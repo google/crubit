@@ -3,28 +3,33 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::slice_ptr::get_raw_parts;
-use crate::std::string_view;
+use crate::std::raw_string_view;
 use core::ptr;
 
-impl string_view {
+// TODO(b/389943233) -- this alias is temporary to allow migrating code to raw_string_view
+// step-by-step. Ultimately, the name string_view will be used for a wrapper of raw_string_view
+// with lifetimes.
+pub type string_view = raw_string_view;
+
+impl raw_string_view {
     /// Returns an equivalent Rust slice pointer.
     ///
     /// The resulting slice pointer is valid for the lifetime of the pointed-to
     /// object.
     ///
     /// Note: For empty strings, the address of the slice pointer may not be the
-    /// same as the address of the string_view. Null pointers are converted
+    /// same as the address of the raw_string_view. Null pointers are converted
     /// to valid, but dangling, pointers.
     #[inline(always)]
     pub fn as_raw_bytes(self) -> *const [u8] {
         self.into()
     }
 
-    /// Converts a `string_view` containing valid UTF-8 to a `*const str`.
+    /// Converts a `raw_string_view` containing valid UTF-8 to a `*const str`.
     ///
     /// # Safety
     ///
-    /// Behavior is undefined if the `string_view` has an invalid pointer.
+    /// Behavior is undefined if the `raw_string_view` has an invalid pointer.
     pub unsafe fn to_str(&self) -> Result<*const str, core::str::Utf8Error> {
         let bytes: &[u8] = unsafe { &*self.as_raw_bytes() };
         let res: *const str = core::str::from_utf8(bytes)?;
@@ -32,23 +37,21 @@ impl string_view {
     }
 }
 
-pub type raw_string_view = string_view;
-
 /// Equivalent to `as_raw_bytes()`.
-impl From<string_view> for *const [u8] {
-    fn from(sv: string_view) -> Self {
+impl From<raw_string_view> for *const [u8] {
+    fn from(sv: raw_string_view) -> Self {
         // SAFETY: `&sv` is a valid pointer. `data()` does not dereference the
-        // string_view.
-        let mut data = unsafe { string_view::data(&sv) } as *const u8;
+        // raw_string_view.
+        let mut data = unsafe { raw_string_view::data(&sv) } as *const u8;
         // TODO(b/249376862): use size(), which does not have the soundness issue below.
-        // let size = unsafe {string_view::size(&sv)};
+        // let size = unsafe {raw_string_view::size(&sv)};
         // SAFETY: `&sv` is a valid pointer, but the call to end() requires that the
-        // string_view not be dangling, so this is unsound.
+        // raw_string_view not be dangling, so this is unsound.
         // (If `sv` is dangling, then `end()` will perform pointer arithmetic on a
         // dangling pointer, which is implementation defined (and treated on
         // Clang as if it were UB).)
-        let size =
-            unsafe { string_view::end(&sv) } as usize - unsafe { string_view::begin(&sv) } as usize;
+        let size = unsafe { raw_string_view::end(&sv) } as usize
+            - unsafe { raw_string_view::begin(&sv) } as usize;
         // Unlike C++, Rust does not allow for null data pointers in slices.
         if data.is_null() {
             data = ptr::NonNull::dangling().as_ptr();
@@ -57,52 +60,52 @@ impl From<string_view> for *const [u8] {
         ptr::slice_from_raw_parts(data, size)
     }
 }
-impl From<&[u8]> for string_view {
+impl From<&[u8]> for raw_string_view {
     fn from(s: &[u8]) -> Self {
-        string_view::from(s as *const [u8])
+        raw_string_view::from(s as *const [u8])
     }
 }
 
-impl<const N: usize> From<&[u8; N]> for string_view {
+impl<const N: usize> From<&[u8; N]> for raw_string_view {
     fn from(s: &[u8; N]) -> Self {
-        string_view::from(s as *const [u8])
+        raw_string_view::from(s as *const [u8])
     }
 }
 
-impl<const N: usize> From<*const [u8; N]> for string_view {
+impl<const N: usize> From<*const [u8; N]> for raw_string_view {
     fn from(s: *const [u8; N]) -> Self {
-        string_view::from(s as *const [u8])
+        raw_string_view::from(s as *const [u8])
     }
 }
 
-impl From<&str> for string_view {
+impl From<&str> for raw_string_view {
     fn from(s: &str) -> Self {
-        string_view::from(s.as_bytes())
+        raw_string_view::from(s.as_bytes())
     }
 }
 
-impl From<&core::ffi::CStr> for string_view {
+impl From<&core::ffi::CStr> for raw_string_view {
     fn from(cstr: &core::ffi::CStr) -> Self {
-        string_view::from(cstr.to_bytes())
+        raw_string_view::from(cstr.to_bytes())
     }
 }
 
-impl From<*const [u8]> for string_view {
+impl From<*const [u8]> for raw_string_view {
     fn from(slice: *const [u8]) -> Self {
         // TODO(jeanpierreda): We can't access the constructors at the moment.
         // This little maneuver's gonna cost us 51 years of annoying build breakages
         // later, so really we should try to get the constructors callable.
 
-        // SAFETY: string_view (in Rust) is a `repr(C)` struct entirely composed of
+        // SAFETY: raw_string_view (in Rust) is a `repr(C)` struct entirely composed of
         // arrays of MaybeUninit<u8>, so this would be safe even without the
         // zeroed(). With the zeroed, it's also safe even if we accidentally use
         // the type without further initialization. (In C++, the fields are a
         // pointer and an integer).
-        let mut sv = unsafe { <core::mem::MaybeUninit<string_view>>::zeroed().assume_init() };
+        let mut sv = unsafe { <core::mem::MaybeUninit<raw_string_view>>::zeroed().assume_init() };
         // We could also use the (unstable) to_raw_parts, but that feature may change
         // over time. It's also difficult, for idiosyncratic reasons, to pipe in
         // the feature flag to the automatically generated bindings for
-        // `string_view` that this file attaches onto, or to inject a dependency
+        // `raw_string_view` that this file attaches onto, or to inject a dependency
         // on a crate to put this logic into. (The crate this file is a part of is
         // automatically generated by Crubit, and so we would need to tell
         // Crubit to add these to the generated bindings for `std`.) So for now,

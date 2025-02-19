@@ -85,9 +85,17 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         FormattedError::FromStatus(std::move(underlying_type.status())));
   }
   ictx_.MarkAsSuccessfullyImported(decl);
+
+  // C++'s std::string_view becomes cc_std::std::raw_string_view, as the
+  // type name string_view is reserved for a version of
+  // string_view with a lifetime.
+  const bool is_string_view =
+      decl->getQualifiedNameAsString() == "std::string_view";
+  Identifier rs_name =
+      is_string_view ? Identifier("raw_string_view") : *identifier;
   return TypeAlias{
-      .cc_name = *identifier,
-      .rs_name = *identifier,
+      .cc_name = *std::move(identifier),
+      .rs_name = rs_name,
       .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
       .doc_comment = ictx_.GetComment(decl),
