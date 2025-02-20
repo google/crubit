@@ -44,6 +44,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Tooling/Transformer/SourceCode.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
@@ -93,26 +94,36 @@ using DiagTransferFunc =
     dataflow::CFGMatchSwitch<const DiagTransferState,
                              SmallVector<PointerNullabilityDiagnostic>>;
 
+CharSourceRange getRangeModuloMacros(CharSourceRange Range,
+                                     const ASTContext &Ctx) {
+  if (auto RangeOpt =
+          tooling::getFileRange(Range, Ctx, /*IncludeMacroExpansion=*/true))
+    return RangeOpt.value();
+  return Range;
+}
+
 SmallVector<PointerNullabilityDiagnostic> untrackedError(
-    const Expr *E, PointerNullabilityDiagnostic::Context DiagCtx =
-                       PointerNullabilityDiagnostic::Context::Other) {
+    const Expr *E, const ASTContext &Ctx,
+    PointerNullabilityDiagnostic::Context DiagCtx =
+        PointerNullabilityDiagnostic::Context::Other) {
   return {{PointerNullabilityDiagnostic::ErrorCode::Untracked, DiagCtx,
-           CharSourceRange::getTokenRange(E->getSourceRange())}};
+           getRangeModuloMacros(
+               CharSourceRange::getTokenRange(E->getSourceRange()), Ctx)}};
 }
 
 // Diagnoses whether `E` violates the expectation that it is nonnull.
 SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     absl::Nonnull<const Expr *> E, const Environment &Env,
-    PointerNullabilityDiagnostic::Context DiagCtx,
+    const ASTContext &Ctx, PointerNullabilityDiagnostic::Context DiagCtx,
     absl::Nullable<const clang::NamedDecl *> Callee = nullptr,
     absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr,
     CharSourceRange Range = {}) {
   if (PointerValue *ActualVal = getPointerValue(E, Env)) {
     if (isNullable(*ActualVal, Env)) {
-      if (!Range.isValid())
+      if (Range.isInvalid())
         Range = CharSourceRange::getTokenRange(E->getSourceRange());
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
-               DiagCtx, Range, Callee, ParamName}};
+               DiagCtx, getRangeModuloMacros(Range, Ctx), Callee, ParamName}};
     }
     return {};
   }
@@ -124,7 +135,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
            "unsafe:\n";
     E->dump();
   });
-  return untrackedError(E, DiagCtx);
+  return untrackedError(E, Ctx, DiagCtx);
 }
 
 // Diagnoses a conceptual assignment of LHS = RHS.
@@ -145,32 +156,32 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) return {};
 
   return LHSNullability.front().concrete() == NullabilityKind::NonNull
-             ? diagnoseNonnullExpected(RHS, Env, DiagCtx, Callee, ParamName,
-                                       LHSRange)
+             ? diagnoseNonnullExpected(RHS, Env, Ctx, DiagCtx, Callee,
+                                       ParamName, LHSRange)
              : SmallVector<PointerNullabilityDiagnostic>{};
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
     absl::Nonnull<const UnaryOperator *> UnaryOp,
-    const MatchFinder::MatchResult &, const DiagTransferState &State) {
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
-      UnaryOp->getSubExpr(), State.Env,
+      UnaryOp->getSubExpr(), State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerDereference(
     absl::Nonnull<const CXXOperatorCallExpr *> Op,
-    const MatchFinder::MatchResult &, const DiagTransferState &State) {
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
-      Op->getArg(0), State.Env,
+      Op->getArg(0), State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseSubscript(
     absl::Nonnull<const ArraySubscriptExpr *> Subscript,
-    const MatchFinder::MatchResult &, const DiagTransferState &State) {
+    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
-      Subscript->getBase(), State.Env,
+      Subscript->getBase(), State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
@@ -178,7 +189,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
     absl::Nonnull<const MemberExpr *> MemberExpr,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
-      MemberExpr->getBase(), State.Env,
+      MemberExpr->getBase(), State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference,
       /*Callee=*/nullptr, /*ParamName=*/nullptr,
       // Attach the diagnostic to the source range of the `->` operator, rather
@@ -231,7 +242,9 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
     if (ReceiverNullability.front().concrete() == NullabilityKind::NonNull)
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
                PointerNullabilityDiagnostic::Context::Assignment,
-               CharSourceRange::getTokenRange(MCE->getSourceRange())}};
+               getRangeModuloMacros(
+                   CharSourceRange::getTokenRange(MCE->getSourceRange()),
+                   *Result.Context)}};
     return {};
   }
 
@@ -332,7 +345,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
   const Expr *GivenExpr = CE->getArg(0);
   const TypeNullability *MaybeComputed =
       State.Lattice.getTypeNullability(GivenExpr);
-  if (MaybeComputed == nullptr) return untrackedError(CE);
+  if (MaybeComputed == nullptr) return untrackedError(CE, Ctx);
 
   if (*MaybeComputed == Expected) return {};
 
@@ -351,31 +364,35 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
 
   return {{PointerNullabilityDiagnostic::ErrorCode::AssertFailed,
            PointerNullabilityDiagnostic::Context::Other,
-           CharSourceRange::getTokenRange(CE->getSourceRange())}};
+           getRangeModuloMacros(
+               CharSourceRange::getTokenRange(CE->getSourceRange()), Ctx)}};
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
     absl::Nonnull<const UnaryOperator *> UnaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(UnaryOp->getSubExpr(), State.Env,
+                                 *Result.Context,
                                  PointerNullabilityDiagnostic::Context::Other);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
-    Expr *PtrExpr, Expr *IntExpr, const Environment &Env) {
+    Expr *PtrExpr, Expr *IntExpr, const Environment &Env,
+    const ASTContext &Ctx) {
   // Adding or subtracting zero is allowed even if the pointer is null.
   if (auto *Lit = dyn_cast<IntegerLiteral>(IntExpr->IgnoreParenImpCasts())) {
     if (Lit->getValue().isZero()) return {};
   }
 
-  return diagnoseNonnullExpected(PtrExpr, Env,
+  return diagnoseNonnullExpected(PtrExpr, Env, Ctx,
                                  PointerNullabilityDiagnostic::Context::Other);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractAssign(
     absl::Nonnull<const BinaryOperator *> BinaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
-  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env);
+  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env,
+                             *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
@@ -383,19 +400,20 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   if (BinaryOp->getLHS()->getType()->isIntegerType()) {
     return diagnoseAddSubtract(BinaryOp->getRHS(), BinaryOp->getLHS(),
-                               State.Env);
+                               State.Env, *Result.Context);
   }
-  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env);
+  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env,
+                             *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnosePointerDifference(
     absl::Nonnull<const BinaryOperator *> BinaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   SmallVector<PointerNullabilityDiagnostic> Diagnostics =
-      diagnoseNonnullExpected(BinaryOp->getLHS(), State.Env,
+      diagnoseNonnullExpected(BinaryOp->getLHS(), State.Env, *Result.Context,
                               PointerNullabilityDiagnostic::Context::Other);
   Diagnostics.append(
-      diagnoseNonnullExpected(BinaryOp->getRHS(), State.Env,
+      diagnoseNonnullExpected(BinaryOp->getRHS(), State.Env, *Result.Context,
                               PointerNullabilityDiagnostic::Context::Other));
   return Diagnostics;
 }
@@ -521,8 +539,9 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
   // Callee is typically a function pointer (not for members or builtins).
   // Check it for null, and unwrap the pointer for the next step.
   if (Callee->getType()->isPointerType()) {
-    auto D = diagnoseNonnullExpected(
-        Callee, State.Env, PointerNullabilityDiagnostic::Context::Other);
+    auto D =
+        diagnoseNonnullExpected(Callee, State.Env, *Result.Context,
+                                PointerNullabilityDiagnostic::Context::Other);
     // TODO: should we continue to diagnose arguments?
     if (!D.empty()) return D;
 
@@ -641,22 +660,24 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseDeclStmt(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseMovedFromNonnullSmartPointer(
-    absl::Nonnull<const Expr *> E, const MatchFinder::MatchResult &,
+    absl::Nonnull<const Expr *> E, const MatchFinder::MatchResult &Result,
     const DiagTransferState &State) {
   const TypeNullability *Nullability = State.Lattice.getTypeNullability(E);
-  if (Nullability == nullptr) return untrackedError(E);
+  const auto &Ctx = *Result.Context;
+  if (Nullability == nullptr) return untrackedError(E, Ctx);
 
   if (Nullability->front().concrete() != NullabilityKind::NonNull) return {};
 
   PointerValue *Val = getPointerValueFromSmartPointer(
       State.Env.get<RecordStorageLocation>(*E), State.Env);
-  if (Val == nullptr) return untrackedError(E);
+  if (Val == nullptr) return untrackedError(E, Ctx);
 
   if (isNullable(*Val, State.Env))
     return {{PointerNullabilityDiagnostic::ErrorCode::
                  AccessingMovedFromNonnullPointer,
              PointerNullabilityDiagnostic::Context::Other,
-             CharSourceRange::getTokenRange(E->getSourceRange())}};
+             getRangeModuloMacros(
+                 CharSourceRange::getTokenRange(E->getSourceRange()), Ctx)}};
 
   return {};
 }
@@ -744,10 +765,12 @@ void checkParmVarDeclWithPointerDefaultArg(
       !shouldDiagnoseExpectedNonnullDefaultArgValue(Ctx, Parm, Defaults))
     return;
 
-  Diags.push_back({PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
-                   PointerNullabilityDiagnostic::Context::Initializer,
-                   CharSourceRange::getTokenRange(DefaultVal->getSourceRange()),
-                   Callee, Parm.getIdentifier()});
+  Diags.push_back(
+      {PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+       PointerNullabilityDiagnostic::Context::Initializer,
+       getRangeModuloMacros(
+           CharSourceRange::getTokenRange(DefaultVal->getSourceRange()), Ctx),
+       Callee, Parm.getIdentifier()});
 }
 
 void checkAnnotationsConsistentHelper(
