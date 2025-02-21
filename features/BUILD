@@ -17,12 +17,16 @@ _EXPERIMENTAL_CLIENTS = [
     "//:__subpackages__",
 ]
 
+# A feature set containing all supported Crubit features.
+# Add this to the `aspect_hints` of a `cc_library` to generate Rust bindings for that library.
 crubit_feature_hint(
     name = "supported",
     crubit_features = SUPPORTED_FEATURES,
     visibility = ["//visibility:public"],
 )
 
+# A feature set containing experimental Crubit features, in addition to the officially supported
+# features.
 crubit_feature_hint(
     name = "experimental",
     crubit_features = SUPPORTED_FEATURES + [
