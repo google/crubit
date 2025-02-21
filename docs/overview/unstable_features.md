@@ -173,3 +173,14 @@ We have many use cases for `min_specialization`, including bindings for C++
 templates that have explicit template specialization or partial template
 specialization. However, they are not yet pressing, and specialization related
 Rust features are especially risky.
+
+### `inherent_associated_types`
+
+Inherent associated types give a natural Rust spelling of the following C++
+type definition:
+
+```c++
+struct Foo {
+    using MyAlias = int;
+};
+```
