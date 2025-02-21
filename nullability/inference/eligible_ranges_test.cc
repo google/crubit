@@ -1296,6 +1296,23 @@ TEST(ExistingAnnotationLengthTest, AbslTemplateWithFunctionPointer) {
                       noPreRangeLength(), noPostRangeLength()))));
 }
 
+TEST(ExistingAnnotationLengthTest, SimpleAlias) {
+  auto Input = Annotations(R"(
+  using IntPtr = int *;
+
+  void target(_Nullable $one[[IntPtr]] P, $two[[IntPtr]] _Nullable Q);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(
+              AllOf(eligibleRange(1, Input.range("one"), Nullability::NULLABLE),
+                    preRangeLength(10), postRangeLength(0)),
+              AllOf(eligibleRange(2, Input.range("two"), Nullability::NULLABLE),
+                    preRangeLength(0), postRangeLength(10)))));
+}
+
 MATCHER_P(offsetAfterStar, Point, "") {
   return arg.Range.has_offset_after_star() &&
          arg.Range.offset_after_star() == Point;

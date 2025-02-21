@@ -134,10 +134,21 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
   return {PrevTokOffset, NextTokOffset};
 }
 
-/// If the token immediately at or after `EndOfStar` is a complete nullability
+static bool isQualifierPositionAnnotation(StringRef Identifier) {
+  return llvm::StringSwitch<bool>(Identifier)
+      .Case(ClangNullable, true)
+      .Case(ClangNonnull, true)
+      .Case(ClangUnknown, true)
+      .Case(AbslMacroNullable, true)
+      .Case(AbslMacroNonnull, true)
+      .Case(AbslMacroUnknown, true)
+      .Default(false);
+}
+
+/// If the token immediately at or after `EndOfPtr` is a complete nullability
 /// annotation, returns the end offset of the annotation. Else, returns
 /// std::nullopt.
-static std::optional<unsigned> getEndOffsetOfImmediatePostStarAnnotation(
+static std::optional<unsigned> getEndOffsetOfEastQualifierAnnotation(
     SourceLocation EndOfStar, const SourceManager &SM,
     const LangOptions &LangOpts, const FileID &DeclFID) {
   std::optional<Token> PossibleAttribute;
@@ -157,18 +168,27 @@ static std::optional<unsigned> getEndOffsetOfImmediatePostStarAnnotation(
   if (!PossibleAttribute->is(tok::raw_identifier)) return std::nullopt;
 
   const StringRef ID = PossibleAttribute->getRawIdentifier();
-  if (bool IsPostStarAnnotation = llvm::StringSwitch<bool>(ID)
-                                      .Case(ClangNullable, true)
-                                      .Case(ClangNonnull, true)
-                                      .Case(ClangUnknown, true)
-                                      .Case(AbslMacroNullable, true)
-                                      .Case(AbslMacroNonnull, true)
-                                      .Case(AbslMacroUnknown, true)
-                                      .Default(false);
-      !IsPostStarAnnotation)
-    return std::nullopt;
+  if (!isQualifierPositionAnnotation(ID)) return std::nullopt;
 
   auto [FID, Offset] = SM.getDecomposedLoc(PossibleAttribute->getEndLoc());
+  if (FID != DeclFID) return std::nullopt;
+
+  return Offset;
+}
+
+/// If the token before `BeginningOfPtr` is a complete nullability
+/// annotation, returns the begin offset of the annotation. Else, returns
+/// std::nullopt.
+static std::optional<unsigned> getBeginOffsetOfWestQualifierAnnotation(
+    SourceLocation BeginningOfPtr, const SourceManager &SM,
+    const LangOptions &LangOpts, const FileID &DeclFID) {
+  Token PrevTok = utils::lexer::getPreviousToken(BeginningOfPtr, SM, LangOpts);
+  if (!PrevTok.is(tok::raw_identifier)) return std::nullopt;
+
+  if (!isQualifierPositionAnnotation(PrevTok.getRawIdentifier()))
+    return std::nullopt;
+
+  auto [FID, Offset] = SM.getDecomposedLoc(PrevTok.getLocation());
   if (FID != DeclFID) return std::nullopt;
 
   return Offset;
@@ -196,11 +216,18 @@ static void addAnnotationPreAndPostRangeLength(
     }
   }
   if (std::optional<unsigned> AttributeEndOffset =
-          getEndOffsetOfImmediatePostStarAnnotation(EndOfStar, SM, LangOpts,
-                                                    DeclFID)) {
+          getEndOffsetOfEastQualifierAnnotation(EndOfStar, SM, LangOpts,
+                                                DeclFID)) {
     Range.set_existing_annotation_pre_range_length(0);
     Range.set_existing_annotation_post_range_length(*AttributeEndOffset -
                                                     EndOfStarOffset);
+  }
+  if (std::optional<unsigned> AttributeBeginOffset =
+          getBeginOffsetOfWestQualifierAnnotation(Begin, SM, LangOpts,
+                                                  DeclFID)) {
+    Range.set_existing_annotation_pre_range_length(BeginOffset -
+                                                   *AttributeBeginOffset);
+    Range.set_existing_annotation_post_range_length(0);
   }
 }
 
