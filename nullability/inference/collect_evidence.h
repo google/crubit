@@ -22,6 +22,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
@@ -85,18 +86,30 @@ class SortedFingerprintVector {
                       "degraded.\n";
       std::sort(Vector.begin(), Vector.end());
     }
-    auto EndOfUnique = std::unique(Vector.begin(), Vector.end());
-    if (EndOfUnique != Vector.end()) {
+    const auto &FirstDuplicate =
+        std::adjacent_find(Vector.begin(), Vector.end());
+    if (FirstDuplicate != Vector.end()) {
       // Duplicate fingerprints are not expected, and can cause incorrect
       // inference results, but only for symbols that have the same fingerprint.
       // Do not crash, to avoid invalidating all the other results, but do log
-      // in case this very unexpected event occurs.
+      // as much debugging information as possible in case this very unexpected
+      // event occurs.
       llvm::errs() << "Found duplicate fingerprints in previous inferences.\n";
-      for (auto It = EndOfUnique; It != Vector.end(); ++It) {
-        // Logs all but the first instance of each duplicate fingerprint.
-        llvm::errs() << "Duplicate fingerprint: " << *It << "\n";
+      llvm::DenseMap<SlotFingerprint, int> AppearanceCounts;
+      // Because the vector is sorted, we can count the number of appearances
+      // starting from FirstDuplicate and know that there will be no duplicates
+      // of any of the fingerprints from Vector.begin() until FirstDuplicate.
+      for (auto It = FirstDuplicate; It != Vector.end(); ++It) {
+        AppearanceCounts[*It]++;
       }
-      Vector.erase(EndOfUnique, Vector.end());
+      for (const auto &[Fingerprint, Count] : AppearanceCounts) {
+        if (Count > 1) {
+          llvm::errs() << "Fingerprint " << Fingerprint << " appears " << Count
+                       << " times.\n";
+        }
+      }
+      // Remove the duplicates before continuing.
+      Vector.erase(std::unique(Vector.begin(), Vector.end()), Vector.end());
     }
   }
 
