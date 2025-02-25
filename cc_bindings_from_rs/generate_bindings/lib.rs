@@ -271,7 +271,7 @@ fn symbols_from_extern_crate(db: &dyn BindingsGenerator<'_>) -> Vec<(DefId, Full
     }
 
     let mut visitor = ForeignSymbols { symbols: Vec::new(), db };
-    tcx.hir().visit_all_item_likes_in_crate(&mut visitor);
+    tcx.hir_visit_all_item_likes_in_crate(&mut visitor);
 
     visitor.symbols
 }
