@@ -198,6 +198,12 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         header_includes.append("-include")
         header_includes.append(hdr.path)
 
+    extra_rs_srcs = get_additional_rust_srcs(ctx)
+    binding_infos = [
+        dep[RustBindingsFromCcInfo]
+        for dep in all_deps
+        if RustBindingsFromCcInfo in dep
+    ]
     return generate_and_compile_bindings(
         ctx,
         ctx.rule.attr,
@@ -211,21 +217,26 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             ],
         ),
         target_args = target_args,
-        extra_rs_srcs = get_additional_rust_srcs(ctx),
+        extra_rs_srcs = extra_rs_srcs,
         deps_for_cc_file = [target[CcInfo]] + [
-            dep[RustBindingsFromCcInfo].cc_info
-            for dep in all_deps
-            if RustBindingsFromCcInfo in dep and
-               dep[RustBindingsFromCcInfo].cc_info
+            d.cc_info
+            for d in binding_infos
+            if d.cc_info
         ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
-        deps_for_rs_file = [
-            dep[RustBindingsFromCcInfo].dep_variant_info
-            for dep in all_deps
-            if RustBindingsFromCcInfo in dep
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
+        deps_for_rs_file = depset(
+            direct = [
+                d.dep_variant_info
+                for d in binding_infos
+                if d.dep_variant_info
+            ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
+            transitive = [
+                d.pass_through_dep_variant_infos
+                for d in binding_infos
+            ],
+        ),
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
         extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx),
-        has_public_headers = has_public_headers,
+        should_generate_bindings = has_public_headers or extra_rs_srcs,
     )
 
 rust_bindings_from_cc_aspect = aspect(

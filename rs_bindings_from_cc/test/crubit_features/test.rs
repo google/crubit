@@ -9,6 +9,8 @@ mod definitions {
 
     #[gtest]
     fn disabled_struct_has_no_bindings() {
+        // Disabled crate shouldn't get bindings at all. If it does, the type should not exist.
+        #[cfg(definition_disabled)]
         assert!(
             !type_exists!(definition_disabled::DisabledStruct),
             "definition_disabled::DisabledStruct was exposed through bindings."
@@ -60,6 +62,8 @@ mod aliases {
     /// since that implies a maintenance burden.
     #[gtest]
     fn disabled_struct_aliases_arent_exposed() {
+        // Disabled crate shouldn't get bindings at all. If it does, the type should not exist.
+        #[cfg(alias_disabled)]
         assert!(
             !type_exists!(alias_disabled::AliasedEnabledStruct),
             "AliasedEnabledStruct was exported by `alias_disabled`, even though that build target disabled bindings."
@@ -68,6 +72,8 @@ mod aliases {
 
     #[gtest]
     fn disabled_template_aliases_arent_exposed() {
+        // Disabled crate shouldn't get bindings at all. If it does, the type should not exist.
+        #[cfg(alias_disabled)]
         assert!(
             !type_exists!(alias_disabled::AliasedEnabledTemplate),
             "AliasedEnabledTemplate was exported by `alias_disabled`, even though that build target disabled bindings."

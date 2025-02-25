@@ -10,8 +10,11 @@ RustBindingsFromCcInfo = provider(
     fields = {
         "cc_info": ("A CcInfo provider for the implementation of the API projection, " +
                     "or None if this is a real Rust target."),
-        "dep_variant_info": ("A DepVariantInfo provider that carries information from the " +
-                             "compiled `.rs` file."),
+        "dep_variant_info": ("A DepVariantInfo provider that carries information about the " +
+                             "generated bindings (compiled `.rs` file)."),
+        "pass_through_dep_variant_infos": ("A depset of DepVariantInfo providers that should be " +
+                                           "passed through to downstream bindings in case the " +
+                                           "target doesn't get bindings."),
         "target_args": ("A depset of strings, each one representing a mapping of target " +
                         "to its per-target arguments (headers, features) in json format:\n\n" +
                         "{'t': <target>, 'h': [<header>], 'f': [<feature>]}"),

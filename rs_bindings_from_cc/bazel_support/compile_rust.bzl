@@ -41,7 +41,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
       attr: The current rule's attributes.
       src: The source file to be compiled.
       extra_srcs: Additional source files to include in the crate.
-      deps: List[DepVariantInfo]: A list of dependencies needed.
+      deps: depset[DepVariantInfo]: A depset of dependencies needed.
       crate_name: (string) crate name for naming the output files (.rlib, .rmeta...))
       include_coverage: (bool) Whether or not coverage information should be generated.
       force_all_deps_direct: (bool) Whether or not to force all deps to be direct.
@@ -83,7 +83,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             type = "rlib",
             root = src,
             srcs = depset([src] + extra_srcs),
-            deps = depset(deps),
+            deps = deps,
             proc_macro_deps = depset([]),
             aliases = {},
             output = lib,

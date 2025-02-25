@@ -91,7 +91,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
-        deps_for_rs_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
+        deps_for_rs_file = depset(ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file),
     )
 
 bindings_for_toolchain_headers = rule(

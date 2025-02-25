@@ -6,6 +6,7 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_make_analysis_test")
+load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "ActionsInfo",
@@ -41,7 +42,7 @@ deps_for_bindings_in_target_cfg_test = crubit_make_analysis_test(
 )
 
 def _test_deps_for_bindings_in_target_cfg():
-    native.cc_library(name = "lib", hdrs = ["lib.h"])
+    crubit_test_cc_library(name = "lib", hdrs = ["lib.h"])
     attach_aspect(name = "lib_with_aspect", dep = ":lib")
     deps_for_bindings_in_target_cfg_test(
         name = "deps_for_bindings_in_target_cfg_test",

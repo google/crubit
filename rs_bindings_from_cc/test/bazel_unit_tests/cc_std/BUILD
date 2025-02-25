@@ -1,15 +1,16 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(":cc_std_test.bzl", "cc_std_test")
 
 package(default_applicable_licenses = ["//:license"])
 
-cc_library(
+crubit_test_cc_library(
     name = "foo",
     hdrs = ["foo.h"],
     deps = [":bar"],
 )
 
-cc_library(
+crubit_test_cc_library(
     name = "bar",
     hdrs = ["bar.h"],
 )

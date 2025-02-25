@@ -9,6 +9,7 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_make_analysis_test",
 )
+load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "ActionsInfo",
@@ -59,20 +60,20 @@ action_inputs_with_pipelining_analysis_test = crubit_make_analysis_test(
 )
 
 def _targets_for_pipelined_compilation():
-    native.cc_library(
+    crubit_test_cc_library(
         name = "top",
         hdrs = [
             "top.h",
         ],
     )
-    native.cc_library(
+    crubit_test_cc_library(
         name = "middle",
         hdrs = [
             "middle.h",
         ],
         deps = [":top"],
     )
-    native.cc_library(
+    crubit_test_cc_library(
         name = "bottom",
         hdrs = ["bottom.h"],
         deps = [":middle"],

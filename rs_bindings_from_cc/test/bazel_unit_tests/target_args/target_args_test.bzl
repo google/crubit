@@ -115,31 +115,38 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     target_args = _get_target_args(target_under_test)
 
-    asserts.equals(env, 4, len(target_args))
+    asserts.equals(env, 5, len(target_args))
     asserts.equals(
         env,
         "//:_nothing_should_depend_on_private_builtin_hdrs",
         target_args[0]["t"],
     )
+
+    # Even though the dependency doesn't have public headers, Crubit should still get metadata.
     asserts.equals(
         env,
-        "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:bottom",
+        "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:bottommest_no_crubit_aspect_hint",
         target_args[1]["t"],
     )
     asserts.equals(
         env,
+        "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:bottom",
+        target_args[2]["t"],
+    )
+    asserts.equals(
+        env,
         ["rs_bindings_from_cc/test/bazel_unit_tests/target_args/lib.h"],
-        target_args[1]["h"],
+        target_args[2]["h"],
     )
 
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:middle",
-        target_args[2]["t"],
+        target_args[3]["t"],
     )
     asserts.true(
         env,
-        target_args[2]["h"][0].endswith(
+        target_args[3]["h"][0].endswith(
             "rs_bindings_from_cc/test/bazel_unit_tests/target_args/middle.empty_source_no_public_headers.h",
         ),
     )
@@ -147,12 +154,12 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     asserts.equals(
         env,
         "//rs_bindings_from_cc/test/bazel_unit_tests/target_args:top",
-        target_args[3]["t"],
+        target_args[4]["t"],
     )
     asserts.equals(
         env,
         ["rs_bindings_from_cc/test/bazel_unit_tests/target_args/top.h"],
-        target_args[3]["h"],
+        target_args[4]["h"],
     )
 
     return analysistest.end(env)
@@ -162,7 +169,8 @@ targets_and_headers_propagate_with_cc_info_test = crubit_make_analysis_test(
 )
 
 def _test_targets_and_headers_propagate_with_cc_infos():
-    native.cc_library(name = "bottom", hdrs = ["lib.h"], aspect_hints = ["//features:internal_testonly_experimental"])
+    native.cc_library(name = "bottommest_no_crubit_aspect_hint")
+    native.cc_library(name = "bottom", hdrs = ["lib.h"], deps = [":bottommest_no_crubit_aspect_hint"], aspect_hints = ["//features:internal_testonly_experimental"])
     native.cc_library(name = "middle", deps = [":bottom"], aspect_hints = ["//features:internal_testonly_experimental"])
     native.cc_library(name = "top", hdrs = ["top.h"], deps = [":middle"], aspect_hints = ["//features:internal_testonly_experimental"])
     attach_aspect(name = "top_with_aspect", dep = ":top")
