@@ -31,12 +31,12 @@ def _cc_bindings_from_rust_library_config_impl(ctx):
 cc_bindings_from_rust_library_config = rule(
     attrs = {
         "extra_cc_srcs": attr.label_list(
-            doc = "The C++ source files to be incldued in addition to generated C++ bindings.",
+            doc = "The C++ source files to be included in addition to generated C++ bindings.",
             allow_files = [".cc"],
             mandatory = False,
         ),
         "extra_cc_hdrs": attr.label_list(
-            doc = "The C++ header files to be incldued in addition to generated C++ bindings.",
+            doc = "The C++ header files to be included in addition to generated C++ bindings.",
             allow_files = [".h"],
             mandatory = False,
         ),
