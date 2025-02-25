@@ -11,6 +11,8 @@ load(
     "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
     "attach_aspect",
 )
+load("//third_party/protobuf/bazel:cc_proto_library.bzl", "cc_proto_library")
+load("//third_party/protobuf/bazel:proto_library.bzl", "proto_library")
 
 def _bindings_generated_when_public_headers_impl(ctx):
     env = analysistest.begin(ctx)
@@ -56,6 +58,29 @@ def _bindings_not_generated_when_no_public_headers():
         target_under_test = ":no_pub_headers_with_aspect",
     )
 
+def _bindings_not_generated_for_protobufs_impl(ctx):
+    env = analysistest.begin(ctx)
+    tut = analysistest.target_under_test(env)
+
+    asserts.true(env, RustBindingsFromCcInfo in tut, "expected target to have RustBindingFromCcInfo")
+    bindings_info = tut[RustBindingsFromCcInfo]
+    asserts.false(env, bindings_info.dep_variant_info, "expected target not to have DepVariantInfo")
+
+    return analysistest.end(env)
+
+bindings_not_generated_for_protobufs_test = crubit_make_analysis_test(
+    _bindings_not_generated_for_protobufs_impl,
+)
+
+def _bindings_not_generated_for_protobufs():
+    proto_library(name = "my_proto", srcs = ["my.proto"])
+    cc_proto_library(name = "my_cc_proto", deps = [":my_proto"])
+    attach_aspect(name = "my_cc_proto_with_aspect", dep = ":my_cc_proto")
+    bindings_not_generated_for_protobufs_test(
+        name = "bindings_not_generated_for_protobufs_test",
+        target_under_test = ":my_cc_proto_with_aspect",
+    )
+
 def generation_test(name):
     """Sets up the test suite.
 
@@ -63,11 +88,13 @@ def generation_test(name):
       name: name of the test suite"""
     _bindings_generated_when_public_headers()
     _bindings_not_generated_when_no_public_headers()
+    _bindings_not_generated_for_protobufs()
 
     native.test_suite(
         name = name,
         tests = [
             ":bindings_generated_when_public_headers_test",
             ":bindings_not_generated_when_no_public_headers_test",
+            ":bindings_not_generated_for_protobufs_test",
         ],
     )

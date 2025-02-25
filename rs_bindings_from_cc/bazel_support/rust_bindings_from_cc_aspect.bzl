@@ -236,7 +236,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ),
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
         extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx),
-        should_generate_bindings = has_public_headers or extra_rs_srcs,
+        should_generate_bindings = (
+            has_public_headers or extra_rs_srcs
+        ) and not _is_proto_library(target),
     )
 
 rust_bindings_from_cc_aspect = aspect(
