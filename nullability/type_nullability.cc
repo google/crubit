@@ -40,7 +40,10 @@
 
 namespace clang::tidy::nullability {
 
-static bool SmartPointersEnabled = false;
+// TODO - b/398880183: Remove this flag after 2025-03-10 if no issues arise with
+// it being true by default. enableSmartPointers(false) can be used to disable
+// it if issues do arise before then.
+static bool SmartPointersEnabled = true;
 
 namespace test {
 
