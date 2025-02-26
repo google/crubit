@@ -2916,23 +2916,25 @@ TEST(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
 TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
   static constexpr llvm::StringRef Header = R"cc(
     struct Base {
+      int BaseNonPtr;
       bool* BaseB;
       Nonnull<char*> BaseC;
     };
     struct MyStruct : public Base {
+      float NonPtr;
       int* I;
       bool* B;
     };
   )cc";
   const llvm::Twine BracesAggInit = Header + R"cc(
     void target(Nullable<bool*> Bool, char* Char) {
-      MyStruct{Bool, Char, nullptr, Bool};
+      MyStruct{0, Bool, Char, 1.0f, nullptr, Bool};
     }
   )cc";
   // New aggregate initialization syntax in C++20
   const llvm::Twine ParensAggInit = Header + R"cc(
     void target(Nullable<bool*> Bool, char* Char) {
-      MyStruct(Base(Bool, Char), nullptr, Bool);
+      MyStruct(Base(0, Bool, Char), 1.0f, nullptr, Bool);
     }
   )cc";
 

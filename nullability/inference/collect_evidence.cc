@@ -1309,7 +1309,7 @@ class DefinitionEvidenceCollector {
     // InitListExpr for the base initialization, so we only need to collect here
     // from the field inits.
     for (auto [Field, InitExpr] : Helper.field_inits()) {
-      if (!isSupportedPointerType(Field->getType())) return;
+      if (!isSupportedPointerType(Field->getType())) continue;
 
       fromAssignmentLike(*Field, *InitExpr, InitExpr->getExprLoc());
     }
