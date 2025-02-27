@@ -44,8 +44,11 @@
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/Support/Errc.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
 namespace {
@@ -301,6 +304,67 @@ static bool isComplexDeclarator(const Type *T) {
   return false;
 }
 
+static llvm::ErrorOr<std::optional<SourceLocation>> maybeSetEndOfStarOffset(
+    TypeLoc TL, CharSourceRange &R, bool IsComplexDeclarator,
+    const SourceManager &SM) {
+  // For raw pointers, we want to add any post-star annotations immediately
+  // after the `*` instead of at the end of the range. These locations are
+  // different in the case of complex declarators, such as pointers to
+  // functions or arrays and arrays of pointers.
+  //
+  // We don't need to compute this for smart pointers, because the post-star
+  // annotation should always be added at the end of the range. There is no
+  // analogous set of complex declarator cases where the smart pointer type is
+  // actually in the middle of the range.
+  auto PTL = TL.getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>();
+  if (!PTL) return std::nullopt;
+
+  SourceLocation StarLoc = SM.getSpellingLoc(PTL.getStarLoc());
+  if (StarLoc.isInvalid()) {
+    // Allow the end offset to be used if we can't find a star.
+    return std::nullopt;
+  }
+
+  // If the star is in an entirely different file from the type's range, we do
+  // not support annotation addition/removal for this range. This type is
+  // likely partially constructed via macro and that macro is likely to be
+  // used for multiple types, in a manner complex enough that it should
+  // probably be examined by a human anyway.
+  // One example that has been seen is the use of late binding patterns to
+  // declare either functions or function pointers, and the star location for
+  // the function pointers is in a macro used for every single function bound
+  // that way.
+  if (SM.getFileID(StarLoc) != SM.getFileID(R.getBegin())) {
+    return llvm::errc::not_supported;
+  }
+
+  // If the star is not inside the range `R`, e.g. it's in a macro that may or
+  // may not expand to the entire type range, then we will not set the offset
+  // after the star.
+  //
+  // This will result in the end offset being used to insert any annotation.
+  //
+  // This works well for simple pointers.
+  //
+  // For complex declarators, in cases where the macro expands to the entire
+  // type, we should already be looking at the macro definition range, so the
+  // star should be inside the range. However, if the macro supplies only a
+  // part of the range, we can end up with a star inside a macro that is
+  // outside the range but still in the same file. This is unusual enough to
+  // log, but can probably be supported by returning the star location.
+  if (!(StarLoc >= R.getBegin() && StarLoc < R.getEnd())) {
+    if (!IsComplexDeclarator) {
+      return std::nullopt;
+    }
+    llvm::errs() << "Complex declarator with star outside range but in same "
+                    "file. This is rare and it may be worth double-checking "
+                    "the results for this range. Star location is "
+                 << StarLoc.printToString(SM) << "\n";
+  }
+
+  return StarLoc.getLocWithOffset(1);
+}
+
 // Extracts the source ranges and associated slot values of each eligible type
 // within `Loc`, accounting for (nested) qualifiers. Guarantees that each source
 // range is eligible for editing, including that its begin and end locations are
@@ -397,6 +461,15 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
 
     unsigned EndOffset = SM.getFileOffset(R->getEnd());
 
+    auto EndOfStarResult =
+        maybeSetEndOfStarOffset(*MaybeLoc, *R, IsComplexDeclarator, SM);
+    if (EndOfStarResult.getError()) {
+      // An error indicates that the star location and range characteristics
+      // invalidate our ability to annotate this range correctly, so we don't
+      // add the range.
+      continue;
+    }
+
     // TODO(b/323509132) When we can infer more than just top-level pointers,
     // synchronize these slot numbers with inference's slot numbers. For now,
     // assign no slot to anything but a first slot in an inferable type.
@@ -408,38 +481,11 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     EligibleRange &Range = Ranges.emplace_back(SlotInContext);
     initSlotRange(Range.Range, BeginOffset, EndOffset, Nullability);
 
-    std::optional<SourceLocation> EndOfStarLoc;
+    std::optional<SourceLocation> EndOfStarLoc = *EndOfStarResult;
     std::optional<unsigned> EndOfStarOffset;
-    // For raw pointers, we want to add any post-star annotations immediately
-    // after the `*` instead of at the end of the range. These locations are
-    // different in the case of complex declarators, such as pointers to
-    // functions or arrays and arrays of pointers.
-    //
-    // We don't need to compute this for smart pointers, because the post-star
-    // annotation should always be added at the end of the range. There is no
-    // analogous set of complex declarator cases where the smart pointer type is
-    // actually in the middle of the range.
-    if (auto PTL =
-            MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>()) {
-      SourceLocation StarLoc = SM.getSpellingLoc(PTL.getStarLoc());
-      // If the star is not inside the range, e.g. it's in a macro that expands
-      // to the entire type range, then we will not set the offset after the
-      // star.
-      //
-      // This will result in the end offset being used to insert any annotation.
-      //
-      // This works well for simple pointers. For complex declarators, we
-      // shouldn't hit the case of the start not being inside the range, because
-      // we should be using the macro definition range. If we do still hit that
-      // case (in debug), we want to fail loudly and fix it.
-      assert(StarLoc.isInvalid() || !IsComplexDeclarator ||
-             StarLoc >= R->getBegin() && StarLoc < R->getEnd());
-      if (!StarLoc.isInvalid() && StarLoc >= R->getBegin() &&
-          StarLoc < R->getEnd()) {
-        EndOfStarLoc = StarLoc.getLocWithOffset(1);
-        EndOfStarOffset = SM.getFileOffset(*EndOfStarLoc);
-        Range.Range.set_offset_after_star(*EndOfStarOffset);
-      }
+    if (EndOfStarLoc) {
+      EndOfStarOffset = SM.getFileOffset(*EndOfStarLoc);
+      Range.Range.set_offset_after_star(*EndOfStarOffset);
     }
 
     if (Nullability) {
