@@ -302,7 +302,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
     Ok(generated_item)
 }
 
-/// Creats a new database. Public for testing.
+/// Creates a new database. Public for testing.
 pub fn new_database<'db>(
     ir: &'db IR,
     errors: &'db dyn ErrorReporting,

@@ -19,8 +19,6 @@
 //!
 //! * Supports non-`'static` types.
 //! * Syntactic differences when initially setting up the trait and database.
-//! * In particular, there is no support for separate compilation: the trait and
-//!   its implementation are defined in the same crate.
 //! * Immutable input and no support for recomputation given mutated inputs.
 //! * Correspondingly, no requirement that the *return* types implement `Eq` or
 //!   `Hash`.
