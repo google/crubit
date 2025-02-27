@@ -13,7 +13,7 @@ use rustc_span::Symbol;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::collections::HashSet;
-use std::ops::AddAssign;
+use std::ops::{Add, AddAssign};
 
 #[derive(Clone, Debug, Default)]
 pub struct CcPrerequisites {
@@ -81,6 +81,15 @@ impl AddAssign for CcPrerequisites {
         self.defs.extend(defs);
         self.fwd_decls.extend(fwd_decls);
         self.required_features |= required_features;
+    }
+}
+
+impl Add for CcPrerequisites {
+    type Output = Self;
+
+    fn add(mut self, rhs: Self) -> Self {
+        self += rhs;
+        self
     }
 }
 

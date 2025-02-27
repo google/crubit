@@ -7,8 +7,8 @@ use crate::format_cc_ident;
 use crate::generate_doc_comment;
 use crate::{
     crate_features, format_ty_for_cc, generate_const, generate_deprecated_tag,
-    generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_exported, is_public_or_supported_export,
+    generate_must_use_tag, generate_trait_thunks, generate_unsupported_def, get_layout,
+    get_scalar_int_type, get_tag_size_with_padding, is_exported, is_public_or_supported_export,
     post_analysis_typing_env, RsSnippet, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
@@ -24,7 +24,9 @@ use quote::quote;
 use quote::ToTokens;
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
 use rustc_hir::{AssocItemKind, ItemKind};
-use rustc_middle::ty::{self, TyCtxt};
+use rustc_middle::mir::interpret::Scalar;
+use rustc_middle::mir::ConstValue;
+use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use std::collections::{BTreeSet, HashSet};
 use std::iter::once;
@@ -35,6 +37,200 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
     tcx: TyCtxt<'tcx>,
 ) -> bool {
     bindings.self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, bindings.def_id))
+}
+
+/// Returns the Rust underlying type of the `cpp_enum` struct specified by the given def id.
+fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
+    let fields = tcx.adt_def(def_id).all_fields().collect::<Vec<_>>();
+    if fields.len() != 1 {
+        return Err(anyhow!(
+            "Expected exactly one field in cpp_enum struct, got {:?}",
+            fields.len()
+        ));
+    }
+
+    let field_def_id = fields[0].did;
+    let field_ty = tcx.type_of(field_def_id).instantiate_identity();
+
+    Ok(field_ty)
+}
+
+/// Returns the C++ underlying type of the `cpp_enum` struct specified by the given def id.
+fn cpp_enum_cpp_underlying_type(db: &dyn BindingsGenerator, def_id: DefId) -> Result<CcSnippet> {
+    let tcx = db.tcx();
+
+    let field_middle_ty = cpp_enum_rust_underlying_type(tcx, def_id)?;
+
+    let field_hir_ty = match tcx.hir_node_by_def_id(def_id.expect_local()) {
+        rustc_hir::Node::Item(hir_item) => match hir_item.kind {
+            ItemKind::Struct(variant_data, _generics) => {
+                if variant_data.fields().len() != 1 {
+                    return Err(anyhow!(
+                        "Expected one field in cpp_enum hir item, got {:?}",
+                        variant_data.fields().len()
+                    ));
+                }
+                Some(variant_data.fields()[0].ty)
+            }
+            _ => {
+                // ItemKind is not Struct.
+                return Err(anyhow!(
+                    "Unexpected `ItemKind` in cpp_enum hir item: {:?}",
+                    hir_item.kind
+                ));
+            }
+        },
+        _ => None, // HIR node is not an Item.
+    };
+
+    format_ty_for_cc(db, SugaredTy::new(field_middle_ty, field_hir_ty), TypeLocation::Other)
+}
+
+/// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
+pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<String> {
+    // Convenience macro to convert a scalar to a particular numeric type and then to a String.
+    //
+    // Examples:
+    //  `eval!(scalar, to_i32)`
+    //     → `scalar.to_i32().unwrap().to_string()`
+    //
+    //  `eval!(scalar, to_target_usize, &tcx)`
+    //     → `scalar.to_target_usize(&tcx).unwrap().to_string()`
+    macro_rules! eval {
+        ( $name: ident, $method:ident $(, $arg:expr)? ) => {
+            $name.$method($($arg)?).unwrap().to_string()
+        };
+    }
+
+    match kind {
+        ty::TyKind::Bool => Ok(eval!(scalar, to_bool)),
+        ty::TyKind::Int(ty::IntTy::I8) => Ok(eval!(scalar, to_i8)),
+        ty::TyKind::Int(ty::IntTy::I16) => Ok(eval!(scalar, to_i16)),
+        ty::TyKind::Int(ty::IntTy::I32) => Ok(eval!(scalar, to_i32)),
+        ty::TyKind::Int(ty::IntTy::I64) => Ok(eval!(scalar, to_i64)),
+        ty::TyKind::Uint(ty::UintTy::U8) => Ok(eval!(scalar, to_u8)),
+        ty::TyKind::Uint(ty::UintTy::U16) => Ok(eval!(scalar, to_u16)),
+        ty::TyKind::Uint(ty::UintTy::U32) => Ok(eval!(scalar, to_u32)),
+        ty::TyKind::Uint(ty::UintTy::U64) => Ok(eval!(scalar, to_u64)),
+        ty::TyKind::Float(ty::FloatTy::F32) => Ok(eval!(scalar, to_f32)),
+        ty::TyKind::Float(ty::FloatTy::F64) => Ok(eval!(scalar, to_f64)),
+        ty::TyKind::Uint(ty::UintTy::Usize) => Ok(eval!(scalar, to_target_usize, &tcx)),
+        ty::TyKind::Int(ty::IntTy::Isize) => Ok(eval!(scalar, to_target_isize, &tcx)),
+        _ => Err(anyhow!("Unsupported constant type: {:?}", kind)),
+    }
+}
+
+/// Formats a struct that is annotated with the `cpp_enum` attribute.
+///
+/// The Rust definition for an item annotation with `cpp_enum` is expected to be a repr-transparent
+/// struct with a single field. Example:
+///
+/// ```rs
+/// #[__crubit::annotate(cpp_enum = "enum class")]
+/// #[repr(transparent)]
+/// pub struct MyEnum(i32);
+///
+/// impl MyEnum {
+///     pub const VARIANT_0: MyEnum = MyEnum(0);
+///     pub const VARIANT_1: MyEnum = MyEnum(1);
+///     // ...
+/// }
+/// ```
+///
+/// This will generate (approximately) the following C++ code:
+///
+/// ```c++
+/// enum class MyEnum : std::int32_t {
+///     VARIANT_0 = 0,
+///     VARIANT_1 = 1,
+///     // ...
+/// };
+/// ```
+fn generate_cpp_enum<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
+) -> ApiSnippets {
+    let tcx = db.tcx();
+    let enumeration_cc_name = &core.cc_short_name;
+
+    let mut main_api_prereqs = CcPrerequisites::default();
+    main_api_prereqs.includes.insert(db.support_header("internal/attribute_macros.h"));
+
+    // Generate relevant attributes.
+    let rs_type = core.rs_fully_qualified_name.to_string();
+    let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
+    if let Some(tag) = generate_must_use_tag(tcx, core.def_id) {
+        attributes.push(tag);
+    }
+    if let Some(tag) = generate_deprecated_tag(tcx, core.def_id) {
+        attributes.push(tag);
+    }
+
+    // Generate the enumerator list.
+    let enumerator_lines: Vec<TokenStream> = (tcx.inherent_impls(core.def_id).iter())
+        // Convert to `Item`s.
+        .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
+        // Unpack and flatten all impl items (since Rust allows multiple impl blocks for a type).
+        .flat_map(|item| match &item.kind {
+            ItemKind::Impl(impl_) => impl_.items,
+            other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
+        })
+        .sorted_by_key(|impl_item_ref| {
+            let local_def_id = impl_item_ref.id.owner_id.def_id;
+            tcx.def_span(local_def_id)
+        })
+        // Generate the code for each enumerator item.
+        .filter_map(|impl_item_ref| {
+            let local_def_id = impl_item_ref.id.owner_id.def_id;
+            let def_id = local_def_id.to_def_id();
+            if !is_exported(db.tcx(), def_id) {
+                return None;
+            }
+            match impl_item_ref.kind {
+                // Every item in an enumeration should be a const.
+                AssocItemKind::Const => {
+                    let enumerator_name =
+                        format_cc_ident(db, tcx.item_name(def_id).as_str()).unwrap();
+                    let value_kind =
+                        *cpp_enum_rust_underlying_type(tcx, core.def_id).unwrap().kind();
+                    let enumerator_value = match tcx.const_eval_poly(def_id).unwrap() {
+                        ConstValue::Scalar(scalar) => {
+                            scalar_value_to_string(tcx, scalar, value_kind).unwrap()
+                        }
+                        other => {
+                            panic!("Unexpected non-scalar ConstValue type in cpp_enum: {other:?}")
+                        }
+                    }
+                    .parse::<TokenStream>()
+                    .unwrap();
+
+                    Some(quote! { #enumerator_name = #enumerator_value, })
+                }
+                other => panic!("Unexpected (non-const) item in C++ enum: {other:?}"),
+            }
+        })
+        .collect();
+
+    let doc_comment = generate_doc_comment(tcx, core.def_id.expect_local());
+    let keyword = &core.keyword;
+    let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, core.def_id).unwrap();
+    let underlying_cc_type = underlying_cc_type_snippet.tokens;
+
+    let main_api = CcSnippet {
+        tokens: quote! {
+            __NEWLINE__ #doc_comment
+            #keyword #(#attributes)* #enumeration_cc_name : #underlying_cc_type {
+                #( __NEWLINE__ #enumerator_lines)*
+            };
+            __NEWLINE__
+        },
+        prereqs: main_api_prereqs + underlying_cc_type_snippet.prereqs,
+    };
+
+    let cc_details = CcSnippet::default();
+    let rs_details = RsSnippet::new(quote! {});
+
+    ApiSnippets { main_api, cc_details, rs_details }
 }
 
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
@@ -50,6 +246,12 @@ pub fn generate_adt<'tcx>(
 
     // `generate_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
+
+    // Handle `cpp_enum` structs.
+    let crubit_attrs = crubit_attr::get_attrs(tcx, core.def_id).unwrap_or_default();
+    if crubit_attrs.cpp_enum.is_some() {
+        return generate_cpp_enum(db, core);
+    }
 
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
@@ -181,20 +383,12 @@ pub fn generate_adt<'tcx>(
             attributes.push(quote! { __attribute__((packed)) })
         }
 
-        // Attribute: must_use
-        if let Some(must_use_attr) = tcx.get_attr(core.def_id, rustc_span::symbol::sym::must_use) {
-            match must_use_attr.value_str() {
-                None => attributes.push(quote! {[[nodiscard]]}),
-                Some(symbol) => {
-                    let message = symbol.as_str();
-                    attributes.push(quote! {[[nodiscard(#message)]]});
-                }
-            }
+        // Additional attributes
+        if let Some(tag) = generate_must_use_tag(tcx, core.def_id) {
+            attributes.push(tag);
         }
-
-        // Attribute: deprecated
-        if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, core.def_id) {
-            attributes.push(cc_deprecated_tag);
+        if let Some(tag) = generate_deprecated_tag(tcx, core.def_id) {
+            attributes.push(tag);
         }
 
         let doc_comment = generate_doc_comment(tcx, core.def_id.expect_local());
@@ -301,10 +495,31 @@ pub fn generate_adt_core<'tcx>(
         .with_context(|| format!("Error formatting the fully-qualified C++ name of `{cpp_name}"))?;
 
     let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
+    let crubit_attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
+
     let keyword = match adt_def.adt_kind() {
-        ty::AdtKind::Struct | ty::AdtKind::Enum => quote! { struct },
+        ty::AdtKind::Struct => match crubit_attrs.cpp_enum {
+            Some(cpp_enum_symbol) => {
+                let s = cpp_enum_symbol.as_str();
+                match s {
+                    "enum" => quote! { enum },
+                    "enum class" => quote! { enum class },
+                    _ => panic!("Unsupported `cpp_enum` tag: {s}"),
+                }
+            }
+            None => quote! { struct },
+        },
+        ty::AdtKind::Enum => quote! { struct },
         ty::AdtKind::Union => quote! { union },
     };
+
+    // Verify that `cpp_enum` structs are also repr-transparent.
+    if crubit_attrs.cpp_enum.is_some() {
+        ensure!(
+            adt_def.repr().transparent(),
+            "`cpp_enum` struct must be annotated with `#[repr(transparent)]`"
+        )
+    }
 
     let layout = get_layout(tcx, self_ty)
         .with_context(|| format!("Error computing the layout of #{cpp_name}"))?;
@@ -2176,6 +2391,184 @@ pub mod tests {
                 },
             );
         });
+    }
+
+    #[test]
+    fn test_cpp_enum_plain() {
+        let test_src = r#"
+        #![feature(register_tool)]
+        #![register_tool(__crubit)]
+
+        #[__crubit::annotate(cpp_enum="enum")]
+        #[repr(transparent)]
+        pub struct Color(i32);
+
+        impl Color {
+            pub const RED: Color = Color(0);
+            pub const BLUE: Color = Color(2);
+        }
+        "#;
+
+        test_format_item(test_src, "Color", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    enum ... Color : std::int32_t {
+                        RED = 0,
+                        BLUE = 2,
+                    };
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_cpp_enum_class() {
+        let test_src = r#"
+        #![feature(register_tool)]
+        #![register_tool(__crubit)]
+
+        #[__crubit::annotate(cpp_enum="enum class")]
+        #[repr(transparent)]
+        pub struct Color(u8);
+
+        impl Color {
+            pub const RED: Color = Color(0);
+            pub const BLUE: Color = Color(2);
+        }
+        "#;
+
+        test_format_item(test_src, "Color", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    enum class ... Color : std::uint8_t {
+                        RED = 0,
+                        BLUE = 2,
+                    };
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_cpp_enum_with_attributes() {
+        let test_src = r#"
+        #![feature(register_tool)]
+        #![register_tool(__crubit)]
+        #![allow(deprecated)]
+        #![allow(unused)]
+
+        #[__crubit::annotate(cpp_enum="enum class")]
+        #[repr(transparent)]
+        #[deprecated(note="Use NewColor")]
+        #[must_use]
+        pub struct Color(i32);
+
+        impl Color {
+            pub const RED: Color = Color(0);
+            pub const BLUE: Color = Color(2);
+        }
+        "#;
+
+        test_format_item(test_src, "Color", |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(!main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    enum class ... [[nodiscard]] [[deprecated("Use NewColor")]] ... Color : std::int32_t {
+                        RED = 0,
+                        BLUE = 2,
+                    };
+                }
+            );
+        });
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_cpp_enum_fails_if_not_repr_transparent() {
+        let test_src = r#"
+        #![feature(register_tool)]
+        #![register_tool(__crubit)]
+
+        #[__crubit::annotate(cpp_enum="enum class")]
+        pub struct Color(i32);
+
+        impl Color {
+            pub const RED: Color = Color(0);
+            pub const BLUE: Color = Color(2);
+        }
+        "#;
+
+        test_format_item(test_src, "Color", |_result| {});
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_cpp_enum_fails_if_implements_method() {
+        let test_src = r#"
+        #![feature(register_tool)]
+        #![register_tool(__crubit)]
+
+        #[__crubit::annotate(cpp_enum="enum class")]
+        #[repr(transparent)]
+        pub struct Color(i32);
+
+        impl Color {
+            pub const RED: Color = Color(0);
+            pub const BLUE: Color = Color(2);
+
+            pub fn f(&self) -> i32 {
+                0
+            }
+        }
+        "#;
+
+        test_format_item(test_src, "Color", |_result| {});
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_cpp_enum_fails_for_rust_union() {
+        let test_src = r#"
+        #![feature(register_tool)]
+        #![register_tool(__crubit)]
+        #![feature(transparent_unions)]
+
+        #[__crubit::annotate(cpp_enum="enum class")]
+        #[repr(transparent)]
+        pub union Color {
+            value: i32,
+        }
+        "#;
+
+        test_format_item(test_src, "Color", |_result| {});
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_cpp_enum_fails_for_rust_enum() {
+        let test_src = r#"
+        #![feature(register_tool)]
+        #![register_tool(__crubit)]
+
+        #[__crubit::annotate(cpp_enum="enum class")]
+        #[repr(transparent)]
+        enum Color {
+            Value(i32),
+        }
+        "#;
+
+        test_format_item(test_src, "Color", |_result| {});
     }
 
     #[test]

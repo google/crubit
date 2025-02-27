@@ -27,7 +27,7 @@ use crate::format_type::{
 };
 use crate::generate_function::generate_function;
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
-use crate::generate_struct_and_union::{generate_adt, generate_adt_core};
+use crate::generate_struct_and_union::{generate_adt, generate_adt_core, scalar_value_to_string};
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
@@ -458,6 +458,22 @@ enum AllowReferences {
     UnsafeAll,
 }
 
+/// Returns the C++ must_use tag for the item identified by `def_id`, or None if there is no such
+/// tag.
+fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
+    if let Some(must_use_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::must_use) {
+        let cc_must_use_tag = match must_use_attr.value_str() {
+            None => quote! {[[nodiscard]]},
+            Some(symbol) => {
+                let message = symbol.as_str();
+                quote! {[[nodiscard(#message)]]}
+            }
+        };
+        return Some(cc_must_use_tag);
+    }
+    None
+}
+
 /// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
 /// deprecated. Otherwise, returns None.
 fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
@@ -638,29 +654,7 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> R
     let cc_type = cc_type_snippet.tokens;
     let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
     let cc_value = match tcx.const_eval_poly(def_id).unwrap() {
-        ConstValue::Scalar(scalar) => {
-            macro_rules! eval {
-                ($method:ident $(,$arg:expr)?) => {
-                    Ok(scalar.$method($($arg)?).unwrap().to_string())
-                };
-            }
-            match ty.kind() {
-                ty::TyKind::Bool => eval!(to_bool),
-                ty::TyKind::Int(ty::IntTy::I8) => eval!(to_i8),
-                ty::TyKind::Int(ty::IntTy::I16) => eval!(to_i16),
-                ty::TyKind::Int(ty::IntTy::I32) => eval!(to_i32),
-                ty::TyKind::Int(ty::IntTy::I64) => eval!(to_i64),
-                ty::TyKind::Uint(ty::UintTy::U8) => eval!(to_u8),
-                ty::TyKind::Uint(ty::UintTy::U16) => eval!(to_u16),
-                ty::TyKind::Uint(ty::UintTy::U32) => eval!(to_u32),
-                ty::TyKind::Uint(ty::UintTy::U64) => eval!(to_u64),
-                ty::TyKind::Float(ty::FloatTy::F32) => eval!(to_f32),
-                ty::TyKind::Float(ty::FloatTy::F64) => eval!(to_f64),
-                ty::TyKind::Uint(ty::UintTy::Usize) => eval!(to_target_usize, &tcx),
-                ty::TyKind::Int(ty::IntTy::Isize) => eval!(to_target_isize, &tcx),
-                _ => Err(anyhow!("Unsupported constant type")),
-            }
-        }
+        ConstValue::Scalar(scalar) => scalar_value_to_string(tcx, scalar, *ty.kind()),
         _ => Err(anyhow!("Unexpected ConstValue type")),
     }?
     .parse::<TokenStream>()

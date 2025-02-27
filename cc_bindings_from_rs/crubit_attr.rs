@@ -49,6 +49,8 @@ pub struct CrubitAttrs {
     /// ```
     pub cpp_name: Option<Symbol>,
 
+    pub cpp_enum: Option<Symbol>,
+
     /// The name of a function that can convert the annotated Rust
     /// type into the C++ type specifed in the `cpp_type` attribute.
     ///
@@ -80,6 +82,7 @@ impl CrubitAttrs {
     pub const CPP_TYPE: &'static str = "cpp_type";
     pub const CPP_NAME: &'static str = "cpp_name";
     pub const CPP_TYPE_INCLUDE: &'static str = "cpp_type_include";
+    pub const CPP_ENUM: &'static str = "cpp_enum";
     pub const RUST_TO_CPP_CONVERTER: &'static str = "rust_to_cpp_converter";
     pub const CPP_TO_RUST_CONVERTER: &'static str = "cpp_to_rust_converter";
 
@@ -88,6 +91,7 @@ impl CrubitAttrs {
             CrubitAttrs::CPP_TYPE => self.cpp_type,
             CrubitAttrs::CPP_NAME => self.cpp_name,
             CrubitAttrs::CPP_TYPE_INCLUDE => self.cpp_type_include,
+            CrubitAttrs::CPP_ENUM => self.cpp_enum,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
             _ => panic!("Invalid attribute name: \"{name}\""),
@@ -99,6 +103,7 @@ impl CrubitAttrs {
             CrubitAttrs::CPP_TYPE => self.cpp_type = symbol,
             CrubitAttrs::CPP_NAME => self.cpp_name = symbol,
             CrubitAttrs::CPP_TYPE_INCLUDE => self.cpp_type_include = symbol,
+            CrubitAttrs::CPP_ENUM => self.cpp_enum = symbol,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
             _ => panic!("Invalid attribute name: \"{name}\""),
@@ -116,6 +121,7 @@ pub fn get_attrs(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttrs> {
         CrubitAttrs::CPP_TYPE,
         CrubitAttrs::CPP_NAME,
         CrubitAttrs::CPP_TYPE_INCLUDE,
+        CrubitAttrs::CPP_ENUM,
         CrubitAttrs::RUST_TO_CPP_CONVERTER,
         CrubitAttrs::CPP_TO_RUST_CONVERTER,
     ]
