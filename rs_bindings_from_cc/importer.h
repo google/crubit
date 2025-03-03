@@ -94,16 +94,10 @@ class Importer final : public ImportContext {
       clang::RedeclarableTemplateDecl* template_decl) override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
   bool IsFromCurrentTarget(const clang::Decl* decl) const override;
-  absl::StatusOr<UnqualifiedIdentifier> GetTranslatedName(
+  absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;
-  absl::StatusOr<Identifier> GetTranslatedIdentifier(
-      const clang::NamedDecl* named_decl) const override {
-    CRUBIT_ASSIGN_OR_RETURN(UnqualifiedIdentifier unqualified,
-                            GetTranslatedName(named_decl));
-    Identifier* identifier = std::get_if<Identifier>(&unqualified);
-    CHECK(identifier) << "Incorrectly called with a special name";
-    return *identifier;
-  }
+  absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
+      const clang::NamedDecl* named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl* decl) const override;
   std::string ConvertSourceLocation(clang::SourceLocation loc) const override;
   absl::StatusOr<MappedType> ConvertQualType(

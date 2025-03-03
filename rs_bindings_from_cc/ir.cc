@@ -291,6 +291,20 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
   return o << SpecialNameToString(special_name);
 }
 
+UnqualifiedIdentifier& TranslatedUnqualifiedIdentifier::rs_identifier() {
+  if (crubit_rust_name.has_value()) {
+    return *crubit_rust_name;
+  }
+  return cc_identifier;
+}
+
+Identifier& TranslatedIdentifier::rs_identifier() {
+  if (crubit_rust_name.has_value()) {
+    return *crubit_rust_name;
+  }
+  return cc_identifier;
+}
+
 llvm::json::Value MemberFuncMetadata::InstanceMethodMetadata::ToJson() const {
   const char* reference_str = nullptr;
   switch (reference) {

@@ -32,6 +32,7 @@
 #include "absl/strings/substitute.h"
 #include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "rs_bindings_from_cc/annotations_consumer.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -1265,13 +1266,12 @@ Importer::GetUnsupportedItemPathForTemplateDecl(
   // segfaults inside ItaniumMangleContextImpl::mangleCXXName. We're not working
   // with a fully-instantiated template declaration, so there is no mangled
   // name to refer to.
-  auto rs_name = GetTranslatedName(template_decl);
-  if (!rs_name.ok()) {
+  auto names = GetTranslatedName(template_decl);
+  if (!names.ok()) {
     return std::nullopt;
   }
-
   return UnsupportedItem::Path{
-      .ident = std::move(*rs_name),
+      .ident = names->cc_identifier,
       .enclosing_item_id = *enclosing_item_id,
   };
 }
@@ -1305,7 +1305,7 @@ std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {
   }
 }
 
-absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
+absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
   switch (named_decl->getDeclName().getNameKind()) {
     case clang::DeclarationName::Identifier: {
@@ -1314,21 +1314,30 @@ absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
         return absl::InvalidArgumentError("Missing identifier");
       }
 
+      std::optional<Identifier> crubit_rust_name = CrubitRustName(named_decl);
+
       // `r#foo` syntax in Rust can't be used to escape `crate`, `self`,
       // `super`, not `Self` identifiers - see
       // https://doc.rust-lang.org/reference/identifiers.html#identifiers
-      if (name == "crate" || name == "self" || name == "super" ||
-          name == "Self") {
+      if ((name == "crate" || name == "self" || name == "super" ||
+           name == "Self") &&
+          !crubit_rust_name.has_value()) {
         return absl::InvalidArgumentError(
             absl::StrCat("Unescapable identifier: ", name));
       }
 
-      return {Identifier(std::move(name))};
+      TranslatedUnqualifiedIdentifier identifier = {
+          .cc_identifier = Identifier(name),
+          .crubit_rust_name = crubit_rust_name,
+      };
+      return identifier;
     }
     case clang::DeclarationName::CXXConstructorName:
-      return {SpecialName::kConstructor};
+      return TranslatedUnqualifiedIdentifier{.cc_identifier =
+                                                 SpecialName::kConstructor};
     case clang::DeclarationName::CXXDestructorName:
-      return {SpecialName::kDestructor};
+      return TranslatedUnqualifiedIdentifier{.cc_identifier =
+                                                 SpecialName::kDestructor};
     case clang::DeclarationName::CXXOperatorName:
       switch (named_decl->getDeclName().getCXXOverloadedOperator()) {
         case clang::OO_None:
@@ -1338,7 +1347,9 @@ absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
           // clang-format off
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
         case clang::OO_##name: {                          \
-          return {Operator(spelling)};                    \
+          return TranslatedUnqualifiedIdentifier{ \
+            .cc_identifier = Operator(spelling) \
+          }; \
         }
         #include "clang/Basic/OperatorKinds.def"
         #undef OVERLOADED_OPERATOR
@@ -1353,6 +1364,35 @@ absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
       return absl::UnimplementedError(
           absl::StrCat("Unsupported name: ", named_decl->getNameAsString()));
   }
+}
+
+absl::StatusOr<TranslatedIdentifier> Importer::GetTranslatedIdentifier(
+    const clang::NamedDecl* named_decl) const {
+  CRUBIT_ASSIGN_OR_RETURN(TranslatedUnqualifiedIdentifier unqualified,
+                          GetTranslatedName(named_decl));
+  Identifier* cc_identifier =
+      std::get_if<Identifier>(&unqualified.cc_identifier);
+  CHECK(cc_identifier) << "Incorrectly called with a special name";
+
+  TranslatedIdentifier translated_identifiers = {
+      .cc_identifier = *cc_identifier,
+  };
+
+  if (!unqualified.crubit_rust_name.has_value()) {
+    translated_identifiers.crubit_rust_name = *cc_identifier;
+    return translated_identifiers;
+  }
+
+  if (!std::holds_alternative<Identifier>(*unqualified.crubit_rust_name)) {
+    CHECK(unqualified.crubit_rust_name)
+        << "Crubit rust name cannot be a special name";
+  }
+
+  // TODO(yulanlin): potentially buggy
+  translated_identifiers.crubit_rust_name =
+      std::move(std::get<Identifier>(*unqualified.crubit_rust_name));
+
+  return translated_identifiers;
 }
 
 void Importer::MarkAsSuccessfullyImported(const clang::NamedDecl* decl) {

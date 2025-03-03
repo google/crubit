@@ -133,6 +133,61 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
     }
 }
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+#[__crubit::annotate(cpp_type = "UnionToRename")]
+pub union RenamedUnion {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for RenamedUnion {}
+impl !Sync for RenamedUnion {}
+forward_declare::unsafe_define!(forward_declare::symbol!("UnionToRename"), crate::RenamedUnion);
+
+impl Default for RenamedUnion {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13UnionToRenameC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for RenamedUnion {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13UnionToRenameC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<&'b Self> for RenamedUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13UnionToRenameaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for RenamedUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13UnionToRenameaSEOS_(self, __param_0);
+        }
+    }
+}
+
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 #[__crubit::annotate(cpp_type = "TriviallyCopyableButNontriviallyDestructible")]
@@ -634,6 +689,19 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'b, crate::RenamedUnion>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameaSERKS_<'a, 'b>(
+            __this: &'a mut crate::RenamedUnion,
+            __param_0: &'b crate::RenamedUnion,
+        ) -> &'a mut crate::RenamedUnion;
+        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameaSEOS_<'a, 'b>(
+            __this: &'a mut crate::RenamedUnion,
+            __param_0: ::ctor::RvalueReference<'b, crate::RenamedUnion>,
+        ) -> &'a mut crate::RenamedUnion;
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
             'a,
             'b,
@@ -761,6 +829,12 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Drop);
     assert!(::core::mem::offset_of!(crate::Nontrivial, field) == 0);
+
+    assert!(::core::mem::size_of::<crate::RenamedUnion>() == 1);
+    assert!(::core::mem::align_of::<crate::RenamedUnion>() == 1);
+    static_assertions::assert_impl_all!(crate::RenamedUnion: Clone);
+    static_assertions::assert_impl_all!(crate::RenamedUnion: Copy);
+    static_assertions::assert_not_impl_any!(crate::RenamedUnion: Drop);
 
     assert!(::core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
     assert!(::core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);

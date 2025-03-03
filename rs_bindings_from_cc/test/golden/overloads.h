@@ -8,6 +8,12 @@
 void Overload();
 void Overload(int);
 
+// Both Overload2() overloads should be generated, because one should be
+// renamed.
+void Overload2();
+[[clang::annotate("crubit_rust_name", "RenamedOverload2")]]
+void Overlaod2(int);
+
 // An overload where at least one of the functions is uncallable.
 // This can happen in real code, one example is the `void*` overload of
 // absl::flags_internal::FlagImpl::Read().

@@ -29,7 +29,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         enum_decl, UnsupportedItem::Kind::kUnnameable, std::nullopt,
         FormattedError::Static("Unnamed enums are not supported yet"));
   }
-  absl::StatusOr<Identifier> enum_name =
+  absl::StatusOr<TranslatedIdentifier> enum_name =
       ictx_.GetTranslatedIdentifier(enum_decl);
   if (!enum_name.ok()) {
     return ictx_.ImportUnsupportedItem(
@@ -54,7 +54,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
                       enum_decl](FormattedError error) {
     return ictx_.ImportUnsupportedItem(
         enum_decl, UnsupportedItem::Kind::kType,
-        UnsupportedItem::Path{.ident = *enum_name,
+        UnsupportedItem::Path{.ident = (*enum_name).rs_identifier(),
                               .enclosing_item_id = *enclosing_item_id},
         error);
   };
@@ -80,7 +80,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   std::vector<Enumerator> enumerators;
   enumerators.reserve(absl::c_distance(enum_decl->enumerators()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
-    absl::StatusOr<Identifier> enumerator_name =
+    absl::StatusOr<TranslatedIdentifier> enumerator_name =
         ictx_.GetTranslatedIdentifier(enumerator);
     if (!enumerator_name.ok()) {
       // It's not clear that this case is possible
@@ -90,7 +90,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     }
 
     enumerators.push_back(Enumerator{
-        .identifier = *enumerator_name,
+        .identifier = (*enumerator_name).rs_identifier(),
         .value = IntegerConstant(enumerator->getInitVal()),
         .unknown_attr = CollectUnknownAttrs(*enumerator),
     });
@@ -98,8 +98,8 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);
   return Enum{
-      .cc_name = *enum_name,
-      .rs_name = *enum_name,
+      .cc_name = (*enum_name).cc_identifier,
+      .rs_name = (*enum_name).rs_identifier(),
       .id = ictx_.GenerateItemId(enum_decl),
       .owning_target = ictx_.GetOwningTarget(enum_decl),
       .source_loc = ictx_.ConvertSourceLocation(enum_decl->getBeginLoc()),

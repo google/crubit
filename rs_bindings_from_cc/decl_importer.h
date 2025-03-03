@@ -153,12 +153,12 @@ class ImportContext {
   // a SpecialName.
   //
   // If the name can't be translated (or is empty), this returns an error.
-  virtual absl::StatusOr<UnqualifiedIdentifier> GetTranslatedName(
+  virtual absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const = 0;
 
   // GetTranslatedName, but only for identifier names. This is the common case.
   // If the name can't be translated (or is empty), this returns an error.
-  virtual absl::StatusOr<Identifier> GetTranslatedIdentifier(
+  virtual absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
       const clang::NamedDecl* named_decl) const = 0;
 
   // Gets the doc comment of the declaration.

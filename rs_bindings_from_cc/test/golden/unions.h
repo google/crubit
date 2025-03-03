@@ -16,6 +16,8 @@ struct Nontrivial final {
   int field;
 };
 
+union [[clang::annotate("crubit_rust_name", "RenamedUnion")]] UnionToRename {};
+
 struct TriviallyCopyableButNontriviallyDestructible {
   TriviallyCopyableButNontriviallyDestructible(
       const TriviallyCopyableButNontriviallyDestructible&) = default;

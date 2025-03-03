@@ -23,7 +23,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
         FormattedError::Static("Anonymous namespaces are not supported yet"));
   }
 
-  absl::StatusOr<Identifier> identifier =
+  absl::StatusOr<TranslatedIdentifier> identifier =
       ictx_.GetTranslatedIdentifier(namespace_decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
@@ -46,8 +46,16 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
         namespace_decl, UnsupportedItem::Kind::kType, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
-  return Namespace{.cc_name = *identifier,
-                   .rs_name = *identifier,
+  // Renames are not currently supported for namespaces.
+  // TODO - b/399487279: Support namespace renames using CRUBIT_RUST_NAME.
+  // if (identifier->crubit_rust_name.has_value()) {
+  //   return ictx_.ImportUnsupportedItem(
+  //       namespace_decl, UnsupportedItem::Kind::kType, std::nullopt,
+  //       FormattedError::Static("Namespace renames are not supported yet"));
+  // }
+
+  return Namespace{.cc_name = identifier->cc_identifier,
+                   .rs_name = identifier->cc_identifier,
                    .id = ictx_.GenerateItemId(namespace_decl),
                    .canonical_namespace_id =
                        ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),

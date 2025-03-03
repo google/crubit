@@ -37,6 +37,22 @@ impl From<Color> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[__crubit::annotate(cpp_type = "EnumToRename")]
+pub struct RenamedEnum(::core::ffi::c_uint);
+impl RenamedEnum {}
+impl From<::core::ffi::c_uint> for RenamedEnum {
+    fn from(value: ::core::ffi::c_uint) -> RenamedEnum {
+        RenamedEnum(value)
+    }
+}
+impl From<RenamedEnum> for ::core::ffi::c_uint {
+    fn from(value: RenamedEnum) -> ::core::ffi::c_uint {
+        value.0
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 #[__crubit::annotate(cpp_type = "Empty")]
 pub struct Empty(::core::ffi::c_uint);
 impl Empty {}

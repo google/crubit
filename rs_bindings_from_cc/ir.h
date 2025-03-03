@@ -408,6 +408,19 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 using UnqualifiedIdentifier = std::variant<Identifier, Operator, SpecialName>;
 llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier);
 
+struct TranslatedUnqualifiedIdentifier {
+  UnqualifiedIdentifier cc_identifier;
+  std::optional<UnqualifiedIdentifier> crubit_rust_name;
+
+  UnqualifiedIdentifier& rs_identifier();
+};
+
+struct TranslatedIdentifier {
+  Identifier cc_identifier;
+  std::optional<Identifier> crubit_rust_name;
+  Identifier& rs_identifier();
+};
+
 struct MemberFuncMetadata {
   enum ReferenceQualification : char {
     kLValue,       // void Foo() &;

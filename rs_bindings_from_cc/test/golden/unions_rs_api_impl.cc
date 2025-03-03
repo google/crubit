@@ -44,6 +44,29 @@ static_assert(CRUBIT_SIZEOF(struct Nontrivial) == 4);
 static_assert(alignof(struct Nontrivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
 
+static_assert(sizeof(union UnionToRename) == 1);
+static_assert(alignof(union UnionToRename) == 1);
+
+extern "C" void __rust_thunk___ZN13UnionToRenameC1Ev(
+    union UnionToRename* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN13UnionToRenameC1EOS_(
+    union UnionToRename* __this, union UnionToRename* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" union UnionToRename* __rust_thunk___ZN13UnionToRenameaSERKS_(
+    union UnionToRename* __this, const union UnionToRename* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" union UnionToRename* __rust_thunk___ZN13UnionToRenameaSEOS_(
+    union UnionToRename* __this, union UnionToRename* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
 static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
               1);

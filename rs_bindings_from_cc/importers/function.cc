@@ -114,7 +114,8 @@ static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
 Identifier FunctionDeclImporter::GetTranslatedParamName(
     const clang::ParmVarDecl* param_decl) {
   int param_pos = param_decl->getFunctionScopeIndex();
-  absl::StatusOr<Identifier> name = ictx_.GetTranslatedIdentifier(param_decl);
+  absl::StatusOr<TranslatedIdentifier> name =
+      ictx_.GetTranslatedIdentifier(param_decl);
   if (!name.ok()) {
     return {Identifier(absl::StrCat("__param_", param_pos))};
   }
@@ -122,9 +123,10 @@ Identifier FunctionDeclImporter::GetTranslatedParamName(
           param_decl->getType()->getAs<clang::SubstTemplateTypeParmType>();
       sttpt && sttpt->getReplacedParameter()->isParameterPack()) {
     // Avoid giving the same name to all parameters expanded from a pack.
-    return {Identifier(absl::StrCat("__", name->Ident(), "_", param_pos))};
+    return {Identifier(
+        absl::StrCat("__", name->rs_identifier().Ident(), "_", param_pos))};
   }
-  return *name;
+  return Identifier(std::string((*name).rs_identifier().Ident()));
 }
 
 std::optional<IR::Item> FunctionDeclImporter::Import(
@@ -155,7 +157,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
-  absl::StatusOr<UnqualifiedIdentifier> translated_name =
+  absl::StatusOr<TranslatedUnqualifiedIdentifier> translated_name =
       ictx_.GetTranslatedName(function_decl);
   if (!translated_name.ok()) {
     return ictx_.ImportUnsupportedItem(
@@ -180,7 +182,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                       function_decl](FormattedError error) {
     return ictx_.ImportUnsupportedItem(
         function_decl, UnsupportedItem::Kind::kValue,
-        UnsupportedItem::Path{.ident = *translated_name,
+        UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         error);
   };
@@ -433,7 +435,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!errors.error_set.empty()) {
     return ictx_.ImportUnsupportedItem(
         function_decl, UnsupportedItem::Kind::kValue,
-        UnsupportedItem::Path{.ident = *translated_name,
+        UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         std::vector(errors.error_set.begin(), errors.error_set.end()));
   }
@@ -485,8 +487,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   CHECK_OK(return_type);
 
   return Func{
-      .cc_name = *translated_name,
-      .rs_name = *translated_name,
+      .cc_name = (*translated_name).cc_identifier,
+      .rs_name = (*translated_name).rs_identifier(),
       .owning_target = ictx_.GetOwningTarget(function_decl),
       .doc_comment = std::move(doc_comment),
       .mangled_name = ictx_.GetMangledName(function_decl),

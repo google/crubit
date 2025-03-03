@@ -298,12 +298,13 @@ std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
     return std::nullopt;
   }
 
-  absl::StatusOr<Identifier> name = ictx_.GetTranslatedIdentifier(field_decl);
+  absl::StatusOr<TranslatedIdentifier> name =
+      ictx_.GetTranslatedIdentifier(field_decl);
   if (!name.ok()) {
     unsigned field_pos = field_decl->getFieldIndex();
     return {Identifier(absl::StrCat("__field_", field_pos))};
   }
-  return *name;
+  return (*name).rs_identifier();
 }
 
 bool IsKnownAttr(const clang::Attr& attr) {
@@ -433,10 +434,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
     CHECK(!named_decl->getName().empty());
 
-    absl::StatusOr<Identifier> record_name =
+    absl::StatusOr<TranslatedIdentifier> record_name =
         ictx_.GetTranslatedIdentifier(named_decl);
     if (record_name.ok()) {
-      rs_name = cc_name = record_name->Ident();
+      rs_name = (*record_name).rs_identifier().Ident();
+      cc_name = (*record_name).cc_identifier.Ident();
       doc_comment = ictx_.GetComment(record_decl);
       source_loc = record_decl->getBeginLoc();
     } else {

@@ -20,6 +20,18 @@
 // Error while generating bindings for item 'Overload':
 // Cannot generate bindings for overloaded function
 
+/// Both Overload2() overloads should be generated, because one should be
+/// renamed.
+#[inline(always)]
+pub fn Overload2() {
+    unsafe { crate::detail::__rust_thunk___Z9Overload2v() }
+}
+
+#[inline(always)]
+pub fn RenamedOverload2(__param_0: ::core::ffi::c_int) {
+    unsafe { crate::detail::__rust_thunk___Z9Overlaod2i(__param_0) }
+}
+
 // Error while generating bindings for item 'UncallableOverload':
 // Cannot generate bindings for overloaded function
 
@@ -44,6 +56,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        #[link_name = "_Z9Overload2v"]
+        pub(crate) unsafe fn __rust_thunk___Z9Overload2v();
+        #[link_name = "_Z9Overlaod2i"]
+        pub(crate) unsafe fn __rust_thunk___Z9Overlaod2i(__param_0: ::core::ffi::c_int);
         pub(crate) unsafe fn __rust_thunk___Z20AlsoTemplateOverloadv();
     }
 }

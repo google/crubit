@@ -4,6 +4,7 @@
 
 // Automatically @generated lib.rs for the cc_library importer.
 
+extern crate annotations_consumer_sys;
 extern crate ast_util_sys;
 extern crate cc_ir_sys;
 extern crate class_template_sys;

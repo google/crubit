@@ -56,7 +56,8 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     return std::nullopt;
   }
 
-  absl::StatusOr<Identifier> identifier = ictx_.GetTranslatedIdentifier(decl);
+  absl::StatusOr<TranslatedIdentifier> identifier =
+      ictx_.GetTranslatedIdentifier(decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
         decl, UnsupportedItem::Kind::kType, std::nullopt,
@@ -80,7 +81,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(
         decl, UnsupportedItem::Kind::kType,
-        UnsupportedItem::Path{.ident = *identifier,
+        UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         FormattedError::FromStatus(std::move(underlying_type.status())));
   }
@@ -91,10 +92,10 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   // string_view with a lifetime.
   const bool is_string_view =
       decl->getQualifiedNameAsString() == "std::string_view";
-  Identifier rs_name =
-      is_string_view ? Identifier("raw_string_view") : *identifier;
+  Identifier rs_name = is_string_view ? Identifier("raw_string_view")
+                                      : (*identifier).rs_identifier();
   return TypeAlias{
-      .cc_name = *std::move(identifier),
+      .cc_name = (*identifier).cc_identifier,
       .rs_name = rs_name,
       .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
