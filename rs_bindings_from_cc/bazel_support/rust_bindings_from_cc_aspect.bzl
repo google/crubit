@@ -30,6 +30,7 @@ load(
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
+load("//third_party/protobuf/rust/bazel:aspects.bzl", "rust_cc_proto_library_aspect")
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -98,6 +99,72 @@ def retain_proto_dot_h_headers(headers):
     return [h for h in headers if h.path.endswith("proto.h")]
 
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
+    # Faithless is he that says farewell when the road darkens (=Fasten the seatbelt).
+    #
+    # rust_bindings_from_cc_aspect requires cc_proto_aspect (because it visits through CcInfo), and
+    # it requires rust_cc_proto_library_aspect (because we need to get a hand at the Protobuf Rust
+    # generated crates). Also, rust_cc_proto_library_aspect requires cc_proto_aspect (because
+    # Protobuf Rust gencode builds on top of C++ protobufs). Let's sketch a hypothethical example:
+    # +----------------+
+    # |rust_library    |
+    # | :server_handler|
+    # |  (0 aspects)   |
+    # +---+------------+-------------+
+    #     |deps                      | cc_deps
+    # +---v---------+          +-----v-------+
+    # |rust_library |          |cc_library   |
+    # | :utils      |          | :cc_utils   |
+    # |  (0 aspects)|          |  (3 aspects)|
+    # +----+--------+          +-------+-----+
+    #      |cc_deps                    | deps
+    #  +---v----------+                |
+    #  |cc_library    |         +------v---------+
+    #  | absl/time    |         |cc_proto_library|
+    #  |   (3 aspects)|         | :my_cc_proto   |
+    #  +--------------+         |   (3 aspects)  |
+    #                           +--+-------------+----------+
+    #                              |deps                    |_cc_lib
+    #                         +----v---------+       +------v------+
+    #                         |proto_library |       |cc_library   |
+    #                         | :my_proto    |       | :pb_runtime |
+    #                         |  (3 aspects) |       |  (2 aspects)|
+    #                         +--------------+       +-------+-----+
+    #                                                        |deps
+    #                                                 +------v------+
+    #                                                 |cc_library   |
+    #                                                 | absl/time   |
+    #                                                 |  (2 aspects)|
+    #                                                 +-------------+
+    #
+    # So, rust_cc_proto_library_aspect + rust_cc_proto_library_aspect + cc_proto_aspect are all
+    # attached to dependencies through `rust_library.cc_deps` attribute.
+
+    # cc_proto_aspect implicitly depends on C++ Protobuf runtime library through its `_cc_lib`
+    # attribute. Transitively, the runtime depends on //third_party/absl. //third_party/absl is also
+    # depended on by other paths in the build graph.
+    #
+    # `_cc_lib` is the root of the problem. We're asking Bazel to attach cc_proto_aspect onto an
+    # implicit dependency of itself. That's a dependency cycle. Bazel
+    # solves it by silently removing cc_proto_aspect from the set of aspects, and attaching this
+    # smaller set onto `_cc_lib`` transitively. In our example (and almost always in large builds),
+    # there are multiple paths through the dependency graph of the target through some
+    # cc_proto_library, and without a cc_proto_library, that land at a common foundational libraries
+    # such as absl. So, Bazel will generate 2 shadow targets for absl. One with 3 aspects, one with
+    # 2 aspects.
+    #
+    # This is quite a pickle on so many levels, but most immediately this results in action
+    # conflicts as rust_bindings_from_cc_aspect - it registers exactly the same binding generation
+    # actions for the shadow target for 2 aspects and for the shadow target for 3 aspects.
+    #
+    # The fix, ugly as it is, is to check if cc_proto_aspect is present in the aspect ids. If not,
+    # we are in the shadow target for 2 aspects, and we can return early. This is only possible
+    # because:
+    # 1. We don't need Crubit bindings for `_cc_lib` for protobuf interop, we use protoc for that.
+    # 2. We know that transitive deps of `_cc_lib` will get Crubit bindings through the "3 aspects"
+    #    path if they are needed.
+    if "//third_party/protobuf/bazel/private:google_cc_proto_library.bzl%cc_proto_aspect" not in ctx.aspect_ids:
+        return []
+
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
     toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
@@ -251,6 +318,7 @@ rust_bindings_from_cc_aspect = aspect(
         # for cc_stubby_library implicit deps
         "implicit_cc_deps",
     ],
+    requires = [rust_cc_proto_library_aspect],
     required_aspect_providers = [CcInfo],
     attrs = bindings_attrs | {
         "_std": attr.label(
