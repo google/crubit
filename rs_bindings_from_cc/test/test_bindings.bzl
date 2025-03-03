@@ -66,10 +66,14 @@ def _get_forwarded_kwargs(
 
 def _write_crubit_outs_impl(ctx):
     cc_library = ctx.attr.cc_library[0]
-    if not GeneratedBindingsInfo in cc_library:
-        fail("Bindings were not generated for the given cc_library.")
+    if GeneratedBindingsInfo not in cc_library:
+        # If there are no headers, or the library doesn't enable Crubit, we skip Crubit.
+        # Just use empty files for this.
+        for out in ctx.outputs.outs:
+            ctx.actions.write(output = out, content = "")
+        return []
+
     bindings = cc_library[GeneratedBindingsInfo]
-    symlinks = []
     for out in ctx.outputs.outs:
         if out.extension == "cc":
             f = bindings.cc_file
@@ -80,7 +84,6 @@ def _write_crubit_outs_impl(ctx):
         else:
             fail("Unknown file extension; can't infer which output to copy out: " + out)
         ctx.actions.symlink(output = out, target_file = f)
-        symlinks.append(out)
     return []
 
 write_crubit_outs = rule(
