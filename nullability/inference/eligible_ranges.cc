@@ -449,6 +449,11 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     // For smart pointers, a preceding qualifier is a qualifier of the smart
     // pointer type, so we don't want to include it in the range, as a spelling
     // preference for template alias annotations.
+    // TODO: b/397989229 - When looking for existing annotations, check for an
+    // annotation preceding or following a potential `const` preceding a
+    // smart/aliased pointer, and check for an annotation preceding or following
+    // a `const` following a raw pointer. For insertion, continue to insert
+    // annotations closer to the type than any existing const.
     SourceLocation Begin =
         isSupportedRawPointerType(MaybeLoc->getType())
             ? includePrecedingCVRQualifiers(R->getBegin(), SM, LangOpts)
@@ -485,7 +490,7 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     std::optional<unsigned> EndOfStarOffset;
     if (EndOfStarLoc) {
       EndOfStarOffset = SM.getFileOffset(*EndOfStarLoc);
-      Range.Range.set_offset_after_star(*EndOfStarOffset);
+      Range.Range.set_qualifier_annotation_insertion_offset(*EndOfStarOffset);
     }
 
     if (Nullability) {
@@ -496,6 +501,16 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
           BeginOffset, EndOffset,
           UseEndOfStarLoc ? *EndOfStarOffset : EndOffset, IsComplexDeclarator,
           DeclFID, SM, LangOpts, Range.Range);
+    }
+
+    if (!Range.Range.has_qualifier_annotation_insertion_offset()) {
+      if (MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>()) {
+        Range.Range.set_qualifier_annotation_insertion_offset(
+            Range.Range.end());
+      } else {
+        Range.Range.set_qualifier_annotation_insertion_offset(
+            Range.Range.begin());
+      }
     }
   }
 }

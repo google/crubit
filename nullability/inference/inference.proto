@@ -200,18 +200,10 @@ message SlotRange {
   // The nullability default set by the pragma affecting `path`, if one exists.
   optional Nullability pragma_nullability = 7;
 
-  // The offset of the first character after the `*` in this range's pointer
-  // type, indicating the point within the range at which a post-star annotation
-  // (such as clang's _Nullable) should be inserted. When this is unset, `end`
-  // should be used for the insertion point.
-  //
-  // In simple pointer cases, this is the same as `end`. For complex
-  // declarators, i.e. (potentially nested) raw pointers to arrays or functions
-  // and (potentially nested) arrays of raw pointers, it is not.
-  //
-  // Smart pointer types do not have this field set, because smart pointers
-  // always have their post-star annotation at the end of the range. There is no
-  // analogous set of complex declarator cases where the smart pointer type is
-  // actually in the middle of the range.
-  optional uint64 offset_after_star = 8;
+  // The offset at which a qualifier-position annotation should be inserted. For
+  // a named pointer type not ending with `*`, including smart pointers and
+  // aliases to raw pointers, this precedes the type but follows any
+  // cv-qualifiers. For other pointers, this follows the `*` but precedes any
+  // cv-qualifiers.
+  optional uint64 qualifier_annotation_insertion_offset = 8;
 }
