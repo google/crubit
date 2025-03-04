@@ -29,9 +29,11 @@
 namespace clang::tidy::nullability {
 namespace {
 using ::clang::ast_matchers::asString;
+using ::clang::ast_matchers::cxxConstructorDecl;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasDeclContext;
 using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::hasParameter;
 using ::clang::ast_matchers::hasTemplateArgument;
 using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::refersToType;
@@ -393,6 +395,72 @@ TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorUsed) {
           {inference(hasName("I"), {inferredSlot(0, Nullability::NULLABLE)}),
            inference(hasName("B"), {inferredSlot(0, Nullability::NULLABLE)}),
            inference(hasName("C"), {inferredSlot(0, Nullability::NULLABLE)})}));
+}
+
+TEST_F(InferTUTest, ConstructorCallThroughMakeUnique) {
+  build(R"cc(
+#include <memory>
+    struct S {
+      S(Nonnull<int*> A, int* B);
+    };
+    void target(int* P, Nullable<int*> Q) { std::make_unique<S>(P, Q); }
+  )cc");
+  EXPECT_THAT(infer(),
+              IsSupersetOf({
+                  inference(cxxConstructorDecl(hasName("S"),
+                                               hasParameter(0, hasName("A"))),
+                            {inferredSlot(1, Nullability::NONNULL),
+                             inferredSlot(2, Nullability::NULLABLE)}),
+                  inference(hasName("target"),
+                            {inferredSlot(1, Nullability::NONNULL),
+                             inferredSlot(2, Nullability::NULLABLE)}),
+              }));
+}
+
+TEST_F(InferTUTest, ConstructorCallWithConversionOperator) {
+  build(R"cc(
+#include <memory>
+    struct S {
+      S(Nonnull<int*> A);
+    };
+    struct ConvertibleToIntPtr {
+      ConvertibleToIntPtr(int* P) : P_(P) {}
+      operator int*() { return P_; }
+      int* P_;
+    };
+    void target(int* X) { S AnS(ConvertibleToIntPtr{X}); }
+  )cc");
+  EXPECT_THAT(infer(),
+              IsSupersetOf({
+                  inference(functionDecl(hasName("operator int *")),
+                            {inferredSlot(0, Nullability::NONNULL)}),
+                  inference(cxxConstructorDecl(hasName("ConvertibleToIntPtr"),
+                                               hasParameter(0, hasName("P"))),
+                            {inferredSlot(1, Nullability::UNKNOWN)}),
+              }));
+}
+
+TEST_F(InferTUTest, ConstructorCallThroughMakeUniqueWithConversionOperator) {
+  build(R"cc(
+#include <memory>
+    struct S {
+      S(Nonnull<int*> A);
+    };
+    struct ConvertibleToIntPtr {
+      ConvertibleToIntPtr(int* P) : P_(P) {}
+      operator int*() { return P_; }
+      int* P_;
+    };
+    void target(int* P) { std::make_unique<S>(ConvertibleToIntPtr{P}); }
+  )cc");
+  EXPECT_THAT(infer(),
+              IsSupersetOf({
+                  inference(functionDecl(hasName("operator int *")),
+                            {inferredSlot(0, Nullability::NONNULL)}),
+                  inference(cxxConstructorDecl(hasName("ConvertibleToIntPtr"),
+                                               hasParameter(0, hasName("P"))),
+                            {inferredSlot(1, Nullability::UNKNOWN)}),
+              }));
 }
 
 TEST_F(InferTUTest, GlobalVariables) {

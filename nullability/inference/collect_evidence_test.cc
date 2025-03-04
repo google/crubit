@@ -1308,6 +1308,20 @@ TEST(CollectEvidenceFromDefinitionTest, ConstructorCall) {
                                     functionNamed("target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, ConstructorCallThroughMakeUnique) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct S {
+      S(Nonnull<int*> A);
+    };
+    void target(int* P) { std::make_unique<S>(P); }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
   static constexpr llvm::StringRef Src = R"cc(
     struct TakeNonnull {
@@ -1347,6 +1361,66 @@ TEST(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
       collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     VariadicConstructorCallThroughMakeUnique) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct S {
+      S(Nonnull<int*> I, ...);
+    };
+    void target(int* P, int* Q) { std::make_unique<S>(P, Q); }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    functionNamed("target"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, ConstructorCallWithConversionOperator) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct S {
+      S(Nonnull<int*> A);
+    };
+    struct ConvertibleToIntPtr {
+      ConvertibleToIntPtr(int* p) : p_(p) {}
+      operator int*() { return p_; }
+      int* p_;
+    };
+    void target(int* P) { S AnS(ConvertibleToIntPtr{P}); }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
+                           functionNamed("operator int *")),
+                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                           functionNamed("ConvertibleToIntPtr"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     ConstructorCallThroughMakeUniqueWithConversionOperator) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct S {
+      S(Nonnull<int*> A);
+    };
+    struct ConvertibleToIntPtr {
+      ConvertibleToIntPtr(int* p) : p_(p) {}
+      operator int*() { return p_; }
+      int* p_;
+    };
+    void target(int* P) { std::make_unique<S>(ConvertibleToIntPtr{P}); }
+  )cc";
+
+  // The implicit conversion from ConvertibleToIntPtr to int* happens within
+  // make_unique instead of at the call site in target, so we don't collect that
+  // evidence. However, we collect the evidence from the make_unique
+  // instantiation and will do inference from that.
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("ConvertibleToIntPtr"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromAssignmentToType) {
@@ -2952,6 +3026,90 @@ TEST(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
               ExpectedEvidenceMatcher);
   EXPECT_THAT(collectFromTargetFuncDefinition(ParensAggInit.str()),
               ExpectedEvidenceMatcher);
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     AggregateInitializationThroughMakeUnique) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct Base {
+      int BaseNonPtr;
+      bool* BaseB;
+      Nonnull<char*> BaseC;
+    };
+    struct MyStruct : public Base {
+      float NonPtr;
+      int* I;
+      bool* B;
+    };
+    // New aggregate initialization syntax in C++20, which allows make_unique
+    // without a constructor.
+    void target(Nullable<bool*> Bool, char* Char) {
+      std::make_unique<MyStruct>(Base(0, Bool, Char), 1.0f, nullptr, Bool);
+    }
+  )cc";
+
+  // TODO(b/375210656): The instantiation of make_unique gets type
+  // `std::nullptr_t` for the parameter that is forwarded to I, and nullptr_t is
+  // not considered a pointer type / isn't modeled with a PointerValue.
+  // We only model when the nullptr_t is cast to a pointer type, which happens
+  // within the body of make_unique instead of at the call site in target.
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("Base::BaseB")),
+                           evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
+                                    functionNamed("target")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("MyStruct::B"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     AggregateInitializationWithConversionOperator) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct S {
+      Nonnull<int*> I;
+    };
+    struct ConvertibleToIntPtr {
+      ConvertibleToIntPtr(int* p) : p_(p) {}
+      operator int*() { return p_; }
+      int* p_;
+    };
+    void target(int* Int) { S AnS(ConvertibleToIntPtr{Int}); }
+  )cc";
+
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
+                           functionNamed("operator int *")),
+                  evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                           functionNamed("ConvertibleToIntPtr"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     AggregateInitializationThroughMakeUniqueWithConversionOperator) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    struct S {
+      Nonnull<int*> I;
+    };
+    struct ConvertibleToIntPtr {
+      ConvertibleToIntPtr(int* p) : p_(p) {}
+      operator int*() { return p_; }
+      int* p_;
+    };
+    void target(int* Int) { std::make_unique<S>(ConvertibleToIntPtr{Int}); }
+  )cc";
+
+  // The implicit conversion from ConvertibleToIntPtr to int* happens within
+  // make_unique instead of at the call site in target, so we don't collect that
+  // evidence. However, we collect the evidence from the make_unique
+  // instantiation and will do inference from that.
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
+                                    functionNamed("ConvertibleToIntPtr"))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {

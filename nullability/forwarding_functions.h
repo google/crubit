@@ -28,6 +28,12 @@ namespace clang::tidy::nullability {
 absl::Nullable<const Expr*> getUnderlyingInitExprInStdMakeUnique(
     const FunctionDecl& Decl);
 
+// Returns the last forwarding function layer in the call chain starting
+// with `FD`, if `FD` is considered a forwarding function like
+// `std::make_unique`.
+absl::Nullable<const FunctionDecl*> getLastForwardingFunctionLayer(
+    const FunctionDecl& Decl);
+
 }  // namespace clang::tidy::nullability
 
 #endif  // THIRD_PARTY_CRUBIT_NULLABILITY_FORWARDING_FUNCTIONS_H_

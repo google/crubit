@@ -13,6 +13,7 @@ cc_library(
     name = "forwarding_functions",
     srcs = ["forwarding_functions.cc"],
     hdrs = ["forwarding_functions.h"],
+    visibility = ["//nullability/inference:__pkg__"],
     deps = [
         "@abseil-cpp//absl/base:nullability",
         "@llvm-project//clang:ast",

@@ -19,6 +19,7 @@
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "nullability/ast_helpers.h"
+#include "nullability/forwarding_functions.h"
 #include "nullability/inference/inferable.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
@@ -690,7 +691,8 @@ class DefinitionEvidenceCollector {
 
   template <typename CallOrConstructExpr>
   void fromArgsAndParams(const FunctionDecl &CalleeDecl,
-                         const CallOrConstructExpr &Expr) {
+                         const CallOrConstructExpr &Expr,
+                         bool MayBeMissingImplicitConversion) {
     bool CollectEvidenceForCallee = isInferenceTarget(CalleeDecl);
     bool CollectEvidenceForCaller = !InferableSlots.empty();
 
@@ -708,6 +710,11 @@ class DefinitionEvidenceCollector {
             BuiltinID == Builtin::BI__builtin_align_down) {
           continue;
         }
+        // In the case of forwarding functions, implicit conversions may be
+        // split between the call site `Expr` and the forwarding function body
+        // (e.g., within `std::make_unique`). We don't piece the two together
+        // here. Instead of crashing, we just skip the argument.
+        if (MayBeMissingImplicitConversion) continue;
       }
       // the corresponding argument should also be a pointer.
       CHECK(isSupportedPointerType(Iter.arg().getType()))
@@ -980,8 +987,25 @@ class DefinitionEvidenceCollector {
           fromAbortIfEqualMacroCall(*CallExpr);
           return;
         }
+        if (const Expr *Initializer =
+                getUnderlyingInitExprInStdMakeUnique(*CalleeFunctionDecl)) {
+          if (const auto *CE = dyn_cast<CXXConstructExpr>(Initializer)) {
+            fromArgsAndParams(*CE->getConstructor(), *CallExpr,
+                              /*MayBeMissingImplicitConversion=*/true);
+            return;
+          }
+          if (const auto *PLI = dyn_cast<CXXParenListInitExpr>(Initializer)) {
+            fromMakeUniqueFieldInits(RecordInitListHelper(PLI), *CallExpr);
+            return;
+          }
+          llvm::errs() << "Nullability: Unexpected initializer expression in "
+                          "make_unique: "
+                       << Initializer->getStmtClassName() << "\n";
+          assert(false);
+        }
       }
-      fromArgsAndParams(*CalleeFunctionDecl, *CallExpr);
+      fromArgsAndParams(*CalleeFunctionDecl, *CallExpr,
+                        /*MayBeMissingImplicitConversion=*/false);
     } else {
       fromCallExprWithoutFunctionCalleeDecl(*CalleeDecl, *CallExpr);
     }
@@ -994,7 +1018,8 @@ class DefinitionEvidenceCollector {
         ConstructExpr->getConstructor());
     if (!ConstructorDecl) return;
 
-    fromArgsAndParams(*ConstructorDecl, *ConstructExpr);
+    fromArgsAndParams(*ConstructorDecl, *ConstructExpr,
+                      /*MayBeMissingImplicitConversion=*/false);
   }
 
   void fromReturn(const Stmt &S) {
@@ -1315,6 +1340,33 @@ class DefinitionEvidenceCollector {
     }
   }
 
+  void fromMakeUniqueFieldInits(const RecordInitListHelper &Helper,
+                                const CallExpr &MakeUniqueCall) {
+    // Skip through the base inits to get to the field inits. Any initialization
+    // of base classes/fields will be collected from the InitListExpr for the
+    // base initialization.
+    int I = Helper.base_inits().size();
+    // Use the arguments from the `MakeUniqueCall` instead of the `field_inits`
+    // from `Helper`.
+    int NumArgs = MakeUniqueCall.getNumArgs();
+    for (auto [Field, InitExpr] : Helper.field_inits()) {
+      if (!isSupportedPointerType(Field->getType())) {
+        ++I;
+        continue;
+      }
+      const Expr *Arg = (I < NumArgs) ? MakeUniqueCall.getArg(I) : InitExpr;
+      // We might be missing implicit conversions (in the make_unique body
+      // instead of the call site). So we check the type of the argument is
+      // as expected as well.
+      if (!isSupportedPointerType(Arg->getType())) {
+        ++I;
+        continue;
+      }
+      fromAssignmentLike(*Field, *Arg, Arg->getExprLoc());
+      ++I;
+    }
+  }
+
   void fromAggregateInitialization(const Stmt &S) {
     if (auto *InitList = dyn_cast<clang::InitListExpr>(&S);
         InitList && InitList->getType()->isRecordType() &&
@@ -1456,6 +1508,55 @@ static void collectEvidenceFromConstructorExitBlock(
   }
 }
 
+// Checks the "last layer" forwarding functions called from the given `Func`.
+// This allows us to collect references made within forwarding functions, as if
+// they were made directly by `Func` (skipping through the forwarding).
+static llvm::DenseSet<const FunctionDecl *>
+collectLastLayerForwardingFunctionsCalled(const FunctionDecl &Func) {
+  llvm::DenseSet<const FunctionDecl *> Results;
+  Stmt *Body = Func.getBody();
+  if (Body == nullptr) return Results;
+
+  class ForwardingFunctionsCallVisitor : public dataflow::AnalysisASTVisitor {
+   public:
+    ForwardingFunctionsCallVisitor(
+        llvm::DenseSet<const FunctionDecl *> &Results)
+        : Results(Results) {}
+
+    bool VisitCallExpr(CallExpr *E) override {
+      const FunctionDecl *Callee = E->getDirectCallee();
+      if (Callee != nullptr) {
+        if (const FunctionDecl *FD = getLastForwardingFunctionLayer(*Callee))
+          Results.insert(FD);
+      }
+      return true;
+    }
+
+    llvm::DenseSet<const FunctionDecl *> &Results;
+  };
+
+  ForwardingFunctionsCallVisitor Visitor(Results);
+  Visitor.TraverseStmt(Body);
+  return Results;
+}
+
+static void collectReferencesFromForwardingFunctions(
+    dataflow::ReferencedDecls &ReferencedDecls, const FunctionDecl &Func) {
+  llvm::DenseSet<const FunctionDecl *> ForwardingFunctions =
+      collectLastLayerForwardingFunctionsCalled(Func);
+  for (const auto *ForwardingFunction : ForwardingFunctions) {
+    dataflow::ReferencedDecls More =
+        dataflow::getReferencedDecls(*ForwardingFunction);
+    ReferencedDecls.Fields.insert(More.Fields.begin(), More.Fields.end());
+    ReferencedDecls.Globals.insert(More.Globals.begin(), More.Globals.end());
+    ReferencedDecls.Locals.insert(More.Locals.begin(), More.Locals.end());
+    ReferencedDecls.Functions.insert(More.Functions.begin(),
+                                     More.Functions.end());
+    ReferencedDecls.LambdaCapturedParams.insert(
+        More.LambdaCapturedParams.begin(), More.LambdaCapturedParams.end());
+  }
+}
+
 static bool containsInitListExpr(const Expr &E) {
   // Short-circuit for the obvious case.
   if (isa<InitListExpr>(&E)) return true;
@@ -1494,6 +1595,9 @@ llvm::Error collectEvidenceFromDefinition(
     }
     TargetStmt = TargetAsFunc->getBody();
     ReferencedDecls = dataflow::getReferencedDecls(*TargetAsFunc);
+
+    // TODO(b/375210656): Collect references for variable initializers too.
+    collectReferencesFromForwardingFunctions(ReferencedDecls, *TargetAsFunc);
   } else if (auto *Var = dyn_cast<VarDecl>(&Definition)) {
     if (!Var->hasInit()) {
       return llvm::createStringError(

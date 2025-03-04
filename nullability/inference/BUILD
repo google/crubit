@@ -17,6 +17,7 @@ cc_library(
         ":slot_fingerprint",
         ":usr_cache",
         "//nullability:ast_helpers",
+        "//nullability:forwarding_functions",
         "//nullability:loc_filter",
         "//nullability:macro_arg_capture",
         "//nullability:pointer_nullability",

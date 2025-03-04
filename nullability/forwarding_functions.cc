@@ -69,4 +69,11 @@ absl::Nullable<const Expr *> getUnderlyingInitExprInStdMakeUnique(
   return findMakeUniqueNewExprInitializer(Decl.getBody());
 }
 
+absl::Nullable<const FunctionDecl *> getLastForwardingFunctionLayer(
+    const FunctionDecl &Decl) {
+  if (!isStdMakeUniqueWithNontrivalConstructor(Decl)) return nullptr;
+  if (Decl.getBody() == nullptr) return nullptr;
+  return &Decl;
+}
+
 }  // namespace clang::tidy::nullability
