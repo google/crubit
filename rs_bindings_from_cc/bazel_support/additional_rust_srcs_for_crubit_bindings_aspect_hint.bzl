@@ -29,8 +29,10 @@ through Crubit.
 load("@bazel_skylib//lib:collections.bzl", "collections")
 
 visibility([
+    # <internal link> start
     "//rs_bindings_from_cc/...",
     "//support/...",
+    # <internal link> end
 ])
 
 AdditionalRustSrcsProviderInfo = provider(
