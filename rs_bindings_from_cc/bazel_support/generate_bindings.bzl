@@ -44,10 +44,6 @@ def _get_extra_rs_srcs_command_line(extra_rs_srcs):
             extra_rs_src_info.append(file.path)
     return ["--extra_rs_srcs=" + ",".join(extra_rs_src_info)]
 
-def _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain):
-    TODO(mboehme): Remove this entire function.
-    return []
-
 def generate_bindings(
         ctx,
         attr,
@@ -117,14 +113,13 @@ def generate_bindings(
                           ("fake_path" in cc_toolchain.built_in_include_directories[0])
 
     toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
-    is_on_demand = toolchain.rs_bindings_from_cc_toolchain_info.is_on_demand
     rs_bindings_from_cc_tool = toolchain.rs_bindings_from_cc_toolchain_info.binary
 
     system_include_directories = depset(
        direct = [
          # libcxx headers.
          cc_toolchain.built_in_include_directories[0],
-       ] + _get_include_paths_for_builtin_headers_and_compiler_rt_headers(ctx, cc_toolchain) + [
+       ] + [
          cc_toolchain.built_in_include_directories[2],
        ],
        transitive = [compilation_context.system_includes],

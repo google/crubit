@@ -59,7 +59,6 @@ rs_bindings_from_cc_toolchain(
         "//llvm/llvm-project/compiler-rt:fuzzer_filegroup",
         "//llvm/llvm-project/compiler-rt:sanitizer_filegroup",
     ],
-    is_on_demand = True,
     stl_headers = ["//nowhere/llvm:cc-std-headers"],
 )
 
@@ -67,7 +66,6 @@ rs_bindings_from_cc_toolchain(
     name = "rs_bindings_from_cc_fake_impl",
     binary = "//rs_bindings_from_cc/bazel_support:fake_rust_bindings_from_cc",
     builtin_headers = [],
-    is_on_demand = True,
     stl_headers = [],
 )
 

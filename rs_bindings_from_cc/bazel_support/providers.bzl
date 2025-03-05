@@ -52,6 +52,5 @@ RustBindingsFromCcToolchainInfo = provider(
         "binary": "The label for the rs_bindings_from_cc binary",
         "builtin_headers": "The list of clang builtin headers.",
         "stl_headers": "The list of STL headers.",
-        "is_on_demand": "Whether this is a dynamically built binary or not",
     },
 )

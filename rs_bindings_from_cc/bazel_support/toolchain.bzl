@@ -16,7 +16,6 @@ def _rs_bindings_from_cc_toolchain_impl(ctx):
                 binary = ctx.file.binary,
                 builtin_headers = ctx.files.builtin_headers,
                 stl_headers = ctx.files.stl_headers,
-                is_on_demand = ctx.attr.is_on_demand,
             ),
         ),
     ]
@@ -31,6 +30,5 @@ rs_bindings_from_cc_toolchain = rule(
         ),
         "builtin_headers": attr.label_list(allow_files = True),
         "stl_headers": attr.label_list(allow_files = True),
-        "is_on_demand": attr.bool(),
     },
 )
