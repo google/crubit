@@ -2550,6 +2550,72 @@ TEST(CollectEvidenceFromDefinitionTest, GlobalSmartExplicitInit) {
                                     globalVarNamed("Target"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest, GlobalInitWithCtor) {
+  llvm::StringLiteral Src = R"cc(
+#include <memory>
+    struct S {
+      S(int *P, Nonnull<int *> Q);
+    };
+
+    int *Foo();
+    int GInt;
+    int *AssignedToNonnull = Foo();
+    S Target(&GInt, AssignedToNonnull);
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("S")),
+                           evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    globalVarNamed("AssignedToNonnull"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, GlobalSmartInitWithMakeUniqueCtor) {
+  llvm::StringLiteral Src = R"cc(
+#include <memory>
+    struct S {
+      S(int *P, Nonnull<int *> Q);
+    };
+
+    int *Foo();
+    int GInt;
+    int *AssignedToNonnull = Foo();
+    std::unique_ptr<S> Target = std::make_unique<S>(&GInt, AssignedToNonnull);
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    globalVarNamed("Target")),
+                           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("S")),
+                           evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    globalVarNamed("AssignedToNonnull"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest,
+     GlobalSmartInitWithMakeUniqueAggregate) {
+  llvm::StringLiteral Src = R"cc(
+#include <memory>
+    struct S {
+      int *P;
+      Nonnull<int *> Q;
+    };
+
+    int *Foo();
+    int GInt;
+    int *AssignedToNonnull = Foo();
+    std::unique_ptr<S> Target = std::make_unique<S>(&GInt, AssignedToNonnull);
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Target", Src),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    globalVarNamed("Target")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    fieldNamed("S::P")),
+                           evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    globalVarNamed("AssignedToNonnull"))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, StaticInitInClass) {
   static constexpr llvm::StringRef Src = R"cc(
     struct MyStruct {

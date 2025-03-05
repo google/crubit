@@ -1508,14 +1508,12 @@ static void collectEvidenceFromConstructorExitBlock(
   }
 }
 
-// Checks the "last layer" forwarding functions called from the given `Func`.
+// Checks the "last layer" forwarding functions called from the given statement.
 // This allows us to collect references made within forwarding functions, as if
-// they were made directly by `Func` (skipping through the forwarding).
+// they were made directly by the statement. (skipping through the forwarding).
 static llvm::DenseSet<const FunctionDecl *>
-collectLastLayerForwardingFunctionsCalled(const FunctionDecl &Func) {
+collectLastLayerForwardingFunctionsCalled(Stmt *S) {
   llvm::DenseSet<const FunctionDecl *> Results;
-  Stmt *Body = Func.getBody();
-  if (Body == nullptr) return Results;
 
   class ForwardingFunctionsCallVisitor : public dataflow::AnalysisASTVisitor {
    public:
@@ -1536,14 +1534,14 @@ collectLastLayerForwardingFunctionsCalled(const FunctionDecl &Func) {
   };
 
   ForwardingFunctionsCallVisitor Visitor(Results);
-  Visitor.TraverseStmt(Body);
+  Visitor.TraverseStmt(S);
   return Results;
 }
 
 static void collectReferencesFromForwardingFunctions(
-    dataflow::ReferencedDecls &ReferencedDecls, const FunctionDecl &Func) {
+    dataflow::ReferencedDecls &ReferencedDecls, Stmt *S) {
   llvm::DenseSet<const FunctionDecl *> ForwardingFunctions =
-      collectLastLayerForwardingFunctionsCalled(Func);
+      collectLastLayerForwardingFunctionsCalled(S);
   for (const auto *ForwardingFunction : ForwardingFunctions) {
     dataflow::ReferencedDecls More =
         dataflow::getReferencedDecls(*ForwardingFunction);
@@ -1596,8 +1594,8 @@ llvm::Error collectEvidenceFromDefinition(
     TargetStmt = TargetAsFunc->getBody();
     ReferencedDecls = dataflow::getReferencedDecls(*TargetAsFunc);
 
-    // TODO(b/375210656): Collect references for variable initializers too.
-    collectReferencesFromForwardingFunctions(ReferencedDecls, *TargetAsFunc);
+    if (TargetStmt != nullptr)
+      collectReferencesFromForwardingFunctions(ReferencedDecls, TargetStmt);
   } else if (auto *Var = dyn_cast<VarDecl>(&Definition)) {
     if (!Var->hasInit()) {
       return llvm::createStringError(
@@ -1620,6 +1618,8 @@ llvm::Error collectEvidenceFromDefinition(
         &DeclStmtForVarDecl.emplace(DeclGroupRef(const_cast<VarDecl *>(Var)),
                                     Var->getBeginLoc(), Var->getEndLoc());
     ReferencedDecls = dataflow::getReferencedDecls(*TargetStmt);
+    collectReferencesFromForwardingFunctions(ReferencedDecls, TargetStmt);
+
     if (!isInferenceTarget(*Var) && !hasAnyInferenceTargets(ReferencedDecls)) {
       // If this variable is not an inference target and the initializer does
       // not reference any inference targets, we won't be able to collect any
