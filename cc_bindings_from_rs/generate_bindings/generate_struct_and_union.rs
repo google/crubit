@@ -8,15 +8,15 @@ use crate::generate_doc_comment;
 use crate::{
     crate_features, format_ty_for_cc, generate_const, generate_deprecated_tag,
     generate_must_use_tag, generate_trait_thunks, generate_unsupported_def, get_layout,
-    get_scalar_int_type, get_tag_size_with_padding, is_exported, is_public_or_supported_export,
-    post_analysis_typing_env, RsSnippet, TraitThunks,
+    get_scalar_int_type, get_tag_size_with_padding, is_bridged_type, is_exported,
+    is_public_or_supported_export, post_analysis_typing_env, RsSnippet, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcInclude;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, FullyQualifiedName, SugaredTy, TypeLocation};
-use error_report::{anyhow, ensure};
+use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::format_ident;
@@ -709,6 +709,13 @@ fn generate_fields<'tcx>(
                             let size =
                                 get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
+                                if is_bridged_type(db, ty.mid())?.is_some() {
+                                    bail!(
+                                        "Field is a bridged type and might not be layout-compatible
+                                    with the C++ type (b/400633609)"
+                                    );
+                                }
+
                                 Ok(FieldTypeInfo {
                                     size,
                                     cpp_type: db
