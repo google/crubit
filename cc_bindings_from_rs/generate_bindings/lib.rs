@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(rustc_private)]
+#![feature(cfg_accessible)]
 #![deny(rustc::internal)]
 
 extern crate rustc_ast;
@@ -47,7 +48,10 @@ use query_compiler::{
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
+
+#[cfg_accessible(rustc_attr_parsing::find_deprecation)]
 use rustc_attr_parsing::find_deprecation;
+
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{Item, ItemKind, Node, UseKind, UsePath};
 use rustc_middle::dep_graph::DepContext;
@@ -476,6 +480,7 @@ fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
 
 /// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
 /// deprecated. Otherwise, returns None.
+#[cfg_accessible(rustc_attr_parsing::find_deprecation)]
 fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     if let Some(deprecated_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::deprecated) {
         if let Some((deprecation, _span)) =
@@ -490,6 +495,22 @@ fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
             };
             return Some(cc_deprecated_tag);
         }
+    }
+    None
+}
+
+#[cfg_accessible(rustc_attr_parsing::find_attr)]
+fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
+    if let Some((deprecation, _span)) = rustc_attr_parsing::find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecation{deprecation, span} => (*deprecation, *span))
+    {
+        let cc_deprecated_tag = match deprecation.note {
+            None => quote! {[[deprecated]]},
+            Some(note_symbol) => {
+                let note = note_symbol.as_str();
+                quote! {[[deprecated(#note)]]}
+            }
+        };
+        return Some(cc_deprecated_tag);
     }
     None
 }

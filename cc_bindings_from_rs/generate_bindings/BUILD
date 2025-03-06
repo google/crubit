@@ -24,7 +24,7 @@ rust_library(
         "lib.rs",
     ],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":query_compiler",
@@ -48,7 +48,7 @@ crubit_rust_test(
     name = "bindings_test",
     crate = ":generate_bindings",
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//cc_bindings_from_rs:run_compiler_test_support",
