@@ -12,7 +12,13 @@ parameter and return types are supported by Crubit:
     [class type](classes_and_structs) or [enum](enums), then the bindings for
     the function use the bindings for that type.
 
-## Example
+Additionally, code can call member functions defined in C++ if the parameter and
+return types are supported by Crubit (see above). Currently, member functions
+are translated as non-method associated functions.
+
+## Examples
+
+### Functions
 
 Given the following C++ header:
 
@@ -27,9 +33,27 @@ and the corresponding FFI glue:
 cs/file:examples/cpp/function/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
 ```
 
-## `unsafe` functions {#unsafe}
+### Methods
 
-### Which C++ functions are marked `unsafe` in Rust? {#unsafe-inference}
+Given the following C++ header:
+
+```live-snippet
+cs/file:examples/cpp/method/example.h content:^([^/#\n])[^\n]*
+```
+
+Crubit will generate the following bindings:
+
+```live-snippet
+cs/file:examples/cpp/method/example_generated.rs symbol:foo::Bar
+```
+
+```live-snippet
+cs/file:examples/cpp/method/example_generated.rs snippet:0,6 "impl Bar"
+```
+
+### `unsafe` functions {#unsafe}
+
+#### Which C++ functions are marked `unsafe` in Rust? {#unsafe-inference}
 
 By default, the Rust binding to a C++ function is marked as safe or `unsafe`
 based on the types of its parameters. If a C++ function accepts only simple
@@ -51,7 +75,7 @@ Crubit will generate the following bindings:
 cs/file:examples/cpp/unsafe_attributes/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
 ```
 
-### Correct usage of `unsafe` {#using-unsafe}
+#### Correct usage of `unsafe` {#using-unsafe}
 
 Functions marked **`unsafe`** cannot be called outside of an `unsafe` block. In
 order to avoid undefined behavior when using `unsafe`, callers must:
@@ -63,7 +87,7 @@ order to avoid undefined behavior when using `unsafe`, callers must:
     if the C++ function accepts a reference or non-null pointer, then do not
     pass in `0 as *const _`.
 
-### Soundness
+#### Soundness
 
 Note that many "safe" C++ functions may still trigger undefined behavior if used
 incorrectly. Regardless of whether a C++ function is marked as `unsafe`, calls
