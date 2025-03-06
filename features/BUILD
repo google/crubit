@@ -58,3 +58,9 @@ bzl_library(
         "//:__subpackages__",
     ],
 )
+
+bzl_library(
+    name = "global_features_bzl",
+    srcs = ["global_features.bzl"],
+    visibility = ["//cc_bindings_from_rs/bazel_support:__pkg__"],
+)

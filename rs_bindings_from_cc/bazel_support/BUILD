@@ -97,6 +97,7 @@ bzl_library(
 bzl_library(
     name = "compile_rust_bzl",
     srcs = ["compile_rust.bzl"],
+    visibility = ["//cc_bindings_from_rs/bazel_support:__pkg__"],
     deps = [
         "@bazel_skylib//lib:structs",
         "@rules_rust//rust/private:bzl_lib",
