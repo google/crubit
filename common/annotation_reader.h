@@ -13,7 +13,6 @@
 #include "absl/strings/string_view.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
-#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Expr.h"
@@ -22,11 +21,42 @@ namespace crubit {
 
 using AnnotateArgs = llvm::SmallVector<clang::Expr*>;
 
-// Returns the arguments of the `[clang::annotate(annotation_name)]`
-// annotation on `decl`, if it exists.
+// Returns the arguments of the [[clang::annotate(annotation_name, ...)]]
+// annotation on `decl`, or none if the annotation does not exist.
 //
-// Returns an error if there is more than one annotation with the given name,
-// or `std::nullopt` if the annotation was not found.
+// Returns an error if there there are any conflicting annotation arguments
+// across all redeclarations of `decl`, or `std::nullopt` if the annotation does
+// not exist.
+//
+// For example, given the following C++ code:
+//
+// class [[clang::annotate("crubit_annotation_foo", "bar")]] MyClass;
+//
+// class [[clang::annotate("crubit_annotation_foo", "bar")]] MyClass {}
+//   ...
+// };
+//
+// GetAnnotateAttrArgs(my_class_decl, "crubit_annotation_foo") will return
+// ["bar"] because 1) it found it, and 2) the annotations are consistent across
+// all redecls. But if the C++ code is:
+//
+// class [[clang::annotate("crubit_annotation_foo", "bar")]] MyClass;
+//
+// class [[clang::annotate("crubit_annotation_foo", "baz")]] MyClass {}
+//   ...
+// };
+//
+// GetAnnotateAttrArgs(my_class_decl, "crubit_annotation_foo") will return an
+// error, because the annotations are inconsistent across redeclarations.
+//
+// Finally, if the C++ code is:
+//
+// class MyClass {
+//   ...
+// };
+//
+// GetAnnotateAttrArgs(my_class_decl, "crubit_annotation_foo") will return
+// std::nullopt, because the annotation does not exist.
 absl::StatusOr<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
     const clang::Decl& decl, absl::string_view annotation_name);
 

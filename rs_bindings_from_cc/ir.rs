@@ -685,6 +685,7 @@ pub struct SizeAlign {
     pub size: usize,
     pub alignment: usize,
 }
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BridgeTypeInfo {
@@ -1510,7 +1511,7 @@ impl IR {
 
     pub fn records(&self) -> impl Iterator<Item = &Rc<Record>> {
         self.items().filter_map(|item| match item {
-            Item::Record(func) => Some(func),
+            Item::Record(record) => Some(record),
             _ => None,
         })
     }

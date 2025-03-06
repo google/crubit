@@ -91,6 +91,18 @@ absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
   });
 }
 
+// Returns the `AnnotateAttr` with the given `annotation_name` if it exists. If
+// there are multiple annotations with the given name, returns an error.
+//
+// For example, given the following C++ code:
+//
+// class [[clang::annotate("crubit_annotation_foo", "bar")]] MyClass {}
+//   ...
+// };
+//
+// GetAnnotateAttrSingleDecl(my_class_decl, "crubit_annotation_foo") will
+// return the `AnnotateAttr` with the annotation `crubit_annotation_foo`,
+// from which the "bar" argument can be extracted.
 static absl::StatusOr<const clang::AnnotateAttr*> GetAnnotateAttrSingleDecl(
     const clang::Decl& decl, absl::string_view annotation_name) {
   const clang::AnnotateAttr* found_attr = nullptr;

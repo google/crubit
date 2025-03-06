@@ -348,7 +348,6 @@ cc_library(
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/types:optional",
         "@llvm-project//clang:ast",
-        "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
 )
