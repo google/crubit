@@ -3240,6 +3240,27 @@ TEST(CollectEvidenceFromDefinitionTest, TransparentInitListExpr) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
+TEST(CollectEvidenceFromDefinitionTest, ArraySubscript) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int* P) { P[0]; }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARRAY_SUBSCRIPT)));
+}
+
+TEST(SmartPointerCollectEvidenceFromDefinitionTest, ArraySubscript) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    void target(std::unique_ptr<int[]> P) {
+      P[0];
+    }
+  )cc";
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src),
+      UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARRAY_SUBSCRIPT)));
+}
+
 // Evidence for return type nonnull-ness should flow only from derived to base,
 // so we collect evidence for the base but not the derived.
 TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {

@@ -150,6 +150,7 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::GCC_NONNULL_ATTRIBUTE:
     case Evidence::ASSIGNED_TO_NONNULL_REFERENCE:
     case Evidence::WELL_KNOWN_NONNULL:
+    case Evidence::ARRAY_SUBSCRIPT:
       // Evidence pointing toward Unknown is only used to prevent Nonnull
       // inferences; it cannot override Nullable. So propagate it in the same
       // direction we do for Nonnull-pointing evidence.
@@ -492,6 +493,7 @@ class DefinitionEvidenceCollector {
       Collector.fromAssignment(*S);
       Collector.fromArithmetic(*S);
       Collector.fromAggregateInitialization(*S);
+      Collector.fromArraySubscript(*S);
     } else if (auto CFGInit = CFGElem.getAs<clang::CFGInitializer>()) {
       Collector.fromCFGInitializer(*CFGInit);
     }
@@ -1377,6 +1379,26 @@ class DefinitionEvidenceCollector {
     if (auto *ParenListInit = dyn_cast<clang::CXXParenListInitExpr>(&S);
         ParenListInit && ParenListInit->getType()->isRecordType()) {
       fromFieldInits(RecordInitListHelper(ParenListInit));
+    }
+  }
+
+  void fromArraySubscript(const Stmt &S) {
+    // For raw pointers, we see an ArraySubscriptExpr.
+    if (auto *Op = dyn_cast<clang::ArraySubscriptExpr>(&S)) {
+      const Expr *Base = Op->getBase();
+      if (!Base || !isSupportedRawPointerType(Base->getType())) return;
+      if (auto *PV = getPointerValue(Base, Env))
+        mustBeNonnull(*PV, Op->getRBracketLoc(), Evidence::ARRAY_SUBSCRIPT);
+      return;
+    }
+    // For smart pointers to arrays, we see a CXXOperatorCallExpr.
+    // Other smart pointers do not have a subscript operator.
+    if (auto *Call = dyn_cast<clang::CXXOperatorCallExpr>(&S);
+        Call && Call->getOperator() == clang::OO_Subscript) {
+      const Expr *Base = Call->getArg(0);
+      if (!Base || !isSupportedSmartPointerType(Base->getType())) return;
+      if (auto *PV = getPointerValue(Base, Env))
+        mustBeNonnull(*PV, Call->getOperatorLoc(), Evidence::ARRAY_SUBSCRIPT);
     }
   }
 

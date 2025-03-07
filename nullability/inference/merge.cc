@@ -126,6 +126,7 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts, bool EnableSoftRules) {
     update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ABORT_IF_NULL]) update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ARITHMETIC]) update(Result, Nullability::NONNULL);
+  if (Counts[Evidence::ARRAY_SUBSCRIPT]) update(Result, Nullability::NONNULL);
   if (Result) return *Result;
 
   if (!EnableSoftRules) return {Nullability::UNKNOWN};

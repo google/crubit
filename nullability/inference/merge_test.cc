@@ -269,6 +269,13 @@ TEST_F(InferTest, Arithmetic) {
   EXPECT_EQ(Nullability::NULLABLE, infer(/*ExpectConflict=*/true));
 }
 
+TEST_F(InferTest, ArraySubscript) {
+  add(Evidence::ARRAY_SUBSCRIPT);
+  EXPECT_EQ(Nullability::NONNULL, infer());
+  add(Evidence::NULLABLE_ARGUMENT);
+  EXPECT_EQ(Nullability::NULLABLE, infer(/*ExpectConflict=*/true));
+}
+
 TEST_F(InferTest, NullableDefaultMemberInitializer) {
   add(Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER);
   EXPECT_EQ(Nullability::NULLABLE, infer());

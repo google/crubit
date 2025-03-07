@@ -141,6 +141,9 @@ message Evidence {
     // A decl that is defined by the standard or strong convention to be
     // Nullable.
     WELL_KNOWN_NULLABLE = 30;
+    // A pointer was used with an array subscript operator without being checked
+    // for null first.
+    ARRAY_SUBSCRIPT = 31;
   }
 }
 
