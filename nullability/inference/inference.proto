@@ -178,32 +178,31 @@ message SlotPartial {
   map</*Kind*/ uint32, SampleLocations> kind_samples = 2;
 }
 
-// The half-open source range of a slot: [begin, end).
-message SlotRange {
+// A half-open source range to be removed: [begin, end).
+message RemovalRange {
   optional uint64 begin = 1;
   optional uint64 end = 2;
+}
 
-  optional Nullability existing_annotation = 3;
-  // The length of the source range before the slot that is part of an existing
-  // annotation to be potentially removed, e.g. the length of
-  // "absl::NullabilityUnknown<" or 0 if the existing annotation is a
-  // non-template representation, such as clang's "_Null_unspecified".
-  optional uint32 existing_annotation_pre_range_length = 4;
-  // The length of the source range after the slot that is part of an existing
-  // annotation to be potentially removed, e.g. 1 for ">" or longer for a
-  // non-template representation of annotations, such as clang's
-  // "_Null_unspecified".
-  optional uint32 existing_annotation_post_range_length = 5;
-
+// Nullability information for a pointer-type source range. Does not include the
+// full source range for the type, as that isn't needed for adding/removing
+// nullability annotations.
+message SlotRange {
   // Path of the file containing this range.
-  optional string path = 6;
+  optional string path = 1;
   // The nullability default set by the pragma affecting `path`, if one exists.
-  optional Nullability pragma_nullability = 7;
-
+  optional Nullability pragma_nullability = 2;
   // The offset at which a qualifier-position annotation should be inserted. For
   // a named pointer type not ending with `*`, including smart pointers and
   // aliases to raw pointers, this precedes the type but follows any
   // cv-qualifiers. For other pointers, this follows the `*` but precedes any
   // cv-qualifiers.
-  optional uint64 qualifier_annotation_insertion_offset = 8;
+  // This field uniquely identifies a pointer-type slot range within a file, as
+  // no two pointer ranges can be annotated with a qualifier-positioned
+  // annotation in the same location.
+  optional uint64 qualifier_annotation_insertion_offset = 3;
+  optional Nullability existing_annotation = 4;
+  // The source ranges of existing annotations to be removed if modifying the
+  // annotation for this range.
+  repeated RemovalRange existing_annotation_removal_range = 5;
 }

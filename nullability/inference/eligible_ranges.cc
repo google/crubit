@@ -68,13 +68,13 @@ static Nullability toProtoNullability(NullabilityKind Kind) {
   llvm_unreachable("Unhandled NullabilityKind");
 }
 
-static void initSlotRange(SlotRange &R, unsigned Begin, unsigned End,
-                          std::optional<NullabilityKind> Nullability) {
-  R.set_begin(Begin);
-  R.set_end(End);
-  if (Nullability) {
-    R.set_existing_annotation(toProtoNullability(*Nullability));
-  }
+static SourceLocation getLocationAfterNewlinePrefixesIfIdentifier(Token Tok) {
+  if (!Tok.is(tok::raw_identifier)) return Tok.getLocation();
+  llvm::StringRef Identifier = Tok.getRawIdentifier();
+  size_t OriginalSize = Identifier.size();
+  int OffsetForEscapedNewlines =
+      OriginalSize - skipEscapedNewLinePrefixes(Identifier).size();
+  return Tok.getLocation().getLocWithOffset(OffsetForEscapedNewlines);
 }
 
 /// If the tokens immediately before `Begin` are an absl::NullabilityUnknown<
@@ -94,7 +94,8 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
       !PrevTok.is(tok::raw_identifier))
     return {};
-  if (const StringRef ID = PrevTok.getRawIdentifier();
+  if (const StringRef ID =
+          skipEscapedNewLinePrefixes(PrevTok.getRawIdentifier());
       ID != AbslTemplateUnknown && ID != AbslTemplateNullable &&
       ID != AbslTemplateNonnull)
     return {};
@@ -106,9 +107,12 @@ getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
           utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
       !PrevTok.is(tok::raw_identifier))
     return {};
-  if (PrevTok.getRawIdentifier() != AbslTemplateNamespace) return {};
+  if (skipEscapedNewLinePrefixes(PrevTok.getRawIdentifier()) !=
+      AbslTemplateNamespace)
+    return {};
 
-  auto [PrevTokFID, PrevTokOffset] = SM.getDecomposedLoc(PrevTok.getLocation());
+  auto [PrevTokFID, PrevTokOffset] =
+      SM.getDecomposedLoc(getLocationAfterNewlinePrefixesIfIdentifier(PrevTok));
   if (PrevTokFID != DeclFID) return {};
 
   Token NextTok;
@@ -157,8 +161,8 @@ static std::optional<unsigned> getEndOffsetOfEastQualifierAnnotation(
   std::optional<Token> PossibleAttribute;
   Token AtEndOfStar;
   // The annotation may appear at `EndOfStar`, so check the token there first.
-  // If it's whitespace or otherwise fails or is a comment, check the next
-  // token.
+  // Skip whitespace, and if it is a comment, check the next token skipping
+  // comments.
   if (bool Failed = Lexer::getRawToken(EndOfStar, AtEndOfStar, SM, LangOpts,
                                        /*IgnoreWhiteSpace=*/true);
       !Failed && !AtEndOfStar.is(tok::comment)) {
@@ -197,11 +201,61 @@ static std::optional<unsigned> getBeginOffsetOfWestQualifierAnnotation(
   return Offset;
 }
 
+static bool isCVR(llvm::StringRef ID) {
+  return llvm::StringSwitch<bool>(ID)
+      .Case("const", true)
+      .Case("volatile", true)
+      .Case("restrict", true)
+      .Default(false);
+}
+
+static SourceLocation includePrecedingCVRQualifiers(
+    SourceLocation Begin, const SourceManager &SM,
+    const LangOptions &LangOpts) {
+  std::optional<Token> FinalQualifierSeen;
+  // Update `Begin` as we search and find qualifier tokens.
+  Token Tok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+  while (!Tok.is(tok::unknown)) {
+    if (!Tok.is(tok::raw_identifier)) break;
+    if (!isCVR(skipEscapedNewLinePrefixes(Tok.getRawIdentifier()))) break;
+    FinalQualifierSeen = Tok;
+    Begin = Tok.getLocation();
+    Tok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+  }
+
+  if (!FinalQualifierSeen.has_value()) return Begin;
+  assert(FinalQualifierSeen->is(tok::raw_identifier));
+  return getLocationAfterNewlinePrefixesIfIdentifier(*FinalQualifierSeen);
+}
+
+static SourceLocation includeFollowingCVRQualifiers(
+    SourceLocation End, const SourceManager &SM, const LangOptions &LangOpts) {
+  Token Tok;
+  Lexer::getRawToken(End, Tok, SM, LangOpts,
+                     /*IgnoreWhiteSpace=*/true);
+  if (Tok.is(tok::comment)) {
+    Tok = utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts)
+              .value_or(Token());
+  }
+
+  std::optional<SourceLocation> LastQualifierEnd;
+  // Update `End` as we search and find qualifier tokens.
+  while (!Tok.is(tok::unknown) && !Tok.is(tok::eof)) {
+    if (!Tok.is(tok::raw_identifier)) break;
+    if (!isCVR(skipEscapedNewLinePrefixes(Tok.getRawIdentifier()))) break;
+    LastQualifierEnd = Tok.getEndLoc();
+    End = Tok.getLocation();
+    Tok = utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts)
+              .value_or(Token());
+  }
+  return LastQualifierEnd.has_value() ? *LastQualifierEnd : End;
+}
+
 /// If the range specified by `Begin` and `End` is immediately wrapped in an
 /// absl nullability annotation and is not a complex declarator, or if
 /// `EndOfStarOffset` is immediately followed by a clang nullability attribute,
 /// set the pre- and post-range lengths for that annotation/attribute.
-static void addAnnotationPreAndPostRangeLength(
+static void addExistingAnnotationRemovalRanges(
     SourceLocation Begin, SourceLocation End, SourceLocation EndOfStar,
     unsigned BeginOffset, unsigned EndOffset, unsigned EndOfStarOffset,
     bool IsComplexDeclarator, const FileID &DeclFID, const SourceManager &SM,
@@ -211,26 +265,31 @@ static void addAnnotationPreAndPostRangeLength(
         getStartAndEndOffsetsOfImmediateAbslAnnotation(Begin, End, SM, LangOpts,
                                                        DeclFID);
     if (AnnotationStartOffset && AnnotationEndOffset) {
-      Range.set_existing_annotation_pre_range_length(BeginOffset -
-                                                     *AnnotationStartOffset);
-      Range.set_existing_annotation_post_range_length(*AnnotationEndOffset -
-                                                      EndOffset);
+      RemovalRange *Removal = Range.add_existing_annotation_removal_range();
+      Removal->set_begin(*AnnotationStartOffset);
+      Removal->set_end(BeginOffset);
+
+      Removal = Range.add_existing_annotation_removal_range();
+      Removal->set_begin(EndOffset);
+      Removal->set_end(*AnnotationEndOffset);
       return;
     }
   }
   if (std::optional<unsigned> AttributeEndOffset =
           getEndOffsetOfEastQualifierAnnotation(EndOfStar, SM, LangOpts,
                                                 DeclFID)) {
-    Range.set_existing_annotation_pre_range_length(0);
-    Range.set_existing_annotation_post_range_length(*AttributeEndOffset -
-                                                    EndOfStarOffset);
+    RemovalRange *Removal = Range.add_existing_annotation_removal_range();
+    Removal->set_begin(EndOfStarOffset);
+    Removal->set_end(*AttributeEndOffset);
+    return;
   }
   if (std::optional<unsigned> AttributeBeginOffset =
           getBeginOffsetOfWestQualifierAnnotation(Begin, SM, LangOpts,
                                                   DeclFID)) {
-    Range.set_existing_annotation_pre_range_length(BeginOffset -
-                                                   *AttributeBeginOffset);
-    Range.set_existing_annotation_post_range_length(0);
+    RemovalRange *Removal = Range.add_existing_annotation_removal_range();
+    Removal->set_begin(*AttributeBeginOffset);
+    Removal->set_end(BeginOffset);
+    return;
   }
 }
 
@@ -268,25 +327,6 @@ StringRef skipEscapedNewLinePrefixes(StringRef Str) {
     Str = New;
   }
   return Str;
-}
-
-static SourceLocation includePrecedingCVRQualifiers(
-    SourceLocation Begin, const SourceManager &SM,
-    const LangOptions &LangOpts) {
-  int OffsetForEscapedNewline = 0;
-  // Update `Begin` as we search backwards and find qualifier tokens.
-  auto PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
-  while (PrevTok.getKind() != tok::unknown) {
-    if (!PrevTok.is(tok::raw_identifier)) break;
-    StringRef RawID = PrevTok.getRawIdentifier();
-    size_t OriginalSize = RawID.size();
-    RawID = skipEscapedNewLinePrefixes(RawID);
-    if (RawID != "const" && RawID != "volatile" && RawID != "restrict") break;
-    OffsetForEscapedNewline = OriginalSize - RawID.size();
-    Begin = PrevTok.getLocation();
-    PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
-  }
-  return Begin.getLocWithOffset(OffsetForEscapedNewline);
 }
 
 static bool isComplexDeclarator(const Type *T) {
@@ -449,11 +489,6 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     // For smart pointers, a preceding qualifier is a qualifier of the smart
     // pointer type, so we don't want to include it in the range, as a spelling
     // preference for template alias annotations.
-    // TODO: b/397989229 - When looking for existing annotations, check for an
-    // annotation preceding or following a potential `const` preceding a
-    // smart/aliased pointer, and check for an annotation preceding or following
-    // a `const` following a raw pointer. For insertion, continue to insert
-    // annotations closer to the type than any existing const.
     SourceLocation Begin =
         isSupportedRawPointerType(MaybeLoc->getType())
             ? includePrecedingCVRQualifiers(R->getBegin(), SM, LangOpts)
@@ -484,7 +519,6 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
             : std::nullopt;
 
     EligibleRange &Range = Ranges.emplace_back(SlotInContext);
-    initSlotRange(Range.Range, BeginOffset, EndOffset, Nullability);
 
     std::optional<SourceLocation> EndOfStarLoc = *EndOfStarResult;
     std::optional<unsigned> EndOfStarOffset;
@@ -494,22 +528,47 @@ static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
     }
 
     if (Nullability) {
+      Range.Range.set_existing_annotation(toProtoNullability(*Nullability));
       bool UseEndOfStarLoc =
           EndOfStarLoc && EndOfStarLoc->isValid() && EndOfStarOffset;
-      addAnnotationPreAndPostRangeLength(
-          Begin, R->getEnd(), UseEndOfStarLoc ? *EndOfStarLoc : R->getEnd(),
-          BeginOffset, EndOffset,
-          UseEndOfStarLoc ? *EndOfStarOffset : EndOffset, IsComplexDeclarator,
-          DeclFID, SM, LangOpts, Range.Range);
+      SourceLocation EndOfStarOrEnd =
+          UseEndOfStarLoc ? *EndOfStarLoc : R->getEnd();
+      unsigned EndOfStarOrEndOffset =
+          UseEndOfStarLoc ? *EndOfStarOffset : EndOffset;
+      addExistingAnnotationRemovalRanges(
+          Begin, R->getEnd(), EndOfStarOrEnd, BeginOffset, EndOffset,
+          EndOfStarOrEndOffset, IsComplexDeclarator, DeclFID, SM, LangOpts,
+          Range.Range);
+
+      if (Range.Range.existing_annotation_removal_range_size() == 0) {
+        // Include any preceding/following CVR qualifiers that could be nearer
+        // than the annotation and try again. Our preferred style is to not
+        // include these closer to the pointer type than the nullability
+        // annotation, but they can be placed closer. We don't check all
+        // potential combinations of CVR placements, but having more than one of
+        // these on a single type is very rare and would trigger
+        // -Wduplicate-decl-specifier.
+        SourceLocation BeginWithCVRs =
+            includePrecedingCVRQualifiers(Begin, SM, LangOpts);
+        unsigned BeginWithCVRsOffset = SM.getFileOffset(BeginWithCVRs);
+        SourceLocation EndWithCVRs =
+            includeFollowingCVRQualifiers(R->getEnd(), SM, LangOpts);
+        unsigned EndWithCVRsOffset = SM.getFileOffset(EndWithCVRs);
+        SourceLocation EndOfStarWithCVRs =
+            includeFollowingCVRQualifiers(EndOfStarOrEnd, SM, LangOpts);
+        unsigned EndOfStarWithCVRsOffset = SM.getFileOffset(EndOfStarWithCVRs);
+        addExistingAnnotationRemovalRanges(
+            BeginWithCVRs, EndWithCVRs, EndOfStarWithCVRs, BeginWithCVRsOffset,
+            EndWithCVRsOffset, EndOfStarWithCVRsOffset, IsComplexDeclarator,
+            DeclFID, SM, LangOpts, Range.Range);
+      }
     }
 
     if (!Range.Range.has_qualifier_annotation_insertion_offset()) {
       if (MaybeLoc->getUnqualifiedLoc().getAsAdjusted<PointerTypeLoc>()) {
-        Range.Range.set_qualifier_annotation_insertion_offset(
-            Range.Range.end());
+        Range.Range.set_qualifier_annotation_insertion_offset(EndOffset);
       } else {
-        Range.Range.set_qualifier_annotation_insertion_offset(
-            Range.Range.begin());
+        Range.Range.set_qualifier_annotation_insertion_offset(BeginOffset);
       }
     }
   }
