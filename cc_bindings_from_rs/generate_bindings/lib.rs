@@ -52,6 +52,9 @@ use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 #[cfg_accessible(rustc_attr_parsing::find_deprecation)]
 use rustc_attr_parsing::find_deprecation;
 
+#[cfg_accessible(rustc_attr_parsing::find_attr)]
+use rustc_attr_parsing::AttributeKind;
+
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{Item, ItemKind, Node, UseKind, UsePath};
 use rustc_middle::dep_graph::DepContext;
