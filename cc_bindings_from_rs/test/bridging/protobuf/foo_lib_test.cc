@@ -4,15 +4,13 @@
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo_lib.h"
 
-#include <memory>
-
 #include "gtest/gtest.h"
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
 
 namespace crubit {
 namespace {
 
-TEST(ProtoBridging, Basic) {
+TEST(ProtoBridging, ViewAndMutTypes) {
   foo_service::FooRequest req;
   req.set_input("hello world");
   foo_service::FooResponse rsp;
@@ -25,6 +23,26 @@ TEST(ProtoBridging, Basic) {
 
   const foo_service::FooRequestStats* req_stats = service.request_stats();
   EXPECT_EQ(req_stats->num_requests(), 1);
+}
+
+TEST(ProtoBridging, OwnedMessages) {
+  foo_lib::FooService service;
+
+  foo_service::FooRequestStats cloned_req_stats = service.clone_request_stats();
+  EXPECT_EQ(cloned_req_stats.num_requests(), 0);
+
+  // Update the local message and check that the service's stats are not
+  // updated i.e. it was actually cloned.
+  cloned_req_stats.set_num_requests(2);
+  EXPECT_EQ(service.request_stats()->num_requests(), 0);
+
+  service.update_request_stats(cloned_req_stats);
+  EXPECT_EQ(service.request_stats()->num_requests(), 2);
+
+  // Update the local message again and check that the service's stats are
+  // not updated.
+  cloned_req_stats.set_num_requests(3);
+  EXPECT_EQ(service.request_stats()->num_requests(), 2);
 }
 
 }  // namespace

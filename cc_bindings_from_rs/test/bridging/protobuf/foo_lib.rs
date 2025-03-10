@@ -20,4 +20,12 @@ impl FooService {
     pub fn request_stats(&self) -> FooRequestStatsView {
         self.stats.as_view()
     }
+
+    pub fn clone_request_stats(&self) -> FooRequestStats {
+        self.stats.clone()
+    }
+
+    pub fn update_request_stats(&mut self, updated_stats: FooRequestStats) {
+        self.stats = updated_stats;
+    }
 }
