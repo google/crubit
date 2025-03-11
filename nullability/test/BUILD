@@ -200,8 +200,6 @@ cc_test(
     srcs = ["function_calls.cc"],
     deps = [
         ":check_diagnostics",
-        "//nullability:type_nullability",
-        "@abseil-cpp//absl/strings",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
@@ -324,7 +322,6 @@ cc_test(
     srcs = ["smart_pointers_diagnosis.cc"],
     deps = [
         ":check_diagnostics",
-        "//nullability:type_nullability",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
@@ -426,7 +423,6 @@ cc_test(
     srcs = ["consistent_annotations.cc"],
     deps = [
         ":check_diagnostics",
-        "//nullability:type_nullability",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

@@ -49,8 +49,6 @@ using ::testing::IsEmpty;
 using ::testing::Matcher;
 using ::testing::Optional;
 
-static test::EnableSmartPointers Enable;
-
 class PointerTypeTest : public ::testing::Test {
  protected:
   QualType underlying(llvm::StringRef Name, TestAST& AST) {

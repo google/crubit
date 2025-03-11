@@ -5,14 +5,10 @@
 // Tests for diagnostics on smart pointers.
 
 #include "nullability/test/check_diagnostics.h"
-#include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
-
-// Static initializer turns on support for smart pointers.
-test::EnableSmartPointers Enable;
 
 TEST(SmartPointerTest, Dereference) {
   EXPECT_TRUE(checkDiagnostics(R"cc(

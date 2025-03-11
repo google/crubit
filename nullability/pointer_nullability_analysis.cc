@@ -779,8 +779,6 @@ void transferValue_SmartPointerComparisonOpCall(
 void transferValue_SharedPtrCastCall(
     const CallExpr *CE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (!smartPointersEnabled()) return;
-
   Environment &Env = State.Env;
   DataflowAnalysisContext &Ctx = Env.getDataflowAnalysisContext();
   Arena &A = Env.arena();
@@ -851,8 +849,6 @@ void transferValue_SharedPtrCastCall(
 void transferValue_WeakPtrLockCall(
     const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
-  if (!smartPointersEnabled()) return;
-
   RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*MCE);
   StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
 

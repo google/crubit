@@ -52,8 +52,6 @@ using ::testing::Pointwise;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
 
-test::EnableSmartPointers Enable;
-
 constexpr char MainFileName[] = "input.cc";
 
 template <typename DeclT, typename MatcherT>

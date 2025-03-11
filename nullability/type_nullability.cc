@@ -40,21 +40,6 @@
 
 namespace clang::tidy::nullability {
 
-// TODO - b/398880183: Remove this flag after 2025-03-10 if no issues arise with
-// it being true by default. enableSmartPointers(false) can be used to disable
-// it if issues do arise before then.
-static bool SmartPointersEnabled = true;
-
-namespace test {
-
-EnableSmartPointers::EnableSmartPointers() { enableSmartPointers(true); }
-
-}  // namespace test
-
-void enableSmartPointers(bool Enabled) { SmartPointersEnabled = Enabled; }
-
-bool smartPointersEnabled() { return SmartPointersEnabled; }
-
 bool isSupportedPointerType(QualType T) {
   return isSupportedRawPointerType(T) || isSupportedSmartPointerType(T);
 }
@@ -144,8 +129,6 @@ static QualType underlyingPointerTypeFromTemplateArg(
 }
 
 QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
-  if (!SmartPointersEnabled) return QualType();
-
   const CXXRecordDecl *RD = T.getCanonicalType()->getAsCXXRecordDecl();
   if (RD == nullptr) return QualType();
 

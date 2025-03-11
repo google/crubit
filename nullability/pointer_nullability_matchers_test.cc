@@ -4,7 +4,6 @@
 
 #include "nullability/pointer_nullability_matchers.h"
 
-#include "nullability/type_nullability.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
@@ -12,9 +11,6 @@
 
 namespace clang::tidy::nullability {
 namespace {
-
-// Static initializer turns on support for smart pointers.
-test::EnableSmartPointers Enable;
 
 using ast_matchers::match;
 

@@ -13,7 +13,6 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pragma.h"
 #include "nullability/proto_matchers.h"
-#include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
@@ -43,8 +42,6 @@ using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::IsSupersetOf;
 using ::testing::UnorderedElementsAre;
-
-test::EnableSmartPointers Enable;
 
 MATCHER_P2(inferredSlot, I, Nullability, "") {
   return testing::ExplainMatchResult(Eq(I), arg.first, result_listener) &&

@@ -76,7 +76,6 @@ cc_test(
     srcs = ["pointer_nullability_matchers_test.cc"],
     deps = [
         ":pointer_nullability_matchers",
-        ":type_nullability",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",

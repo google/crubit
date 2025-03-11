@@ -5,13 +5,10 @@
 // Tests for diagnostics that flag inconsistent nullability annotations.
 
 #include "nullability/test/check_diagnostics.h"
-#include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
-
-test::EnableSmartPointers Enable;
 
 TEST(ConsistentAnnotations, ConsistentParameter) {
   EXPECT_TRUE(checkDiagnostics(R"cc(

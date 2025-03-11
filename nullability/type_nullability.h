@@ -48,28 +48,6 @@
 
 namespace clang::tidy::nullability {
 
-namespace test {
-
-/// Instantiating a global instance of this class turns on support for smart
-/// pointers in the type_nullability library. This class is primarily intended
-/// for use in tests.
-class EnableSmartPointers {
- public:
-  EnableSmartPointers();
-};
-
-}  // namespace test
-
-// Enables or disables support for smart pointers in the type_nullability
-// library. (Disabled by default.)
-// This should only be called once before the first analysis is started.
-// If smart pointer support is not enabled, `isSupportedSmartPointerType()`
-// always returns false, `countPointers()` does not count smart pointers, etc.
-void enableSmartPointers(bool Enabled);
-
-/// Returns whether support for smart pointers has been turned on.
-bool smartPointersEnabled();
-
 /// Is this exactly a pointer type that we track outer nullability for?
 /// This unwraps sugar, i.e. it looks at the canonical type.
 ///

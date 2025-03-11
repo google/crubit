@@ -5,7 +5,6 @@
 // Tests for function calls.
 
 #include "nullability/test/check_diagnostics.h"
-#include "nullability/type_nullability.h"
 #include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -973,7 +972,6 @@ TEST(PointerNullabilityTest, ConstMethodReturningBool) {
 }
 
 TEST(PointerNullabilityTest, ConstMethodReturningSmartPointer) {
-  test::EnableSmartPointers Enable;
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
     struct S {
@@ -989,7 +987,6 @@ TEST(PointerNullabilityTest, ConstMethodReturningSmartPointer) {
 }
 
 TEST(PointerNullabilityTest, ConstMethodReturningSmartPointerByReference) {
-  test::EnableSmartPointers Enable;
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
     struct S {
@@ -1025,7 +1022,6 @@ TEST(PointerNullabilityTest, ConstOperatorReturningPointer) {
 }
 
 TEST(PointerNullabilityTest, NonConstMethodClearsSmartPointer) {
-  test::EnableSmartPointers Enable;
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
     struct S {

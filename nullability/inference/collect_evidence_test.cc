@@ -14,7 +14,6 @@
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/pragma.h"
-#include "nullability/type_nullability.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -69,8 +68,6 @@ using ::testing::Not;
 using ::testing::ResultOf;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
-
-test::EnableSmartPointers Enable;
 
 constexpr llvm::StringRef CheckMacroDefinitions = R"cc(
   // Bodies must reference the first param so that args are in the AST, but
