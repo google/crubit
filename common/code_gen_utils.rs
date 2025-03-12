@@ -6,6 +6,7 @@ use arc_anyhow::{anyhow, ensure, Result};
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
+use std::fmt::Write as _;
 use std::rc::Rc;
 use std::sync::LazyLock;
 
@@ -45,6 +46,111 @@ pub fn is_cpp_pointer_type(cpp_type: TokenStream) -> Option<CcConstQualifier> {
 }
 
 pub fn is_cpp_reserved_keyword(ident: &str) -> bool {
+    static RESERVED_CC_KEYWORDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
+        // `RESERVED_CC_KEYWORDS` are based on https://en.cppreference.com/w/cpp/keyword
+        [
+            "alignas",
+            "alignof",
+            "and",
+            "and_eq",
+            "asm",
+            "atomic_cancel",
+            "atomic_commit",
+            "atomic_noexcept",
+            "auto",
+            "bitand",
+            "bitor",
+            "bool",
+            "break",
+            "case",
+            "catch",
+            "char",
+            "char8_t",
+            "char16_t",
+            "char32_t",
+            "class",
+            "compl",
+            "concept",
+            "const",
+            "consteval",
+            "constexpr",
+            "constinit",
+            "const_cast",
+            "continue",
+            "co_await",
+            "co_return",
+            "co_yield",
+            "decltype",
+            "default",
+            "delete",
+            "do",
+            "double",
+            "dynamic_cast",
+            "else",
+            "enum",
+            "explicit",
+            "export",
+            "extern",
+            "false",
+            "float",
+            "for",
+            "friend",
+            "goto",
+            "if",
+            "inline",
+            "int",
+            "long",
+            "mutable",
+            "namespace",
+            "new",
+            "noexcept",
+            "not",
+            "not_eq",
+            "nullptr",
+            "operator",
+            "or",
+            "or_eq",
+            "private",
+            "protected",
+            "public",
+            "reflexpr",
+            "register",
+            "reinterpret_cast",
+            "requires",
+            "return",
+            "short",
+            "signed",
+            "sizeof",
+            "static",
+            "static_assert",
+            "static_cast",
+            "struct",
+            "switch",
+            "synchronized",
+            "template",
+            "this",
+            "thread_local",
+            "throw",
+            "true",
+            "try",
+            "typedef",
+            "typeid",
+            "typename",
+            "union",
+            "unsigned",
+            "using",
+            "virtual",
+            "void",
+            "volatile",
+            "wchar_t",
+            "while",
+            "xor",
+            "xor_eq",
+        ]
+        .into_iter()
+        .collect()
+    });
+
     RESERVED_CC_KEYWORDS.contains(ident)
 }
 
@@ -58,13 +164,11 @@ pub fn expect_format_cc_ident(ident: &str) -> TokenStream {
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
 pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
-    ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
-
     // C++ doesn't have an equivalent of
     // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
     // an error is returned when `ident` is a C++ reserved keyword.
     ensure!(
-        !RESERVED_CC_KEYWORDS.contains(ident),
+        !is_cpp_reserved_keyword(ident),
         "`{}` is a C++ reserved keyword and can't be used as a C++ identifier",
         ident
     );
@@ -73,7 +177,10 @@ pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
     // begin with a non-digit character (Latin letter, underscore, or Unicode
     // character of class XID_Start)".  One motivation for this check is to
     // explicitly catch names of tuple fields (e.g. `some_tuple.0`).
-    let first_char = ident.chars().next().expect("!is_empty checked above");
+    let first_char = ident
+        .chars()
+        .next()
+        .ok_or_else(|| anyhow!("Empty string is not a valid C++ identifier"))?;
     ensure!(
         unicode_ident::is_xid_start(first_char) || first_char == '_' || first_char == ':',
         "The following character can't be used as a start of a C++ identifier: {first_char}",
@@ -92,7 +199,7 @@ pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
 pub fn make_rs_ident(ident: &str) -> Ident {
     // TODO(https://github.com/dtolnay/syn/pull/1098): Remove the hardcoded list once syn recognizes
     // 2018 and 2021 keywords.
-    if ["async", "await", "try", "dyn"].contains(&ident) {
+    if matches!(ident, "async" | "await" | "try" | "dyn") {
         return format_ident!("r#{}", ident);
     }
     match syn::parse_str::<syn::Ident>(ident) {
@@ -137,8 +244,7 @@ pub fn escape_non_identifier_chars(symbol: &str) -> String {
                 if is_valid_identifier_char {
                     result.push(c);
                 } else {
-                    result.push_str("_x");
-                    result.push_str(&format!("{:08x}", c as u32));
+                    _ = write!(&mut result, "_x{:08x}", c as u32);
                 };
             }
         }
@@ -331,111 +437,6 @@ pub fn format_cc_includes(set_of_includes: &BTreeSet<CcInclude>) -> TokenStream 
     }
     tokens
 }
-
-static RESERVED_CC_KEYWORDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
-    // `RESERVED_CC_KEYWORDS` are based on https://en.cppreference.com/w/cpp/keyword
-    [
-        "alignas",
-        "alignof",
-        "and",
-        "and_eq",
-        "asm",
-        "atomic_cancel",
-        "atomic_commit",
-        "atomic_noexcept",
-        "auto",
-        "bitand",
-        "bitor",
-        "bool",
-        "break",
-        "case",
-        "catch",
-        "char",
-        "char8_t",
-        "char16_t",
-        "char32_t",
-        "class",
-        "compl",
-        "concept",
-        "const",
-        "consteval",
-        "constexpr",
-        "constinit",
-        "const_cast",
-        "continue",
-        "co_await",
-        "co_return",
-        "co_yield",
-        "decltype",
-        "default",
-        "delete",
-        "do",
-        "double",
-        "dynamic_cast",
-        "else",
-        "enum",
-        "explicit",
-        "export",
-        "extern",
-        "false",
-        "float",
-        "for",
-        "friend",
-        "goto",
-        "if",
-        "inline",
-        "int",
-        "long",
-        "mutable",
-        "namespace",
-        "new",
-        "noexcept",
-        "not",
-        "not_eq",
-        "nullptr",
-        "operator",
-        "or",
-        "or_eq",
-        "private",
-        "protected",
-        "public",
-        "reflexpr",
-        "register",
-        "reinterpret_cast",
-        "requires",
-        "return",
-        "short",
-        "signed",
-        "sizeof",
-        "static",
-        "static_assert",
-        "static_cast",
-        "struct",
-        "switch",
-        "synchronized",
-        "template",
-        "this",
-        "thread_local",
-        "throw",
-        "true",
-        "try",
-        "typedef",
-        "typeid",
-        "typename",
-        "union",
-        "unsigned",
-        "using",
-        "virtual",
-        "void",
-        "volatile",
-        "wchar_t",
-        "while",
-        "xor",
-        "xor_eq",
-    ]
-    .into_iter()
-    .collect()
-});
 
 #[cfg(test)]
 pub mod tests {
