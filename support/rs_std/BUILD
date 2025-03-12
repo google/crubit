@@ -1,5 +1,13 @@
 """C++ libraries that help work with Rust types."""
 
+load(
+    "@rules_rust//rust:defs.bzl",
+    "rust_library",
+)
+load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "cc_bindings_from_rust",
+)
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
@@ -31,6 +39,30 @@ crubit_cc_test(
         ":rs_char",
         "@com_google_googletest//:gtest_main",
     ],
+)
+
+cc_library(
+    name = "cpp_waker",
+    srcs = ["cpp_waker.cc"],
+    hdrs = ["cpp_waker.h"],
+    aspect_hints = ["//features:supported"],
+    visibility = ["//visibility:public"],
+)
+
+rust_library(
+    name = "dyn_future",
+    srcs = ["dyn_future.rs"],
+    aspect_hints = ["//features:supported"],
+    cc_deps = [
+        ":cpp_waker",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_bindings_from_rust(
+    name = "dyn_future_cc",
+    crate = ":dyn_future",
+    visibility = ["//visibility:public"],
 )
 
 cc_library(
