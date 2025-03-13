@@ -34,7 +34,7 @@ pub fn IsGreater(lhs: ffi::c_int, rhs: ffi::c_int) -> bool {...}
 ```
 
 Note: There are some temporary restrictions on the API shape. For example,
-functions that accept a type like `std::string` can't be called from Rust
+functions that accept a type like `std::vector` can't be called from Rust
 directly via Crubit. These restrictions will be relaxed over time.
 
 ### Rust {.new-tab}
