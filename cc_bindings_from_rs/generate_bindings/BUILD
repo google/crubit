@@ -23,8 +23,11 @@ rust_library(
         "generate_struct_and_union.rs",
         "lib.rs",
     ],
+    proc_macro_deps = [
+        "@crate_index//:rustversion",
+    ],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible"],
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":query_compiler",
@@ -48,7 +51,7 @@ crubit_rust_test(
     name = "bindings_test",
     crate = ":generate_bindings",
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible"],
+    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//cc_bindings_from_rs:run_compiler_test_support",

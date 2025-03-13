@@ -113,17 +113,19 @@ For each feature we use, we document the following:
 *   **Exit strategy:** Do not release, or release but with degraded
     AddressSanitizer results that hide bugs.
 
-### `cfg_accessible`
+### `cfg_accessible`, `stmt_expr_attributes`, `proc_macro_hygiene`
 
 *   **Crubit feature:** N/A, used internally by Crubit
 *   **Use case:** Crubit uses rustc as a library, which is subject to
     backwards-incompatible changes. `cfg_accessible` makes it much easier to
     write code which is compatible with two versions of rustc at the same time.
+    `stmt_expr_attributes`, `proc_macro_hygiene` lets us handle
+    backwards-incompatible changes affecting individual expressions.
 *   **Exit strategy:** If `cfg_accessible` changes during the very same update
     we are trying to be compatible with, we can't use it in the first place. If
     it changes in a future version, then the update has already completed
     successfully, so we can delete the usage (keeping the `cfg_accessible` usage
-    that is currently used, and deleting the other one).
+    that is currently used, and deleting the other one). Same for the rest.
 
 ## Unstable features **not** used by Crubit {#rejected}
 

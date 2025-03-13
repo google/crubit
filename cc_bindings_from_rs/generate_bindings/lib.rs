@@ -4,6 +4,8 @@
 #![feature(rustc_private)]
 #![feature(cfg_accessible)]
 #![deny(rustc::internal)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
 
 extern crate rustc_ast;
 extern crate rustc_attr_parsing;
