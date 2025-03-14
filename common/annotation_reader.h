@@ -71,6 +71,13 @@ absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
 std::optional<std::string> GetAnnotateArgAsStringByAttribute(
     const clang::Decl* decl, absl::string_view attribute);
 
+// Returns true if `decl` has an annotation with the given name.
+//
+// Returns an error if an annotation with the given name exists, but it has
+// arguments.
+absl::StatusOr<bool> HasAnnotationWithoutArgs(
+    const clang::Decl& decl, absl::string_view annotation_name);
+
 absl::Status RequireSingleStringArgIfExists(const clang::Decl* decl,
                                             absl::string_view attribute);
 }  // namespace crubit

@@ -98,6 +98,7 @@ fn test_function() {
                 id: ItemId(...),
                 enclosing_item_id: None,
                 adl_enclosing_record: None,
+                must_bind: false,
             }
         }
     );
@@ -1105,6 +1106,34 @@ fn test_type_conversion() -> Result<()> {
 }
 
 #[gtest]
+fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
+    let ir = ir_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
+    let record = ir.records().find(|record| *record.rs_name == "S").or_fail()?;
+    expect_that!(&**record, field!(&Record.must_bind, eq(true)));
+    Ok(())
+}
+
+#[gtest]
+fn test_must_bind_annotation_on_function() -> googletest::Result<()> {
+    let ir = ir_from_cc(r#"[[clang::annotate("crubit_must_bind")]] void f() {}"#).or_fail()?;
+    let func = ir.functions().find(|func| func.rs_name == "f").or_fail()?;
+    expect_that!(&**func, field!(&Func.must_bind, eq(true)));
+    Ok(())
+}
+
+#[gtest]
+fn test_must_bind_annotation_on_unbindable_type_produces_must_bind_error() -> googletest::Result<()>
+{
+    let ir = ir_from_cc(
+        r#"template<typename T> struct [[clang::annotate("crubit_must_bind", 7)]] S {};"#,
+    )
+    .or_fail()?;
+    let record = ir.unsupported_items().find(|item| &*item.name == "S").or_fail()?;
+    expect_that!(&**record, field!(&UnsupportedItem.must_bind, eq(true)));
+    Ok(())
+}
+
+#[gtest]
 fn test_typedef() -> Result<()> {
     let ir = ir_from_cc(
         r#"
@@ -1144,6 +1173,7 @@ fn test_typedef() -> Result<()> {
             underlying_type: #int,
             source_loc: ...
             enclosing_item_id: None,
+            must_bind: false,
           }
         }
     );
@@ -1160,6 +1190,7 @@ fn test_typedef() -> Result<()> {
             underlying_type: #int,
             source_loc: ...,
             enclosing_item_id: None,
+            must_bind: false,
           }
         }
     );

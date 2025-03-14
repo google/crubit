@@ -84,6 +84,10 @@ class ImportContext {
   virtual void ImportDeclsFromDeclContext(
       const clang::DeclContext* decl_context) = 0;
 
+  // Returns an unsupported item that will result in a hard error at binding
+  // generation time.
+  virtual IR::Item HardError(const clang::Decl& decl, FormattedError error) = 0;
+
   // Imports an unsupported item with a single formatted error message.
   virtual IR::Item ImportUnsupportedItem(
       const clang::Decl* decl, UnsupportedItem::Kind kind,

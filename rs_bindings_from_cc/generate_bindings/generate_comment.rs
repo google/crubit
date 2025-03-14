@@ -110,6 +110,15 @@ pub fn generate_unsupported(db: &dyn BindingsGenerator, item: &UnsupportedItem) 
         write!(&mut message, "{error:#}").unwrap();
     }
 
+    if item.must_bind {
+        let must_bind_message = [
+            &*message,
+            "\nThis is a hard error because the item was annotated with `CRUBIT_MUST_BIND`",
+        ]
+        .concat();
+        db.fatal_errors().report(&must_bind_message);
+    }
+
     ApiSnippets { main_api: quote! { __COMMENT__ #message }, ..Default::default() }
 }
 

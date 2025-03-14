@@ -285,6 +285,7 @@ cc_library(
         ":decl_importer",
         ":recording_diagnostic_consumer",
         ":type_map",
+        "//common:annotation_reader",
         "//common:status_macros",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc/importers:class_template",

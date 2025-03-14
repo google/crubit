@@ -95,13 +95,12 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   absl::StatusOr<std::optional<absl::string_view>> rust_type =
       GetRustTypeAttribute(type_decl);
   if (!rust_type.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        type_decl,
+    return ictx_.HardError(
+        *type_decl,
         // Failure here indicates that there was an incorrect attempt to use the
         // `crubit_internal_rust_type` attribute. This attribute should never
         // result in the generation of a Rust type, so we use the unnameable
         // kind.
-        UnsupportedItem::Kind::kUnnameable, std::nullopt,
         FormattedError::PrefixedStrCat(
             "Invalid crubit_internal_rust_type attribute",
             rust_type.status().message()));
@@ -111,11 +110,10 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   }
   absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
   if (!is_same_abi.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        type_decl, UnsupportedItem::Kind::kUnnameable, std::nullopt,
-        FormattedError::PrefixedStrCat(
-            "Invalid crubit_internal_is_same_abi attribute",
-            is_same_abi.status().message()));
+    return ictx_.HardError(*type_decl,
+                           FormattedError::PrefixedStrCat(
+                               "Invalid crubit_internal_is_same_abi attribute",
+                               is_same_abi.status().message()));
   }
 
   auto rs_name = std::string(**rust_type);

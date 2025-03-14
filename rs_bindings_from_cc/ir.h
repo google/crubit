@@ -486,6 +486,7 @@ struct Func {
   // Rust type modeling in src_code_gen makes it much easier to do on the
   // consuming end.
   std::optional<ItemId> adl_enclosing_record;
+  bool must_bind = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
@@ -732,6 +733,7 @@ struct Record {
 
   std::vector<ItemId> child_item_ids;
   std::optional<ItemId> enclosing_item_id;
+  bool must_bind = false;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -744,6 +746,7 @@ struct IncompleteRecord {
   std::optional<std::string> unknown_attr;
   RecordType record_type;
   std::optional<ItemId> enclosing_item_id;
+  bool must_bind = false;
 };
 
 struct Enumerator {
@@ -766,6 +769,7 @@ struct Enum {
   std::optional<std::vector<Enumerator>> enumerators;
   std::optional<std::string> unknown_attr;
   std::optional<ItemId> enclosing_item_id;
+  bool must_bind = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
@@ -785,6 +789,7 @@ struct TypeAlias {
   MappedType underlying_type;
   std::string source_loc;
   std::optional<ItemId> enclosing_item_id;
+  bool must_bind = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
@@ -889,6 +894,10 @@ struct UnsupportedItem {
   std::vector<FormattedError> errors;
   std::string source_loc;
   ItemId id;
+
+  // Whether the item required binding (was annotated with `CRUBIT_MUST_BIND`).
+  // If this is true, binding generation will fail with a hard error.
+  bool must_bind;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
@@ -900,6 +909,7 @@ struct Comment {
 
   std::string text;
   ItemId id;
+  bool must_bind = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
@@ -918,6 +928,7 @@ struct Namespace {
   std::vector<ItemId> child_item_ids;
   std::optional<ItemId> enclosing_item_id;
   bool is_inline = false;
+  bool must_bind = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {
@@ -933,6 +944,7 @@ struct UseMod {
   std::string path;
   Identifier mod_name;
   ItemId id;
+  bool must_bind = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const UseMod& use_mod) {
@@ -957,6 +969,7 @@ struct TypeMapOverride {
 
   bool is_same_abi;
   ItemId id;
+  bool must_bind = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o,
@@ -1022,6 +1035,8 @@ struct IR {
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       crubit_features;
 };
+
+void SetMustBindItem(IR::Item& item);
 
 inline std::string IrToJson(const IR& ir) {
   return std::string(llvm::formatv("{0:2}", ir.ToJson()));

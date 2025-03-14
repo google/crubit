@@ -341,6 +341,7 @@ llvm::json::Value TypeMapOverride::ToJson() const {
       {"owning_target", owning_target},
       {"is_same_abi", is_same_abi},
       {"id", id},
+      {"must_bind", must_bind},
   };
   if (size_align.has_value()) {
     override.insert({"size_align", size_align->ToJson()});
@@ -356,6 +357,7 @@ llvm::json::Value UseMod::ToJson() const {
       {"path", path},
       {"mod_name", mod_name},
       {"id", id},
+      {"must_bind", must_bind},
   };
 
   return llvm::json::Object{
@@ -399,6 +401,7 @@ llvm::json::Value Func::ToJson() const {
       {"id", id},
       {"enclosing_item_id", enclosing_item_id},
       {"adl_enclosing_record", adl_enclosing_record},
+      {"must_bind", must_bind},
   };
 
   return llvm::json::Object{
@@ -472,15 +475,14 @@ std::ostream& operator<<(std::ostream& o, const RecordType& record_type) {
 }
 
 llvm::json::Value IncompleteRecord::ToJson() const {
-  llvm::json::Object record{
-      {"cc_name", cc_name},
-      {"rs_name", rs_name},
-      {"id", id},
-      {"owning_target", owning_target},
-      {"unknown_attr", unknown_attr},
-      {"record_type", RecordTypeToString(record_type)},
-      {"enclosing_item_id", enclosing_item_id},
-  };
+  llvm::json::Object record{{"cc_name", cc_name},
+                            {"rs_name", rs_name},
+                            {"id", id},
+                            {"owning_target", owning_target},
+                            {"unknown_attr", unknown_attr},
+                            {"record_type", RecordTypeToString(record_type)},
+                            {"enclosing_item_id", enclosing_item_id},
+                            {"must_bind", must_bind}};
 
   return llvm::json::Object{
       {"IncompleteRecord", std::move(record)},
@@ -589,6 +591,7 @@ llvm::json::Value Record::ToJson() const {
       {"is_anon_record_with_typedef", is_anon_record_with_typedef},
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_item_id", enclosing_item_id},
+      {"must_bind", must_bind},
   };
 
   return llvm::json::Object{
@@ -615,6 +618,7 @@ llvm::json::Value Enum::ToJson() const {
       {"enumerators", enumerators},
       {"unknown_attr", unknown_attr},
       {"enclosing_item_id", enclosing_item_id},
+      {"must_bind", must_bind},
   };
 
   return llvm::json::Object{
@@ -623,17 +627,16 @@ llvm::json::Value Enum::ToJson() const {
 }
 
 llvm::json::Value TypeAlias::ToJson() const {
-  llvm::json::Object type_alias{
-      {"cc_name", cc_name},
-      {"rs_name", rs_name},
-      {"id", id},
-      {"owning_target", owning_target},
-      {"unknown_attr", unknown_attr},
-      {"doc_comment", doc_comment},
-      {"underlying_type", underlying_type},
-      {"source_loc", source_loc},
-      {"enclosing_item_id", enclosing_item_id},
-  };
+  llvm::json::Object type_alias{{"cc_name", cc_name},
+                                {"rs_name", rs_name},
+                                {"id", id},
+                                {"owning_target", owning_target},
+                                {"unknown_attr", unknown_attr},
+                                {"doc_comment", doc_comment},
+                                {"underlying_type", underlying_type},
+                                {"source_loc", source_loc},
+                                {"enclosing_item_id", enclosing_item_id},
+                                {"must_bind", must_bind}};
 
   return llvm::json::Object{
       {"TypeAlias", std::move(type_alias)},
@@ -692,6 +695,7 @@ llvm::json::Value UnsupportedItem::ToJson() const {
       {"errors", json_errors},
       {"source_loc", source_loc},
       {"id", id},
+      {"must_bind", must_bind},
   };
 
   return llvm::json::Object{
@@ -703,6 +707,7 @@ llvm::json::Value Comment::ToJson() const {
   llvm::json::Object comment{
       {"text", text},
       {"id", id},
+      {"must_bind", must_bind},
   };
   comment["id"] = id.value();
   return llvm::json::Object{
@@ -727,6 +732,7 @@ llvm::json::Value Namespace::ToJson() const {
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_item_id", enclosing_item_id},
       {"is_inline", is_inline},
+      {"must_bind", must_bind},
   };
 
   return llvm::json::Object{
@@ -773,6 +779,11 @@ llvm::json::Value IR::ToJson() const {
 std::string ItemToString(const IR::Item& item) {
   return std::visit(
       [&](auto&& item) { return llvm::formatv("{0}", item.ToJson()); }, item);
+}
+
+void SetMustBindItem(IR::Item& item) {
+  // All IR::Item variants have a `must_bind` field.
+  std::visit([](auto& item_variant) { item_variant.must_bind = true; }, item);
 }
 
 }  // namespace crubit

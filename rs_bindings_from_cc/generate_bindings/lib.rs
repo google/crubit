@@ -38,7 +38,10 @@ pub fn generate_bindings(
     fatal_errors: &dyn ReportFatalError,
     environment: Environment,
 ) -> Result<Bindings> {
-    let ir = deserialize_ir(json)?;
+    let ir = deserialize_ir(json).with_context(|| {
+        let ir_string = String::from_utf8_lossy(json);
+        format!("Failed to deserialize IR:\n{}", ir_string)
+    })?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
         &ir,

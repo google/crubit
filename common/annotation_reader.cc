@@ -20,32 +20,14 @@
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/StringRef.h"
 
 namespace crubit {
-
-absl::StatusOr<bool> GetExprAsBool(const clang::Expr& expr,
-                                   const clang::ASTContext& ast_context) {
-  clang::Expr::EvalResult eval_result;
-  if (!expr.EvaluateAsConstantExpr(eval_result, ast_context)) {
-    return absl::InvalidArgumentError(
-        "failed to evaluate annotation expression as a constant");
-  }
-  if (eval_result.Val.getKind() != clang::APValue::Int) {
-    return absl::InvalidArgumentError(
-        "annotation expression must evaluate to a bool");
-  }
-  const llvm::APSInt& int_value = eval_result.Val.getInt();
-  if (int_value.isZero()) {
-    return false;
-  } else {
-    // Non-zero values are treated as true.
-    return true;
-  }
-}
+namespace {
 
 // Returns the string literal value of `expr`.
 //
@@ -80,15 +62,6 @@ static absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
   }
 
   return {string_literal->getString()};
-}
-
-absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
-    const clang::Expr& expr,
-    const clang::ASTContext& ast_context ABSL_ATTRIBUTE_LIFETIME_BOUND) {
-  return GetExprAsStringLiteral(expr, ast_context, []() {
-    return absl::InvalidArgumentError(
-        "cannot evaluate argument as a string literal");
-  });
 }
 
 // Returns the `AnnotateAttr` with the given `annotation_name` if it exists. If
@@ -190,17 +163,65 @@ static absl::Status CheckAnnotationsConsistent(
   return absl::OkStatus();
 }
 
+// Returns the `clang::Decl` that should be used for reading annotations.
+//
+// Template declarations technically do not have annotations-- the *templated*
+// decl has annotations. So, if we're searching for annotations on a template
+// decl, we should search for annotations on the templated decl instead.
+static const clang::Decl& DeclForAnnotations(const clang::Decl& decl) {
+  auto* template_decl = clang::dyn_cast<clang::TemplateDecl>(&decl);
+  if (template_decl == nullptr) {
+    return decl;
+  }
+  auto* templated_decl = template_decl->getTemplatedDecl();
+  if (templated_decl == nullptr) {
+    return decl;
+  }
+  return *templated_decl;
+}
+
+}  // namespace
+
+absl::StatusOr<bool> GetExprAsBool(const clang::Expr& expr,
+                                   const clang::ASTContext& ast_context) {
+  clang::Expr::EvalResult eval_result;
+  if (!expr.EvaluateAsConstantExpr(eval_result, ast_context)) {
+    return absl::InvalidArgumentError(
+        "failed to evaluate annotation expression as a constant");
+  }
+  if (eval_result.Val.getKind() != clang::APValue::Int) {
+    return absl::InvalidArgumentError(
+        "annotation expression must evaluate to a bool");
+  }
+  const llvm::APSInt& int_value = eval_result.Val.getInt();
+  if (int_value.isZero()) {
+    return false;
+  } else {
+    // Non-zero values are treated as true.
+    return true;
+  }
+}
+
+absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
+    const clang::Expr& expr,
+    const clang::ASTContext& ast_context ABSL_ATTRIBUTE_LIFETIME_BOUND) {
+  return GetExprAsStringLiteral(expr, ast_context, []() {
+    return absl::InvalidArgumentError(
+        "cannot evaluate argument as a string literal");
+  });
+}
+
 absl::StatusOr<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
     const clang::Decl& decl, absl::string_view annotation_name) {
   const clang::AnnotateAttr* found_attr = nullptr;
 
   int num_found = 0;
-  for (const clang::Decl* redecl : decl.redecls()) {
-    if (redecl == nullptr) continue;
+  for (const clang::Decl* redecl_ptr : decl.redecls()) {
+    if (redecl_ptr == nullptr) continue;
+    const clang::Decl& redecl = DeclForAnnotations(*redecl_ptr);
 
-    CRUBIT_ASSIGN_OR_RETURN(
-        const clang::AnnotateAttr* attr,
-        GetAnnotateAttrSingleDecl(*redecl, annotation_name));
+    CRUBIT_ASSIGN_OR_RETURN(const clang::AnnotateAttr* attr,
+                            GetAnnotateAttrSingleDecl(redecl, annotation_name));
 
     if (attr != nullptr) {
       ++num_found;
@@ -216,8 +237,8 @@ absl::StatusOr<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
   // If only one redeclaration had an annotation, check the annotation against
   // itself. This checks that all arguments have the expected type.
   if (num_found == 1) {
-    CRUBIT_RETURN_IF_ERROR(CheckAnnotationsConsistent(found_attr, found_attr,
-                                                      decl.getASTContext()));
+    CRUBIT_RETURN_IF_ERROR(CheckAnnotationsConsistent(
+        found_attr, found_attr, DeclForAnnotations(decl).getASTContext()));
   }
 
   if (found_attr == nullptr) {
@@ -244,6 +265,23 @@ std::optional<std::string> GetAnnotateArgAsStringByAttribute(
     return std::nullopt;
   }
   return std::string(*maybe_val);
+}
+
+absl::StatusOr<bool> HasAnnotationWithoutArgs(const clang::Decl& decl,
+                                              absl::string_view annotation) {
+  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
+      GetAnnotateAttrArgs(decl, annotation);
+  if (!maybe_args.ok()) {
+    return maybe_args.status();
+  }
+  if (!maybe_args->has_value()) {
+    return false;
+  }
+  if (!maybe_args->value().empty()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Annotation ", annotation, " does not expect arguments."));
+  }
+  return true;
 }
 
 absl::Status RequireSingleStringArgIfExists(const clang::Decl* decl,

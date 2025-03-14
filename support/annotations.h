@@ -7,6 +7,45 @@
 
 #include "support/internal/attribute_macros.h"
 
+// Marks a function or type as requiring Rust binding.
+//
+// If Crubit fails to generate bindings for a function or type annotated with
+// `CRUBIT_MUST_BIND`, bindings generation for the entire target will fail
+// with a hard error.
+//
+// This can be useful when developing C++ API surfaces that are intended to be
+// used from Rust, as it produces a clear error message when a function is
+// missing bindings.
+//
+// For example, this C++ header will silently not produce bindings for
+// `foo` because overloads are not supported.
+//
+// ```c++
+// void foo();
+// void foo(int x);
+// void bar();
+// ```
+//
+// This default behavior allows `bar` to still receive bindings.
+//
+// By contrast, this C++ header will fail at binding generation time with an
+// error message describing that overloads are not supported:
+//
+// ```c++
+// CRUBIT_MUST_BIND void foo();
+// void foo(int x);
+// void bar();
+// ```
+//
+// The annotation can also be applied to a type:
+//
+// ```c++
+// struct CRUBIT_MUST_BIND Foo {
+//   int x;
+// };
+// ```
+#define CRUBIT_MUST_BIND CRUBIT_INTERNAL_ANNOTATE("crubit_must_bind")
+
 // By default, <internal link> will infer Rust safety based on the types of the
 // function's parameters. This annotation can be used to override that
 // inference.

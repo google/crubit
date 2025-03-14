@@ -70,6 +70,7 @@ class Importer final : public ImportContext {
   // Implementation of `ImportContext`
   void ImportDeclsFromDeclContext(
       const clang::DeclContext* decl_context) override;
+  IR::Item HardError(const clang::Decl& decl, FormattedError error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                  UnsupportedItem::Kind kind,
                                  std::optional<UnsupportedItem::Path> path,
@@ -78,6 +79,11 @@ class Importer final : public ImportContext {
                                  UnsupportedItem::Kind kind,
                                  std::optional<UnsupportedItem::Path> path,
                                  std::vector<FormattedError> error) override;
+  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 UnsupportedItem::Kind kind,
+                                 std::optional<UnsupportedItem::Path> path,
+                                 std::vector<FormattedError> error,
+                                 bool is_hard_error);
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
   std::optional<IR::Item> GetImportedItem(
       const clang::Decl* decl) const override;

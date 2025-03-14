@@ -34,15 +34,19 @@ using MyI8Alias [[clang::annotate("crubit_internal_rust_type", "i8")]] =
 // Invalid annotations cause bindings to fail to be generated.
 // (It's important not to fall back to the underlying type, since the user
 // intent was to override it.)
-using TooFewArgs [[clang::annotate("crubit_internal_rust_type")]] =
+// Uncomment these invalid annotations to observe the build-time errors.
+// TODO: b/402989591 - Use compile-fail UI test to check these outputs.
+using TooFewArgs /*[[clang::annotate("crubit_internal_rust_type")]]*/ =
     unsigned char;
-using TooManyArgs [[clang::annotate("crubit_internal_rust_type", "i8", "i8")]] =
-    unsigned char;
-using NonStringArg [[clang::annotate("crubit_internal_rust_type", 8)]] =
+using TooManyArgs
+    /*[[clang::annotate("crubit_internal_rust_type", "i8", "i8")]]*/
+    = unsigned char;
+using NonStringArg /*[[clang::annotate("crubit_internal_rust_type", 8)]]*/ =
     unsigned char;
 using BadSameAbiAttr
-    [[clang::annotate("crubit_internal_rust_type", "i8")]] [[clang::annotate(
-        "crubit_internal_same_abi", true)]] = unsigned char;
+    /*[[clang::annotate("crubit_internal_rust_type", "i8")]] [[clang::annotate(
+        "crubit_internal_same_abi", true)]]*/
+    = unsigned char;
 
 struct TypeMapOverrideFieldTypes final {
   MyI8Struct my_i8_struct;

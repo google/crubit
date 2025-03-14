@@ -26,17 +26,18 @@
 
 // Type bindings for MyI8Alias suppressed due to being mapped to an existing Rust type (i8)
 
-// Error while generating bindings for item 'TooFewArgs':
-// Invalid crubit_internal_rust_type attribute: The `crubit_internal_rust_type` attribute requires a single string literal argument, the Rust type.
+/// Invalid annotations cause bindings to fail to be generated.
+/// (It's important not to fall back to the underlying type, since the user
+/// intent was to override it.)
+/// Uncomment these invalid annotations to observe the build-time errors.
+/// TODO: b/402989591 - Use compile-fail UI test to check these outputs.
+pub type TooFewArgs = ::core::ffi::c_uchar;
 
-// Error while generating bindings for item 'TooManyArgs':
-// Invalid crubit_internal_rust_type attribute: The `crubit_internal_rust_type` attribute requires a single string literal argument, the Rust type.
+pub type TooManyArgs = ::core::ffi::c_uchar;
 
-// Error while generating bindings for item 'NonStringArg':
-// Invalid crubit_internal_rust_type attribute: cannot evaluate argument as a string literal
+pub type NonStringArg = ::core::ffi::c_uchar;
 
-// Error while generating bindings for item 'BadSameAbiAttr':
-// Invalid crubit_internal_is_same_abi attribute: The `crubit_internal_same_abi` attribute takes no arguments.
+pub type BadSameAbiAttr = ::core::ffi::c_uchar;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -46,9 +47,7 @@ pub struct TypeMapOverrideFieldTypes {
     pub my_i8_class: i8,
     pub my_i8_enum: i8,
     pub my_i8_alias: i8,
-    /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type 'TooFewArgs': No generated bindings found for 'TooFewArgs'
-    pub(crate) error: [::core::mem::MaybeUninit<u8>; 1],
+    pub error: crate::TooFewArgs,
 }
 impl !Send for TypeMapOverrideFieldTypes {}
 impl !Sync for TypeMapOverrideFieldTypes {}

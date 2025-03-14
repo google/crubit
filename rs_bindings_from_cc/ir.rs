@@ -40,6 +40,9 @@ pub trait GenericItem {
     /// A human-readable list of unknown attributes, or None if all attributes
     /// were understood.
     fn unknown_attr(&self) -> Option<Rc<str>>;
+
+    /// Whether failure to generate binding should be treated as a hard error (`CRUBIT_MUST_BIND`).
+    fn must_bind(&self) -> bool;
 }
 
 impl<T> GenericItem for Rc<T>
@@ -60,6 +63,9 @@ where
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
         (**self).unknown_attr()
+    }
+    fn must_bind(&self) -> bool {
+        (**self).must_bind()
     }
 }
 
@@ -283,6 +289,12 @@ impl PartialEq<str> for Identifier {
     }
 }
 
+impl PartialEq<&str> for Identifier {
+    fn eq(&self, other: &&str) -> bool {
+        self.eq(*other)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IntegerConstant {
@@ -442,6 +454,22 @@ impl Debug for UnqualifiedIdentifier {
     }
 }
 
+impl PartialEq<str> for UnqualifiedIdentifier {
+    fn eq(&self, other: &str) -> bool {
+        if let UnqualifiedIdentifier::Identifier(identifier) = self {
+            &*identifier.identifier == other
+        } else {
+            false
+        }
+    }
+}
+
+impl PartialEq<&str> for UnqualifiedIdentifier {
+    fn eq(&self, other: &&str) -> bool {
+        self.eq(*other)
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
 pub enum ReferenceQualification {
     LValue,
@@ -535,6 +563,7 @@ pub struct Func {
     /// The record pointed to by `ItemId` must then be ADL-visible in order to
     /// invoke this function.
     pub adl_enclosing_record: Option<ItemId>,
+    pub must_bind: bool,
 }
 
 impl GenericItem for Func {
@@ -570,6 +599,9 @@ impl GenericItem for Func {
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
         self.unknown_attr.clone()
+    }
+    fn must_bind(&self) -> bool {
+        self.must_bind
     }
 }
 
@@ -641,6 +673,7 @@ pub struct IncompleteRecord {
     pub unknown_attr: Option<Rc<str>>,
     pub record_type: RecordType,
     pub enclosing_item_id: Option<ItemId>,
+    pub must_bind: bool,
 }
 
 impl GenericItem for IncompleteRecord {
@@ -658,6 +691,9 @@ impl GenericItem for IncompleteRecord {
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
         self.unknown_attr.clone()
+    }
+    fn must_bind(&self) -> bool {
+        self.must_bind
     }
 }
 
@@ -770,6 +806,7 @@ pub struct Record {
     pub is_anon_record_with_typedef: bool,
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_item_id: Option<ItemId>,
+    pub must_bind: bool,
 }
 
 impl GenericItem for Record {
@@ -787,6 +824,9 @@ impl GenericItem for Record {
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
         self.unknown_attr.clone()
+    }
+    fn must_bind(&self) -> bool {
+        self.must_bind
     }
 }
 
@@ -867,6 +907,7 @@ pub struct Enum {
     /// A human-readable list of attributes that Crubit doesn't understand.
     pub unknown_attr: Option<Rc<str>>,
     pub enclosing_item_id: Option<ItemId>,
+    pub must_bind: bool,
 }
 
 impl GenericItem for Enum {
@@ -884,6 +925,9 @@ impl GenericItem for Enum {
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
         self.unknown_attr.clone()
+    }
+    fn must_bind(&self) -> bool {
+        self.must_bind
     }
 }
 
@@ -909,6 +953,7 @@ pub struct TypeAlias {
     pub underlying_type: MappedType,
     pub source_loc: Rc<str>,
     pub enclosing_item_id: Option<ItemId>,
+    pub must_bind: bool,
 }
 
 impl GenericItem for TypeAlias {
@@ -926,6 +971,9 @@ impl GenericItem for TypeAlias {
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
         self.unknown_attr.clone()
+    }
+    fn must_bind(&self) -> bool {
+        self.must_bind
     }
 }
 
@@ -991,6 +1039,8 @@ pub struct UnsupportedItem {
     errors: Vec<Rc<FormattedError>>,
     pub source_loc: Option<Rc<str>>,
     pub id: ItemId,
+    pub must_bind: bool,
+
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
     /// memoized result of converting `errors`.
     #[serde(skip)]
@@ -1013,6 +1063,9 @@ impl GenericItem for UnsupportedItem {
     fn unknown_attr(&self) -> Option<Rc<str>> {
         None
     }
+    fn must_bind(&self) -> bool {
+        self.must_bind
+    }
 }
 
 impl UnsupportedItem {
@@ -1022,6 +1075,7 @@ impl UnsupportedItem {
         path: Option<UnsupportedItemPath>,
         error: Option<Rc<FormattedError>>,
         cause: Option<Error>,
+        must_bind: bool,
     ) -> Self {
         Self {
             name: item.debug_name(ir),
@@ -1031,6 +1085,7 @@ impl UnsupportedItem {
             source_loc: item.source_loc(),
             id: item.id(),
             cause: IgnoredField(cause.map(|e| OnceCell::from(vec![e])).unwrap_or_default()),
+            must_bind,
         }
     }
 
@@ -1046,6 +1101,7 @@ impl UnsupportedItem {
             path,
             Some(Rc::new(FormattedError { fmt: message.into(), message: message.into() })),
             None,
+            item.must_bind(),
         )
     }
 
@@ -1055,7 +1111,7 @@ impl UnsupportedItem {
         path: Option<UnsupportedItemPath>,
         cause: Error,
     ) -> Self {
-        Self::new(ir, item, path, None, Some(cause))
+        Self::new(ir, item, path, None, Some(cause), item.must_bind())
     }
 
     pub fn errors(&self) -> &[Error] {
@@ -1079,6 +1135,7 @@ impl UnsupportedItem {
 pub struct Comment {
     pub text: Rc<str>,
     pub id: ItemId,
+    pub must_bind: bool,
 }
 
 impl GenericItem for Comment {
@@ -1097,6 +1154,9 @@ impl GenericItem for Comment {
     fn unknown_attr(&self) -> Option<Rc<str>> {
         None
     }
+    fn must_bind(&self) -> bool {
+        self.must_bind
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1113,6 +1173,7 @@ pub struct Namespace {
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_item_id: Option<ItemId>,
     pub is_inline: bool,
+    pub must_bind: bool,
 }
 
 impl GenericItem for Namespace {
@@ -1131,6 +1192,9 @@ impl GenericItem for Namespace {
     fn unknown_attr(&self) -> Option<Rc<str>> {
         self.unknown_attr.clone()
     }
+    fn must_bind(&self) -> bool {
+        self.must_bind
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1139,6 +1203,7 @@ pub struct UseMod {
     pub path: Rc<str>,
     pub mod_name: Identifier,
     pub id: ItemId,
+    pub must_bind: bool,
 }
 
 impl GenericItem for UseMod {
@@ -1157,6 +1222,9 @@ impl GenericItem for UseMod {
     fn unknown_attr(&self) -> Option<Rc<str>> {
         None
     }
+    fn must_bind(&self) -> bool {
+        self.must_bind
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1169,6 +1237,7 @@ pub struct TypeMapOverride {
     pub size_align: Option<SizeAlign>,
     pub is_same_abi: bool,
     pub id: ItemId,
+    pub must_bind: bool,
 }
 
 impl GenericItem for TypeMapOverride {
@@ -1186,6 +1255,9 @@ impl GenericItem for TypeMapOverride {
     }
     fn unknown_attr(&self) -> Option<Rc<str>> {
         None
+    }
+    fn must_bind(&self) -> bool {
+        self.must_bind
     }
 }
 
@@ -1261,6 +1333,13 @@ impl GenericItem for Item {
         forward_item! {
             match self {
                 _(x) => x.unknown_attr()
+            }
+        }
+    }
+    fn must_bind(&self) -> bool {
+        forward_item! {
+            match self {
+                _(x) => x.must_bind()
             }
         }
     }

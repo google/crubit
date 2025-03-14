@@ -30,6 +30,7 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
+#include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/annotations_consumer.h"
@@ -683,11 +684,28 @@ bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
 
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   if (IsTransitivelyInPrivate(decl)) return std::nullopt;
+
+  const absl::StatusOr<bool> must_bind =
+      HasAnnotationWithoutArgs(*decl, "crubit_must_bind");
+  if (!must_bind.ok()) {
+    return HardError(*decl, FormattedError::FromStatus(must_bind.status()));
+  }
+
   for (auto& importer : decl_importers_) {
     std::optional<IR::Item> result = importer->ImportDecl(decl);
     if (result.has_value()) {
+      if (*must_bind) {
+        SetMustBindItem(*result);
+      }
       return result;
     }
+  }
+
+  if (*must_bind) {
+    return HardError(
+        *decl,
+        FormattedError::Static(
+            "No importer found for decl with CRUBIT_MUST_BIND annotation"));
   }
   return std::nullopt;
 }
@@ -742,37 +760,44 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
 }
 
+IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
+  return ImportUnsupportedItem(&decl, UnsupportedItem::Kind::kUnnameable,
+                               std::nullopt, {error}, /*is_hard_error=*/true);
+}
+
 IR::Item Importer::ImportUnsupportedItem(
     const clang::Decl* decl, UnsupportedItem::Kind kind,
     std::optional<UnsupportedItem::Path> path, FormattedError error) {
-  std::string name = "unnamed";
-  if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
-    name = named_decl->getQualifiedNameAsString();
-  }
-  std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
-  return UnsupportedItem{.name = name,
-                         .kind = kind,
-                         .path = std::move(path),
-                         .errors = {error},
-                         .source_loc = source_loc,
-                         .id = GenerateItemId(decl)};
+  return ImportUnsupportedItem(decl, kind, std::move(path),
+                               std::vector<FormattedError>({std::move(error)}));
 }
 
 IR::Item Importer::ImportUnsupportedItem(
     const clang::Decl* decl, UnsupportedItem::Kind kind,
     std::optional<UnsupportedItem::Path> path,
     std::vector<FormattedError> errors) {
+  return ImportUnsupportedItem(decl, kind, std::move(path), std::move(errors),
+                               /*is_hard_error=*/false);
+}
+
+IR::Item Importer::ImportUnsupportedItem(
+    const clang::Decl* decl, UnsupportedItem::Kind kind,
+    std::optional<UnsupportedItem::Path> path,
+    std::vector<FormattedError> errors, bool is_hard_error) {
   std::string name = "unnamed";
   if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
   std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
-  return UnsupportedItem{.name = name,
-                         .kind = kind,
-                         .path = std::move(path),
-                         .errors = std::move(errors),
-                         .source_loc = source_loc,
-                         .id = GenerateItemId(decl)};
+  return UnsupportedItem{
+      .name = name,
+      .kind = kind,
+      .path = std::move(path),
+      .errors = std::move(errors),
+      .source_loc = source_loc,
+      .id = GenerateItemId(decl),
+      .must_bind = is_hard_error,
+  };
 }
 
 static bool ShouldKeepCommentLine(absl::string_view line) {

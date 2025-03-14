@@ -93,6 +93,9 @@ impl ir::GenericItem for TestItem {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Unnameable
     }
+    fn must_bind(&self) -> bool {
+        false
+    }
 }
 
 struct TestDbFactory {
