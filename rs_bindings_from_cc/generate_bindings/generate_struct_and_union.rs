@@ -4,7 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
+use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::ApiSnippets;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind, TypeLocation};
@@ -736,7 +736,7 @@ pub fn generate_derives(record: &Record) -> Vec<Ident> {
 }
 
 fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Result<TokenStream> {
-    let record_ident = expect_format_cc_ident(record.cc_name.identifier.as_ref());
+    let record_ident = expect_format_cc_type_name(record.cc_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(record).format_for_cc()?;
     let tag_kind = record.cc_tag_kind();
     let field_assertions = record
@@ -756,7 +756,7 @@ fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Re
             let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
 
             let field_ident =
-                expect_format_cc_ident(&field.identifier.as_ref().unwrap().identifier);
+                expect_format_cc_type_name(&field.identifier.as_ref().unwrap().identifier);
             let actual_offset = quote! {
                 CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident)
             };

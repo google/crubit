@@ -144,6 +144,23 @@ pub fn write_unformatted_tokens(
                     bail!("__COMMENT__ must be followed by a literal")
                 }
             }
+            TokenTree::Ident(tt) if tt == "__LITERALLY__" => {
+                if let Some(TokenTree::Literal(lit)) = it.next() {
+                    // TokenTree::Literal does not provide a structured way to
+                    // get the value out, so we have to use the Display impl to
+                    // print the string literal as Rust syntax and unescape it.
+                    writeln!(
+                        result,
+                        "{}",
+                        lit.to_string()
+                            .trim_matches('"')
+                            .replace("\\\"", "\"")
+                            .replace("\\\\", "\\")
+                    )?;
+                } else {
+                    bail!("__LITERALLY__ must be followed by a literal")
+                }
+            }
             TokenTree::Group(tt) => {
                 let (open_delimiter, closed_delimiter) = match tt.delimiter() {
                     Delimiter::Parenthesis => ("(", ")"),

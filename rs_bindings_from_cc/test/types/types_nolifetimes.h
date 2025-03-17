@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <cstdint>
 #include <type_traits>
 
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NOLIFETIMES_H_
@@ -34,6 +35,14 @@ TEST(FuncRef, std::type_identity_t<void()> &);
 TEST(FuncPtr, std::type_identity_t<void()> *);
 TEST(UnsafeFuncRef, std::type_identity_t<void(void *)> &);
 TEST(UnsafeFuncPtr, std::type_identity_t<void(void *)> *);
+
+template <uint8_t default_value>
+struct IntTemplateStruct {
+  uint8_t field = default_value;
+};
+
+TEST(IntTemplate, IntTemplateStruct<1>);
+TEST(IntTemplateCharEscape, IntTemplateStruct<'\f'>);
 
 #undef TEST
 

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use code_gen_utils::expect_format_cc_ident;
+use code_gen_utils::expect_format_cc_type_name;
 use error_report::{anyhow, bail};
 use ir::{CcType, Item, Record, IR};
 use proc_macro2::TokenStream;
@@ -24,7 +24,7 @@ pub fn cpp_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream>
 }
 
 pub fn cpp_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
-    let ident = expect_format_cc_ident(record.cc_name.identifier.as_ref());
+    let ident = expect_format_cc_type_name(record.cc_name.identifier.as_ref());
     let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
     Ok(quote! { #namespace_qualifier #ident })
 }
@@ -134,19 +134,19 @@ fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
 
     match item {
         Item::IncompleteRecord(incomplete_record) => {
-            let ident = expect_format_cc_ident(incomplete_record.cc_name.identifier.as_ref());
+            let ident = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
             let namespace_qualifier = ir.namespace_qualifier(incomplete_record).format_for_cc()?;
             let tag_kind = incomplete_record.record_type;
             Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
         Item::Record(record) => cpp_type_name_for_record(record, ir),
         Item::Enum(enum_) => {
-            let ident = expect_format_cc_ident(&enum_.rs_name.identifier);
+            let ident = expect_format_cc_type_name(&enum_.rs_name.identifier);
             let qualifier = cpp_qualified_path_prefix(item, ir)?;
             Ok(quote! { #qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
-            let ident = expect_format_cc_ident(&type_alias.cc_name.identifier);
+            let ident = expect_format_cc_type_name(&type_alias.cc_name.identifier);
             let qualifier = cpp_qualified_path_prefix(item, ir)?;
             Ok(quote! { #qualifier #ident })
         }

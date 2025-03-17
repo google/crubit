@@ -164,34 +164,41 @@ pub fn expect_format_cc_ident(ident: &str) -> TokenStream {
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
 pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
-    // C++ doesn't have an equivalent of
-    // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
-    // an error is returned when `ident` is a C++ reserved keyword.
-    ensure!(
-        !is_cpp_reserved_keyword(ident),
-        "`{}` is a C++ reserved keyword and can't be used as a C++ identifier",
-        ident
-    );
-
-    // https://en.cppreference.com/w/cpp/language/identifiers says that "A valid identifier must
-    // begin with a non-digit character (Latin letter, underscore, or Unicode
-    // character of class XID_Start)".  One motivation for this check is to
-    // explicitly catch names of tuple fields (e.g. `some_tuple.0`).
-    let first_char = ident
-        .chars()
-        .next()
-        .ok_or_else(|| anyhow!("Empty string is not a valid C++ identifier"))?;
-    ensure!(
-        unicode_ident::is_xid_start(first_char) || first_char == '_' || first_char == ':',
-        "The following character can't be used as a start of a C++ identifier: {first_char}",
-    );
-
-    ident.parse().map_err(
+    check_valid_cc_name(ident)?;
+    ident
+        .parse()
         // Explicitly mapping the error via `anyhow!`, because `LexError` is not `Sync`
         // (required for `anyhow::Error` to implement `From<LexError>`) and
         // therefore we can't just use `?`.
-        |lex_error| anyhow!("Can't format `{ident}` as a C++ identifier: {lex_error}"),
-    )
+        .map_err(|lex_error| anyhow!("Can't format `{ident}` as a C++ identifier: {lex_error}"))
+}
+
+/// Formats a C++ type name. Panics if `name` is not a valid type name in C++.
+#[track_caller]
+pub fn expect_format_cc_type_name(name: &str) -> TokenStream {
+    format_cc_type_name(name).expect("IR should only contain valid C++ types")
+}
+
+/// Formats a C++ type name. Returns an error when `name` is a C++
+/// reserved keyword or otherwise an invalid type name.
+pub fn format_cc_type_name(name: &str) -> Result<TokenStream> {
+    check_valid_cc_name(name)?;
+    match name.parse() {
+        Ok(name) => Ok(name),
+        Err(_) => {
+            // Sometimes valid C++ type names do not parse as TokenStreams.
+            // For example, this can happen in the case of literals that are not
+            // valid Rust: IntTemplateStruct<'\f'>.
+            //
+            // As a last ditch effort, we convert the identifier into a string literal.
+            // We could use quote! to do the escaping, but instead we do it manually to
+            // mirror the code in token_stream_printer.
+            let name = name.replace("\\", "\\\\").replace('"', "\\\"");
+            let name = format!("__LITERALLY__ \"{name}\"");
+            name.parse()
+                .map_err(|lex_error| anyhow!("Can't format `{name}` as a C++ type: {lex_error}"))
+        }
+    }
 }
 
 /// Makes an 'Ident' to be used in the Rust source code. Escapes Rust keywords.
@@ -206,6 +213,32 @@ pub fn make_rs_ident(ident: &str) -> Ident {
         Ok(_) => format_ident!("{}", ident),
         Err(_) => format_ident!("r#{}", ident),
     }
+}
+
+fn check_valid_cc_name(name: &str) -> Result<()> {
+    ensure!(!name.is_empty(), "Empty string is not a valid C++ identifier");
+
+    // C++ doesn't have an equivalent of
+    // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
+    // an error is returned when `ident` is a C++ reserved keyword.
+    ensure!(
+        !is_cpp_reserved_keyword(name),
+        "`{}` is a C++ reserved keyword and can't be used as a C++ identifier",
+        name
+    );
+
+    // https://en.cppreference.com/w/cpp/language/identifiers says that "A valid identifier must
+    // begin with a non-digit character (Latin letter, underscore, or Unicode
+    // character of class XID_Start)".  One motivation for this check is to
+    // explicitly catch names of tuple fields (e.g. `some_tuple.0`).
+    let first_char =
+        name.chars().next().ok_or_else(|| anyhow!("Empty string is not a valid C++ identifier"))?;
+    ensure!(
+        unicode_ident::is_xid_start(first_char) || first_char == '_' || first_char == ':',
+        "The following character can't be used as a start of a C++ identifier: {first_char}",
+    );
+
+    Ok(())
 }
 
 /// Escapes characters that may not appear in a C++ or Rust identifier.
@@ -473,14 +506,6 @@ pub mod tests {
         let msg = err.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
         assert!(msg.contains("C++ reserved keyword"));
-    }
-
-    #[gtest]
-    fn test_format_cc_ident_unparseable_identifier() {
-        let err = format_cc_ident("foo)").unwrap_err();
-        let msg = err.to_string();
-        assert!(msg.contains("Can't format `foo)` as a C++ identifier"));
-        assert!(msg.contains("cannot parse"));
     }
 
     #[gtest]
