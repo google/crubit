@@ -17,12 +17,12 @@ use std::task::{RawWaker, RawWakerVTable, Waker};
 pub struct DynFuture(Option<Pin<Box<dyn Future<Output = ()> + Send + 'static>>>);
 
 impl DynFuture {
-    /// Returns whether `try_complete` has returned `true` or `discard` has been called.
+    /// Returns whether `poll` has returned `true` or `discard` has been called.
     pub fn is_completed_or_discarded(&self) -> bool {
         self.0.is_none()
     }
 
-    /// Discards the `DynFuture`.
+    /// Discards the `DynFuture`, throwing away the underlying future.
     pub fn discard(&mut self) {
         self.0 = None;
     }
@@ -32,14 +32,14 @@ impl DynFuture {
         Self(Some(Box::pin(future)))
     }
 
-    /// Attempts to complete the future by polling it. Returns `true` if the future was completed.
+    /// Attempts to complete the future by polling it. Returns `true` if the future became ready.
     ///
-    /// This function must not be called on a completed or discarded `DynFuture`.
+    /// This function must not be called after `discard` or after `poll` returns true.
     ///
     /// # Safety
     ///
     /// `waker_ptr` must be a valid pointer to a `CppWaker`.
-    pub unsafe fn try_complete(&mut self, waker_ptr: *const CppWaker) -> bool {
+    pub unsafe fn poll(&mut self, waker_ptr: *const CppWaker) -> bool {
         // Wrap in `ManuallyDrop` because we don't want to decrease the refcount when this function
         // completes.
         // Safety: the `wakeup_object` is managed by `wakeup_vtable` as required by the function.
