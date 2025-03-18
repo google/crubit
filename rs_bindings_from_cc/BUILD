@@ -297,6 +297,7 @@ cc_library(
         "//rs_bindings_from_cc/importers:namespace",
         "//rs_bindings_from_cc/importers:type_alias",
         "//rs_bindings_from_cc/importers:type_map_override",
+        "//rs_bindings_from_cc/importers:var",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",

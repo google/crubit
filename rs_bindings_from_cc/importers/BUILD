@@ -64,6 +64,20 @@ cc_library(
 )
 
 cc_library(
+    name = "var",
+    srcs = ["var.cc"],
+    hdrs = ["var.h"],
+    deps = [
+        "//rs_bindings_from_cc:ast_util",
+        "//rs_bindings_from_cc:cc_ir",
+        "//rs_bindings_from_cc:decl_importer",
+        "@abseil-cpp//absl/log:check",
+        "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "friend",
     srcs = ["friend.cc"],
     hdrs = ["friend.h"],

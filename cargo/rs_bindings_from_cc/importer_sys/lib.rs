@@ -20,3 +20,4 @@ extern crate type_alias_sys;
 extern crate type_lifetimes_sys;
 extern crate type_map_override_sys;
 extern crate type_map_sys;
+extern crate var_sys;

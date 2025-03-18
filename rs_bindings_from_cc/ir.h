@@ -772,6 +772,21 @@ struct Enum {
   bool must_bind = false;
 };
 
+struct GlobalVar {
+  llvm::json::Value ToJson() const;
+
+  Identifier cc_name;
+  Identifier rs_name;
+  ItemId id;
+  BazelLabel owning_target;
+  std::string source_loc;
+  std::optional<std::string> mangled_name;
+  MappedType type;
+  std::optional<std::string> unknown_attr;
+  std::optional<ItemId> enclosing_item_id;
+  bool must_bind = false;
+};
+
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
   return o << std::string(llvm::formatv("{0:2}", r.ToJson()));
 }
@@ -1014,8 +1029,8 @@ struct IR {
   BazelLabel current_target;
 
   using Item = std::variant<Func, Record, IncompleteRecord, Enum, TypeAlias,
-                            UnsupportedItem, Comment, Namespace, UseMod,
-                            TypeMapOverride>;
+                            GlobalVar, UnsupportedItem, Comment, Namespace,
+                            UseMod, TypeMapOverride>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
   // Empty string signals that the bindings should be generated in the crate

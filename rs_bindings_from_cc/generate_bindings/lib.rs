@@ -103,6 +103,27 @@ fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Re
     .into())
 }
 
+fn generate_global_var(db: &dyn BindingsGenerator, var: &GlobalVar) -> Result<ApiSnippets> {
+    let ident = make_rs_ident(&var.rs_name.identifier);
+    let type_ = db.rs_type_kind(var.type_.rs_type.clone())?;
+
+    let link_name = if let Some(mangled_name) = &var.mangled_name {
+        let mangled_name = &**mangled_name;
+        quote! { #[link_name = #mangled_name] }
+    } else {
+        quote! {}
+    };
+    let mutness = if !var.type_.cpp_type.is_const { quote!(mut) } else { quote!() };
+    let type_tokens = type_.to_token_stream(db);
+    Ok(quote! {
+        extern "C" {
+            #link_name
+            pub static #mutness #ident: #type_tokens;
+        }
+    }
+    .into())
+}
+
 fn generate_namespace(db: &dyn BindingsGenerator, namespace: &Namespace) -> Result<ApiSnippets> {
     let ir = db.ir();
     let mut items = vec![];
@@ -253,6 +274,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
         }
         Item::Record(record) => db.generate_record(Rc::clone(record))?,
         Item::Enum(enum_) => db.generate_enum(Rc::clone(enum_))?,
+        Item::GlobalVar(var) => generate_global_var(db, var)?,
         Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias)?,
         Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported),
         Item::Comment(comment) => generate_comment(comment)?,

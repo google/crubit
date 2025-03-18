@@ -287,6 +287,7 @@ pub fn required_crubit_features(
                 &|| "".into(),
             );
         }
+        Item::GlobalVar(_) => {}
         Item::Namespace(_) => {
             require_any_feature(
                 &mut missing_features,

@@ -30,6 +30,7 @@
 #include "rs_bindings_from_cc/importers/namespace.h"
 #include "rs_bindings_from_cc/importers/type_alias.h"
 #include "rs_bindings_from_cc/importers/type_map_override.h"
+#include "rs_bindings_from_cc/importers/var.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
@@ -55,6 +56,7 @@ class Importer final : public ImportContext {
         std::make_unique<ClassTemplateDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<EnumDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<VarDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<FriendDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<FunctionDeclImporter>(*this));
     decl_importers_.push_back(
