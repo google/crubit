@@ -107,7 +107,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
       proto_crate_renames: Mapping of the `rust_proto_library` to the `proto_library` crate name.
 
     Returns:
-      A tuple of (GeneratedBindingsInfo, features).
+      A tuple of (GeneratedBindingsInfo, features, current_config, output_depset).
     """
     h_out_file = ctx.actions.declare_file(basename + ".h")
     rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
@@ -184,8 +184,9 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
         h_file = h_out_file,
         rust_file = rs_out_file,
     )
+    output_depset = [x for x in outputs if x != None]
 
-    return generated_bindings_info, features, current_config
+    return generated_bindings_info, features, current_config, output_depset
 
 def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, cc_infos):
     """Creates and returns CcInfo for the generated ..._cc_api.h header file.
@@ -345,7 +346,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         skip_expanding_rustc_env = True,
     )
 
-    bindings_info, features, config = _generate_bindings(
+    bindings_info, features, config, output_depset = _generate_bindings(
         ctx,
         target,
         basename,
@@ -378,7 +379,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             configuration = config,
         ),
         bindings_info,
-        OutputGroupInfo(out = depset([bindings_info.h_file, bindings_info.rust_file])),
+        OutputGroupInfo(out = output_depset),
     ]
 
 cc_bindings_from_rust_aspect = aspect(
