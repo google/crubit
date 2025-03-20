@@ -474,15 +474,19 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueParenInitListExpr(
 
   RecordInitListHelper InitListHelper(InitListInMakeUnique);
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+  // Skip through the base inits to get to the field inits. Any initialization
+  // of base classes/fields will be collected from the InitListExpr for the
+  // base initialization.
+  int I = InitListHelper.base_inits().size();
   // Use the arguments from the `MakeUniqueCall`, which has the
   // call-site nullability information from the `State`, instead of the
   // `field_inits` from `InitListInMakeUnique`.
-  int I = 0;
+  int NumArgs = MakeUniqueCall->getNumArgs();
   for (auto [Field, Init] : InitListHelper.field_inits()) {
     // The make_unique call can have fewer arguments than fields in the struct.
     // The rest should be various kinds of default initializers.
     const Expr *Arg;
-    if (I < MakeUniqueCall->getNumArgs()) {
+    if (I < NumArgs) {
       Arg = MakeUniqueCall->getArg(I);
     } else {
       assert(isa<ImplicitValueInitExpr>(Init) || isa<CXXConstructExpr>(Init) ||

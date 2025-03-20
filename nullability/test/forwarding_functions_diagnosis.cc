@@ -40,6 +40,13 @@ TEST(PointerNullabilityTest, ConstructorThroughMakeUnique) {
         std::make_unique<S>(x, cq, cp);  // [[unsafe]]
         std::make_unique<S>(x, cq, cp);  // [[unsafe]]
       } else if (x == 6) {
+        // Test with nullptr literal, which results in a make_unique
+        // instantiation with a parameter of type nullptr_t (which isn't
+        // considered a PointerValue)
+        // TODO(b/378501394): This looks like it is caught in tests, but it
+        // falls into the "untracked" category, so is suppressed in production.
+        std::make_unique<S>(x, cq, nullptr);  // [[unsafe]]
+      } else if (x == 7) {
         // Also test uninteresting constructors (e.g., the 0-arg one)
         std::make_unique<S[]>(10);
       } else {
@@ -100,7 +107,7 @@ TEST(PointerNullabilityTest, ConstructorWithSafeDefaultArg) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, MakeUniqueNewViaInitListInsteadOfConstructor) {
+TEST(PointerNullabilityTest, InitListInsteadOfConstructor) {
   // Test when a struct doesn't have a constructor, so make_unique's `new
   // S2(...)` will be an `CXXParenListInitExpr` instead.
   // This is a C++20 (and onward) feature.
@@ -137,6 +144,39 @@ TEST(PointerNullabilityTest, MakeUniqueNewViaInitListInsteadOfConstructor) {
           } else if (x == 2) {
             // Test fewer arguments than fields.
             std::make_unique<S2>(x, p, p);  // [[unsafe]]
+          } else if (x == 3) {
+            // Test nullptr literal.
+            std::make_unique<S2>(x, p, nullptr);  // [[unsafe]]
+          }
+        }
+      )cc",
+      TestLanguage::Lang_CXX20));
+}
+
+TEST(PointerNullabilityTest, InitListInsteadOfConstructorWithBaseClass) {
+  EXPECT_TRUE(checkDiagnosticsWithMin(
+      R"cc(
+#include <memory>
+        struct Base {
+          int *_Nonnull a;
+          int *_Nullable b;
+        };
+
+        struct S : public Base {
+          int *_Nullable p;
+          int *_Nonnull q;
+        };
+
+        void target(int x, int *_Nullable null, int *_Nonnull nonnull) {
+          if (x == 0) {
+            // Brace aggregation initialization
+            S{nonnull, null, nonnull, null};  // [[unsafe]]
+          } else if (x == 1) {
+            // make_unique cases
+            std::make_unique<S>(Base(nonnull, null), nonnull, null);  // [[unsafe]]
+          } else if (x == 2) {
+            // Test nullptr literal
+            std::make_unique<S>(Base(nonnull, null), nonnull, nullptr);  // [[unsafe]]
           }
         }
       )cc",
