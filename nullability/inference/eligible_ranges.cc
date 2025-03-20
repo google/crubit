@@ -757,9 +757,12 @@ void forAllEligibleRanges(llvm::function_ref<void(const EligibleRange &)> Func,
                           const TypeNullabilityDefaults &Defaults,
                           absl::Nullable<USRCache *> USRs,
                           bool RestrictToMainFileOrHeader) {
-  Walker W(Func, Defaults,
-           getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader),
-           USRs);
+  Walker W(
+      Func, Defaults,
+      getLocFilter(Ctx.getSourceManager(),
+                   RestrictToMainFileOrHeader ? LocFilterKind::kMainFileOrHeader
+                                              : LocFilterKind::kAllowAll),
+      USRs);
   W.TraverseAST(Ctx);
 }
 

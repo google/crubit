@@ -20,10 +20,14 @@ class LocFilter {
   virtual bool check(SourceLocation Loc) = 0;
 };
 
-// Returns a LocFilter that does or does not restrict to the main file or its
-// associated header, per `RestrictToMainFileOrHeader`.
+enum class LocFilterKind {
+  kAllowAll,          // No filtering.
+  kMainFileOrHeader,  // Restrict to the main file or its associated header.
+};
+
+// Returns a LocFilter that restricts according to the given LocFilterKind.
 std::unique_ptr<LocFilter> getLocFilter(const SourceManager &SM,
-                                        bool RestrictToMainFileOrHeader);
+                                        LocFilterKind Kind);
 
 }  // namespace clang::tidy::nullability
 

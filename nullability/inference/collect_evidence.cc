@@ -1965,8 +1965,11 @@ void EvidenceSites::forDefinitionsAndForDeclarations(
     }
   };
 
-  Walker W(ForDefinitions, ForDeclarations,
-           getLocFilter(Ctx.getSourceManager(), RestrictToMainFileOrHeader));
+  Walker W(
+      ForDefinitions, ForDeclarations,
+      getLocFilter(Ctx.getSourceManager(),
+                   RestrictToMainFileOrHeader ? LocFilterKind::kMainFileOrHeader
+                                              : LocFilterKind::kAllowAll));
   W.TraverseAST(Ctx);
 }
 

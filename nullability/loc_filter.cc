@@ -13,6 +13,7 @@
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Path.h"
 
 namespace clang::tidy::nullability {
@@ -83,10 +84,14 @@ class NoOpFilter : public LocFilter {
 }  // namespace
 
 std::unique_ptr<LocFilter> getLocFilter(const SourceManager &SM,
-                                        bool RestrictToMainFileOrHeader) {
-  if (RestrictToMainFileOrHeader) {
-    return std::make_unique<InMainFileOrHeader>(SM);
+                                        LocFilterKind FilterKind) {
+  switch (FilterKind) {
+    case LocFilterKind::kAllowAll:
+      return std::make_unique<NoOpFilter>();
+    case LocFilterKind::kMainFileOrHeader:
+      return std::make_unique<InMainFileOrHeader>(SM);
   }
+  llvm_unreachable("Unknown LocFilterKind");
   return std::make_unique<NoOpFilter>();
 }
 

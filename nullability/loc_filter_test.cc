@@ -36,8 +36,7 @@ TEST(getLocFilterTest, NoRestrict) {
   TestAST AST(Inputs);
 
   std::unique_ptr<LocFilter> Filter =
-      getLocFilter(AST.context().getSourceManager(),
-                   /*RestrictToMainFileOrHeader=*/false);
+      getLocFilter(AST.context().getSourceManager(), LocFilterKind::kAllowAll);
   EXPECT_TRUE(Filter->check(
       selectFirst<FunctionDecl>(
           "f", match(functionDecl(hasName("func")).bind("f"), AST.context()))
@@ -54,7 +53,7 @@ TEST(getLocFilterTest, NoRestrict) {
           ->getBeginLoc()));
 }
 
-TEST(MaybeRestrictToMainFileOrHeaderWalkerTest, Restrict) {
+TEST(getLocFilterTest, RestrictMainFileOrHeader) {
   TestInputs Inputs;
   Inputs.Code = R"cc(
 #include "input.h"
@@ -68,9 +67,8 @@ TEST(MaybeRestrictToMainFileOrHeaderWalkerTest, Restrict) {
                         )cc"}};
   TestAST AST(Inputs);
 
-  std::unique_ptr<LocFilter> Filter =
-      getLocFilter(AST.context().getSourceManager(),
-                   /*RestrictToMainFileOrHeader=*/true);
+  std::unique_ptr<LocFilter> Filter = getLocFilter(
+      AST.context().getSourceManager(), LocFilterKind::kMainFileOrHeader);
   EXPECT_TRUE(Filter->check(
       selectFirst<FunctionDecl>(
           "f", match(functionDecl(hasName("func")).bind("f"), AST.context()))
