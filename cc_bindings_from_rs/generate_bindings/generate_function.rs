@@ -356,8 +356,11 @@ pub fn generate_function(
             .zip(SugaredTy::fn_inputs(&sig_mid, Some(sig_hir)))
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
-                let cc_name = format_cc_ident(db, name.as_str())
+                let mut cc_name = format_cc_ident(db, name.as_str())
                     .unwrap_or_else(|_err| expect_format_cc_ident(&format!("__param_{i}")));
+                if name.as_str() == "_" {
+                    cc_name = expect_format_cc_ident(&format!("__param_{i}"));
+                }
                 let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
                 Param { cc_name, cpp_type, ty }
             })
