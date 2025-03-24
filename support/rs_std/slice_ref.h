@@ -29,18 +29,18 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
  public:
   // Creates a default `SliceRef` - one that represents an empty slice.
   // To mirror slices in Rust, the data pointer is not null.
-  constexpr SliceRef() noexcept : ptr_(alignof(T)), size_(0) {}
+  constexpr SliceRef() noexcept : dangling_ptr_(alignof(T)), size_(0) {}
 
-  // This constructor cannot be constexpr because it calls `reinterpret_cast`.
-  // The `reinterpret_cast`, in turn, is needed if we want to keep `ptr_` an
-  // `uintptr_t` instead of a `T*`, which we do to avoid storing dangling
-  // pointers. The `reinterpret_cast` preserves both invariants required for
-  // `ptr_`, because the resulting value comes from a valid, non-null pointer.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  SliceRef(absl::Span<T> span) noexcept
-      : ptr_(span.empty() ? alignof(T)
-                          : reinterpret_cast<uintptr_t>(span.data())),
-        size_(span.size()) {}
+  constexpr SliceRef(absl::Span<T> span) noexcept
+      // Store a dangling pointer assuming `span` is empty-- we have to
+      // initialize the union to something.
+      : dangling_ptr_(alignof(T)), size_(span.size()) {
+    // Store a valid pointer when `span` is not empty.
+    if (!span.empty()) {
+      ptr_ = span.data();
+    }
+  }
 
   // Re-use implicit conversions to `absl::Span`. Prevent a delegation circle
   // by excluding `absl::Span<T>` as the converted type.
@@ -48,7 +48,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
     requires(std::convertible_to<Container &&, absl::Span<T>> &&
              !std::is_same_v<Container, absl::Span<T>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
-  SliceRef(Container&& container) noexcept
+  constexpr SliceRef(Container&& container) noexcept
       : SliceRef(
             // This is using `static_cast` instead of `absl::implicit_cast` to
             // avoid a dependency on `absl/base/casts.h`, which has a lot of
@@ -61,32 +61,39 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
     requires(std::constructible_from<absl::Span<T>, Container &&> &&
              !std::convertible_to<Container &&, absl::Span<T>> &&
              !std::is_same_v<Container, absl::Span<T>>)
-  explicit SliceRef(Container&& container) noexcept
+  constexpr explicit SliceRef(Container&& container) noexcept
       : SliceRef(absl::Span<T>(std::forward<Container>(container))) {}
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr operator std::span<T>() const {
-    return std::span<T>(size_ > 0 ? static_cast<T*>(ptr_) : nullptr, size_);
+  constexpr operator std::span<T>() const noexcept {
+    return std::span<T>(size_ > 0 ? ptr_ : nullptr, size_);
   }
 
   constexpr SliceRef(const SliceRef&) = default;
   constexpr SliceRef& operator=(const SliceRef&) = default;
-  constexpr SliceRef(SliceRef&&) = default;
-  constexpr SliceRef& operator=(SliceRef&&) = default;
+  constexpr SliceRef(SliceRef&&) noexcept = default;
+  constexpr SliceRef& operator=(SliceRef&&) noexcept = default;
   ~SliceRef() = default;
 
-  // The `reinterpret_cast` is safe thanks to invariant (2) (see the definition
-  // of `ptr_`).
-  T* data() const { return size_ > 0 ? reinterpret_cast<T*>(ptr_) : nullptr; }
-  size_t size() const { return size_; }
+  constexpr T* data() const noexcept { return size_ > 0 ? ptr_ : nullptr; }
+  constexpr size_t size() const noexcept { return size_; }
 
-  absl::Span<T> to_span() const { return absl::Span<T>(data(), size()); }
+  constexpr absl::Span<T> to_span() const noexcept {
+    return absl::Span<T>(data(), size());
+  }
 
  private:
   // Stick to the following invariants when changing the data member values:
-  // (1) `ptr_` is never 0 (to mirror slices in Rust).
-  // (2) if `size_ > 0` then `reinterpret_cast<T*>(ptr_)` is a valid pointer.
-  uintptr_t ptr_;
+  // (1) `ptr_` and `dangling_ptr_` must never be 0 (to mirror slices in Rust).
+  // (2) if `size_ > 0` then `ptr_` is a valid pointer, otherwise
+  //     `dangling_ptr_` is a dangling pointer.
+  //
+  // `dangling_ptr_` is never read from in C++, and `ptr_` must only ever be
+  // read from when `size_ > 0`.
+  union {
+    T* ptr_;
+    uintptr_t dangling_ptr_;
+  };
   size_t size_;
 };
 
