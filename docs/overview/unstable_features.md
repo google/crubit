@@ -186,3 +186,47 @@ struct Foo {
     using MyAlias = int;
 };
 ```
+
+### `disjoint_associated_types`
+
+[`disjoint_associated_types`](https://github.com/rust-lang/rfcs/pull/1672) was
+closed, but not necessarily permanently. See also
+https://github.com/rust-lang/rust/issues/20400.
+
+Not every C++ type supports the Rust move operation. For more on this, see
+[Classes and Structs](../cpp/classes_and_structs#trivially_relocatable).
+
+Crubit (in `experimental` mode) supports passing and returning these non-Rust-movable C++
+objects by value. But since they are not Rust-movable, they cannot literally
+be returned in Rust by value: `pub fn foo() -> X` performs a Rust move of its
+return type by definition.
+
+Instead, these objects support lazy construction, in the same style as
+[`moveit`](https://mcyoung.xyz/2021/04/26/move-ctors/). See
+[`ctor.rs`](https://github.com/google/crubit/blob/main/support/ctor.rs). This
+results in, for example, the following API differences:
+
+`X` is rust-movable  | `X` is not rust-movable
+-------------------- | ---------------------------------------
+`pub fn foo() -> X`  | `pub fn foo() -> impl Ctor<Output=X>`
+`impl Add<X> for &C` | `impl<T: Ctor<Output=X>> Add<T> for &C`
+
+The problem comes in with operator overloading: the following is valid:
+
+```rust
+impl Add<X> for &C {...}
+impl Add<Y> for &C {...}
+```
+But the equivalent using this lazy-construction trait is not:
+
+```rust
+impl<T: Ctor<Output=X>> Add<T> for &C {...}
+impl<T: Ctor<Output=Y>> Add<T> for &C {...}
+```
+
+Rust doesn't know that these two are disjoint, meaning that we cannot use the
+`Ctor` trait approach for traits.
+
+An alternative fix would be language support for in-place pinned construction.
+That would render the `Ctor` trait obsolete, and reduce Crubit's needs around
+trait coherence (as well as `negative_impls`, above).
