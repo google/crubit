@@ -1,6 +1,6 @@
 """Support libraries that the generated Rust/C++ bindings depend upon."""
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
@@ -33,6 +33,27 @@ cc_library(
     ],
     deps = [
         "//support/internal:bindings_support",
+    ],
+)
+
+rust_proc_macro(
+    name = "crubit_annotate",
+    srcs = ["crubit_annotate.rs"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:syn",
+    ],
+)
+
+rust_test(
+    name = "crubit_annotate_test",
+    srcs = ["crubit_annotate_test.rs"],
+    proc_macro_deps = [
+        ":crubit_annotate",
     ],
 )
 
