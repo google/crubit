@@ -5,6 +5,12 @@
 
 set -euo pipefail
 
+if [ $# -ne 0 ]; then
+  TESTS_TO_RUN=$@
+else
+  TESTS_TO_RUN=(//...)
+fi
+
 bazel test \
   --test_tag_filters=crubit_golden_test,-manual \
   --build_tag_filters=crubit_golden_test,-manual \
@@ -12,4 +18,4 @@ bazel test \
   --test_strategy=local \
   --test_env=WRITE_GOLDENS=1 \
   -k \
-  //...
+  $TESTS_TO_RUN
