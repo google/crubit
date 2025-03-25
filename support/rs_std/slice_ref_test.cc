@@ -85,29 +85,29 @@ TEST(SliceTest, Comparison) {
   static constexpr std::array<uint8_t, 5> kArr = {1, 2, 3, 4, 5};
   static constexpr std::array<uint8_t, 5> kArrCopy = {1, 2, 3, 4, 5};
 
-  static constexpr rs_std::SliceRef<const uint8_t> s1 = kArr;
-  static constexpr rs_std::SliceRef<const uint8_t> s1_copy = s1;
-  static constexpr rs_std::SliceRef<const uint8_t> s2 = kArrCopy;
+  static constexpr rs_std::SliceRef<const uint8_t> kSlice = kArr;
+  static constexpr rs_std::SliceRef<const uint8_t> kSliceCopy = kSlice;
+  static constexpr rs_std::SliceRef<const uint8_t> kSlice2 = kArrCopy;
 
-  EXPECT_EQ(s1.to_span(), s1.to_span());
-  EXPECT_EQ(s1.to_span(), s1_copy.to_span());
-  EXPECT_EQ(s1.to_span(), s2.to_span());
-  static constexpr rs_std::SliceRef<const uint8_t> s1_prefix =
+  EXPECT_EQ(kSlice.to_span(), kSlice.to_span());
+  EXPECT_EQ(kSlice.to_span(), kSliceCopy.to_span());
+  EXPECT_EQ(kSlice.to_span(), kSlice2.to_span());
+  static constexpr rs_std::SliceRef<const uint8_t> kSlicePrefix =
       absl::MakeSpan(kArr.data(), kArr.size() - 1);
-  static constexpr rs_std::SliceRef<const uint8_t> s1_suffix =
+  static constexpr rs_std::SliceRef<const uint8_t> kSliceSuffix =
       absl::MakeSpan(kArr.data() + 1, kArr.size() - 1);
-  static constexpr rs_std::SliceRef<const uint8_t> s1_infix =
+  static constexpr rs_std::SliceRef<const uint8_t> kSliceInfix =
       absl::MakeSpan(kArr.data() + 1, kArr.size() - 2);
 
-  EXPECT_NE(s1.to_span(), s1_prefix.to_span());
-  EXPECT_NE(s1.to_span(), s1_suffix.to_span());
-  EXPECT_NE(s1.to_span(), s1_infix.to_span());
+  EXPECT_NE(kSlice.to_span(), kSlicePrefix.to_span());
+  EXPECT_NE(kSlice.to_span(), kSliceSuffix.to_span());
+  EXPECT_NE(kSlice.to_span(), kSliceInfix.to_span());
 }
 
 TEST(SliceTest, FromAndTo) {
   static constexpr std::array<uint8_t, 5> kArr = {1, 2, 3, 4, 5};
-  static constexpr rs_std::SliceRef<const uint8_t> s = kArr;
-  EXPECT_EQ(absl::Span<const uint8_t>(kArr), s.to_span());
+  static constexpr rs_std::SliceRef<const uint8_t> kSlice = kArr;
+  EXPECT_EQ(absl::Span<const uint8_t>(kArr), kSlice.to_span());
 }
 
 // To test the value of `data_`, the test includes the knowledge of
@@ -121,27 +121,27 @@ struct SliceRefFields {
 // `SliceRef` is correct.
 TEST(SliceTest, Layout) {
   static constexpr std::array<uint8_t, 5> kArr = {2, 3, 5};
-  static constexpr rs_std::SliceRef<const uint8_t> s = kArr;
-  const auto fields = std::bit_cast<SliceRefFields>(s);
+  static constexpr rs_std::SliceRef<const uint8_t> kSlice = kArr;
+  const auto fields = std::bit_cast<SliceRefFields>(kSlice);
   EXPECT_EQ(fields.ptr, kArr.data());
   EXPECT_EQ(fields.size, kArr.size());
 }
 
 TEST(SliceTest, Empty) {
-  static constexpr uint8_t kEmpty[] = {};
-  static constexpr rs_std::SliceRef<const uint8_t> empty =
-      absl::MakeSpan(kEmpty, 0);
-  static constexpr rs_std::SliceRef<const uint8_t> default_constructed;
-  EXPECT_EQ(empty.to_span(), default_constructed.to_span());
+  static constexpr uint8_t kEmptyArray[] = {};
+  static constexpr rs_std::SliceRef<const uint8_t> kEmpty =
+      absl::MakeSpan(kEmptyArray, 0);
+  static constexpr rs_std::SliceRef<const uint8_t> kDefaultConstructed;
+  EXPECT_EQ(kEmpty.to_span(), kDefaultConstructed.to_span());
 
-  const auto fields = std::bit_cast<SliceRefFields>(empty);
+  const auto fields = std::bit_cast<SliceRefFields>(kEmpty);
   EXPECT_THAT(fields.ptr, Not(IsNull()));
   EXPECT_EQ(fields.size, 0);
 
   // While `empty.data_` is not null, `data()` converts it to null for
   // compatibility with `std::span`.
-  EXPECT_THAT(empty.data(), IsNull());
-  EXPECT_EQ(empty.size(), 0);
+  EXPECT_THAT(kEmpty.data(), IsNull());
+  EXPECT_EQ(kEmpty.size(), 0);
 }
 
 TEST(ImplicitConversionTest, MutableFromVector) {
@@ -172,9 +172,9 @@ TEST(ImplicitConversionTest, FromArray) {
 }
 
 TEST(ImplicitConversionTest, FromConstArray) {
-  static constexpr std::array<int, 2> arr = {1, 2};
-  static constexpr rs_std::SliceRef<const int> from_arr = arr;
-  EXPECT_THAT(from_arr.to_span(), ElementsAre(1, 2));
+  static constexpr std::array<int, 2> kArray = {1, 2};
+  static constexpr rs_std::SliceRef<const int> kFromArray = kArray;
+  EXPECT_THAT(kFromArray.to_span(), ElementsAre(1, 2));
 }
 
 void Fuzzer(std::vector<uint8_t> data) {
