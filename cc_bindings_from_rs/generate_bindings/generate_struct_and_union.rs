@@ -169,7 +169,7 @@ fn generate_cpp_enum<'tcx>(
     // Generate the enumerator list.
     let enumerator_lines: Vec<TokenStream> = (tcx.inherent_impls(core.def_id).iter())
         // Convert to `Item`s.
-        .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
+        .map(|impl_id| tcx.hir_expect_item(impl_id.expect_local()))
         // Unpack and flatten all impl items (since Rust allows multiple impl blocks for a type).
         .flat_map(|item| match &item.kind {
             ItemKind::Impl(impl_) => impl_.items,
@@ -307,7 +307,7 @@ pub fn generate_adt<'tcx>(
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
         .iter()
-        .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
+        .map(|impl_id| tcx.hir_expect_item(impl_id.expect_local()))
         .flat_map(|item| match &item.kind {
             ItemKind::Impl(impl_) => impl_.items,
             other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),

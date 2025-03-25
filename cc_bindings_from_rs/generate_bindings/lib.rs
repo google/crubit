@@ -368,7 +368,7 @@ fn reexported_symbol_canonical_name_mapping(
             .filter_map(|item_id| {
                 let local_def_id: LocalDefId = item_id.owner_id.def_id;
                 if let Item { ident, kind: ItemKind::Use(use_path, use_kind), .. } =
-                    tcx.hir().expect_item(local_def_id)
+                    tcx.hir_expect_item(local_def_id)
                 {
                     // TODO(b/350772554): Preserve the errors.
                     collect_alias_from_use(db, ident.as_str(), use_path, use_kind).ok().map(
@@ -571,7 +571,7 @@ fn generate_using_statement(
             let hir_ty = if def_id.is_local() {
                 let local_def_id = def_id.as_local().unwrap();
                 let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } =
-                    tcx.hir().expect_item(local_def_id)
+                    tcx.hir_expect_item(local_def_id)
                 else {
                     panic!("{:#?} is not a type alias", def_id);
                 };
@@ -713,8 +713,7 @@ fn generate_type_alias(
 ) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
-    let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } = tcx.hir().expect_item(local_def_id)
-    else {
+    let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } = tcx.hir_expect_item(local_def_id) else {
         panic!("called generate_type_alias on a non-type-alias");
     };
     let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), Some(*hir_ty));
@@ -1060,8 +1059,7 @@ fn generate_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
 fn generate_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
     let hir_id = tcx.local_def_id_to_hir_id(local_def_id);
     let doc_comment = tcx
-        .hir()
-        .attrs(hir_id)
+        .hir_attrs(hir_id)
         .iter()
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
@@ -1085,7 +1083,7 @@ fn generate_item(
         return Ok(None);
     }
 
-    let item = match tcx.hir().expect_item(def_id) {
+    let item = match tcx.hir_expect_item(def_id) {
         Item { kind: ItemKind::Struct(_, generics) |
                      ItemKind::Enum(_, generics) |
                      ItemKind::Union(_, generics),

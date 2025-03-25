@@ -115,7 +115,7 @@ fn run_compiler_for_testing_impl(
 
     let mut opts = Options {
         crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-        maybe_sysroot: Some(get_sysroot_for_testing()),
+        sysroot: get_sysroot_for_testing(),
         output_types,
         edition: rustc_span::edition::Edition::Edition2021,
         unstable_features: rustc_feature::UnstableFeatures::Allow,
