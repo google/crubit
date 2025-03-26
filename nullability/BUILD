@@ -31,7 +31,6 @@ cc_library(
         "//nullability/test:__pkg__",
     ],
     deps = [
-        ":pointer_nullability",
         ":type_nullability",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/container:flat_hash_map",
@@ -183,7 +182,6 @@ cc_test(
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
-        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

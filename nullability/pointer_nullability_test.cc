@@ -8,6 +8,7 @@
 
 #include "nullability/type_nullability.h"
 #include "clang/AST/Type.h"
+#include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Analysis/FlowSensitive/Value.h"

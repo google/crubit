@@ -42,7 +42,6 @@ cc_test(
     srcs = ["assert_nullability_test.cc"],
     deps = [
         ":check_diagnostics",
-        "@llvm-project//llvm:TestingSupport",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
