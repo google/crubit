@@ -1332,14 +1332,13 @@ std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {
 
 absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
+  std::optional<Identifier> crubit_rust_name = CrubitRustName(named_decl);
   switch (named_decl->getDeclName().getNameKind()) {
     case clang::DeclarationName::Identifier: {
       auto name = std::string(named_decl->getName());
       if (name.empty()) {
         return absl::InvalidArgumentError("Missing identifier");
       }
-
-      std::optional<Identifier> crubit_rust_name = CrubitRustName(named_decl);
 
       // `r#foo` syntax in Rust can't be used to escape `crate`, `self`,
       // `super`, not `Self` identifiers - see
@@ -1351,18 +1350,21 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
             absl::StrCat("Unescapable identifier: ", name));
       }
 
-      TranslatedUnqualifiedIdentifier identifier = {
+      return TranslatedUnqualifiedIdentifier{
           .cc_identifier = Identifier(name),
           .crubit_rust_name = crubit_rust_name,
       };
-      return identifier;
     }
     case clang::DeclarationName::CXXConstructorName:
-      return TranslatedUnqualifiedIdentifier{.cc_identifier =
-                                                 SpecialName::kConstructor};
+      return TranslatedUnqualifiedIdentifier{
+          .cc_identifier = SpecialName::kConstructor,
+          .crubit_rust_name = crubit_rust_name,
+      };
     case clang::DeclarationName::CXXDestructorName:
-      return TranslatedUnqualifiedIdentifier{.cc_identifier =
-                                                 SpecialName::kDestructor};
+      return TranslatedUnqualifiedIdentifier{
+          .cc_identifier = SpecialName::kDestructor,
+          .crubit_rust_name = crubit_rust_name,
+      };
     case clang::DeclarationName::CXXOperatorName:
       switch (named_decl->getDeclName().getCXXOverloadedOperator()) {
         case clang::OO_None:
@@ -1373,7 +1375,8 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
         case clang::OO_##name: {                          \
           return TranslatedUnqualifiedIdentifier{ \
-            .cc_identifier = Operator(spelling) \
+            .cc_identifier = Operator(spelling), \
+            .crubit_rust_name = crubit_rust_name, \
           }; \
         }
         #include "clang/Basic/OperatorKinds.def"

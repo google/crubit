@@ -5,6 +5,8 @@
 """The `additional_rust_srcs_for_crubit_bindings` aspect hint, when attached to a `cc_library`,
 specifies additional Rust source files to be included in the generated Rust crate by Crubit.
 
+WARNING: This presents novel compatibility problems, tread with caution. See below.
+
 Typical uses:
 
  *  Adding trait implementations to a type defined in C++, which call existing C++ functions and
@@ -24,6 +26,28 @@ bindings from Rust source code).
 Rust and C++ form one ecosystem: anything a Rust caller may want to do, a C++ caller may want to
 do as well. Typically, abstractions should be defined in the C++ file, and exposed to Rust callers
 through Crubit.
+
+## Compatibility
+
+SUMMARY: If a newly-introduced item in an additional Rust source file might conflict with a future Crubit
+release, then rename the C++ entity using CRUBIT_RUST_NAME.
+
+TODO: b/402478920 - Renamed constructor traits are not callable in any useful way at the moment.
+
+Changes to Crubit can introduce new items into the automatically generated bindings,
+which can introduce a conflict when you use `additional_rust_srcs_for_crubit_bindings`.
+
+For example, suppose that Crubit could not generate bindings for a method `void Foo(CustomType x);`,
+because `CustomType` was not yet supported. If the `additional_rust_srcs_for_crubit_bindings` source
+file defines `impl MyType { pub fn Foo(&self) {} }`, then this will work... as long as Crubit does
+not generate bindings for `Foo` in the future.
+
+**Avoid this.** This will block Crubit releases!
+
+Fortunately, Crubit supports a workaround: you can use `CRUBIT_RUST_NAME` to rename the C++ entity
+to something else, if it ever receives bindings. Then the original name (or trait), which you
+want to implement, cannot conflict with the future Crubit bindings.
+
 """
 
 load("@bazel_skylib//lib:collections.bzl", "collections")
