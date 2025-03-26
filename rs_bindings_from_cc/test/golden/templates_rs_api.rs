@@ -824,7 +824,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("__CcTemplateInst18MyTopLevelTemplateIiE"));
+forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("MyTopLevelTemplate < int >"));
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -898,7 +898,7 @@ impl __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
     }
 }
 
-forward_declare::forward_declare!(pub __CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE = forward_declare::symbol!("__CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE"));
+forward_declare::forward_declare!(pub __CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE = forward_declare::symbol!("forward_declared_template :: ForwardDeclaredTemplate < int >"));
 
 mod detail {
     #[allow(unused_imports)]

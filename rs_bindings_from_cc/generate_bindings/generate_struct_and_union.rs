@@ -49,8 +49,9 @@ pub fn generate_incomplete_record(
     incomplete_record: &IncompleteRecord,
 ) -> Result<ApiSnippets> {
     let ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
+    let cc_type = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(incomplete_record).format_for_cc()?;
-    let symbol = quote! {#namespace_qualifier #ident}.to_string();
+    let symbol = quote! {#namespace_qualifier #cc_type}.to_string();
     Ok(quote! {
         forward_declare::forward_declare!(
             pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
