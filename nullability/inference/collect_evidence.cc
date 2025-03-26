@@ -84,9 +84,9 @@ using ConcreteNullabilityCache =
     absl::flat_hash_map<const Decl *,
                         std::optional<const PointerTypeNullability>>;
 
-static llvm::DenseSet<absl::Nonnull<const CXXMethodDecl *>> getOverridden(
-    absl::Nonnull<const CXXMethodDecl *> Derived) {
-  llvm::DenseSet<absl::Nonnull<const CXXMethodDecl *>> Overridden;
+static llvm::DenseSet<const CXXMethodDecl *absl_nonnull> getOverridden(
+    const CXXMethodDecl *absl_nonnull Derived) {
+  llvm::DenseSet<const CXXMethodDecl *absl_nonnull> Overridden;
   for (const CXXMethodDecl *Base : Derived->overridden_methods()) {
     if (Base == nullptr) continue;
     Overridden.insert(Base);
@@ -447,8 +447,8 @@ static std::optional<Evidence::Kind> evidenceKindFromDeclaredReturnType(
       getReturnTypeNullabilityAnnotations(D, Defaults));
 }
 
-static bool isOrIsConstructedFromNullPointerConstant(
-    absl::Nonnull<const Expr *> E, ASTContext &Ctx) {
+static bool isOrIsConstructedFromNullPointerConstant(const Expr *absl_nonnull E,
+                                                     ASTContext &Ctx) {
   if (E->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNotNull) !=
       Expr::NPCK_NotNull) {
     return true;
@@ -1917,7 +1917,7 @@ void EvidenceSites::forDefinitionsAndForDeclarations(
     ForEach ForDeclarations;
     std::unique_ptr<LocFilter> LocFilter;
 
-    bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
+    bool VisitFunctionDecl(const FunctionDecl *absl_nonnull FD) {
       if (!LocFilter->check(FD->getBeginLoc())) {
         return true;
       }
@@ -1940,7 +1940,7 @@ void EvidenceSites::forDefinitionsAndForDeclarations(
       return true;
     }
 
-    bool VisitFieldDecl(absl::Nonnull<const FieldDecl *> FD) {
+    bool VisitFieldDecl(const FieldDecl *absl_nonnull FD) {
       if (!LocFilter->check(FD->getBeginLoc())) {
         return true;
       }
@@ -1948,7 +1948,7 @@ void EvidenceSites::forDefinitionsAndForDeclarations(
       return true;
     }
 
-    bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
+    bool VisitVarDecl(const VarDecl *absl_nonnull VD) {
       if (!LocFilter->check(VD->getBeginLoc())) {
         return true;
       }

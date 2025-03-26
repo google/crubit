@@ -36,20 +36,20 @@ using dataflow::Value;
 constexpr llvm::StringLiteral kFromNullable = "from_nullable";
 constexpr llvm::StringLiteral kNull = "is_null";
 
-absl::Nullable<PointerValue *> getRawPointerValue(
-    absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
+PointerValue *absl_nullable getRawPointerValue(
+    const Expr *absl_nonnull PointerExpr, const Environment &Env) {
   return Env.get<PointerValue>(*PointerExpr);
 }
 
-absl::Nullable<PointerValue *> getPointerValueFromSmartPointer(
-    absl::Nullable<RecordStorageLocation *> SmartPointerLoc,
+PointerValue *absl_nullable getPointerValueFromSmartPointer(
+    RecordStorageLocation *absl_nullable SmartPointerLoc,
     const Environment &Env) {
   if (SmartPointerLoc == nullptr) return nullptr;
   return Env.get<PointerValue>(SmartPointerLoc->getSyntheticField(PtrField));
 }
 
-absl::Nullable<PointerValue *> getSmartPointerValue(
-    absl::Nonnull<const Expr *> SmartPointerExpr, const Environment &Env) {
+PointerValue *absl_nullable getSmartPointerValue(
+    const Expr *absl_nonnull SmartPointerExpr, const Environment &Env) {
   RecordStorageLocation *Loc = nullptr;
   if (SmartPointerExpr->isPRValue())
     Loc = &Env.getResultObjectLocation(*SmartPointerExpr);
@@ -58,8 +58,8 @@ absl::Nullable<PointerValue *> getSmartPointerValue(
   return getPointerValueFromSmartPointer(Loc, Env);
 }
 
-absl::Nullable<dataflow::PointerValue *> getPointerValue(
-    absl::Nonnull<const Expr *> PointerExpr, const Environment &Env) {
+dataflow::PointerValue *absl_nullable getPointerValue(
+    const Expr *absl_nonnull PointerExpr, const Environment &Env) {
   QualType Ty = PointerExpr->getType();
   if (Ty->isNullPtrType() || isSupportedRawPointerType(Ty))
     return getRawPointerValue(PointerExpr, Env);
@@ -67,7 +67,7 @@ absl::Nullable<dataflow::PointerValue *> getPointerValue(
 }
 
 void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
-                          absl::Nullable<dataflow::PointerValue *> Val,
+                          dataflow::PointerValue *absl_nullable Val,
                           Environment &Env) {
   StorageLocation &PointerLoc = SmartPointerLoc.getSyntheticField(PtrField);
   if (Val)
@@ -106,8 +106,8 @@ PointerNullState getPointerNullState(const PointerValue &PointerVal) {
 
 static bool tryCreatePointerNullState(
     PointerValue &PointerVal, dataflow::Arena &A,
-    absl::Nullable<const Formula *> FromNullable = nullptr,
-    absl::Nullable<const Formula *> IsNull = nullptr) {
+    const Formula *absl_nullable FromNullable = nullptr,
+    const Formula *absl_nullable IsNull = nullptr) {
   if (hasPointerNullState(PointerVal)) return false;
   if (!FromNullable) FromNullable = &A.makeAtomRef(A.makeAtom());
   if (!IsNull) IsNull = &A.makeAtomRef(A.makeAtom());
@@ -164,9 +164,8 @@ PointerValue &createNullPointer(QualType PointeeType, Environment &Env) {
   return PointerVal;
 }
 
-bool isNullable(
-    const PointerValue &PointerVal, const Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+bool isNullable(const PointerValue &PointerVal, const Environment &Env,
+                const dataflow::Formula *absl_nullable AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   auto [FromNullable, Null] = getPointerNullState(PointerVal);
 
@@ -207,7 +206,7 @@ bool isNullable(
 
 NullabilityKind getNullability(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+    const dataflow::Formula *absl_nullable AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   if (auto *Null = getPointerNullState(PointerVal).IsNull) {
     if (AdditionalConstraints) Null = &A.makeAnd(*AdditionalConstraints, *Null);
@@ -219,8 +218,8 @@ NullabilityKind getNullability(
 }
 
 NullabilityKind getNullability(
-    absl::Nonnull<const Expr *> E, const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+    const Expr *absl_nonnull E, const dataflow::Environment &Env,
+    const dataflow::Formula *absl_nullable AdditionalConstraints) {
   if (dataflow::PointerValue *P = getPointerValue(E, Env))
     return getNullability(*P, Env, AdditionalConstraints);
   return clang::NullabilityKind::Unspecified;

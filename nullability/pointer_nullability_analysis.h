@@ -78,7 +78,7 @@ class PointerNullabilityAnalysis
   //
   // The returned nullability is guaranteed to be symbolic.
   PointerTypeNullability assignNullabilityVariable(
-      absl::Nonnull<const ValueDecl *> D, dataflow::Arena &);
+      const ValueDecl *absl_nonnull D, dataflow::Arena &);
 
   void assignNullabilityOverride(
       llvm::unique_function<

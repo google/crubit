@@ -36,22 +36,22 @@ inline constexpr llvm::StringRef PtrField = "ptr";
 
 /// Returns the `PointerValue` allocated to `PointerExpr` if available.
 /// Otherwise, returns nullptr.
-absl::Nullable<dataflow::PointerValue *> getRawPointerValue(
-    absl::Nonnull<const Expr *> PointerExpr, const dataflow::Environment &Env);
+dataflow::PointerValue *absl_nullable getRawPointerValue(
+    const Expr *absl_nonnull PointerExpr, const dataflow::Environment &Env);
 
 /// Returns the `PointerValue` underlying a smart pointer, or null if no
 /// `PointerValue` is assigned to the smart pointer in the environment.
 /// If `SmartPointerLoc` is null, returns null.
-absl::Nullable<dataflow::PointerValue *> getPointerValueFromSmartPointer(
-    absl::Nullable<dataflow::RecordStorageLocation *> SmartPointerLoc,
+dataflow::PointerValue *absl_nullable getPointerValueFromSmartPointer(
+    dataflow::RecordStorageLocation *absl_nullable SmartPointerLoc,
     const dataflow::Environment &Env);
 
 /// Returns the `PointerValue` underlying a smart pointer expression, if
 /// available.
 /// Returns null if the expression is not associated with a storage location or
 /// the smart pointer is not associated with a `PointerValue`.
-absl::Nullable<dataflow::PointerValue *> getSmartPointerValue(
-    absl::Nonnull<const Expr *> SmartPointerExpr,
+dataflow::PointerValue *absl_nullable getSmartPointerValue(
+    const Expr *absl_nonnull SmartPointerExpr,
     const dataflow::Environment &Env);
 
 /// Returns the `PointerValue` for a raw or smart pointer expression, if
@@ -59,14 +59,14 @@ absl::Nullable<dataflow::PointerValue *> getSmartPointerValue(
 /// Use this function only if the expression can actually be either a raw or
 /// smart pointer; otherwise, use `getRawPointerValue()` or
 /// `getSmartPointerValue()`.
-absl::Nullable<dataflow::PointerValue *> getPointerValue(
-    absl::Nonnull<const Expr *> PointerExpr, const dataflow::Environment &Env);
+dataflow::PointerValue *absl_nullable getPointerValue(
+    const Expr *absl_nonnull PointerExpr, const dataflow::Environment &Env);
 
 /// Sets the `PointerValue` underlying a smart pointer. If `PointerValue` is
 /// null, clears any association between the smart pointer and an underlying
 /// `PointerValue` in the environment.
 void setSmartPointerValue(dataflow::RecordStorageLocation &SmartPointerLoc,
-                          absl::Nullable<dataflow::PointerValue *> Val,
+                          dataflow::PointerValue *absl_nullable Val,
                           dataflow::Environment &Env);
 
 // Sets the `PointerValue` underlying a smart pointer to null.
@@ -91,9 +91,9 @@ bool hasPointerNullState(const dataflow::PointerValue &PointerVal);
 /// no information on this property.
 struct PointerNullState {
   /// Did the pointer come from a known-nullable source?
-  absl::Nullable<const dataflow::Formula *> FromNullable;
+  const dataflow::Formula *absl_nullable FromNullable;
   /// Is the pointer's value null?
-  absl::Nullable<const dataflow::Formula *> IsNull;
+  const dataflow::Formula *absl_nullable IsNull;
   // These are independent: sources with unknown nullability can yield nullptr!
 };
 
@@ -146,7 +146,7 @@ dataflow::PointerValue &createNullPointer(QualType PointeeType,
 /// source and may be null.
 bool isNullable(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
+    const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about `PointerVal`.
 /// If PointerVal may not be null, returns Nonnull.
@@ -155,13 +155,13 @@ bool isNullable(
 /// Otherwise, returns Unspecified.
 clang::NullabilityKind getNullability(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
+    const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about the value of
 /// `E` in `Env`.
 clang::NullabilityKind getNullability(
-    absl::Nonnull<const Expr *> E, const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
+    const Expr *absl_nonnull E, const dataflow::Environment &Env,
+    const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>

@@ -69,7 +69,7 @@ EligibleRanges getInferenceRanges(const Decl& D,
 void forAllEligibleRanges(llvm::function_ref<void(const EligibleRange&)> Func,
                           ASTContext& Ctx,
                           const TypeNullabilityDefaults& Defaults,
-                          absl::Nullable<USRCache*> USRs = nullptr,
+                          USRCache* absl_nullable USRs = nullptr,
                           bool RestrictToMainFileOrHeader = false);
 
 /// Return the given string ref without any escaped newline prefixes.

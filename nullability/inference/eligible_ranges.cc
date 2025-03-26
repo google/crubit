@@ -414,7 +414,7 @@ static llvm::ErrorOr<std::optional<SourceLocation>> maybeSetEndOfStarOffset(
 // itself, because the edit will do the correct thing implicitly: the `const`
 // will be left out of the TypeLoc's range, leaving `const` outside the
 // nullability annotation, which is the preferred spelling.
-static void addRangesQualifierAware(absl::Nullable<const DeclaratorDecl *> Decl,
+static void addRangesQualifierAware(const DeclaratorDecl *absl_nullable Decl,
                                     TypeLoc WholeLoc, SlotNum StartingSlot,
                                     const ASTContext &Context,
                                     const FileID &DeclFID,
@@ -686,7 +686,7 @@ namespace {
 struct Walker : public RecursiveASTVisitor<Walker> {
   Walker(llvm::function_ref<void(const EligibleRange &)> Func,
          const TypeNullabilityDefaults &Defaults,
-         std::unique_ptr<LocFilter> LocFilter, absl::Nullable<USRCache *> USRs)
+         std::unique_ptr<LocFilter> LocFilter, USRCache *absl_nullable USRs)
       : Func(Func),
         Defaults(Defaults),
         LocFilter(std::move(LocFilter)),
@@ -697,14 +697,14 @@ struct Walker : public RecursiveASTVisitor<Walker> {
   const TypeNullabilityDefaults &Defaults;
   std::unique_ptr<LocFilter> LocFilter;
   // Must outlive the walker.
-  absl::Nullable<USRCache *> USRs;
+  USRCache *absl_nullable USRs;
 
   // We can't walk the nullabilities in templates themselves, but walking the
   // instantiations will let us at least see the templates that get used.
   bool shouldVisitTemplateInstantiations() const { return true; }
 
   template <typename DeclT>
-  void insertPointerRanges(absl::Nonnull<const DeclT *> Decl) {
+  void insertPointerRanges(const DeclT *absl_nonnull Decl) {
     // We can't walk the nullabilities in dependent contexts.
     if (Decl->getDeclContext()->isDependentContext()) return;
     if (!LocFilter->check(Decl->getBeginLoc())) return;
@@ -721,19 +721,19 @@ struct Walker : public RecursiveASTVisitor<Walker> {
     }
   }
 
-  bool VisitFunctionDecl(absl::Nonnull<const FunctionDecl *> FD) {
+  bool VisitFunctionDecl(const FunctionDecl *absl_nonnull FD) {
     // We can't walk the nullabilities of dependent contexts.
     if (FD->isDependentContext()) return true;
     insertPointerRanges(FD);
     return true;
   }
 
-  bool VisitFieldDecl(absl::Nonnull<const FieldDecl *> FD) {
+  bool VisitFieldDecl(const FieldDecl *absl_nonnull FD) {
     insertPointerRanges(FD);
     return true;
   }
 
-  bool VisitVarDecl(absl::Nonnull<const VarDecl *> VD) {
+  bool VisitVarDecl(const VarDecl *absl_nonnull VD) {
     // We'll see these as part of function decls.
     if (isa<ParmVarDecl>(VD)) return true;
     // We can't walk the nullabilities in templates.
@@ -742,7 +742,7 @@ struct Walker : public RecursiveASTVisitor<Walker> {
     return true;
   }
 
-  bool VisitLambdaExpr(absl::Nonnull<const LambdaExpr *> LE) {
+  bool VisitLambdaExpr(const LambdaExpr *absl_nonnull LE) {
     if (LE->hasExplicitParameters() || LE->hasExplicitResultType()) {
       insertPointerRanges(LE->getCallOperator());
     }
@@ -755,7 +755,7 @@ struct Walker : public RecursiveASTVisitor<Walker> {
 void forAllEligibleRanges(llvm::function_ref<void(const EligibleRange &)> Func,
                           ASTContext &Ctx,
                           const TypeNullabilityDefaults &Defaults,
-                          absl::Nullable<USRCache *> USRs,
+                          USRCache *absl_nullable USRs,
                           bool RestrictToMainFileOrHeader) {
   Walker W(
       Func, Defaults,

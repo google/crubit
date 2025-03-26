@@ -85,8 +85,8 @@ TypeNullability prepend(NullabilityKind Head, const TypeNullability &Tail) {
 // If `E` is already associated with a `PointerValue`, returns it.
 // Otherwise, associates a newly created `PointerValue` with `E` and returns it.
 // Returns null iff `E` is not a raw pointer expression.
-absl::Nullable<PointerValue *> ensureRawPointerHasValue(
-    absl::Nonnull<const Expr *> E, Environment &Env) {
+PointerValue *absl_nullable ensureRawPointerHasValue(const Expr *absl_nonnull E,
+                                                     Environment &Env) {
   if (!isSupportedRawPointerType(E->getType())) return nullptr;
 
   if (E->isPRValue()) {
@@ -107,7 +107,7 @@ absl::Nullable<PointerValue *> ensureRawPointerHasValue(
   return Val;
 }
 
-void computeNullability(absl::Nonnull<const Expr *> E,
+void computeNullability(const Expr *absl_nonnull E,
                         TransferState<PointerNullabilityLattice> &State,
                         std::function<TypeNullability()> Compute) {
   (void)State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
@@ -140,7 +140,7 @@ void computeNullability(absl::Nonnull<const Expr *> E,
 // Returns the computed nullability for a subexpr of the current expression.
 // This is always available as we compute bottom-up.
 const TypeNullability &getNullabilityForChild(
-    absl::Nonnull<const Expr *> E,
+    const Expr *absl_nonnull E,
     TransferState<PointerNullabilityLattice> &State) {
   return State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
     // Since we process child nodes before parents, we should already have
@@ -157,7 +157,7 @@ const TypeNullability &getNullabilityForChild(
   });
 }
 
-static absl::Nullable<const Decl *> getAssociatedTemplateDecl(
+static const Decl *absl_nullable getAssociatedTemplateDecl(
     const SubstTemplateTypeParmType *ST) {
   const Decl *AssociatedDecl = ST->getAssociatedDecl();
   if (!AssociatedDecl) return nullptr;
@@ -297,7 +297,7 @@ struct Resugarer {
 };
 
 PointerTypeNullability getPointerTypeNullability(
-    absl::Nonnull<const Expr *> E, PointerNullabilityAnalysis::Lattice &L) {
+    const Expr *absl_nonnull E, PointerNullabilityAnalysis::Lattice &L) {
   // TODO: handle this in non-flow-sensitive transfer instead
   if (auto FromClang = E->getType()->getNullability();
       FromClang && *FromClang != NullabilityKind::Unspecified)
@@ -313,7 +313,7 @@ PointerTypeNullability getPointerTypeNullability(
 }
 
 void initPointerFromTypeNullability(
-    PointerValue &PointerVal, absl::Nonnull<const Expr *> E,
+    PointerValue &PointerVal, const Expr *absl_nonnull E,
     TransferState<PointerNullabilityLattice> &State) {
   initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
                        getPointerTypeNullability(E, State.Lattice));
@@ -345,8 +345,8 @@ void ensureRawPointerHasValueAndNullability(
 /// -  The original pointer value if no unpacking took place.
 /// -  Null if `PointerLoc` is not associated with a value.
 /// This is analogous to the unpacking done on `TopBoolValue`s in the framework.
-absl::Nullable<PointerValue *> unpackPointerValue(StorageLocation &PointerLoc,
-                                                  Environment &Env) {
+PointerValue *absl_nullable unpackPointerValue(StorageLocation &PointerLoc,
+                                               Environment &Env) {
   auto *PointerVal = Env.get<PointerValue>(PointerLoc);
   if (!PointerVal) return nullptr;
 
@@ -399,7 +399,7 @@ void initSmartPointerForExpr(const Expr *E,
 }
 
 void transferValue_NullPointer(
-    absl::Nonnull<const Expr *> NullPointer, const MatchFinder::MatchResult &,
+    const Expr *absl_nonnull NullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   if (auto *PointerVal = ensureRawPointerHasValue(NullPointer, State.Env)) {
     initNullPointer(*PointerVal, State.Env.getDataflowAnalysisContext());
@@ -407,8 +407,7 @@ void transferValue_NullPointer(
 }
 
 void transferValue_PointerIncOrDec(
-    absl::Nonnull<const UnaryOperator *> UnaryOp,
-    const MatchFinder::MatchResult &,
+    const UnaryOperator *absl_nonnull UnaryOp, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   // The framework propagates the subexpression's value (in the case of post-
   // increment) or storage location (in the case of pre-increment). We just
@@ -423,7 +422,7 @@ void transferValue_PointerIncOrDec(
 }
 
 void transferValue_PointerAddOrSubAssign(
-    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const BinaryOperator *absl_nonnull BinaryOp,
     const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   // The framework propagates the storage location of the LHS, so we just need
@@ -438,8 +437,7 @@ void transferValue_PointerAddOrSubAssign(
 }
 
 void transferValue_NotNullPointer(
-    absl::Nonnull<const Expr *> NotNullPointer,
-    const MatchFinder::MatchResult &,
+    const Expr *absl_nonnull NotNullPointer, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   if (auto *PointerVal = ensureRawPointerHasValue(NotNullPointer, State.Env)) {
     initPointerNullState(*PointerVal, State.Env.getDataflowAnalysisContext(),
@@ -891,7 +889,7 @@ void transferValue_SmartPointerArrowMemberExpr(
                        Nullability);
 }
 
-void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
+void transferValue_Pointer(const Expr *absl_nonnull PointerExpr,
                            const MatchFinder::MatchResult &Result,
                            TransferState<PointerNullabilityLattice> &State) {
   auto *PointerVal = ensureRawPointerHasValue(PointerExpr, State.Env);
@@ -914,9 +912,9 @@ void transferValue_Pointer(absl::Nonnull<const Expr *> PointerExpr,
 //
 // `LHSNull` and `RHSNull` represent the nullability of the left- and right-hand
 // expresssions, respectively. A nullptr value is interpreted as Top.
-absl::Nullable<BoolValue *> processPointerComparison(
-    const Formula &ComparisonFormula, absl::Nullable<const Formula *> LHSNull,
-    absl::Nullable<const Formula *> RHSNull, BinaryOperatorKind Opcode,
+BoolValue *absl_nullable processPointerComparison(
+    const Formula &ComparisonFormula, const Formula *absl_nullable LHSNull,
+    const Formula *absl_nullable RHSNull, BinaryOperatorKind Opcode,
     Environment &Env) {
   auto &A = Env.arena();
 
@@ -959,7 +957,7 @@ absl::Nullable<BoolValue *> processPointerComparison(
 // unknown pointers when there is evidence that it is nullable, for example
 // when the pointer is compared to nullptr, or cast to boolean.
 void transferValue_NullCheckComparison(
-    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const BinaryOperator *absl_nonnull BinaryOp,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   auto *LHS = BinaryOp->getLHS();
@@ -985,7 +983,7 @@ void transferValue_NullCheckComparison(
 }
 
 void transferValue_NullCheckImplicitCastPtrToBool(
-    absl::Nonnull<const Expr *> CastExpr, const MatchFinder::MatchResult &,
+    const Expr *absl_nonnull CastExpr, const MatchFinder::MatchResult &,
     TransferState<PointerNullabilityLattice> &State) {
   auto &A = State.Env.arena();
   if (auto *CE = dyn_cast<clang::CastExpr>(CastExpr);
@@ -1008,7 +1006,7 @@ void transferValue_NullCheckImplicitCastPtrToBool(
     State.Env.setValue(*CastExpr, A.makeTopValue());
 }
 
-void initializeOutputParameter(absl::Nonnull<const Expr *> Arg,
+void initializeOutputParameter(const Expr *absl_nonnull Arg,
                                TransferState<PointerNullabilityLattice> &State,
                                const VarDecl &Param) {
   // When a function has an "output parameter" - a non-const pointer or
@@ -1149,7 +1147,7 @@ void modelCheckNE(const CallExpr &CE, Environment &Env) {
     Env.assume(Env.arena().makeEquals(Val->formula(), *IsNull));
 }
 
-void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
+void transferValue_CallExpr(const CallExpr *absl_nonnull CE,
                             const MatchFinder::MatchResult &Result,
                             TransferState<PointerNullabilityLattice> &State) {
   // The dataflow framework itself generally does not model `CallExpr`s
@@ -1223,7 +1221,7 @@ void transferValue_CallExpr(absl::Nonnull<const CallExpr *> CE,
 }
 
 void transferValue_AccessorCall(
-    absl::Nonnull<const CXXMemberCallExpr *> MCE,
+    const CXXMemberCallExpr *absl_nonnull MCE,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   auto *member = Result.Nodes.getNodeAs<clang::ValueDecl>("member-decl");
@@ -1247,7 +1245,7 @@ void transferValue_AccessorCall(
 }
 
 std::function<void(StorageLocation &)>
-initCallbackForStorageLocationIfSmartPointer(absl::Nonnull<const CallExpr *> CE,
+initCallbackForStorageLocationIfSmartPointer(const CallExpr *absl_nonnull CE,
                                              dataflow::Environment &Env) {
   if (!isSupportedSmartPointerType(CE->getType()))
     return [](StorageLocation &Loc) {};
@@ -1260,8 +1258,8 @@ initCallbackForStorageLocationIfSmartPointer(absl::Nonnull<const CallExpr *> CE,
 }
 
 void handleConstMemberCall(
-    absl::Nonnull<const CallExpr *> CE,
-    absl::Nullable<dataflow::RecordStorageLocation *> RecordLoc,
+    const CallExpr *absl_nonnull CE,
+    dataflow::RecordStorageLocation *absl_nullable RecordLoc,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   if (RecordLoc == nullptr) {
@@ -1335,7 +1333,7 @@ void handleConstMemberCall(
 }
 
 void transferValue_ConstMemberCall(
-    absl::Nonnull<const CXXMemberCallExpr *> MCE,
+    const CXXMemberCallExpr *absl_nonnull MCE,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   handleConstMemberCall(
@@ -1350,7 +1348,7 @@ void transferValue_ConstMemberOperatorCall(
   handleConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
-void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
+void handleNonConstMemberCall(const CallExpr *absl_nonnull CE,
                               dataflow::RecordStorageLocation *RecordLoc,
                               const MatchFinder::MatchResult &Result,
                               TransferState<PointerNullabilityLattice> &State) {
@@ -1379,7 +1377,7 @@ void handleNonConstMemberCall(absl::Nonnull<const CallExpr *> CE,
 }
 
 void transferValue_NonConstMemberCall(
-    absl::Nonnull<const CXXMemberCallExpr *> MCE,
+    const CXXMemberCallExpr *absl_nonnull MCE,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   handleNonConstMemberCall(
@@ -1387,7 +1385,7 @@ void transferValue_NonConstMemberCall(
 }
 
 void transferValue_NonConstMemberOperatorCall(
-    absl::Nonnull<const CXXOperatorCallExpr *> OCE,
+    const CXXOperatorCallExpr *absl_nonnull OCE,
     const MatchFinder::MatchResult &Result,
     TransferState<PointerNullabilityLattice> &State) {
   auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
@@ -1395,7 +1393,7 @@ void transferValue_NonConstMemberOperatorCall(
   handleNonConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
-void transferType_DeclRefExpr(absl::Nonnull<const DeclRefExpr *> DRE,
+void transferType_DeclRefExpr(const DeclRefExpr *absl_nonnull DRE,
                               const MatchFinder::MatchResult &MR,
                               TransferState<PointerNullabilityLattice> &State) {
   computeNullability(DRE, State, [&] {
@@ -1420,7 +1418,7 @@ void transferType_DeclRefExpr(absl::Nonnull<const DeclRefExpr *> DRE,
   });
 }
 
-void transferType_MemberExpr(absl::Nonnull<const MemberExpr *> ME,
+void transferType_MemberExpr(const MemberExpr *absl_nonnull ME,
                              const MatchFinder::MatchResult &MR,
                              TransferState<PointerNullabilityLattice> &State) {
   computeNullability(ME, State, [&]() {
@@ -1450,7 +1448,7 @@ void transferType_MemberExpr(absl::Nonnull<const MemberExpr *> ME,
   });
 }
 
-void transferType_CastExpr(absl::Nonnull<const CastExpr *> CE,
+void transferType_CastExpr(const CastExpr *absl_nonnull CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
   computeNullability(CE, State, [&]() -> TypeNullability {
@@ -1607,7 +1605,7 @@ void transferType_CastExpr(absl::Nonnull<const CastExpr *> CE,
 }
 
 void transferType_MaterializeTemporaryExpr(
-    absl::Nonnull<const MaterializeTemporaryExpr *> MTE,
+    const MaterializeTemporaryExpr *absl_nonnull MTE,
     const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(MTE, State, [&]() {
@@ -1631,7 +1629,7 @@ void transferType_CopyOrMoveConstruct(
   });
 }
 
-void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
+void transferType_CallExpr(const CallExpr *absl_nonnull CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
   computeNullability(CE, State, [&]() {
@@ -1654,7 +1652,7 @@ void transferType_CallExpr(absl::Nonnull<const CallExpr *> CE,
 }
 
 void transferType_UnaryOperator(
-    absl::Nonnull<const UnaryOperator *> UO, const MatchFinder::MatchResult &MR,
+    const UnaryOperator *absl_nonnull UO, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(UO, State, [&]() -> TypeNullability {
     switch (UO->getOpcode()) {
@@ -1696,8 +1694,7 @@ void transferType_UnaryOperator(
 }
 
 void transferType_BinaryOperator(
-    absl::Nonnull<const BinaryOperator *> BO,
-    const MatchFinder::MatchResult &MR,
+    const BinaryOperator *absl_nonnull BO, const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(BO, State, [&]() -> TypeNullability {
     switch (BO->getOpcode()) {
@@ -1740,7 +1737,7 @@ void transferType_BinaryOperator(
   });
 }
 
-void transferType_NewExpr(absl::Nonnull<const CXXNewExpr *> NE,
+void transferType_NewExpr(const CXXNewExpr *absl_nonnull NE,
                           const MatchFinder::MatchResult &MR,
                           TransferState<PointerNullabilityLattice> &State) {
   computeNullability(NE, State, [&]() {
@@ -1754,7 +1751,7 @@ void transferType_NewExpr(absl::Nonnull<const CXXNewExpr *> NE,
 }
 
 void transferType_ArraySubscriptExpr(
-    absl::Nonnull<const ArraySubscriptExpr *> ASE,
+    const ArraySubscriptExpr *absl_nonnull ASE,
     const MatchFinder::MatchResult &MR,
     TransferState<PointerNullabilityLattice> &State) {
   computeNullability(ASE, State, [&]() {
@@ -1767,7 +1764,7 @@ void transferType_ArraySubscriptExpr(
   });
 }
 
-void transferType_ThisExpr(absl::Nonnull<const CXXThisExpr *> TE,
+void transferType_ThisExpr(const CXXThisExpr *absl_nonnull TE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
   computeNullability(TE, State, [&]() {
@@ -1964,7 +1961,7 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(
 }
 
 PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
-    absl::Nonnull<const ValueDecl *> D, dataflow::Arena &A) {
+    const ValueDecl *absl_nonnull D, dataflow::Arena &A) {
   auto [It, Inserted] = NFS.DeclTopLevelNullability.try_emplace(
       cast<ValueDecl>(D->getCanonicalDecl()));
   if (Inserted) It->second = PointerTypeNullability::createSymbolic(A);
@@ -1982,9 +1979,9 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
   ensureSmartPointerInitialized(Elt, State);
 }
 
-static absl::Nullable<const Formula *> mergeFormulas(
-    absl::Nullable<const Formula *> Bool1, const Environment &Env1,
-    absl::Nullable<const Formula *> Bool2, const Environment &Env2,
+static const Formula *absl_nullable mergeFormulas(
+    const Formula *absl_nullable Bool1, const Environment &Env1,
+    const Formula *absl_nullable Bool2, const Environment &Env2,
     Environment &MergedEnv) {
   if (Bool1 == Bool2) {
     return Bool1;
@@ -2087,10 +2084,10 @@ ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,
 // be proven equivalent. Otherwise, (`Prev` and `Cur` are provably equivalent),
 // returns `Cur`. Returns `Cur`, if `Prev` is equivalent to `Cur`. Otherwise,
 // returns `Top`.
-static std::pair<absl::Nullable<const Formula *>, LatticeEffect>
-widenNullabilityProperty(absl::Nullable<const Formula *> Prev,
+static std::pair<const Formula *absl_nullable, LatticeEffect>
+widenNullabilityProperty(const Formula *absl_nullable Prev,
                          const Environment &PrevEnv,
-                         absl::Nullable<const Formula *> Cur,
+                         const Formula *absl_nullable Cur,
                          Environment &CurEnv) {
   if (Prev == Cur) return {Cur, LatticeEffect::Unchanged};
   if (Prev == nullptr) return {nullptr, LatticeEffect::Unchanged};

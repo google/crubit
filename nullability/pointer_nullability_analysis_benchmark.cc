@@ -22,8 +22,7 @@
 namespace clang::tidy::nullability {
 namespace {
 
-absl::Nonnull<NamedDecl *> lookup(absl::string_view Name,
-                                  const DeclContext &DC) {
+NamedDecl *absl_nonnull lookup(absl::string_view Name, const DeclContext &DC) {
   auto Result = DC.lookup(&DC.getParentASTContext().Idents.get(Name));
   CHECK(Result.isSingleResult()) << Name;
   return Result.front();
@@ -220,7 +219,7 @@ BENCHMARK(BM_PointerAnalysisCallInLoop);
 }  // namespace
 }  // namespace clang::tidy::nullability
 
-int main(int argc, absl::Nonnull<char **> argv) {
+int main(int argc, char **absl_nonnull argv) {
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
   return 0;

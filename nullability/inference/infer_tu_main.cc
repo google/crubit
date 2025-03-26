@@ -154,7 +154,7 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
     DiagSample = Diags.getCustomDiagID(DiagnosticsEngine::Note, "%0 here");
   }
 
-  bool VisitDecl(absl::Nonnull<const Decl *> FD) {
+  bool VisitDecl(const Decl *absl_nonnull FD) {
     llvm::SmallString<128> USR;
     if (!index::generateUSRForDecl(FD, USR)) {
       if (auto It = InferencesByUSR.find(USR.str());
@@ -215,7 +215,7 @@ struct DeclFilter {
 class Action : public SyntaxOnlyAction {
   NullabilityPragmas Pragmas;
 
-  absl::Nonnull<std::unique_ptr<ASTConsumer>> CreateASTConsumer(
+  absl_nonnull std::unique_ptr<ASTConsumer> CreateASTConsumer(
       CompilerInstance &, llvm::StringRef) override {
     class Consumer : public ASTConsumer {
      public:
@@ -301,7 +301,7 @@ class Action : public SyntaxOnlyAction {
 }  // namespace
 }  // namespace clang::tidy::nullability
 
-int main(int argc, absl::Nonnull<const char **> argv) {
+int main(int argc, const char **absl_nonnull argv) {
   using namespace clang::tooling;
   auto Exec = createExecutorFromCommandLineArgs(argc, argv, Opts);
   QCHECK(Exec) << toString(Exec.takeError());

@@ -34,7 +34,7 @@ class EqualsProtoMatcher
 
   bool MatchAndExplain(
       const proto2::Message &M,
-      absl::Nonnull<testing::MatchResultListener *> Listener) const override {
+      testing::MatchResultListener *absl_nonnull Listener) const override {
     std::unique_ptr<proto2::Message> Parsed(M.New());
     if (!proto2::TextFormat::ParseFromString(Expected, Parsed.get())) {
       *Listener << "where <<<\n"
@@ -55,7 +55,7 @@ class EqualsProtoMatcher
                                        Listener);
   }
 
-  void DescribeTo(absl::Nonnull<std::ostream *> OS) const override {
+  void DescribeTo(std::ostream *absl_nonnull OS) const override {
     *OS << "equals proto <<<\n" << Expected << "\n>>>";
   }
 };

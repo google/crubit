@@ -113,10 +113,10 @@ SmallVector<PointerNullabilityDiagnostic> untrackedError(
 
 // Diagnoses whether `E` violates the expectation that it is nonnull.
 SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
-    absl::Nonnull<const Expr *> E, const Environment &Env,
-    const ASTContext &Ctx, PointerNullabilityDiagnostic::Context DiagCtx,
-    absl::Nullable<const clang::NamedDecl *> Callee = nullptr,
-    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr,
+    const Expr *absl_nonnull E, const Environment &Env, const ASTContext &Ctx,
+    PointerNullabilityDiagnostic::Context DiagCtx,
+    const clang::NamedDecl *absl_nullable Callee = nullptr,
+    const clang::IdentifierInfo *absl_nullable ParamName = nullptr,
     CharSourceRange Range = {}) {
   if (PointerValue *ActualVal = getPointerValue(E, Env)) {
     if (isNullable(*ActualVal, Env)) {
@@ -142,10 +142,10 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
 // LHS can be a variable, the return value of a function, a param etc.
 SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     QualType LHSType, ArrayRef<PointerTypeNullability> LHSNullability,
-    absl::Nonnull<const Expr *> RHS, const Environment &Env, ASTContext &Ctx,
+    const Expr *absl_nonnull RHS, const Environment &Env, ASTContext &Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx,
-    absl::Nullable<const clang::NamedDecl *> Callee = nullptr,
-    absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr,
+    const clang::NamedDecl *absl_nullable Callee = nullptr,
+    const clang::IdentifierInfo *absl_nullable ParamName = nullptr,
     CharSourceRange LHSRange = {}) {
   LHSType = LHSType.getNonReferenceType();
   // For now, we just check whether the top-level pointer type is compatible.
@@ -162,7 +162,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
-    absl::Nonnull<const UnaryOperator *> UnaryOp,
+    const UnaryOperator *absl_nonnull UnaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
       UnaryOp->getSubExpr(), State.Env, *Result.Context,
@@ -170,7 +170,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerDereference(
-    absl::Nonnull<const CXXOperatorCallExpr *> Op,
+    const CXXOperatorCallExpr *absl_nonnull Op,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
       Op->getArg(0), State.Env, *Result.Context,
@@ -178,7 +178,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerDereference(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseSubscript(
-    absl::Nonnull<const ArraySubscriptExpr *> Subscript,
+    const ArraySubscriptExpr *absl_nonnull Subscript,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
       Subscript->getBase(), State.Env, *Result.Context,
@@ -186,7 +186,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseSubscript(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
-    absl::Nonnull<const MemberExpr *> MemberExpr,
+    const MemberExpr *absl_nonnull MemberExpr,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(
       MemberExpr->getBase(), State.Env, *Result.Context,
@@ -202,7 +202,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
-    absl::Nonnull<const BinaryOperator *> Op,
+    const BinaryOperator *absl_nonnull Op,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   const TypeNullability *LHSNullability =
       State.Lattice.getTypeNullability(Op->getLHS());
@@ -214,7 +214,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
-    absl::Nonnull<const CXXOperatorCallExpr *> Op,
+    const CXXOperatorCallExpr *absl_nonnull Op,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   const TypeNullability *LHSNullability =
       State.Lattice.getTypeNullability(Op->getArg(0));
@@ -226,7 +226,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
-    absl::Nonnull<const CXXMemberCallExpr *> MCE,
+    const CXXMemberCallExpr *absl_nonnull MCE,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   const TypeNullability *ObjArgNullability =
       State.Lattice.getTypeNullability(MCE->getImplicitObjectArgument());
@@ -260,7 +260,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
     const FunctionProtoType &CalleeFPT,
     ArrayRef<PointerTypeNullability> ParamsNullability,
     ArrayRef<const ParmVarDecl *> ParmDecls, ArrayRef<const Expr *> Args,
-    absl::Nullable<const clang::NamedDecl *> Callee, const Environment &Env,
+    const clang::NamedDecl *absl_nullable Callee, const Environment &Env,
     ASTContext &Ctx) {
   auto ParamTypes = CalleeFPT.getParamTypes();
   // C-style varargs cannot be annotated and therefore are unchecked.
@@ -326,7 +326,7 @@ NullabilityKind parseNullabilityKind(StringRef EnumName) {
 ///    }
 /// \endcode
 SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
-    absl::Nonnull<const CallExpr *> CE, const DiagTransferState &State,
+    const CallExpr *absl_nonnull CE, const DiagTransferState &State,
     ASTContext &Ctx) {
   auto *DRE = cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
 
@@ -369,7 +369,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
-    absl::Nonnull<const UnaryOperator *> UnaryOp,
+    const UnaryOperator *absl_nonnull UnaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseNonnullExpected(UnaryOp->getSubExpr(), State.Env,
                                  *Result.Context,
@@ -389,14 +389,14 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractAssign(
-    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const BinaryOperator *absl_nonnull BinaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env,
                              *Result.Context);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
-    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const BinaryOperator *absl_nonnull BinaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   if (BinaryOp->getLHS()->getType()->isIntegerType()) {
     return diagnoseAddSubtract(BinaryOp->getRHS(), BinaryOp->getLHS(),
@@ -407,7 +407,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnosePointerDifference(
-    absl::Nonnull<const BinaryOperator *> BinaryOp,
+    const BinaryOperator *absl_nonnull BinaryOp,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   SmallVector<PointerNullabilityDiagnostic> Diagnostics =
       diagnoseNonnullExpected(BinaryOp->getLHS(), State.Env, *Result.Context,
@@ -432,7 +432,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseConstructorCall(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
-    absl::Nonnull<const CXXConstructExpr *> CE,
+    const CXXConstructExpr *absl_nonnull CE,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   const CXXConstructorDecl *CtorDecl = CE->getConstructor();
   ArrayRef<const Expr *> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
@@ -440,8 +440,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueConstructExpr(
-    absl::Nonnull<const CallExpr *> MakeUniqueCall,
-    absl::Nonnull<const CXXConstructExpr *> CEInMakeUnique,
+    const CallExpr *absl_nonnull MakeUniqueCall,
+    const CXXConstructExpr *absl_nonnull CEInMakeUnique,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   CXXConstructorDecl *CtorDecl = CEInMakeUnique->getConstructor();
   // Use the arguments from the `MakeUniqueCall`, which has the
@@ -467,8 +467,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueConstructExpr(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueParenInitListExpr(
-    absl::Nonnull<const CallExpr *> MakeUniqueCall,
-    absl::Nonnull<const CXXParenListInitExpr *> InitListInMakeUnique,
+    const CallExpr *absl_nonnull MakeUniqueCall,
+    const CXXParenListInitExpr *absl_nonnull InitListInMakeUnique,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   if (!InitListInMakeUnique->getType()->isRecordType()) return {};
 
@@ -503,7 +503,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMakeUniqueParenInitListExpr(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
-    absl::Nonnull<const CallExpr *> CE, const MatchFinder::MatchResult &Result,
+    const CallExpr *absl_nonnull CE, const MatchFinder::MatchResult &Result,
     const DiagTransferState &State) {
   // Handle some special cases first.
   if (auto *FD = CE->getDirectCallee()) {
@@ -585,8 +585,8 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
-    absl::Nonnull<const ReturnStmt *> RS,
-    const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
+    const ReturnStmt *absl_nonnull RS, const MatchFinder::MatchResult &Result,
+    const DiagTransferState &State) {
   if (!RS->getRetValue()) return {};
 
   auto *Function = State.Env.getCurrentFunc();
@@ -604,7 +604,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
-    absl::Nonnull<const CXXCtorInitializer *> CI,
+    const CXXCtorInitializer *absl_nonnull CI,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   CHECK(CI->isAnyMemberInitializer());
   auto *Member = CI->getAnyMember();
@@ -630,7 +630,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseInitListExpr(
-    absl::Nonnull<const InitListExpr *> ILE,
+    const InitListExpr *absl_nonnull ILE,
     const MatchFinder::MatchResult &Result, const DiagTransferState &State) {
   if (!ILE->getType()->isRecordType()) return {};
 
@@ -649,7 +649,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseInitListExpr(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseDeclStmt(
-    absl::Nonnull<const DeclStmt *> DS, const MatchFinder::MatchResult &Result,
+    const DeclStmt *absl_nonnull DS, const MatchFinder::MatchResult &Result,
     const DiagTransferState &State) {
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   for (const Decl *D : DS->decls()) {
@@ -664,7 +664,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseDeclStmt(
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseMovedFromNonnullSmartPointer(
-    absl::Nonnull<const Expr *> E, const MatchFinder::MatchResult &Result,
+    const Expr *absl_nonnull E, const MatchFinder::MatchResult &Result,
     const DiagTransferState &State) {
   const TypeNullability *Nullability = State.Lattice.getTypeNullability(E);
   const auto &Ctx = *Result.Context;
@@ -756,7 +756,7 @@ void checkParmVarDeclWithPointerDefaultArg(
     clang::ASTContext &Ctx, const clang::ParmVarDecl &Parm,
     llvm::SmallVector<PointerNullabilityDiagnostic> &Diags,
     const TypeNullabilityDefaults &Defaults,
-    absl::Nullable<const clang::NamedDecl *> Callee = nullptr) {
+    const clang::NamedDecl *absl_nullable Callee = nullptr) {
   if (Parm.getType()->isDependentType()) return;
   TypeNullability DeclAnnotation = getTypeNullability(Parm, Defaults);
   if (DeclAnnotation.empty() ||
@@ -794,7 +794,7 @@ void checkAnnotationsConsistentHelper(
 }
 
 void checkAnnotationsConsistent(
-    absl::Nonnull<const ValueDecl *> VD,
+    const ValueDecl *absl_nonnull VD,
     llvm::SmallVector<PointerNullabilityDiagnostic> &Diags,
     const TypeNullabilityDefaults &Defaults) {
   auto *CanonicalDecl = cast<ValueDecl>(VD->getCanonicalDecl());
@@ -909,7 +909,7 @@ DiagTransferFunc pointerNullabilityDiagnoserAfter(
       // `ensureSmartPointerInitialized()`).
       .CaseOfCFGStmt<Expr>(
           expr(hasType(isSupportedSmartPointer()), isGLValue()),
-          [&AllowedMovedFromNonnull](absl::Nonnull<const Expr *> E,
+          [&AllowedMovedFromNonnull](const Expr *absl_nonnull E,
                                      const MatchFinder::MatchResult &Result,
                                      const DiagTransferState &State)
               -> SmallVector<PointerNullabilityDiagnostic> {

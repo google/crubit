@@ -25,13 +25,13 @@ namespace clang::tidy::nullability {
 // The 0-arg constructor call may leave Nonnull fields uninitialized (with
 // indeterminate values). We can try to diagnose later during initialization.
 // Returns `nullptr` otherwise.
-absl::Nullable<const Expr*> getUnderlyingInitExprInStdMakeUnique(
+const Expr* absl_nullable getUnderlyingInitExprInStdMakeUnique(
     const FunctionDecl& Decl);
 
 // Returns the last forwarding function layer in the call chain starting
 // with `FD`, if `FD` is considered a forwarding function like
 // `std::make_unique`.
-absl::Nullable<const FunctionDecl*> getLastForwardingFunctionLayer(
+const FunctionDecl* absl_nullable getLastForwardingFunctionLayer(
     const FunctionDecl& Decl);
 
 }  // namespace clang::tidy::nullability

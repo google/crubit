@@ -59,11 +59,11 @@ struct PointerNullabilityDiagnostic {
   CharSourceRange Range;
   /// The function where the argument is being passed to.
   /// Populated only if `Ctx` is `FunctionArgument`.
-  absl::Nullable<const clang::NamedDecl *> Callee = nullptr;
+  const clang::NamedDecl *absl_nullable Callee = nullptr;
   /// Name of the parameter that the argument is being passed to.
   /// Populated only if `Ctx` is `FunctionArgument` and the parameter name is
   /// known.
-  absl::Nullable<const clang::IdentifierInfo *> ParamName = nullptr;
+  const clang::IdentifierInfo *absl_nullable ParamName = nullptr;
   /// Source range of a note to be emitted alongside the diagnostic.
   /// The exact semantics of the note depend on `Code` and `Ctx`.
   CharSourceRange NoteRange;

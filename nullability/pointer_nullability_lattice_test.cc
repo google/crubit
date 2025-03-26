@@ -41,7 +41,7 @@ using dataflow::RecordStorageLocation;
 using dataflow::Value;
 using dataflow::WatchedLiteralsSolver;
 
-absl::Nonnull<NamedDecl *> lookup(StringRef Name, const DeclContext &DC) {
+NamedDecl *absl_nonnull lookup(StringRef Name, const DeclContext &DC) {
   auto Result = DC.lookup(&DC.getParentASTContext().Idents.get(Name));
   EXPECT_TRUE(Result.isSingleResult()) << Name;
   return Result.front();

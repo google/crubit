@@ -25,8 +25,8 @@ using dataflow::LatticeJoinEffect;
 // Returns overridden nullability information associated with a declaration.
 // For now we only track top-level decl nullability symbolically and check for
 // concrete nullability override results.
-absl::Nullable<const PointerTypeNullability *> getDeclNullability(
-    absl::Nullable<const Decl *> D,
+const PointerTypeNullability *absl_nullable getDeclNullability(
+    const Decl *absl_nullable D,
     const PointerNullabilityLattice::NonFlowSensitiveState &NFS) {
   if (!D) return nullptr;
   if (const auto *VD = dyn_cast_or_null<ValueDecl>(D->getCanonicalDecl())) {
@@ -43,7 +43,7 @@ absl::Nullable<const PointerTypeNullability *> getDeclNullability(
 
 const TypeNullability &
 PointerNullabilityLatticeBase::insertExprNullabilityIfAbsent(
-    absl::Nonnull<const Expr *> E,
+    const Expr *absl_nonnull E,
     const std::function<TypeNullability()> &GetNullability) {
   E = &dataflow::ignoreCFGOmittedNodes(*E);
   if (auto It = NFS.ExprToNullability.find(E);
@@ -58,7 +58,7 @@ PointerNullabilityLatticeBase::insertExprNullabilityIfAbsent(
 }
 
 void PointerNullabilityLatticeBase::overrideNullabilityFromDecl(
-    absl::Nullable<const Decl *> D, TypeNullability &N) const {
+    const Decl *absl_nullable D, TypeNullability &N) const {
   // For now, overrides are always for pointer values only, and override only
   // the top-level nullability.
   if (N.empty()) return;

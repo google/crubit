@@ -41,7 +41,7 @@ bool isStdMakeUniqueWithNontrivalConstructor(const FunctionDecl &FD) {
   return FirstArg.getAsType()->isRecordType();
 }
 
-const Expr *findMakeUniqueNewExprInitializer(absl::Nonnull<const Stmt *> S) {
+const Expr *findMakeUniqueNewExprInitializer(const Stmt *absl_nonnull S) {
   // Do a simple walk over the children, which should be sufficient for
   // make_unique. RecursiveASTVisitor can also work but is supposed to be more
   // expensive to compile. make_unique should have a `new T( ... )` in its
@@ -62,14 +62,14 @@ const Expr *findMakeUniqueNewExprInitializer(absl::Nonnull<const Stmt *> S) {
 
 }  // namespace
 
-absl::Nullable<const Expr *> getUnderlyingInitExprInStdMakeUnique(
+const Expr *absl_nullable getUnderlyingInitExprInStdMakeUnique(
     const FunctionDecl &Decl) {
   if (!isStdMakeUniqueWithNontrivalConstructor(Decl)) return nullptr;
   if (Decl.getBody() == nullptr) return nullptr;
   return findMakeUniqueNewExprInitializer(Decl.getBody());
 }
 
-absl::Nullable<const FunctionDecl *> getLastForwardingFunctionLayer(
+const FunctionDecl *absl_nullable getLastForwardingFunctionLayer(
     const FunctionDecl &Decl) {
   if (!isStdMakeUniqueWithNontrivalConstructor(Decl)) return nullptr;
   if (Decl.getBody() == nullptr) return nullptr;

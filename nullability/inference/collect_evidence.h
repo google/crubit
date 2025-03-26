@@ -50,8 +50,8 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
 // Map from virtual methods in a TU to the set of methods that override them in
 // that TU.
 using VirtualMethodOverridesMap =
-    absl::flat_hash_map<absl::Nonnull<const CXXMethodDecl *>,
-                        llvm::DenseSet<absl::Nonnull<const CXXMethodDecl *>>>;
+    absl::flat_hash_map<const CXXMethodDecl *absl_nonnull,
+                        llvm::DenseSet<const CXXMethodDecl *absl_nonnull>>;
 /// Collect a map from virtual methods to a set of their overrides.
 VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx);
 

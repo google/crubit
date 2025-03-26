@@ -60,8 +60,8 @@ static bool isStandardSmartPointerDecl(const CXXRecordDecl *RD) {
   return Name == "unique_ptr" || Name == "shared_ptr";
 }
 
-static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
-    absl::Nullable<const CXXRecordDecl *> RD,
+static const CXXRecordDecl *absl_nullable getSmartPointerBaseClass(
+    const CXXRecordDecl *absl_nullable RD,
     llvm::SmallPtrSet<const CXXRecordDecl *, 2> &Seen,
     AccessSpecifier BaseAccess) {
   if (RD == nullptr) return nullptr;
@@ -112,8 +112,8 @@ static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
 /// If `RD` or one of its bases (with access at most as restrictive as
 /// `BaseAccess`) is a smart pointer class, returns that smart
 /// pointer class; otherwise, returns null.
-static absl::Nullable<const CXXRecordDecl *> getSmartPointerBaseClass(
-    absl::Nullable<const CXXRecordDecl *> RD, AccessSpecifier BaseAccess) {
+static const CXXRecordDecl *absl_nullable getSmartPointerBaseClass(
+    const CXXRecordDecl *absl_nullable RD, AccessSpecifier BaseAccess) {
   llvm::SmallPtrSet<const CXXRecordDecl *, 2> Seen;
   return getSmartPointerBaseClass(RD, Seen, BaseAccess);
 }
@@ -213,7 +213,7 @@ std::string nullabilityToString(const TypeNullability &Nullability) {
   return Result;
 }
 
-FileID getGoverningFile(absl::Nullable<const Decl *> D) {
+FileID getGoverningFile(const Decl *absl_nullable D) {
   if (!D) return FileID();
   return D->getASTContext()
       .getSourceManager()
@@ -573,7 +573,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
         break;
     }
   }
-  void visit(absl::Nonnull<const DeclContext *> DC) {
+  void visit(const DeclContext *absl_nonnull DC) {
     // For now, only consider enclosing classes.
     // TODO: The nullability of template functions can affect local classes too,
     // this can be relevant e.g. when instantiating templates with such types.
@@ -581,12 +581,12 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       visit(DC->getParentASTContext().getRecordType(CRD), std::nullopt);
   }
 
-  void visit(absl::Nonnull<const Type *> T, std::optional<TypeLoc> L) {
+  void visit(const Type *absl_nonnull T, std::optional<TypeLoc> L) {
     if (L) recordLoc(*L);
     Base::visit(T, L);
   }
 
-  void visitType(absl::Nonnull<const Type *> T, std::optional<TypeLoc> L) {
+  void visitType(const Type *absl_nonnull T, std::optional<TypeLoc> L) {
     // For sugar not explicitly handled below, desugar and continue.
     // (We need to walk the full structure of the canonical type.)
     if (auto *Desugar =
@@ -603,7 +603,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     Base::visitType(T, L);
   }
 
-  void visitFunctionProtoType(absl::Nonnull<const FunctionProtoType *> FPT,
+  void visitFunctionProtoType(const FunctionProtoType *absl_nonnull FPT,
                               std::optional<FunctionProtoTypeLoc> L) {
     ignoreUnexpectedNullability();
     if (FPT->getNoReturnAttr() && L && L->getNumParams() > 0 &&
@@ -637,7 +637,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   }
 
   void visitTemplateSpecializationType(
-      absl::Nonnull<const TemplateSpecializationType *> TST,
+      const TemplateSpecializationType *absl_nonnull TST,
       std::optional<TemplateSpecializationTypeLoc> L) {
     if (TST->isTypeAlias()) {
       auto NK = getAliasNullability(TST->getTemplateName());
@@ -708,7 +708,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   }
 
   void visitSubstTemplateTypeParmType(
-      absl::Nonnull<const SubstTemplateTypeParmType *> T,
+      const SubstTemplateTypeParmType *absl_nonnull T,
       std::optional<SubstTemplateTypeParmTypeLoc> L) {
     // The underlying type of T in the AST has no sugar, as the template has
     // only one body instantiated per canonical args.
@@ -753,7 +753,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   }
 
   // If we see foo<args>::ty then we may need sugar from args to resugar ty.
-  void visitElaboratedType(absl::Nonnull<const ElaboratedType *> ET,
+  void visitElaboratedType(const ElaboratedType *absl_nonnull ET,
                            std::optional<ElaboratedTypeLoc> L) {
     std::vector<TemplateContext> BoundTemplateArgs;
     std::optional<NestedNameSpecifierLoc> NNSLoc;
@@ -818,7 +818,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     visitType(T, std::nullopt);
   }
 
-  void visitRecordType(absl::Nonnull<const RecordType *> RT,
+  void visitRecordType(const RecordType *absl_nonnull RT,
                        std::optional<RecordTypeLoc> L) {
     if (isSupportedSmartPointerType(QualType(RT, 0))) {
       report(RT);
@@ -859,7 +859,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     }
   }
 
-  void visitAttributedType(absl::Nonnull<const AttributedType *> AT,
+  void visitAttributedType(const AttributedType *absl_nonnull AT,
                            std::optional<AttributedTypeLoc> L) {
     auto NK = AT->getImmediateNullability();
     if (NK == NullabilityKind::Unspecified) {
@@ -873,28 +873,28 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
         << AT->getModifiedType().getAsString();
   }
 
-  void visitPointerType(absl::Nonnull<const PointerType *> PT,
+  void visitPointerType(const PointerType *absl_nonnull PT,
                         std::optional<PointerTypeLoc> L) {
     report(PT);
     visit(PT->getPointeeType(),
           L ? std::optional<TypeLoc>(L->getPointeeLoc()) : std::nullopt);
   }
 
-  void visitReferenceType(absl::Nonnull<const ReferenceType *> RT,
+  void visitReferenceType(const ReferenceType *absl_nonnull RT,
                           std::optional<ReferenceTypeLoc> L) {
     ignoreUnexpectedNullability();
     visit(RT->getPointeeTypeAsWritten(),
           L ? std::optional<TypeLoc>(L->getPointeeLoc()) : std::nullopt);
   }
 
-  void visitArrayType(absl::Nonnull<const ArrayType *> AT,
+  void visitArrayType(const ArrayType *absl_nonnull AT,
                       std::optional<ArrayTypeLoc> L) {
     ignoreUnexpectedNullability();
     visit(AT->getElementType(),
           L ? std::optional<TypeLoc>(L->getElementLoc()) : std::nullopt);
   }
 
-  void visitParenType(absl::Nonnull<const ParenType *> PT,
+  void visitParenType(const ParenType *absl_nonnull PT,
                       std::optional<ParenTypeLoc> L) {
     visit(PT->getInnerType(),
           L ? std::optional<TypeLoc>(L->getInnerLoc()) : std::nullopt);
@@ -904,8 +904,8 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 struct CountWalker : public NullabilityWalker<CountWalker> {
   CountWalker() : NullabilityWalker(FileID()) {}
   unsigned Count = 0;
-  void report(absl::Nonnull<const Type *>, FileID,
-              std::optional<NullabilityKind>, std::optional<TypeLoc>) {
+  void report(const Type *absl_nonnull, FileID, std::optional<NullabilityKind>,
+              std::optional<TypeLoc>) {
     ++Count;
   }
 };
@@ -945,7 +945,7 @@ unsigned countPointersInType(QualType T) {
   return PointerCountWalker.Count;
 }
 
-unsigned countPointersInType(absl::Nonnull<const DeclContext *> DC) {
+unsigned countPointersInType(const DeclContext *absl_nonnull DC) {
   CountWalker PointerCountWalker;
   PointerCountWalker.visit(DC);
   return PointerCountWalker.Count;
@@ -957,13 +957,13 @@ unsigned countPointersInType(const TemplateArgument &TA) {
   return PointerCountWalker.Count;
 }
 
-QualType exprType(absl::Nonnull<const Expr *> E) {
+QualType exprType(const Expr *absl_nonnull E) {
   if (E->hasPlaceholderType(BuiltinType::BoundMember))
     return Expr::findBoundMemberType(E);
   return E->getType();
 }
 
-unsigned countPointersInType(absl::Nonnull<const Expr *> E) {
+unsigned countPointersInType(const Expr *absl_nonnull E) {
   return countPointersInType(exprType(E));
 }
 
@@ -988,14 +988,14 @@ TypeNullability getTypeNullability(
     Walker(FileID File, const TypeNullabilityDefaults &Defaults)
         : NullabilityWalker(File), Defaults(Defaults) {}
 
-    void report(absl::Nonnull<const Type *>, FileID File,
+    void report(const Type *absl_nonnull, FileID File,
                 std::optional<NullabilityKind> NK, std::optional<TypeLoc>) {
       if (!NK) NK = Defaults.get(File);
       Annotations.push_back(*NK);
     }
 
     void visitSubstTemplateTypeParmType(
-        absl::Nonnull<const SubstTemplateTypeParmType *> ST,
+        const SubstTemplateTypeParmType *absl_nonnull ST,
         std::optional<SubstTemplateTypeParmTypeLoc> L) {
       if (SubstituteTypeParam) {
         if (auto Subst = SubstituteTypeParam(ST)) {
@@ -1055,7 +1055,7 @@ TypeNullability getTypeNullability(
                             SubstituteTypeParam);
 }
 
-TypeNullability unspecifiedNullability(absl::Nonnull<const Expr *> E) {
+TypeNullability unspecifiedNullability(const Expr *absl_nonnull E) {
   return TypeNullability(countPointersInType(E), NullabilityKind::Unspecified);
 }
 
@@ -1092,9 +1092,9 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
   }
 
   // Default behavior for unhandled types: do not transform.
-  QualType VisitType(absl::Nonnull<const Type *> T) { return QualType(T, 0); }
+  QualType VisitType(const Type *absl_nonnull T) { return QualType(T, 0); }
 
-  QualType VisitPointerType(absl::Nonnull<const PointerType *> PT) {
+  QualType VisitPointerType(const PointerType *absl_nonnull PT) {
     CHECK(!Nullability.empty())
         << "Nullability vector too short at " << QualType(PT, 0).getAsString();
     NullabilityKind NK = Nullability.front().concrete();
@@ -1105,7 +1105,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
     return Ctx.getAttributedType(NK, Rebuilt, Rebuilt);
   }
 
-  QualType VisitRecordType(absl::Nonnull<const RecordType *> RT) {
+  QualType VisitRecordType(const RecordType *absl_nonnull RT) {
     if (const auto *CTSD =
             dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
       std::vector<TemplateArgument> TransformedArgs;
@@ -1118,34 +1118,32 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
     return QualType(RT, 0);
   }
 
-  QualType VisitFunctionProtoType(absl::Nonnull<const FunctionProtoType *> T) {
+  QualType VisitFunctionProtoType(const FunctionProtoType *absl_nonnull T) {
     QualType Ret = Visit(T->getReturnType());
     std::vector<QualType> Params;
     for (const auto &Param : T->getParamTypes()) Params.push_back(Visit(Param));
     return Ctx.getFunctionType(Ret, Params, T->getExtProtoInfo());
   }
 
-  QualType VisitLValueReferenceType(
-      absl::Nonnull<const LValueReferenceType *> T) {
+  QualType VisitLValueReferenceType(const LValueReferenceType *absl_nonnull T) {
     return Ctx.getLValueReferenceType(Visit(T->getPointeeType()));
   }
-  QualType VisitRValueReferenceType(
-      absl::Nonnull<const RValueReferenceType *> T) {
+  QualType VisitRValueReferenceType(const RValueReferenceType *absl_nonnull T) {
     return Ctx.getRValueReferenceType(Visit(T->getPointeeType()));
   }
 
-  QualType VisitConstantArrayType(absl::Nonnull<const ConstantArrayType *> AT) {
+  QualType VisitConstantArrayType(const ConstantArrayType *absl_nonnull AT) {
     return Ctx.getConstantArrayType(Visit(AT->getElementType()), AT->getSize(),
                                     AT->getSizeExpr(), AT->getSizeModifier(),
                                     AT->getIndexTypeCVRQualifiers());
   }
   QualType VisitIncompleteArrayType(
-      absl::Nonnull<const IncompleteArrayType *> AT) {
+      const IncompleteArrayType *absl_nonnull AT) {
     return Ctx.getIncompleteArrayType(Visit(AT->getElementType()),
                                       AT->getSizeModifier(),
                                       AT->getIndexTypeCVRQualifiers());
   }
-  QualType VisitVariableArrayType(absl::Nonnull<const VariableArrayType *> AT) {
+  QualType VisitVariableArrayType(const VariableArrayType *absl_nonnull AT) {
     return Ctx.getVariableArrayType(
         Visit(AT->getElementType()), AT->getSizeExpr(), AT->getSizeModifier(),
         AT->getIndexTypeCVRQualifiers(), AT->getBracketsRange());
@@ -1186,7 +1184,7 @@ std::vector<TypeNullabilityLoc> getTypeNullabilityLocs(
     Walker(FileID File, const TypeNullabilityDefaults &Defaults)
         : NullabilityWalker(File), Defaults(Defaults) {}
 
-    void report(absl::Nonnull<const Type *> T, FileID File,
+    void report(const Type *absl_nonnull T, FileID File,
                 std::optional<NullabilityKind> NK, std::optional<TypeLoc> Loc) {
       if (!NK) {
         // If the file has a specified default nullability, report that as an

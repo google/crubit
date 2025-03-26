@@ -184,13 +184,13 @@ struct TypeNullabilityDefaults {
 
   // The AST context is needed to resolve the associated file in some cases.
   // TODO(sammccall): this should always be provided, clean up callers.
-  absl::Nullable<ASTContext *> Ctx;
+  ASTContext *absl_nullable Ctx;
   // The nullability of pointer types in this translation unit, where no
   // nullability annotations or pragmas apply.
   NullabilityKind DefaultNullability = NullabilityKind::Unspecified;
   // Files where per-file pragmas have changed the default nullability.
   // TODO(sammccall)): this should always be provided, clean up callers.
-  absl::Nullable<const NullabilityPragmas *> FileNullability;
+  const NullabilityPragmas *absl_nullable FileNullability;
 };
 
 /// Traverse over a type to get its nullability. For example, if T is the type
@@ -221,7 +221,7 @@ TypeNullability getTypeNullability(
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
 
 /// Returns the `FileID` of the file that governs the nullability of `D`.
-FileID getGoverningFile(absl::Nullable<const Decl *> D);
+FileID getGoverningFile(const Decl *absl_nullable D);
 
 /// Legacy getTypeNullability variant; treats unannotated pointers as Unknown.
 /// Per-file pragmas are ignored.
@@ -249,15 +249,15 @@ QualType rebuildWithNullability(QualType, const TypeNullability &,
 /// Each of these could conceptually be nullable, so this is the length of
 /// the nullability vector computed by getTypeNullability().
 unsigned countPointersInType(QualType T);
-unsigned countPointersInType(absl::Nonnull<const Expr *> E);
+unsigned countPointersInType(const Expr *absl_nonnull E);
 unsigned countPointersInType(const TemplateArgument &TA);
-unsigned countPointersInType(absl::Nonnull<const DeclContext *> DC);
+unsigned countPointersInType(const DeclContext *absl_nonnull DC);
 
 /// Returns the type of an expression for the purposes of nullability.
 /// This handles wrinkles in the type system like BoundMember.
-QualType exprType(absl::Nonnull<const Expr *> E);
+QualType exprType(const Expr *absl_nonnull E);
 
-TypeNullability unspecifiedNullability(absl::Nonnull<const Expr *> E);
+TypeNullability unspecifiedNullability(const Expr *absl_nonnull E);
 
 // Type and optionally location and nullability information for a single pointer
 // type seen within a potentially more complex type. `Slot` indicates the

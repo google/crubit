@@ -30,8 +30,7 @@ class PointerNullabilityLatticeBase {
     // These are set by PointerNullabilityAnalysis::assignNullabilityVariable,
     // and take precedence over the declared type and over any result from
     // ConcreteNullabilityOverride.
-    absl::flat_hash_map<absl::Nonnull<const ValueDecl *>,
-                        PointerTypeNullability>
+    absl::flat_hash_map<const ValueDecl *absl_nonnull, PointerTypeNullability>
         DeclTopLevelNullability;
     // Returns overriding concrete nullability for decls. This is set by
     // PointerNullabilityAnalysis::assignNullabilityOverride, and the result, if
@@ -43,8 +42,8 @@ class PointerNullabilityLatticeBase {
 
   PointerNullabilityLatticeBase(NonFlowSensitiveState &NFS) : NFS(NFS) {}
 
-  absl::Nullable<const TypeNullability *> getTypeNullability(
-      absl::Nonnull<const Expr *> E) const {
+  const TypeNullability *absl_nullable getTypeNullability(
+      const Expr *absl_nonnull E) const {
     auto I = NFS.ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == NFS.ExprToNullability.end() ? nullptr : &I->second;
   }
@@ -54,12 +53,12 @@ class PointerNullabilityLatticeBase {
   // the provided GetNullability.
   // Returns the (cached or computed) nullability.
   const TypeNullability &insertExprNullabilityIfAbsent(
-      absl::Nonnull<const Expr *> E,
+      const Expr *absl_nonnull E,
       const std::function<TypeNullability()> &GetNullability);
 
   // If nullability for the decl D has been overridden, patch N to reflect it.
   // (N is the nullability of an access to D).
-  void overrideNullabilityFromDecl(absl::Nullable<const Decl *> D,
+  void overrideNullabilityFromDecl(const Decl *absl_nullable D,
                                    TypeNullability &N) const;
 
   bool operator==(const PointerNullabilityLatticeBase &Other) const {

@@ -45,7 +45,7 @@ using ::clang::ast_matchers::to;
 using ::testing::ElementsAre;
 using ::testing::Pointee;
 
-absl::Nonnull<NamedDecl *> lookup(StringRef Name, const DeclContext &DC) {
+NamedDecl *absl_nonnull lookup(StringRef Name, const DeclContext &DC) {
   auto Result = DC.lookup(&DC.getParentASTContext().Idents.get(Name));
   EXPECT_TRUE(Result.isSingleResult()) << Name;
   return Result.front();
