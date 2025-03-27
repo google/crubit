@@ -165,6 +165,14 @@ clang::NullabilityKind getNullability(
     const Expr *absl_nonnull E, const dataflow::Environment &Env,
     const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
+/// Returns the strongest nullability kind for a `nullptr_t` typed value
+/// (a `nullptr` literal). This will be Nullable if the value's expression is
+/// reachable according to `Env`'s flow condition. Otherwise, returns
+/// Unspecified.
+clang::NullabilityKind getNullabilityForNullptrT(
+    const dataflow::Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
+
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>
 void dump(const T &Node, llvm::raw_ostream &OS) {

@@ -702,6 +702,7 @@ class DefinitionEvidenceCollector {
          ++Iter) {
       if (!isSupportedPointerType(Iter.param().getType().getNonReferenceType()))
         continue;
+      bool ArgIsNullPtrT = Iter.arg().getType()->isNullPtrType();
       if (!isSupportedPointerType(Iter.arg().getType())) {
         // These builtins are declared with pointer type parameters even when
         // given a valid argument of type uintptr_t. In this case, there's
@@ -716,10 +717,12 @@ class DefinitionEvidenceCollector {
         // split between the call site `Expr` and the forwarding function body
         // (e.g., within `std::make_unique`). We don't piece the two together
         // here. Instead of crashing, we just skip the argument.
-        if (MayBeMissingImplicitConversion) continue;
+        // `nullptr_t` is handled since we have an answer for its nullability.
+        if (MayBeMissingImplicitConversion && !ArgIsNullPtrT) continue;
       }
       // the corresponding argument should also be a pointer.
-      CHECK(isSupportedPointerType(Iter.arg().getType()))
+      CHECK(isSupportedPointerType(Iter.arg().getType()) ||
+            (MayBeMissingImplicitConversion && ArgIsNullPtrT))
           << "Unsupported argument " << Iter.argIdx()
           << " type: " << Iter.arg().getType().getAsString();
 
@@ -750,13 +753,14 @@ class DefinitionEvidenceCollector {
           !evidenceKindFromDeclaredNullability(
               getTypeNullability(Iter.param(), Lattice.defaults()))) {
         dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
-        if (PV) {
+        if (PV || ArgIsNullPtrT) {
           // Calculate the parameter's nullability based on InferableSlots
           // for the caller being assigned to Unknown or their
           // previously-inferred value, to reflect the current annotations and
           // not all possible annotations for them.
           NullabilityKind ArgNullability =
-              getNullability(*PV, Env, &InferableSlotsConstraint);
+              PV ? getNullability(*PV, Env, &InferableSlotsConstraint)
+                 : getNullabilityForNullptrT(Env, &InferableSlotsConstraint);
           Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
                getArgEvidenceKindFromNullability(ArgNullability,
                                                  Iter.param().getType()),
@@ -1081,8 +1085,8 @@ class DefinitionEvidenceCollector {
 
   /// Collects evidence for a slot that would, if marked Nullable, cause
   /// TypeNullability's first-layer nullability to be Nullable. We collect for
-  /// this slot, evidence that a value was assigned with `PointerValue`'s
-  /// nullability, whether Nullable, Nonnull, or Unknown.
+  /// this slot, evidence that a value was assigned with a PointerValue's
+  /// nullability (`PVNullability`), whether Nullable, Nonnull, or Unknown.
   ///
   /// e.g. This is used for example to collect from the following:
   /// ```
@@ -1100,9 +1104,9 @@ class DefinitionEvidenceCollector {
   /// ASSIGNED_FROM_NONNULL.
   void fromAssignmentFromValue(
       const TypeNullability &TypeNullability,
-      const dataflow::PointerValue &PointerValue, SourceLocation ValueLoc,
+      clang::NullabilityKind PVNullability, SourceLocation ValueLoc,
       Evidence::Kind EvidenceKindForAssignmentFromNullable) {
-    if (TypeNullability.empty() || !hasPointerNullState(PointerValue)) return;
+    if (TypeNullability.empty()) return;
     dataflow::Arena &A = Env.arena();
     const Formula &TypeIsNullable = TypeNullability[0].isNullable(A);
     // If the flow conditions already imply that the type is nullable, or
@@ -1123,8 +1127,6 @@ class DefinitionEvidenceCollector {
       if (Solver.reachedLimit()) return;
       DCHECK(AllowsNullable);
       if (Env.proves(Implication)) {
-        clang::NullabilityKind PVNullability =
-            getNullability(PointerValue, Env, &InferableSlotsConstraint);
         Evidence::Kind EvidenceKind;
         switch (PVNullability) {
           case NullabilityKind::Nullable:
@@ -1164,9 +1166,13 @@ class DefinitionEvidenceCollector {
                           Evidence::Kind EvidenceKindForAssignmentFromNullable =
                               Evidence::ASSIGNED_FROM_NULLABLE) {
     const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
-    if (!PV) return;
+    if (!PV && !RHS.getType()->isNullPtrType()) return;
     fromAssignmentToType(LHSType, LHSNullability, RHS, Loc);
-    fromAssignmentFromValue(LHSNullability, *PV, Loc,
+    clang::NullabilityKind PVNullability =
+        PV != nullptr
+            ? getNullability(*PV, Env, &InferableSlotsConstraint)
+            : getNullabilityForNullptrT(Env, &InferableSlotsConstraint);
+    fromAssignmentFromValue(LHSNullability, PVNullability, Loc,
                             EvidenceKindForAssignmentFromNullable);
   }
 
@@ -1360,7 +1366,8 @@ class DefinitionEvidenceCollector {
       // We might be missing implicit conversions (in the make_unique body
       // instead of the call site). So we check the type of the argument is
       // as expected as well.
-      if (!isSupportedPointerType(Arg->getType())) {
+      if (!isSupportedPointerType(Arg->getType()) &&
+          !Arg->getType()->isNullPtrType()) {
         ++I;
         continue;
       }

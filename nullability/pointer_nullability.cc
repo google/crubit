@@ -164,10 +164,11 @@ PointerValue &createNullPointer(QualType PointeeType, Environment &Env) {
   return PointerVal;
 }
 
-bool isNullable(const PointerValue &PointerVal, const Environment &Env,
-                const dataflow::Formula *absl_nullable AdditionalConstraints) {
+static bool isPointerStateNullable(
+    PointerNullState PointerNullState, const Environment &Env,
+    const dataflow::Formula *absl_nullable AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
-  auto [FromNullable, Null] = getPointerNullState(PointerVal);
+  auto [FromNullable, Null] = PointerNullState;
 
   // A value is nullable if either of two things is true:
   // - The value is provably null under satisfiable flow conditions
@@ -204,6 +205,22 @@ bool isNullable(const PointerValue &PointerVal, const Environment &Env,
   return Env.allows(*NullableAndMaybeNull);
 }
 
+bool isNullable(
+    const PointerValue &PointerVal, const Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+  return isPointerStateNullable(getPointerNullState(PointerVal), Env,
+                                AdditionalConstraints);
+}
+
+static bool isReachableNullptrLiteral(
+    const Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+  auto &A = Env.getDataflowAnalysisContext().arena();
+  PointerNullState NullState = {/*FromNullable=*/&A.makeLiteral(true),
+                                /*IsNull=*/&A.makeLiteral(true)};
+  return isPointerStateNullable(NullState, Env, AdditionalConstraints);
+}
+
 NullabilityKind getNullability(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
     const dataflow::Formula *absl_nullable AdditionalConstraints) {
@@ -223,6 +240,14 @@ NullabilityKind getNullability(
   if (dataflow::PointerValue *P = getPointerValue(E, Env))
     return getNullability(*P, Env, AdditionalConstraints);
   return clang::NullabilityKind::Unspecified;
+}
+
+NullabilityKind getNullabilityForNullptrT(
+    const dataflow::Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+  return isReachableNullptrLiteral(Env, AdditionalConstraints)
+             ? NullabilityKind::Nullable
+             : NullabilityKind::Unspecified;
 }
 
 }  // namespace clang::tidy::nullability

@@ -122,6 +122,14 @@ TEST_F(NullabilityPropertiesTest, GetNullabilityAdditionalConstraints) {
   EXPECT_EQ(getNullability(P, Env, NotNull), NullabilityKind::NonNull);
 }
 
+TEST_F(NullabilityPropertiesTest, GetNullabilityForNullptrT) {
+  EXPECT_EQ(getNullabilityForNullptrT(Env), NullabilityKind::Nullable);
+  auto *False = &DACtx.arena().makeLiteral(false);
+  Env.assume(*False);
+  EXPECT_EQ(getNullabilityForNullptrT(Env, False),
+            NullabilityKind::Unspecified);
+}
+
 TEST_F(NullabilityPropertiesTest, InitNullabilityPropertiesWithFormulas) {
   auto &P = Env.create<dataflow::PointerValue>(
       DACtx.createStorageLocation(QualType()));

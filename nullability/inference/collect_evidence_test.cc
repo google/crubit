@@ -1295,28 +1295,32 @@ TEST(CollectEvidenceFromDefinitionTest, MemberOperatorCallVarArgs) {
 TEST(CollectEvidenceFromDefinitionTest, ConstructorCall) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
-      S(Nonnull<int*> A);
+      S(Nonnull<int*> A, int* B);
     };
-    void target(int* P) { S AnS(P); }
+    void target(int* P) { S AnS(P, nullptr); }
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target"))));
+                                    functionNamed("target")),
+                           evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("S"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, ConstructorCallThroughMakeUnique) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     struct S {
-      S(Nonnull<int*> A);
+      S(Nonnull<int*> A, int* B);
     };
-    void target(int* P) { std::make_unique<S>(P); }
+    void target(int* P) { std::make_unique<S>(P, nullptr); }
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("target"))));
+                                    functionNamed("target")),
+                           evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
+                                    functionNamed("S"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
@@ -3112,17 +3116,14 @@ TEST(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  // TODO(b/375210656): The instantiation of make_unique gets type
-  // `std::nullptr_t` for the parameter that is forwarded to I, and nullptr_t is
-  // not considered a pointer type / isn't modeled with a PointerValue.
-  // We only model when the nullptr_t is cast to a pointer type, which happens
-  // within the body of make_unique instead of at the call site in target.
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Base::BaseB")),
                            evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("MyStruct::I")),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("MyStruct::B"))));
 }
