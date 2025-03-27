@@ -212,7 +212,7 @@ bool isNullable(
                                 AdditionalConstraints);
 }
 
-static bool isReachableNullptrLiteral(
+bool isReachableNullptrLiteral(
     const Environment &Env,
     absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();

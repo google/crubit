@@ -19,6 +19,9 @@ namespace nullability {
 /// would be desirable to check their actual content too.
 bool checkDiagnostics(llvm::StringRef SourceCode);
 
+/// Same as `checkDiagnostics`, but allows for untracked errors.
+bool checkDiagnosticsHasUntracked(llvm::StringRef SourceCode);
+
 bool checkDiagnosticsWithMin(llvm::StringRef SourceCode, TestLanguage Min);
 
 }  // namespace nullability

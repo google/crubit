@@ -30,7 +30,8 @@
 
 namespace clang::tidy::nullability {
 
-static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
+static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
+                             bool AllowUntracked) {
   using ast_matchers::BoundNodes;
   using ast_matchers::hasName;
   using ast_matchers::match;
@@ -103,9 +104,15 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang) {
     for (const auto &[Line, _] : Annotations) {
       ExpectedLines.insert(Line);
     }
-    for (const auto &Diag : Diagnostics)
-      ActualLines.insert(
-          AST.sourceManager().getPresumedLineNumber(Diag.Range.getBegin()));
+    for (const auto &Diag : Diagnostics) {
+      // Untracked errors are not reported in production by default, so only
+      // consider those if explicitly requested by AllowUntracked.
+      if (AllowUntracked ||
+          Diag.Code != PointerNullabilityDiagnostic::ErrorCode::Untracked) {
+        ActualLines.insert(
+            AST.sourceManager().getPresumedLineNumber(Diag.Range.getBegin()));
+      }
+    }
     if (ActualLines != ExpectedLines) {
       Success = false;
 
@@ -156,14 +163,23 @@ static constexpr std::array<TestLanguage, 2> CXXLanguagesToTest = {
 
 bool checkDiagnostics(llvm::StringRef SourceCode) {
   for (TestLanguage Lang : CXXLanguagesToTest)
-    if (!checkDiagnostics(SourceCode, Lang)) return false;
+    if (!checkDiagnostics(SourceCode, Lang, /*AllowUntracked=*/false))
+      return false;
+  return true;
+}
+
+bool checkDiagnosticsHasUntracked(llvm::StringRef SourceCode) {
+  for (TestLanguage Lang : CXXLanguagesToTest)
+    if (!checkDiagnostics(SourceCode, Lang, /*AllowUntracked=*/true))
+      return false;
   return true;
 }
 
 bool checkDiagnosticsWithMin(llvm::StringRef SourceCode, TestLanguage Min) {
   for (TestLanguage Lang : CXXLanguagesToTest) {
     if (Lang < Min) continue;
-    if (!checkDiagnostics(SourceCode, Lang)) return false;
+    if (!checkDiagnostics(SourceCode, Lang, /*AllowUntracked=*/false))
+      return false;
   }
   return true;
 }

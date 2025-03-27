@@ -1072,7 +1072,7 @@ TEST(PointerNullabilityTest, NonConstMethodDoesNotClearConstPointerMembers) {
 
 // This is a crash repro.
 TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
     void f(char* _Nonnull const&, char* const&);
 
     struct S {

@@ -150,6 +150,12 @@ bool isNullable(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
     const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
+/// Returns true if a `nullptr` literal is reachable according to `Env`'s flow
+/// condition. Otherwise, returns Unspecified.
+bool isReachableNullptrLiteral(
+    const dataflow::Environment &Env,
+    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
+
 /// Returns the strongest provable assertion we can make about `PointerVal`.
 /// If PointerVal may not be null, returns Nonnull.
 /// If PointerVal is known to be null or is from a nullable source and may be

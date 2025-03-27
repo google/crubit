@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "absl/base/nullability.h"
@@ -118,8 +119,14 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     const clang::NamedDecl *absl_nullable Callee = nullptr,
     const clang::IdentifierInfo *absl_nullable ParamName = nullptr,
     CharSourceRange Range = {}) {
-  if (PointerValue *ActualVal = getPointerValue(E, Env)) {
-    if (isNullable(*ActualVal, Env)) {
+  std::optional<bool> IsNullable;
+  if (PointerValue *ActualVal = getPointerValue(E, Env))
+    IsNullable = isNullable(*ActualVal, Env);
+  else if (E->getType()->isNullPtrType())
+    IsNullable = isReachableNullptrLiteral(Env);
+
+  if (IsNullable.has_value()) {
+    if (*IsNullable) {
       if (Range.isInvalid())
         Range = CharSourceRange::getTokenRange(E->getSourceRange());
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,

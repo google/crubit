@@ -43,8 +43,6 @@ TEST(PointerNullabilityTest, ConstructorThroughMakeUnique) {
         // Test with nullptr literal, which results in a make_unique
         // instantiation with a parameter of type nullptr_t (which isn't
         // considered a PointerValue)
-        // TODO(b/378501394): This looks like it is caught in tests, but it
-        // falls into the "untracked" category, so is suppressed in production.
         std::make_unique<S>(x, cq, nullptr);  // [[unsafe]]
       } else if (x == 7) {
         // Also test uninteresting constructors (e.g., the 0-arg one)
