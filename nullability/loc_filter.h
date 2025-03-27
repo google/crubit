@@ -23,6 +23,9 @@ class LocFilter {
 enum class LocFilterKind {
   kAllowAll,          // No filtering.
   kMainFileOrHeader,  // Restrict to the main file or its associated header.
+  kAllowAllButNotMainFile,    // Restrict to all files but the main file.
+  kMainHeaderButNotMainFile,  // Restrict to the header associated with the
+                              // main file, but not the main file itself.
 };
 
 // Returns a LocFilter that restricts according to the given LocFilterKind.

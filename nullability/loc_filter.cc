@@ -12,9 +12,11 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/Regex.h"
 
 namespace clang::tidy::nullability {
 namespace {
@@ -25,11 +27,16 @@ class InMainFileOrHeader : public LocFilter {
  private:
   OptionalFileEntryRef MainFile;
   std::string MainFileStem;
+  std::string MainFileStemWithoutTestSuffix;
   const SourceManager &SM;
   llvm::DenseMap<FileID, bool> IsMainFileOrHeaderCache;
+  bool AllowMainFile;
+
+  static const llvm::Regex TestSuffixRegex;
 
  public:
-  InMainFileOrHeader(const SourceManager &SM) : SM(SM) {
+  InMainFileOrHeader(const SourceManager &SM, bool AllowMainFile)
+      : SM(SM), AllowMainFile(AllowMainFile) {
     FileID MainFileID = SM.getMainFileID();
     MainFile = SM.getFileEntryRefForID(MainFileID);
     CHECK(MainFile) << "Unable to compute main file for filtering.";
@@ -37,6 +44,11 @@ class InMainFileOrHeader : public LocFilter {
     CHECK(!MainFileName.empty());
     MainFileStem = llvm::sys::path::stem(MainFileName);
     IsMainFileOrHeaderCache.insert({MainFileID, true});
+    llvm::SmallVector<llvm::StringRef, 2> TestFileSuffixMatches;
+    if (TestSuffixRegex.match(MainFileStem, &TestFileSuffixMatches)) {
+      MainFileStemWithoutTestSuffix = MainFileStem.substr(
+          0, MainFileStem.size() - TestFileSuffixMatches[1].size());
+    }
   }
 
   bool isMainFileOrHeader(FileID FileID) {
@@ -46,7 +58,13 @@ class InMainFileOrHeader : public LocFilter {
 
     if (FileEntry->getDir() != MainFile->getDir()) return false;
 
-    return llvm::sys::path::stem(FileEntry->getName()) == MainFileStem;
+    // Compare the directory and the stem, but not the file extension, to allow
+    // matches for the main implementation file and the associated header.
+    // Also, allow "foo_test.cc" to be associated with "foo.h"
+    llvm::StringRef FileStem = llvm::sys::path::stem(FileEntry->getName());
+    return FileStem == MainFileStem ||
+           (!MainFileStemWithoutTestSuffix.empty() &&
+            FileStem == MainFileStemWithoutTestSuffix);
   }
 
   // Returns whether `loc` is in the main file or its associated header (i.e.
@@ -55,7 +73,7 @@ class InMainFileOrHeader : public LocFilter {
     if (Loc.isInvalid()) return false;
 
     if (SM.isInMainFile(Loc)) {
-      return true;
+      return AllowMainFile;
     }
 
     auto FileID = SM.getFileID(Loc);
@@ -66,9 +84,6 @@ class InMainFileOrHeader : public LocFilter {
     // cache hits.
     auto [It, Inserted] = IsMainFileOrHeaderCache.try_emplace(FileID, true);
     if (Inserted) {
-      // Compare the directory and the stem, but not the file extension, to
-      // allow matches for the main implementation file and the associated
-      // header.
       It->second = isMainFileOrHeader(FileID);
     }
 
@@ -76,9 +91,25 @@ class InMainFileOrHeader : public LocFilter {
   }
 };
 
+const llvm::Regex InMainFileOrHeader::TestSuffixRegex(
+    "^.*(_test|-test|_unittest|-unittest)$");
+
 // A filter that allows all locations.
 class NoOpFilter : public LocFilter {
   bool check(SourceLocation) override { return true; }
+};
+
+// A filter that allows all locations, except the main file.
+class AllButMainFileFilter : public LocFilter {
+  const SourceManager &SM;
+
+ public:
+  explicit AllButMainFileFilter(const SourceManager &SM) : SM(SM) {}
+  bool check(SourceLocation Loc) override {
+    if (Loc.isInvalid()) return true;
+    if (SM.isInMainFile(Loc)) return false;
+    return true;
+  }
 };
 
 }  // namespace
@@ -89,7 +120,11 @@ std::unique_ptr<LocFilter> getLocFilter(const SourceManager &SM,
     case LocFilterKind::kAllowAll:
       return std::make_unique<NoOpFilter>();
     case LocFilterKind::kMainFileOrHeader:
-      return std::make_unique<InMainFileOrHeader>(SM);
+      return std::make_unique<InMainFileOrHeader>(SM, /*AllowMainFile=*/true);
+    case LocFilterKind::kAllowAllButNotMainFile:
+      return std::make_unique<AllButMainFileFilter>(SM);
+    case LocFilterKind::kMainHeaderButNotMainFile:
+      return std::make_unique<InMainFileOrHeader>(SM, /*AllowMainFile=*/false);
   }
   llvm_unreachable("Unknown LocFilterKind");
   return std::make_unique<NoOpFilter>();

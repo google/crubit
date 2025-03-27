@@ -85,5 +85,70 @@ TEST(getLocFilterTest, RestrictMainFileOrHeader) {
           ->getBeginLoc()));
 }
 
+TEST(getLocFilterTest, RestrictAllowAllButNotMainFile) {
+  TestInputs Inputs;
+  Inputs.Code = R"cc(
+#include "input.h"
+#include "not_input.h"
+    void func();
+  )cc";
+  Inputs.ExtraFiles = {{"input.h", R"cc(
+                          void input_header_func();)cc"},
+                       {"not_input.h", R"cc(
+                          void not_input_header_func();
+                        )cc"}};
+  TestAST AST(Inputs);
+
+  std::unique_ptr<LocFilter> Filter = getLocFilter(
+      AST.context().getSourceManager(), LocFilterKind::kAllowAllButNotMainFile);
+  EXPECT_FALSE(Filter->check(
+      selectFirst<FunctionDecl>(
+          "f", match(functionDecl(hasName("func")).bind("f"), AST.context()))
+          ->getBeginLoc()));
+  EXPECT_TRUE(Filter->check(
+      selectFirst<FunctionDecl>(
+          "f", match(functionDecl(hasName("input_header_func")).bind("f"),
+                     AST.context()))
+          ->getBeginLoc()));
+  EXPECT_TRUE(Filter->check(
+      selectFirst<FunctionDecl>(
+          "f", match(functionDecl(hasName("not_input_header_func")).bind("f"),
+                     AST.context()))
+          ->getBeginLoc()));
+}
+
+TEST(getLocFilterTest, RestrictMainHeaderButNotMainFile) {
+  TestInputs Inputs;
+  Inputs.Code = R"cc(
+#include "input.h"
+#include "not_input.h"
+    void func();
+  )cc";
+  Inputs.ExtraFiles = {{"input.h", R"cc(
+                          void input_header_func();)cc"},
+                       {"not_input.h", R"cc(
+                          void not_input_header_func();
+                        )cc"}};
+  TestAST AST(Inputs);
+
+  std::unique_ptr<LocFilter> Filter =
+      getLocFilter(AST.context().getSourceManager(),
+                   LocFilterKind::kMainHeaderButNotMainFile);
+  EXPECT_FALSE(Filter->check(
+      selectFirst<FunctionDecl>(
+          "f", match(functionDecl(hasName("func")).bind("f"), AST.context()))
+          ->getBeginLoc()));
+  EXPECT_TRUE(Filter->check(
+      selectFirst<FunctionDecl>(
+          "f", match(functionDecl(hasName("input_header_func")).bind("f"),
+                     AST.context()))
+          ->getBeginLoc()));
+  EXPECT_FALSE(Filter->check(
+      selectFirst<FunctionDecl>(
+          "f", match(functionDecl(hasName("not_input_header_func")).bind("f"),
+                     AST.context()))
+          ->getBeginLoc()));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
