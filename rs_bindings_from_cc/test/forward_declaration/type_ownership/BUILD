@@ -80,7 +80,6 @@ crubit_test_cc_library(
     hdrs = [
         "definition.h",
     ],
-    aspect_hints = [],
     deps = [
         ":forward_declaration_with_crubit_disabled",
     ],
