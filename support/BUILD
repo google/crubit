@@ -1,7 +1,7 @@
 """Support libraries that the generated Rust/C++ bindings depend upon."""
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -147,5 +147,39 @@ crubit_rust_test(
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "@crate_index//:googletest",
+    ],
+)
+
+rust_library(
+    name = "bridge_rust",
+    srcs = ["bridge.rs"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+)
+
+crubit_rust_test(
+    name = "bridge_rust_test",
+    srcs = ["bridge.rs"],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
+    name = "bridge_cpp",
+    hdrs = ["bridge.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+)
+
+crubit_cc_test(
+    name = "bridge_cpp_test",
+    srcs = ["bridge_test.cc"],
+    deps = [
+        ":bridge_cpp",
+        "@com_google_googletest//:gtest_main",
     ],
 )
