@@ -233,10 +233,24 @@ impl RsType {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CcType {
-    pub name: Option<Rc<str>>,
+    pub variant: CcTypeVariant,
     pub is_const: bool,
-    pub type_args: Vec<CcType>,
-    pub decl_id: Option<ItemId>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum CcTypeVariant {
+    NamedType { name: Rc<str>, type_args: Vec<CcType> },
+    ItemIdType { decl_id: ItemId },
+}
+
+impl CcType {
+    pub fn name(&self) -> Option<&str> {
+        match &self.variant {
+            CcTypeVariant::NamedType { name, .. } => Some(name.as_ref()),
+            _ => None,
+        }
+    }
 }
 
 pub trait TypeWithDeclId {
@@ -254,7 +268,10 @@ impl TypeWithDeclId for RsType {
 
 impl TypeWithDeclId for CcType {
     fn decl_id(&self) -> Option<ItemId> {
-        self.decl_id
+        match &self.variant {
+            CcTypeVariant::ItemIdType { decl_id } => Some(*decl_id),
+            _ => None,
+        }
     }
 }
 

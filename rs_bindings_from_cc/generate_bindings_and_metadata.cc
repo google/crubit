@@ -40,11 +40,13 @@ std::vector<const Record*> FindInstantiationsInNamespace(const IR& ir,
   for (const auto* type_alias : ir.get_items_if<TypeAlias>()) {
     if (type_alias->enclosing_item_id == namespace_id) {
       const MappedType* mapped_type = &type_alias->underlying_type;
-      CHECK(mapped_type->cpp_type.decl_id.has_value());
-      const auto* decl_id = std::get_if<ItemId>(&mapped_type->rs_type);
-      CHECK(decl_id != nullptr);
-      CHECK(mapped_type->cpp_type.decl_id.value() == *decl_id);
-      record_ids.insert(*decl_id);
+      const auto* cpp_decl_id =
+          std::get_if<ItemId>(&mapped_type->cpp_type.variant);
+      CHECK(cpp_decl_id != nullptr);
+      const auto* rust_decl_id = std::get_if<ItemId>(&mapped_type->rs_type);
+      CHECK(rust_decl_id != nullptr);
+      CHECK(*cpp_decl_id == *rust_decl_id);
+      record_ids.insert(*rust_decl_id);
     }
   }
 

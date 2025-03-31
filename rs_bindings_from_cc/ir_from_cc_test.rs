@@ -41,10 +41,11 @@ fn test_function() {
                         type_args: [],
                     },
                     cpp_type: CcType {
-                        name: Some("int"),
+                        variant: NamedType {
+                            name: "int",
+                            type_args: [],
+                        },
                         is_const: false,
-                        type_args: [],
-                        decl_id: None,
                     },
                 },
                 params: [
@@ -56,10 +57,11 @@ fn test_function() {
                                 type_args: [],
                             },
                             cpp_type: CcType {
-                                name: Some("int"),
+                                variant: NamedType {
+                                    name: "int",
+                                    type_args: [],
+                                },
                                 is_const: false,
-                                type_args: [],
-                                decl_id: None,
                             },
                         },
                         identifier: "a",
@@ -73,10 +75,11 @@ fn test_function() {
                                 type_args: [],
                             },
                             cpp_type: CcType {
-                                name: Some("int"),
+                                variant: NamedType {
+                                    name: "int",
+                                    type_args: [],
+                                },
                                 is_const: false,
-                                type_args: [],
-                                decl_id: None,
                             },
                         },
                         identifier: "b",
@@ -441,7 +444,7 @@ fn test_bitfields() {
                            identifier: Some("b1"), ...
                            type_: Ok(MappedType {
                                rs_type: NamedType { name: "::core::ffi::c_int", ... },
-                               cpp_type: CcType { name: Some("int"), ... },
+                               cpp_type: CcType { variant: NamedType { name: "int", ... }, ... },
                            }), ...
                            offset: 0,
                            size: 1, ...
@@ -451,7 +454,7 @@ fn test_bitfields() {
                            identifier: Some("b2"), ...
                            type_: Ok(MappedType {
                                rs_type: NamedType { name: "::core::ffi::c_int", ... },
-                               cpp_type: CcType { name: Some("int"), ... },
+                               cpp_type: CcType { variant: NamedType { name: "int", ... }, ... },
                            }), ...
                            offset: 1,
                            size: 2, ...
@@ -461,7 +464,7 @@ fn test_bitfields() {
                            identifier: Some("b3"), ...
                            type_: Ok(MappedType {
                                rs_type: NamedType { name: "::core::ffi::c_int", ... },
-                               cpp_type: CcType { name: Some("int"), ... },
+                               cpp_type: CcType { variant: NamedType { name: "int", ... }, ... },
                            }), ...
                            offset: 3,
                            size: 13, ...
@@ -471,7 +474,7 @@ fn test_bitfields() {
                            identifier: Some("b4"), ...
                            type_: Ok(MappedType {
                                rs_type: NamedType { name: "::core::ffi::c_int", ... },
-                               cpp_type: CcType { name: Some("int"), ... },
+                               cpp_type: CcType { variant: NamedType { name: "int", ... }, ... },
                            }), ...
                            offset: 16,
                            size: 14, ...
@@ -829,13 +832,14 @@ fn test_pointer_member_variable() {
                         }],
                     },
                     cpp_type: CcType {
-                        name: Some("*") ...
-                        type_args: [CcType {
-                            name: None ...
-                            type_args: [],
-                            decl_id: Some(...),
-                        }],
-                        decl_id: None,
+                        variant: NamedType {
+                            name: "*" ...
+                            type_args: [CcType {
+                                variant: ItemIdType {
+                                    decl_id: ...,
+                                }, ...
+                            }],
+                        }, ...
                     },
                 }) ...
             }
@@ -1040,7 +1044,7 @@ fn test_type_conversion() -> Result<()> {
     let fields = ir.records().next().unwrap().fields.iter();
     let type_mapping: HashMap<_, _> = fields
         .filter_map(|f| f.type_.as_ref().ok())
-        .map(|t| (t.cpp_type.name.as_ref().unwrap().as_ref(), t.rs_type.name().unwrap()))
+        .map(|t| (t.cpp_type.name().unwrap(), t.rs_type.name().unwrap()))
         .collect();
 
     assert_eq!(type_mapping["bool"], "bool");
@@ -1153,10 +1157,11 @@ fn test_typedef() -> Result<()> {
           type_args: [],
         },
         cpp_type: CcType {
-          name: Some("int"),
+          variant: NamedType {
+            name: "int",
+            type_args: [],
+          },
           is_const: false,
-          type_args: [],
-          decl_id: None,
         },
       }
     };
@@ -1280,7 +1285,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                 doc_comment: Some("Doc comment of `value` field."), ...
                 type_: Ok(MappedType {
                     rs_type: NamedType { name: "::core::ffi::c_int", ... },
-                    cpp_type: CcType { name: Some("int"), ... },
+                    cpp_type: CcType { variant: NamedType { name: "int", ... }, ... },
                 }),
                 access: Public,
                 offset: 0, ...
@@ -1306,10 +1311,9 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                     decl_id: ItemId(#record_id),
                 },
                 cpp_type: CcType {
-                    name: None,
-                    is_const: false,
-                    type_args: [],
-                    decl_id: Some(ItemId(#record_id)),
+                  variant: ItemIdType {
+                    decl_id: ItemId(#record_id),
+                  }, ...
                 },
             } ...
           }
@@ -1389,7 +1393,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 doc_comment: Some("Doc comment of the `value` field specialization for T=int."), ...
                 type_: Ok(MappedType {
                     rs_type: NamedType { name: "::core::ffi::c_int", ... },
-                    cpp_type: CcType { name: Some("int"), ... },
+                    cpp_type: CcType { variant: NamedType { name: "int", ... }, ... },
                 }),
                 access: Public,
                 offset: 0, ...
@@ -1673,7 +1677,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                     FuncParam {
                         type_: MappedType {
                             rs_type: NamedType { name: "::core::ffi::c_int", ...  },
-                            cpp_type: CcType { name: Some("int"), ...  },
+                            cpp_type: CcType { variant: NamedType { name: "int", ...  }, ... },
                         },
                         identifier: "__my_args_0",
                         unknown_attr: None,
@@ -1681,7 +1685,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                     FuncParam {
                         type_: MappedType {
                             rs_type: NamedType { name: "::core::ffi::c_int", ...  },
-                            cpp_type: CcType { name: Some("int"), ...  },
+                            cpp_type: CcType { variant: NamedType { name: "int", ...  }, ... },
                         },
                         identifier: "__my_args_1",
                         unknown_attr: None,
@@ -1728,10 +1732,9 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
                     decl_id: ItemId(#record_id),
                 },
                 cpp_type: CcType {
-                    name: None,
-                    is_const: false,
-                    type_args: [],
-                    decl_id: Some(ItemId(#record_id)),
+                    variant: ItemIdType {
+                        decl_id: ItemId(#record_id),
+                    }, ...
                 },
             }, ...
             params: [], ...
@@ -1785,15 +1788,15 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
                         }],
                     },
                     cpp_type: CcType {
-                        name: Some("&"),
+                        variant: NamedType {
+                            name: "&",
+                            type_args: [CcType {
+                                variant: ItemIdType {
+                                    decl_id: ItemId(#record_id),
+                                }, ...
+                            }],
+                        },
                         is_const: false,
-                        type_args: [CcType {
-                            name: None,
-                            is_const: true,
-                            type_args: [],
-                            decl_id: Some(ItemId(#record_id)),
-                        }],
-                        decl_id: None,
                     },
                 },
                 identifier: "my_param",
@@ -1848,11 +1851,10 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
                                decl_id: ItemId(#record_id),
                            },
                            cpp_type: CcType {
-                               name: None,
-                               is_const: false,
-                               type_args: [],
-                               decl_id: Some(ItemId(#record_id)),
-                           },
+                              variant: ItemIdType {
+                                  decl_id: ItemId(#record_id),
+                              }, ...
+                          },
                        }),
                        access: Public,
                        offset: 0,
@@ -1927,7 +1929,7 @@ fn test_template_with_decltype_and_with_auto() -> Result<()> {
                rs_name: "TemplatedAdd", ...
                return_type: MappedType {
                    rs_type: NamedType { name: "::core::ffi::c_longlong", ... },
-                   cpp_type: CcType { name: Some("long long"), ... },
+                   cpp_type: CcType { variant: NamedType { name: "long long", ... }, ... },
                }, ...
             }
         }
@@ -1961,22 +1963,26 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
         ir,
         quote! {
             Func {
-               cc_name: "GetConstRef",
-               rs_name: "GetConstRef", ...
-               return_type: MappedType {
-                   rs_type: NamedType {
-                       name: "&", ...
-                       type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                   },
-                   cpp_type: CcType {
-                       name: Some("&"),
-                       is_const: false,
-                       type_args: [CcType {
-                           name: Some("int"),
-                           is_const: true, ...
-                       }], ...
-                   },
-               }, ...
+                cc_name: "GetConstRef",
+                rs_name: "GetConstRef", ...
+                return_type: MappedType {
+                    rs_type: NamedType {
+                        name: "&", ...
+                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
+                    },
+                    cpp_type: CcType {
+                        variant: NamedType {
+                            name: "&",
+                            type_args: [CcType {
+                                variant: NamedType {
+                                    name: "int", ...
+                                },
+                                is_const: true,
+                            }], ...
+                        },
+                        is_const: false,
+                    }, ...
+                }, ...
             }
         }
     );
@@ -1984,22 +1990,26 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
         ir,
         quote! {
             Func {
-               cc_name: "GetRef",
-               rs_name: "GetRef", ...
-               return_type: MappedType {
-                   rs_type: NamedType {
-                       name: "&mut", ...
-                       type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                   },
-                   cpp_type: CcType {
-                       name: Some("&"),
-                       is_const: false,
-                       type_args: [CcType {
-                           name: Some("int"),
-                           is_const: false, ...
-                       }], ...
-                   },
-               }, ...
+                cc_name: "GetRef",
+                rs_name: "GetRef", ...
+                return_type: MappedType {
+                    rs_type: NamedType {
+                        name: "&mut", ...
+                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
+                    },
+                    cpp_type: CcType {
+                        variant: NamedType {
+                            name: "&",
+                            type_args: [CcType {
+                                variant: NamedType {
+                                    name: "int", ...
+                                },
+                                is_const: false,
+                            }],
+                        },
+                        is_const: false,
+                    },
+                }, ...
             }
         }
     );
@@ -2032,22 +2042,26 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
         ir,
         quote! {
             Func {
-              cc_name: "GetConstRef",
-               rs_name: "GetConstRef", ...
-               return_type: MappedType {
-                   rs_type: NamedType {
-                       name: "&", ...
-                       type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                   },
-                   cpp_type: CcType {
-                       name: Some("&"),
-                       is_const: false,
-                       type_args: [CcType {
-                           name: Some("int"),
-                           is_const: true, ...
-                       }], ...
-                   },
-               }, ...
+                cc_name: "GetConstRef",
+                rs_name: "GetConstRef", ...
+                return_type: MappedType {
+                    rs_type: NamedType {
+                        name: "&", ...
+                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
+                    },
+                    cpp_type: CcType {
+                        variant: NamedType {
+                            name: "&",
+                            type_args: [CcType {
+                                variant: NamedType {
+                                    name: "int", ...
+                                },
+                                is_const: true,
+                            }],
+                        },
+                        is_const: false,
+                    },
+                }, ...
             }
         }
     );
@@ -2055,22 +2069,26 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
         ir,
         quote! {
             Func {
-              cc_name: "GetRef",
-               rs_name: "GetRef", ...
-               return_type: MappedType {
-                   rs_type: NamedType {
-                       name: "&", ...
-                       type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                   },
-                   cpp_type: CcType {
-                       name: Some("&"),
+                cc_name: "GetRef",
+                rs_name: "GetRef", ...
+                return_type: MappedType {
+                    rs_type: NamedType {
+                        name: "&", ...
+                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
+                    },
+                    cpp_type: CcType {
+                        variant: NamedType {
+                            name: "&",
+                            type_args: [CcType {
+                                variant: NamedType {
+                                    name: "int", ...
+                                },
+                                is_const: true,
+                            }],
+                        },
                        is_const: false,
-                       type_args: [CcType {
-                           name: Some("int"),
-                           is_const: true, ...
-                       }], ...
-                   },
-               }, ...
+                    },
+                }, ...
             }
         }
     );
@@ -2316,10 +2334,7 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
                 rs_type: ItemIdType {
                   decl_id: ...,
                 },
-                cpp_type: CcType {
-                  name: None, ...
-                  decl_id: Some(...), ...
-                },
+                cpp_type: CcType { variant: ItemIdType { decl_id: ..., }, ... },
               },
               identifier: "i",
               unknown_attr: None,
@@ -2699,10 +2714,7 @@ fn test_integer_typedef_usage() -> Result<()> {
               rs_type: ItemIdType {
                 decl_id: ...,
               },
-              cpp_type: CcType {
-                name: None, ...
-                decl_id: Some(...), ...
-              },
+              cpp_type: CcType { variant: ItemIdType { decl_id: ..., }, ... },
             },
             identifier: "my_typedef",
             unknown_attr: None,
@@ -2728,7 +2740,7 @@ fn test_struct() {
                         identifier: Some("first_field"), ...
                         type_: Ok(MappedType {
                             rs_type : NamedType { name : "::core::ffi::c_int", ...},
-                            cpp_type : CcType { name : Some ("int"), ...},
+                            cpp_type : CcType { variant: NamedType { name : "int", ...}, ... },
                          }), ...
                         offset: 0, ...
                         size: 32, ...
@@ -2738,7 +2750,7 @@ fn test_struct() {
                         identifier: Some("second_field"), ...
                         type_: Ok(MappedType {
                             rs_type : NamedType { name : "::core::ffi::c_int", ...},
-                            cpp_type : CcType { name : Some ("int"), ...},
+                            cpp_type : CcType { variant: NamedType { name : "int", ...}, ... },
                          }), ...
                         offset: 32, ...
                         size: 32, ...
@@ -2832,7 +2844,7 @@ fn test_union() {
                         identifier: Some("first_field"), ...
                         type_: Ok(MappedType {
                             rs_type : NamedType { name : "::core::ffi::c_int", ...},
-                            cpp_type : CcType { name : Some ("int"), ...},
+                            cpp_type : CcType { variant: NamedType { name : "int", ...}, ... },
                          }), ...
                         offset: 0, ...
                         size: 32, ...
@@ -2842,7 +2854,7 @@ fn test_union() {
                         identifier: Some("second_field"), ...
                         type_: Ok(MappedType {
                             rs_type : NamedType { name : "::core::ffi::c_int", ...},
-                            cpp_type : CcType { name : Some ("int"), ...},
+                            cpp_type : CcType { variant: NamedType { name : "int", ...}, ... },
                          }), ...
                         offset: 0, ...
                         size: 32, ...

@@ -17,7 +17,6 @@
 #include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "common/string_type.h"
 #include "common/strong_int.h"
 #include "clang/AST/Type.h"
@@ -90,12 +89,25 @@ llvm::json::Value RsTypeNamed::ToJson() const {
 }
 
 llvm::json::Value CcType::ToJson() const {
+  llvm::json::Object variant_object;
+  if (auto* cc_type_named = std::get_if<CcTypeNamed>(&variant)) {
+    variant_object = llvm::json::Object{{"NamedType", cc_type_named->ToJson()}};
+  } else {
+    ItemId decl_id = std::get<ItemId>(variant);
+    variant_object = llvm::json::Object{
+        {"ItemIdType", llvm::json::Object{{"decl_id", decl_id.value()}}}};
+  }
+
   return llvm::json::Object{
-      {"name", decl_id.has_value() ? llvm::json::Value(nullptr)
-                                   : llvm::json::Value(name)},
+      {"variant", std::move(variant_object)},
       {"is_const", is_const},
+  };
+}
+
+llvm::json::Value CcTypeNamed::ToJson() const {
+  return llvm::json::Object{
+      {"name", name},
       {"type_args", type_args},
-      {"decl_id", decl_id},
   };
 }
 
@@ -137,8 +149,9 @@ MappedType PointerOrReferenceTo(
   }
   return MappedType{
       .rs_type = std::move(rs_type),
-      .cpp_type = CcType{.name = std::string(cc_ptr_name),
-                         .type_args = {std::move(pointee_type.cpp_type)}},
+      .cpp_type = {CcTypeNamed{
+          .name = std::string(cc_ptr_name),
+          .type_args = {std::move(pointee_type.cpp_type)}}},
   };
 }
 }  // namespace
@@ -175,8 +188,10 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
                               std::move(return_type), std::move(param_types));
 
-  CHECK_EQ(result.cpp_type.name, internal::kCcLValueRef);
-  result.cpp_type.name = std::string(internal::kCcPtr);
+  auto* cpp_type_named = std::get_if<CcTypeNamed>(&result.cpp_type.variant);
+  CHECK(cpp_type_named != nullptr);
+  CHECK_EQ(cpp_type_named->name, internal::kCcLValueRef);
+  cpp_type_named->name = std::string(internal::kCcPtr);
 
   RsType rs_func_ptr_type = std::move(result.rs_type);
   const RsTypeNamed* named = std::get_if<RsTypeNamed>(&rs_func_ptr_type);
@@ -206,12 +221,13 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
     rs_type_args.push_back(std::move(type_arg.rs_type));
   }
 
-  CcType cc_func_value_type = CcType{
+  CcType cc_func_value_type = {CcTypeNamed{
       .name = absl::StrCat(internal::kCcFuncValue, " ", cc_call_conv),
       .type_args = std::move(cpp_type_args),
-  };
-  CcType cc_func_ref_type = CcType{.name = std::string(internal::kCcLValueRef),
-                                   .type_args = {cc_func_value_type}};
+  }};
+  CcType cc_func_ref_type = {
+      CcTypeNamed{.name = std::string(internal::kCcLValueRef),
+                  .type_args = {cc_func_value_type}}};
 
   // Rust cannot express a function *value* type, only function pointer types.
   RsTypeNamed rs_func_ptr_type = RsTypeNamed{

@@ -333,7 +333,7 @@ pub fn generate_function_thunk_impl(
                 let formatted_ident = convert_ident(&ident);
                 ident = quote! { &(#formatted_ident.val) };
             }
-            match p.type_.cpp_type.name.as_deref() {
+            match p.type_.cpp_type.name() {
                 Some("&") => Ok(quote! { * #ident }),
                 Some("&&") => Ok(quote! { std::move(* #ident) }),
                 _ => {
@@ -427,20 +427,21 @@ pub fn generate_function_thunk_impl(
                 quote! {new(#out_param) auto(#return_expr)}
             }
         }
-    } else {
-        match func.return_type.cpp_type.name.as_deref() {
-            Some("void") => return_expr,
-            Some("&") => quote! { return & #return_expr },
-            Some("&&") => {
+    } else if let CcTypeVariant::NamedType { name, type_args } = &func.return_type.cpp_type.variant
+    {
+        match name.as_ref() {
+            "void" => return_expr,
+            "&" => quote! { return & #return_expr },
+            "&&" => {
                 // The code below replicates bits of `format_cpp_type`, but formats an rvalue
                 // reference (which `format_cpp_type` would format as a pointer).
                 // `const_fragment` from `format_cpp_type` is ignored - it is not applicable for
                 // references.
                 let ty = &func.return_type.cpp_type;
-                if ty.type_args.len() != 1 {
+                let [type_arg] = &type_args[..] else {
                     bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
-                }
-                let nested_type = cpp_type_name::format_cpp_type(&ty.type_args[0], &ir)?;
+                };
+                let nested_type = cpp_type_name::format_cpp_type(type_arg, ir)?;
                 quote! {
                     #nested_type && lvalue = #return_expr;
                     return &lvalue
@@ -448,6 +449,8 @@ pub fn generate_function_thunk_impl(
             }
             _ => quote! { return #return_expr },
         }
+    } else {
+        quote! { return #return_expr }
     };
 
     Ok(quote! {

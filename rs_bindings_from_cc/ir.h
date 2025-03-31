@@ -139,9 +139,9 @@ inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
 // unsafe.
 enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
 
-// A C++ type involved in the bindings. It has the knowledge of how the type
-// is spelled in C++.
-struct CcType {
+struct CcType;
+
+struct CcTypeNamed {
   llvm::json::Value ToJson() const;
 
   // The name of the type. Examples:
@@ -151,12 +151,22 @@ struct CcType {
   // - "#funcValue <callConv>" (compare with "#funcPtr <abi>" in RsType::name
   //   and note that Rust only supports function pointers; note that <callConv>
   //   in CcType doesn't map 1:1 to <abi> in RsType).
-  // - An empty string when `decl_id` is non-empty.
   std::string name;
 
-  // Id of a decl that this type corresponds to. `nullopt` when `name` is
-  // non-empty.
-  std::optional<ItemId> decl_id;
+  // Type arguments for a generic type. Examples:
+  //   int has no type arguments.
+  //   int* has a single type argument, int.
+  //   tuple<int, float> has two type arguments, int and float.
+  std::vector<CcType> type_args = {};
+};
+
+// A C++ type involved in the bindings. It has the knowledge of how the type
+// is spelled in C++.
+struct CcType {
+  llvm::json::Value ToJson() const;
+
+  // Either a named type with possible type arguments, or an ItemId.
+  std::variant<CcTypeNamed, ItemId> variant;
 
   // The C++ const-qualification for the type.
   //
@@ -165,12 +175,6 @@ struct CcType {
   // or a reference type like `int&`, then `T`, `const T`, and `volatile T` are
   // all the same type in C++.
   bool is_const = false;
-
-  // Type arguments for a generic type. Examples:
-  //   int has no type arguments.
-  //   int* has a single type argument, int.
-  //   tuple<int, float> has two type arguments, int and float.
-  std::vector<CcType> type_args = {};
 };
 
 struct RsTypeNamed;
@@ -235,11 +239,11 @@ struct MappedType {
   /// Returns the MappedType for a non-templated/generic, non-cv-qualified type.
   /// For example, Void() is Simple("()", "void").
   static MappedType Simple(std::string rs_name, std::string cc_name) {
-    return MappedType{RsTypeNamed{rs_name}, CcType{cc_name}};
+    return MappedType{RsTypeNamed{rs_name}, {CcTypeNamed{cc_name}}};
   }
 
   static MappedType WithDeclId(ItemId decl_id) {
-    return MappedType{decl_id, CcType{.decl_id = decl_id}};
+    return MappedType{decl_id, {decl_id}};
   }
 
   static MappedType PointerTo(

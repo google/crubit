@@ -125,12 +125,25 @@ auto ParamType(const Args&... matchers) {
   return testing::Field("type", &FuncParam::type, AllOf(matchers...));
 }
 
-// Matches an CcType that has the given name.
-MATCHER_P(CcTypeNameIs, name, "") {
+MATCHER_P(UnsupportedItemNameIs, name, "") {
   if (arg.name == name) return true;
 
   *result_listener << "actual name: '" << arg.name << "'";
   return false;
+}
+
+// Matches an CcType that has the given name.
+MATCHER_P(CcTypeNameIs, name, "") {
+  const auto* named = std::get_if<CcTypeNamed>(&arg.variant);
+  if (named == nullptr || named->name != name) {
+    *result_listener << "actual name: '";
+    if (named != nullptr) {
+      *result_listener << named->name;
+    }
+    *result_listener << "'";
+    return false;
+  }
+  return true;
 }
 
 // Matches an RsType that has the given name.
@@ -157,11 +170,12 @@ MATCHER_P(TextIs, text, "") {
 
 // Matches an CcType that has the given decl_id.
 MATCHER_P(CcDeclIdIs, decl_id, "") {
-  if (arg.decl_id.has_value() && *arg.decl_id == decl_id) return true;
+  const auto* arg_decl_id = std::get_if<ItemId>(&arg.variant);
+  if (arg_decl_id != nullptr && *arg_decl_id == decl_id) return true;
 
   *result_listener << "actual decl_id: ";
-  if (arg.decl_id.has_value()) {
-    *result_listener << *arg.decl_id;
+  if (arg_decl_id != nullptr) {
+    *result_listener << *arg_decl_id;
   } else {
     *result_listener << "std::nullopt";
   }
@@ -207,8 +221,10 @@ auto RsTypeParamsAre(const Args&... matchers) {
 // Matches a CcType that has type arguments matching `matchers`.
 template <typename... Args>
 auto CcTypeParamsAre(const Args&... matchers) {
-  return testing::Field("type_args", &CcType::type_args,
-                        ElementsAre(matchers...));
+  return testing::Field(
+      "variant", &CcType::variant,
+      testing::VariantWith<CcTypeNamed>(testing::Field(
+          "type_args", &CcTypeNamed::type_args, ElementsAre(matchers...))));
 }
 
 auto IsCcInt() { return AllOf(CcTypeNameIs("int"), CcTypeParamsAre()); }
@@ -930,7 +946,7 @@ TEST(ImporterTest, RecordItemIds) {
               AllOf(Contains(VariantWith<Comment>(TextIs("A free comment"))),
                     Contains(VariantWith<Func>(IdentifierIs("bar"))),
                     Contains(VariantWith<UnsupportedItem>(
-                        CcTypeNameIs("TopLevelStruct::Nested"))),
+                        UnsupportedItemNameIs("TopLevelStruct::Nested"))),
                     Contains(VariantWith<Func>(IdentifierIs("baz")))));
 }
 

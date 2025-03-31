@@ -5,7 +5,7 @@
 use arc_anyhow::Result;
 use code_gen_utils::expect_format_cc_type_name;
 use error_report::{anyhow, bail};
-use ir::{CcType, Item, Record, IR};
+use ir::{CcType, CcTypeVariant, Item, Record, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -35,13 +35,13 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
     } else {
         quote! {}
     };
-    if let Some(ref name) = ty.name {
+    if let CcTypeVariant::NamedType { name, type_args } = &ty.variant {
         match name.as_ref() {
             mut name @ ("*" | "&" | "&&") => {
-                if ty.type_args.len() != 1 {
+                let [type_arg] = &type_args[..] else {
                     bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
-                }
-                let nested_type = format_cpp_type_inner(&ty.type_args[0], ir, references_ok)?;
+                };
+                let nested_type = format_cpp_type_inner(type_arg, ir, references_ok)?;
                 if !references_ok {
                     name = "*";
                 }
@@ -55,7 +55,7 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
             }
             cpp_type_name => match cpp_type_name.strip_prefix("#funcValue ") {
                 None => {
-                    if !ty.type_args.is_empty() {
+                    if !type_args.is_empty() {
                         bail!("Type not yet supported: {:?}", ty);
                     }
                     // Not using `code_gen_utils::format_cc_ident`, because
@@ -64,7 +64,7 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
                     let cc_ident: TokenStream = cpp_type_name.parse().unwrap();
                     Ok(quote! { #cc_ident #const_fragment })
                 }
-                Some(abi) => match ty.type_args.split_last() {
+                Some(abi) => match type_args.split_last() {
                     None => bail!("funcValue type without a return type: {:?}", ty),
                     Some((ret_type, param_types)) => {
                         // Function pointer types don't ignore references, but luckily,
