@@ -41,7 +41,7 @@ static_assert(
     std::is_trivially_move_constructible_v<rs_std::SliceRef<const uint8_t>>);
 static_assert(
     std::is_trivially_move_assignable_v<rs_std::SliceRef<const uint8_t>>);
-// Note: `rs_std::SliceRef` is not trivially constructible because it's default
+// Note: `rs_std::SliceRef` is not trivially constructible because its default
 // constructor ensures that the data pointer is not null.
 
 // `SliceRef` does on purpose not have `operator==`, because <internal link>
@@ -66,7 +66,11 @@ static_assert(std::is_standard_layout_v<rs_std::SliceRef<int64_t>>);
 
 // Slice assumes that the Rust slice layout is first the pointer and then the
 // size. This does not appear to be standardised, so instead there are runtime
-// checks for this in `format_ty_for_cc` in `cc_bindings_from_rs/bindings.rs`.
+// checks for this in `format_ty_for_cc` in `generate_bindings/format_type.rs`.
+// See the `check_slice_layout` function.
+//
+// Stabilizing this layout is proposed in
+// https://github.com/rust-lang/rfcs/pull/3775
 static_assert(sizeof(rs_std::SliceRef<const uint8_t>) ==
               sizeof(const uint8_t*) + sizeof(size_t));
 static_assert(alignof(rs_std::SliceRef<const uint8_t>) ==

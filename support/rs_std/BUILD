@@ -96,3 +96,39 @@ crubit_cc_test(
         "@com_google_googletest//:gmock",
     ],
 )
+
+cc_library(
+    name = "str_ref",
+    hdrs = ["str_ref.h"],
+    # Enable bidirectional bindings (via crubit_internal_rust_type).
+    aspect_hints = ["//features:experimental"],
+    visibility = [
+        "//visibility:public",
+    ],
+
+    # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
+    # possible. Using mature Abseil APIs seems okay - we should be able to assume that Crubit users
+    # have a version of Abseil that is relatively recent (although we can't rely on an exact version
+    # and/or exact absl/base/options.h).
+    deps = [
+        ":slice_ref",
+        "//support/internal:bindings_support",
+        "//support/rs_std/internal:is_utf8",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+crubit_cc_test(
+    name = "str_ref_test",
+    srcs = ["str_ref_test.cc"],
+    deps = [
+        ":str_ref",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@com_google_fuzztest//:fuzztest",
+        "@com_google_fuzztest//:fuzztest_gtest_main",
+        "@com_google_googletest//:gmock",
+    ],
+)
