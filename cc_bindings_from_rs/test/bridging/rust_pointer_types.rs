@@ -2,15 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![feature(register_tool)]
-#![register_tool(__crubit)]
-
 use std::ffi::c_void;
 use std::marker::PhantomData;
 
-#[__crubit::annotate(
+#[crubit_annotate::cpp_convertible(
     cpp_type = "crubit::test::TheCppType*",
-    cpp_type_include = "cc_bindings_from_rs/test/bridging/cc_type.h",
+    include_path = "cc_bindings_from_rs/test/bridging/cc_type.h",
     rust_to_cpp_converter = "crubit_test_rust_owned_struct_to_cpp_owned_pointer",
     cpp_to_rust_converter = "crubit_test_cpp_owned_pointer_to_rust_owned_struct"
 )]
@@ -22,9 +19,9 @@ pub fn pass_through(val: RustOwned) -> RustOwned {
     val
 }
 
-#[__crubit::annotate(
+#[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "const crubit::test::TheCppType*",
-    cpp_type_include = "cc_bindings_from_rs/test/bridging/cc_type.h"
+    include_path = "cc_bindings_from_rs/test/bridging/cc_type.h"
 )]
 #[repr(transparent)]
 pub struct RustView<'a> {

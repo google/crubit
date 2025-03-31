@@ -634,13 +634,14 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         }
     };
 
+    let crubit_annotation = format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}");
     let record_tokens = quote! {
         #doc_comment
         #derives
         #recursively_pinned_attribute
         #must_use
         #[repr(#( #repr_attributes ),*)]
-        #[__crubit::annotate(cpp_type=#fully_qualified_cc_name)]
+        #[doc=#crubit_annotation]
         pub #record_kind #ident {
             #head_padding
             #( #field_definitions, )*
@@ -657,9 +658,6 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         #( #items __NEWLINE__ __NEWLINE__)*
     };
     features.insert(make_rs_ident("negative_impls"));
-    // For #![register_tool(__crubit)] / #![__crubit::...]
-    features.insert(make_rs_ident("register_tool"));
-
     let record_trait_assertions = {
         let record_type_name = RsTypeKind::new_record(db, record.clone(), ir)?.to_token_stream(db);
         let mut assertions: Vec<TokenStream> = vec![];

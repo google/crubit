@@ -30,18 +30,6 @@ For each feature we use, we document the following:
     fields, this is a compatibility break, and we'd need to add a PhantomData
     field to all C++ types to mark them as `!Send`, `!Unpin`, etc.
 
-### `register_tool`
-
-*   **Crubit feature:** `supported`
-*   **Use case:** Used to allow Crubit to read annotations on types/functions.
-    For example, so that Crubit can round-trip a type correctly, or to implement
-    automated bridging so that a C++ `Status` becomes a Rust `Result<(),
-    StatusError>`, or what have you.
-*   **Exit strategy:** Unlikely to go away entirely. If it did, we would
-    temporarily add `__crubit` to the hardcoded list in the compiler (currently
-    just `clippy`) to prevent short-term breakage, and then reimplement the
-    annotations using a non-attribute syntax, such as traits or doc-comments.
-
 ### `vec_into_raw_parts`
 
 *   **Crubit feature:** `experimental`
@@ -230,3 +218,14 @@ Rust doesn't know that these two are disjoint, meaning that we cannot use the
 An alternative fix would be language support for in-place pinned construction.
 That would render the `Ctor` trait obsolete, and reduce Crubit's needs around
 trait coherence (as well as `negative_impls`, above).
+
+
+### `register_tool`
+
+We previously used this attribute to allow Crubit to read annotations on
+types/functions. However, the need for end-users to enable a feature gate and
+re-declare the tool caused us to migrate away to using `#[doc]` attributes.
+
+We use custom attributes so that Crubit can round-trip a type correctly, or to
+implement automated bridging so that a C++ `Status` becomes a Rust `Result<(),
+StatusError>`, or what have you.

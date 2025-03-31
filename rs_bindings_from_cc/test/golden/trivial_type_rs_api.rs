@@ -11,12 +11,10 @@
     arbitrary_self_types,
     cfg_sanitize,
     custom_inner_attributes,
-    negative_impls,
-    register_tool
+    negative_impls
 )]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -27,7 +25,7 @@ pub mod ns {
     /// only trivial members.
     #[derive(Clone, Copy)]
     #[repr(C)]
-    #[__crubit::annotate(cpp_type = "ns :: Trivial")]
+    ///CRUBIT_ANNOTATE: cpp_type=ns :: Trivial
     pub struct Trivial {
         pub trivial_field: ::core::ffi::c_int,
     }

@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:item_order_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -17,7 +16,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "FirstStruct")]
+///CRUBIT_ANNOTATE: cpp_type=FirstStruct
 pub struct FirstStruct {
     pub field: ::core::ffi::c_int,
 }
@@ -77,7 +76,7 @@ pub fn first_func() -> ::core::ffi::c_int {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "SecondStruct")]
+///CRUBIT_ANNOTATE: cpp_type=SecondStruct
 pub struct SecondStruct {
     pub field: ::core::ffi::c_int,
 }

@@ -18,7 +18,7 @@ fn test_generate_enum_basic() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Color")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::core::ffi::c_uint);
             impl Color {
                 pub const kRed: Color = Color(5);
@@ -56,7 +56,7 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Color")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::core::ffi::c_int);
             impl Color {
                 pub const kRed: Color = Color(-5);
@@ -94,7 +94,7 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Color")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::core::ffi::c_long);
             impl Color {
                 pub const kViolet: Color = Color(-9223372036854775808);
@@ -133,7 +133,7 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Color")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::core::ffi::c_ulong);
             impl Color {
                 pub const kRed: Color = Color(0);
@@ -166,7 +166,7 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Color")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::core::ffi::c_int);
             impl Color {
                 pub const kViolet: Color = Color(-2147483648);
@@ -199,7 +199,7 @@ fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Color")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
             pub struct Color(::core::ffi::c_uint);
             impl Color {
                 pub const kRed: Color = Color(0);
@@ -230,7 +230,7 @@ fn test_generate_enum_bool() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Bool")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Bool"]
             pub struct Bool(bool);
             impl Bool {
                 pub const kFalse: Bool = Bool(false);
@@ -260,7 +260,7 @@ fn test_generate_enum_bool_alias() -> Result<()> {
         quote! {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-            #[__crubit::annotate(cpp_type = "Bool")]
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Bool"]
             pub struct Bool(crate::MyBool);
             impl Bool {
                 pub const kFalse: Bool = Bool(false);

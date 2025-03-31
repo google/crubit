@@ -5,11 +5,8 @@
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
 //! generated C++ bindings are then tested via `enums_test.cc`.
 
-#![feature(register_tool)]
-#![register_tool(__crubit)]
-
 pub mod cpp_enum {
-    #[__crubit::annotate(cpp_enum = "enum class")]
+    #[crubit_annotate::cpp_enum(kind = "enum class")]
     #[repr(transparent)]
     pub struct Color(i32);
 

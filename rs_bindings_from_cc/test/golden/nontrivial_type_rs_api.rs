@@ -12,12 +12,10 @@
     cfg_sanitize,
     custom_inner_attributes,
     impl_trait_in_assoc_type,
-    negative_impls,
-    register_tool
+    negative_impls
 )]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -30,7 +28,7 @@
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "Nontrivial")]
+///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
@@ -313,7 +311,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "NontrivialInline")]
+///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
 pub struct NontrivialInline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
@@ -495,7 +493,7 @@ impl NontrivialInline {
 /// each field.
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "NontrivialMembers")]
+///CRUBIT_ANNOTATE: cpp_type=NontrivialMembers
 pub struct NontrivialMembers {
     pub nontrivial_member: ::core::mem::ManuallyDrop<crate::Nontrivial>,
 }
@@ -608,7 +606,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialMembers
 
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "NontrivialUnpin")]
+///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
 pub struct NontrivialUnpin {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub field: ::core::ffi::c_int,
@@ -848,7 +846,7 @@ pub fn TakesUnpinByConstRvalueReference<'a>(
 /// Finally, testing for strange by-value APIs.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "NontrivialByValue")]
+///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -928,7 +926,7 @@ where
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "Nonmovable")]
+///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

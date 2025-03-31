@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:method_qualifiers_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -17,7 +16,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "Noninline")]
+///CRUBIT_ANNOTATE: cpp_type=Noninline
 pub struct Noninline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -81,7 +80,7 @@ impl Noninline {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "Inline")]
+///CRUBIT_ANNOTATE: cpp_type=Inline
 pub struct Inline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

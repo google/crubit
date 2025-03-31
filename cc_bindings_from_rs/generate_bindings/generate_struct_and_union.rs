@@ -126,7 +126,7 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
 /// struct with a single field. Example:
 ///
 /// ```rs
-/// #[__crubit::annotate(cpp_enum = "enum class")]
+/// #[crubit_annotate::cpp_enum("enum class")]
 /// #[repr(transparent)]
 /// pub struct MyEnum(i32);
 ///
@@ -1344,15 +1344,10 @@ pub mod tests {
     #[test]
     fn test_format_bridged_type_in_generic_types() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="cpp_ns::CppType",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  rust_to_cpp_converter="convert_rust_to_cpp_type",
-                  cpp_to_rust_converter="convert_cpp_to_rust_type",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::CppType"]
+                #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type"]
                 pub struct RustType {
                     pub x: i32,
                 }
@@ -1367,8 +1362,8 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error handling parameter #0: Can't format ADT as it has a generic type \
-                    `RustType` that is a bridged type"
+                "Error handling parameter #0 of type `std::boxed::Box<RustType>`: \
+                Can't format ADT as it has a generic type `RustType` that is a bridged type"
             );
         });
 
@@ -1376,7 +1371,7 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error handling parameter #0: Can't format ADT as it has a generic type \
+                "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: Can't format ADT as it has a generic type \
                     `RustType` that is a bridged type"
             );
         });
@@ -1385,10 +1380,7 @@ pub mod tests {
     #[test]
     fn test_format_struct_cpp_name() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(cpp_name="Bar")]
+                #[doc="CRUBIT_ANNOTATE: cpp_name=Bar"]
                 pub struct Foo {
                     pub x: i32,
                 }
@@ -2403,10 +2395,7 @@ pub mod tests {
     #[test]
     fn test_cpp_enum_plain() {
         let test_src = r#"
-        #![feature(register_tool)]
-        #![register_tool(__crubit)]
-
-        #[__crubit::annotate(cpp_enum="enum")]
+        #[doc="CRUBIT_ANNOTATE: cpp_enum=enum"]
         #[repr(transparent)]
         pub struct Color(i32);
 
@@ -2438,7 +2427,7 @@ pub mod tests {
         #![feature(register_tool)]
         #![register_tool(__crubit)]
 
-        #[__crubit::annotate(cpp_enum="enum class")]
+        #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
         #[repr(transparent)]
         pub struct Color(u8);
 
@@ -2472,7 +2461,7 @@ pub mod tests {
         #![allow(deprecated)]
         #![allow(unused)]
 
-        #[__crubit::annotate(cpp_enum="enum class")]
+        #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
         #[repr(transparent)]
         #[deprecated(note="Use NewColor")]
         #[must_use]
@@ -2507,7 +2496,7 @@ pub mod tests {
         #![feature(register_tool)]
         #![register_tool(__crubit)]
 
-        #[__crubit::annotate(cpp_enum="enum class")]
+        #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
         pub struct Color(i32);
 
         impl Color {
@@ -2526,7 +2515,7 @@ pub mod tests {
         #![feature(register_tool)]
         #![register_tool(__crubit)]
 
-        #[__crubit::annotate(cpp_enum="enum class")]
+        #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
         #[repr(transparent)]
         pub struct Color(i32);
 
@@ -2547,11 +2536,9 @@ pub mod tests {
     #[should_panic]
     fn test_cpp_enum_fails_for_rust_union() {
         let test_src = r#"
-        #![feature(register_tool)]
-        #![register_tool(__crubit)]
         #![feature(transparent_unions)]
 
-        #[__crubit::annotate(cpp_enum="enum class")]
+        #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
         #[repr(transparent)]
         pub union Color {
             value: i32,
@@ -2565,10 +2552,7 @@ pub mod tests {
     #[should_panic]
     fn test_cpp_enum_fails_for_rust_enum() {
         let test_src = r#"
-        #![feature(register_tool)]
-        #![register_tool(__crubit)]
-
-        #[__crubit::annotate(cpp_enum="enum class")]
+        #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
         #[repr(transparent)]
         enum Color {
             Value(i32),
@@ -2909,10 +2893,7 @@ pub mod tests {
     #[test]
     fn test_format_cpp_name_for_struct() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(cpp_type="cpp_ns::CppType")]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
                 pub struct RustType {
                     pub x: i32,
                 }

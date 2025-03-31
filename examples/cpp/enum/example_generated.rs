@@ -10,7 +10,6 @@
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -18,7 +17,7 @@
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-#[__crubit::annotate(cpp_type = "Color")]
+///CRUBIT_ANNOTATE: cpp_type=Color
 pub struct Color(::core::ffi::c_uint);
 impl Color {
     pub const kRed: Color = Color(0);

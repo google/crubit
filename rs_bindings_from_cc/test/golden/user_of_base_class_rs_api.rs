@@ -11,12 +11,10 @@
     cfg_sanitize,
     custom_inner_attributes,
     impl_trait_in_assoc_type,
-    negative_impls,
-    register_tool
+    negative_impls
 )]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -29,7 +27,7 @@
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cpp_type = "Derived2")]
+///CRUBIT_ANNOTATE: cpp_type=Derived2
 pub struct Derived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 20],
     pub derived_1: ::core::ffi::c_char,
@@ -149,7 +147,7 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for crate::Derived2 {
 
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
-#[__crubit::annotate(cpp_type = "VirtualDerived2")]
+///CRUBIT_ANNOTATE: cpp_type=VirtualDerived2
 pub struct VirtualDerived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 32],
 }

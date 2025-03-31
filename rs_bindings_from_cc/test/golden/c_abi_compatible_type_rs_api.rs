@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:c_abi_compatible_type_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -19,7 +18,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "X")]
+///CRUBIT_ANNOTATE: cpp_type=X
 pub struct X {
     pub a: ::core::ffi::c_int,
 }

@@ -106,6 +106,7 @@ def golden_test(
     _generate_bindings(
         name = bindings_name,
         rust_library = patched_name,
+        testonly = True,
     )
     args = []
     data = ["//common:LICENSE_HEADER"]
@@ -116,6 +117,7 @@ def golden_test(
             name = new_h,
             srcs = [bindings_name],
             output_group = "h_file",
+            testonly = True,
         )
         args += [
             "$(location %s)" % golden_h,
@@ -133,6 +135,7 @@ def golden_test(
             name = new_rs,
             srcs = [bindings_name],
             output_group = "rust_file",
+            testonly = True,
         )
         args += [
             "$(location %s)" % golden_rs,
@@ -150,10 +153,12 @@ def golden_test(
         args = args,
         data = data,
         tags = tags,
+        testonly = True,
     )
     native.filegroup(
         name = basename + ".build_cleaner_optout",
         srcs = owned_files,
         tags = ["ignore_srcs"],
         visibility = ["//visibility:private"],
+        testonly = True,
     )

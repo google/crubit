@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -17,7 +16,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
-#[__crubit::annotate(cpp_type = "HasCustomAlignment")]
+///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignment
 pub struct HasCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -75,7 +74,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasCustomAli
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "HasFieldWithCustomAlignment")]
+///CRUBIT_ANNOTATE: cpp_type=HasFieldWithCustomAlignment
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
 }
@@ -133,7 +132,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasFieldWith
 
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
-#[__crubit::annotate(cpp_type = "InheritsFromBaseWithCustomAlignment")]
+///CRUBIT_ANNOTATE: cpp_type=InheritsFromBaseWithCustomAlignment
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -205,7 +204,7 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment>
 
 #[derive(Clone, Copy)]
 #[repr(C, align(64))]
-#[__crubit::annotate(cpp_type = "HasCustomAlignmentWithGnuAttr")]
+///CRUBIT_ANNOTATE: cpp_type=HasCustomAlignmentWithGnuAttr
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 64],
 }
@@ -281,7 +280,7 @@ pub mod template_with_preferred_name {
 /// forward declaration of `basic_string_view` class template.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "template_with_preferred_name :: SomeTemplate < int >")]
+///CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SomeTemplate < int >
 pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

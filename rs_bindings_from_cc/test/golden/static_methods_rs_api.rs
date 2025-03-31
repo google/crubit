@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:static_methods_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -17,7 +16,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cpp_type = "SomeClass")]
+///CRUBIT_ANNOTATE: cpp_type=SomeClass
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

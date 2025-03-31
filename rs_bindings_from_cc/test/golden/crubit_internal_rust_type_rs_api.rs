@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -41,7 +40,7 @@ pub type BadSameAbiAttr = ::core::ffi::c_uchar;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "TypeMapOverrideFieldTypes")]
+///CRUBIT_ANNOTATE: cpp_type=TypeMapOverrideFieldTypes
 pub struct TypeMapOverrideFieldTypes {
     pub my_i8_struct: i8,
     pub my_i8_class: i8,

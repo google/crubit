@@ -21,7 +21,9 @@ rust_library(
     aspect_hints = [
         ":cc_type_hint",
     ],
-    rustc_flags = ["-Zallow-features=register_tool"],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
 )
 
 cc_bindings_from_rust_library_config(
@@ -40,7 +42,9 @@ rust_library(
     aspect_hints = [
         ":cc_type_hint",
     ],
-    rustc_flags = ["-Zallow-features=register_tool"],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
 )
 
 cc_bindings_from_rust(

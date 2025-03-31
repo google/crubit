@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:doc_comment_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -20,7 +19,7 @@
 ///  * with three slashes
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "DocCommentSlashes")]
+///CRUBIT_ANNOTATE: cpp_type=DocCommentSlashes
 pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
@@ -127,7 +126,7 @@ impl DocCommentSlashes {
 ///  * with slashes and bang
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "DocCommentBang")]
+///CRUBIT_ANNOTATE: cpp_type=DocCommentBang
 pub struct DocCommentBang {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -186,7 +185,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DocCommentBa
 ///  with two stars
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "MultilineCommentTwoStars")]
+///CRUBIT_ANNOTATE: cpp_type=MultilineCommentTwoStars
 pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -248,7 +247,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MultilineCom
 ///  * with two slashes
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "LineComment")]
+///CRUBIT_ANNOTATE: cpp_type=LineComment
 pub struct LineComment {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -307,7 +306,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for LineComment 
 ///  with one star
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "MultilineOneStar")]
+///CRUBIT_ANNOTATE: cpp_type=MultilineOneStar
 pub struct MultilineOneStar {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -397,7 +396,7 @@ pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 /// Class template.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "MyTemplate < int >")]
+///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
 pub struct __CcTemplateInst10MyTemplateIiE {
     /// Data member.
     pub value: ::core::ffi::c_int,
@@ -466,7 +465,7 @@ impl __CcTemplateInst10MyTemplateIiE {
 /// Class template specialization.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "MyTemplate < float >")]
+///CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >
 pub struct __CcTemplateInst10MyTemplateIfE {
     /// Data member in a specialization.
     pub value: f32,
@@ -533,7 +532,7 @@ impl __CcTemplateInst10MyTemplateIfE {
 /// Class template with nested struct inside.
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "OuterTemplate < int >")]
+///CRUBIT_ANNOTATE: cpp_type=OuterTemplate < int >
 pub struct __CcTemplateInst13OuterTemplateIiE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

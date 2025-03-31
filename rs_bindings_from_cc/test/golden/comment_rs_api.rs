@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:comment_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -24,7 +23,7 @@
 /// Foo
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "Foo")]
+///CRUBIT_ANNOTATE: cpp_type=Foo
 pub struct Foo {
     /// A field
     pub i: ::core::ffi::c_int,
@@ -102,7 +101,7 @@ pub fn foo() {
 /// Bar
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "Bar")]
+///CRUBIT_ANNOTATE: cpp_type=Bar
 pub struct Bar {
     pub i: ::core::ffi::c_int,
 }
@@ -156,7 +155,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
 /// d
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "HasNoComments")]
+///CRUBIT_ANNOTATE: cpp_type=HasNoComments
 pub struct HasNoComments {
     pub i: ::core::ffi::c_int,
 }

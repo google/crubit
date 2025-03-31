@@ -423,24 +423,6 @@ pub fn generate_bindings_tokens(
         }
     };
 
-    // Allows the use of #[__crubit::foo] attributes to control the behavior of
-    // cc_bindings_from_rs on the generated code.
-    //
-    // Note that we use `__crubit`, not `crubit`. This way, namespaces and types can
-    // be named `crubit` without causing obscure internal failures during
-    // bindings generation. In particular, well, crubit itself does use
-    // `namespace crubit`...
-    //
-    // Note also that there is only one tool namespace we use, __crubit. So we can
-    // use the existence of a register_tool feature requirement to signal
-    // whether or not we need to bother registering __crubit, and make the
-    // bindings more compact for headers that don't define any types.
-    let register_crubit_tool = if features.contains(&make_rs_ident("register_tool")) {
-        quote! {#![register_tool(__crubit)] __NEWLINE__}
-    } else {
-        quote! {}
-    };
-
     let features = if features.is_empty() {
         quote! {}
     } else {
@@ -464,7 +446,6 @@ pub fn generate_bindings_tokens(
         rs_api: quote! {
             #features __NEWLINE__
             #![no_std] __NEWLINE__
-            #register_crubit_tool
 
             // `rust_builtin_type_abi_assumptions.md` documents why the generated
             // bindings need to relax the `improper_ctypes_definitions` warning

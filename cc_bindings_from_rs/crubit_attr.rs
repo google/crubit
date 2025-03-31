@@ -10,32 +10,37 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
-extern crate rustc_ast;
-extern crate rustc_middle;
-extern crate rustc_span;
-
 use anyhow::{bail, ensure, Result};
-
-use rustc_ast::ast::{LitKind, MetaItemKind};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 
-/// A collection of `#[__crubit::annotate(...)]` attributes.
+/// A collection of attributes applied via `#[crubit_annotate::...]`.
+///
+/// Note that these attributes are procedural macros that generate doc comment attributes of the
+/// form `#[doc="CRUBIT_ANNOTATE: ..."]`.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct CrubitAttrs {
     /// The spelling of the C++ type of the item.
     ///
     /// For example, the following annotation indicates that the C++ type of
     /// this item should be `std::basic_string<char>`:
-    ///   `#[__crubit::annotate(cpp_type="std::basic_string<char>")]`
+    ///
+    ///   #[doc="CRUBIT_ANNOTATE: cpp_type=std::basic_string<char>"]
     pub cpp_type: Option<Symbol>,
 
     /// Path to the header file that declares the type specified in `cpp_type`.
     ///
     /// If specified, the header file will be added as an #include directive to
     /// the generated bindings.
-    pub cpp_type_include: Option<Symbol>,
+    ///
+    /// For example, the following annotation indicates that the C++ type of
+    /// this item is `std::basic_string<char>` and that the header for that type
+    /// is `<string>`:
+    ///
+    ///   #[doc="CRUBIT_ANNOTATE: cpp_type=std::basic_string<char>"]
+    ///   #[doc="CRUBIT_ANNOTATE: include_path=<string>]`
+    pub include_path: Option<Symbol>,
 
     /// The C++ name of the item. This allows us to rename Rust function names
     /// that are not C++-compatible like `new`.
@@ -44,7 +49,7 @@ pub struct CrubitAttrs {
     /// `new` should be renamed to `Create` in C++:
     ///
     /// ```
-    /// #[__crubit::annotate(cpp_name="Create")]
+    /// #[doc="CRUBIT_ANNOTATE: cpp_name=Create"]
     /// pub fn new() -> i32 {...}
     /// ```
     pub cpp_name: Option<Symbol>,
@@ -81,206 +86,57 @@ pub struct CrubitAttrs {
 impl CrubitAttrs {
     pub const CPP_TYPE: &'static str = "cpp_type";
     pub const CPP_NAME: &'static str = "cpp_name";
-    pub const CPP_TYPE_INCLUDE: &'static str = "cpp_type_include";
+    pub const CPP_TYPE_INCLUDE: &'static str = "include_path";
     pub const CPP_ENUM: &'static str = "cpp_enum";
     pub const RUST_TO_CPP_CONVERTER: &'static str = "rust_to_cpp_converter";
     pub const CPP_TO_RUST_CONVERTER: &'static str = "cpp_to_rust_converter";
 
-    pub fn get_attr(&self, name: &str) -> Option<Symbol> {
-        match name {
+    pub fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
+        Ok(match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type,
             CrubitAttrs::CPP_NAME => self.cpp_name,
-            CrubitAttrs::CPP_TYPE_INCLUDE => self.cpp_type_include,
+            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_path,
             CrubitAttrs::CPP_ENUM => self.cpp_enum,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
-            _ => panic!("Invalid attribute name: \"{name}\""),
-        }
+            _ => bail!("Invalid attribute name: \"{name}\""),
+        })
     }
 
-    pub fn set_attr(&mut self, name: &str, symbol: Option<Symbol>) {
+    pub fn set_attr(&mut self, name: &str, symbol: Option<Symbol>) -> Result<()> {
         match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type = symbol,
             CrubitAttrs::CPP_NAME => self.cpp_name = symbol,
-            CrubitAttrs::CPP_TYPE_INCLUDE => self.cpp_type_include = symbol,
+            CrubitAttrs::CPP_TYPE_INCLUDE => self.include_path = symbol,
             CrubitAttrs::CPP_ENUM => self.cpp_enum = symbol,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
-            _ => panic!("Invalid attribute name: \"{name}\""),
+            _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
+        Ok(())
     }
 }
 
-/// Returns a CrubitAttrs object containing all the `#[__crubit::annotate(...)]`
+/// Returns a CrubitAttrs object containing all the `#[doc="CRUBIT_ANNOTATE: key=value"]`
 /// attributes of the specified definition.
-pub fn get_attrs(tcx: TyCtxt, did: impl Into<DefId>) -> Result<CrubitAttrs> {
-    // NB: do not make these lazy globals, symbols are per-session and sessions are
-    // reset in tests. The resulting test failures are very difficult.
-    let crubit_annotate = &[Symbol::intern("__crubit"), Symbol::intern("annotate")];
-    let attr_name_symbol_pairs = [
-        CrubitAttrs::CPP_TYPE,
-        CrubitAttrs::CPP_NAME,
-        CrubitAttrs::CPP_TYPE_INCLUDE,
-        CrubitAttrs::CPP_ENUM,
-        CrubitAttrs::RUST_TO_CPP_CONVERTER,
-        CrubitAttrs::CPP_TO_RUST_CONVERTER,
-    ]
-    .into_iter()
-    .map(|name| (name, Symbol::intern(name)))
-    .collect::<Vec<_>>();
-
+pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
     let mut crubit_attrs = CrubitAttrs::default();
-    // A quick note: the parsing logic is unfortunate, but such is life. We don't
-    // put extra special effort into making the error messages maximally
-    // helpful, because they "should never happen": `__crubit::annotate` calls
-    // are introduced automatically by Crubit itself, so these errors are only
-    // going to be read by Crubit developers when we mess up, not Crubit
-    // _users_.
-    for attr in tcx.get_attrs_by_path(did.into(), crubit_annotate) {
-        let Some(args) = attr.meta_item_list() else {
-            bail!("Invalid #[__crubit::annotate(...)] attribute (not a rustc_hir::hir::MetaItem)");
+    for attr in tcx.get_all_attrs(did) {
+        let Some(comment) = attr.doc_str() else { continue };
+        let Some((_, key_value)) = comment.as_str().split_once("CRUBIT_ANNOTATE:") else {
+            continue;
         };
-        for arg in args {
-            let Some(arg) = arg.meta_item() else {
-                bail!(
-                    "Invalid #[__crubit::annotate(...)] attribute (expected nested meta item, not a literal)"
-                );
-            };
-            for (attr_name, attr_symbol) in attr_name_symbol_pairs.iter() {
-                if arg.path == *attr_symbol {
-                    let bail_message = format!(
-                        "Invalid #[__crubit::annotate({attr_name}=...) attribute (expected =\"...\")"
-                    );
-
-                    let MetaItemKind::NameValue(value) = &arg.kind else {
-                        bail!(bail_message);
-                    };
-                    let LitKind::Str(s, _raw) = value.kind else {
-                        bail!(bail_message);
-                    };
-                    ensure!(
-                        crubit_attrs.get_attr(attr_name).is_none(),
-                        format!("Unexpected duplicate #[__crubit::annotate({attr_name}=...)]")
-                    );
-                    crubit_attrs.set_attr(attr_name, Some(s));
-                }
-            }
-        }
+        let Some((key, value)) = key_value.split_once("=") else {
+            bail!("Invalid CRUBIT_ANNOTATE attribute: `{comment}`. Expected `key=value`")
+        };
+        // Remove optional whitespace (e.g. `key = "value"` vs. `key="value"`).
+        let key = key.trim();
+        let value = value.trim();
+        ensure!(
+            crubit_attrs.get_attr(key)?.is_none(),
+            format!("Unexpected duplicate Crubit attribute: {key}=...")
+        );
+        crubit_attrs.set_attr(key, Some(Symbol::intern(value)))?;
     }
-
     Ok(crubit_attrs)
-}
-
-#[cfg(test)]
-pub mod tests {
-    use super::*;
-    use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
-
-    #[test]
-    fn test_bridged_type() {
-        let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                    cpp_type = "CppType",
-                    cpp_type_include = "crubit/cpp_type.h",
-                    cpp_to_rust_converter = "cpp_to_rust",
-                    rust_to_cpp_converter = "rust_to_cpp")
-                ]
-                pub struct SomeStruct;
-        "#;
-        run_compiler_for_testing(test_src, |tcx| {
-            let attrs = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
-
-            let mut expected_attrs = CrubitAttrs::default();
-            expected_attrs.cpp_type = Some(Symbol::intern("CppType"));
-            expected_attrs.cpp_type_include = Some(Symbol::intern("crubit/cpp_type.h"));
-            expected_attrs.cpp_to_rust_converter = Some(Symbol::intern("cpp_to_rust"));
-            expected_attrs.rust_to_cpp_converter = Some(Symbol::intern("rust_to_cpp"));
-
-            assert_eq!(attrs, expected_attrs);
-        });
-    }
-
-    #[test]
-    fn test_missing() {
-        let test_src = r#"
-                pub struct SomeStruct;
-            "#;
-        run_compiler_for_testing(test_src, |tcx| {
-            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
-            assert_eq!(attr, CrubitAttrs::default());
-        });
-    }
-
-    #[test]
-    fn test_empty() {
-        let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-                #[__crubit::annotate()]
-                pub struct SomeStruct;
-            "#;
-        run_compiler_for_testing(test_src, |tcx| {
-            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
-            assert_eq!(attr, CrubitAttrs::default());
-        });
-    }
-
-    #[test]
-    fn test_cpp_type() {
-        let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-                #[__crubit::annotate(cpp_type = "A C++ Type")]
-                pub struct SomeStruct;
-            "#;
-        run_compiler_for_testing(test_src, |tcx| {
-            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct")).unwrap();
-            assert_eq!(attr.cpp_type.unwrap(), Symbol::intern("A C++ Type"));
-        });
-    }
-
-    #[test]
-    fn test_cpp_name() {
-        let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-                #[__crubit::annotate(cpp_name = "Create")]
-                pub fn new() -> i32 { 0 }
-            "#;
-        run_compiler_for_testing(test_src, |tcx| {
-            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "new")).unwrap();
-            assert_eq!(attr.cpp_name.unwrap(), Symbol::intern("Create"));
-        });
-    }
-
-    #[test]
-    fn test_cpp_name_duplicated() {
-        let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-                #[__crubit::annotate(cpp_name = "Create", cpp_name = "Create2")]
-                pub fn new() -> i32 { 0 }
-            "#;
-        run_compiler_for_testing(test_src, |tcx| {
-            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "new"));
-            assert!(attr.is_err());
-        });
-    }
-
-    #[test]
-    fn test_cpp_type_multi() {
-        let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-                #[__crubit::annotate(cpp_type = "X", cpp_type = "X")]
-                pub struct SomeStruct;
-            "#;
-        run_compiler_for_testing(test_src, |tcx| {
-            let attr = get_attrs(tcx, find_def_id_by_name(tcx, "SomeStruct"));
-            assert!(attr.is_err());
-        });
-    }
 }

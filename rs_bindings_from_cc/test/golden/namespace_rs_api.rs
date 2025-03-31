@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:namespace_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -18,7 +17,7 @@
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy)]
     #[repr(C)]
-    #[__crubit::annotate(cpp_type = "test_namespace_bindings :: S")]
+    ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: S
     pub struct S {
         pub i: ::core::ffi::c_int,
     }
@@ -120,7 +119,7 @@ pub mod test_namespace_bindings_reopened_0 {
     pub mod inner_0 {
         #[derive(Clone, Copy)]
         #[repr(C)]
-        #[__crubit::annotate(cpp_type = "test_namespace_bindings_reopened :: inner :: S")]
+        ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_reopened :: inner :: S
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -211,9 +210,7 @@ pub mod test_namespace_bindings_inline {
     pub mod inner {
         #[derive(Clone, Copy)]
         #[repr(C)]
-        #[__crubit::annotate(
-            cpp_type = "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
-        )]
+        ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: inner :: StructInInlineNamespace
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }

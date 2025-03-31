@@ -41,7 +41,7 @@ pub struct FullyQualifiedName {
     ///
     /// For example, the following struct
     /// ```
-    /// #[__crubit::annotate(cpp_name="Bar")]
+    /// #[crubit_annotate::cpp_layout_equivalent(cpp_name="Bar")]
     /// struct Foo { ... }
     /// ```
     /// will be generated as a C++ struct named `Bar` instead of `Foo`.
@@ -50,7 +50,7 @@ pub struct FullyQualifiedName {
     /// The fully-qualified C++ type to use for this, if this was originally a
     /// C++ type.
     ///
-    /// For example, if a type has `#[__crubit::annotate(cpp_type="x::y")]`,
+    /// For example, if a type has `#[crubit_annotate::cpp_layout_equivalent(cpp_type="x::y")]`,
     /// then cpp_type will be `Some(x::y)`.
     pub cpp_type: Option<Symbol>,
 }

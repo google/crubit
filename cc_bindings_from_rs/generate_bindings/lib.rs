@@ -2056,13 +2056,8 @@ pub mod tests {
     #[test]
     fn test_format_bridged_type_pointer_like_errors() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="const CppType*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=const CppType*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
                 pub struct MissingReprTransparent {
                     pub cpp_type: *const core::ffi::c_void,
                 }
@@ -2070,10 +2065,8 @@ pub mod tests {
                 #[unsafe(no_mangle)]
                 pub fn with_missing_repr_transparent(_: MissingReprTransparent) {}
 
-                #[__crubit::annotate(
-                  cpp_type="const CppType*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=const CppType*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
                 #[repr(transparent)]
                 pub struct NotPointerLike {
                     pub value: i32,
@@ -2087,8 +2080,8 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error handling parameter #0: Can't convert MissingReprTransparent to a C++ \
-                    pointer as it's not `repr(transparent)`"
+                "Error handling parameter #0 of type `MissingReprTransparent`: Can't convert \
+                MissingReprTransparent to a C++ pointer as it's not `repr(transparent)`"
             );
         });
 
@@ -2096,9 +2089,10 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error handling parameter #0: Can't convert NotPointerLike to a C++ pointer as \
-                    its layout is not pointer-like. To be considered pointer-like it may only have \
-                    one non-ZST field that needs to be a C ABI compatible pointer."
+                "Error handling parameter #0 of type `NotPointerLike`: Can't convert \
+                NotPointerLike to a C++ pointer as its layout is not pointer-like. To be \
+                considered pointer-like it may only have one non-ZST field that needs to be a C \
+                ABI compatible pointer."
             );
         });
     }
@@ -2106,13 +2100,8 @@ pub mod tests {
     #[test]
     fn test_format_bridged_func_arg_pointer_like() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="const CppType*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=const CppType*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
                 #[repr(transparent)]
                 pub struct RustTypeView {
                     pub cpp_type: *const core::ffi::c_void,
@@ -2178,15 +2167,11 @@ pub mod tests {
     #[test]
     fn test_format_bridged_func_arg_by_pointer() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="CppType const*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  cpp_to_rust_converter="cpp_pointer_to_rust_struct",
-                  rust_to_cpp_converter="rust_struct_to_cpp_pointer",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=CppType const*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer"]
+                #[repr(transparent)]
                 pub struct RustTypeView {
                     pub cpp_type: *const core::ffi::c_void,
                 }
@@ -2264,15 +2249,10 @@ pub mod tests {
     #[test]
     fn test_format_bridged_func_arg_by_value() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="cpp_ns::CppType",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  rust_to_cpp_converter="convert_rust_to_cpp_type",
-                  cpp_to_rust_converter="convert_cpp_to_rust_type",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=convert_cpp_to_rust_type"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=convert_rust_to_cpp_type"]
                 pub struct RustType {
                     pub x: i32,
                 }
@@ -2352,13 +2332,8 @@ pub mod tests {
     #[test]
     fn test_format_bridged_return_type_pointer_like() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="CppType*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
                 #[repr(transparent)]
                 pub struct RustTypeOwned {
                     pub cpp_type: *mut core::ffi::c_void,
@@ -2426,25 +2401,18 @@ pub mod tests {
     #[test]
     fn test_format_brided_type_deduplicate_extern_c_decls() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="CppType*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  rust_to_cpp_converter="rust_struct_to_cpp_pointer",
-                  cpp_to_rust_converter="cpp_pointer_to_rust_struct",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct"]
                 pub struct RustType1 {
                     pub cpp_type: *const core::ffi::c_void,
                 }
 
-                #[__crubit::annotate(
-                  cpp_type="CppType*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  rust_to_cpp_converter="rust_struct_to_cpp_pointer",
-                  cpp_to_rust_converter="cpp_pointer_to_rust_struct",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct"]
                 pub struct RustType2 {
                     pub cpp_type: *const core::ffi::c_void,
                 }
@@ -2471,15 +2439,10 @@ pub mod tests {
     #[test]
     fn test_format_bridged_return_type_by_pointer() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="CppType*",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  rust_to_cpp_converter="rust_struct_to_cpp_pointer",
-                  cpp_to_rust_converter="cpp_pointer_to_rust_struct",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=CppType*"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_struct_to_cpp_pointer"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_pointer_to_rust_struct"]
                 pub struct RustTypeOwned {
                     pub cpp_type: *const core::ffi::c_void,
                 }
@@ -2561,15 +2524,10 @@ pub mod tests {
     #[test]
     fn test_format_bridged_return_type_by_value() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="cpp_ns::CppType",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  rust_to_cpp_converter="rust_to_cpp_converter",
-                  cpp_to_rust_converter="cpp_to_rust_converter",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_to_cpp_converter"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_to_rust_converter"]
                 pub struct RustType {
                     pub x: i32,
                 }
@@ -2654,15 +2612,10 @@ pub mod tests {
     #[test]
     fn test_bridged_type_unsupported() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[__crubit::annotate(
-                  cpp_type="cpp_ns::CppType",
-                  cpp_type_include="cpp_ns/cpp_type.h",
-                  rust_to_cpp_converter="convert_rust_to_cpp_type",
-                  cpp_to_rust_converter="convert_cpp_to_rust_type",
-                )]
+                #[doc="CRUBIT_ANNOTATE: cpp_type=cpp_ns::CppType"]
+                #[doc="CRUBIT_ANNOTATE: include_path=cpp_ns/cpp_type.h"]
+                #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter=convert_rust_to_cpp_type"]
+                #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter=convert_cpp_to_rust_type"]
                 pub struct RustType {
                     pub x: i32,
                 }
@@ -2687,8 +2640,8 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error handling parameter #0: Function pointers can't have a thunk: Any calling \
-                    convention other than `extern \"C\"` requires a thunk"
+                "Error handling parameter #0 of type `fn() -> RustType`: Function pointers can't \
+                have a thunk: Any calling convention other than `extern \"C\"` requires a thunk"
             );
         });
 
@@ -3184,8 +3137,8 @@ pub mod tests {
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
                                    defined at <crubit_unittests.rs>;l=7: \
-                                   Error handling parameter #0: \
-                                   Generic types are not supported yet (b/259749095)";
+                                   Error handling parameter #0 of type `std::sync::Arc<SomeStruct>`\
+                                   : Generic types are not supported yet (b/259749095)";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -3221,7 +3174,8 @@ pub mod tests {
             let main_api = &result.main_api;
             let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
                                    defined at <crubit_unittests.rs>;l=7: \
-                                   Error handling parameter #0: \
+                                   Error handling parameter #0 of type \
+                                   `std::pin::Pin<&'__anon1 mut SomeStruct>`: \
                                    Generic types are not supported yet (b/259749095)";
             assert_cc_matches!(
                 main_api.tokens,

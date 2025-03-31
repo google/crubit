@@ -107,12 +107,14 @@ rust_library(
 
 crubit_rust_test(
     name = "crubit_attr_test",
-    crate = ":crubit_attr",
+    srcs = ["crubit_attr_test.rs"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
+        ":crubit_attr",
         ":run_compiler_test_support",
+        "@crate_index//:anyhow",
     ],
 )
 

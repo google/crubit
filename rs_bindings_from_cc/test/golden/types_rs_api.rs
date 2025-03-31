@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:types_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -23,7 +22,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "SomeStruct")]
+///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -80,7 +79,7 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
-#[__crubit::annotate(cpp_type = "FieldTypeTestStruct")]
+///CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: ::core::ffi::c_char,

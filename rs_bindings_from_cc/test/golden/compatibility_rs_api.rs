@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:compatibility_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -21,7 +20,7 @@
 /// additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl
 #[::ctor::recursively_pinned]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "CompatibleType")]
+///CRUBIT_ANNOTATE: cpp_type=CompatibleType
 pub struct CompatibleType {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

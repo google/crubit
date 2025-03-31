@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:no_elided_lifetimes_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -22,7 +21,7 @@ pub unsafe fn free_function(p1: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "S")]
+///CRUBIT_ANNOTATE: cpp_type=S
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -73,7 +72,7 @@ impl S {
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "TriviallyCopyableButNontriviallyDestructible")]
+///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -106,7 +105,7 @@ pub unsafe fn take_pointer(p: *mut ::core::ffi::c_int) {
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cpp_type = "WrappedValue")]
+///CRUBIT_ANNOTATE: cpp_type=WrappedValue
 pub struct WrappedValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

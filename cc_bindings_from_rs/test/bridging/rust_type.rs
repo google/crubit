@@ -2,12 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![feature(register_tool)]
-#![register_tool(__crubit)]
-
-#[__crubit::annotate(
+#[crubit_annotate::cpp_convertible(
     cpp_type = "crubit::test::TheCppType",
-    cpp_type_include = "cc_bindings_from_rs/test/bridging/cc_type.h",
+    include_path = "cc_bindings_from_rs/test/bridging/cc_type.h",
     rust_to_cpp_converter = "convert_rust_to_cpp_type",
     cpp_to_rust_converter = "convert_cpp_to_rust_type"
 )]

@@ -1009,7 +1009,7 @@ pub mod tests {
             |result| {
                 assert_eq!(
                     result.unwrap_err(),
-                    "Error handling parameter #0: Failed to format the referent of the reference type `&'__anon1 &'__anon2 i32`: Can't format `&'__anon2 i32`, because references are only supported in function parameter types and return types (b/286256327)"
+                    "Error handling parameter #0 of type `&'__anon1 &'__anon2 i32`: Failed to format the referent of the reference type `&'__anon1 &'__anon2 i32`: Can't format `&'__anon2 i32`, because references are only supported in function parameter types and return types (b/286256327)"
                 )
             },
         );
@@ -1069,7 +1069,7 @@ pub mod tests {
             |result| {
                 assert_eq!(
                     result.unwrap_err(),
-                    "Error handling parameter #0: Failed to format the referent of the reference type `&'a Foo<'a>`: Generic types are not supported yet (b/259749095)"
+                    "Error handling parameter #0 of type `&'a Foo<'a>`: Failed to format the referent of the reference type `&'a Foo<'a>`: Generic types are not supported yet (b/259749095)"
                 )
             },
         );
@@ -1097,11 +1097,7 @@ pub mod tests {
     #[test]
     fn test_format_fn_cpp_name() {
         let test_src = r#"
-                #![feature(register_tool)]
-                #![register_tool(__crubit)]
-
-                #[unsafe(no_mangle)]
-                #[__crubit::annotate(cpp_name="Create")]
+                #[doc="CRUBIT_ANNOTATE: cpp_name=Create"]
                 pub fn foo() {}
             "#;
         test_format_item(test_src, "foo", |result| {
@@ -1601,7 +1597,7 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error formatting function return type: \
+                "Error formatting function return type `impl std::future::Future<Output = ()>`: \
                              The following Rust type is not supported yet: \
                              impl std::future::Future<Output = ()>"
             );
@@ -2002,7 +1998,7 @@ pub mod tests {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
-                "Error handling parameter #0: \
+                "Error handling parameter #0 of type `!`: \
                  The never type `!` is only supported as a return type (b/254507801)"
             );
         });

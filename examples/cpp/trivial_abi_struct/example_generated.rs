@@ -7,10 +7,9 @@
 // Features: supported
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -22,7 +21,7 @@
 /// Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 #[derive(Clone)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "Position")]
+///CRUBIT_ANNOTATE: cpp_type=Position
 pub struct Position {
     pub x: ::core::ffi::c_int,
     pub y: ::core::ffi::c_int,

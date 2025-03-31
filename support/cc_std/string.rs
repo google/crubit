@@ -22,12 +22,11 @@ use core::ptr::NonNull;
 /// conversion between `string` and other types like `&str` or `String` can be
 /// O(n).
 // TODO: Make it mutable?.
-#[__crubit::annotate(
-    cpp_type = "std::string",
-    cpp_type_include = "<string>",
-    cpp_to_rust_converter = "cpp_string_to_rust_string",
-    rust_to_cpp_converter = "rust_string_to_cpp_string"
-)]
+// TODO: add a depedency on `crubit_annotate` to use that directly rather than doc attributes.
+#[doc = "CRUBIT_ANNOTATE: cpp_type=std::string"]
+#[doc = "CRUBIT_ANNOTATE: include_path=<string>"]
+#[doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_string_to_rust_string"]
+#[doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_string_to_cpp_string"]
 #[allow(non_snake_case)]
 pub struct string {
     owned_cpp_string: NonNull<c_void>,

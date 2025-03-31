@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:typedefs_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -17,7 +16,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "SomeStruct")]
+///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -78,7 +77,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "SomeOtherStruct")]
+///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
 pub struct SomeOtherStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -136,7 +135,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeOtherStr
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "SomeUnion")]
+///CRUBIT_ANNOTATE: cpp_type=SomeUnion
 pub union SomeUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -194,7 +193,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeUnion {
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-#[__crubit::annotate(cpp_type = "SomeOtherUnion")]
+///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion
 pub union SomeOtherUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

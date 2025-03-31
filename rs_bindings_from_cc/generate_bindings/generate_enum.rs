@@ -55,10 +55,11 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
     });
     let underlying_type_tokens = underlying_type.to_token_stream(db);
 
+    let annotation = format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}");
     let item = quote! {
         #[repr(transparent)]
         #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-        #[__crubit::annotate(cpp_type=#fully_qualified_cc_name)]
+        #[doc=#annotation]
         pub struct #name(#underlying_type_tokens);
         impl #name {
             #(#enumerators)*

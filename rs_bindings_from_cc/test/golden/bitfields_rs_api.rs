@@ -6,10 +6,9 @@
 // //rs_bindings_from_cc/test/golden:bitfields_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
-#![register_tool(__crubit)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code)]
@@ -17,7 +16,7 @@
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cpp_type = "WithBitfields")]
+///CRUBIT_ANNOTATE: cpp_type=WithBitfields
 pub struct WithBitfields {
     // f1 : 2 bits
     __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
@@ -96,7 +95,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for WithBitfield
 /// generated struct was wrong/missing.
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
-#[__crubit::annotate(cpp_type = "AlignmentRegressionTest")]
+///CRUBIT_ANNOTATE: cpp_type=AlignmentRegressionTest
 pub struct AlignmentRegressionTest {
     // code_point : 31 bits
     // status : 1 bits

@@ -524,7 +524,7 @@ pub mod tests {
     /// https://en.cppreference.com/w/cpp/language/identifiers#Qualified_identifiers
     ///
     /// This may appear in `IR::Record::cc_name`, or in
-    /// `__crubit::annotate(cpp_type=...)`.
+    /// `crubit_annotate::cpp_layout_equivalent(cpp_type=...)`.
     #[gtest]
     fn test_format_cc_ident_qualified_identifiers() {
         assert_cc_matches!(
