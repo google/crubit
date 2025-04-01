@@ -40,13 +40,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: foo_lib_golden :: FooService") alignas(8)
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=17
-  bool handle_request(::foo_service::FooRequest* req,
+  bool handle_request(const ::foo_service::FooRequest* req,
                       ::foo_service::FooResponse* rsp)
       [[clang::annotate_type("lifetime", "__anon1")]];
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=24
-  ::foo_service::FooRequestStats* request_stats() const
+  const ::foo_service::FooRequestStats* request_stats() const
       [[clang::annotate_type("lifetime", "__anon1")]];
 
   // Generated from:
@@ -98,9 +98,9 @@ inline FooService& FooService::operator=(FooService&& other) {
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_handle_urequest(
     ::foo_lib::FooService& [[clang::annotate_type("lifetime", "__anon1")]],
-    ::foo_service::FooRequest*, ::foo_service::FooResponse*);
+    const ::foo_service::FooRequest*, ::foo_service::FooResponse*);
 }
-inline bool FooService::handle_request(::foo_service::FooRequest* req,
+inline bool FooService::handle_request(const ::foo_service::FooRequest* req,
                                        ::foo_service::FooResponse* rsp)
     [[clang::annotate_type("lifetime", "__anon1")]] {
   auto&& self = *this;
@@ -111,15 +111,15 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_request_ustats(
     ::foo_lib::FooService const& [[clang::annotate_type("lifetime",
                                                         "__anon1")]],
-    ::foo_service::FooRequestStats** __ret_ptr);
+    const ::foo_service::FooRequestStats** __ret_ptr);
 }
-inline ::foo_service::FooRequestStats* FooService::request_stats() const
+inline const ::foo_service::FooRequestStats* FooService::request_stats() const
     [[clang::annotate_type("lifetime", "__anon1")]] {
   auto&& self = *this;
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
     ~__return_value_crubit_return_union() { std::destroy_at(&this->val); }
-    ::foo_service::FooRequestStats* val;
+    const ::foo_service::FooRequestStats* val;
   } __return_value_ret_val_holder;
   auto* __return_value_storage = &__return_value_ret_val_holder.val;
   __crubit_internal::__crubit_thunk_request_ustats(self,
