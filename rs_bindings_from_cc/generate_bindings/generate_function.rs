@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{Context, Result};
+use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::make_rs_ident;
 use database::code_snippet::ApiSnippets;
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
@@ -1473,6 +1473,15 @@ fn function_signature(
     derived_record: Option<Rc<Record>>,
     errors: &Errors,
 ) -> Result<BindingsSignature> {
+    if let Some(derived_record) = derived_record.as_deref() {
+        ensure!(
+            db.ir()
+                .target_crubit_features(&derived_record.owning_target)
+                .contains(crubit_feature::CrubitFeature::Experimental),
+            "upcasting is currently experimental, see b/216195042"
+        );
+    }
+
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
     let mut thunk_prepare = quote! {};

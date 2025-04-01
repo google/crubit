@@ -294,6 +294,7 @@ rust_library(
         ":generate_function_thunk",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:crubit_feature",
         "//common:error_report",
         "//common:errors",
         "//rs_bindings_from_cc:ir",
