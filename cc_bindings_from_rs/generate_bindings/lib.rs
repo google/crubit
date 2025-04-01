@@ -367,17 +367,17 @@ fn reexported_symbol_canonical_name_mapping(
         tcx.hir_free_items()
             .filter_map(|item_id| {
                 let local_def_id: LocalDefId = item_id.owner_id.def_id;
-                if let Item { ident, kind: ItemKind::Use(use_path, use_kind), .. } =
+                if let Item { kind: kind @ ItemKind::Use(use_path, use_kind), .. } =
                     tcx.hir_expect_item(local_def_id)
                 {
+                    let ident_str =
+                        &kind.ident().map_or("".to_owned(), |ident| ident.as_str().to_owned());
                     // TODO(b/350772554): Preserve the errors.
-                    collect_alias_from_use(db, ident.as_str(), use_path, use_kind).ok().map(
-                        |aliases| {
-                            aliases.into_iter().map(move |(using_name, type_def_id, def_kind)| {
-                                AliasInfo { using_name, local_def_id, type_def_id, def_kind }
-                            })
-                        },
-                    )
+                    collect_alias_from_use(db, ident_str, use_path, use_kind).ok().map(|aliases| {
+                        aliases.into_iter().map(move |(using_name, type_def_id, def_kind)| {
+                            AliasInfo { using_name, local_def_id, type_def_id, def_kind }
+                        })
+                    })
                 } else {
                     None
                 }
@@ -570,7 +570,7 @@ fn generate_using_statement(
         DefKind::TyAlias => {
             let hir_ty = if def_id.is_local() {
                 let local_def_id = def_id.as_local().unwrap();
-                let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } =
+                let Item { kind: ItemKind::TyAlias(_, hir_ty, ..), .. } =
                     tcx.hir_expect_item(local_def_id)
                 else {
                     panic!("{:#?} is not a type alias", def_id);
@@ -668,7 +668,7 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> R
     let hir_node = tcx.hir_node_by_def_id(local_def_id);
 
     let hir_ty = match hir_node {
-        Node::Item(item) => item.expect_const().0,
+        Node::Item(item) => item.expect_const().1,
         Node::ImplItem(item) => item.expect_const().0,
         _ => panic!("{}", unsupported_node_item_msg),
     };
@@ -713,7 +713,8 @@ fn generate_type_alias(
 ) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
-    let Item { kind: ItemKind::TyAlias(hir_ty, ..), .. } = tcx.hir_expect_item(local_def_id) else {
+    let Item { kind: ItemKind::TyAlias(_, hir_ty, ..), .. } = tcx.hir_expect_item(local_def_id)
+    else {
         panic!("called generate_type_alias on a non-type-alias");
     };
     let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), Some(*hir_ty));
@@ -1084,9 +1085,9 @@ fn generate_item(
     }
 
     let item = match tcx.hir_expect_item(def_id) {
-        Item { kind: ItemKind::Struct(_, generics) |
-                     ItemKind::Enum(_, generics) |
-                     ItemKind::Union(_, generics),
+        Item { kind: ItemKind::Struct(_, _, generics) |
+                     ItemKind::Enum(_, _, generics) |
+                     ItemKind::Union(_, _, generics),
                .. } if !generics.params.is_empty() => {
             bail!("Generic types are not supported yet (b/259749095)");
         },
@@ -1104,12 +1105,13 @@ fn generate_item(
                 .map(|core| Some(generate_adt(db, core)))
         }
         Item { kind: ItemKind::TyAlias(..), ..} => generate_type_alias(db, def_id).map(Some),
-        Item { ident, kind: ItemKind::Use(use_path, use_kind), ..} => {
-            generate_use(db, ident.as_str(), use_path, use_kind).map(Some)
+        Item { kind: kind@ItemKind::Use(use_path, use_kind), ..} => {
+                let ident_str = &kind.ident().map_or("".to_owned(), |ident| ident.as_str().to_owned());
+            generate_use(db, ident_str, use_path, use_kind).map(Some)
         },
         Item { kind: ItemKind::Const(..), .. } => generate_const(db, def_id).map(Some),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `generate_adt`
-        Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `generate_crate`
+        Item { kind: ItemKind::Mod(_, _), .. } =>  // Handled by `generate_crate`
             Ok(None),
         Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
     };

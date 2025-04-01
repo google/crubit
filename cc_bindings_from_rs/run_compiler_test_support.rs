@@ -200,12 +200,15 @@ fn tcx_ensure_ok_analysis(tcx: &TyCtxt) {
 /// Panics if no such item is found, or if there is more than one match.
 pub fn find_def_id_by_name(tcx: TyCtxt, name: &str) -> LocalDefId {
     let hir_items = || tcx.hir_free_items().map(|item_id| tcx.hir_item(item_id));
-    let items_with_matching_name =
-        hir_items().filter(|item| item.ident.name.as_str() == name).collect_vec();
+    let items_with_matching_name = hir_items()
+        .filter(|item| item.kind.ident().map_or(false, |ident| ident.name.as_str() == name))
+        .collect_vec();
     match *items_with_matching_name.as_slice() {
         [] => {
             let found_names = hir_items()
-                .map(|item| item.ident.name.as_str())
+                .map(|item| item.kind.ident())
+                .filter(|ident| ident.is_some())
+                .map(|ident| ident.unwrap().name.as_str().to_owned())
                 .filter(|s| !s.is_empty())
                 .sorted()
                 .dedup()
