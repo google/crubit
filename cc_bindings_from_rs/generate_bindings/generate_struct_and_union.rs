@@ -23,11 +23,11 @@ use quote::format_ident;
 use quote::quote;
 use quote::ToTokens;
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
-use rustc_hir::{AssocItemKind, ItemKind};
+use rustc_hir::{AssocItemKind, ImplItemRef, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
-use rustc_span::def_id::{DefId, LOCAL_CRATE};
+use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use std::collections::{BTreeSet, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -233,6 +233,51 @@ fn generate_cpp_enum<'tcx>(
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
+fn generate_associated_item<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    self_id: LocalDefId,
+    impl_item_ref: &ImplItemRef,
+    member_function_names: &mut HashSet<String>,
+) -> Option<ApiSnippets> {
+    let tcx = db.tcx();
+    let def_id = impl_item_ref.id.owner_id.def_id;
+    if !is_exported(tcx, def_id.to_def_id()) {
+        return None;
+    }
+    let result = match impl_item_ref.kind {
+        AssocItemKind::Fn { .. } => {
+            let result = db.generate_function(def_id);
+            if result.is_ok() {
+                let cpp_name =
+                    FullyQualifiedName::new(db, def_id.into()).cpp_name.unwrap().to_string();
+                member_function_names.insert(cpp_name);
+            }
+            result
+        }
+        AssocItemKind::Const => generate_const(db, def_id),
+        other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
+    };
+    let result = result
+        .and_then(|snippet| snippet.resolve_feature_requirements(crate_features(db, LOCAL_CRATE)));
+    match result {
+        Err(err) => {
+            if crubit_attr::get_attrs(tcx, def_id.to_def_id()).unwrap().must_bind {
+                let self_name = crate::item_name(db, self_id);
+                let item_name = impl_item_ref.ident.as_str();
+                let must_bind_message = format!(
+                    "Failed to generate bindings for `{self_name}::{item_name}`:\n\
+                    {err:?}\n\
+                    This is a hard error because `{self_name}::{item_name}` was annotated with \
+                    `#[crubit_annotate::must_bind]`"
+                );
+                db.fatal_errors().report(&must_bind_message);
+            }
+            Some(generate_unsupported_def(db, def_id, err))
+        }
+        Ok(result) => Some(result),
+    }
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `generate_adt_core` returns success we have committed to emitting C++
@@ -317,32 +362,7 @@ pub fn generate_adt<'tcx>(
             tcx.def_span(def_id)
         })
         .filter_map(|impl_item_ref| {
-            let def_id = impl_item_ref.id.owner_id.def_id;
-            if !is_exported(db.tcx(), def_id.to_def_id()) {
-                return None;
-            }
-            let result = match impl_item_ref.kind {
-                AssocItemKind::Fn { .. } => {
-                    let result = db.generate_function(def_id);
-                    if result.is_ok() {
-                        let cpp_name = FullyQualifiedName::new(db, def_id.into())
-                            .cpp_name
-                            .unwrap()
-                            .to_string();
-                        member_function_names.insert(cpp_name);
-                    }
-                    result
-                }
-                AssocItemKind::Const => generate_const(db, def_id),
-                other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
-            };
-            let result = result.and_then(|snippet| {
-                snippet.resolve_feature_requirements(crate_features(db, LOCAL_CRATE))
-            });
-            match result {
-                Err(err) => Some(generate_unsupported_def(db, def_id, err)),
-                Ok(result) => Some(result),
-            }
+            generate_associated_item(db, local_def_id, impl_item_ref, &mut member_function_names)
         })
         .collect();
 

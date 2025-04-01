@@ -10,7 +10,7 @@ use crate::sugared_ty::SugaredTy;
 use crate::type_location::TypeLocation;
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
-use error_report::ErrorReporting;
+use error_report::{ErrorReporting, ReportFatalError};
 use proc_macro2::TokenStream;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId};
@@ -62,6 +62,13 @@ memoized::query_group! {
       /// Error collector for generating reports of errors encountered during the generation of bindings.
       #[input]
       fn errors(&self) -> Rc<dyn ErrorReporting>;
+
+      /// A collection of errors that should cause bindings generation to fail.
+      ///
+      /// These errors should be issued only in response to misusage of Crubit itself, such as
+      /// incorrect use of Crubit-specific annotations.
+      #[input]
+      fn fatal_errors(&self) -> Rc<dyn ReportFatalError>;
 
       #[input]
       fn no_thunk_name_mangling(&self) -> bool;

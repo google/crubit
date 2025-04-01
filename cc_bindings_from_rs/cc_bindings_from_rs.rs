@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
-use error_report::{ErrorReport, ErrorReporting};
+use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError};
 use generate_bindings::{Database, IncludeGuard};
 use run_compiler::run_compiler;
 use token_stream_printer::{
@@ -41,6 +41,7 @@ fn new_db<'tcx>(
     cmdline: &Cmdline,
     tcx: TyCtxt<'tcx>,
     errors: Rc<dyn ErrorReporting>,
+    fatal_errors: Rc<dyn ReportFatalError>,
 ) -> Database<'tcx> {
     let crubit_support_path_format = cmdline.crubit_support_path_format.as_str().into();
 
@@ -87,6 +88,7 @@ fn new_db<'tcx>(
         crate_name_to_namespace.into(),
         crate_renames.into(),
         errors,
+        fatal_errors,
         cmdline.no_thunk_name_mangling,
         include_guard,
     )
@@ -97,11 +99,17 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
 
     let generate_error_report = cmdline.error_report_out.is_some();
     let (error_report, errors) = ErrorReport::new_rc_or_ignore(generate_error_report);
+    let fatal_errors = Rc::new(FatalErrors::new());
 
     let BindingsTokens { cc_api, cc_api_impl } = {
-        let db = new_db(cmdline, tcx, errors);
+        let db = new_db(cmdline, tcx, errors, fatal_errors.clone());
         generate_bindings(&db)?
     };
+
+    let fatal_error_message = fatal_errors.take_string();
+    if !fatal_error_message.is_empty() {
+        return Err(arc_anyhow::Error::msg(fatal_error_message));
+    }
 
     {
         let cc_api = cc_tokens_to_formatted_string(cc_api, &cmdline.clang_format_exe_path)?;

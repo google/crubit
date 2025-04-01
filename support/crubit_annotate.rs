@@ -305,3 +305,33 @@ pub fn cpp_enum(attribute: TokenStream, input: TokenStream) -> TokenStream {
         key_value_to_doc_comment("cpp_enum", &kind_str)
     })
 }
+
+/// Enforces that a Rust function or type receives C++ bindings.
+///
+/// Example:
+///
+/// ```rs
+/// #[crubit_annotate::must_bind]
+/// pub fn my_function() -> i32 {...}
+/// ```
+///
+/// By default, Crubit will gracefully omit bindings for functions and types that cannot be bound to
+/// C++. Applying `#[must_bind]` to the item ensures that Crubit will fail at bindings generation
+/// time if the item cannot be bound to C++.
+///
+/// This can be useful for ensuring that particular functions or types are usable from C++.
+#[proc_macro_attribute]
+pub fn must_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if !attribute.is_empty() {
+            return TokenStream::from(
+                syn::Error::new(
+                    attribute.into_iter().next().unwrap().span().into(),
+                    "The `must_bind` annotation does not accept any arguments.",
+                )
+                .into_compile_error(),
+            );
+        }
+        key_value_to_doc_comment("must_bind", "")
+    })
+}

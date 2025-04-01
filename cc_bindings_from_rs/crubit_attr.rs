@@ -13,7 +13,7 @@
 use anyhow::{bail, ensure, Result};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
-use rustc_span::symbol::Symbol;
+use rustc_span::symbol::{kw, Symbol};
 
 /// A collection of attributes applied via `#[crubit_annotate::...]`.
 ///
@@ -81,17 +81,37 @@ pub struct CrubitAttrs {
     /// `cpp_type`. `rs_out` is a valid pointer to uninitialized instance of the
     /// annotated Rust Type.
     pub cpp_to_rust_converter: Option<Symbol>,
+
+    /// Whether the annotated item must be bound to C++.
+    ///
+    /// By default, when a given item does not receive bindings, it is replaced
+    /// by a failure marker, such as a comment, which explains that bindings
+    /// were not generated, and why. If this is true, then instead of replacing
+    /// with a failure marker, bindings generation will fail outright at build time.
+    ///
+    /// This can be used to make failures more obvious, and occur earlier in the
+    /// development process.
+    ///
+    /// For example, the following annotation indicates that the Rust function
+    /// `new` must be bound to C++:
+    ///
+    /// ```
+    /// #[crubit_annotate::must_bind]
+    /// pub fn new() -> i32 {...}
+    /// ```
+    pub must_bind: bool,
 }
 
 impl CrubitAttrs {
-    pub const CPP_TYPE: &'static str = "cpp_type";
-    pub const CPP_NAME: &'static str = "cpp_name";
-    pub const CPP_TYPE_INCLUDE: &'static str = "include_path";
-    pub const CPP_ENUM: &'static str = "cpp_enum";
-    pub const RUST_TO_CPP_CONVERTER: &'static str = "rust_to_cpp_converter";
-    pub const CPP_TO_RUST_CONVERTER: &'static str = "cpp_to_rust_converter";
+    const CPP_TYPE: &'static str = "cpp_type";
+    const CPP_NAME: &'static str = "cpp_name";
+    const CPP_TYPE_INCLUDE: &'static str = "include_path";
+    const CPP_ENUM: &'static str = "cpp_enum";
+    const RUST_TO_CPP_CONVERTER: &'static str = "rust_to_cpp_converter";
+    const CPP_TO_RUST_CONVERTER: &'static str = "cpp_to_rust_converter";
+    const MUST_BIND: &'static str = "must_bind";
 
-    pub fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
+    fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
         Ok(match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type,
             CrubitAttrs::CPP_NAME => self.cpp_name,
@@ -99,11 +119,13 @@ impl CrubitAttrs {
             CrubitAttrs::CPP_ENUM => self.cpp_enum,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
+            // MUST_BIND is a boolean attribute, so it does not have a Symbol value.
+            CrubitAttrs::MUST_BIND => self.must_bind.then_some(kw::Empty),
             _ => bail!("Invalid attribute name: \"{name}\""),
         })
     }
 
-    pub fn set_attr(&mut self, name: &str, symbol: Option<Symbol>) -> Result<()> {
+    fn set_attr(&mut self, name: &str, symbol: Option<Symbol>) -> Result<()> {
         match name {
             CrubitAttrs::CPP_TYPE => self.cpp_type = symbol,
             CrubitAttrs::CPP_NAME => self.cpp_name = symbol,
@@ -111,6 +133,7 @@ impl CrubitAttrs {
             CrubitAttrs::CPP_ENUM => self.cpp_enum = symbol,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
+            CrubitAttrs::MUST_BIND => self.must_bind = true,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())

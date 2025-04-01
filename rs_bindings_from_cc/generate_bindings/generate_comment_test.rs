@@ -5,9 +5,8 @@
 //! Tests for comment generation.
 
 use arc_anyhow::Result;
-use database::db::FatalErrors;
 use database::{BindingsGenerator, Database};
-use error_report::ErrorReport;
+use error_report::{ErrorReport, FatalErrors};
 use ffi_types::Environment;
 use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};

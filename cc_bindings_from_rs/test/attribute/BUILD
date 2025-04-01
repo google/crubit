@@ -46,3 +46,33 @@ crubit_cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+rust_library(
+    name = "must_bind",
+    srcs = ["must_bind.rs"],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+)
+
+golden_test(
+    name = "must_bind_golden_test",
+    basename = "must_bind",
+    golden_h = "must_bind_cc_api.h",
+    golden_rs = "must_bind_cc_api_impl.rs",
+    rust_library = "must_bind",
+)
+
+cc_bindings_from_rust(
+    name = "must_bind_cc_api",
+    crate = ":must_bind",
+)
+
+crubit_cc_test(
+    name = "must_bind_test",
+    srcs = ["must_bind_test.cc"],
+    deps = [
+        ":must_bind_cc_api",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

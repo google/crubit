@@ -6,9 +6,9 @@
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
-use database::db::{BindingsGenerator, Database, ReportFatalError};
+use database::db::{BindingsGenerator, Database};
 use database::rs_snippet::RsTypeKind;
-use error_report::{bail, ErrorReporting};
+use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};

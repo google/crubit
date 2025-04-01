@@ -6,8 +6,8 @@
 
 use arc_anyhow::Result;
 use database::code_snippet::BindingsTokens;
-use database::db::{Database, FatalErrors};
-use error_report::{bail, ErrorReport};
+use database::db::Database;
+use error_report::{bail, ErrorReport, FatalErrors};
 use ffi_types::Environment;
 use generate_bindings::{generate_bindings_tokens, new_database};
 use ir::IR;

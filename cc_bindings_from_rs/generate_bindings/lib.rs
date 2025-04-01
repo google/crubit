@@ -39,7 +39,7 @@ use database::{
     TypeLocation,
 };
 pub use database::{Database, IncludeGuard};
-use error_report::{anyhow, bail, ErrorReporting};
+use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use query_compiler::{
@@ -117,6 +117,7 @@ pub fn new_database<'db>(
     crate_name_to_namespace: Rc<HashMap<Rc<str>, Rc<str>>>,
     crate_renames: Rc<HashMap<Rc<str>, Rc<str>>>,
     errors: Rc<dyn ErrorReporting>,
+    fatal_errors: Rc<dyn ReportFatalError>,
     no_thunk_name_mangling: bool,
     h_out_include_guard: IncludeGuard,
 ) -> Database<'db> {
@@ -129,6 +130,7 @@ pub fn new_database<'db>(
         crate_name_to_namespace,
         crate_renames,
         errors,
+        fatal_errors,
         no_thunk_name_mangling,
         h_out_include_guard,
         support_header,
@@ -1069,11 +1071,46 @@ fn generate_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
     quote! { __COMMENT__ #doc_comment}
 }
 
+/// Returns the name of the item identified by `local_def_id`, or "<unknown>" if
+/// the item can't be identified.
+fn item_name(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Symbol {
+    db.tcx()
+        .hir_expect_item(local_def_id)
+        .kind
+        .ident()
+        .map(|ident| ident.name)
+        .unwrap_or_else(|| Symbol::intern("<unknown>"))
+}
+
 /// Formats a HIR item idenfied by `def_id`.  Returns `None` if the item
 /// can be ignored. Returns an `Err` if the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
 fn generate_item(
+    db: &dyn BindingsGenerator<'_>,
+    local_def_id: LocalDefId,
+) -> Result<Option<ApiSnippets>> {
+    let tcx = db.tcx();
+    let generated = generate_item_impl(db, local_def_id);
+    let attributes = crubit_attr::get_attrs(tcx, local_def_id.to_def_id()).unwrap();
+    if attributes.must_bind {
+        if let Err(e) = &generated {
+            let item_name = item_name(db, local_def_id);
+            let must_bind_message = format!(
+                "Failed to generate bindings for `{item_name}`:\n\
+                {e:?}\n\
+                This is a hard error because `{item_name}` was annotated with \
+                `#[crubit_annotate::must_bind]`"
+            );
+            db.fatal_errors().report(&must_bind_message);
+        }
+    }
+    generated
+}
+
+// A helper for `generate_item`.
+// The wrapper is used to ensure that the `must_bind` annotation is enforced.
+fn generate_item_impl(
     db: &dyn BindingsGenerator<'_>,
     def_id: LocalDefId,
 ) -> Result<Option<ApiSnippets>> {
@@ -1358,7 +1395,7 @@ pub mod tests {
 
     use quote::quote;
 
-    use error_report::IgnoreErrors;
+    use error_report::{FatalErrors, IgnoreErrors};
     use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
@@ -4584,6 +4621,7 @@ pub mod tests {
             /* crate_name_to_namespace= */ HashMap::default().into(),
             /* crate_renames= */ HashMap::default().into(),
             /* errors = */ Rc::new(IgnoreErrors),
+            /* fatal_errors= */ Rc::new(FatalErrors::new()),
             /* no_thunk_name_mangling= */ true,
             /* include_guard */ IncludeGuard::PragmaOnce,
         )

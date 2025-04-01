@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use database::code_snippet::{Bindings, FfiBindings};
-use database::db::FatalErrors;
-use error_report::{ErrorReport, ErrorReporting};
+use error_report::{ErrorReport, ErrorReporting, FatalErrors};
 use ffi_types::{Environment, FfiU8Slice, FfiU8SliceBox};
 use generate_bindings::generate_bindings;
 use std::ffi::OsString;

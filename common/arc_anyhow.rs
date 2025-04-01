@@ -39,6 +39,14 @@ use std::sync::Arc;
 pub struct Error(Arc<anyhow::Error>);
 
 impl Error {
+    /// Create a new error object from a printable error message.
+    pub fn msg<M>(message: M) -> Self
+    where
+        M: Display + Debug + Send + Sync + 'static,
+    {
+        Self(Arc::new(anyhow::Error::msg(message)))
+    }
+
     /// Convert this into an `anyhow::Error`.
     ///
     /// This creates an extra layer of pointer indirection and should be avoided
@@ -55,7 +63,11 @@ impl Error {
         // This crate's `StdError` type is private, so recurse into it to get an
         // error the caller might expect to find.
         let e = self.0.root_cause();
-        if let Some(e) = e.downcast_ref::<StdError>() { e.0.root_cause() } else { e }
+        if let Some(e) = e.downcast_ref::<StdError>() {
+            e.0.root_cause()
+        } else {
+            e
+        }
     }
 
     pub fn context<C>(self, context: C) -> Self
