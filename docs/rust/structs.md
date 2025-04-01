@@ -12,7 +12,7 @@ To receive C++ bindings, the `struct` must be movable in C++. See
 Given the following Rust module:
 
 ```live-snippet
-cs/file:examples/rust/struct/example.rs content:^([^/\n])([^!\n]|$)[^\n]*
+cs/file:examples/rust/struct/example.rs class:Struct
 ```
 
 Crubit will generate the following bindings:

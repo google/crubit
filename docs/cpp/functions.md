@@ -23,14 +23,14 @@ are translated as non-method associated functions.
 Given the following C++ header:
 
 ```live-snippet
-cs/file:examples/cpp/function/example.h content:^([^/#\n])[^\n]*
+cs/file:examples/cpp/function/example.h function:add_two_integers
 ```
 
-Crubit will generate the following bindings, containing a safe public function
-and the corresponding FFI glue:
+Crubit will generate the following bindings, with a safe public function
+that calls into the corresponding FFI glue:
 
 ```live-snippet
-cs/file:examples/cpp/function/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
+cs/file:examples/cpp/function/example_generated.rs function:add_two_integers
 ```
 
 ### Methods
@@ -38,13 +38,13 @@ cs/file:examples/cpp/function/example_generated.rs content:^([^/\n])([^!\n]|$)[^
 Given the following C++ header:
 
 ```live-snippet
-cs/file:examples/cpp/method/example.h content:^([^/#\n])[^\n]*
+cs/file:examples/cpp/method/example.h class:Bar
 ```
 
 Crubit will generate the following bindings:
 
 ```live-snippet
-cs/file:examples/cpp/method/example_generated.rs symbol:foo::Bar
+cs/file:examples/cpp/method/example_generated.rs class:Bar
 ```
 
 ```live-snippet

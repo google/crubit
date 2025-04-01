@@ -25,7 +25,7 @@ cs/file:examples/cpp/enum/example.h class:Color
 Crubit will generate the following bindings:
 
 ```live-snippet
-cs/file:examples/cpp/enum/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
+cs/file:examples/cpp/enum/example_generated.rs class:Color
 ```
 
 ## Why isn't it an `enum`?

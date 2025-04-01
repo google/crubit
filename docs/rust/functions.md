@@ -21,11 +21,11 @@ types, with some restrictions to ensure safety. See [References](#references).
 Given the following Rust crate:
 
 ```live-snippet
-cs/file:examples/rust/function/example.rs content:^([^/\n])([^!\n]|$)[^\n]*
+cs/file:examples/rust/function/example.rs function:add_two_integers
 ```
 
-Crubit will generate the following function declaration, plus accompanying glue
-code:
+Crubit will generate the following function declaration, which calls into
+accompanying glue code:
 
 ```live-snippet
 cs/file:examples/rust/function/example_generated.h function:add_two_integers

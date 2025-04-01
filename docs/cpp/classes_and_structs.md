@@ -17,11 +17,10 @@ Given the following C++ header:
 cs/file:examples/cpp/trivial_struct/example.h class:Position
 ```
 
-Crubit will generate a struct with the same layout, as well as some debug
-assertions to ensure the bindings are correct.
+Crubit will generate a struct with the same layout:
 
 ```live-snippet
-cs/file:examples/cpp/trivial_struct/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
+cs/file:examples/cpp/trivial_struct/example_generated.rs class:Position
 ```
 
 For an example of a trivially-relocatable class with a destructor, see

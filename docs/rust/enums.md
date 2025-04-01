@@ -11,7 +11,7 @@ To receive C++ bindings, the `enum` must be movable in C++. See
 Given the following Rust crate:
 
 ```live-snippet
-cs/file:examples/rust/enum/example.rs content:^([^/\n])([^!\n]|$)[^\n]*
+cs/file:examples/rust/enum/example.rs class:Color
 ```
 
 Crubit will generate the following bindings:
