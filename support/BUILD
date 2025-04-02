@@ -1,7 +1,7 @@
 """Support libraries that the generated Rust/C++ bindings depend upon."""
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -66,7 +66,7 @@ crubit_rust_test(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "ctor_test",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
@@ -78,7 +78,7 @@ crubit_rust_test(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "ctor_proc_macros_e2e_test",
     srcs = ["ctor_proc_macros_test.rs"],
     # LINT.IfChange
@@ -90,7 +90,7 @@ crubit_rust_test(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "ctor_macro_test",
     srcs = ["ctor_macro_test.rs"],
     deps = [
@@ -119,7 +119,7 @@ rust_proc_macro(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "forward_declare_macros_test",
     srcs = ["forward_declare_macros_test.rs"],
     deps = [
@@ -139,7 +139,7 @@ rust_library(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "oops_test",
     srcs = ["oops.rs"],
     # LINT.IfChange
@@ -158,7 +158,7 @@ rust_library(
     ],
 )
 
-crubit_rust_test(
+rust_test(
     name = "bridge_rust_test",
     srcs = ["bridge.rs"],
     deps = [
@@ -175,7 +175,7 @@ cc_library(
     ],
 )
 
-crubit_cc_test(
+cc_test(
     name = "bridge_cpp_test",
     srcs = ["bridge_test.cc"],
     deps = [
