@@ -142,8 +142,36 @@ llvm::json::Value CcType::ToJson() const {
             };
           },
           [&](const CcType::Record& record) {
+            llvm::json::Value builtin_bridge_type_value = nullptr;
+            if (record.builtin_bridge_type.has_value()) {
+              builtin_bridge_type_value = std::visit(
+                  visitor{
+                      [&](const CcType::Record::StdOptional& std_optional) {
+                        return llvm::json::Object{
+                            {"StdOptional",
+                             llvm::json::Object{
+                                 {"inner_type", *std_optional.inner_type},
+                             }},
+                        };
+                      },
+                      [&](const CcType::Record::StdPair& std_pair) {
+                        return llvm::json::Object{
+                            {"StdPair",
+                             llvm::json::Object{
+                                 {"first_type", *std_pair.first_type},
+                                 {"second_type", *std_pair.second_type},
+                             }},
+                        };
+                      },
+                  },
+                  *record.builtin_bridge_type);
+            }
             return llvm::json::Object{
-                {"Record", llvm::json::Object{{"id", record.id}}}};
+                {"Record",
+                 llvm::json::Object{
+                     {"id", record.id},
+                     {"builtin_bridge_type", builtin_bridge_type_value},
+                 }}};
           }},
       variant);
 

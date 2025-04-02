@@ -930,7 +930,61 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
         type_string, import_status.message()));
   }
 
-  return ConvertTypeDecl(specialization_decl);
+  CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_type,
+                          ConvertTypeDecl(specialization_decl));
+  CRUBIT_ASSIGN_OR_RETURN(
+      std::optional<CcType::Record::BuiltinBridgeType> builtin_bridge_type,
+      AsBuiltinBridgeType(specialization_decl));
+  auto* record = std::get_if<CcType::Record>(&mapped_type.cpp_type.variant);
+  CHECK(record != nullptr);
+  record->builtin_bridge_type = std::move(builtin_bridge_type);
+  return mapped_type;
+}
+
+absl::StatusOr<std::optional<CcType::Record::BuiltinBridgeType>>
+Importer::AsBuiltinBridgeType(
+    const clang::ClassTemplateSpecializationDecl* decl) {
+  const clang::CXXRecordDecl* cxx_record_decl =
+      decl->getSpecializedTemplate()->getTemplatedDecl();
+
+  const clang::DeclContext* context = cxx_record_decl->getDeclContext();
+  bool is_std_namespace = false;
+  while (context) {
+    if (context->isStdNamespace()) {
+      is_std_namespace = true;
+      break;
+    }
+    context = context->getParent();
+  }
+
+  if (!is_std_namespace) {
+    return std::nullopt;
+  }
+
+  clang::StringRef name = cxx_record_decl->getName();
+  auto mapped_type_of_arg = [&](int index) {
+    return ConvertQualType(
+        /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
+        /*lifetimes=*/nullptr,
+        /*ref_qualifier_kind=*/std::nullopt,
+        /*nullable=*/false);
+  };
+
+  if (name == "optional") {
+    CRUBIT_ASSIGN_OR_RETURN(MappedType inner, mapped_type_of_arg(0));
+    return {CcType::Record::StdOptional{
+        .inner_type = std::make_shared<CcType>(std::move(inner).cpp_type),
+    }};
+  } else if (name == "pair") {
+    CRUBIT_ASSIGN_OR_RETURN(MappedType first, mapped_type_of_arg(0));
+    CRUBIT_ASSIGN_OR_RETURN(MappedType second, mapped_type_of_arg(1));
+    return {CcType::Record::StdPair{
+        .first_type = std::make_shared<CcType>(std::move(first).cpp_type),
+        .second_type = std::make_shared<CcType>(std::move(second).cpp_type)}};
+  }
+  // Add builtin bridge types here as needed.
+
+  return std::nullopt;
 }
 
 absl::StatusOr<MappedType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {

@@ -380,7 +380,15 @@ pub enum CcTypeVariant {
     },
     Record {
         id: ItemId,
+        builtin_bridge_type: Option<BuiltinBridgeType>,
     },
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum BuiltinBridgeType {
+    StdOptional { inner_type: Rc<CcType> },
+    StdPair { first_type: Rc<CcType>, second_type: Rc<CcType> },
 }
 
 impl CcTypeVariant {
@@ -408,7 +416,7 @@ impl TypeWithDeclId for RsType {
 impl TypeWithDeclId for CcType {
     fn decl_id(&self) -> Option<ItemId> {
         match &self.variant {
-            CcTypeVariant::Record { id } => Some(*id),
+            CcTypeVariant::Record { id, .. } => Some(*id),
             _ => None,
         }
     }

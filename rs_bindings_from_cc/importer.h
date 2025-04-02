@@ -7,9 +7,7 @@
 
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
-#include <variant>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -17,7 +15,6 @@
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/status/statusor.h"
-#include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
@@ -34,6 +31,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
@@ -173,6 +171,11 @@ class Importer final : public ImportContext {
   // the template instantiation.
   absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type);
+  // Helper function for `ConvertTemplateSpecializationType`.
+  // Returns the bridge type of the given `decl` if it is a builtin bridge type
+  // (e.g., `std::optional`). Otherwise, returns `std::nullopt`.
+  absl::StatusOr<std::optional<CcType::Record::BuiltinBridgeType>>
+  AsBuiltinBridgeType(const clang::ClassTemplateSpecializationDecl* decl);
 
   // The different decl importers. Note that order matters: the first importer
   // to successfully match a decl "wins", and no other importers are tried.

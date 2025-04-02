@@ -171,9 +171,22 @@ struct CcType {
     std::string spelling;
   };
 
-  // A record type.
+  // A record type. It may or may not be a bridge type.
   struct Record {
+    struct StdOptional {
+      std::shared_ptr<CcType> inner_type;
+    };
+
+    struct StdPair {
+      std::shared_ptr<CcType> first_type;
+      std::shared_ptr<CcType> second_type;
+    };
+
+    // Add more builtin bridge types here as needed.
+    using BuiltinBridgeType = std::variant<StdOptional, StdPair>;
+
     ItemId id;
+    std::optional<BuiltinBridgeType> builtin_bridge_type = std::nullopt;
   };
 
   std::variant<Primitive, Pointer, FuncValue, Record> variant;
