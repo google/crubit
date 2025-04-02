@@ -16,6 +16,10 @@ TEST(ModulesTest, BasicModule) {
   ASSERT_EQ(123 + 456, modules::basic_module::add_i32(123, 456));
 }
 
+TEST(ModulesTest, DeprecatedModule) {
+  ASSERT_EQ(123 + 456, modules::deprecated_module::add_i32(123, 456));
+}
+
 TEST(ModulesTest, ImplInSeparatePrivateModule) {
   namespace test = modules::impl_in_separate_private_module;
   test::Foo foo = test::Foo::create(123);

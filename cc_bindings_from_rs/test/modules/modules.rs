@@ -11,6 +11,13 @@ pub mod basic_module {
     }
 }
 
+#[deprecated]
+pub mod deprecated_module {
+    pub fn add_i32(x: i32, y: i32) -> i32 {
+        crate::basic_module::add_i32(x, y)
+    }
+}
+
 /// This is a regression test that verifies that thunk impls use the right
 /// fully-qualified name when referring to methods:
 ///

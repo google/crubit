@@ -254,7 +254,7 @@ fn format_with_cc_body(
         let namespace_cc_idents =
             ns.0.iter().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
         Ok(quote! {
-            __NEWLINE__ #(#attributes)* namespace #(#namespace_cc_idents)::* { __NEWLINE__
+            __NEWLINE__ namespace #(#attributes)* #(#namespace_cc_idents)::* { __NEWLINE__
                 #body
             __NEWLINE__ }  __NEWLINE__
         })
@@ -1891,8 +1891,7 @@ pub mod tests {
                 bindings.cc_api,
                 quote! {
                     ...
-                        [[deprecated]]
-                        namespace some_module {
+                        namespace [[deprecated]] some_module {
                             ...
                         }  // namespace some_module
                     ...
@@ -1915,8 +1914,9 @@ pub mod tests {
                 bindings.cc_api,
                 quote! {
                     ...
+                        namespace
                         [[deprecated("Use other_module instead")]]
-                        namespace some_module {
+                        some_module {
                             ...
                         }  // namespace some_module
                     ...
@@ -1939,8 +1939,9 @@ pub mod tests {
                 bindings.cc_api,
                 quote! {
                     ...
+                        namespace
                         [[deprecated("Use other_module instead")]]
-                        namespace some_module {
+                        some_module {
                             ...
                         }  // namespace some_module
                     ...
