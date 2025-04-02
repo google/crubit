@@ -163,4 +163,83 @@
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_unsafe_impl" __VA_OPT__(, ) \
                                __VA_ARGS__)
 
+// Declare a Rust type as the bridge type for binding generation.
+//
+// This can be applied to a struct, class, or enum.
+//
+// Let's walk through an example, starting with the BUILD file:
+//
+// ```bzl
+// cc_library(
+//   name = "example",
+//   hdrs = ["example.h"],
+//   additional_rust_srcs_for_crubit_bindings = [":additional_example_src"],
+// )
+//
+// additional_rust_srcs_for_crubit_bindings(
+//     name = "additional_example_src",
+//     srcs = ["additional_example_src.rs"],
+// )
+//
+// rust_library(
+//     name = "example_rs",
+//     srcs = ["example.rs"],
+//     cc_deps = [":example"],
+// )
+// ```
+//
+// There are two main targets: :example and :additional_example_src. If the Rust
+// side of the bridge type isn't provided by Rust std, then it must be provided
+// in the additional_rust_srcs_for_crubit_bindings. :example_rs is simply a Rust
+// library that shows how a Rust library can consume the C++ bindings and its
+// bridge type.
+//
+// Here's the C++ bridge type with the annotation, as well as a function that
+// returns it:
+//
+// ```c++
+// // example.h
+// struct CRUBIT_BRIDGE("MyRustStruct", "rust_to_cpp", "cpp_to_rust")
+//   MyCppStruct {
+//     std::string name;
+// };
+// MyCppStruct foo();
+// ```
+//
+// For this example, we'll make a native Rust struct that contains a Rust String
+// field, defined in additional_example_src.rs:
+//
+// ```rust
+// // additional_example_src.rs
+// pub struct MyRustStruct {
+//   pub name: String,
+// }
+// ```
+//
+// With the provided BUILD configuration above, we can now use the bridge type
+// and methods that use the bridge type in Rust.
+//
+// ```rust
+// // example.rs
+// pub fn print_foo() {
+//   let s: example::MyRustStruct = example::foo();
+//   println!("{}", s.name);
+// }
+// ```
+//
+// `ty` must be a path to a Rust type. If it starts with `::`, it will be
+// treated as a fully-qualified path, i.e. it can refer to types defined outside
+// of (but still visible to) the current build target. Otherwise, it will assume
+// the Rust type is defined in the Rust bindings by prefixing it with `crate::`
+// in all references, which requires defining the type in an
+// `additional_rust_srcs_for_crubit_bindings`.
+//
+// SAFETY:
+//   * `rust_to_cpp` must be a valid function name, and its signature must be
+//     `void rust_to_cpp (void* rust_struct, MyCppStruct* cpp_struct)`.
+//   * `cpp_to_rust` must be valid function name and its signature must be
+//     `void cpp_to_rust (MyCppStruct* cpp_struct, void* rust_struct)`.
+#define CRUBIT_BRIDGE(ty, rust_to_cpp, cpp_to_rust) \
+  CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty, rust_to_cpp, cpp_to_rust)
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

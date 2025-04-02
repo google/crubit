@@ -77,42 +77,7 @@
 #define CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(t) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type_cpp_to_rust_converter", t)
 
-// Declare a Rust type as the bridge type for binding generation.
-//
-// This can be applied to a struct, class, or enum.
-//
-// For example, We have the following C++ struct and its Rust bridge
-// counterpart:
-//
-// ```c++
-// struct
-//   CRUBIT_INTERNAL_BRIDGE_SUPPORT("MyRustStruct", "rust_to_cpp",
-//   "cpp_to_rust") MyCppStruct {
-//     std::string name;
-// };
-// ```
-//
-// ```rust
-// pub struct MyRustStruct {
-//   name: String,
-// }
-// ```
-// Then the following C++ api will be translated to Rust:
-//
-// ```c++
-// MyCppStruct foo();
-// ```
-//
-// ```rust
-// pub fn foo() -> MyRustStruct;
-// ```
-//
-// SAFETY:
-//   * `ty` must be a fully-qualified valid Rust type name.
-//   * `rust_to_cpp` must be a valid function name, and its signature must be
-//     `void rust_to_cpp (void* rust_struct, MyCppStruct* cpp_struct)`.
-//   * `cpp_to_rust` must be valid function name and its signature must be
-//     `void cpp_to_rust (MyCppStruct* cpp_struct, void* rust_struct)`.
+// See CRUBIT_BRIDGE in annotations.h.
 #define CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty, rust_to_cpp, cpp_to_rust) \
   CRUBIT_INTERNAL_BRIDGE_TYPE(ty)                                    \
   CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \
