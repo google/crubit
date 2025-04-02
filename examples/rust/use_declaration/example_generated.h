@@ -11,6 +11,7 @@
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_USE_DECLARATION_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -41,6 +42,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `module::Type` doesn't implement the `Clone` trait
   Type(const Type&) = delete;
   Type& operator=(const Type&) = delete;
+  Type(::crubit::UnsafeRelocateTag, Type&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  public:
   union {

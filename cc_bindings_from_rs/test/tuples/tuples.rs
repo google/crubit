@@ -42,6 +42,7 @@ impl Drop for NontrivialDrop {
         self.0 = 55;
     }
 }
+
 pub fn return_new_nontrivial_drop_in_tuple() -> (NontrivialDrop,) {
     (NontrivialDrop(243),)
 }
@@ -51,6 +52,23 @@ pub fn param_nontrivial_drop_in_tuple(nontrivial_drop: (NontrivialDrop,)) {
 pub fn assert_nontrivial_drop_count(drop_count: u8) {
     assert_eq!(DROP_COUNT.load(Ordering::Relaxed), drop_count);
 }
+
+/// The same as NontrivialDrop, but without a C++ move operation. This can be returned by value,
+/// even inside a tuple!
+pub struct NonCppMovable {
+    pub value: u8,
+}
+
+impl Drop for NonCppMovable {
+    fn drop(&mut self) {}
+}
+
+pub fn return_new_non_cpp_movable_in_tuple() -> (NonCppMovable,) {
+    (NonCppMovable { value: 42 },)
+}
+// pub fn return_new_non_cpp_movable_in_nested_tuple() -> ((NonCppMovable,),) {
+//     ((NonCppMovable {value: 42},),)
+// }
 
 pub fn param_nested_tuples(v: ((i32, i32), i32)) {
     assert_eq!(v, ((1, 2), 3));

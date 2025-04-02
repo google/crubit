@@ -11,6 +11,7 @@
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -34,6 +35,9 @@ ReprCUnion final {
   // `ReprCUnion` doesn't implement the `Clone` trait
   ReprCUnion(const ReprCUnion&) = delete;
   ReprCUnion& operator=(const ReprCUnion&) = delete;
+  ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  public:
   // Generated from:

@@ -47,6 +47,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `test_use_glob::X1` doesn't implement the `Clone` trait
   X1(const X1&) = delete;
   X1& operator=(const X1&) = delete;
+  X1(::crubit::UnsafeRelocateTag, X1&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  private:
   union {
@@ -83,6 +86,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   // `private_module::Bar` doesn't implement the `Clone` trait
   Bar(const Bar&) = delete;
   Bar& operator=(const Bar&) = delete;
+  Bar(::crubit::UnsafeRelocateTag, Bar&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  private:
   union {
@@ -111,6 +117,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   // `private_module::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
+  Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/uses.rs;l=41
@@ -171,6 +180,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   // `m1::m2::InnerX` doesn't implement the `Clone` trait
   InnerX(const InnerX&) = delete;
   InnerX& operator=(const InnerX&) = delete;
+  InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  public:
   union {

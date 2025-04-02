@@ -51,6 +51,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `AdtHoldingFiveAndSix` doesn't implement the `Clone` trait
   AdtHoldingFiveAndSix(const AdtHoldingFiveAndSix&) = delete;
   AdtHoldingFiveAndSix& operator=(const AdtHoldingFiveAndSix&) = delete;
+  AdtHoldingFiveAndSix(::crubit::UnsafeRelocateTag,
+                       AdtHoldingFiveAndSix&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  private:
   union {
@@ -95,6 +99,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   // `NontrivialDrop` doesn't implement the `Clone` trait
   NontrivialDrop(const NontrivialDrop&) = delete;
   NontrivialDrop& operator=(const NontrivialDrop&) = delete;
+  NontrivialDrop(::crubit::UnsafeRelocateTag, NontrivialDrop&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  private:
   union {
@@ -108,43 +115,86 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=45
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=46
 std::tuple<::tuples::NontrivialDrop> return_new_nontrivial_drop_in_tuple();
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=48
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=49
 void param_nontrivial_drop_in_tuple(
     std::tuple<::tuples::NontrivialDrop> nontrivial_drop);
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=51
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=52
 void assert_nontrivial_drop_count(std::uint8_t drop_count);
 
+//  The same as NontrivialDrop, but without a C++ move operation. This can be
+//  returned by value,
+//
+//  even inside a tuple!
+//
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=55
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=58
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
+    [[clang::trivial_abi]] NonCppMovable final {
+ public:
+  // `NonCppMovable` doesn't implement the `Default` trait
+  NonCppMovable() = delete;
+
+  // Drop::drop
+  ~NonCppMovable();
+
+  // C++ moves are deleted because there's no non-destructive implementation
+  // available.
+  NonCppMovable(NonCppMovable&&) = delete;
+  NonCppMovable& operator=(NonCppMovable&&) = delete;
+  // `NonCppMovable` doesn't implement the `Clone` trait
+  NonCppMovable(const NonCppMovable&) = delete;
+  NonCppMovable& operator=(const NonCppMovable&) = delete;
+  NonCppMovable(::crubit::UnsafeRelocateTag, NonCppMovable&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+ public:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/tuples/tuples.rs;l=59
+    std::uint8_t value;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Error generating bindings for `return_new_non_cpp_movable_in_tuple` defined
+// at cc_bindings_from_rs/test/tuples/tuples.rs;l=66:
+// Can't return a type by value inside a compound data type without a move
+// constructor
+
+// Generated from:
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=73
 void param_nested_tuples(
     std::tuple<std::tuple<std::int32_t, std::int32_t>, std::int32_t> v);
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=58
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=76
 std::tuple<std::tuple<std::int32_t, std::int32_t>, std::int32_t>
 return_nested_tuples();
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=62
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=80
 void param_triply_nested_tuple(
     std::tuple<std::tuple<std::tuple<std::int32_t>>> v);
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=65
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=83
 std::tuple<std::tuple<std::tuple<std::int32_t>>> return_triply_nested_tuple();
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=69
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=87
 void param_ffi_alias_in_tuple(std::tuple<char> five);
 
 // Generated from:
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=72
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=90
 std::tuple<char> return_ffi_alias_in_tuple();
 
 namespace __crubit_internal {
@@ -282,6 +332,22 @@ inline void assert_nontrivial_drop_count(std::uint8_t drop_count) {
       drop_count);
 }
 
+static_assert(
+    sizeof(NonCppMovable) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(NonCppMovable) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_drop(
+    ::tuples::NonCppMovable& [[clang::annotate_type("lifetime", "__anon1")]]);
+}
+inline NonCppMovable::~NonCppMovable() {
+  __crubit_internal::__crubit_thunk_drop(*this);
+}
+inline void NonCppMovable::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(NonCppMovable, value));
+}
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_unested_utuples(void**);
 }

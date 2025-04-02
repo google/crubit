@@ -3438,7 +3438,7 @@ pub mod tests {
             let pass_by_value_msg = format!(
                 "Error generating bindings for `TypeUnderTest::pass_by_value` \
                         defined at <crubit_unittests.rs>;l={pass_by_value_line_number}: \
-                 Can't pass the return type by value without a move constructor"
+                 Can't pass a type by value without a move constructor"
             );
             assert_cc_matches!(
                 main_api.tokens,
@@ -3504,10 +3504,11 @@ pub mod tests {
                 }
 
                 impl TypeUnderTest {
-                    pub fn pass_by_value() -> Self { unimplemented!() }
+                    pub fn return_by_value() -> Self { unimplemented!() }
+                    pub fn pass_by_value(_: Self) { unimplemented!() }
                 }
             "#;
-        let pass_by_value_line_number = 12;
+        let pass_by_value_line_number = 13;
         test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
             test_src,
             pass_by_value_line_number,
@@ -3533,10 +3534,11 @@ pub mod tests {
                 }
 
                 impl TypeUnderTest {
-                    pub fn pass_by_value() -> Self { unimplemented!() }
+                    pub fn return_by_value() -> Self { unimplemented!() }
+                    pub fn pass_by_value(_: Self) { unimplemented!() }
                 }
             "#;
-        let pass_by_value_line_number = 18;
+        let pass_by_value_line_number = 19;
         test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
             test_src,
             pass_by_value_line_number,
@@ -3812,7 +3814,8 @@ pub mod tests {
                 }
 
                 impl SomeStruct {
-                    pub fn pass_by_value() -> Self { unimplemented!() }
+                    pub fn return_by_value() -> Self { unimplemented!() }
+                    pub fn pass_by_value(_: Self) { unimplemented!() }
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
@@ -3821,8 +3824,8 @@ pub mod tests {
             let move_deleted_msg = "C++ moves are deleted \
                                     because there's no non-destructive implementation available.";
             let pass_by_value_msg = "Error generating bindings for `SomeStruct::pass_by_value` \
-                        defined at <crubit_unittests.rs>;l=17: \
-                 Can't pass the return type by value without a move constructor";
+                        defined at <crubit_unittests.rs>;l=18: \
+                 Can't pass a type by value without a move constructor";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
@@ -3841,6 +3844,7 @@ pub mod tests {
                           SomeStruct(SomeStruct&&) = delete;
                           SomeStruct& operator=(SomeStruct&&) = delete;
                           ...
+                          static ::rust_out::SomeStruct return_by_value();
                           __COMMENT__ #pass_by_value_msg
                           ...
                     };

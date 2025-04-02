@@ -11,6 +11,7 @@
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <type_traits>
@@ -33,6 +34,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   // assignment operator.
   Color(const Color&) = default;
   Color& operator=(const Color&) = default;
+  Color(::crubit::UnsafeRelocateTag, Color&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings

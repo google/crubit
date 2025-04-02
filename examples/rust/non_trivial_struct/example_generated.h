@@ -12,6 +12,7 @@
 
 #include "support/internal/attribute_macros.h"
 #include "support/internal/memswap.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -37,6 +38,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `NonTrivialStruct` doesn't implement the `Clone` trait
   NonTrivialStruct(const NonTrivialStruct&) = delete;
   NonTrivialStruct& operator=(const NonTrivialStruct&) = delete;
+  NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  public:
   union {

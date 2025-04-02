@@ -38,6 +38,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   // `Original` doesn't implement the `Clone` trait
   Original(const Original&) = delete;
   Original& operator=(const Original&) = delete;
+  Original(::crubit::UnsafeRelocateTag, Original&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
   // CRUBIT_ANNOTATE: must_bind=
   //

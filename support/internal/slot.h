@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// In-place construction of Rust-movable types which might not be C++-movable.
+
 #ifndef CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
 #define CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
 
@@ -10,8 +12,21 @@
 
 namespace crubit {
 
-// `Slot<T>` provides a slot that can store a move-only return
-// value.  This class is used to return non-`#[repr(C)]` structs from Rust
+// A type tag for constructors to move-construct via a trivial relocation
+// operation, or a Rust move, rather than by running the actual logic of a move
+// constructor.
+//
+// A constructor which accepts `(UnsafeRelocateTag, T&& x)` will relocate `x`
+// into the new object, leaving `x` in an uninitialized state. The caller must
+// not run the destructor of `x` (or otherwise use it) without first
+// reinitializing it.
+//
+// This can be used, for example, to initialize a value on the stack, and then
+// move it into a return value without performing a C++ move operation.
+struct UnsafeRelocateTag {};
+
+// `Slot<T>` provides a slot that can store a relocatable return value.
+// This class is used to return non-`#[repr(C)]` structs from Rust
 // into C++ in a way that is compatible with the ABI of `extern "C"` Rust
 // thunks.
 //
@@ -70,15 +85,20 @@ class Slot {
   //   without calling its destructor).
   T* Get() { return &value_; }
 
-  // Destructively takes and returns the contained value.
+  // Destructively takes and returns the contained value, using relocation if
+  // possible, or moves if not.
   //
   // Leaves the value contained in `Slot` uninitialized.
   //
   // SAFETY REQUIREMENTS: The contained value is initialized.
   T AssumeInitAndTakeValue() && {
-    T return_value(std::move(value_));
-    std::destroy_at(&value_);
-    return return_value;
+    if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
+      return T(UnsafeRelocateTag{}, std::move(value_));
+    } else {
+      T return_value(std::move(value_));
+      std::destroy_at(&value_);
+      return return_value;
+    }
   }
 
   // SAFETY REQUIREMENTS: The value contained in `other` must be initialized

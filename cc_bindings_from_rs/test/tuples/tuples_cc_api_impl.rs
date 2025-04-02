@@ -112,6 +112,15 @@ unsafe extern "C" fn __crubit_thunk_param_unontrivial_udrop_uin_utuple(
 unsafe extern "C" fn __crubit_thunk_assert_unontrivial_udrop_ucount(drop_count: u8) -> () {
     unsafe { ::tuples_golden::assert_nontrivial_drop_count(drop_count) }
 }
+const _: () = assert!(::std::mem::size_of::<::tuples_golden::NonCppMovable>() == 1);
+const _: () = assert!(::std::mem::align_of::<::tuples_golden::NonCppMovable>() == 1);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_drop(
+    __self: &mut ::core::mem::MaybeUninit<::tuples_golden::NonCppMovable>,
+) {
+    unsafe { __self.assume_init_drop() };
+}
+const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NonCppMovable, value) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_unested_utuples(
     v: *const [*const core::ffi::c_void; 2usize],

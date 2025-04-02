@@ -44,6 +44,31 @@ pub mod default_repr {
     }
 }
 
+pub mod non_cpp_movable {
+
+    #[repr(C)]
+    pub struct Point {
+        pub x: i32,
+        pub y: i32,
+    }
+
+    impl Drop for Point {
+        fn drop(&mut self) {
+            // This only exists to force the type to not be movable in C++.
+        }
+    }
+
+    // It can still be returned by value
+    pub fn create(x: i32, y: i32) -> Point {
+        Point { x, y }
+    }
+
+    // ... but not passed by value
+    pub fn get_x(p: &Point) -> i32 {
+        p.x
+    }
+}
+
 /// Test for a struct containing zero-sized fields.
 pub mod zst_fields {
 

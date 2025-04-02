@@ -11,6 +11,7 @@
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
 
 #include "support/internal/attribute_macros.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -35,6 +36,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `X` doesn't implement the `Clone` trait
   X(const X&) = delete;
   X& operator=(const X&) = delete;
+  X(::crubit::UnsafeRelocateTag, X&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=13

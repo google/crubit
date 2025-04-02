@@ -42,6 +42,11 @@ NonTriviallyDestructable final {
   // Clone::clone_from
   NonTriviallyDestructable& operator=(const NonTriviallyDestructable&);
 
+  NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
+                           NonTriviallyDestructable&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
  public:
   union {
     // Generated from:

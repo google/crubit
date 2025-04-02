@@ -348,6 +348,8 @@ pub fn generate_adt<'tcx>(
     let move_ctor_and_assignment_snippets =
         db.generate_move_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
 
+    let relocating_ctor_snippets = generate_relocating_ctor(db, core.clone());
+
     let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
@@ -375,6 +377,7 @@ pub fn generate_adt<'tcx>(
         destructor_snippets,
         move_ctor_and_assignment_snippets,
         copy_ctor_and_assignment_snippets,
+        relocating_ctor_snippets,
         impl_items_snippets,
     ]
     .into_iter()
@@ -1065,8 +1068,11 @@ fn generate_fields<'tcx>(
                         ty::AdtKind::Struct => quote! {
                             #visibility __NEWLINE__
                                 // The anonymous union gives more control over when exactly
-                                // the field constructors and destructors run.  See also
-                                // b/288138612.
+                                // the field constructors and destructors run. For example,
+                                // this lets us initialize the fields for the first time via
+                                // memcpy, in the move or UnsafeRelocateTag constructor, and lets
+                                // us destroy them only by calling into Rust.
+                                // See also b/288138612.
                                 union {  __NEWLINE__
                                     #doc_comment
                                     #(#attributes)*
@@ -1302,6 +1308,33 @@ fn generate_fields<'tcx>(
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
+/// Generates the `(UnsafeRelocateTag, T&&)` constructor for the given ADT.
+fn generate_relocating_ctor<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
+) -> ApiSnippets {
+    let adt_cc_name = &core.cc_short_name;
+    let main_api = CcSnippet::with_include(
+        quote! {
+            #adt_cc_name(::crubit::UnsafeRelocateTag, #adt_cc_name&& value) {
+                // This is a bit tricky. Note that the lifetime of `this` has already begun,
+                // so memcpy is only being used to copy the object representation.
+                //
+                // Second, note that the current type is trivially relocatable
+                // (because it came from Rust).
+                //
+                // Finally, note that none of the fields are initialized yet. (Each is in a
+                // union.)
+                //
+                // So while `memcpy` doesn't usually work, it does here.
+                memcpy(this, &value, sizeof(value));
+            }
+        },
+        db.support_header("internal/slot.h"),
+    );
+    ApiSnippets { main_api, ..Default::default() }
+}
+
 #[cfg(test)]
 pub mod tests {
     use crate::tests::*;
@@ -1526,6 +1559,10 @@ pub mod tests {
                             __COMMENT__ "`SomeStruct` doesn't implement the `Clone` trait"
                             SomeStruct(const SomeStruct&) = delete;
                             SomeStruct& operator=(const SomeStruct&) = delete;
+
+                            SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+                              memcpy(this, &value, sizeof(value));
+                            }
                         public: union { ... std::int32_t x; };
                         public: union { ... std::int32_t y; };
                         private:
@@ -1589,6 +1626,9 @@ pub mod tests {
                             __COMMENT__ "`TupleStruct` doesn't implement the `Clone` trait"
                             TupleStruct(const TupleStruct&) = delete;
                             TupleStruct& operator=(const TupleStruct&) = delete;
+                            TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
+                              memcpy(this, &value, sizeof(value));
+                            }
                         public: union { ... std::int32_t __field0; };
                         public: union { ... std::int32_t __field1; };
                         private:
@@ -2141,6 +2181,10 @@ pub mod tests {
                             __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
                             SomeEnum(const SomeEnum&) = delete;
                             SomeEnum& operator=(const SomeEnum&) = delete;
+
+                            SomeEnum(::crubit::UnsafeRelocateTag, SomeEnum&& value) {
+                              memcpy(this, &value, sizeof(value));
+                            }
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[1];
@@ -2201,6 +2245,10 @@ pub mod tests {
                             __COMMENT__ "`Point` doesn't implement the `Clone` trait"
                             Point(const Point&) = delete;
                             Point& operator=(const Point&) = delete;
+
+                            Point(::crubit::UnsafeRelocateTag, Point&& value) {
+                              memcpy(this, &value, sizeof(value));
+                            }
                         private:
                             __COMMENT__ #no_fields_msg
                             unsigned char __opaque_blob_of_bytes[12];

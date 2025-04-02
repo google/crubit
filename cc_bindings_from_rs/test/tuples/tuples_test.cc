@@ -49,6 +49,18 @@ TEST(TuplesTest, NontrivialDropInTuple) {
   tuples::assert_nontrivial_drop_count(2);
 }
 
+// TODO(jeanpierreda): enable non-movable types inside compound data types like
+// tuples?
+//
+// TEST(TuplesTest, NonCppMovableInTuple) {
+//   std::tuple<tuples::NonCppMovable> v =
+//       tuples::return_new_non_cpp_movable_in_tuple();
+//   EXPECT_EQ(std::get<0>(v).value, 42);
+//   std::tuple<std::tuple<tuples::NonCppMovable>> nested_v =
+//       tuples::return_new_non_cpp_movable_in_nested_tuple();
+//   EXPECT_EQ(std::get<0>(std::get<0>(nested_v)).value, 42);
+// }
+
 TEST(TuplesTest, NestedTupleParameters) {
   tuples::param_nested_tuples(std::make_tuple(std::make_tuple(1, 2), 3));
 }

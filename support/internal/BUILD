@@ -50,6 +50,7 @@ crubit_cc_test(
     srcs = ["slot_test.cc"],
     deps = [
         ":bindings_support",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:check",
         "@com_google_googletest//:gtest_main",
     ],

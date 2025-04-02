@@ -132,52 +132,51 @@ TEST(DropTest, DropImplWithClone) {
   // Test the destructor.
   drop::counters::reset_counts();
   {
-    // Non-zero clone and drop count come from the temporary created by
-    // `create_from_int`.
+    // The return value is Rust-moved, so it is not copied or destroyed yet.
     TypeUnderTest s = TypeUnderTest::create_from_int(123);
     EXPECT_EQ(123, s.get_int());
-    EXPECT_EQ(1, drop::counters::get_clone_count());
-    EXPECT_EQ(1, drop::counters::get_drop_count());
+    EXPECT_EQ(0, drop::counters::get_clone_count());
+    EXPECT_EQ(0, drop::counters::get_drop_count());
   }  // `TypeUnderTest`'s destructor runs when `s` goes out of scope.
-  EXPECT_EQ(1, drop::counters::get_clone_count());
-  EXPECT_EQ(2, drop::counters::get_drop_count());
+  EXPECT_EQ(0, drop::counters::get_clone_count());
+  EXPECT_EQ(1, drop::counters::get_drop_count());
 
   // Testing the move constructor.
   drop::counters::reset_counts();
   {
     TypeUnderTest s = TypeUnderTest::create_from_int(123);
     EXPECT_EQ(123, s.get_int());
-    EXPECT_EQ(1, drop::counters::get_clone_count());
-    EXPECT_EQ(1, drop::counters::get_drop_count());
+    EXPECT_EQ(0, drop::counters::get_clone_count());
+    EXPECT_EQ(0, drop::counters::get_drop_count());
 
     // We expect the move to be implemented in terms of copy, so we expect
     // a corresponding increase in clone counters.
     TypeUnderTest s2(std::move(s));
     EXPECT_EQ(123, s2.get_int());
     EXPECT_EQ(123, s.get_int());  // NOLINT(bugprone-use-after-move)
-    EXPECT_EQ(2, drop::counters::get_clone_count());
-    EXPECT_EQ(1, drop::counters::get_drop_count());
+    EXPECT_EQ(1, drop::counters::get_clone_count());
+    EXPECT_EQ(0, drop::counters::get_drop_count());
   }
-  EXPECT_EQ(2, drop::counters::get_clone_count());
-  EXPECT_EQ(3, drop::counters::get_drop_count());
+  EXPECT_EQ(1, drop::counters::get_clone_count());
+  EXPECT_EQ(2, drop::counters::get_drop_count());
 
   // Testing the move assignment operator.
   drop::counters::reset_counts();
   {
     TypeUnderTest s1 = TypeUnderTest::create_from_int(123);
     TypeUnderTest s2 = TypeUnderTest::create_from_int(456);
-    EXPECT_EQ(2, drop::counters::get_clone_count());
+    EXPECT_EQ(0, drop::counters::get_clone_count());
     EXPECT_EQ(0, drop::counters::get_clone_from_count());
-    EXPECT_EQ(2, drop::counters::get_drop_count());
+    EXPECT_EQ(0, drop::counters::get_drop_count());
 
     // We expect the move to be implemented in terms of copy, so we expect
     // a corresponding increase in clone counters.
     s2 = std::move(s1);
     EXPECT_EQ(123, s1.get_int());  // NOLINT(bugprone-use-after-move)
     EXPECT_EQ(123, s2.get_int());
-    EXPECT_EQ(2, drop::counters::get_clone_count());
+    EXPECT_EQ(0, drop::counters::get_clone_count());
     EXPECT_EQ(1, drop::counters::get_clone_from_count());
-    EXPECT_EQ(2, drop::counters::get_drop_count());
+    EXPECT_EQ(0, drop::counters::get_drop_count());
 
     // Okay to assign a value to itself.  `clone_from` should *not* be called
     // (it would lead to aliasing-related UB in Rust when `self` and `source`
@@ -188,26 +187,26 @@ TEST(DropTest, DropImplWithClone) {
 #pragma clang diagnostic pop
     EXPECT_EQ(123, s1.get_int());
     EXPECT_EQ(123, s2.get_int());
-    EXPECT_EQ(2, drop::counters::get_clone_count());
+    EXPECT_EQ(0, drop::counters::get_clone_count());
     EXPECT_EQ(1, drop::counters::get_clone_from_count());
-    EXPECT_EQ(2, drop::counters::get_drop_count());
+    EXPECT_EQ(0, drop::counters::get_drop_count());
   }
-  EXPECT_EQ(2, drop::counters::get_clone_count());
+  EXPECT_EQ(0, drop::counters::get_clone_count());
   EXPECT_EQ(1, drop::counters::get_clone_from_count());
-  EXPECT_EQ(4, drop::counters::get_drop_count());
+  EXPECT_EQ(2, drop::counters::get_drop_count());
 
   // Testing pass by value.
   drop::counters::reset_counts();
   {
     TypeUnderTest s = TypeUnderTest::create_from_int(123);
-    EXPECT_EQ(1, drop::counters::get_clone_count());
+    EXPECT_EQ(0, drop::counters::get_clone_count());
     // Clones twice: once into the parameter, once again from the thunk to Rust.
     // Both are destroyed.
     TypeUnderTest::take_by_value(std::move(s));
-    EXPECT_EQ(3, drop::counters::get_clone_count());
-    EXPECT_EQ(3, drop::counters::get_drop_count());
+    EXPECT_EQ(2, drop::counters::get_clone_count());
+    EXPECT_EQ(2, drop::counters::get_drop_count());
   }
-  EXPECT_EQ(4, drop::counters::get_drop_count());
+  EXPECT_EQ(3, drop::counters::get_drop_count());
 }
 
 TEST(DropTest, DropImplWithNothingElse) {

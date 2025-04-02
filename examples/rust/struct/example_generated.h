@@ -11,6 +11,7 @@
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -36,6 +37,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
 
   // Clone::clone_from
   Struct& operator=(const Struct&);
+
+  Struct(::crubit::UnsafeRelocateTag, Struct&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
  public:
   union {

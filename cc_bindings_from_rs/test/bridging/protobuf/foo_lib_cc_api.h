@@ -12,6 +12,7 @@
 
 #include "support/internal/attribute_macros.h"
 #include "support/internal/memswap.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <utility>
@@ -37,6 +38,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: foo_lib_golden :: FooService") alignas(8)
   // `FooService` doesn't implement the `Clone` trait
   FooService(const FooService&) = delete;
   FooService& operator=(const FooService&) = delete;
+  FooService(::crubit::UnsafeRelocateTag, FooService&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=17

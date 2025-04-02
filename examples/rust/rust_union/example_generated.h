@@ -11,6 +11,7 @@
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN
 
 #include "support/internal/attribute_macros.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -35,6 +36,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // `ReprRustUnion` doesn't implement the `Clone` trait
   ReprRustUnion(const ReprRustUnion&) = delete;
   ReprRustUnion& operator=(const ReprRustUnion&) = delete;
+  ReprRustUnion(::crubit::UnsafeRelocateTag, ReprRustUnion&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
 
   // Generated from:
   // examples/rust/rust_union/example.rs;l=21

@@ -217,6 +217,7 @@ fn cc_return_value_from_c_abi<'tcx>(
     ty: SugaredTy<'tcx>,
     prereqs: &mut CcPrerequisites,
     storage_statements: &mut TokenStream,
+    recursive: bool,
 ) -> Result<ReturnConversion> {
     let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
     if let Some(attrs) = is_bridged_type(db, ty.mid())? {
@@ -268,6 +269,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 tuple_tys.index(i),
                 prereqs,
                 storage_statements,
+                /*recursive=*/ true,
             )?;
             storage_names.push(element_storage_name);
             unpack_exprs.push(element_unpack_expr);
@@ -280,12 +282,14 @@ fn cc_return_value_from_c_abi<'tcx>(
             unpack_expr: quote! { std::make_tuple(#(#unpack_exprs),*) },
         })
     } else {
-        if let Some(adt_def) = ty.mid().ty_adt_def() {
-            let core = db.generate_adt_core(adt_def.did())?;
-            // Note: the error here is an ApiSnippets which is not propagated.
-            db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
-                anyhow!("Can't pass the return type by value without a move constructor")
-            })?;
+        if recursive {
+            if let Some(adt_def) = ty.mid().ty_adt_def() {
+                let core = db.generate_adt_core(adt_def.did())?;
+                // Note: the error here is an ApiSnippets which is not propagated.
+                db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
+                    anyhow!("Can't return a type by value inside a compound data type without a move constructor")
+                })?;
+            }
         }
         let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
         let cc_type = format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
@@ -537,6 +541,7 @@ pub fn generate_function(
                 rs_return_type,
                 &mut prereqs,
                 &mut statements,
+                /*recursive=*/ false,
             )?;
             thunk_args.push(quote! { #storage_name });
             quote! {
