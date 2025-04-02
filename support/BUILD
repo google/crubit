@@ -28,6 +28,7 @@ rust_proc_macro(
 cc_library(
     name = "annotations",
     hdrs = ["annotations.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
     ],
