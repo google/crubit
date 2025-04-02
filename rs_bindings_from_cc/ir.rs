@@ -235,19 +235,158 @@ impl RsType {
 pub struct CcType {
     pub variant: CcTypeVariant,
     pub is_const: bool,
+    pub unknown_attr: Rc<str>,
+}
+
+#[derive(Copy, Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum CcPointerKind {
+    LValueRef,
+    RValueRef,
+    Nullable,
+    NonNull,
+}
+
+/// Generates an enum type that implements `Deserialize`, which parses the stringified contents of
+/// the braces, and `ToTokens`, which quotes the contents of the braces.
+macro_rules! define_typed_tokens_enum {
+    {$(#[$ty_attr:meta])* $vis:vis enum $Type:ident {$($(#[$variant_attr:meta])* $Variant:ident = {$($cpp_spelling:tt)+},)+}} => {
+        $(#[$ty_attr])*
+        $vis enum $Type {
+            $(
+                $(#[$variant_attr])*
+                $Variant,
+            )+
+        }
+
+        // #[serde(rename(deserialize = stringify!(...)))] doesn't work, so manual impl.
+        impl<'de> serde::Deserialize<'de> for $Type {
+            fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                struct Visitor;
+                impl serde::de::Visitor<'_> for Visitor {
+                    type Value = $Type;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        const S: &str = concat!(
+                            "one of: ",
+                            $(
+                                "\"",
+                                stringify!($($cpp_spelling)+),
+                                "\", "
+                            ),+
+                        );
+                        formatter.write_str(&S[..S.len() - ", ".len()])
+                    }
+
+                    fn visit_str<E: serde::de::Error>(self, s: &str) -> Result<Self::Value, E> {
+                        match s {
+                            $(
+                                stringify!($($cpp_spelling)+) => Ok($Type::$Variant),
+                            )+
+                            _ => Err(serde::de::Error::invalid_value(serde::de::Unexpected::Str(s), &self))
+                        }
+                    }
+                }
+                deserializer.deserialize_str(Visitor)
+            }
+        }
+
+        impl ToTokens for $Type {
+            fn to_tokens(&self, tokens: &mut TokenStream) {
+                match self {
+                    $(
+                        Self::$Variant => quote! { $($cpp_spelling)+ }.to_tokens(tokens),
+                    )+
+                }
+            }
+        }
+    }
+}
+
+define_typed_tokens_enum! {
+    #[derive(Copy, Debug, PartialEq, Eq, Hash, Clone)]
+    pub enum Primitive {
+        Bool = {bool},
+        Void = {void},
+        Float = {float},
+        Double = {double},
+        Char = {char},
+        SignedChar = {signed char},
+        UnsignedChar = {unsigned char},
+        Short = {short},
+        Int = {int},
+        Long = {long},
+        LongLong = {long long},
+        UnsignedShort = {unsigned short},
+        UnsignedInt = {unsigned int},
+        UnsignedLong = {unsigned long},
+        UnsignedLongLong = {unsigned long long},
+        Char16T = {char16_t},
+        Char32T = {char32_t},
+        PtrdiffT = {ptrdiff_t},
+        IntptrT = {intptr_t},
+        SizeT = {size_t},
+        UintptrT = {uintptr_t},
+        StdPtrdiffT = {std::ptrdiff_t},
+        StdIntptrT = {std::intptr_t},
+        StdSizeT = {std::size_t},
+        StdUintptrT = {std::uintptr_t},
+        Int8T = {int8_t},
+        Int16T = {int16_t},
+        Int32T = {int32_t},
+        Int64T = {int64_t},
+        StdInt8T = {std::int8_t},
+        StdInt16T = {std::int16_t},
+        StdInt32T = {std::int32_t},
+        StdInt64T = {std::int64_t},
+        Uint8T = {uint8_t},
+        Uint16T = {uint16_t},
+        Uint32T = {uint32_t},
+        Uint64T = {uint64_t},
+        StdUint8T = {std::uint8_t},
+        StdUint16T = {std::uint16_t},
+        StdUint32T = {std::uint32_t},
+        StdUint64T = {std::uint64_t},
+    }
+}
+
+define_typed_tokens_enum! {
+    /// The C++ calling convention of a function.
+    #[derive(Copy, Debug, PartialEq, Eq, Hash, Clone)]
+    pub enum CcCallingConv {
+        C = {cdecl},
+        X86FastCall = {fastcall},
+        X86VectorCall = {vectorcall},
+        X86ThisCall = {thiscall},
+        X86StdCall = {stdcall},
+        Win64 = {ms_abi},
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum CcTypeVariant {
-    NamedType { name: Rc<str>, type_args: Vec<CcType> },
-    ItemIdType { decl_id: ItemId },
+    Primitive(Primitive),
+    Pointer {
+        pointer_kind: CcPointerKind,
+        lifetime: Option<LifetimeId>,
+        pointee_type: Rc<CcType>,
+    },
+    FuncValue {
+        call_conv: CcCallingConv,
+
+        /// The parameter types, followed by the return type.
+        param_and_return_types: Rc<[CcType]>,
+    },
+    Record {
+        id: ItemId,
+    },
 }
 
-impl CcType {
-    pub fn name(&self) -> Option<&str> {
-        match &self.variant {
-            CcTypeVariant::NamedType { name, .. } => Some(name.as_ref()),
+impl CcTypeVariant {
+    pub fn as_primitive(&self) -> Option<Primitive> {
+        match &self {
+            CcTypeVariant::Primitive(primitive) => Some(*primitive),
             _ => None,
         }
     }
@@ -269,7 +408,7 @@ impl TypeWithDeclId for RsType {
 impl TypeWithDeclId for CcType {
     fn decl_id(&self) -> Option<ItemId> {
         match &self.variant {
-            CcTypeVariant::ItemIdType { decl_id } => Some(*decl_id),
+            CcTypeVariant::Record { id } => Some(*id),
             _ => None,
         }
     }

@@ -24,6 +24,8 @@ using ::testing::AnyOf;
 using ::testing::Contains;
 using ::testing::Each;
 using ::testing::ElementsAre;
+using ::testing::Eq;
+using ::testing::Field;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
@@ -132,18 +134,16 @@ MATCHER_P(UnsupportedItemNameIs, name, "") {
   return false;
 }
 
-// Matches an CcType that has the given name.
-MATCHER_P(CcTypeNameIs, name, "") {
-  const auto* named = std::get_if<CcTypeNamed>(&arg.variant);
-  if (named == nullptr || named->name != name) {
-    *result_listener << "actual name: '";
-    if (named != nullptr) {
-      *result_listener << named->name;
-    }
-    *result_listener << "'";
-    return false;
+// Matches an CcType that's a primitive with the given name.
+MATCHER_P(IsCcPrimitive, name, "") {
+  const auto* primitive = std::get_if<CcType::Primitive>(&arg.variant);
+  if (primitive != nullptr || primitive->spelling == name) return true;
+  *result_listener << "actual name: '";
+  if (primitive != nullptr) {
+    *result_listener << primitive->spelling;
   }
-  return true;
+  *result_listener << "'";
+  return false;
 }
 
 // Matches an RsType that has the given name.
@@ -170,12 +170,12 @@ MATCHER_P(TextIs, text, "") {
 
 // Matches an CcType that has the given decl_id.
 MATCHER_P(CcDeclIdIs, decl_id, "") {
-  const auto* arg_decl_id = std::get_if<ItemId>(&arg.variant);
-  if (arg_decl_id != nullptr && *arg_decl_id == decl_id) return true;
+  const auto* record = std::get_if<CcType::Record>(&arg.variant);
+  if (record != nullptr && record->id == decl_id) return true;
 
   *result_listener << "actual decl_id: ";
-  if (arg_decl_id != nullptr) {
-    *result_listener << *arg_decl_id;
+  if (record != nullptr) {
+    *result_listener << record->id;
   } else {
     *result_listener << "std::nullopt";
   }
@@ -218,17 +218,6 @@ auto RsTypeParamsAre(const Args&... matchers) {
       "type_args", &RsTypeNamed::type_args, ElementsAre(matchers...)));
 }
 
-// Matches a CcType that has type arguments matching `matchers`.
-template <typename... Args>
-auto CcTypeParamsAre(const Args&... matchers) {
-  return testing::Field(
-      "variant", &CcType::variant,
-      testing::VariantWith<CcTypeNamed>(testing::Field(
-          "type_args", &CcTypeNamed::type_args, ElementsAre(matchers...))));
-}
-
-auto IsCcInt() { return AllOf(CcTypeNameIs("int"), CcTypeParamsAre()); }
-
 auto IsRsInt() {
   return AllOf(RsTypeNameIs("::core::ffi::c_int"), RsTypeParamsAre());
 }
@@ -236,12 +225,23 @@ auto IsRsInt() {
 // Matches a CcType that is a pointer to a type matching `matcher`.
 template <typename Matcher>
 auto CcPointsTo(const Matcher& matcher) {
-  return AllOf(CcTypeNameIs("*"), CcTypeParamsAre(matcher));
+  return Field("variant", &CcType::variant,
+               VariantWith<CcType::Pointer>(
+                   AllOf(Field("pointer_kind", &CcType::Pointer::pointer_kind,
+                               AnyOf(Eq(CcPointerKind::kNullable),
+                                     Eq(CcPointerKind::kNonNull))),
+                         Field("pointee_type", &CcType::Pointer::pointee_type,
+                               Pointee(matcher)))));
 }
 
 template <typename Matcher>
 auto CcReferenceTo(const Matcher& matcher) {
-  return AllOf(CcTypeNameIs("&"), CcTypeParamsAre(matcher));
+  return Field("variant", &CcType::variant,
+               VariantWith<CcType::Pointer>(
+                   AllOf(Field("pointer_kind", &CcType::Pointer::pointer_kind,
+                               Eq(CcPointerKind::kLValueRef)),
+                         Field("pointee_type", &CcType::Pointer::pointee_type,
+                               Pointee(matcher)))));
 }
 
 // Matches an RsType that is a mutable pointer to a type matching `matcher`.
@@ -261,13 +261,13 @@ MATCHER(IsVoid, "") { return arg.IsVoid(); }
 
 // Matches a MappedType that is a pointer to integer.
 auto IsIntPtr() {
-  return AllOf(CcTypeIs(CcPointsTo(IsCcInt())),
+  return AllOf(CcTypeIs(CcPointsTo(IsCcPrimitive("int"))),
                RsTypeIs(RsPointsTo(IsRsInt())));
 }
 
 // Matches a MappedType that is an lvalue reference to integer.
 auto IsIntRef() {
-  return AllOf(CcTypeIs(CcReferenceTo(IsCcInt())),
+  return AllOf(CcTypeIs(CcReferenceTo(IsCcPrimitive("int"))),
                RsTypeIs(RsPointsTo(IsRsInt())));
 }
 

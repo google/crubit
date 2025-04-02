@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <iomanip>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -139,42 +140,45 @@ inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
 // unsafe.
 enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
 
-struct CcType;
+enum class CcPointerKind { kRValueRef, kLValueRef, kNullable, kNonNull };
 
-struct CcTypeNamed {
-  llvm::json::Value ToJson() const;
-
-  // The name of the type. Examples:
-  // - "int32_t", "std::ptrdiff_t", "long long", "bool"
-  // - "void"
-  // - "&" or "*" (pointee stored in `type_args[0]`)
-  // - "#funcValue <callConv>" (compare with "#funcPtr <abi>" in RsType::name
-  //   and note that Rust only supports function pointers; note that <callConv>
-  //   in CcType doesn't map 1:1 to <abi> in RsType).
-  std::string name;
-
-  // Type arguments for a generic type. Examples:
-  //   int has no type arguments.
-  //   int* has a single type argument, int.
-  //   tuple<int, float> has two type arguments, int and float.
-  std::vector<CcType> type_args = {};
-};
-
-// A C++ type involved in the bindings. It has the knowledge of how the type
-// is spelled in C++.
 struct CcType {
   llvm::json::Value ToJson() const;
 
-  // Either a named type with possible type arguments, or an ItemId.
-  std::variant<CcTypeNamed, ItemId> variant;
+  struct FuncValue {
+    std::string call_conv;
+    std::vector<CcType> param_and_return_types;
+  };
 
-  // The C++ const-qualification for the type.
-  //
-  // Note: there are two types for which cv-qualification does not do anything:
-  // references and functions. if `T` is either a function type like `void()`,
-  // or a reference type like `int&`, then `T`, `const T`, and `volatile T` are
-  // all the same type in C++.
+  struct Pointer {
+    CcPointerKind pointer_kind;
+    std::optional<LifetimeId> lifetime;
+    std::shared_ptr<CcType> pointee_type;
+  };
+
+  struct Primitive {
+    // One of: bool, void, float, double, char, signed char, unsigned char,
+    // short, int, long, long long, unsigned short, unsigned int, unsigned long,
+    // unsigned long long, char16_t, char32_t, ptrdiff_t, intptr_t, size_t,
+    // uintptr_t, std::ptrdiff_t, std::intptr_t, std::size_t, std::uintptr_t,
+    // int8_t, int16_t, int32_t, int64_t, std::int8_t, std::int16_t,
+    // std::int32_t, std::int64_t, uint8_t, uint16_t, uint32_t, uint64_t,
+    // std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t.
+    //
+    // If we wanted to be really pedantic, this could be an enum. However,
+    // this type is only read by Rust after serialization. So there's no reason
+    // to convert to an enum just to convert it back in a ToJson() method.
+    std::string spelling;
+  };
+
+  // A record type.
+  struct Record {
+    ItemId id;
+  };
+
+  std::variant<Primitive, Pointer, FuncValue, Record> variant;
   bool is_const = false;
+  std::string unknown_attr = "";
 };
 
 struct RsTypeNamed;
@@ -234,16 +238,14 @@ inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
 // should almost certainly not be a u8, because u8 and pointers are sized and
 // aligned differently.
 struct MappedType {
-  static MappedType Void() { return Simple("()", "void"); }
-
   /// Returns the MappedType for a non-templated/generic, non-cv-qualified type.
   /// For example, Void() is Simple("()", "void").
-  static MappedType Simple(std::string rs_name, std::string cc_name) {
-    return MappedType{RsTypeNamed{rs_name}, {CcTypeNamed{cc_name}}};
+  static MappedType Simple(std::string rs_name, CcType cpp_type) {
+    return MappedType{RsTypeNamed{rs_name}, std::move(cpp_type)};
   }
 
   static MappedType WithDeclId(ItemId decl_id) {
-    return MappedType{decl_id, {decl_id}};
+    return MappedType{decl_id, {CcType::Record{decl_id}}};
   }
 
   static MappedType PointerTo(

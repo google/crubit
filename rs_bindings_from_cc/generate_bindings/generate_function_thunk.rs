@@ -333,9 +333,12 @@ pub fn generate_function_thunk_impl(
                 let formatted_ident = convert_ident(&ident);
                 ident = quote! { &(#formatted_ident.val) };
             }
-            match p.type_.cpp_type.name() {
-                Some("&") => Ok(quote! { * #ident }),
-                Some("&&") => Ok(quote! { std::move(* #ident) }),
+            match &p.type_.cpp_type.variant {
+                CcTypeVariant::Pointer { pointer_kind, .. } => match pointer_kind {
+                    CcPointerKind::RValueRef => Ok(quote! { std::move(*#ident) }),
+                    CcPointerKind::LValueRef => Ok(quote! { *#ident }),
+                    CcPointerKind::Nullable | CcPointerKind::NonNull => Ok(quote! { #ident }),
+                },
                 _ => {
                     let rs_type_kind = db.rs_type_kind(p.type_.rs_type.clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
@@ -427,30 +430,30 @@ pub fn generate_function_thunk_impl(
                 quote! {new(#out_param) auto(#return_expr)}
             }
         }
-    } else if let CcTypeVariant::NamedType { name, type_args } = &func.return_type.cpp_type.variant
-    {
-        match name.as_ref() {
-            "void" => return_expr,
-            "&" => quote! { return & #return_expr },
-            "&&" => {
+    } else {
+        match &func.return_type.cpp_type.variant {
+            CcTypeVariant::Primitive(Primitive::Void) => return_expr,
+            CcTypeVariant::Pointer { pointer_kind: CcPointerKind::LValueRef, .. } => {
+                // The C++ function returns an lvalue reference, so we turn it into a pointer before
+                // passing back across the C boundary.
+                quote! { return & #return_expr }
+            }
+            CcTypeVariant::Pointer {
+                pointer_kind: CcPointerKind::RValueRef, pointee_type, ..
+            } => {
                 // The code below replicates bits of `format_cpp_type`, but formats an rvalue
                 // reference (which `format_cpp_type` would format as a pointer).
                 // `const_fragment` from `format_cpp_type` is ignored - it is not applicable for
                 // references.
-                let ty = &func.return_type.cpp_type;
-                let [type_arg] = &type_args[..] else {
-                    bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
-                };
-                let nested_type = cpp_type_name::format_cpp_type(type_arg, ir)?;
+                let nested_type = cpp_type_name::format_cpp_type(pointee_type, ir)?;
                 quote! {
-                    #nested_type && lvalue = #return_expr;
-                    return &lvalue
+                        #nested_type && lvalue = #return_expr;
+                        return &lvalue
+
                 }
             }
             _ => quote! { return #return_expr },
         }
-    } else {
-        quote! { return #return_expr }
     };
 
     Ok(quote! {

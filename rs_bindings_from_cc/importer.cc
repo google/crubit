@@ -987,6 +987,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
         });
     if (unknown_attr.has_value()) {
       mapped_type->rs_type = UnknownAttr{.unknown_attr = *unknown_attr};
+      mapped_type->cpp_type.unknown_attr = *unknown_attr;
     }
   }
   return mapped_type;
@@ -1088,53 +1089,63 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
              type->getAsAdjusted<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
-        return MappedType::Simple("bool", "bool");
+        return MappedType::Simple("bool", {CcType::Primitive{"bool"}});
       case clang::BuiltinType::Void:
-        return MappedType::Void();
+        return MappedType::Simple("()", {CcType::Primitive{"void"}});
 
       // Floating-point numbers
       //
       // TODO(b/255768062): Generated bindings should explicitly check if
       // `math.h` defines the `__STDC_IEC_559__` macro.
       case clang::BuiltinType::Float:
-        return MappedType::Simple("f32", "float");
+        return MappedType::Simple("f32", {CcType::Primitive{"float"}});
       case clang::BuiltinType::Double:
-        return MappedType::Simple("f64", "double");
+        return MappedType::Simple("f64", {CcType::Primitive{"double"}});
 
       // `char`
       case clang::BuiltinType::Char_S:  // 'char' in targets where it's signed
       case clang::BuiltinType::Char_U:  // 'char' in targets where it's unsigned
-        return MappedType::Simple("::core::ffi::c_char", "char");
+        return MappedType::Simple("::core::ffi::c_char",
+                                  {CcType::Primitive{"char"}});
       case clang::BuiltinType::SChar:  // 'signed char', explicitly qualified
-        return MappedType::Simple("::core::ffi::c_schar", "signed char");
+        return MappedType::Simple("::core::ffi::c_schar",
+                                  {CcType::Primitive{"signed char"}});
       case clang::BuiltinType::UChar:  // 'unsigned char', explicitly qualified
-        return MappedType::Simple("::core::ffi::c_uchar", "unsigned char");
+        return MappedType::Simple("::core::ffi::c_uchar",
+                                  {CcType::Primitive{"unsigned char"}});
 
       // Signed integers
       case clang::BuiltinType::Short:
-        return MappedType::Simple("::core::ffi::c_short", "short");
+        return MappedType::Simple("::core::ffi::c_short",
+                                  {CcType::Primitive{"short"}});
       case clang::BuiltinType::Int:
-        return MappedType::Simple("::core::ffi::c_int", "int");
+        return MappedType::Simple("::core::ffi::c_int",
+                                  {CcType::Primitive{"int"}});
       case clang::BuiltinType::Long:
-        return MappedType::Simple("::core::ffi::c_long", "long");
+        return MappedType::Simple("::core::ffi::c_long",
+                                  {CcType::Primitive{"long"}});
       case clang::BuiltinType::LongLong:
-        return MappedType::Simple("::core::ffi::c_longlong", "long long");
+        return MappedType::Simple("::core::ffi::c_longlong",
+                                  {CcType::Primitive{"long long"}});
 
       // Unsigned integers
       case clang::BuiltinType::UShort:
-        return MappedType::Simple("::core::ffi::c_ushort", "unsigned short");
+        return MappedType::Simple("::core::ffi::c_ushort",
+                                  {CcType::Primitive{"unsigned short"}});
       case clang::BuiltinType::UInt:
-        return MappedType::Simple("::core::ffi::c_uint", "unsigned int");
+        return MappedType::Simple("::core::ffi::c_uint",
+                                  {CcType::Primitive{"unsigned int"}});
       case clang::BuiltinType::ULong:
-        return MappedType::Simple("::core::ffi::c_ulong", "unsigned long");
+        return MappedType::Simple("::core::ffi::c_ulong",
+                                  {CcType::Primitive{"unsigned long"}});
       case clang::BuiltinType::ULongLong:
         return MappedType::Simple("::core::ffi::c_ulonglong",
-                                  "unsigned long long");
+                                  {CcType::Primitive{"unsigned long long"}});
 
       case clang::BuiltinType::Char16:
-        return MappedType::Simple("u16", "char16_t");
+        return MappedType::Simple("u16", {CcType::Primitive{"char16_t"}});
       case clang::BuiltinType::Char32:
-        return MappedType::Simple("u32", "char32_t");
+        return MappedType::Simple("u32", {CcType::Primitive{"char32_t"}});
       default:
         return absl::UnimplementedError("Unsupported builtin type");
     }

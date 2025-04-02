@@ -67,7 +67,8 @@ std::optional<MappedType> GetTypeMapOverride(const clang::Type& cpp_type) {
   std::optional<absl::string_view> rust_type =
       MapKnownCcTypeToRsType(type_string);
   if (rust_type.has_value()) {
-    return MappedType::Simple(std::string(*rust_type), type_string);
+    return MappedType::Simple(std::string(*rust_type),
+                              {CcType::Primitive{type_string}});
   }
   return std::nullopt;
 }

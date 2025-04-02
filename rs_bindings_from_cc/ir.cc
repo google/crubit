@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -23,6 +24,13 @@
 #include "llvm/Support/JSON.h"
 
 namespace crubit {
+namespace {
+// https://en.cppreference.com/w/cpp/utility/variant/visit
+template <typename... Ts>
+struct visitor : Ts... {
+  using Ts::operator()...;
+};
+}  // namespace
 
 template <class T>
 llvm::json::Value toJSON(const T& t) {
@@ -89,38 +97,75 @@ llvm::json::Value RsTypeNamed::ToJson() const {
 }
 
 llvm::json::Value CcType::ToJson() const {
-  llvm::json::Object variant_object;
-  if (auto* cc_type_named = std::get_if<CcTypeNamed>(&variant)) {
-    variant_object = llvm::json::Object{{"NamedType", cc_type_named->ToJson()}};
-  } else {
-    ItemId decl_id = std::get<ItemId>(variant);
-    variant_object = llvm::json::Object{
-        {"ItemIdType", llvm::json::Object{{"decl_id", decl_id.value()}}}};
-  }
+  llvm::json::Object variant_object = std::visit(
+      visitor{
+          [&](CcType::Primitive primitive) {
+            return llvm::json::Object{{"Primitive", primitive.spelling}};
+          },
+          [&](CcType::Pointer pointer) {
+            return llvm::json::Object{
+                {"Pointer",
+                 llvm::json::Object{
+                     {
+                         "pointer_kind",
+                         [&]() -> llvm::json::Value {
+                           switch (pointer.pointer_kind) {
+                             case CcPointerKind::kLValueRef:
+                               return "LValueRef";
+                             case CcPointerKind::kRValueRef:
+                               return "RValueRef";
+                             case CcPointerKind::kNullable:
+                               return "Nullable";
+                             case CcPointerKind::kNonNull:
+                               return "NonNull";
+                           }
+                         }(),
+                     },
+                     {"lifetime", pointer.lifetime},
+                     {"pointee_type", *pointer.pointee_type},
+                 }},
+            };
+          },
+          [&](const CcType::FuncValue& func_value) {
+            std::vector<llvm::json::Value> param_and_return_type_values;
+            param_and_return_type_values.reserve(
+                func_value.param_and_return_types.size());
+            for (const CcType& type : func_value.param_and_return_types) {
+              param_and_return_type_values.push_back(type.ToJson());
+            }
+            return llvm::json::Object{
+                {"FuncValue",
+                 llvm::json::Object{
+                     {"call_conv", func_value.call_conv},
+                     {"param_and_return_types", param_and_return_type_values},
+                 }},
+            };
+          },
+          [&](const CcType::Record& record) {
+            return llvm::json::Object{
+                {"Record", llvm::json::Object{{"id", record.id}}}};
+          }},
+      variant);
 
   return llvm::json::Object{
       {"variant", std::move(variant_object)},
       {"is_const", is_const},
-  };
-}
-
-llvm::json::Value CcTypeNamed::ToJson() const {
-  return llvm::json::Object{
-      {"name", name},
-      {"type_args", type_args},
+      {"unknown_attr", unknown_attr},
   };
 }
 
 namespace {
-enum class ValueCategory { kLvalue, kRvalue };
-
 MappedType PointerOrReferenceTo(
-    MappedType pointee_type, absl::string_view cc_ptr_name,
-    ValueCategory value_category, std::optional<LifetimeId> lifetime,
-    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
+    MappedType pointee_type, CcPointerKind pointer_kind,
+    std::optional<LifetimeId> lifetime,
+    std::optional<clang::RefQualifierKind> ref_qualifier_kind) {
   bool has_lifetime = lifetime.has_value();
   absl::string_view rs_name;
-  if (value_category == ValueCategory::kLvalue) {
+  if (pointer_kind == CcPointerKind::kRValueRef) {
+    CHECK(has_lifetime);
+    rs_name = pointee_type.cpp_type.is_const ? internal::kRustRvalueRefConst
+                                             : internal::kRustRvalueRefMut;
+  } else {
     if (has_lifetime) {
       if (ref_qualifier_kind.has_value() &&
           ref_qualifier_kind.value() == clang::RefQualifierKind::RQ_RValue) {
@@ -134,24 +179,23 @@ MappedType PointerOrReferenceTo(
       rs_name = pointee_type.cpp_type.is_const ? internal::kRustPtrConst
                                                : internal::kRustPtrMut;
     }
-  } else {
-    CHECK(has_lifetime);
-    rs_name = pointee_type.cpp_type.is_const ? internal::kRustRvalueRefConst
-                                             : internal::kRustRvalueRefMut;
   }
   RsTypeNamed rs_type = RsTypeNamed{.name = std::string(rs_name)};
   if (has_lifetime) {
-    rs_type.lifetime_args.push_back(*std::move(lifetime));
+    rs_type.lifetime_args.push_back(*lifetime);
   }
   rs_type.type_args.push_back(std::move(pointee_type.rs_type));
-  if (has_lifetime && nullable) {
+  if (has_lifetime && pointer_kind == CcPointerKind::kNullable) {
     rs_type = RsTypeNamed{.name = "Option", .type_args = {std::move(rs_type)}};
   }
   return MappedType{
       .rs_type = std::move(rs_type),
-      .cpp_type = {CcTypeNamed{
-          .name = std::string(cc_ptr_name),
-          .type_args = {std::move(pointee_type.cpp_type)}}},
+      .cpp_type = {CcType::Pointer{
+          .pointer_kind = pointer_kind,
+          .lifetime = lifetime,
+          .pointee_type =
+              std::make_shared<CcType>(std::move(pointee_type).cpp_type),
+      }},
   };
 }
 }  // namespace
@@ -159,25 +203,24 @@ MappedType PointerOrReferenceTo(
 MappedType MappedType::PointerTo(
     MappedType pointee_type, std::optional<LifetimeId> lifetime,
     std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
-  return PointerOrReferenceTo(std::move(pointee_type), internal::kCcPtr,
-                              ValueCategory::kLvalue, lifetime,
-                              ref_qualifier_kind, nullable);
+  return PointerOrReferenceTo(
+      std::move(pointee_type),
+      nullable ? CcPointerKind::kNullable : CcPointerKind::kNonNull, lifetime,
+      ref_qualifier_kind);
 }
 
 MappedType MappedType::LValueReferenceTo(MappedType pointee_type,
                                          std::optional<LifetimeId> lifetime) {
-  return PointerOrReferenceTo(std::move(pointee_type), internal::kCcLValueRef,
-                              ValueCategory::kLvalue, lifetime,
-                              /*ref_qualifier_kind=*/std::nullopt,
-                              /*nullable=*/false);
+  return PointerOrReferenceTo(std::move(pointee_type),
+                              CcPointerKind::kLValueRef, lifetime,
+                              /*ref_qualifier_kind=*/std::nullopt);
 }
 
 MappedType MappedType::RValueReferenceTo(MappedType pointee_type,
                                          LifetimeId lifetime) {
-  return PointerOrReferenceTo(std::move(pointee_type), internal::kCcRValueRef,
-                              ValueCategory::kRvalue, lifetime,
-                              /*ref_qualifier_kind=*/std::nullopt,
-                              /*nullable=*/false);
+  return PointerOrReferenceTo(std::move(pointee_type),
+                              CcPointerKind::kRValueRef, lifetime,
+                              /*ref_qualifier_kind=*/std::nullopt);
 }
 
 MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
@@ -188,10 +231,9 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
                               std::move(return_type), std::move(param_types));
 
-  auto* cpp_type_named = std::get_if<CcTypeNamed>(&result.cpp_type.variant);
-  CHECK(cpp_type_named != nullptr);
-  CHECK_EQ(cpp_type_named->name, internal::kCcLValueRef);
-  cpp_type_named->name = std::string(internal::kCcPtr);
+  auto* cc_func_ptr = std::get_if<CcType::Pointer>(&result.cpp_type.variant);
+  CHECK(cc_func_ptr != nullptr);
+  cc_func_ptr->pointer_kind = CcPointerKind::kNonNull;
 
   RsType rs_func_ptr_type = std::move(result.rs_type);
   const RsTypeNamed* named = std::get_if<RsTypeNamed>(&rs_func_ptr_type);
@@ -221,13 +263,14 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
     rs_type_args.push_back(std::move(type_arg.rs_type));
   }
 
-  CcType cc_func_value_type = {CcTypeNamed{
-      .name = absl::StrCat(internal::kCcFuncValue, " ", cc_call_conv),
-      .type_args = std::move(cpp_type_args),
-  }};
-  CcType cc_func_ref_type = {
-      CcTypeNamed{.name = std::string(internal::kCcLValueRef),
-                  .type_args = {cc_func_value_type}}};
+  CcType::Pointer cc_func_ref_type = CcType::Pointer{
+      .pointer_kind = CcPointerKind::kLValueRef,
+      .lifetime = lifetime,
+      .pointee_type = std::make_shared<CcType>(CcType{CcType::FuncValue{
+          .call_conv = std::string(cc_call_conv),
+          .param_and_return_types = std::move(cpp_type_args),
+      }}),
+  };
 
   // Rust cannot express a function *value* type, only function pointer types.
   RsTypeNamed rs_func_ptr_type = RsTypeNamed{
@@ -239,7 +282,7 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
 
   return MappedType{
       .rs_type = std::move(rs_func_ptr_type),
-      .cpp_type = std::move(cc_func_ref_type),
+      .cpp_type = {std::move(cc_func_ref_type)},
   };
 }
 

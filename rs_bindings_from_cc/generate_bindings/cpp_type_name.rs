@@ -5,7 +5,7 @@
 use arc_anyhow::Result;
 use code_gen_utils::expect_format_cc_type_name;
 use error_report::{anyhow, bail};
-use ir::{CcType, CcTypeVariant, Item, Record, IR};
+use ir::{CcCallingConv, CcPointerKind, CcType, CcTypeVariant, Item, Record, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -35,80 +35,49 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
     } else {
         quote! {}
     };
-    if let CcTypeVariant::NamedType { name, type_args } = &ty.variant {
-        match name.as_ref() {
-            mut name @ ("*" | "&" | "&&") => {
-                let [type_arg] = &type_args[..] else {
-                    bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
-                };
-                let nested_type = format_cpp_type_inner(type_arg, ir, references_ok)?;
-                if !references_ok {
-                    name = "*";
-                }
-                let ptr = match name {
-                    "*" => quote! {*},
-                    "&" => quote! {&},
-                    "&&" => quote! {&&},
-                    _ => unreachable!(),
-                };
-                Ok(quote! {#nested_type #ptr #const_fragment})
-            }
-            cpp_type_name => match cpp_type_name.strip_prefix("#funcValue ") {
-                None => {
-                    if !type_args.is_empty() {
-                        bail!("Type not yet supported: {:?}", ty);
-                    }
-                    // Not using `code_gen_utils::format_cc_ident`, because
-                    // `cpp_type_name` may be a C++ reserved keyword (e.g.
-                    // `int`).
-                    let cc_ident: TokenStream = cpp_type_name.parse().unwrap();
-                    Ok(quote! { #cc_ident #const_fragment })
-                }
-                Some(abi) => match type_args.split_last() {
-                    None => bail!("funcValue type without a return type: {:?}", ty),
-                    Some((ret_type, param_types)) => {
-                        // Function pointer types don't ignore references, but luckily,
-                        // `-Wreturn-type-c-linkage` does. So we can just re-enable references now
-                        // so that the function type is exactly correct.
-                        let ret_type =
-                            format_cpp_type_inner(ret_type, ir, /* references_ok= */ true)?;
-                        let param_types = param_types
-                            .iter()
-                            .map(|t| format_cpp_type_inner(t, ir, /* references_ok= */ true))
-                            .collect::<Result<Vec<_>>>()?;
-                        let attr = format_cc_call_conv_as_clang_attribute(abi)?;
-                        // `type_identity_t` is used below to avoid having to
-                        // emit spiral-like syntax where some syntax elements of
-                        // an inner type (e.g. function type as below) can
-                        // surround syntax elements of an outer type (e.g. a
-                        // pointer type). Compare: `int (*foo)(int, int)` VS
-                        // `type_identity_t<int(int, int)>* foo`.
-                        Ok(quote! { crubit::type_identity_t<
-                            #ret_type ( #( #param_types ),* ) #attr
-                        >  })
-                    }
-                },
-            },
+    match &ty.variant {
+        CcTypeVariant::Primitive(primitive) => Ok(quote! { #primitive #const_fragment }),
+        CcTypeVariant::Pointer { pointer_kind, pointee_type, .. } => {
+            let nested_type = format_cpp_type_inner(pointee_type, ir, references_ok)?;
+            let ptr = match (references_ok, pointer_kind) {
+                (true, CcPointerKind::LValueRef) => quote! {&},
+                (true, CcPointerKind::RValueRef) => quote! {&&},
+                _ => quote! {*},
+            };
+            Ok(quote! {#nested_type #ptr #const_fragment})
         }
-    } else {
-        let item = ir.item_for_type(ty)?;
-        let type_name = cpp_type_name_for_item(item, ir)?;
-        Ok(quote! {#const_fragment #type_name})
-    }
-}
+        CcTypeVariant::FuncValue { call_conv, param_and_return_types } => {
+            let (ret_type, param_types) = param_and_return_types.split_last().expect(
+                "funcValue should always have a return type, this is a crubit implementation bug",
+            );
 
-// Maps a Rust ABI [1] into a Clang attribute. See also
-// `ConvertCcCallConvIntoRsApi` in importer.cc.
-// [1]
-// https://doc.rust-lang.org/reference/items/functions.html#extern-function-qualifier
-fn format_cc_call_conv_as_clang_attribute(rs_abi: &str) -> Result<TokenStream> {
-    match rs_abi {
-        "cdecl" => Ok(quote! {}),
-        "fastcall" => Ok(quote! { __attribute__((fastcall)) }),
-        "stdcall" => Ok(quote! { __attribute__((stdcall)) }),
-        "thiscall" => Ok(quote! { __attribute__((thiscall)) }),
-        "vectorcall" => Ok(quote! { __attribute__((vectorcall)) }),
-        _ => bail!("Unsupported ABI: {}", rs_abi),
+            // Function pointer types don't ignore references, but luckily,
+            // `-Wreturn-type-c-linkage` does. So we can just re-enable references now
+            // so that the function type is exactly correct.
+            let ret_type = format_cpp_type_inner(ret_type, ir, /* references_ok= */ true)?;
+            let param_types = param_types
+                .iter()
+                .map(|t| format_cpp_type_inner(t, ir, /* references_ok= */ true))
+                .collect::<Result<Vec<_>>>()?;
+            let attr = match call_conv {
+                CcCallingConv::C => quote! {},
+                other => quote! { __attribute__((#other)) },
+            };
+            // `type_identity_t` is used below to avoid having to
+            // emit spiral-like syntax where some syntax elements of
+            // an inner type (e.g. function type as below) can
+            // surround syntax elements of an outer type (e.g. a
+            // pointer type). Compare: `int (*foo)(int, int)` VS
+            // `type_identity_t<int(int, int)>* foo`.
+            Ok(quote! { crubit::type_identity_t<
+                #ret_type ( #( #param_types ),* ) #attr
+            >  })
+        }
+        CcTypeVariant::Record { id } => {
+            let item = ir.find_untyped_decl(*id);
+            let type_name = cpp_type_name_for_item(item, ir)?;
+            Ok(quote! {#const_fragment #type_name})
+        }
     }
 }
 
