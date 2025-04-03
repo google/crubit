@@ -169,13 +169,13 @@ forward_declare::unsafe_define!(
 // Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
 
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<Inner> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<test_namespace_bindings::Inner> &&': Unsupported type: && without lifetime
 
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<Inner> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<test_namespace_bindings::Inner> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     #[inline(always)]
@@ -256,13 +256,13 @@ forward_declare::unsafe_define!(
 // Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<Inner> > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<test_namespace_bindings::Inner> > &&': Unsupported type: && without lifetime
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<Inner> > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<test_namespace_bindings::Inner> > &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     #[inline(always)]
