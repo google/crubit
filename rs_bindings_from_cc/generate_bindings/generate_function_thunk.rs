@@ -339,6 +339,13 @@ pub fn generate_function_thunk_impl(
                     CcPointerKind::LValueRef => Ok(quote! { *#ident }),
                     CcPointerKind::Nullable | CcPointerKind::NonNull => Ok(quote! { #ident }),
                 },
+                CcTypeVariant::FuncPointer { non_null, .. } => {
+                    if *non_null {
+                        Ok(quote! { *#ident })
+                    } else {
+                        Ok(quote! { #ident })
+                    }
+                }
                 _ => {
                     let rs_type_kind = db.rs_type_kind(p.type_.rs_type.clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
@@ -434,8 +441,6 @@ pub fn generate_function_thunk_impl(
         match &func.return_type.cpp_type.variant {
             CcTypeVariant::Primitive(Primitive::Void) => return_expr,
             CcTypeVariant::Pointer { pointer_kind: CcPointerKind::LValueRef, .. } => {
-                // The C++ function returns an lvalue reference, so we turn it into a pointer before
-                // passing back across the C boundary.
                 quote! { return & #return_expr }
             }
             CcTypeVariant::Pointer {
@@ -452,6 +457,7 @@ pub fn generate_function_thunk_impl(
 
                 }
             }
+            CcTypeVariant::FuncPointer { non_null: true, .. } => quote! { return & #return_expr },
             _ => quote! { return #return_expr },
         }
     };

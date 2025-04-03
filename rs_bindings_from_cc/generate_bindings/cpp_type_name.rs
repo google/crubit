@@ -46,7 +46,7 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
             };
             Ok(quote! {#nested_type #ptr #const_fragment})
         }
-        CcTypeVariant::FuncValue { call_conv, param_and_return_types } => {
+        CcTypeVariant::FuncPointer { non_null, call_conv, param_and_return_types } => {
             let (ret_type, param_types) = param_and_return_types.split_last().expect(
                 "funcValue should always have a return type, this is a crubit implementation bug",
             );
@@ -63,15 +63,22 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
                 CcCallingConv::C => quote! {},
                 other => quote! { __attribute__((#other)) },
             };
+            let ptr = if *non_null && references_ok {
+                quote! {&}
+            } else {
+                quote! {*}
+            };
             // `type_identity_t` is used below to avoid having to
             // emit spiral-like syntax where some syntax elements of
             // an inner type (e.g. function type as below) can
             // surround syntax elements of an outer type (e.g. a
             // pointer type). Compare: `int (*foo)(int, int)` VS
             // `type_identity_t<int(int, int)>* foo`.
-            Ok(quote! { crubit::type_identity_t<
-                #ret_type ( #( #param_types ),* ) #attr
-            >  })
+            Ok(quote! {
+                crubit::type_identity_t<
+                    #ret_type ( #( #param_types ),* ) #attr
+                > #ptr #const_fragment
+            })
         }
         CcTypeVariant::Record { id, .. } => {
             let item = ir.find_untyped_decl(*id);

@@ -145,7 +145,11 @@ enum class CcPointerKind { kRValueRef, kLValueRef, kNullable, kNonNull };
 struct CcType {
   llvm::json::Value ToJson() const;
 
-  struct FuncValue {
+  struct FuncPointer {
+    // When true, this is a C++ function reference that maps to a Rust function
+    // pointer. When false, this is a C++ function pointer that maps to a Rust
+    // function pointer wrapped in an `Option`.
+    bool non_null;
     std::string call_conv;
     std::vector<CcType> param_and_return_types;
   };
@@ -189,7 +193,7 @@ struct CcType {
     std::optional<BuiltinBridgeType> builtin_bridge_type = std::nullopt;
   };
 
-  std::variant<Primitive, Pointer, FuncValue, Record> variant;
+  std::variant<Primitive, Pointer, FuncPointer, Record> variant;
   bool is_const = false;
   std::string unknown_attr = "";
 };

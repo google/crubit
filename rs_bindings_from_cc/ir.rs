@@ -372,7 +372,8 @@ pub enum CcTypeVariant {
         lifetime: Option<LifetimeId>,
         pointee_type: Rc<CcType>,
     },
-    FuncValue {
+    FuncPointer {
+        non_null: bool,
         call_conv: CcCallingConv,
 
         /// The parameter types, followed by the return type.

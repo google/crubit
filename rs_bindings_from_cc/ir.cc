@@ -126,7 +126,7 @@ llvm::json::Value CcType::ToJson() const {
                  }},
             };
           },
-          [&](const CcType::FuncValue& func_value) {
+          [&](const CcType::FuncPointer& func_value) {
             std::vector<llvm::json::Value> param_and_return_type_values;
             param_and_return_type_values.reserve(
                 func_value.param_and_return_types.size());
@@ -134,8 +134,9 @@ llvm::json::Value CcType::ToJson() const {
               param_and_return_type_values.push_back(type.ToJson());
             }
             return llvm::json::Object{
-                {"FuncValue",
+                {"FuncPointer",
                  llvm::json::Object{
+                     {"non_null", func_value.non_null},
                      {"call_conv", func_value.call_conv},
                      {"param_and_return_types", param_and_return_type_values},
                  }},
@@ -259,9 +260,10 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
                               std::move(return_type), std::move(param_types));
 
-  auto* cc_func_ptr = std::get_if<CcType::Pointer>(&result.cpp_type.variant);
+  auto* cc_func_ptr =
+      std::get_if<CcType::FuncPointer>(&result.cpp_type.variant);
   CHECK(cc_func_ptr != nullptr);
-  cc_func_ptr->pointer_kind = CcPointerKind::kNonNull;
+  cc_func_ptr->non_null = false;
 
   RsType rs_func_ptr_type = std::move(result.rs_type);
   const RsTypeNamed* named = std::get_if<RsTypeNamed>(&rs_func_ptr_type);
@@ -291,13 +293,10 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
     rs_type_args.push_back(std::move(type_arg.rs_type));
   }
 
-  CcType::Pointer cc_func_ref_type = CcType::Pointer{
-      .pointer_kind = CcPointerKind::kLValueRef,
-      .lifetime = lifetime,
-      .pointee_type = std::make_shared<CcType>(CcType{CcType::FuncValue{
-          .call_conv = std::string(cc_call_conv),
-          .param_and_return_types = std::move(cpp_type_args),
-      }}),
+  CcType::FuncPointer cc_func_type = {
+      .non_null = true,
+      .call_conv = std::string(cc_call_conv),
+      .param_and_return_types = std::move(cpp_type_args),
   };
 
   // Rust cannot express a function *value* type, only function pointer types.
@@ -310,7 +309,7 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
 
   return MappedType{
       .rs_type = std::move(rs_func_ptr_type),
-      .cpp_type = {std::move(cc_func_ref_type)},
+      .cpp_type = {std::move(cc_func_type)},
   };
 }
 
