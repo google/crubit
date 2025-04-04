@@ -417,9 +417,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
          specialization_decl->getTemplateArgs().asArray()) {
       if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
         template_specialization->template_args.emplace_back(
-            TemplateArg{ictx_.ConvertQualType(
-                template_arg.getAsType(), /*lifetimes=*/nullptr,
-                /*ref_qualifier_kind=*/std::nullopt)});
+            TemplateArg{ictx_.ConvertQualType(template_arg.getAsType(),
+                                              /*lifetimes=*/nullptr)});
       }
     }
   } else {
@@ -645,8 +644,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
       case clang::AS_public:
         // TODO(mboehme): Once lifetime_annotations supports retrieving
         // lifetimes in field types, pass these to ConvertQualType().
-        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes,
-                                     std::nullopt);
+        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes);
         break;
       case clang::AS_protected:
       case clang::AS_private:

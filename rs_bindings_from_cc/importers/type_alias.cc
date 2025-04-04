@@ -76,7 +76,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   // TODO(mboehme): Once lifetime_annotations supports retrieving lifetimes in
   // type aliases, pass these to ConvertQualType().
   absl::StatusOr<MappedType> underlying_type =
-      ictx_.ConvertQualType(underlying_qualtype, no_lifetimes, std::nullopt);
+      ictx_.ConvertQualType(underlying_qualtype, no_lifetimes);
 
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(

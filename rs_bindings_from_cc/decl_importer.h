@@ -183,11 +183,12 @@ class ImportContext {
   // all pointers contained in `qual_type`, in the same way that `lifetimes`
   // specifies lifetimes for all these pointers. Once this is done, make sure
   // that all callers pass in the appropriate information, derived from
-  // nullability annotations.
+  // nullability annotations. Today, the only caller that passes in
+  // `nullable=false` is the code that handles the `this` parameter type for
+  // methods, which is always a pointer that cannot be null.
   virtual absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-      std::optional<clang::RefQualifierKind> ref_qualifier_kind,
       bool nullable = true) = 0;
 
   // Marks `decl` as successfully imported.  Other pieces of code can check

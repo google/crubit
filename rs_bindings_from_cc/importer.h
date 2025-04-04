@@ -109,7 +109,6 @@ class Importer final : public ImportContext {
   absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-      std::optional<clang::RefQualifierKind> ref_qualifier_kind,
       bool nullable = true) override;
 
   void MarkAsSuccessfullyImported(const clang::NamedDecl* decl) override;
@@ -151,20 +150,13 @@ class Importer final : public ImportContext {
   std::vector<clang::Decl*> GetCanonicalChildren(
       const clang::DeclContext* decl_context) const;
   // Converts a type to a MappedType.
-  //
-  // ref_qualifier_kind is the member function reference qualifier, e.g., `&`
-  // means Lvalue-reference-qualified, `&&` means Rvalue-reference-qualified.
-  // This is only meaningful and hence populated when converting the type of
-  // the `this` pointer.
   absl::StatusOr<MappedType> ConvertType(
       const clang::Type* type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-      std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable);
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable);
   // Converts a type, without processing attributes.
   absl::StatusOr<MappedType> ConvertUnattributedType(
       const clang::Type* type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-      std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable);
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable);
   absl::StatusOr<MappedType> ConvertTypeDecl(clang::NamedDecl* decl);
 
   // Converts `type` into a MappedType, after first importing the Record behind

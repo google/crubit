@@ -965,9 +965,7 @@ Importer::AsBuiltinBridgeType(
   auto mapped_type_of_arg = [&](int index) {
     return ConvertQualType(
         /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
-        /*lifetimes=*/nullptr,
-        /*ref_qualifier_kind=*/std::nullopt,
-        /*nullable=*/false);
+        /*lifetimes=*/nullptr);
   };
 
   if (name == "optional") {
@@ -1014,10 +1012,9 @@ static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
 
 absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
-    const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
   absl::StatusOr<MappedType> mapped_type =
-      ConvertUnattributedType(type, lifetimes, ref_qualifier_kind, nullable);
+      ConvertUnattributedType(type, lifetimes, nullable);
   if (mapped_type.ok()) {
     std::optional<std::string> unknown_attr =
         CollectUnknownTypeAttrs(*type, [](clang::attr::Kind kind) {
@@ -1049,8 +1046,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 
 absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
     const clang::Type* type,
-    const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
@@ -1090,8 +1086,7 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
       }
       CRUBIT_ASSIGN_OR_RETURN(
           MappedType mapped_return_type,
-          ConvertQualType(func_type->getReturnType(), return_lifetimes,
-                          ref_qualifier_kind));
+          ConvertQualType(func_type->getReturnType(), return_lifetimes));
 
       std::vector<MappedType> mapped_param_types;
       for (unsigned i = 0; i < func_type->getNumParams(); ++i) {
@@ -1102,8 +1097,7 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
         }
         CRUBIT_ASSIGN_OR_RETURN(
             MappedType mapped_param_type,
-            ConvertQualType(func_type->getParamType(i), param_lifetimes,
-                            ref_qualifier_kind));
+            ConvertQualType(func_type->getParamType(i), param_lifetimes));
         mapped_param_types.push_back(std::move(mapped_param_type));
       }
 
@@ -1119,12 +1113,11 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
       }
     }
 
-    CRUBIT_ASSIGN_OR_RETURN(
-        MappedType mapped_pointee_type,
-        ConvertQualType(pointee_type, pointee_lifetimes, ref_qualifier_kind));
+    CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_pointee_type,
+                            ConvertQualType(pointee_type, pointee_lifetimes));
     if (type->isPointerType()) {
       return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
-                                   ref_qualifier_kind, nullable);
+                                   nullable);
     } else if (type->isLValueReferenceType()) {
       return MappedType::LValueReferenceTo(std::move(mapped_pointee_type),
                                            lifetime);
@@ -1215,14 +1208,12 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
     return ConvertTemplateSpecializationType(tst_type);
   } else if (const auto* subst_type =
                  type->getAs<clang::SubstTemplateTypeParmType>()) {
-    return ConvertQualType(subst_type->getReplacementType(), lifetimes,
-                           ref_qualifier_kind);
+    return ConvertQualType(subst_type->getReplacementType(), lifetimes);
   } else if (const auto* deduced_type = type->getAs<clang::DeducedType>()) {
     // Deduction should have taken place earlier (e.g. via DeduceReturnType
     // called from FunctionDeclImporter::Import).
     CHECK(deduced_type->isDeduced());
-    return ConvertQualType(deduced_type->getDeducedType(), lifetimes,
-                           ref_qualifier_kind);
+    return ConvertQualType(deduced_type->getDeducedType(), lifetimes);
   }
 
   return absl::UnimplementedError(absl::StrCat(
@@ -1249,12 +1240,11 @@ static clang::QualType GetUnelaboratedType(clang::QualType qual_type,
 
 absl::StatusOr<MappedType> Importer::ConvertQualType(
     clang::QualType qual_type,
-    const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
   qual_type = GetUnelaboratedType(std::move(qual_type), ctx_);
   std::string type_string = qual_type.getAsString();
-  absl::StatusOr<MappedType> type = ConvertType(
-      qual_type.getTypePtr(), lifetimes, ref_qualifier_kind, nullable);
+  absl::StatusOr<MappedType> type =
+      ConvertType(qual_type.getTypePtr(), lifetimes, nullable);
   if (!type.ok()) {
     absl::Status error = absl::UnimplementedError(absl::Substitute(
         "Unsupported type '$0': $1", type_string, type.status().message()));

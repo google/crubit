@@ -20,7 +20,6 @@
 #include "absl/strings/string_view.h"
 #include "common/string_type.h"
 #include "common/strong_int.h"
-#include "clang/AST/Type.h"
 #include "llvm/Support/JSON.h"
 
 namespace crubit {
@@ -184,10 +183,9 @@ llvm::json::Value CcType::ToJson() const {
 }
 
 namespace {
-MappedType PointerOrReferenceTo(
-    MappedType pointee_type, CcPointerKind pointer_kind,
-    std::optional<LifetimeId> lifetime,
-    std::optional<clang::RefQualifierKind> ref_qualifier_kind) {
+MappedType PointerOrReferenceTo(MappedType pointee_type,
+                                CcPointerKind pointer_kind,
+                                std::optional<LifetimeId> lifetime) {
   bool has_lifetime = lifetime.has_value();
   absl::string_view rs_name;
   if (pointer_kind == CcPointerKind::kRValueRef) {
@@ -196,14 +194,8 @@ MappedType PointerOrReferenceTo(
                                              : internal::kRustRvalueRefMut;
   } else {
     if (has_lifetime) {
-      if (ref_qualifier_kind.has_value() &&
-          ref_qualifier_kind.value() == clang::RefQualifierKind::RQ_RValue) {
-        rs_name = pointee_type.cpp_type.is_const ? internal::kRustRvalueRefConst
-                                                 : internal::kRustRvalueRefMut;
-      } else {
-        rs_name = pointee_type.cpp_type.is_const ? internal::kRustRefConst
-                                                 : internal::kRustRefMut;
-      }
+      rs_name = pointee_type.cpp_type.is_const ? internal::kRustRefConst
+                                               : internal::kRustRefMut;
     } else {
       rs_name = pointee_type.cpp_type.is_const ? internal::kRustPtrConst
                                                : internal::kRustPtrMut;
@@ -229,27 +221,24 @@ MappedType PointerOrReferenceTo(
 }
 }  // namespace
 
-MappedType MappedType::PointerTo(
-    MappedType pointee_type, std::optional<LifetimeId> lifetime,
-    std::optional<clang::RefQualifierKind> ref_qualifier_kind, bool nullable) {
+MappedType MappedType::PointerTo(MappedType pointee_type,
+                                 std::optional<LifetimeId> lifetime,
+                                 bool nullable) {
   return PointerOrReferenceTo(
       std::move(pointee_type),
-      nullable ? CcPointerKind::kNullable : CcPointerKind::kNonNull, lifetime,
-      ref_qualifier_kind);
+      nullable ? CcPointerKind::kNullable : CcPointerKind::kNonNull, lifetime);
 }
 
 MappedType MappedType::LValueReferenceTo(MappedType pointee_type,
                                          std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              CcPointerKind::kLValueRef, lifetime,
-                              /*ref_qualifier_kind=*/std::nullopt);
+                              CcPointerKind::kLValueRef, lifetime);
 }
 
 MappedType MappedType::RValueReferenceTo(MappedType pointee_type,
                                          LifetimeId lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              CcPointerKind::kRValueRef, lifetime,
-                              /*ref_qualifier_kind=*/std::nullopt);
+                              CcPointerKind::kRValueRef, lifetime);
 }
 
 MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,

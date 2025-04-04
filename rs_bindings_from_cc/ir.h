@@ -36,7 +36,6 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
-#include "clang/AST/Type.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
@@ -265,10 +264,9 @@ struct MappedType {
     return MappedType{decl_id, {CcType::Record{decl_id}}};
   }
 
-  static MappedType PointerTo(
-      MappedType pointee_type, std::optional<LifetimeId> lifetime,
-      std::optional<clang::RefQualifierKind> ref_qualifier_kind,
-      bool nullable = true);
+  static MappedType PointerTo(MappedType pointee_type,
+                              std::optional<LifetimeId> lifetime,
+                              bool nullable = true);
 
   static MappedType LValueReferenceTo(MappedType pointee_type,
                                       std::optional<LifetimeId> lifetime);

@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "absl/container/btree_set.h"
@@ -96,6 +97,40 @@ SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
     }
   }
   return crubit;
+}
+
+// Applies the ref qualifier to the `this` pointer.
+//
+// Assume `f` is a method in `void f() && $a`. Converting the `this` parameter
+// type of `f` will result in a pointer type, even though the method is rvalue
+// ref qualified and has a lifetime. This function will update the `this`
+// parameter type to be an rvalue reference instead.
+void ApplyRefQualifierToThisPointer(
+    MappedType& this_param_type, clang::RefQualifierKind ref_qualifier_kind) {
+  auto* pointer =
+      std::get_if<CcType::Pointer>(&this_param_type.cpp_type.variant);
+  // The MappedType of `this` should always be a pointer.
+  CHECK(pointer != nullptr);
+
+  // Now we go back and fix the `this` parameter type to be a reference
+  // if it was a rvalue ref qualified and had a lifetime.
+  if (pointer->lifetime.has_value() &&
+      ref_qualifier_kind == clang::RefQualifierKind::RQ_RValue) {
+    // Fix the RsType
+    auto* rs_type = std::get_if<RsTypeNamed>(&this_param_type.rs_type);
+    CHECK(rs_type != nullptr);
+    if (rs_type->name == internal::kRustRefConst) {
+      rs_type->name = internal::kRustRvalueRefConst;
+    } else {
+      CHECK(rs_type->name == internal::kRustRefMut);
+      rs_type->name = internal::kRustRvalueRefMut;
+    }
+
+    // It was just a non null pointer, but because of the rvalue ref
+    // qualification, it should be an rvalue reference.
+    CHECK(pointer->pointer_kind == CcPointerKind::kNonNull);
+    pointer->pointer_kind = CcPointerKind::kRValueRef;
+  }
 }
 
 }  // namespace
@@ -308,18 +343,19 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       if (lifetimes) {
         this_lifetimes = &lifetimes->GetThisLifetimes();
       }
-      auto param_type =
+      auto this_param_type =
           ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
-                                std::optional<clang::RefQualifierKind>(
-                                    method_decl->getRefQualifier()),
                                 /*nullable=*/false);
-      if (!param_type.ok()) {
+      if (!this_param_type.ok()) {
         errors.Add(
             FormattedError::PrefixedStrCat("`this` parameter is not supported",
-                                           param_type.status().message()));
+                                           this_param_type.status().message()));
       } else {
+        ApplyRefQualifierToThisPointer(*this_param_type,
+                                       method_decl->getRefQualifier());
+
         params.push_back(
-            {.type = *std::move(param_type),
+            {.type = *std::move(this_param_type),
              .identifier = Identifier("__this"),
              // TODO(b/319524852): catch `[[clang::lifetimbound]]` on `this`.
              .unknown_attr = {}});
@@ -337,8 +373,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       param_lifetimes = &lifetimes->GetParamLifetimes(i);
     }
-    auto param_type =
-        ictx_.ConvertQualType(param->getType(), param_lifetimes, std::nullopt);
+    auto param_type = ictx_.ConvertQualType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
       errors.Add(
           FormattedError::Substitute("Parameter #$0 is not supported: $1", i,
@@ -377,8 +412,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       return_lifetimes = &lifetimes->GetReturnLifetimes();
     }
-    return_type = ictx_.ConvertQualType(function_decl->getReturnType(),
-                                        return_lifetimes, std::nullopt);
+    return_type =
+        ictx_.ConvertQualType(function_decl->getReturnType(), return_lifetimes);
     if (!return_type.ok()) {
       errors.Add(FormattedError::PrefixedStrCat(
           "Return type is not supported", return_type.status().message()));
