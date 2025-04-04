@@ -111,11 +111,13 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsType
                     RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Const }
                 }
                 "&mut" => RsTypeKind::Reference {
+                    option: false,
                     referent: get_pointee()?,
                     mutability: Mutability::Mut,
                     lifetime: get_lifetime()?,
                 },
                 "&" => RsTypeKind::Reference {
+                    option: false,
                     referent: get_pointee()?,
                     mutability: Mutability::Const,
                     lifetime: get_lifetime()?,
@@ -137,7 +139,15 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsType
                         "Option should have exactly 1 type argument (got {})",
                         type_args.len()
                     );
-                    RsTypeKind::Option(Rc::new(type_args.remove(0)))
+                    let mut inner = type_args.remove(0);
+                    match &mut inner {
+                        RsTypeKind::Reference { option, .. }
+                        | RsTypeKind::FuncPtr { option, .. } => {
+                            *option = true;
+                        }
+                        _ => unreachable!(),
+                    }
+                    inner
                 }
                 name => {
                     let mut type_args = get_type_args()?;
@@ -164,6 +174,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsType
                             an FFI thunk (and function pointers don't have a thunk)",
                         );
                         RsTypeKind::FuncPtr {
+                            option: false,
                             abi: abi.into(),
                             return_type: Rc::new(type_args.remove(type_args.len() - 1)),
                             param_types: Rc::from(type_args),

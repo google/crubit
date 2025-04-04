@@ -477,8 +477,7 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
         | RsTypeKind::TypeAlias { underlying_type: t, .. }
-        | RsTypeKind::Slice(t)
-        | RsTypeKind::Option(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
+        | RsTypeKind::Slice(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
         RsTypeKind::FuncPtr { return_type, param_types, .. } => {
             // Easier to do this imperatively when Result is involved...
             if db.is_rs_type_kind_unsafe(return_type.as_ref().clone())? {

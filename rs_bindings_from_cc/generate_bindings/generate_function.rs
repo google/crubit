@@ -874,6 +874,7 @@ fn adjust_param_types_for_trait_impl(
                 return Default::default();
             }
             *param_type = RsTypeKind::Reference {
+                option: false,
                 referent: Rc::new(param_type.clone()),
                 mutability: Mutability::Const,
                 lifetime: Lifetime::new("_"),

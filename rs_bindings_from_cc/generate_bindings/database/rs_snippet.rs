@@ -362,6 +362,7 @@ pub enum RsTypeKind {
         mutability: Mutability,
     },
     Reference {
+        option: bool,
         referent: Rc<RsTypeKind>,
         mutability: Mutability,
         lifetime: Lifetime,
@@ -372,6 +373,7 @@ pub enum RsTypeKind {
         lifetime: Lifetime,
     },
     FuncPtr {
+        option: bool,
         abi: Rc<str>,
         return_type: Rc<RsTypeKind>,
         param_types: Rc<[RsTypeKind]>,
@@ -398,8 +400,6 @@ pub enum RsTypeKind {
     },
     Primitive(PrimitiveType),
     Slice(Rc<RsTypeKind>),
-    /// Nullable T, using the rust Option type.
-    Option(Rc<RsTypeKind>),
     /// Types that require custom logic to translate.
     BridgeType {
         name: Rc<str>,
@@ -690,7 +690,6 @@ impl RsTypeKind {
                 RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
-                RsTypeKind::Option { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::BridgeType { original_type, .. } => {
                     if original_type.template_specialization.is_none()
                         || TEMPLATE_INSTANTIATION_ALLOWLIST
@@ -806,7 +805,8 @@ impl RsTypeKind {
                     "`self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function."
                 )
             }
-            RsTypeKind::Reference { referent, lifetime, mutability } => {
+            RsTypeKind::Reference { option, referent, lifetime, mutability } => {
+                assert!(!*option, "Optional self type is not valid, this should never happen");
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
@@ -855,7 +855,6 @@ impl RsTypeKind {
             RsTypeKind::Record { record, .. } => should_derive_copy(record),
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
-            RsTypeKind::Option(t) => t.implements_copy(),
             RsTypeKind::Slice(t) => t.implements_copy(),
             // We cannot get the information of the Rust type so we assume it is not Copy.
             RsTypeKind::BridgeType { .. } => false,
@@ -942,20 +941,22 @@ impl RsTypeKind {
                 let pointee_ = pointee.to_token_stream_replacing_by_self(db, self_record);
                 quote! {* #mutability #pointee_}
             }
-            RsTypeKind::Reference { referent, mutability, lifetime } => {
+            RsTypeKind::Reference { option, referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
-                let reference = quote! {& #lifetime #mut_ #referent_};
+                let mut tokens = quote! {& #lifetime #mut_ #referent_};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
                     // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
                     // not implementing ToTokens, but instead some other interface.)
-                    quote! {::core::pin::Pin< #reference >}
-                } else {
-                    reference
+                    tokens = quote! {::core::pin::Pin< #tokens >};
                 }
+                if *option {
+                    tokens = quote! {Option< #tokens >};
+                }
+                tokens
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
                 let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
@@ -966,17 +967,19 @@ impl RsTypeKind {
                     quote! {::ctor::ConstRvalueReference<#lifetime, #referent_>}
                 }
             }
-            RsTypeKind::FuncPtr { abi, return_type, param_types } => {
+            RsTypeKind::FuncPtr { option, abi, return_type, param_types } => {
                 let param_types_ = param_types
                     .iter()
                     .map(|type_| type_.to_token_stream_replacing_by_self(db, self_record));
                 let return_frag = return_type.format_as_return_type_fragment(db, self_record);
-                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe(db)) {
-                    quote! {unsafe}
-                } else {
-                    quote! {}
-                };
-                quote! { #unsafe_ extern #abi fn( #( #param_types_ ),* ) #return_frag }
+                let mut tokens = quote! { extern #abi fn( #( #param_types_ ),* ) #return_frag };
+                if param_types.iter().any(|p| p.is_unsafe(db)) {
+                    tokens = quote! { unsafe #tokens }
+                }
+                if *option {
+                    tokens = quote! {Option< #tokens >}
+                }
+                tokens
             }
             RsTypeKind::Record { record, .. } => {
                 if self_record == Some(record) {
@@ -988,10 +991,6 @@ impl RsTypeKind {
             RsTypeKind::Slice(t) => {
                 let type_arg = t.to_token_stream_replacing_by_self(db, self_record);
                 quote! {[#type_arg]}
-            }
-            RsTypeKind::Option(t) => {
-                let type_arg = t.to_token_stream_replacing_by_self(db, self_record);
-                quote! {Option<#type_arg>}
             }
             RsTypeKind::BridgeType { .. } => self.to_token_stream(db),
             RsTypeKind::TypeMapOverride { .. } => self.to_token_stream(db),
@@ -1095,20 +1094,22 @@ impl RsTypeKind {
                 let pointee_tokens = pointee.to_token_stream(db);
                 quote! {* #mutability #pointee_tokens}
             }
-            RsTypeKind::Reference { referent, mutability, lifetime } => {
+            RsTypeKind::Reference { option, referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 let referent_tokens = referent.to_token_stream(db);
-                let reference = quote! {& #lifetime #mut_ #referent_tokens};
+                let mut tokens = quote! {& #lifetime #mut_ #referent_tokens};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::core::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
                     // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
                     // not implementing ToTokens, but instead some other interface.)
-                    quote! {::core::pin::Pin< #reference >}
-                } else {
-                    reference
+                    tokens = quote! { ::core::pin::Pin< #tokens > };
                 }
+                if *option {
+                    tokens = quote! { Option< #tokens > };
+                }
+                tokens
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
                 // TODO(b/239661934): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
@@ -1119,15 +1120,19 @@ impl RsTypeKind {
                     quote! {::ctor::ConstRvalueReference<#lifetime, #referent_tokens>}
                 }
             }
-            RsTypeKind::FuncPtr { abi, return_type, param_types } => {
+            RsTypeKind::FuncPtr { option, abi, return_type, param_types } => {
                 let return_frag = return_type.format_as_return_type_fragment(db, None);
                 let param_types_tokens = param_types.iter().map(|ty| ty.to_token_stream(db));
-                let unsafe_ = if param_types.iter().any(|p| p.is_unsafe(db)) {
-                    quote! {unsafe}
-                } else {
-                    quote! {}
-                };
-                quote! { #unsafe_ extern #abi fn( #( #param_types_tokens ),* ) #return_frag }
+                let mut tokens =
+                    quote! { extern #abi fn( #( #param_types_tokens ),* ) #return_frag };
+
+                if param_types.iter().any(|p| p.is_unsafe(db)) {
+                    tokens = quote! { unsafe #tokens }
+                }
+                if *option {
+                    tokens = quote! {Option< #tokens >}
+                }
+                tokens
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
                 let record_ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
@@ -1173,11 +1178,6 @@ impl RsTypeKind {
             RsTypeKind::Slice(t) => {
                 let type_arg = t.to_token_stream(db);
                 quote! {[#type_arg]}
-            }
-            RsTypeKind::Option(t) => {
-                // TODO(jeanpierreda): This should likely be `::core::option::Option`.
-                let type_arg = t.to_token_stream(db);
-                quote! {Option<#type_arg>}
             }
             RsTypeKind::BridgeType { name, original_type, .. } => {
                 let is_crate_path = name.starts_with("::");
@@ -1231,7 +1231,6 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         self.todo.extend(param_types.iter().rev());
                     }
                     RsTypeKind::Slice(t) => self.todo.push(t),
-                    RsTypeKind::Option(t) => self.todo.push(t),
                     RsTypeKind::BridgeType { .. } => {}
                     RsTypeKind::TypeMapOverride { .. } => {}
                 };
@@ -1256,6 +1255,7 @@ mod tests {
             let b = RsTypeKind::TypeMapOverride { name: "B".into(), is_same_abi: true };
             let c = RsTypeKind::TypeMapOverride { name: "C".into(), is_same_abi: true };
             RsTypeKind::FuncPtr {
+                option: false,
                 abi: "blah".into(),
                 param_types: Rc::from([a, b]),
                 return_type: Rc::new(c),
@@ -1279,6 +1279,7 @@ mod tests {
     fn test_lifetime_elision_for_references() {
         let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
         let reference = RsTypeKind::Reference {
+            option: false,
             referent,
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
@@ -1337,17 +1338,20 @@ mod tests {
         let no_types: &[RsTypeKind] = &[];
         let int = RsTypeKind::Primitive(PrimitiveType::i32);
         let reference = RsTypeKind::Reference {
+            option: false,
             referent: Rc::new(int.clone()),
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
         };
         for func_ptr in [
             RsTypeKind::FuncPtr {
+                option: false,
                 abi: "C".into(),
                 return_type: Rc::new(reference.clone()),
                 param_types: no_types.into(),
             },
             RsTypeKind::FuncPtr {
+                option: false,
                 abi: "C".into(),
                 return_type: Rc::new(int),
                 param_types: Rc::from([reference]),
