@@ -264,16 +264,28 @@ fn unique_late_bound_regions_in_fn_sig(sig: &ty::FnSig) -> Vec<syn::Lifetime> {
     regions
 }
 
+#[rustversion::before(2025-03-19)]
+pub(crate) fn ident_or_opt_ident(i: &rustc_span::Ident) -> &rustc_span::Ident {
+    i
+}
+
+#[rustversion::since(2025-03-19)]
+pub(crate) fn ident_or_opt_ident(i: &Option<rustc_span::Ident>) -> rustc_span::Ident {
+    i.unwrap()
+}
+
 /// Returns an iterator which yields arbitrary unique names for the parameters
 /// of the function identified by `fn_def_id`.
 fn thunk_param_names(tcx: ty::TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
     tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
-        if ident.name == kw::Underscore || ident.name.is_empty() {
+        if ident_or_opt_ident(ident).name == kw::Underscore
+            || ident_or_opt_ident(ident).name.is_empty()
+        {
             format_ident!("__param_{i}")
-        } else if ident.name == kw::SelfLower {
+        } else if ident_or_opt_ident(ident).name == kw::SelfLower {
             format_ident!("__self")
         } else {
-            make_rs_ident(ident.as_str())
+            make_rs_ident(ident_or_opt_ident(ident).as_str())
         }
     })
 }

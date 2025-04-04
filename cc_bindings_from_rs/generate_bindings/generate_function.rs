@@ -4,7 +4,9 @@
 
 use crate::format_type::{format_cc_ident, format_ty_for_cc};
 use crate::generate_doc_comment;
-use crate::generate_function_thunk::{generate_thunk_decl, generate_thunk_impl, is_thunk_required};
+use crate::generate_function_thunk::{
+    generate_thunk_decl, generate_thunk_impl, ident_or_opt_ident, is_thunk_required,
+};
 use crate::{
     format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
     generate_deprecated_tag, is_bridged_type, is_c_abi_compatible_by_value,
@@ -360,9 +362,9 @@ pub fn generate_function(
             .zip(SugaredTy::fn_inputs(&sig_mid, Some(sig_hir)))
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
-                let mut cc_name = format_cc_ident(db, name.as_str())
+                let mut cc_name = format_cc_ident(db, ident_or_opt_ident(name).as_str())
                     .unwrap_or_else(|_err| expect_format_cc_ident(&format!("__param_{i}")));
-                if name.as_str() == "_" {
+                if ident_or_opt_ident(name).as_str() == "_" {
                     cc_name = expect_format_cc_ident(&format!("__param_{i}"));
                 }
                 let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
@@ -382,7 +384,7 @@ pub fn generate_function(
     let method_kind = match tcx.hir_node_by_def_id(local_def_id) {
         Node::Item(_) => FunctionKind::Free,
         Node::ImplItem(_) => match tcx.fn_arg_names(def_id).first() {
-            Some(arg_name) if arg_name.name == kw::SelfLower => {
+            Some(arg_name) if ident_or_opt_ident(arg_name).name == kw::SelfLower => {
                 let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
                 if params[0].ty.mid() == self_ty {
                     FunctionKind::MethodTakingSelfByValue
