@@ -1016,7 +1016,7 @@ pub mod tests {
             |result| {
                 assert_eq!(
                     result.unwrap_err(),
-                    "Error handling parameter #0 of type `&'__anon1 &'__anon2 i32`: Failed to format the referent of the reference type `&'__anon1 &'__anon2 i32`: Can't format `&'__anon2 i32`, because references are only supported in function parameter types and return types (b/286256327)"
+                    "Error handling parameter #0 of type `&'__anon1 &'__anon2 i32`: Failed to format the referent of the reference type `&'__anon1 &'__anon2 i32`: Can't format `&'__anon2 i32`, because references are only supported in function parameter types, return types, and consts (b/286256327)"
                 )
             },
         );

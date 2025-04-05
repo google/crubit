@@ -161,6 +161,11 @@ pub fn format_slice_pointer_for_cc<'tcx>(
     })
 }
 
+/// Returns a CcSnippet referencing `rs_std::StrRef` and its include path.
+pub fn format_str_ref_for_cc(db: &dyn BindingsGenerator<'_>) -> CcSnippet {
+    CcSnippet::with_include(quote! { rs_std::StrRef }, db.support_header("rs_std/str_ref.h"))
+}
+
 pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     referent_ty: Ty<'tcx>,
@@ -394,8 +399,24 @@ pub fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Ref(region, referent_mid, mutability) => {
-            if let ty::TyKind::Slice(_) = referent_mid.kind() {
+            match location {
+                TypeLocation::FnReturn | TypeLocation::FnParam | TypeLocation::Const => (),
+                TypeLocation::Other => bail!(
+                    "Can't format `{ty}`, because references are only supported in \
+                     function parameter types, return types, and consts (b/286256327)",
+                ),
+            };
+
+            if matches!(referent_mid.kind(), ty::TyKind::Slice(_)) {
                 check_slice_layout(db.tcx(), ty.mid());
+            }
+
+            if matches!(referent_mid.kind(), ty::TyKind::Str) {
+                check_slice_layout(db.tcx(), ty.mid());
+                if mutability.is_mut() {
+                    bail!("Mutable references to `str` are not yet supported.")
+                }
+                return Ok(format_str_ref_for_cc(db));
             }
 
             let mut referent_hir = None;
@@ -405,13 +426,6 @@ pub fn format_ty_for_cc<'tcx>(
                 }
             }
 
-            match location {
-                TypeLocation::FnReturn | TypeLocation::FnParam => (),
-                TypeLocation::Other => bail!(
-                    "Can't format `{ty}`, because references are only supported in \
-                     function parameter types and return types (b/286256327)",
-                ),
-            };
             let lifetime = format_region_as_cc_lifetime(region);
 
             // Early return in case we handle a transparent reference type.
@@ -476,7 +490,9 @@ pub fn format_ty_for_cc<'tcx>(
             // top-level return types and parameter types (and pointers are used
             // in other locations).
             let ptr_or_ref_sigil = match location {
-                TypeLocation::FnReturn | TypeLocation::FnParam => quote! { & },
+                TypeLocation::FnReturn | TypeLocation::FnParam | TypeLocation::Const => {
+                    quote! { & }
+                }
                 TypeLocation::Other => quote! { * },
             };
 
@@ -717,6 +733,10 @@ pub fn format_ty_for_rs<'tcx>(
             quote! { * #qualifier #ty }
         }
         ty::TyKind::Ref(region, referent_ty, mutability) => {
+            let lifetime = format_region_as_rs_lifetime(region);
+            if matches!(referent_ty.kind(), ty::TyKind::Str) && mutability.is_not() {
+                return Ok(quote! { & #lifetime str });
+            }
             let mutability = match mutability {
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! {},
@@ -727,7 +747,6 @@ pub fn format_ty_for_rs<'tcx>(
                     format!("Failed to format the referent of the reference type `{ty}`")
                 })?,
             };
-            let lifetime = format_region_as_rs_lifetime(region);
             quote! { & #lifetime #mutability #ty }
         }
         ty::TyKind::Slice(slice_ty) => {
@@ -1126,6 +1145,11 @@ pub mod tests {
                 prereq_def: "SomeStruct"
 
             ),
+            case!(
+                rs: "&'static str",
+                cc: "rs_std::StrRef",
+                includes: ["<crubit/support/for/tests/rs_std/str_ref.h>"]
+            ),
             // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
             case!(
                 rs: "*mut SomeStruct",
@@ -1321,7 +1345,7 @@ pub mod tests {
                 "&'static &'static i32", // TyKind::Ref (nested reference - referent of reference)
                 "Failed to format the referent of the reference type `&'static &'static i32`: \
                  Can't format `&'static i32`, because references are only supported \
-                 in function parameter types and return types (b/286256327)",
+                 in function parameter types, return types, and consts (b/286256327)",
             ),
             (
                 "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)
@@ -1337,11 +1361,6 @@ pub mod tests {
                 "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
                 "Failed to format the referent of the reference type `&'static [i32]`: \
                  The following Rust type is not supported yet: [i32]",
-            ),
-            (
-                "&'static str", // TyKind::Str (nested underneath TyKind::Ref)
-                "Failed to format the referent of the reference type `&'static str`: \
-                 The following Rust type is not supported yet: str",
             ),
             (
                 "impl Eq", // TyKind::Alias
@@ -1466,6 +1485,8 @@ pub mod tests {
             ("extern \"C\" fn(i32) -> i32", "extern \"C\" fn(i32) -> i32"),
             // Pointer to a Slice:
             ("*mut [i32]", "*mut [i32]"),
+            // str reference:
+            ("&'static str", "& 'static str"),
             // MaybeUninit:
             ("&'static std::mem::MaybeUninit<i32>", "& 'static std :: mem :: MaybeUninit < i32 >"),
             (
@@ -1508,11 +1529,6 @@ pub mod tests {
             (
                 "[i32; 42]", // TyKind::Array
                 "The following Rust type is not supported yet: [i32; 42]",
-            ),
-            (
-                "&'static str", // TyKind::Str (nested underneath TyKind::Ref)
-                "Failed to format the referent of the reference type `&'static str`: \
-                 The following Rust type is not supported yet: str",
             ),
             (
                 "impl Eq", // TyKind::Alias

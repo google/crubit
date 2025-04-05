@@ -1941,8 +1941,8 @@ pub mod tests {
             let main_api = &result.main_api;
             let broken_field_msg = "Field type has been replaced with a blob of bytes: \
                                     Can't format `&'static i32`, because references \
-                                    are only supported in function parameter types and \
-                                    return types (b/286256327)";
+                                    are only supported in function parameter types, \
+                                    return types, and consts (b/286256327)";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {

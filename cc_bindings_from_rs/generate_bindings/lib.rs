@@ -675,14 +675,37 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> R
         _ => panic!("{}", unsupported_node_item_msg),
     };
     let ty = tcx.type_of(def_id).instantiate_identity();
-    let cc_type_snippet =
-        format_ty_for_cc(db, SugaredTy::new(ty, Some(hir_ty)), TypeLocation::Other)?;
+    let rust_type = SugaredTy::new(ty, Some(hir_ty));
+    let cc_type_snippet = format_ty_for_cc(db, rust_type, TypeLocation::Const)?;
 
     let cc_type = cc_type_snippet.tokens;
     let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
-    let cc_value = match tcx.const_eval_poly(def_id).unwrap() {
+
+    // Note that `&str` constants may appear as either `ConstValue::Slice` or
+    // `ConstValue::Indirect`.
+    let const_value: ConstValue = tcx.const_eval_poly(def_id).unwrap();
+    let cc_value = match const_value {
         ConstValue::Scalar(scalar) => scalar_value_to_string(tcx, scalar, *ty.kind()),
-        _ => Err(anyhow!("Unexpected ConstValue type")),
+        ConstValue::ZeroSized => bail!("const of type `{rust_type}` cannot be generated as zero-sized consts are not supported in C++."),
+        ConstValue::Slice { .. } | ConstValue::Indirect { .. } => {
+            let string_literal = match ty.kind() {
+                ty::TyKind::Ref(_region, referent_ty, mutability)
+                    if matches!(referent_ty.kind(), ty::TyKind::Str) =>
+                {
+                    if mutability.is_mut() {
+                        panic!("Unexpected mutable reference in a constant of type `{rust_type}`")
+                    }
+                    if let Some(slice) = const_value.try_get_slice_bytes_for_diagnostics(tcx) {
+                        let str_data = std::str::from_utf8(slice).unwrap();
+                        Some(quote! { rs_std::StrRef(#str_data) }.to_string())
+                    } else { None }
+                }
+                _ => None
+            };
+            string_literal.ok_or_else(|| {
+                anyhow!("const of type `{rust_type}` cannot be generated as only scalar consts are supported.")
+            })
+        }
     }?
     .parse::<TokenStream>()
     .unwrap();
@@ -4533,7 +4556,7 @@ pub mod tests {
                         #preamble
                         pub fn test_function(_arg: #ty_tokens) { unimplemented!() }
                     },
-                    TypeLocation::Other => unimplemented!(),
+                    TypeLocation::Const | TypeLocation::Other => unimplemented!(),
                 };
                 input.to_string()
             };
@@ -4555,7 +4578,7 @@ pub mod tests {
                     TypeLocation::FnParam => {
                         SugaredTy::new(sig_mid.inputs()[0], Some(&sig_hir.inputs[0]))
                     }
-                    TypeLocation::Other => unimplemented!(),
+                    TypeLocation::Const | TypeLocation::Other => unimplemented!(),
                 };
                 test_fn(&desc, tcx, ty, expected);
             });

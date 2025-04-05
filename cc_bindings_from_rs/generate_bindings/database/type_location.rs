@@ -24,6 +24,9 @@ pub enum TypeLocation {
     // `format_ty_for_cc` emit `T&` rather than `T*`).
     FnParam,
 
+    /// The type of a constant item.
+    Const,
+
     /// Other location (e.g. pointee type, field type, etc.).
     Other,
 }
