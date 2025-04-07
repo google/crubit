@@ -757,7 +757,7 @@ pub fn get_binding(
             let mut function_param_types = function
                 .params
                 .iter()
-                .map(|param| db.rs_type_kind(param.type_.rs_type.clone()))
+                .map(|param| db.rs_type_kind(param.type_.cpp_type.clone()))
                 .collect::<Result<Vec<_>>>()
                 .ok()?;
             if !function_param_types.iter().eq(expected_param_types.iter()) {
@@ -785,7 +785,7 @@ pub fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> boo
                 let mut function_param_types = function
                     .params
                     .iter()
-                    .map(|param| db.rs_type_kind(param.type_.rs_type.clone()))
+                    .map(|param| db.rs_type_kind(param.type_.cpp_type.clone()))
                     .collect::<Result<Vec<_>>>()
                     .unwrap_or_default();
                 if function.params.len() != 2 || !function_param_types[1].is_shared_ref_to(&record)
@@ -1067,7 +1067,7 @@ pub fn generate_function(
         .iter()
         .enumerate()
         .filter_map(|(i, p)| {
-            db.rs_type_kind(p.type_.rs_type.clone())
+            db.rs_type_kind(p.type_.cpp_type.clone())
                 .map_err(|err| {
                     param_errors.add(anyhow!("Failed to format type of parameter {i}: {err}"))
                 })
@@ -1087,7 +1087,7 @@ pub fn generate_function(
     let namespace_qualifier = ir.namespace_qualifier(&func).format_for_rs();
 
     let mut return_type = errors.consolidate_on_err(
-        db.rs_type_kind(func.return_type.rs_type.clone())
+        db.rs_type_kind(func.return_type.cpp_type.clone())
             .with_context(|| "Failed to format return type"),
     )?;
     if let Err(err) = return_type.check_by_value() {

@@ -8,7 +8,7 @@ use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::Result;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
-use ir::{Enum, Func, Record, RsType, UnqualifiedIdentifier, IR};
+use ir::{CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashSet;
 use std::rc::Rc;
@@ -43,7 +43,7 @@ memoized::query_group! {
 
         fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets>;
 
-        fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
+        fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind>;
 
         fn generate_function(&self, func: Rc<Func>, record_overwrite: Option<Rc<Record>>) -> Result<Option<GeneratedFunction>>;
 

@@ -606,7 +606,7 @@ fn test_rs_type_kind_implements_copy() -> Result<()> {
         let ir = db.ir();
 
         let f = retrieve_func(&ir, "func");
-        let t = db.rs_type_kind(f.params[0].type_.rs_type.clone())?;
+        let t = db.rs_type_kind(f.params[0].type_.cpp_type.clone())?;
 
         let fmt = t.to_token_stream(&db).to_string();
         assert_eq!(test.rs, fmt, "Testing: {}", test_name);
@@ -633,7 +633,7 @@ fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
     assert_eq!(foo_func.params.len(), 1);
     let foo_param = &foo_func.params[0];
     assert_eq!(foo_param.identifier.identifier.as_ref(), "foo_param");
-    let foo_type = db.rs_type_kind(foo_param.type_.rs_type.clone())?;
+    let foo_type = db.rs_type_kind(foo_param.type_.cpp_type.clone())?;
     assert!(foo_type.is_shared_ref_to(record));
     assert!(matches!(foo_type, RsTypeKind::Reference { mutability: Mutability::Const, .. }));
 
@@ -641,7 +641,7 @@ fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
     assert_eq!(bar_func.params.len(), 1);
     let bar_param = &bar_func.params[0];
     assert_eq!(bar_param.identifier.identifier.as_ref(), "bar_param");
-    let bar_type = db.rs_type_kind(bar_param.type_.rs_type.clone())?;
+    let bar_type = db.rs_type_kind(bar_param.type_.cpp_type.clone())?;
     assert!(!bar_type.is_shared_ref_to(record));
     assert!(matches!(bar_type, RsTypeKind::Reference { mutability: Mutability::Mut, .. }));
 
@@ -662,7 +662,7 @@ fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
     assert_eq!(foo_func.params.len(), 1);
     let foo_param = &foo_func.params[0];
     assert_eq!(foo_param.identifier.identifier.as_ref(), "foo_param");
-    let foo_type = db.rs_type_kind(foo_param.type_.rs_type.clone())?;
+    let foo_type = db.rs_type_kind(foo_param.type_.cpp_type.clone())?;
     assert!(!foo_type.is_shared_ref_to(record));
     assert!(matches!(foo_type, RsTypeKind::Pointer { mutability: Mutability::Const, .. }));
 
@@ -680,14 +680,14 @@ fn test_rs_type_kind_lifetimes() -> Result<()> {
     let db = db_factory.make_db();
     let ir = db.ir();
     let func = retrieve_func(&ir, "foo");
-    let ret = db.rs_type_kind(func.return_type.rs_type.clone())?;
-    let a = db.rs_type_kind(func.params[0].type_.rs_type.clone())?;
-    let b = db.rs_type_kind(func.params[1].type_.rs_type.clone())?;
-    let c = db.rs_type_kind(func.params[2].type_.rs_type.clone())?;
-    let d = db.rs_type_kind(func.params[3].type_.rs_type.clone())?;
-    let e = db.rs_type_kind(func.params[4].type_.rs_type.clone())?;
-    let f = db.rs_type_kind(func.params[5].type_.rs_type.clone())?;
-    let g = db.rs_type_kind(func.params[6].type_.rs_type.clone())?;
+    let ret = db.rs_type_kind(func.return_type.cpp_type.clone())?;
+    let a = db.rs_type_kind(func.params[0].type_.cpp_type.clone())?;
+    let b = db.rs_type_kind(func.params[1].type_.cpp_type.clone())?;
+    let c = db.rs_type_kind(func.params[2].type_.cpp_type.clone())?;
+    let d = db.rs_type_kind(func.params[3].type_.cpp_type.clone())?;
+    let e = db.rs_type_kind(func.params[4].type_.cpp_type.clone())?;
+    let f = db.rs_type_kind(func.params[5].type_.cpp_type.clone())?;
+    let g = db.rs_type_kind(func.params[6].type_.cpp_type.clone())?;
 
     assert_eq!(0, ret.lifetimes().count()); // No lifetimes on `void`.
     assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int`.
@@ -707,7 +707,7 @@ fn test_rs_type_kind_lifetimes_raw_ptr() -> Result<()> {
     let db = db_factory.make_db();
     let ir = db.ir();
     let f = retrieve_func(&ir, "foo");
-    let a = db.rs_type_kind(f.params[0].type_.rs_type.clone())?;
+    let a = db.rs_type_kind(f.params[0].type_.cpp_type.clone())?;
     assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int*`.
     Ok(())
 }
@@ -727,7 +727,7 @@ fn test_rs_type_kind_rejects_func_ptr_that_returns_struct_by_value() -> Result<(
 
     // Expecting an error, because passing a struct by value requires a thunk and
     // function pointers don't have a thunk.
-    let err = db.rs_type_kind(f.return_type.rs_type.clone()).unwrap_err();
+    let err = db.rs_type_kind(f.return_type.cpp_type.clone()).unwrap_err();
     let msg = err.to_string();
     assert_eq!(
         msg,
@@ -752,7 +752,7 @@ fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()>
 
     // Expecting an error, because passing a struct by value requires a thunk and
     // function pointers don't have a thunk.
-    let err = db.rs_type_kind(f.return_type.rs_type.clone()).unwrap_err();
+    let err = db.rs_type_kind(f.return_type.cpp_type.clone()).unwrap_err();
     let msg = err.to_string();
     assert_eq!(
         msg,

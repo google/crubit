@@ -297,6 +297,46 @@ impl PrimitiveType {
     }
 }
 
+impl From<Primitive> for PrimitiveType {
+    fn from(cc_primitive: Primitive) -> Self {
+        match cc_primitive {
+            Primitive::Bool => Self::bool,
+            Primitive::Void => Self::Unit,
+            Primitive::Float => Self::f32,
+            Primitive::Double => Self::f64,
+            Primitive::Char => Self::c_char,
+            Primitive::SignedChar => Self::c_schar,
+            Primitive::UnsignedChar => Self::c_uchar,
+            Primitive::Short => Self::c_short,
+            Primitive::Int => Self::c_int,
+            Primitive::Long => Self::c_long,
+            Primitive::LongLong => Self::c_longlong,
+            Primitive::UnsignedShort => Self::c_ushort,
+            Primitive::UnsignedInt => Self::c_uint,
+            Primitive::UnsignedLong => Self::c_ulong,
+            Primitive::UnsignedLongLong => Self::c_ulonglong,
+            Primitive::Char16T => Self::u16,
+            Primitive::Char32T => Self::u32,
+            Primitive::PtrdiffT
+            | Primitive::StdPtrdiffT
+            | Primitive::IntptrT
+            | Primitive::StdIntptrT => Self::isize,
+            Primitive::SizeT
+            | Primitive::StdSizeT
+            | Primitive::UintptrT
+            | Primitive::StdUintptrT => Self::usize,
+            Primitive::Int8T | Primitive::StdInt8T => Self::i8,
+            Primitive::Int16T | Primitive::StdInt16T => Self::i16,
+            Primitive::Int32T | Primitive::StdInt32T => Self::i32,
+            Primitive::Int64T | Primitive::StdInt64T => Self::i64,
+            Primitive::Uint8T | Primitive::StdUint8T => Self::u8,
+            Primitive::Uint16T | Primitive::StdUint16T => Self::u16,
+            Primitive::Uint32T | Primitive::StdUint32T => Self::u32,
+            Primitive::Uint64T | Primitive::StdUint64T => Self::u64,
+        }
+    }
+}
+
 impl ToTokens for PrimitiveType {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
@@ -466,7 +506,8 @@ fn map_alias_to_bridge_type(type_alias: &RsTypeKind) -> Option<Result<RsTypeKind
 impl RsTypeKind {
     pub fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
         let ir = db.ir();
-        let underlying_type = Rc::new(db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?);
+        let underlying_type =
+            Rc::new(db.rs_type_kind(type_alias.underlying_type.cpp_type.clone())?);
         let crate_path = Rc::new(CratePath::new(
             &ir,
             ir.namespace_qualifier(&type_alias),
@@ -521,7 +562,7 @@ impl RsTypeKind {
                 type_map_override.type_parameters.len()
             );
             let mapped_slice_type = type_map_override.type_parameters.first().unwrap();
-            let mapped_slice_type_rs = db.rs_type_kind(mapped_slice_type.rs_type.clone())?;
+            let mapped_slice_type_rs = db.rs_type_kind(mapped_slice_type.cpp_type.clone())?;
 
             return Ok(RsTypeKind::Pointer {
                 pointee: Rc::new(RsTypeKind::Slice(Rc::new(mapped_slice_type_rs))),
@@ -1044,7 +1085,7 @@ pub fn map_to_supported_generic(
             return None;
         }
         let arg_type = arg.type_.clone().unwrap();
-        let Ok(arg_type_kind) = db.rs_type_kind(arg_type.rs_type.clone()) else {
+        let Ok(arg_type_kind) = db.rs_type_kind(arg_type.cpp_type.clone()) else {
             return None;
         };
         if arg_type_kind.is_bridge_type() {
