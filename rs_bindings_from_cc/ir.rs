@@ -238,13 +238,27 @@ pub struct CcType {
     pub unknown_attr: Rc<str>,
 }
 
+impl CcType {
+    pub fn is_unit_type(&self) -> bool {
+        matches!(&self.variant, CcTypeVariant::Primitive(Primitive::Void))
+    }
+}
+
 #[derive(Copy, Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub enum CcPointerKind {
+pub enum PointerTypeKind {
     LValueRef,
     RValueRef,
     Nullable,
     NonNull,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PointerType {
+    pub kind: PointerTypeKind,
+    pub lifetime: Option<LifetimeId>,
+    pub pointee_type: Rc<CcType>,
 }
 
 /// Generates an enum type that implements `Deserialize`, which parses the stringified contents of
@@ -367,11 +381,7 @@ define_typed_tokens_enum! {
 #[serde(deny_unknown_fields)]
 pub enum CcTypeVariant {
     Primitive(Primitive),
-    Pointer {
-        pointer_kind: CcPointerKind,
-        lifetime: Option<LifetimeId>,
-        pointee_type: Rc<CcType>,
-    },
+    Pointer(PointerType),
     FuncPointer {
         non_null: bool,
         call_conv: CcCallingConv,
@@ -383,6 +393,15 @@ pub enum CcTypeVariant {
         id: ItemId,
         builtin_bridge_type: Option<BuiltinBridgeType>,
     },
+}
+
+impl CcTypeVariant {
+    pub fn as_pointer(&self) -> Option<&PointerType> {
+        match &self {
+            CcTypeVariant::Pointer(pointer) => Some(pointer),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

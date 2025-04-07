@@ -1568,9 +1568,10 @@ fn function_signature(
         Some(TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)) => {
             // For constructors, we move the output parameter to be the return value.
             // The return value is "really" void.
-            if !func.return_type.rs_type.is_unit_type() {
-                panic!("Unexpectedly non-void return type of a constructor: {func:?}");
-            }
+            assert!(
+                func.return_type.cpp_type.is_unit_type(),
+                "Unexpectedly non-void return type of a constructor: {func:?}"
+            );
 
             //  Presence of element #0 is indirectly verified by a `Constructor`-related
             // `match` branch a little bit above.

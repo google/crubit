@@ -43,10 +43,7 @@ std::vector<const Record*> FindInstantiationsInNamespace(const IR& ir,
       const auto* record =
           std::get_if<CcType::Record>(&mapped_type->cpp_type.variant);
       CHECK(record != nullptr);
-      const auto* rust_decl_id = std::get_if<ItemId>(&mapped_type->rs_type);
-      CHECK(rust_decl_id != nullptr);
-      CHECK(record->id == *rust_decl_id);
-      record_ids.insert(*rust_decl_id);
+      record_ids.insert(record->id);
     }
   }
 

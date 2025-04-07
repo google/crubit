@@ -334,10 +334,10 @@ pub fn generate_function_thunk_impl(
                 ident = quote! { &(#formatted_ident.val) };
             }
             match &p.type_.cpp_type.variant {
-                CcTypeVariant::Pointer { pointer_kind, .. } => match pointer_kind {
-                    CcPointerKind::RValueRef => Ok(quote! { std::move(*#ident) }),
-                    CcPointerKind::LValueRef => Ok(quote! { *#ident }),
-                    CcPointerKind::Nullable | CcPointerKind::NonNull => Ok(quote! { #ident }),
+                CcTypeVariant::Pointer(pointer) => match pointer.kind {
+                    PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
+                    PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
+                    PointerTypeKind::Nullable | PointerTypeKind::NonNull => Ok(quote! { #ident }),
                 },
                 CcTypeVariant::FuncPointer { non_null, .. } => {
                     if *non_null {
@@ -440,21 +440,22 @@ pub fn generate_function_thunk_impl(
     } else {
         match &func.return_type.cpp_type.variant {
             CcTypeVariant::Primitive(Primitive::Void) => return_expr,
-            CcTypeVariant::Pointer { pointer_kind: CcPointerKind::LValueRef, .. } => {
+            CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::LValueRef, .. }) => {
                 quote! { return & #return_expr }
             }
-            CcTypeVariant::Pointer {
-                pointer_kind: CcPointerKind::RValueRef, pointee_type, ..
-            } => {
+            CcTypeVariant::Pointer(PointerType {
+                kind: PointerTypeKind::RValueRef,
+                pointee_type,
+                ..
+            }) => {
                 // The code below replicates bits of `format_cpp_type`, but formats an rvalue
                 // reference (which `format_cpp_type` would format as a pointer).
                 // `const_fragment` from `format_cpp_type` is ignored - it is not applicable for
                 // references.
                 let nested_type = cpp_type_name::format_cpp_type(pointee_type, ir)?;
                 quote! {
-                        #nested_type && lvalue = #return_expr;
-                        return &lvalue
-
+                    #nested_type && lvalue = #return_expr;
+                    return &lvalue
                 }
             }
             CcTypeVariant::FuncPointer { non_null: true, .. } => quote! { return & #return_expr },

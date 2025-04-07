@@ -5,7 +5,7 @@
 use arc_anyhow::Result;
 use code_gen_utils::expect_format_cc_type_name;
 use error_report::{anyhow, bail};
-use ir::{CcCallingConv, CcPointerKind, CcType, CcTypeVariant, Item, Record, IR};
+use ir::{CcCallingConv, CcType, CcTypeVariant, Item, PointerTypeKind, Record, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -37,11 +37,11 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
     };
     match &ty.variant {
         CcTypeVariant::Primitive(primitive) => Ok(quote! { #primitive #const_fragment }),
-        CcTypeVariant::Pointer { pointer_kind, pointee_type, .. } => {
-            let nested_type = format_cpp_type_inner(pointee_type, ir, references_ok)?;
-            let ptr = match (references_ok, pointer_kind) {
-                (true, CcPointerKind::LValueRef) => quote! {&},
-                (true, CcPointerKind::RValueRef) => quote! {&&},
+        CcTypeVariant::Pointer(pointer) => {
+            let nested_type = format_cpp_type_inner(&pointer.pointee_type, ir, references_ok)?;
+            let ptr = match (references_ok, pointer.kind) {
+                (true, PointerTypeKind::LValueRef) => quote! {&},
+                (true, PointerTypeKind::RValueRef) => quote! {&&},
                 _ => quote! {*},
             };
             Ok(quote! {#nested_type #ptr #const_fragment})

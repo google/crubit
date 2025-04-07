@@ -108,7 +108,7 @@ SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
 void ApplyRefQualifierToThisPointer(
     MappedType& this_param_type, clang::RefQualifierKind ref_qualifier_kind) {
   auto* pointer =
-      std::get_if<CcType::Pointer>(&this_param_type.cpp_type.variant);
+      std::get_if<CcType::PointerType>(&this_param_type.cpp_type.variant);
   // The MappedType of `this` should always be a pointer.
   CHECK(pointer != nullptr);
 
@@ -116,20 +116,10 @@ void ApplyRefQualifierToThisPointer(
   // if it was a rvalue ref qualified and had a lifetime.
   if (pointer->lifetime.has_value() &&
       ref_qualifier_kind == clang::RefQualifierKind::RQ_RValue) {
-    // Fix the RsType
-    auto* rs_type = std::get_if<RsTypeNamed>(&this_param_type.rs_type);
-    CHECK(rs_type != nullptr);
-    if (rs_type->name == internal::kRustRefConst) {
-      rs_type->name = internal::kRustRvalueRefConst;
-    } else {
-      CHECK(rs_type->name == internal::kRustRefMut);
-      rs_type->name = internal::kRustRvalueRefMut;
-    }
-
     // It was just a non null pointer, but because of the rvalue ref
     // qualification, it should be an rvalue reference.
-    CHECK(pointer->pointer_kind == CcPointerKind::kNonNull);
-    pointer->pointer_kind = CcPointerKind::kRValueRef;
+    CHECK(pointer->kind == PointerTypeKind::kNonNull);
+    pointer->kind = PointerTypeKind::kRValueRef;
   }
 }
 
@@ -357,7 +347,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         params.push_back(
             {.type = *std::move(this_param_type),
              .identifier = Identifier("__this"),
-             // TODO(b/319524852): catch `[[clang::lifetimbound]]` on `this`.
+             // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
              .unknown_attr = {}});
       }
     }

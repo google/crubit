@@ -9,7 +9,7 @@ use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_testing::{ir_id, retrieve_func, retrieve_record};
 use itertools::Itertools;
-use quote::{quote, ToTokens};
+use quote::quote;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
 use std::rc::Rc;
@@ -35,11 +35,7 @@ fn test_function() {
                 mangled_name: "_Z1fii",
                 doc_comment: None,
                 return_type: MappedType {
-                    rs_type: NamedType {
-                        name: "::core::ffi::c_int",
-                        lifetime_args: [],
-                        type_args: [],
-                    },
+                    ...
                     cpp_type: CcType {
                         variant: Primitive(Int),
                         is_const: false, ...
@@ -48,11 +44,7 @@ fn test_function() {
                 params: [
                     FuncParam {
                         type_: MappedType {
-                            rs_type: NamedType {
-                                name: "::core::ffi::c_int",
-                                lifetime_args: [],
-                                type_args: [],
-                            },
+                            ...
                             cpp_type: CcType {
                                 variant: Primitive(Int),
                                 is_const: false, ...
@@ -63,11 +55,7 @@ fn test_function() {
                     },
                     FuncParam {
                         type_: MappedType {
-                            rs_type: NamedType {
-                                name: "::core::ffi::c_int",
-                                lifetime_args: [],
-                                type_args: [],
-                            },
+                            ...
                             cpp_type: CcType {
                                 variant: Primitive(Int),
                                 is_const: false, ...
@@ -434,7 +422,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b1"), ...
                            type_: Ok(MappedType {
-                               rs_type: NamedType { name: "::core::ffi::c_int", ... },
+                               ...
                                cpp_type: CcType { variant: Primitive(Int), ... },
                            }), ...
                            offset: 0,
@@ -444,7 +432,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b2"), ...
                            type_: Ok(MappedType {
-                               rs_type: NamedType { name: "::core::ffi::c_int", ... },
+                               ...
                                cpp_type: CcType { variant: Primitive(Int), ... },
                            }), ...
                            offset: 1,
@@ -454,7 +442,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b3"), ...
                            type_: Ok(MappedType {
-                               rs_type: NamedType { name: "::core::ffi::c_int", ... },
+                               ...
                                cpp_type: CcType { variant: Primitive(Int), ... },
                            }), ...
                            offset: 3,
@@ -464,7 +452,7 @@ fn test_bitfields() {
                        Field {
                            identifier: Some("b4"), ...
                            type_: Ok(MappedType {
-                               rs_type: NamedType { name: "::core::ffi::c_int", ... },
+                               ...
                                cpp_type: CcType { variant: Primitive(Int), ... },
                            }), ...
                            offset: 16,
@@ -816,20 +804,15 @@ fn test_pointer_member_variable() {
             Field {
                 identifier: Some("ptr") ...
                 type_: Ok(MappedType {
-                    rs_type: NamedType {
-                        name: "*mut" ...
-                        type_args: [ItemIdType {
-                            decl_id: ...,
-                        }],
-                    },
+                    ...
                     cpp_type: CcType {
-                        variant: Pointer {
-                            pointer_kind: Nullable,
+                        variant: Pointer(PointerType {
+                            kind: Nullable,
                             lifetime: None,
                             pointee_type: CcType {
                                 variant: Record { id: ... }, ...
                             },
-                        }, ...
+                        }), ...
                     },
                 }) ...
             }
@@ -939,172 +922,6 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
 }
 
 #[gtest]
-fn test_type_conversion() -> Result<()> {
-    // TODO(mboehme): Add tests for the corresponding versions of the types in
-    // the `std` namespace. We currently can't do this because we can't include
-    // C++ standard library headers such as <cstdint>, only builtin headers such
-    // as <stdint.h> (see b/214344126).
-    let ir = ir_from_cc(
-        r#"
-        // TOOD(b/275876867): Fix the `#include`s below and re-enable asserts below.
-        #if 0
-            // #include <stdint.h>
-            // #include <stddef.h>
-
-            // We mock types from the C++ standard library because it's hard to
-            // make headers that aren't part of the compiler available to a unit test.
-            namespace std {
-              using ::int8_t;
-              using ::int16_t;
-              using ::int32_t;
-              using ::int64_t;
-
-              using ::uint8_t;
-              using ::uint16_t;
-              using ::uint32_t;
-              using ::uint64_t;
-
-              using ::ptrdiff_t;
-              using ::size_t;
-              using ::intptr_t;
-              using ::uintptr_t;
-            }
-        #endif
-
-            struct S {
-                bool b;
-
-                char c;
-                unsigned char uc;
-                signed char sc;
-                char16_t c16;
-                char32_t c32;
-                wchar_t wc;
-
-                short s;
-                int i;
-                long l;
-                long long ll;
-
-                unsigned short us;
-                unsigned int ui;
-                unsigned long ul;
-                unsigned long long ull;
-
-                signed short ss;
-                signed int si;
-                signed long sl;
-                signed long long sll;
-
-        // TOOD(b/275876867): Reenable test inputs below after fix the `#include` problem.
-        #if 0
-                int8_t i8;
-                int16_t i16;
-                int32_t i32;
-                int64_t i64;
-                std::int8_t std_i8;
-                std::int16_t std_i16;
-                std::int32_t std_i32;
-                std::int64_t std_i64;
-
-                uint8_t u8;
-                uint16_t u16;
-                uint32_t u32;
-                uint64_t u64;
-                std::uint8_t std_u8;
-                std::uint16_t std_u16;
-                std::uint32_t std_u32;
-                std::uint64_t std_u64;
-
-                ptrdiff_t pt;
-                size_t st;
-                intptr_t ip;
-                uintptr_t up;
-                std::ptrdiff_t std_pt;
-                std::size_t std_st;
-                std::intptr_t std_ip;
-                std::uintptr_t std_up;
-            #endif
-
-                float f;
-                double d;
-            };
-        "#,
-    )?;
-    let fields = ir.records().next().unwrap().fields.iter();
-    let type_mapping: HashMap<_, _> = fields
-        .filter_map(|f| f.type_.as_ref().ok())
-        .map(|t| {
-            (
-                t.cpp_type.variant.as_primitive().unwrap().to_token_stream().to_string(),
-                t.rs_type.name().unwrap(),
-            )
-        })
-        .collect();
-
-    assert_eq!(type_mapping["bool"], "bool");
-
-    assert_eq!(type_mapping["char"], "::core::ffi::c_char");
-    assert_eq!(type_mapping["unsigned char"], "::core::ffi::c_uchar");
-    assert_eq!(type_mapping["signed char"], "::core::ffi::c_schar");
-
-    assert_eq!(type_mapping["char16_t"], "u16");
-
-    // We cannot map C++ char32_t or wchar_t to Rust char,
-    // because Rust requires that chars are valid UTF scalar values.
-    assert_eq!(type_mapping["char32_t"], "u32");
-
-    // TODO(b/283268558): Eventually we may need to add `wchar_t` support, after
-    // figuring out how to represent it accurately on Windows (16-bit) and
-    // elsewhere (32-bit).
-    assert!(!type_mapping.contains_key("wchar_t"));
-
-    assert_eq!(type_mapping["short"], "::core::ffi::c_short");
-    assert_eq!(type_mapping["int"], "::core::ffi::c_int");
-    assert_eq!(type_mapping["long"], "::core::ffi::c_long");
-    assert_eq!(type_mapping["long long"], "::core::ffi::c_longlong");
-
-    assert_eq!(type_mapping["unsigned short"], "::core::ffi::c_ushort");
-    assert_eq!(type_mapping["unsigned int"], "::core::ffi::c_uint");
-    assert_eq!(type_mapping["unsigned long"], "::core::ffi::c_ulong");
-    assert_eq!(type_mapping["unsigned long long"], "::core::ffi::c_ulonglong");
-
-    /* TOOD(b/275876867): Reenable assertions below after fixing the `#include` problem.
-    assert_eq!(type_mapping["int8_t"], "i8");
-    assert_eq!(type_mapping["int16_t"], "i16");
-    assert_eq!(type_mapping["int32_t"], "i32");
-    assert_eq!(type_mapping["int64_t"], "i64");
-    assert_eq!(type_mapping["std::int8_t"], "i8");
-    assert_eq!(type_mapping["std::int16_t"], "i16");
-    assert_eq!(type_mapping["std::int32_t"], "i32");
-    assert_eq!(type_mapping["std::int64_t"], "i64");
-
-    assert_eq!(type_mapping["uint8_t"], "u8");
-    assert_eq!(type_mapping["uint16_t"], "u16");
-    assert_eq!(type_mapping["uint32_t"], "u32");
-    assert_eq!(type_mapping["uint64_t"], "u64");
-    assert_eq!(type_mapping["std::uint8_t"], "u8");
-    assert_eq!(type_mapping["std::uint16_t"], "u16");
-    assert_eq!(type_mapping["std::uint32_t"], "u32");
-    assert_eq!(type_mapping["std::uint64_t"], "u64");
-
-    assert_eq!(type_mapping["ptrdiff_t"], "isize");
-    assert_eq!(type_mapping["size_t"], "usize");
-    assert_eq!(type_mapping["intptr_t"], "isize");
-    assert_eq!(type_mapping["uintptr_t"], "usize");
-    assert_eq!(type_mapping["std::ptrdiff_t"], "isize");
-    assert_eq!(type_mapping["std::size_t"], "usize");
-    assert_eq!(type_mapping["std::intptr_t"], "isize");
-    assert_eq!(type_mapping["std::uintptr_t"], "usize");
-    */
-
-    assert_eq!(type_mapping["float"], "f32");
-    assert_eq!(type_mapping["double"], "f64");
-
-    Ok(())
-}
-
-#[gtest]
 fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
     let ir = ir_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
     let record = ir.records().find(|record| *record.rs_name == "S").or_fail()?;
@@ -1146,11 +963,7 @@ fn test_typedef() -> Result<()> {
 
     let int = quote! {
       MappedType {
-        rs_type: NamedType {
-          name: "::core::ffi::c_int",
-          lifetime_args: [],
-          type_args: [],
-        },
+        ...
         cpp_type: CcType {
           variant: Primitive(Int),
           is_const: false, ...
@@ -1276,7 +1089,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                 identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of `value` field."), ...
                 type_: Ok(MappedType {
-                    rs_type: NamedType { name: "::core::ffi::c_int", ... },
+                    ...
                     cpp_type: CcType { variant: Primitive(Int), ... },
                 }),
                 access: Public,
@@ -1299,9 +1112,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment of MyTypeAlias."), ...
             underlying_type: MappedType {
-                rs_type: ItemIdType {
-                    decl_id: ItemId(#record_id),
-                },
+                ...
                 cpp_type: CcType {
                   variant: Record { id: ItemId(#record_id), builtin_bridge_type: None, }, ...
                 },
@@ -1382,7 +1193,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of the `value` field specialization for T=int."), ...
                 type_: Ok(MappedType {
-                    rs_type: NamedType { name: "::core::ffi::c_int", ... },
+                    ...
                     cpp_type: CcType { variant: Primitive(Int), ... },
                 }),
                 access: Public,
@@ -1666,7 +1477,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                 params: [
                     FuncParam {
                         type_: MappedType {
-                            rs_type: NamedType { name: "::core::ffi::c_int", ...  },
+                            ...
                             cpp_type: CcType { variant: Primitive(Int), ... },
                         },
                         identifier: "__my_args_0",
@@ -1674,7 +1485,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                     },
                     FuncParam {
                         type_: MappedType {
-                            rs_type: NamedType { name: "::core::ffi::c_int", ...  },
+                            ...
                             cpp_type: CcType { variant: Primitive(Int), ... },
                         },
                         identifier: "__my_args_1",
@@ -1718,9 +1529,7 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
             rs_name: "MyFunction",
             owning_target: BazelLabel("//test:testing_target"), ...
             return_type: MappedType {
-                rs_type: ItemIdType {
-                    decl_id: ItemId(#record_id),
-                },
+                ...
                 cpp_type: CcType {
                     variant: Record { id: ItemId(#record_id), builtin_bridge_type: None, }, ...
                 },
@@ -1768,21 +1577,15 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"), ...
             params: [FuncParam {
                 type_: MappedType {
-                    rs_type: NamedType {
-                        name: "&",
-                        lifetime_args: [LifetimeId(...)],
-                        type_args: [ItemIdType {
-                            decl_id: ItemId(#record_id),
-                        }],
-                    },
+                    ...
                     cpp_type: CcType {
-                        variant: Pointer {
-                            pointer_kind: LValueRef,
+                        variant: Pointer(PointerType {
+                            kind: LValueRef,
                             lifetime: Some(...),
                             pointee_type: CcType {
                                 variant: Record { id: ItemId(#record_id), builtin_bridge_type: None, }, ...
                             },
-                        },
+                        }),
                         is_const: false, ...
                     },
                 },
@@ -1834,9 +1637,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
                    fields: [Field {
                        identifier: Some("public_field"), ...
                        type_: Ok(MappedType {
-                           rs_type: ItemIdType {
-                               decl_id: ItemId(#record_id),
-                           },
+                           ...
                            cpp_type: CcType {
                               variant: Record { id: ItemId(#record_id), builtin_bridge_type: None, }, ...
                           },
@@ -1913,7 +1714,7 @@ fn test_template_with_decltype_and_with_auto() -> Result<()> {
               cc_name: "TemplatedAdd",
                rs_name: "TemplatedAdd", ...
                return_type: MappedType {
-                   rs_type: NamedType { name: "::core::ffi::c_longlong", ... },
+                   ...
                    cpp_type: CcType { variant: Primitive(LongLong), ... },
                }, ...
             }
@@ -1951,19 +1752,16 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
                 cc_name: "GetConstRef",
                 rs_name: "GetConstRef", ...
                 return_type: MappedType {
-                    rs_type: NamedType {
-                        name: "&", ...
-                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                    },
+                    ...
                     cpp_type: CcType {
-                        variant: Pointer {
-                            pointer_kind: LValueRef,
+                        variant: Pointer(PointerType {
+                            kind: LValueRef,
                             lifetime: Some(...),
                             pointee_type: CcType {
                                 variant: Primitive(Int),
                                 is_const: true, ...
                             }, ...
-                        },
+                        }),
                         is_const: false, ...
                     }, ...
                 }, ...
@@ -1977,19 +1775,16 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
                 cc_name: "GetRef",
                 rs_name: "GetRef", ...
                 return_type: MappedType {
-                    rs_type: NamedType {
-                        name: "&mut", ...
-                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                    },
+                    ...
                     cpp_type: CcType {
-                        variant: Pointer {
-                            pointer_kind: LValueRef,
+                        variant: Pointer(PointerType {
+                            kind: LValueRef,
                             lifetime: Some(...),
                             pointee_type: CcType {
                                 variant: Primitive(Int),
                                 is_const: false, ...
                             },
-                        },
+                        }),
                         is_const: false, ...
                     },
                 }, ...
@@ -2028,19 +1823,16 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                 cc_name: "GetConstRef",
                 rs_name: "GetConstRef", ...
                 return_type: MappedType {
-                    rs_type: NamedType {
-                        name: "&", ...
-                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                    },
+                    ...
                     cpp_type: CcType {
-                        variant: Pointer {
-                            pointer_kind: LValueRef,
+                        variant: Pointer(PointerType {
+                            kind: LValueRef,
                             lifetime: Some(...),
                             pointee_type: CcType {
                                 variant: Primitive(Int),
                                 is_const: true, ...
                             },
-                        },
+                        }),
                         is_const: false, ...
                     },
                 }, ...
@@ -2054,19 +1846,16 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                 cc_name: "GetRef",
                 rs_name: "GetRef", ...
                 return_type: MappedType {
-                    rs_type: NamedType {
-                        name: "&", ...
-                        type_args: [NamedType { name: "::core::ffi::c_int", ...  }], ...
-                    },
+                    ...
                     cpp_type: CcType {
-                        variant: Pointer {
-                            pointer_kind: LValueRef,
+                        variant: Pointer(PointerType {
+                            kind: LValueRef,
                             lifetime: Some(...),
                             pointee_type: CcType {
                                 variant: Primitive(Int),
                                 is_const: true, ...
                             },
-                        },
+                        }),
                        is_const: false, ...
                     },
                 }, ...
@@ -2312,9 +2101,7 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
             params: [
              FuncParam {
               type_: MappedType {
-                rs_type: ItemIdType {
-                  decl_id: ...,
-                },
+                ...
                 cpp_type: CcType { variant: Record { id: ... }, ... },
               },
               identifier: "i",
@@ -2692,9 +2479,7 @@ fn test_integer_typedef_usage() -> Result<()> {
          params: [
            FuncParam {
             type_: MappedType {
-              rs_type: ItemIdType {
-                decl_id: ...,
-              },
+              ...
               cpp_type: CcType { variant: Record { id: ... }, ... },
             },
             identifier: "my_typedef",
@@ -2720,7 +2505,7 @@ fn test_struct() {
                     Field {
                         identifier: Some("first_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : NamedType { name : "::core::ffi::c_int", ...},
+                            ...
                             cpp_type : CcType { variant: Primitive(Int), ... },
                          }), ...
                         offset: 0, ...
@@ -2730,7 +2515,7 @@ fn test_struct() {
                     Field {
                         identifier: Some("second_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : NamedType { name : "::core::ffi::c_int", ...},
+                            ...
                             cpp_type : CcType { variant: Primitive(Int), ... },
                          }), ...
                         offset: 32, ...
@@ -2824,7 +2609,7 @@ fn test_union() {
                     Field {
                         identifier: Some("first_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : NamedType { name : "::core::ffi::c_int", ...},
+                            ...
                             cpp_type : CcType { variant: Primitive(Int), ... },
                          }), ...
                         offset: 0, ...
@@ -2834,7 +2619,7 @@ fn test_union() {
                     Field {
                         identifier: Some("second_field"), ...
                         type_: Ok(MappedType {
-                            rs_type : NamedType { name : "::core::ffi::c_int", ...},
+                            ...
                             cpp_type : CcType { variant: Primitive(Int), ... },
                          }), ...
                         offset: 0, ...
@@ -3035,8 +2820,9 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
             f.rs_name == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method"))
         })
         .unwrap();
-    let this_param = &rvalue_ref_method.params[0].type_.rs_type.name();
-    assert_eq!(this_param.unwrap(), "#RvalueReference mut");
+    let this_param = &rvalue_ref_method.params[0].type_.cpp_type.variant.as_pointer().unwrap();
+    assert_eq!(this_param.kind, PointerTypeKind::RValueRef);
+    assert!(!this_param.pointee_type.is_const);
 
     let rvalue_ref_const_method = ir
         .functions()
@@ -3045,8 +2831,10 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
                 == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
         })
         .unwrap();
-    let const_this_param = &rvalue_ref_const_method.params[0];
-    assert_eq!(const_this_param.type_.rs_type.name().unwrap(), "#RvalueReference const");
+    let const_this_param =
+        rvalue_ref_const_method.params[0].type_.cpp_type.variant.as_pointer().unwrap();
+    assert_eq!(const_this_param.kind, PointerTypeKind::RValueRef);
+    assert!(const_this_param.pointee_type.is_const);
 }
 
 #[gtest]
@@ -3195,15 +2983,17 @@ fn test_elided_lifetimes() {
     assert_eq!(lifetime_params.iter().map(|p| p.name.as_ref()).collect_vec(), vec!["a", "b"]);
     let a_id = lifetime_params[0].id;
     let b_id = lifetime_params[1].id;
-    assert_eq!(func.return_type.rs_type.lifetime_args().unwrap_or_default(), &[a_id]);
+    assert_eq!(func.return_type.cpp_type.variant.as_pointer().unwrap().lifetime.unwrap(), a_id);
 
     assert_eq!(func.params[0].identifier, ir_id("__this"));
-    assert_eq!(func.params[0].type_.rs_type.name(), Some("&mut"));
-    assert_eq!(func.params[0].type_.rs_type.lifetime_args().unwrap_or_default(), &[a_id]);
+    let ptr = &func.params[0].type_.cpp_type.variant.as_pointer().unwrap();
+    assert!(!ptr.pointee_type.is_const);
+    assert_eq!(ptr.lifetime.unwrap(), a_id);
 
     assert_eq!(func.params[1].identifier, ir_id("i"));
-    assert_eq!(func.params[1].type_.rs_type.name(), Some("&mut"));
-    assert_eq!(func.params[1].type_.rs_type.lifetime_args().unwrap_or_default(), &[b_id]);
+    let ptr = &func.params[1].type_.cpp_type.variant.as_pointer().unwrap();
+    assert!(!ptr.pointee_type.is_const);
+    assert_eq!(ptr.lifetime.unwrap(), b_id);
 }
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
@@ -3220,10 +3010,9 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let p = f.params.first().expect("IR should contain `__this` parameter");
     assert_eq!(p.identifier, ir_id("__this"));
 
-    let t = &p.type_.rs_type;
-    assert_eq!(t.lifetime_args().unwrap().len(), 1);
-    assert_eq!(t.lifetime_args().unwrap()[0], f.lifetime_params[0].id);
-    assert_eq!(t.name(), Some("&mut"));
+    let p_ptr = p.type_.cpp_type.variant.as_pointer().unwrap();
+    assert_eq!(p_ptr.lifetime.unwrap(), f.lifetime_params[0].id);
+    assert!(!p_ptr.pointee_type.is_const);
 }
 
 #[gtest]
@@ -3384,16 +3173,17 @@ fn test_class_template_specialization_information_collection() {
                 TemplateArg {
                     type_: Ok(MappedType {
                         ...
-                        rs_type: NamedType {
-                            name: "::core::ffi::c_char" ...
-                        } ...
+                        cpp_type: CcType {
+                            variant: Primitive(Char), ...
+                        },
                     }),
                 },
                 TemplateArg {
                     type_: Ok(MappedType {
-                        rs_type: NamedType {
-                            name: "::core::ffi::c_int" ...
-                        } ...
+                        ...
+                        cpp_type: CcType {
+                            variant: Primitive(Int), ...
+                        },
                     }),
                 },
             ],

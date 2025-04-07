@@ -101,21 +101,21 @@ llvm::json::Value CcType::ToJson() const {
           [&](CcType::Primitive primitive) {
             return llvm::json::Object{{"Primitive", primitive.spelling}};
           },
-          [&](CcType::Pointer pointer) {
+          [&](CcType::PointerType pointer) {
             return llvm::json::Object{
                 {"Pointer",
                  llvm::json::Object{
                      {
-                         "pointer_kind",
+                         "kind",
                          [&]() -> llvm::json::Value {
-                           switch (pointer.pointer_kind) {
-                             case CcPointerKind::kLValueRef:
+                           switch (pointer.kind) {
+                             case PointerTypeKind::kLValueRef:
                                return "LValueRef";
-                             case CcPointerKind::kRValueRef:
+                             case PointerTypeKind::kRValueRef:
                                return "RValueRef";
-                             case CcPointerKind::kNullable:
+                             case PointerTypeKind::kNullable:
                                return "Nullable";
-                             case CcPointerKind::kNonNull:
+                             case PointerTypeKind::kNonNull:
                                return "NonNull";
                            }
                          }(),
@@ -136,7 +136,25 @@ llvm::json::Value CcType::ToJson() const {
                 {"FuncPointer",
                  llvm::json::Object{
                      {"non_null", func_value.non_null},
-                     {"call_conv", func_value.call_conv},
+                     {
+                         "call_conv",
+                         [&]() -> llvm::json::Value {
+                           switch (func_value.call_conv) {
+                             case CallingConv::kC:
+                               return "cdecl";
+                             case CallingConv::kX86FastCall:
+                               return "fastcall";
+                             case CallingConv::kX86VectorCall:
+                               return "vectorcall";
+                             case CallingConv::kX864ThisCall:
+                               return "thiscall";
+                             case CallingConv::kX86StdCall:
+                               return "stdcall";
+                             case CallingConv::kWin64:
+                               return "ms_abi";
+                           }
+                         }(),
+                     },
                      {"param_and_return_types", param_and_return_type_values},
                  }},
             };
@@ -184,11 +202,11 @@ llvm::json::Value CcType::ToJson() const {
 
 namespace {
 MappedType PointerOrReferenceTo(MappedType pointee_type,
-                                CcPointerKind pointer_kind,
+                                PointerTypeKind pointer_kind,
                                 std::optional<LifetimeId> lifetime) {
   bool has_lifetime = lifetime.has_value();
   absl::string_view rs_name;
-  if (pointer_kind == CcPointerKind::kRValueRef) {
+  if (pointer_kind == PointerTypeKind::kRValueRef) {
     CHECK(has_lifetime);
     rs_name = pointee_type.cpp_type.is_const ? internal::kRustRvalueRefConst
                                              : internal::kRustRvalueRefMut;
@@ -206,13 +224,13 @@ MappedType PointerOrReferenceTo(MappedType pointee_type,
     rs_type.lifetime_args.push_back(*lifetime);
   }
   rs_type.type_args.push_back(std::move(pointee_type.rs_type));
-  if (has_lifetime && pointer_kind == CcPointerKind::kNullable) {
+  if (has_lifetime && pointer_kind == PointerTypeKind::kNullable) {
     rs_type = RsTypeNamed{.name = "Option", .type_args = {std::move(rs_type)}};
   }
   return MappedType{
       .rs_type = std::move(rs_type),
-      .cpp_type = {CcType::Pointer{
-          .pointer_kind = pointer_kind,
+      .cpp_type = {CcType::PointerType{
+          .kind = pointer_kind,
           .lifetime = lifetime,
           .pointee_type =
               std::make_shared<CcType>(std::move(pointee_type).cpp_type),
@@ -226,22 +244,23 @@ MappedType MappedType::PointerTo(MappedType pointee_type,
                                  bool nullable) {
   return PointerOrReferenceTo(
       std::move(pointee_type),
-      nullable ? CcPointerKind::kNullable : CcPointerKind::kNonNull, lifetime);
+      nullable ? PointerTypeKind::kNullable : PointerTypeKind::kNonNull,
+      lifetime);
 }
 
 MappedType MappedType::LValueReferenceTo(MappedType pointee_type,
                                          std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              CcPointerKind::kLValueRef, lifetime);
+                              PointerTypeKind::kLValueRef, lifetime);
 }
 
 MappedType MappedType::RValueReferenceTo(MappedType pointee_type,
                                          LifetimeId lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              CcPointerKind::kRValueRef, lifetime);
+                              PointerTypeKind::kRValueRef, lifetime);
 }
 
-MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
+MappedType MappedType::FuncPtr(CallingConv cc_call_conv,
                                absl::string_view rs_abi,
                                std::optional<LifetimeId> lifetime,
                                MappedType return_type,
@@ -265,7 +284,7 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   return result;
 }
 
-MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
+MappedType MappedType::FuncRef(CallingConv cc_call_conv,
                                absl::string_view rs_abi,
                                std::optional<LifetimeId> lifetime,
                                MappedType return_type,
@@ -284,7 +303,7 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
 
   CcType::FuncPointer cc_func_type = {
       .non_null = true,
-      .call_conv = std::string(cc_call_conv),
+      .call_conv = cc_call_conv,
       .param_and_return_types = std::move(cpp_type_args),
   };
 

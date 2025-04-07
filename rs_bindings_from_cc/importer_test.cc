@@ -146,20 +146,6 @@ MATCHER_P(IsCcPrimitive, name, "") {
   return false;
 }
 
-// Matches an RsType that has the given name.
-MATCHER_P(RsTypeNameIs, name, "") {
-  const auto* named = std::get_if<RsTypeNamed>(&arg);
-  if (named == nullptr || named->name != name) {
-    *result_listener << "actual name: '";
-    if (named != nullptr) {
-      *result_listener << named->name;
-    }
-    *result_listener << "'";
-    return false;
-  }
-  return true;
-}
-
 // Matches text for comments.
 MATCHER_P(TextIs, text, "") {
   if (arg.text == text) return true;
@@ -182,20 +168,6 @@ MATCHER_P(CcDeclIdIs, decl_id, "") {
   return false;
 }
 
-// Matches an RsType that has the given decl_id.
-MATCHER_P(RsDeclIdIs, decl_id, "") {
-  const auto* arg_decl_id = std::get_if<ItemId>(&arg);
-  if (arg_decl_id != nullptr && *arg_decl_id == decl_id) return true;
-
-  *result_listener << "actual decl_id: ";
-  if (arg_decl_id != nullptr) {
-    *result_listener << *arg_decl_id;
-  } else {
-    *result_listener << "std::nullopt";
-  }
-  return false;
-}
-
 // Matches an RsType or CcType that is const .
 MATCHER(IsConst, "") { return arg.is_const; }
 
@@ -205,71 +177,36 @@ auto CcTypeIs(const Args&... matchers) {
   return testing::Field("cpp_type", &MappedType::cpp_type, AllOf(matchers...));
 }
 
-// Matches a MappedType with a RsType that matches all given matchers.
-template <typename... Args>
-auto RsTypeIs(const Args&... matchers) {
-  return testing::Field("rs_type", &MappedType::rs_type, AllOf(matchers...));
-}
-
-// Matches an RsType that has type arguments matching `matchers`.
-template <typename... Args>
-auto RsTypeParamsAre(const Args&... matchers) {
-  return testing::VariantWith<RsTypeNamed>(testing::Field(
-      "type_args", &RsTypeNamed::type_args, ElementsAre(matchers...)));
-}
-
-auto IsRsInt() {
-  return AllOf(RsTypeNameIs("::core::ffi::c_int"), RsTypeParamsAre());
-}
-
 // Matches a CcType that is a pointer to a type matching `matcher`.
 template <typename Matcher>
 auto CcPointsTo(const Matcher& matcher) {
   return Field("variant", &CcType::variant,
-               VariantWith<CcType::Pointer>(
-                   AllOf(Field("pointer_kind", &CcType::Pointer::pointer_kind,
-                               AnyOf(Eq(CcPointerKind::kNullable),
-                                     Eq(CcPointerKind::kNonNull))),
-                         Field("pointee_type", &CcType::Pointer::pointee_type,
-                               Pointee(matcher)))));
+               VariantWith<CcType::PointerType>(AllOf(
+                   Field("kind", &CcType::PointerType::kind,
+                         AnyOf(Eq(PointerTypeKind::kNullable),
+                               Eq(PointerTypeKind::kNonNull))),
+                   Field("pointee_type", &CcType::PointerType::pointee_type,
+                         Pointee(matcher)))));
 }
 
 template <typename Matcher>
 auto CcReferenceTo(const Matcher& matcher) {
   return Field("variant", &CcType::variant,
-               VariantWith<CcType::Pointer>(
-                   AllOf(Field("pointer_kind", &CcType::Pointer::pointer_kind,
-                               Eq(CcPointerKind::kLValueRef)),
-                         Field("pointee_type", &CcType::Pointer::pointee_type,
-                               Pointee(matcher)))));
-}
-
-// Matches an RsType that is a mutable pointer to a type matching `matcher`.
-template <typename Matcher>
-auto RsPointsTo(const Matcher& matcher) {
-  return AllOf(RsTypeNameIs("*mut"), RsTypeParamsAre(matcher));
-}
-
-// Matches an RsType that is a const pointer to a type matching `matcher`.
-template <typename Matcher>
-auto RsConstPointsTo(const Matcher& matcher) {
-  return AllOf(RsTypeNameIs("*const"), RsTypeParamsAre(matcher));
+               VariantWith<CcType::PointerType>(AllOf(
+                   Field("kind", &CcType::PointerType::kind,
+                         Eq(PointerTypeKind::kLValueRef)),
+                   Field("pointee_type", &CcType::PointerType::pointee_type,
+                         Pointee(matcher)))));
 }
 
 // Matches a MappedType that is void.
 MATCHER(IsVoid, "") { return arg.IsVoid(); }
 
 // Matches a MappedType that is a pointer to integer.
-auto IsIntPtr() {
-  return AllOf(CcTypeIs(CcPointsTo(IsCcPrimitive("int"))),
-               RsTypeIs(RsPointsTo(IsRsInt())));
-}
+auto IsIntPtr() { return CcTypeIs(CcPointsTo(IsCcPrimitive("int"))); }
 
 // Matches a MappedType that is an lvalue reference to integer.
-auto IsIntRef() {
-  return AllOf(CcTypeIs(CcReferenceTo(IsCcPrimitive("int"))),
-               RsTypeIs(RsPointsTo(IsRsInt())));
-}
+auto IsIntRef() { return CcTypeIs(CcReferenceTo(IsCcPrimitive("int"))); }
 
 // Matches a Record that has fields matching `matchers`.
 template <typename... Args>
@@ -437,8 +374,7 @@ TEST(ImporterTest, TestImportConstStructPointerFunc) {
   ASSERT_TRUE(decl_id.has_value());
 
   auto is_ptr_to_const_s =
-      AllOf(CcTypeIs(CcPointsTo(AllOf(CcDeclIdIs(*decl_id), IsConst()))),
-            RsTypeIs(RsConstPointsTo(RsDeclIdIs(*decl_id))));
+      CcTypeIs(CcPointsTo(AllOf(CcDeclIdIs(*decl_id), IsConst())));
 
   EXPECT_THAT(ir.items, Contains(VariantWith<Func>(AllOf(
                             IdentifierIs("Foo"), ReturnType(is_ptr_to_const_s),

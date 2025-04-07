@@ -433,9 +433,11 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
         // Double-check that the test scenario set up above uses the same lifetime
         // for both of the constructor's parameters: `__this` and `i`.
         assert_eq!(ctor.params.len(), 2);
-        let this_lifetimes = ctor.params[0].type_.rs_type.lifetime_args().unwrap();
-        let i_lifetimes = ctor.params[1].type_.rs_type.lifetime_args().unwrap();
-        assert_eq!(i_lifetimes[0], this_lifetimes[0]);
+        let this_lifetime =
+            ctor.params[0].type_.cpp_type.variant.as_pointer().unwrap().lifetime.unwrap();
+        let i_lifetime =
+            ctor.params[1].type_.cpp_type.variant.as_pointer().unwrap().lifetime.unwrap();
+        assert_eq!(i_lifetime, this_lifetime);
     }
 
     // Before cl/423346348 the generated Rust code would incorrectly look

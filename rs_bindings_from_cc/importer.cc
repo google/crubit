@@ -109,6 +109,55 @@ bool IsFilteredComment(const clang::SourceManager& sm,
 
 namespace {
 
+// Reduces a clang::CallingConv into a crubit::CallingConv, which is a subset.
+// If the variant isn't in the subset, returns an error.
+absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
+    clang::CallingConv cc_call_conv) {
+  switch (cc_call_conv) {
+    case clang::CC_C:  // __attribute__((cdecl))
+      return CallingConv::kC;
+    case clang::CC_X86FastCall:  // __attribute__((fastcall))
+      return CallingConv::kX86FastCall;
+    case clang::CC_X86VectorCall:  // __attribute__((vectorcall))
+      return CallingConv::kX86VectorCall;
+    case clang::CC_X86ThisCall:  // __attribute__((thiscall))
+      return CallingConv::kX864ThisCall;
+    case clang::CC_X86StdCall:  // __attribute__((stdcall))
+      return CallingConv::kX86StdCall;
+    case clang::CC_Win64:  // __attribute__((ms_abi))
+      return CallingConv::kWin64;
+    case clang::CC_AAPCS:      // __attribute__((pcs("aapcs")))
+    case clang::CC_AAPCS_VFP:  // __attribute__((pcs("aapcs-vfp")))
+      // TODO(lukasza): Should both map to "aapcs"?
+      break;
+    case clang::CC_X86_64SysV:  // __attribute__((sysv_abi))
+      // TODO(lukasza): Maybe this is "sysv64"?
+      break;
+    case clang::CC_X86Pascal:     // __attribute__((pascal))
+    case clang::CC_X86RegCall:    // __attribute__((regcall))
+    case clang::CC_IntelOclBicc:  // __attribute__((intel_ocl_bicc))
+    case clang::CC_SpirFunction:  // default for OpenCL functions on SPIR target
+    case clang::CC_OpenCLKernel:  // inferred for OpenCL kernels
+    case clang::CC_Swift:         // __attribute__((swiftcall))
+    case clang::CC_SwiftAsync:    // __attribute__((swiftasynccall))
+    case clang::CC_PreserveMost:  // __attribute__((preserve_most))
+    case clang::CC_PreserveAll:   // __attribute__((preserve_all))
+    case clang::CC_AArch64VectorCall:  // __attribute__((aarch64_vector_pcs))
+      // TODO(hlopko): Uncomment once we integrate the upstream change that
+      // introduced it:
+      // case clang::CC_AArch64SVEPCS: __attribute__((aarch64_sve_pcs))
+
+      // These don't seem to have any Rust equivalents.
+      break;
+    default:
+      break;
+  }
+  return absl::UnimplementedError(
+      absl::StrCat("Unsupported calling convention: ",
+                   absl::string_view(
+                       clang::FunctionType::getNameForCallConv(cc_call_conv))));
+}
+
 // Converts clang::CallingConv enum [1] into an equivalent Rust Abi [2, 3, 4].
 // [1]
 // https://github.com/llvm/llvm-project/blob/c6a3225bb03b6afc2b63fbf13db3c100406b32ce/clang/include/clang/Basic/Specifiers.h#L262-L283
@@ -1074,8 +1123,9 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
             (lifetime->value() ==
              clang::tidy::lifetimes::Lifetime::Static().Id()));
 
-      clang::StringRef cc_call_conv =
-          clang::FunctionType::getNameForCallConv(func_type->getCallConv());
+      CRUBIT_ASSIGN_OR_RETURN(
+          CallingConv cc_call_conv,
+          ConvertCcCallConvToSupportedCallingConv(func_type->getCallConv()));
       CRUBIT_ASSIGN_OR_RETURN(
           absl::string_view rs_abi,
           ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));

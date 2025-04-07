@@ -7,7 +7,8 @@ use database::rs_snippet::{CratePath, Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
 use has_bindings::{has_bindings, HasBindings, NoBindingsReason};
 use ir::{
-    rs_imported_crate_name, CcCallingConv, CcPointerKind, CcType, CcTypeVariant, GenericItem, Item,
+    rs_imported_crate_name, CcCallingConv, CcType, CcTypeVariant, GenericItem, Item,
+    PointerTypeKind,
 };
 use std::rc::Rc;
 
@@ -15,7 +16,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
     ensure!(ty.unknown_attr.is_empty(), "unknown attribute(s): {}", ty.unknown_attr);
     match &ty.variant {
         CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive((*primitive).into())),
-        CcTypeVariant::Pointer { pointer_kind, lifetime, pointee_type } => {
+        CcTypeVariant::Pointer(pointer) => {
             // In Rust, we have no such concept of a "const" type. All types can be either
             // mutable or immutable depending on the context. However, we do have mutable and
             // immutable references/pointers, where the mutability determines whether the pointee
@@ -26,24 +27,24 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
             // Rust pointer (as opposed to the mutability of the C++ pointer to determine the
             // mutability of the Rust pointer, e.g. ty.is_const).
             let mutability =
-                if pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
-            let pointee = Rc::new(db.rs_type_kind(pointee_type.as_ref().clone())?);
+                if pointer.pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
+            let pointee = Rc::new(db.rs_type_kind(pointer.pointee_type.as_ref().clone())?);
 
-            let Some(lifetime_id) = lifetime else {
+            let Some(lifetime_id) = pointer.lifetime else {
                 return Ok(RsTypeKind::Pointer { pointee, mutability });
             };
 
             let lifetime = db
                 .ir()
-                .get_lifetime(*lifetime_id)
+                .get_lifetime(lifetime_id)
                 .map(Lifetime::from)
                 .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?;
 
-            if let CcPointerKind::RValueRef = pointer_kind {
+            if let PointerTypeKind::RValueRef = pointer.kind {
                 Ok(RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime })
             } else {
                 Ok(RsTypeKind::Reference {
-                    option: matches!(pointer_kind, CcPointerKind::Nullable),
+                    option: matches!(pointer.kind, PointerTypeKind::Nullable),
                     referent: pointee,
                     mutability,
                     lifetime,

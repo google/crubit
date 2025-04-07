@@ -293,16 +293,16 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
             .into()
         }
         Item::TypeMapOverride(type_override) => {
-            let rs_type = RsTypeKind::new_type_map_override(db, type_override)?;
+            let rs_type_kind = RsTypeKind::new_type_map_override(db, type_override)?;
             let disable_comment = format!(
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
-                    an existing Rust type ({rs_type})",
+                    an existing Rust type ({rs_type_kind})",
                 cpp_type = type_override.debug_name(&ir),
-                rs_type = rs_type.display(db),
+                rs_type_kind = rs_type_kind.display(db),
             );
             let assertions = if let Some(size_align) = &type_override.size_align {
                 generate_struct_and_union::rs_size_align_assertions(
-                    rs_type.to_token_stream(db),
+                    rs_type_kind.to_token_stream(db),
                     size_align,
                 )
             } else {

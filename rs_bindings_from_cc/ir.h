@@ -139,7 +139,19 @@ inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
 // unsafe.
 enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
 
-enum class CcPointerKind { kRValueRef, kLValueRef, kNullable, kNonNull };
+enum class PointerTypeKind { kRValueRef, kLValueRef, kNullable, kNonNull };
+
+// Calling conventions for functions that are supported by Crubit.
+//
+// This is a subset of the calling conventions supported by Clang.
+enum class CallingConv {
+  kC,              // __attribute__((cdecl))
+  kX86VectorCall,  // __attribute__((vectorcall))
+  kX86FastCall,    // __attribute__((fastcall))
+  kX864ThisCall,   // __attribute__((thiscall))
+  kX86StdCall,     // __attribute__((stdcall))
+  kWin64,          // __attribute__((ms_abi))
+};
 
 struct CcType {
   llvm::json::Value ToJson() const;
@@ -149,12 +161,12 @@ struct CcType {
     // pointer. When false, this is a C++ function pointer that maps to a Rust
     // function pointer wrapped in an `Option`.
     bool non_null;
-    std::string call_conv;
+    CallingConv call_conv;
     std::vector<CcType> param_and_return_types;
   };
 
-  struct Pointer {
-    CcPointerKind pointer_kind;
+  struct PointerType {
+    PointerTypeKind kind;
     std::optional<LifetimeId> lifetime;
     std::shared_ptr<CcType> pointee_type;
   };
@@ -192,7 +204,7 @@ struct CcType {
     std::optional<BuiltinBridgeType> builtin_bridge_type = std::nullopt;
   };
 
-  std::variant<Primitive, Pointer, FuncPointer, Record> variant;
+  std::variant<Primitive, PointerType, FuncPointer, Record> variant;
   bool is_const = false;
   std::string unknown_attr = "";
 };
@@ -280,20 +292,18 @@ struct MappedType {
   static MappedType RValueReferenceTo(MappedType pointee_type,
                                       LifetimeId lifetime);
 
-  static MappedType FuncPtr(absl::string_view cc_call_conv,
-                            absl::string_view rs_abi,
+  static MappedType FuncPtr(CallingConv cc_call_conv, absl::string_view rs_abi,
                             std::optional<LifetimeId> lifetime,
                             MappedType return_type,
                             std::vector<MappedType> param_types);
-  static MappedType FuncRef(absl::string_view cc_call_conv,
-                            absl::string_view rs_abi,
+  static MappedType FuncRef(CallingConv cc_call_conv, absl::string_view rs_abi,
                             std::optional<LifetimeId> lifetime,
                             MappedType return_type,
                             std::vector<MappedType> param_types);
 
   bool IsVoid() const {
-    const auto* rs_type_named = std::get_if<RsTypeNamed>(&rs_type);
-    return rs_type_named != nullptr && rs_type_named->name == "()";
+    const auto* primitive = std::get_if<CcType::Primitive>(&cpp_type.variant);
+    return primitive != nullptr && primitive->spelling == "void";
   }
 
   llvm::json::Value ToJson() const;
