@@ -106,7 +106,7 @@ class Importer final : public ImportContext {
       const clang::NamedDecl* named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl* decl) const override;
   std::string ConvertSourceLocation(clang::SourceLocation loc) const override;
-  absl::StatusOr<MappedType> ConvertQualType(
+  absl::StatusOr<CcType> ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
       bool nullable = true) override;
@@ -149,19 +149,19 @@ class Importer final : public ImportContext {
 
   std::vector<clang::Decl*> GetCanonicalChildren(
       const clang::DeclContext* decl_context) const;
-  // Converts a type to a MappedType.
-  absl::StatusOr<MappedType> ConvertType(
+  // Converts a type to a CcType.
+  absl::StatusOr<CcType> ConvertType(
       const clang::Type* type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable);
   // Converts a type, without processing attributes.
-  absl::StatusOr<MappedType> ConvertUnattributedType(
+  absl::StatusOr<CcType> ConvertUnattributedType(
       const clang::Type* type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable);
-  absl::StatusOr<MappedType> ConvertTypeDecl(clang::NamedDecl* decl);
+  absl::StatusOr<CcType> ConvertTypeDecl(clang::NamedDecl* decl);
 
-  // Converts `type` into a MappedType, after first importing the Record behind
+  // Converts `type` into a CcType, after first importing the Record behind
   // the template instantiation.
-  absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
+  absl::StatusOr<CcType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type);
   // Helper function for `ConvertTemplateSpecializationType`.
   // Returns the bridge type of the given `decl` if it is a builtin bridge type

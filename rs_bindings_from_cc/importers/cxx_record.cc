@@ -639,7 +639,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     }
 
     const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
-    absl::StatusOr<MappedType> type;
+    absl::StatusOr<CcType> type;
     switch (access) {
       case clang::AS_public:
         // TODO(mboehme): Once lifetime_annotations supports retrieving

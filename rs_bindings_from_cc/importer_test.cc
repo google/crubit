@@ -171,12 +171,6 @@ MATCHER_P(CcDeclIdIs, decl_id, "") {
 // Matches an CcType that is const .
 MATCHER(IsConst, "") { return arg.is_const; }
 
-// Matches a MappedType with a CcType that matches all given matchers.
-template <typename... Args>
-auto CcTypeIs(const Args&... matchers) {
-  return testing::Field("cpp_type", &MappedType::cpp_type, AllOf(matchers...));
-}
-
 // Matches a CcType that is a pointer to a type matching `matcher`.
 template <typename Matcher>
 auto CcPointsTo(const Matcher& matcher) {
@@ -199,14 +193,14 @@ auto CcReferenceTo(const Matcher& matcher) {
                          Pointee(matcher)))));
 }
 
-// Matches a MappedType that is void.
+// Matches a CcType that is void.
 MATCHER(IsVoid, "") { return arg.IsVoid(); }
 
-// Matches a MappedType that is a pointer to integer.
-auto IsIntPtr() { return CcTypeIs(CcPointsTo(IsCcPrimitive("int"))); }
+// Matches a CcType that is a pointer to integer.
+auto IsIntPtr() { return CcPointsTo(IsCcPrimitive("int")); }
 
-// Matches a MappedType that is an lvalue reference to integer.
-auto IsIntRef() { return CcTypeIs(CcReferenceTo(IsCcPrimitive("int"))); }
+// Matches a CcType that is an lvalue reference to integer.
+auto IsIntRef() { return CcReferenceTo(IsCcPrimitive("int")); }
 
 // Matches a Record that has fields matching `matchers`.
 template <typename... Args>
@@ -373,8 +367,7 @@ TEST(ImporterTest, TestImportConstStructPointerFunc) {
   std::optional<ItemId> decl_id = DeclIdForRecord(ir, "S");
   ASSERT_TRUE(decl_id.has_value());
 
-  auto is_ptr_to_const_s =
-      CcTypeIs(CcPointsTo(AllOf(CcDeclIdIs(*decl_id), IsConst())));
+  auto is_ptr_to_const_s = CcPointsTo(AllOf(CcDeclIdIs(*decl_id), IsConst()));
 
   EXPECT_THAT(ir.items, Contains(VariantWith<Func>(AllOf(
                             IdentifierIs("Foo"), ReturnType(is_ptr_to_const_s),

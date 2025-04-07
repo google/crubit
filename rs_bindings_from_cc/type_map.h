@@ -22,7 +22,7 @@ namespace crubit {
 //
 // To create a new type mapping, add the type to the hardcoded list
 // of types.
-std::optional<MappedType> GetTypeMapOverride(const clang::Type& cpp_type);
+std::optional<CcType> GetTypeMapOverride(const clang::Type& cpp_type);
 
 }  // namespace crubit
 

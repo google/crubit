@@ -402,12 +402,6 @@ impl TypeWithDeclId for CcType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct MappedType {
-    pub cpp_type: CcType,
-}
-
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Identifier {
@@ -639,7 +633,7 @@ pub struct MemberFuncMetadata {
 #[serde(deny_unknown_fields)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
-    pub type_: MappedType,
+    pub type_: CcType,
     pub identifier: Identifier,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
@@ -668,7 +662,7 @@ pub struct Func {
     pub owning_target: BazelLabel,
     pub mangled_name: Rc<str>,
     pub doc_comment: Option<Rc<str>>,
-    pub return_type: MappedType,
+    pub return_type: CcType,
     pub params: Vec<FuncParam>,
     /// For tests and internal use only.
     ///
@@ -770,7 +764,7 @@ pub struct Field {
     pub identifier: Option<Identifier>,
     pub doc_comment: Option<Rc<str>>,
     #[serde(rename(deserialize = "type"))]
-    pub type_: Result<MappedType, String>,
+    pub type_: Result<CcType, String>,
     pub access: AccessSpecifier,
     pub offset: usize,
     pub size: usize,
@@ -876,7 +870,7 @@ pub struct BridgeTypeInfo {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TemplateArg {
     #[serde(rename(deserialize = "type"))]
-    pub type_: Result<MappedType, String>,
+    pub type_: Result<CcType, String>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1045,7 +1039,7 @@ pub struct GlobalVar {
     pub enclosing_item_id: Option<ItemId>,
     pub mangled_name: Option<Rc<str>>,
     #[serde(rename(deserialize = "type"))]
-    pub type_: MappedType,
+    pub type_: CcType,
     pub must_bind: bool,
 }
 
@@ -1078,7 +1072,7 @@ pub struct Enum {
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub source_loc: Rc<str>,
-    pub underlying_type: MappedType,
+    pub underlying_type: CcType,
     /// The enumerators. If None, this is a forward-declared (opaque) enum.
     ///
     /// That is, the difference between `enum X : int {};` and `enum X : int;`
@@ -1131,7 +1125,7 @@ pub struct TypeAlias {
     pub doc_comment: Option<Rc<str>>,
     /// A human-readable list of attributes that Crubit doesn't understand.
     pub unknown_attr: Option<Rc<str>>,
-    pub underlying_type: MappedType,
+    pub underlying_type: CcType,
     pub source_loc: Rc<str>,
     pub enclosing_item_id: Option<ItemId>,
     pub must_bind: bool,
@@ -1413,7 +1407,7 @@ impl GenericItem for UseMod {
 pub struct TypeMapOverride {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
-    pub type_parameters: Vec<MappedType>,
+    pub type_parameters: Vec<CcType>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
     pub is_same_abi: bool,

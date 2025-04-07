@@ -84,7 +84,7 @@ pub fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
     // Note: if the RsTypeKind cannot be parsed / rs_type_kind returns Err, then
     // bindings generation will fail for this function, so it doesn't really matter
     // what we do here.
-    if let Ok(return_type) = db.rs_type_kind(func.return_type.cpp_type.clone()) {
+    if let Ok(return_type) = db.rs_type_kind(func.return_type.clone()) {
         if !return_type.is_c_abi_compatible_by_value() {
             return false;
         }
@@ -104,7 +104,7 @@ pub fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
     // (As a side effect, this, like return values, means that support is
     // ABI-agnostic.)
     for param in &func.params {
-        if let Ok(param_type) = db.rs_type_kind(param.type_.cpp_type.clone()) {
+        if let Ok(param_type) = db.rs_type_kind(param.type_.clone()) {
             if !param_type.is_c_abi_compatible_by_value() {
                 return false;
             }
@@ -299,8 +299,8 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let cpp_type = cpp_type_name::format_cpp_type(&p.type_.cpp_type, &ir)?;
-            let arg_type = db.rs_type_kind(p.type_.cpp_type.clone())?;
+            let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
+            let arg_type = db.rs_type_kind(p.type_.clone())?;
             if let RsTypeKind::BridgeType { rust_to_cpp_converter, .. } = &arg_type {
                 let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
                 let ident = expect_format_cc_ident(&p.identifier.identifier);
@@ -329,11 +329,11 @@ pub fn generate_function_thunk_impl(
         .iter()
         .map(|p| {
             let mut ident = expect_format_cc_ident(&p.identifier.identifier);
-            if db.rs_type_kind(p.type_.cpp_type.clone())?.is_bridge_type() {
+            if db.rs_type_kind(p.type_.clone())?.is_bridge_type() {
                 let formatted_ident = convert_ident(&ident);
                 ident = quote! { &(#formatted_ident.val) };
             }
-            match &p.type_.cpp_type.variant {
+            match &p.type_.variant {
                 CcTypeVariant::Pointer(pointer) => match pointer.kind {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
                     PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
@@ -347,7 +347,7 @@ pub fn generate_function_thunk_impl(
                     }
                 }
                 _ => {
-                    let rs_type_kind = db.rs_type_kind(p.type_.cpp_type.clone())?;
+                    let rs_type_kind = db.rs_type_kind(p.type_.clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
                     if !rs_type_kind.is_c_abi_compatible_by_value() {
                         Ok(quote! { std::move(* #ident) })
@@ -365,13 +365,13 @@ pub fn generate_function_thunk_impl(
     // value across `extern "C"` ABI.  (We do this after the arg_expressions
     // computation, so that it's only in the parameter list, not the argument
     // list.)
-    let return_type_kind = db.rs_type_kind(func.return_type.cpp_type.clone())?;
+    let return_type_kind = db.rs_type_kind(func.return_type.clone())?;
     let is_return_value_c_abi_compatible = return_type_kind.is_c_abi_compatible_by_value();
 
     let return_type_name = if !is_return_value_c_abi_compatible {
         param_idents.insert(0, expect_format_cc_ident("__return"));
         // In order to be modified, the return type can't be const.
-        let mut cc_return_type = func.return_type.cpp_type.clone();
+        let mut cc_return_type = func.return_type.clone();
         cc_return_type.is_const = false;
         let return_type_name = cpp_type_name::format_cpp_type(&cc_return_type, &ir)?;
         match &return_type_kind {
@@ -388,7 +388,7 @@ pub fn generate_function_thunk_impl(
         };
         quote! {void}
     } else {
-        cpp_type_name::format_cpp_type(&func.return_type.cpp_type, &ir)?
+        cpp_type_name::format_cpp_type(&func.return_type, ir)?
     };
 
     let this_ref_qualification =
@@ -438,7 +438,7 @@ pub fn generate_function_thunk_impl(
             }
         }
     } else {
-        match &func.return_type.cpp_type.variant {
+        match &func.return_type.variant {
             CcTypeVariant::Primitive(Primitive::Void) => return_expr,
             CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::LValueRef, .. }) => {
                 quote! { return & #return_expr }

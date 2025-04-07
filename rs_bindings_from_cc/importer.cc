@@ -845,7 +845,7 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   return absl::StrCat(spelling_loc_str, "\n", expansion_loc_str);
 }
 
-absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
+absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
     const clang::TemplateSpecializationType* type) {
   // Qualifiers are handled separately in TypeMapper::ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
@@ -899,15 +899,15 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
         type_string, import_status.message()));
   }
 
-  CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_type,
+  CRUBIT_ASSIGN_OR_RETURN(CcType cpp_type,
                           ConvertTypeDecl(specialization_decl));
   CRUBIT_ASSIGN_OR_RETURN(
       std::optional<CcType::Record::BuiltinBridgeType> builtin_bridge_type,
       AsBuiltinBridgeType(specialization_decl));
-  auto* record = std::get_if<CcType::Record>(&mapped_type.cpp_type.variant);
+  auto* record = std::get_if<CcType::Record>(&cpp_type.variant);
   CHECK(record != nullptr);
   record->builtin_bridge_type = std::move(builtin_bridge_type);
-  return mapped_type;
+  return cpp_type;
 }
 
 absl::StatusOr<std::optional<CcType::Record::BuiltinBridgeType>>
@@ -931,37 +931,38 @@ Importer::AsBuiltinBridgeType(
   }
 
   clang::StringRef name = cxx_record_decl->getName();
-  auto mapped_type_of_arg = [&](int index) {
+  auto cc_type_of_arg = [&](int index) {
     return ConvertQualType(
         /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
         /*lifetimes=*/nullptr);
   };
 
   if (name == "optional") {
-    CRUBIT_ASSIGN_OR_RETURN(MappedType inner, mapped_type_of_arg(0));
+    CRUBIT_ASSIGN_OR_RETURN(CcType inner, cc_type_of_arg(0));
     return {CcType::Record::StdOptional{
-        .inner_type = std::make_shared<CcType>(std::move(inner).cpp_type),
+        .inner_type = std::make_shared<CcType>(std::move(inner)),
     }};
   } else if (name == "pair") {
-    CRUBIT_ASSIGN_OR_RETURN(MappedType first, mapped_type_of_arg(0));
-    CRUBIT_ASSIGN_OR_RETURN(MappedType second, mapped_type_of_arg(1));
+    CRUBIT_ASSIGN_OR_RETURN(CcType first, cc_type_of_arg(0));
+    CRUBIT_ASSIGN_OR_RETURN(CcType second, cc_type_of_arg(1));
     return {CcType::Record::StdPair{
-        .first_type = std::make_shared<CcType>(std::move(first).cpp_type),
-        .second_type = std::make_shared<CcType>(std::move(second).cpp_type)}};
+        .first_type = std::make_shared<CcType>(std::move(first)),
+        .second_type = std::make_shared<CcType>(std::move(second)),
+    }};
   }
   // Add builtin bridge types here as needed.
 
   return std::nullopt;
 }
 
-absl::StatusOr<MappedType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
+absl::StatusOr<CcType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
   if (!EnsureSuccessfullyImported(decl)) {
     return absl::NotFoundError(absl::Substitute(
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
 
   ItemId decl_id = GenerateItemId(decl);
-  return MappedType::WithDeclId(decl_id);
+  return CcType(CcType::Record{.id = decl_id});
 }
 
 static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
@@ -979,12 +980,12 @@ static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
   return type1 == type2;
 }
 
-absl::StatusOr<MappedType> Importer::ConvertType(
+absl::StatusOr<CcType> Importer::ConvertType(
     const clang::Type* type,
     const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
-  absl::StatusOr<MappedType> mapped_type =
+  absl::StatusOr<CcType> cpp_type =
       ConvertUnattributedType(type, lifetimes, nullable);
-  if (mapped_type.ok()) {
+  if (cpp_type.ok()) {
     std::optional<std::string> unknown_attr =
         CollectUnknownTypeAttrs(*type, [](clang::attr::Kind kind) {
           using enum clang::attr::Kind;
@@ -1006,13 +1007,13 @@ absl::StatusOr<MappedType> Importer::ConvertType(
           }
         });
     if (unknown_attr.has_value()) {
-      mapped_type->cpp_type.unknown_attr = *unknown_attr;
+      cpp_type->unknown_attr = *unknown_attr;
     }
   }
-  return mapped_type;
+  return cpp_type;
 }
 
-absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
+absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     const clang::Type* type,
     const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
   // Qualifiers are handled separately in ConvertQualType().
@@ -1045,16 +1046,9 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
       CRUBIT_ASSIGN_OR_RETURN(
           CallingConv cc_call_conv,
           ConvertCcCallConvToSupportedCallingConv(func_type->getCallConv()));
-      const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
-      if (pointee_lifetimes) {
-        return_lifetimes =
-            &pointee_lifetimes->GetFuncLifetimes().GetReturnLifetimes();
-      }
-      CRUBIT_ASSIGN_OR_RETURN(
-          MappedType mapped_return_type,
-          ConvertQualType(func_type->getReturnType(), return_lifetimes));
 
-      std::vector<MappedType> mapped_param_types;
+      std::vector<CcType> param_and_return_types;
+      param_and_return_types.reserve(func_type->getNumParams() + 1);
       for (unsigned i = 0; i < func_type->getNumParams(); ++i) {
         const clang::tidy::lifetimes::ValueLifetimes* param_lifetimes = nullptr;
         if (pointee_lifetimes) {
@@ -1062,39 +1056,42 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
               &pointee_lifetimes->GetFuncLifetimes().GetParamLifetimes(i);
         }
         CRUBIT_ASSIGN_OR_RETURN(
-            MappedType mapped_param_type,
+            CcType cpp_param_type,
             ConvertQualType(func_type->getParamType(i), param_lifetimes));
-        mapped_param_types.push_back(std::move(mapped_param_type));
+        param_and_return_types.push_back(std::move(cpp_param_type));
       }
 
-      if (type->isPointerType()) {
-        return MappedType::FuncPtr(cc_call_conv, lifetime,
-                                   std::move(mapped_return_type),
-                                   std::move(mapped_param_types));
-      } else {
-        CHECK(type->isLValueReferenceType());
-        return MappedType::FuncRef(cc_call_conv, lifetime,
-                                   std::move(mapped_return_type),
-                                   std::move(mapped_param_types));
+      const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
+      if (pointee_lifetimes) {
+        return_lifetimes =
+            &pointee_lifetimes->GetFuncLifetimes().GetReturnLifetimes();
       }
+      CRUBIT_ASSIGN_OR_RETURN(
+          CcType cpp_return_type,
+          ConvertQualType(func_type->getReturnType(), return_lifetimes));
+      param_and_return_types.push_back(std::move(cpp_return_type));
+
+      CHECK(type->isPointerType() || type->isLValueReferenceType());
+      return CcType(CcType::FuncPointer{
+          .non_null = type->isLValueReferenceType(),
+          .call_conv = cc_call_conv,
+          .param_and_return_types = std::move(param_and_return_types),
+      });
     }
 
-    CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_pointee_type,
+    CRUBIT_ASSIGN_OR_RETURN(CcType cpp_pointee_type,
                             ConvertQualType(pointee_type, pointee_lifetimes));
     if (type->isPointerType()) {
-      return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
-                                   nullable);
+      return CcType::PointerTo(std::move(cpp_pointee_type), lifetime, nullable);
     } else if (type->isLValueReferenceType()) {
-      return MappedType::LValueReferenceTo(std::move(mapped_pointee_type),
-                                           lifetime);
+      return CcType::LValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     } else {
       CHECK(type->isRValueReferenceType());
       if (!lifetime.has_value()) {
         return absl::UnimplementedError(
             "Unsupported type: && without lifetime");
       }
-      return MappedType::RValueReferenceTo(std::move(mapped_pointee_type),
-                                           *lifetime);
+      return CcType::RValueReferenceTo(std::move(cpp_pointee_type), *lifetime);
     }
   } else if (const auto* builtin_type =
                  // Use getAsAdjusted instead of getAs so we don't desugar
@@ -1102,52 +1099,52 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
              type->getAsAdjusted<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
-        return MappedType::Simple({CcType::Primitive{"bool"}});
+        return CcType(CcType::Primitive{"bool"});
       case clang::BuiltinType::Void:
-        return MappedType::Simple({CcType::Primitive{"void"}});
+        return CcType(CcType::Primitive{"void"});
 
       // Floating-point numbers
       //
       // TODO(b/255768062): Generated bindings should explicitly check if
       // `math.h` defines the `__STDC_IEC_559__` macro.
       case clang::BuiltinType::Float:
-        return MappedType::Simple({CcType::Primitive{"float"}});
+        return CcType(CcType::Primitive{"float"});
       case clang::BuiltinType::Double:
-        return MappedType::Simple({CcType::Primitive{"double"}});
+        return CcType(CcType::Primitive{"double"});
 
       // `char`
       case clang::BuiltinType::Char_S:  // 'char' in targets where it's signed
       case clang::BuiltinType::Char_U:  // 'char' in targets where it's unsigned
-        return MappedType::Simple({CcType::Primitive{"char"}});
+        return CcType(CcType::Primitive{"char"});
       case clang::BuiltinType::SChar:  // 'signed char', explicitly qualified
-        return MappedType::Simple({CcType::Primitive{"signed char"}});
+        return CcType(CcType::Primitive{"signed char"});
       case clang::BuiltinType::UChar:  // 'unsigned char', explicitly qualified
-        return MappedType::Simple({CcType::Primitive{"unsigned char"}});
+        return CcType(CcType::Primitive{"unsigned char"});
 
       // Signed integers
       case clang::BuiltinType::Short:
-        return MappedType::Simple({CcType::Primitive{"short"}});
+        return CcType(CcType::Primitive{"short"});
       case clang::BuiltinType::Int:
-        return MappedType::Simple({CcType::Primitive{"int"}});
+        return CcType(CcType::Primitive{"int"});
       case clang::BuiltinType::Long:
-        return MappedType::Simple({CcType::Primitive{"long"}});
+        return CcType(CcType::Primitive{"long"});
       case clang::BuiltinType::LongLong:
-        return MappedType::Simple({CcType::Primitive{"long long"}});
+        return CcType(CcType::Primitive{"long long"});
 
       // Unsigned integers
       case clang::BuiltinType::UShort:
-        return MappedType::Simple({CcType::Primitive{"unsigned short"}});
+        return CcType(CcType::Primitive{"unsigned short"});
       case clang::BuiltinType::UInt:
-        return MappedType::Simple({CcType::Primitive{"unsigned int"}});
+        return CcType(CcType::Primitive{"unsigned int"});
       case clang::BuiltinType::ULong:
-        return MappedType::Simple({CcType::Primitive{"unsigned long"}});
+        return CcType(CcType::Primitive{"unsigned long"});
       case clang::BuiltinType::ULongLong:
-        return MappedType::Simple({CcType::Primitive{"unsigned long long"}});
+        return CcType(CcType::Primitive{"unsigned long long"});
 
       case clang::BuiltinType::Char16:
-        return MappedType::Simple({CcType::Primitive{"char16_t"}});
+        return CcType(CcType::Primitive{"char16_t"});
       case clang::BuiltinType::Char32:
-        return MappedType::Simple({CcType::Primitive{"char32_t"}});
+        return CcType(CcType::Primitive{"char32_t"});
       default:
         return absl::UnimplementedError("Unsupported builtin type");
     }
@@ -1193,12 +1190,12 @@ static clang::QualType GetUnelaboratedType(clang::QualType qual_type,
   }
 }
 
-absl::StatusOr<MappedType> Importer::ConvertQualType(
+absl::StatusOr<CcType> Importer::ConvertQualType(
     clang::QualType qual_type,
     const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
   qual_type = GetUnelaboratedType(std::move(qual_type), ctx_);
   std::string type_string = qual_type.getAsString();
-  absl::StatusOr<MappedType> type =
+  absl::StatusOr<CcType> type =
       ConvertType(qual_type.getTypePtr(), lifetimes, nullable);
   if (!type.ok()) {
     absl::Status error = absl::UnimplementedError(absl::Substitute(
@@ -1208,7 +1205,7 @@ absl::StatusOr<MappedType> Importer::ConvertQualType(
   }
 
   // Handle cv-qualification.
-  type->cpp_type.is_const = qual_type.isConstQualified();
+  type->is_const = qual_type.isConstQualified();
   if (qual_type.isVolatileQualified()) {
     return absl::UnimplementedError(
         absl::StrCat("Unsupported `volatile` qualifier: ", type_string));

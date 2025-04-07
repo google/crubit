@@ -34,6 +34,7 @@
 #include "absl/strings/substitute.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
@@ -142,6 +143,7 @@ struct CcType {
     // function pointer wrapped in an `Option`.
     bool non_null;
     CallingConv call_conv;
+    // param_and_return_types assumes the last type is the return type.
     std::vector<CcType> param_and_return_types;
   };
 
@@ -184,34 +186,11 @@ struct CcType {
     std::optional<BuiltinBridgeType> builtin_bridge_type = std::nullopt;
   };
 
-  std::variant<Primitive, PointerType, FuncPointer, Record> variant;
-  bool is_const = false;
-  std::string unknown_attr = "";
-};
+  static CcType PointerTo(CcType pointee_type,
+                          std::optional<LifetimeId> lifetime, bool nullable);
 
-// A type involved in the bindings. The rs_type and cpp_type will be treated
-// as interchangeable during bindings, and so should share the same layout.
-//
-// For example: a C++ pointer may be a usize in Rust, rather than a pointer, but
-// should almost certainly not be a u8, because u8 and pointers are sized and
-// aligned differently.
-struct MappedType {
-  /// Returns the MappedType for a non-templated/generic, non-cv-qualified type.
-  /// For example, Void() is Simple("()", "void").
-  static MappedType Simple(CcType cpp_type) {
-    return MappedType{std::move(cpp_type)};
-  }
-
-  static MappedType WithDeclId(ItemId decl_id) {
-    return MappedType{{CcType::Record{decl_id}}};
-  }
-
-  static MappedType PointerTo(MappedType pointee_type,
-                              std::optional<LifetimeId> lifetime,
-                              bool nullable = true);
-
-  static MappedType LValueReferenceTo(MappedType pointee_type,
-                                      std::optional<LifetimeId> lifetime);
+  static CcType LValueReferenceTo(CcType pointee_type,
+                                  std::optional<LifetimeId> lifetime);
 
   // Creates an Rvalue Reference mapped type.
   //
@@ -219,29 +198,23 @@ struct MappedType {
   // lifetime. (Such a thing would require an "Rvalue Pointer" type -- probably
   // spelled `Move<*mut T>` in Rust, although that doesn't work today due to
   // the `P: DerefMut` bound in `Move<P>`.)
-  static MappedType RValueReferenceTo(MappedType pointee_type,
-                                      LifetimeId lifetime);
-
-  static MappedType FuncPtr(CallingConv cc_call_conv,
-                            std::optional<LifetimeId> lifetime,
-                            MappedType return_type,
-                            std::vector<MappedType> param_types);
-  static MappedType FuncRef(CallingConv cc_call_conv,
-                            std::optional<LifetimeId> lifetime,
-                            MappedType return_type,
-                            std::vector<MappedType> param_types);
+  static CcType RValueReferenceTo(CcType pointee_type, LifetimeId lifetime);
 
   bool IsVoid() const {
-    const auto* primitive = std::get_if<CcType::Primitive>(&cpp_type.variant);
+    const auto* primitive = std::get_if<CcType::Primitive>(&variant);
     return primitive != nullptr && primitive->spelling == "void";
   }
 
-  llvm::json::Value ToJson() const;
+  using Variant = std::variant<Primitive, PointerType, FuncPointer, Record>;
 
-  CcType cpp_type;
+  explicit CcType(Variant variant) : variant(std::move(variant)) {}
+
+  Variant variant;
+  bool is_const = false;
+  std::string unknown_attr = "";
 };
 
-inline std::ostream& operator<<(std::ostream& o, const MappedType& type) {
+inline std::ostream& operator<<(std::ostream& o, const CcType& type) {
   return o << std::string(llvm::formatv("{0:2}", type.ToJson()));
 }
 
@@ -343,7 +316,7 @@ inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
 struct FuncParam {
   llvm::json::Value ToJson() const;
 
-  MappedType type;
+  CcType type;
   Identifier identifier;
   std::optional<std::string> unknown_attr;
 };
@@ -419,7 +392,7 @@ struct Func {
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
   std::string mangled_name;
-  MappedType return_type;
+  CcType return_type;
   std::vector<FuncParam> params;
   std::vector<LifetimeName> lifetime_params;
   bool is_inline;
@@ -472,7 +445,7 @@ struct Field {
   std::optional<Identifier> identifier;
 
   std::optional<std::string> doc_comment;
-  absl::StatusOr<MappedType> type;
+  absl::StatusOr<CcType> type;
   AccessSpecifier access;
   uint64_t offset;  // Field offset in bits.
   uint64_t size;    // Field size in bits.
@@ -559,7 +532,7 @@ struct BridgeTypeInfo {
 // TODO: Handle non-type template parameter.
 // A template argument for a template specialization.
 struct TemplateArg {
-  absl::StatusOr<MappedType> type;
+  absl::StatusOr<CcType> type;
   llvm::json::Value ToJson() const;
 };
 
@@ -725,7 +698,7 @@ struct Enum {
   ItemId id;
   BazelLabel owning_target;
   std::string source_loc;
-  MappedType underlying_type;
+  CcType underlying_type;
   std::optional<std::vector<Enumerator>> enumerators;
   std::optional<std::string> unknown_attr;
   std::optional<ItemId> enclosing_item_id;
@@ -741,7 +714,7 @@ struct GlobalVar {
   BazelLabel owning_target;
   std::string source_loc;
   std::optional<std::string> mangled_name;
-  MappedType type;
+  CcType type;
   std::optional<std::string> unknown_attr;
   std::optional<ItemId> enclosing_item_id;
   bool must_bind = false;
@@ -761,7 +734,7 @@ struct TypeAlias {
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
   std::optional<std::string> unknown_attr;
-  MappedType underlying_type;
+  CcType underlying_type;
   std::string source_loc;
   std::optional<ItemId> enclosing_item_id;
   bool must_bind = false;
@@ -935,7 +908,7 @@ struct TypeMapOverride {
   std::string cc_name;
 
   // The generic/template type parameters to the C++/Rust type.
-  std::vector<MappedType> type_parameters;
+  std::vector<CcType> type_parameters;
 
   BazelLabel owning_target;
   // Size and alignment, if known.

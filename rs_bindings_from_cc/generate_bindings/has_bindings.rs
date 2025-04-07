@@ -98,7 +98,7 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
         // Function bindings aren't guaranteed, because they don't _need_ to be guaranteed. We
         // choose not to generate code which relies on functions existing in other TUs.
         Item::Func(..) => HasBindings::Maybe,
-        Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.cpp_type.clone()) {
+        Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.clone()) {
             Ok(_) => HasBindings::Yes,
             Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
                 context: alias.debug_name(&ir),

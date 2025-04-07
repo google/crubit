@@ -106,10 +106,9 @@ SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
 // ref qualified and has a lifetime. This function will update the `this`
 // parameter type to be an rvalue reference instead.
 void ApplyRefQualifierToThisPointer(
-    MappedType& this_param_type, clang::RefQualifierKind ref_qualifier_kind) {
-  auto* pointer =
-      std::get_if<CcType::PointerType>(&this_param_type.cpp_type.variant);
-  // The MappedType of `this` should always be a pointer.
+    CcType& this_param_type, clang::RefQualifierKind ref_qualifier_kind) {
+  auto* pointer = std::get_if<CcType::PointerType>(&this_param_type.variant);
+  // The CcType of `this` should always be a pointer.
   CHECK(pointer != nullptr);
 
   // Now we go back and fix the `this` parameter type to be a reference
@@ -333,7 +332,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       if (lifetimes) {
         this_lifetimes = &lifetimes->GetThisLifetimes();
       }
-      auto this_param_type =
+      absl::StatusOr<CcType> this_param_type =
           ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
                                 /*nullable=*/false);
       if (!this_param_type.ok()) {
@@ -396,7 +395,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
               "Diagnostics emitted:\n")));
     }
   }
-  absl::StatusOr<MappedType> return_type;
+  absl::StatusOr<CcType> return_type;
   if (!undeduced_return_type) {
     const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
     if (lifetimes) {

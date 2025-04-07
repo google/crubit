@@ -142,7 +142,7 @@ class ImportContext {
   GetUnsupportedItemPathForTemplateDecl(
       clang::RedeclarableTemplateDecl* template_decl) = 0;
 
-  // Returs the label of the target that contains a decl.
+  // Returns the label of the target that contains a decl.
   virtual BazelLabel GetOwningTarget(const clang::Decl* decl) const = 0;
 
   // Checks if the given decl belongs to the current target. Does not look into
@@ -173,7 +173,7 @@ class ImportContext {
   virtual std::string ConvertSourceLocation(
       clang::SourceLocation loc) const = 0;
 
-  // Converts the Clang type `qual_type` into an equivalent `MappedType`.
+  // Converts the Clang type `qual_type` into an equivalent `CcType`.
   // Lifetimes for the type can optionally be specified using `lifetimes` (pass
   // null otherwise).
   // If `qual_type` is a pointer type, `nullable` specifies whether the
@@ -186,7 +186,7 @@ class ImportContext {
   // nullability annotations. Today, the only caller that passes in
   // `nullable=false` is the code that handles the `this` parameter type for
   // methods, which is always a pointer that cannot be null.
-  virtual absl::StatusOr<MappedType> ConvertQualType(
+  virtual absl::StatusOr<CcType> ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
       bool nullable = true) = 0;

@@ -189,7 +189,7 @@ pub fn required_crubit_features(
                     &|| "destructors".into(),
                 );
             } else {
-                let return_type = db.rs_type_kind(func.return_type.cpp_type.clone())?;
+                let return_type = db.rs_type_kind(func.return_type.clone())?;
                 require_rs_type_kind(
                     &mut missing_features,
                     &return_type,
@@ -197,7 +197,7 @@ pub fn required_crubit_features(
                     &|| "return type".into(),
                 );
                 for (i, param) in func.params.iter().enumerate() {
-                    let param_type = db.rs_type_kind(param.type_.cpp_type.clone())?;
+                    let param_type = db.rs_type_kind(param.type_.clone())?;
                     require_rs_type_kind(
                         &mut missing_features,
                         &param_type,

@@ -506,8 +506,7 @@ fn map_alias_to_bridge_type(type_alias: &RsTypeKind) -> Option<Result<RsTypeKind
 impl RsTypeKind {
     pub fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
         let ir = db.ir();
-        let underlying_type =
-            Rc::new(db.rs_type_kind(type_alias.underlying_type.cpp_type.clone())?);
+        let underlying_type = Rc::new(db.rs_type_kind(type_alias.underlying_type.clone())?);
         let crate_path = Rc::new(CratePath::new(
             &ir,
             ir.namespace_qualifier(&type_alias),
@@ -556,17 +555,18 @@ impl RsTypeKind {
         type_map_override: &TypeMapOverride,
     ) -> Result<Self> {
         if type_map_override.rs_name.as_ref() == SLICE_REF_NAME_RS {
-            ensure!(
-                type_map_override.type_parameters.len() == 1,
-                "SliceRef has {} type parameters, expected 1",
-                type_map_override.type_parameters.len()
-            );
-            let mapped_slice_type = type_map_override.type_parameters.first().unwrap();
-            let mapped_slice_type_rs = db.rs_type_kind(mapped_slice_type.cpp_type.clone())?;
+            let [slice_type_inner] = &type_map_override.type_parameters[..] else {
+                bail!(
+                    "SliceRef has {} type parameters, expected 1",
+                    type_map_override.type_parameters.len()
+                );
+            };
 
             return Ok(RsTypeKind::Pointer {
-                pointee: Rc::new(RsTypeKind::Slice(Rc::new(mapped_slice_type_rs))),
-                mutability: if mapped_slice_type.cpp_type.is_const {
+                pointee: Rc::new(RsTypeKind::Slice(Rc::new(
+                    db.rs_type_kind(slice_type_inner.clone())?,
+                ))),
+                mutability: if slice_type_inner.is_const {
                     Mutability::Const
                 } else {
                     Mutability::Mut
@@ -1085,7 +1085,7 @@ pub fn map_to_supported_generic(
             return None;
         }
         let arg_type = arg.type_.clone().unwrap();
-        let Ok(arg_type_kind) = db.rs_type_kind(arg_type.cpp_type.clone()) else {
+        let Ok(arg_type_kind) = db.rs_type_kind(arg_type.clone()) else {
             return None;
         };
         if arg_type_kind.is_bridge_type() {

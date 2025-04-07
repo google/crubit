@@ -84,7 +84,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
             let fallback_type = match item {
                 // Type aliases are unique among items, in that if the item defining the alias fails
                 // to receive bindings, we can still use the aliased type.
-                ir::Item::TypeAlias(alias) => Some(&alias.underlying_type.cpp_type),
+                ir::Item::TypeAlias(alias) => Some(&alias.underlying_type),
                 _ => None,
             };
             match (has_bindings(db, item), fallback_type) {

@@ -61,10 +61,10 @@ absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
 }
 
 // Gathers all instantiated template parameters for `decl` (if any) and converts
-// them to `MappedType`s.
+// them to `CcType`s.
 //
 // `decl` must not be null.
-absl::StatusOr<std::optional<std::vector<MappedType>>> GetTemplateParameters(
+absl::StatusOr<std::optional<std::vector<CcType>>> GetTemplateParameters(
     ImportContext& ictx, const clang::Decl* decl) {
   const auto* specialization_decl =
       llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(decl);
@@ -72,13 +72,13 @@ absl::StatusOr<std::optional<std::vector<MappedType>>> GetTemplateParameters(
     return std::nullopt;
   }
 
-  std::vector<MappedType> result;
+  std::vector<CcType> result;
   for (const auto& arg : specialization_decl->getTemplateArgs().asArray()) {
-    auto mapped_type =
+    auto cpp_type =
         ictx.ConvertQualType(arg.getAsType(), /*lifetimes=*/nullptr);
-    if (!mapped_type.ok()) return mapped_type.status();
+    if (!cpp_type.ok()) return cpp_type.status();
 
-    result.push_back(*mapped_type);
+    result.push_back(*cpp_type);
   }
 
   return result;
@@ -120,7 +120,7 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   if (cpp_type == nullptr) return std::nullopt;
   std::string cc_name = cc_qualtype.getAsString();
 
-  absl::StatusOr<std::optional<std::vector<MappedType>>> type_parameters =
+  absl::StatusOr<std::optional<std::vector<CcType>>> type_parameters =
       GetTemplateParameters(ictx_, type_decl);
   if (!type_parameters.ok()) {
     return ictx_.ImportUnsupportedItem(
@@ -141,7 +141,7 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   return TypeMapOverride{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
-      .type_parameters = type_parameters->value_or(std::vector<MappedType>()),
+      .type_parameters = type_parameters->value_or(std::vector<CcType>()),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),
       .is_same_abi = *is_same_abi,

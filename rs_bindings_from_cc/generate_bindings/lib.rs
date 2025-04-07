@@ -92,7 +92,7 @@ fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Re
         db.environment(),
     );
     let underlying_type = db
-        .rs_type_kind(type_alias.underlying_type.cpp_type.clone())
+        .rs_type_kind(type_alias.underlying_type.clone())
         .with_context(|| format!("Failed to format underlying type for {}", type_alias))?;
 
     let underlying_type_tokens = underlying_type.to_token_stream(db);
@@ -105,7 +105,7 @@ fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Re
 
 fn generate_global_var(db: &dyn BindingsGenerator, var: &GlobalVar) -> Result<ApiSnippets> {
     let ident = make_rs_ident(&var.rs_name.identifier);
-    let type_ = db.rs_type_kind(var.type_.cpp_type.clone())?;
+    let type_ = db.rs_type_kind(var.type_.clone())?;
 
     let link_name = if let Some(mangled_name) = &var.mangled_name {
         let mangled_name = &**mangled_name;
@@ -113,7 +113,7 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: &GlobalVar) -> Result<Ap
     } else {
         quote! {}
     };
-    let mutness = if !var.type_.cpp_type.is_const { quote!(mut) } else { quote!() };
+    let mutness = if !var.type_.is_const { quote!(mut) } else { quote!() };
     let type_tokens = type_.to_token_stream(db);
     Ok(quote! {
         extern "C" {
@@ -511,10 +511,10 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
                 if field.access != AccessSpecifier::Public {
                     continue;
                 }
-                let Ok(mapped_type) = &field.type_ else {
+                let Ok(cpp_type) = &field.type_ else {
                     continue;
                 };
-                let field_rs_type_kind = db.rs_type_kind(mapped_type.cpp_type.clone())?;
+                let field_rs_type_kind = db.rs_type_kind(cpp_type.clone())?;
                 if db.is_rs_type_kind_unsafe(field_rs_type_kind)? {
                     return Ok(true);
                 }

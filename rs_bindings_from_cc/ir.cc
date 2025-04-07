@@ -173,82 +173,33 @@ llvm::json::Value CcType::ToJson() const {
 }
 
 namespace {
-MappedType PointerOrReferenceTo(MappedType pointee_type,
-                                PointerTypeKind pointer_kind,
-                                std::optional<LifetimeId> lifetime) {
-  return MappedType{
-      .cpp_type = {CcType::PointerType{
-          .kind = pointer_kind,
-          .lifetime = lifetime,
-          .pointee_type =
-              std::make_shared<CcType>(std::move(pointee_type).cpp_type),
-      }},
-  };
+CcType PointerOrReferenceTo(CcType pointee_type, PointerTypeKind pointer_kind,
+                            std::optional<LifetimeId> lifetime) {
+  return CcType(CcType::PointerType{
+      .kind = pointer_kind,
+      .lifetime = lifetime,
+      .pointee_type = std::make_shared<CcType>(std::move(pointee_type)),
+  });
 }
 }  // namespace
 
-MappedType MappedType::PointerTo(MappedType pointee_type,
-                                 std::optional<LifetimeId> lifetime,
-                                 bool nullable) {
+CcType CcType::PointerTo(CcType pointee_type,
+                         std::optional<LifetimeId> lifetime, bool nullable) {
   return PointerOrReferenceTo(
       std::move(pointee_type),
       nullable ? PointerTypeKind::kNullable : PointerTypeKind::kNonNull,
       lifetime);
 }
 
-MappedType MappedType::LValueReferenceTo(MappedType pointee_type,
-                                         std::optional<LifetimeId> lifetime) {
+CcType CcType::LValueReferenceTo(CcType pointee_type,
+                                 std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
                               PointerTypeKind::kLValueRef, lifetime);
 }
 
-MappedType MappedType::RValueReferenceTo(MappedType pointee_type,
-                                         LifetimeId lifetime) {
+CcType CcType::RValueReferenceTo(CcType pointee_type, LifetimeId lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
                               PointerTypeKind::kRValueRef, lifetime);
-}
-
-MappedType MappedType::FuncPtr(CallingConv cc_call_conv,
-                               std::optional<LifetimeId> lifetime,
-                               MappedType return_type,
-                               std::vector<MappedType> param_types) {
-  MappedType result = FuncRef(cc_call_conv, lifetime, std::move(return_type),
-                              std::move(param_types));
-
-  auto* cc_func_ptr =
-      std::get_if<CcType::FuncPointer>(&result.cpp_type.variant);
-  CHECK(cc_func_ptr != nullptr);
-  cc_func_ptr->non_null = false;
-
-  return result;
-}
-
-MappedType MappedType::FuncRef(CallingConv cc_call_conv,
-                               std::optional<LifetimeId> lifetime,
-                               MappedType return_type,
-                               std::vector<MappedType> param_types) {
-  std::vector<MappedType> type_args = std::move(param_types);
-  type_args.push_back(std::move(return_type));
-
-  std::vector<CcType> cpp_type_args;
-  cpp_type_args.reserve(type_args.size());
-  for (MappedType& type_arg : type_args) {
-    cpp_type_args.push_back(std::move(type_arg.cpp_type));
-  }
-
-  return MappedType{
-      .cpp_type = {CcType::FuncPointer{
-          .non_null = true,
-          .call_conv = cc_call_conv,
-          .param_and_return_types = std::move(cpp_type_args),
-      }},
-  };
-}
-
-llvm::json::Value MappedType::ToJson() const {
-  return llvm::json::Object{
-      {"cpp_type", cpp_type},
-  };
 }
 
 llvm::json::Value Identifier::ToJson() const {
