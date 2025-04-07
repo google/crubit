@@ -48,15 +48,76 @@ rust_library(
 )
 
 crubit_rust_test(
-    name = "bindings_test",
-    crate = ":generate_bindings",
+    name = "format_type_test",
+    srcs = ["format_type_test.rs"],
+    deps = [
+        ":generate_bindings",
+        ":test_helpers",
+        "//cc_bindings_from_rs:run_compiler_test_support",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:code_gen_utils",
+        "//common:token_stream_matchers",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+    ],
+)
+
+crubit_rust_test(
+    name = "generate_bindings_test",
+    srcs = ["generate_bindings_test.rs"],
+    deps = [
+        ":generate_bindings",
+        ":test_helpers",
+        "//cc_bindings_from_rs:run_compiler_test_support",
+        "//common:code_gen_utils",
+        "//common:token_stream_matchers",
+        "@crate_index//:quote",
+    ],
+)
+
+crubit_rust_test(
+    name = "generate_function_test",
+    srcs = ["generate_function_test.rs"],
+    deps = [
+        ":test_helpers",
+        "//common:code_gen_utils",
+        "//common:crubit_feature",
+        "//common:token_stream_matchers",
+        "@crate_index//:flagset",
+        "@crate_index//:quote",
+    ],
+)
+
+crubit_rust_test(
+    name = "generate_struct_and_union_test",
+    srcs = ["generate_struct_and_union_test.rs"],
+    deps = [
+        ":test_helpers",
+        "//common:token_stream_matchers",
+        "@crate_index//:quote",
+    ],
+)
+
+rust_library(
+    name = "test_helpers",
+    testonly = True,
+    srcs = [
+        "test_helpers.rs",
+    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
+    tags = [
+        "manual",
+    ],
     deps = [
+        ":generate_bindings",
         "//cc_bindings_from_rs:run_compiler_test_support",
-        "//common:token_stream_matchers",
-        "@crate_index//:itertools",
+        "//cc_bindings_from_rs/generate_bindings/database",
+        "//common:arc_anyhow",
+        "//common:crubit_feature",
+        "//common:error_report",
+        "@crate_index//:flagset",
     ],
 )
 
