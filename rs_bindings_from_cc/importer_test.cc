@@ -134,7 +134,7 @@ MATCHER_P(UnsupportedItemNameIs, name, "") {
   return false;
 }
 
-// Matches an CcType that's a primitive with the given name.
+// Matches a CcType that's a primitive with the given name.
 MATCHER_P(IsCcPrimitive, name, "") {
   const auto* primitive = std::get_if<CcType::Primitive>(&arg.variant);
   if (primitive != nullptr || primitive->spelling == name) return true;
@@ -168,7 +168,7 @@ MATCHER_P(CcDeclIdIs, decl_id, "") {
   return false;
 }
 
-// Matches an RsType or CcType that is const .
+// Matches an CcType that is const .
 MATCHER(IsConst, "") { return arg.is_const; }
 
 // Matches a MappedType with a CcType that matches all given matchers.

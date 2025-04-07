@@ -158,7 +158,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
-        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/strings",
         "@llvm-project//clang:ast",
     ],

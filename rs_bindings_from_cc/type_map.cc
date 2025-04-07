@@ -7,7 +7,7 @@
 #include <optional>
 #include <string>
 
-#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Type.h"
@@ -15,60 +15,34 @@
 namespace crubit {
 
 namespace {
-// A mapping of C++ standard types to their equivalent Rust types.
-std::optional<absl::string_view> MapKnownCcTypeToRsType(
-    absl::string_view cpp_type) {
+// Returns true if the type is a known Rust type.
+bool IsKnownRustType(absl::string_view cpp_type) {
   static const auto* const kWellKnownTypes =
-      new absl::flat_hash_map<absl::string_view, absl::string_view>({
+      new absl::flat_hash_set<absl::string_view>({
           // TODO(lukasza): Try to deduplicate the entries below - for example:
           // - Try to unify `std::int32_t` and `int32_t`
           // One approach would be to desugar the types before calling
-          // `MapKnownCcTypeToRsType`, but note that desugaring of type aliases
+          // `IsKnownRustType`, but note that desugaring of type aliases
           // may be undesirable (i.e.  we may want the bindings to refer to
           // `TypeAlias` rather than directly to the type that it desugars to).
           // Note that b/254096006 tracks desire to preserve type aliases in
           // `cc_bindings_from_rs`.
-          {"ptrdiff_t", "isize"},
-          {"intptr_t", "isize"},
-          {"size_t", "usize"},
-          {"uintptr_t", "usize"},
-          {"std::ptrdiff_t", "isize"},
-          {"std::intptr_t", "isize"},
-          {"std::size_t", "usize"},
-          {"std::uintptr_t", "usize"},
-
-          {"int8_t", "i8"},
-          {"int16_t", "i16"},
-          {"int32_t", "i32"},
-          {"int64_t", "i64"},
-          {"std::int8_t", "i8"},
-          {"std::int16_t", "i16"},
-          {"std::int32_t", "i32"},
-          {"std::int64_t", "i64"},
-
-          {"uint8_t", "u8"},
-          {"uint16_t", "u16"},
-          {"uint32_t", "u32"},
-          {"uint64_t", "u64"},
-          {"std::uint8_t", "u8"},
-          {"std::uint16_t", "u16"},
-          {"std::uint32_t", "u32"},
-          {"std::uint64_t", "u64"},
+          "ptrdiff_t",      "intptr_t",      "size_t",        "uintptr_t",
+          "std::ptrdiff_t", "std::intptr_t", "std::size_t",   "std::uintptr_t",
+          "int8_t",         "int16_t",       "int32_t",       "int64_t",
+          "std::int8_t",    "std::int16_t",  "std::int32_t",  "std::int64_t",
+          "uint8_t",        "uint16_t",      "uint32_t",      "uint64_t",
+          "std::uint8_t",   "std::uint16_t", "std::uint32_t", "std::uint64_t",
       });
-  auto it = kWellKnownTypes->find(cpp_type);
-  if (it == kWellKnownTypes->end()) return std::nullopt;
-  return it->second;
+  return kWellKnownTypes->contains(cpp_type);
 }
 
 }  // namespace
 
 std::optional<MappedType> GetTypeMapOverride(const clang::Type& cpp_type) {
   std::string type_string = clang::QualType(&cpp_type, 0).getAsString();
-  std::optional<absl::string_view> rust_type =
-      MapKnownCcTypeToRsType(type_string);
-  if (rust_type.has_value()) {
-    return MappedType::Simple(std::string(*rust_type),
-                              {CcType::Primitive{type_string}});
+  if (IsKnownRustType(type_string)) {
+    return MappedType::Simple({CcType::Primitive{type_string}});
   }
   return std::nullopt;
 }

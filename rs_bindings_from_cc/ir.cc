@@ -67,34 +67,6 @@ llvm::json::Value LifetimeName::ToJson() const {
   };
 }
 
-llvm::json::Value toJSON(const RsType& type) {
-  if (auto* rs_type_named = std::get_if<RsTypeNamed>(&type)) {
-    return llvm::json::Object{{"NamedType", rs_type_named->ToJson()}};
-  } else if (auto* decl_id = std::get_if<ItemId>(&type)) {
-    return llvm::json::Object{
-        {"ItemIdType", llvm::json::Object{{"decl_id", decl_id->value()}}}};
-  } else {
-    return llvm::json::Object{
-        {"UnknownAttr",
-         llvm::json::Object{
-             {"unknown_attr", std::get<UnknownAttr>(type).unknown_attr}}},
-    };
-  }
-}
-
-llvm::json::Value RsTypeNamed::ToJson() const {
-  std::vector<llvm::json::Value> type_args_vector;
-  type_args_vector.reserve(type_args.size());
-  for (const RsType& type : type_args) {
-    type_args_vector.push_back(toJSON(type));
-  }
-  return llvm::json::Object{
-      {"name", name},
-      {"lifetime_args", lifetime_args},
-      {"type_args", type_args_vector},
-  };
-}
-
 llvm::json::Value CcType::ToJson() const {
   llvm::json::Object variant_object = std::visit(
       visitor{
@@ -204,31 +176,7 @@ namespace {
 MappedType PointerOrReferenceTo(MappedType pointee_type,
                                 PointerTypeKind pointer_kind,
                                 std::optional<LifetimeId> lifetime) {
-  bool has_lifetime = lifetime.has_value();
-  absl::string_view rs_name;
-  if (pointer_kind == PointerTypeKind::kRValueRef) {
-    CHECK(has_lifetime);
-    rs_name = pointee_type.cpp_type.is_const ? internal::kRustRvalueRefConst
-                                             : internal::kRustRvalueRefMut;
-  } else {
-    if (has_lifetime) {
-      rs_name = pointee_type.cpp_type.is_const ? internal::kRustRefConst
-                                               : internal::kRustRefMut;
-    } else {
-      rs_name = pointee_type.cpp_type.is_const ? internal::kRustPtrConst
-                                               : internal::kRustPtrMut;
-    }
-  }
-  RsTypeNamed rs_type = RsTypeNamed{.name = std::string(rs_name)};
-  if (has_lifetime) {
-    rs_type.lifetime_args.push_back(*lifetime);
-  }
-  rs_type.type_args.push_back(std::move(pointee_type.rs_type));
-  if (has_lifetime && pointer_kind == PointerTypeKind::kNullable) {
-    rs_type = RsTypeNamed{.name = "Option", .type_args = {std::move(rs_type)}};
-  }
   return MappedType{
-      .rs_type = std::move(rs_type),
       .cpp_type = {CcType::PointerType{
           .kind = pointer_kind,
           .lifetime = lifetime,
@@ -261,31 +209,21 @@ MappedType MappedType::RValueReferenceTo(MappedType pointee_type,
 }
 
 MappedType MappedType::FuncPtr(CallingConv cc_call_conv,
-                               absl::string_view rs_abi,
                                std::optional<LifetimeId> lifetime,
                                MappedType return_type,
                                std::vector<MappedType> param_types) {
-  MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
-                              std::move(return_type), std::move(param_types));
+  MappedType result = FuncRef(cc_call_conv, lifetime, std::move(return_type),
+                              std::move(param_types));
 
   auto* cc_func_ptr =
       std::get_if<CcType::FuncPointer>(&result.cpp_type.variant);
   CHECK(cc_func_ptr != nullptr);
   cc_func_ptr->non_null = false;
 
-  RsType rs_func_ptr_type = std::move(result.rs_type);
-  const RsTypeNamed* named = std::get_if<RsTypeNamed>(&rs_func_ptr_type);
-  CHECK(named != nullptr &&
-        named->name.substr(0, internal::kRustFuncPtr.length()) ==
-            internal::kRustFuncPtr);
-  result.rs_type =
-      RsTypeNamed{.name = "Option", .type_args = {std::move(rs_func_ptr_type)}};
-
   return result;
 }
 
 MappedType MappedType::FuncRef(CallingConv cc_call_conv,
-                               absl::string_view rs_abi,
                                std::optional<LifetimeId> lifetime,
                                MappedType return_type,
                                std::vector<MappedType> param_types) {
@@ -293,37 +231,22 @@ MappedType MappedType::FuncRef(CallingConv cc_call_conv,
   type_args.push_back(std::move(return_type));
 
   std::vector<CcType> cpp_type_args;
-  std::vector<RsType> rs_type_args;
   cpp_type_args.reserve(type_args.size());
-  rs_type_args.reserve(type_args.size());
   for (MappedType& type_arg : type_args) {
     cpp_type_args.push_back(std::move(type_arg.cpp_type));
-    rs_type_args.push_back(std::move(type_arg.rs_type));
   }
 
-  CcType::FuncPointer cc_func_type = {
-      .non_null = true,
-      .call_conv = cc_call_conv,
-      .param_and_return_types = std::move(cpp_type_args),
-  };
-
-  // Rust cannot express a function *value* type, only function pointer types.
-  RsTypeNamed rs_func_ptr_type = RsTypeNamed{
-      .name = absl::StrCat(internal::kRustFuncPtr, " ", rs_abi),
-      .type_args = std::move(rs_type_args),
-  };
-  if (lifetime.has_value())
-    rs_func_ptr_type.lifetime_args.push_back(*std::move(lifetime));
-
   return MappedType{
-      .rs_type = std::move(rs_func_ptr_type),
-      .cpp_type = {std::move(cc_func_type)},
+      .cpp_type = {CcType::FuncPointer{
+          .non_null = true,
+          .call_conv = cc_call_conv,
+          .param_and_return_types = std::move(cpp_type_args),
+      }},
   };
 }
 
 llvm::json::Value MappedType::ToJson() const {
   return llvm::json::Object{
-      {"rs_type", rs_type},
       {"cpp_type", cpp_type},
   };
 }

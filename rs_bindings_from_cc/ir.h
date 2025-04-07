@@ -44,26 +44,6 @@
 namespace crubit {
 
 namespace internal {
-// Pointers and LValue references.
-inline constexpr absl::string_view kRustPtrMut = "*mut";
-inline constexpr absl::string_view kRustPtrConst = "*const";
-inline constexpr absl::string_view kRustRefMut = "&mut";
-inline constexpr absl::string_view kRustRefConst = "&";
-
-// RValue References
-inline constexpr absl::string_view kRustRvalueRefMut = "#RvalueReference mut";
-inline constexpr absl::string_view kRustRvalueRefConst =
-    "#RvalueReference const";
-
-// Function pointers.
-inline constexpr absl::string_view kRustFuncPtr = "#funcPtr";
-
-// C++ types therein.
-inline constexpr absl::string_view kCcPtr = "*";
-inline constexpr absl::string_view kCcLValueRef = "&";
-inline constexpr absl::string_view kCcRValueRef = "&&";
-inline constexpr absl::string_view kCcFuncValue = "#funcValue";
-
 inline constexpr int kJsonIndent = 2;
 }  // namespace internal
 
@@ -209,56 +189,6 @@ struct CcType {
   std::string unknown_attr = "";
 };
 
-struct RsTypeNamed;
-
-struct UnknownAttr {
-  // A human-readable list of unknown attributes that should have applied to
-  // this RsType.
-  std::string unknown_attr;
-};
-
-// A Rust type involved in the bindings. It has the knowledge of how the type
-// is spelled in Rust.
-using RsType = std::variant<RsTypeNamed, ItemId, UnknownAttr>;
-llvm::json::Value toJSON(const RsType& type);
-
-struct RsTypeNamed {
-  llvm::json::Value ToJson() const;
-
-  // The name of the type. Examples:
-  // - "i32" or "bool" or "::core::ffi::c_int"
-  // - "()" (the unit type, equivalent of "void" in CcType)
-  // - "&", "&mut", "*const", "*mut" (pointee stored in `type_args[0]`)
-  // - "Option" (e.g. representing nullable, lifetime-annotated C++ pointer as
-  //   `Option<&'a SomeOtherType>` - in this case `type_args[0]` is the generic
-  //    argument representing the Rust reference type).
-  // - "#funcPtr <abi>" (function pointer; return type is the last elem in
-  //   `type_args`; param types are stored in other `type_args`; <abi> would be
-  //   replaced with "cdecl", "stdcall" or other Abi - see
-  //   https://doc.rust-lang.org/reference/types/function-pointer.html);
-  std::string name;
-
-  // Lifetime arguments for a generic type. Examples:
-  //   *mut i32 has no lifetime arguments
-  //   &'a 32 has a single lifetime argument, 'a.
-  //   SomeType<'a, 'b> has two lifetime arguments, 'a and 'b.
-  // Lifetimes are identified by their unique ID. The corresponding LifetimeName
-  // will be found within the lifetime_params of a Func or Record or TypeAlias
-  // that uses this type underneath (as a parameter type, field type, or aliased
-  // type).
-  std::vector<LifetimeId> lifetime_args = {};
-
-  // Type arguments for a generic type. Examples:
-  //   i32 has no type arguments.
-  //   *mut i32 has a single type argument, i32.
-  //   (i32, f32) has two type arguments, i32 and f32.
-  std::vector<RsType> type_args = {};
-};
-
-inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
-  return o << std::string(llvm::formatv("{0:2}", toJSON(type)));
-}
-
 // A type involved in the bindings. The rs_type and cpp_type will be treated
 // as interchangeable during bindings, and so should share the same layout.
 //
@@ -268,12 +198,12 @@ inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
 struct MappedType {
   /// Returns the MappedType for a non-templated/generic, non-cv-qualified type.
   /// For example, Void() is Simple("()", "void").
-  static MappedType Simple(std::string rs_name, CcType cpp_type) {
-    return MappedType{RsTypeNamed{rs_name}, std::move(cpp_type)};
+  static MappedType Simple(CcType cpp_type) {
+    return MappedType{std::move(cpp_type)};
   }
 
   static MappedType WithDeclId(ItemId decl_id) {
-    return MappedType{decl_id, {CcType::Record{decl_id}}};
+    return MappedType{{CcType::Record{decl_id}}};
   }
 
   static MappedType PointerTo(MappedType pointee_type,
@@ -292,11 +222,11 @@ struct MappedType {
   static MappedType RValueReferenceTo(MappedType pointee_type,
                                       LifetimeId lifetime);
 
-  static MappedType FuncPtr(CallingConv cc_call_conv, absl::string_view rs_abi,
+  static MappedType FuncPtr(CallingConv cc_call_conv,
                             std::optional<LifetimeId> lifetime,
                             MappedType return_type,
                             std::vector<MappedType> param_types);
-  static MappedType FuncRef(CallingConv cc_call_conv, absl::string_view rs_abi,
+  static MappedType FuncRef(CallingConv cc_call_conv,
                             std::optional<LifetimeId> lifetime,
                             MappedType return_type,
                             std::vector<MappedType> param_types);
@@ -308,7 +238,6 @@ struct MappedType {
 
   llvm::json::Value ToJson() const;
 
-  RsType rs_type;
   CcType cpp_type;
 };
 

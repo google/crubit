@@ -158,86 +158,6 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
                        clang::FunctionType::getNameForCallConv(cc_call_conv))));
 }
 
-// Converts clang::CallingConv enum [1] into an equivalent Rust Abi [2, 3, 4].
-// [1]
-// https://github.com/llvm/llvm-project/blob/c6a3225bb03b6afc2b63fbf13db3c100406b32ce/clang/include/clang/Basic/Specifiers.h#L262-L283
-// [2] https://doc.rust-lang.org/reference/types/function-pointer.html
-// [3]
-// https://doc.rust-lang.org/reference/items/functions.html#extern-function-qualifier
-// [4]
-// https://github.com/rust-lang/rust/blob/b27ccbc7e1e6a04d749e244a3c13f72ca38e80e7/compiler/rustc_target/src/spec/abi.rs#L49
-absl::StatusOr<absl::string_view> ConvertCcCallConvIntoRsAbi(
-    clang::CallingConv cc_call_conv) {
-  switch (cc_call_conv) {
-    case clang::CC_C:  // __attribute__((cdecl))
-      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-      // that:
-      // - `extern "C"` [...] whatever the default your C compiler supports.
-      // - `extern "cdecl"` -- The default for x86_32 C code.
-      //
-      // We don't support C++ exceptions and therefore we use "C" (rather than
-      // "C-unwind") - we have no need for unwinding across the FFI boundary -
-      // e.g. from C++ into Rust frames (or vice versa).
-      return "C";
-    case clang::CC_X86FastCall:  // __attribute__((fastcall))
-      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-      // that the fastcall ABI -- corresponds to MSVC's __fastcall and GCC and
-      // clang's __attribute__((fastcall)).
-      return "fastcall";
-    case clang::CC_X86VectorCall:  // __attribute__((vectorcall))
-      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-      // that the vectorcall ABI -- corresponds to MSVC's __vectorcall and
-      // clang's __attribute__((vectorcall)).
-      return "vectorcall";
-    case clang::CC_X86ThisCall:  // __attribute__((thiscall))
-      // We don't support C++ exceptions and therefore we use "thiscall" (rather
-      // than "thiscall-unwind") - we have no need for unwinding across the FFI
-      // boundary - e.g. from C++ into Rust frames (or vice versa).
-      return "thiscall";
-    case clang::CC_X86StdCall:  // __attribute__((stdcall))
-      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-      // extern "stdcall" -- The default for the Win32 API on x86_32.
-      //
-      // We don't support C++ exceptions and therefore we use "stdcall" (rather
-      // than "stdcall-unwind") - we have no need for unwinding across the FFI
-      // boundary - e.g. from C++ into Rust frames (or vice versa).
-      return "stdcall";
-    case clang::CC_Win64:  // __attribute__((ms_abi))
-      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-      // extern "win64" -- The default for C code on x86_64 Windows.
-      return "win64";
-    case clang::CC_AAPCS:      // __attribute__((pcs("aapcs")))
-    case clang::CC_AAPCS_VFP:  // __attribute__((pcs("aapcs-vfp")))
-      // TODO(lukasza): Should both map to "aapcs"?
-      break;
-    case clang::CC_X86_64SysV:  // __attribute__((sysv_abi))
-      // TODO(lukasza): Maybe this is "sysv64"?
-      break;
-    case clang::CC_X86Pascal:     // __attribute__((pascal))
-    case clang::CC_X86RegCall:    // __attribute__((regcall))
-    case clang::CC_IntelOclBicc:  // __attribute__((intel_ocl_bicc))
-    case clang::CC_SpirFunction:  // default for OpenCL functions on SPIR target
-    case clang::CC_OpenCLKernel:  // inferred for OpenCL kernels
-    case clang::CC_Swift:         // __attribute__((swiftcall))
-    case clang::CC_SwiftAsync:    // __attribute__((swiftasynccall))
-    case clang::CC_PreserveMost:  // __attribute__((preserve_most))
-    case clang::CC_PreserveAll:   // __attribute__((preserve_all))
-    case clang::CC_AArch64VectorCall:  // __attribute__((aarch64_vector_pcs))
-      // TODO(hlopko): Uncomment once we integrate the upstream change that
-      // introduced it:
-      // case clang::CC_AArch64SVEPCS: __attribute__((aarch64_sve_pcs))
-
-      // These don't seem to have any Rust equivalents.
-      break;
-    default:
-      break;
-  }
-  return absl::UnimplementedError(
-      absl::StrCat("Unsupported calling convention: ",
-                   absl::string_view(
-                       clang::FunctionType::getNameForCallConv(cc_call_conv))));
-}
-
 }  // namespace
 
 // Multiple IR items can be associated with the same source location (e.g. the
@@ -1086,7 +1006,6 @@ absl::StatusOr<MappedType> Importer::ConvertType(
           }
         });
     if (unknown_attr.has_value()) {
-      mapped_type->rs_type = UnknownAttr{.unknown_attr = *unknown_attr};
       mapped_type->cpp_type.unknown_attr = *unknown_attr;
     }
   }
@@ -1126,9 +1045,6 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
       CRUBIT_ASSIGN_OR_RETURN(
           CallingConv cc_call_conv,
           ConvertCcCallConvToSupportedCallingConv(func_type->getCallConv()));
-      CRUBIT_ASSIGN_OR_RETURN(
-          absl::string_view rs_abi,
-          ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));
       const clang::tidy::lifetimes::ValueLifetimes* return_lifetimes = nullptr;
       if (pointee_lifetimes) {
         return_lifetimes =
@@ -1152,12 +1068,12 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
       }
 
       if (type->isPointerType()) {
-        return MappedType::FuncPtr(cc_call_conv, rs_abi, lifetime,
+        return MappedType::FuncPtr(cc_call_conv, lifetime,
                                    std::move(mapped_return_type),
                                    std::move(mapped_param_types));
       } else {
         CHECK(type->isLValueReferenceType());
-        return MappedType::FuncRef(cc_call_conv, rs_abi, lifetime,
+        return MappedType::FuncRef(cc_call_conv, lifetime,
                                    std::move(mapped_return_type),
                                    std::move(mapped_param_types));
       }
@@ -1186,63 +1102,52 @@ absl::StatusOr<MappedType> Importer::ConvertUnattributedType(
              type->getAsAdjusted<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
-        return MappedType::Simple("bool", {CcType::Primitive{"bool"}});
+        return MappedType::Simple({CcType::Primitive{"bool"}});
       case clang::BuiltinType::Void:
-        return MappedType::Simple("()", {CcType::Primitive{"void"}});
+        return MappedType::Simple({CcType::Primitive{"void"}});
 
       // Floating-point numbers
       //
       // TODO(b/255768062): Generated bindings should explicitly check if
       // `math.h` defines the `__STDC_IEC_559__` macro.
       case clang::BuiltinType::Float:
-        return MappedType::Simple("f32", {CcType::Primitive{"float"}});
+        return MappedType::Simple({CcType::Primitive{"float"}});
       case clang::BuiltinType::Double:
-        return MappedType::Simple("f64", {CcType::Primitive{"double"}});
+        return MappedType::Simple({CcType::Primitive{"double"}});
 
       // `char`
       case clang::BuiltinType::Char_S:  // 'char' in targets where it's signed
       case clang::BuiltinType::Char_U:  // 'char' in targets where it's unsigned
-        return MappedType::Simple("::core::ffi::c_char",
-                                  {CcType::Primitive{"char"}});
+        return MappedType::Simple({CcType::Primitive{"char"}});
       case clang::BuiltinType::SChar:  // 'signed char', explicitly qualified
-        return MappedType::Simple("::core::ffi::c_schar",
-                                  {CcType::Primitive{"signed char"}});
+        return MappedType::Simple({CcType::Primitive{"signed char"}});
       case clang::BuiltinType::UChar:  // 'unsigned char', explicitly qualified
-        return MappedType::Simple("::core::ffi::c_uchar",
-                                  {CcType::Primitive{"unsigned char"}});
+        return MappedType::Simple({CcType::Primitive{"unsigned char"}});
 
       // Signed integers
       case clang::BuiltinType::Short:
-        return MappedType::Simple("::core::ffi::c_short",
-                                  {CcType::Primitive{"short"}});
+        return MappedType::Simple({CcType::Primitive{"short"}});
       case clang::BuiltinType::Int:
-        return MappedType::Simple("::core::ffi::c_int",
-                                  {CcType::Primitive{"int"}});
+        return MappedType::Simple({CcType::Primitive{"int"}});
       case clang::BuiltinType::Long:
-        return MappedType::Simple("::core::ffi::c_long",
-                                  {CcType::Primitive{"long"}});
+        return MappedType::Simple({CcType::Primitive{"long"}});
       case clang::BuiltinType::LongLong:
-        return MappedType::Simple("::core::ffi::c_longlong",
-                                  {CcType::Primitive{"long long"}});
+        return MappedType::Simple({CcType::Primitive{"long long"}});
 
       // Unsigned integers
       case clang::BuiltinType::UShort:
-        return MappedType::Simple("::core::ffi::c_ushort",
-                                  {CcType::Primitive{"unsigned short"}});
+        return MappedType::Simple({CcType::Primitive{"unsigned short"}});
       case clang::BuiltinType::UInt:
-        return MappedType::Simple("::core::ffi::c_uint",
-                                  {CcType::Primitive{"unsigned int"}});
+        return MappedType::Simple({CcType::Primitive{"unsigned int"}});
       case clang::BuiltinType::ULong:
-        return MappedType::Simple("::core::ffi::c_ulong",
-                                  {CcType::Primitive{"unsigned long"}});
+        return MappedType::Simple({CcType::Primitive{"unsigned long"}});
       case clang::BuiltinType::ULongLong:
-        return MappedType::Simple("::core::ffi::c_ulonglong",
-                                  {CcType::Primitive{"unsigned long long"}});
+        return MappedType::Simple({CcType::Primitive{"unsigned long long"}});
 
       case clang::BuiltinType::Char16:
-        return MappedType::Simple("u16", {CcType::Primitive{"char16_t"}});
+        return MappedType::Simple({CcType::Primitive{"char16_t"}});
       case clang::BuiltinType::Char32:
-        return MappedType::Simple("u32", {CcType::Primitive{"char32_t"}});
+        return MappedType::Simple({CcType::Primitive{"char32_t"}});
       default:
         return absl::UnimplementedError("Unsupported builtin type");
     }
