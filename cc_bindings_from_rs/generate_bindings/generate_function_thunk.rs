@@ -265,27 +265,32 @@ fn unique_late_bound_regions_in_fn_sig(sig: &ty::FnSig) -> Vec<syn::Lifetime> {
 }
 
 #[rustversion::before(2025-03-19)]
-pub(crate) fn ident_or_opt_ident(i: &rustc_span::Ident) -> &rustc_span::Ident {
-    i
+pub(crate) fn ident_or_opt_ident(i: &rustc_span::Ident) -> Option<&rustc_span::Ident> {
+    Some(i)
 }
 
 #[rustversion::since(2025-03-19)]
-pub(crate) fn ident_or_opt_ident(i: &Option<rustc_span::Ident>) -> rustc_span::Ident {
-    i.unwrap()
+pub(crate) fn ident_or_opt_ident(i: &Option<rustc_span::Ident>) -> Option<&rustc_span::Ident> {
+    i.as_ref()
 }
 
 /// Returns an iterator which yields arbitrary unique names for the parameters
 /// of the function identified by `fn_def_id`.
-fn thunk_param_names(tcx: ty::TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
+pub fn thunk_param_names(
+    tcx: ty::TyCtxt<'_>,
+    fn_def_id: DefId,
+) -> impl Iterator<Item = Ident> + '_ {
     tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
-        if ident_or_opt_ident(ident).name == kw::Underscore
-            || ident_or_opt_ident(ident).name.is_empty()
-        {
+        let Some(ident) = ident_or_opt_ident(ident) else {
+            return format_ident!("__param_{i}");
+        };
+        // TODO(jeanpierreda): Deduplicate the logic after the next rustc rollout.
+        if ident.name == kw::Underscore || ident.name.is_empty() {
             format_ident!("__param_{i}")
-        } else if ident_or_opt_ident(ident).name == kw::SelfLower {
+        } else if ident.name == kw::SelfLower {
             format_ident!("__self")
         } else {
-            make_rs_ident(ident_or_opt_ident(ident).as_str())
+            make_rs_ident(ident.as_str())
         }
     })
 }

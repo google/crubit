@@ -362,11 +362,20 @@ pub fn generate_function(
             .zip(SugaredTy::fn_inputs(&sig_mid, Some(sig_hir)))
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
-                let mut cc_name = format_cc_ident(db, ident_or_opt_ident(name).as_str())
-                    .unwrap_or_else(|_err| expect_format_cc_ident(&format!("__param_{i}")));
-                if ident_or_opt_ident(name).as_str() == "_" {
-                    cc_name = expect_format_cc_ident(&format!("__param_{i}"));
+                // TODO(jeanpierreda): deduplicate this with thunk_param_names.
+                let mut cc_name = None;
+                if let Some(ident) = ident_or_opt_ident(name) {
+                    if ident.name.as_str() != "_" {
+                        if let Ok(name) = format_cc_ident(db, ident.name.as_str()) {
+                            cc_name = Some(name);
+                        }
+                    }
                 }
+                let cc_name = if let Some(cc_name) = cc_name {
+                    cc_name
+                } else {
+                    expect_format_cc_ident(&format!("__param_{i}"))
+                };
                 let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
                 Param { cc_name, cpp_type, ty }
             })
@@ -383,8 +392,8 @@ pub fn generate_function(
 
     let method_kind = match tcx.hir_node_by_def_id(local_def_id) {
         Node::Item(_) => FunctionKind::Free,
-        Node::ImplItem(_) => match tcx.fn_arg_names(def_id).first() {
-            Some(arg_name) if ident_or_opt_ident(arg_name).name == kw::SelfLower => {
+        Node::ImplItem(_) => match tcx.fn_arg_names(def_id).first().and_then(ident_or_opt_ident) {
+            Some(ident) if ident.name == kw::SelfLower => {
                 let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
                 if params[0].ty.mid() == self_ty {
                     FunctionKind::MethodTakingSelfByValue
