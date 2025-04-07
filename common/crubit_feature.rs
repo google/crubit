@@ -15,6 +15,9 @@ flagset::flags! {
     /// `aspect_hint`.
     pub enum CrubitFeature : u8 {
         Supported,
+
+        Wrapper,
+
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -30,6 +33,7 @@ impl CrubitFeature {
     pub fn short_name(&self) -> &'static str {
         match self {
             Self::Supported => "supported",
+            Self::Wrapper => "wrapper",
             Self::Experimental => "experimental",
         }
     }
@@ -40,6 +44,7 @@ impl CrubitFeature {
     pub fn aspect_hint(&self) -> &'static str {
         match self {
             Self::Supported => "//features:supported",
+            Self::Wrapper => "//features:wrapper",
             Self::Experimental => "//features:experimental",
         }
     }
@@ -50,6 +55,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
     let features = match name {
         b"all" => flagset::FlagSet::<CrubitFeature>::full(),
         b"supported" => CrubitFeature::Supported.into(),
+        b"wrapper" => CrubitFeature::Wrapper.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         _ => return None,
     };
@@ -149,7 +155,10 @@ mod tests {
     #[gtest]
     fn test_serialized_crubit_feature_all() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"all\"").unwrap();
-        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Experimental);
+        assert_eq!(
+            features,
+            CrubitFeature::Supported | CrubitFeature::Wrapper | CrubitFeature::Experimental
+        );
     }
 
     #[gtest]
@@ -168,13 +177,19 @@ mod tests {
     #[gtest]
     fn test_serialized_crubit_features_all() {
         let SerializedCrubitFeatures(features) = serde_json::from_str("[\"all\"]").unwrap();
-        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Experimental);
+        assert_eq!(
+            features,
+            CrubitFeature::Supported | CrubitFeature::Wrapper | CrubitFeature::Experimental
+        );
     }
 
     #[gtest]
     fn test_serialized_crubit_features_all_overlapping() {
         let SerializedCrubitFeatures(features) =
             serde_json::from_str("[\"all\", \"supported\", \"experimental\"]").unwrap();
-        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Experimental);
+        assert_eq!(
+            features,
+            CrubitFeature::Supported | CrubitFeature::Wrapper | CrubitFeature::Experimental
+        );
     }
 }
