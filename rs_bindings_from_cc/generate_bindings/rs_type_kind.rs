@@ -30,6 +30,12 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 if pointer.pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
             let pointee = Rc::new(db.rs_type_kind(pointer.pointee_type.as_ref().clone())?);
 
+            // TODO(b/351976044): Support bridge types by pointer/reference.
+            ensure!(
+                !pointee.is_bridge_type(),
+                "Bridging types are not supported as pointee/referent types."
+            );
+
             let Some(lifetime_id) = pointer.lifetime else {
                 return Ok(RsTypeKind::Pointer { pointee, mutability });
             };
