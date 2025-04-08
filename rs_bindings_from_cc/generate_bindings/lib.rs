@@ -7,7 +7,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
 use database::db::{BindingsGenerator, Database};
-use database::rs_snippet::RsTypeKind;
+use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
@@ -498,30 +498,43 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
         RsTypeKind::Enum { .. }
         | RsTypeKind::Primitive(..)
         | RsTypeKind::TypeMapOverride { .. } => Ok(false),
-        // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-        RsTypeKind::BridgeType { original_type: record, .. }
-        | RsTypeKind::Record { record, .. } => {
-            if record.is_unsafe_type {
-                return Ok(true);
+        RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
+            BridgeRsTypeKind::StdOptional(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
+            BridgeRsTypeKind::StdPair(t1, t2) => {
+                let t1_unsafe = db.is_rs_type_kind_unsafe(t1.as_ref().clone())?;
+                let t2_unsafe = db.is_rs_type_kind_unsafe(t2.as_ref().clone())?;
+                Ok(t1_unsafe || t2_unsafe)
             }
-            if record.record_type == RecordType::Union {
-                return Ok(true);
-            }
-            for field in &record.fields {
-                if field.access != AccessSpecifier::Public {
-                    continue;
-                }
-                let Ok(cpp_type) = &field.type_ else {
-                    continue;
-                };
-                let field_rs_type_kind = db.rs_type_kind(cpp_type.clone())?;
-                if db.is_rs_type_kind_unsafe(field_rs_type_kind)? {
-                    return Ok(true);
-                }
-            }
-            Ok(false)
+            // TODO(b/390621592): Should bridge types just delegate to the underlying type?
+            BridgeRsTypeKind::Annotation { .. } => is_record_unsafe(db, &original_type),
+        },
+        RsTypeKind::Record { record, .. } => is_record_unsafe(db, &record),
+    }
+}
+
+/// Helper function for `is_rs_type_kind_unsafe`.
+/// Returns true if the record is unsafe, or if it transitively contains a public field of
+/// an unsafe type.
+fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> Result<bool> {
+    if record.is_unsafe_type {
+        return Ok(true);
+    }
+    if record.record_type == RecordType::Union {
+        return Ok(true);
+    }
+    for field in &record.fields {
+        if field.access != AccessSpecifier::Public {
+            continue;
+        }
+        let Ok(cpp_type) = &field.type_ else {
+            continue;
+        };
+        let field_rs_type_kind = db.rs_type_kind(cpp_type.clone())?;
+        if db.is_rs_type_kind_unsafe(field_rs_type_kind)? {
+            return Ok(true);
         }
     }
+    Ok(false)
 }
 
 fn generate_rs_api_impl_includes(
@@ -541,7 +554,7 @@ fn generate_rs_api_impl_includes(
     };
 
     for record in ir.records() {
-        if record.bridge_type_info.is_some() {
+        if record.bridge_type.is_some() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.into(),
                 "internal/lazy_init.h".into(),

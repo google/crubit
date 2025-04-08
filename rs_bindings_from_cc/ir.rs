@@ -358,10 +358,7 @@ pub enum CcTypeVariant {
         /// The parameter types, followed by the return type.
         param_and_return_types: Rc<[CcType]>,
     },
-    Record {
-        id: ItemId,
-        builtin_bridge_type: Option<BuiltinBridgeType>,
-    },
+    Record(ItemId),
 }
 
 impl CcTypeVariant {
@@ -371,13 +368,6 @@ impl CcTypeVariant {
             _ => None,
         }
     }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub enum BuiltinBridgeType {
-    StdOptional { inner_type: Rc<CcType> },
-    StdPair { first_type: Rc<CcType>, second_type: Rc<CcType> },
 }
 
 impl CcTypeVariant {
@@ -396,7 +386,7 @@ pub trait TypeWithDeclId {
 impl TypeWithDeclId for CcType {
     fn decl_id(&self) -> Option<ItemId> {
         match &self.variant {
-            CcTypeVariant::Record { id, .. } => Some(*id),
+            CcTypeVariant::Record(id) => Some(*id),
             _ => None,
         }
     }
@@ -861,10 +851,14 @@ pub struct SizeAlign {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct BridgeTypeInfo {
-    pub bridge_type: Rc<str>,
-    pub rust_to_cpp_converter: Rc<str>,
-    pub cpp_to_rust_converter: Rc<str>,
+pub enum BridgeType {
+    Annotation {
+        rust_name: Rc<str>,
+        rust_to_cpp_converter: Rc<str>,
+        cpp_to_rust_converter: Rc<str>,
+    },
+    StdOptional(CcType),
+    StdPair(CcType, CcType),
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -919,7 +913,7 @@ pub struct Record {
     /// default-closed and do not expose functions with unknown attributes.
     pub unknown_attr: Option<Rc<str>>,
     pub doc_comment: Option<Rc<str>>,
-    pub bridge_type_info: Option<BridgeTypeInfo>,
+    pub bridge_type: Option<BridgeType>,
     pub source_loc: Rc<str>,
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,

@@ -39,10 +39,10 @@ std::vector<const Record*> FindInstantiationsInNamespace(const IR& ir,
   absl::flat_hash_set<ItemId> record_ids;
   for (const auto* type_alias : ir.get_items_if<TypeAlias>()) {
     if (type_alias->enclosing_item_id == namespace_id) {
-      const auto* record =
-          std::get_if<CcType::Record>(&type_alias->underlying_type.variant);
-      CHECK(record != nullptr);
-      record_ids.insert(record->id);
+      const auto* id =
+          std::get_if<ItemId>(&type_alias->underlying_type.variant);
+      CHECK(id != nullptr);
+      record_ids.insert(*id);
     }
   }
 

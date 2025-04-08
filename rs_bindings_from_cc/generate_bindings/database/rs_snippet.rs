@@ -442,9 +442,7 @@ pub enum RsTypeKind {
     Slice(Rc<RsTypeKind>),
     /// Types that require custom logic to translate.
     BridgeType {
-        name: Rc<str>,
-        cpp_to_rust_converter: Rc<str>,
-        rust_to_cpp_converter: Rc<str>,
+        bridge_type: BridgeRsTypeKind,
         original_type: Rc<Record>,
     },
     /// Types that can be reinterpreted in place, e.g., signed char <-> i8
@@ -452,6 +450,62 @@ pub enum RsTypeKind {
         name: Rc<str>,
         is_same_abi: bool,
     },
+}
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum BridgeRsTypeKind {
+    Annotation {
+        rust_name: Rc<str>,
+        cpp_to_rust_converter: Rc<str>,
+        rust_to_cpp_converter: Rc<str>,
+        template_types: Rc<[RsTypeKind]>,
+    },
+    StdOptional(Rc<RsTypeKind>),
+    StdPair(Rc<RsTypeKind>, Rc<RsTypeKind>),
+}
+
+impl BridgeRsTypeKind {
+    /// If the record is a bridge type, returns the corresponding BridgeRsTypeKind.
+    /// Otherwise, returns None. This may also return an error if db.rs_type_kind fails, or if the
+    /// record has template parameters that cannot be translated.
+    pub fn new(record: &Record, db: &dyn BindingsGenerator) -> Result<Option<BridgeRsTypeKind>> {
+        let Some(bridge_type) = &record.bridge_type else {
+            return Ok(None);
+        };
+
+        let bridge_rs_type_kind = match bridge_type {
+            BridgeType::Annotation { rust_name, cpp_to_rust_converter, rust_to_cpp_converter } => {
+                let template_types: Rc<[RsTypeKind]> = record
+                    .template_specialization
+                    .as_ref()
+                    .map(|template_specialization| &template_specialization.template_args[..])
+                    .unwrap_or_default()
+                    .iter()
+                    .map(|template_arg: &TemplateArg| {
+                        template_arg
+                            .type_
+                            .as_ref()
+                            .map_err(|err| anyhow!("Failed to get type from template arg: {}", err))
+                            .and_then(|type_: &CcType| db.rs_type_kind(type_.clone()))
+                    })
+                    .collect::<Result<_>>()?;
+                BridgeRsTypeKind::Annotation {
+                    rust_name: rust_name.clone(),
+                    cpp_to_rust_converter: cpp_to_rust_converter.clone(),
+                    rust_to_cpp_converter: rust_to_cpp_converter.clone(),
+                    template_types,
+                }
+            }
+            BridgeType::StdOptional(t) => {
+                BridgeRsTypeKind::StdOptional(Rc::new(db.rs_type_kind(t.clone())?))
+            }
+            BridgeType::StdPair(t1, t2) => BridgeRsTypeKind::StdPair(
+                Rc::new(db.rs_type_kind(t1.clone())?),
+                Rc::new(db.rs_type_kind(t2.clone())?),
+            ),
+        };
+
+        Ok(Some(bridge_rs_type_kind))
+    }
 }
 
 fn is_basic_string_char(record: &Record) -> bool {
@@ -469,11 +523,15 @@ fn create_string_bridge_type(record: &Record) -> Result<RsTypeKind> {
     if owning_crate == "cc_std" {
         return Err(anyhow!("Disable the original std::string in cc_std"));
     }
-    let name = "::cc_std::std::string";
     Ok(RsTypeKind::BridgeType {
-        name: Rc::from(name),
-        cpp_to_rust_converter: Rc::from("cpp_string_to_rust_string"),
-        rust_to_cpp_converter: Rc::from("rust_string_to_cpp_string"),
+        // TODO(okabayashi): std::string should be its own builtin variant, not
+        // BridgeRsTypeKind::Annotation.
+        bridge_type: BridgeRsTypeKind::Annotation {
+            rust_name: Rc::from("::cc_std::std::string"),
+            cpp_to_rust_converter: Rc::from("cpp_string_to_rust_string"),
+            rust_to_cpp_converter: Rc::from("rust_string_to_cpp_string"),
+            template_types: Rc::default(),
+        },
         original_type: record.clone().into(),
     })
 }
@@ -520,13 +578,8 @@ impl RsTypeKind {
     }
 
     pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>, ir: &IR) -> Result<Self> {
-        if let Some(bridge_type_info) = &record.bridge_type_info {
-            return Ok(RsTypeKind::BridgeType {
-                name: bridge_type_info.bridge_type.clone(),
-                cpp_to_rust_converter: bridge_type_info.cpp_to_rust_converter.clone(),
-                rust_to_cpp_converter: bridge_type_info.rust_to_cpp_converter.clone(),
-                original_type: record,
-            });
+        if let Some(bridge_type) = BridgeRsTypeKind::new(&record, db)? {
+            return Ok(RsTypeKind::BridgeType { bridge_type, original_type: record });
         }
         let crate_path = Rc::new(CratePath::new(
             ir,
@@ -731,10 +784,20 @@ impl RsTypeKind {
                 RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
-                RsTypeKind::BridgeType { original_type, .. } => {
+                RsTypeKind::BridgeType { bridge_type, original_type } => {
+                    let is_pointer_bridge = match bridge_type {
+                        BridgeRsTypeKind::Annotation {
+                            rust_to_cpp_converter,
+                            cpp_to_rust_converter,
+                            ..
+                        } => !rust_to_cpp_converter.is_empty() || !cpp_to_rust_converter.is_empty(),
+                        _ => false,
+                    };
+
                     if original_type.template_specialization.is_none()
                         || TEMPLATE_INSTANTIATION_ALLOWLIST
                             .contains(&original_type.cc_preferred_name.as_ref())
+                        || !is_pointer_bridge
                     {
                         require_feature(CrubitFeature::Supported, None)
                     } else {
@@ -897,8 +960,12 @@ impl RsTypeKind {
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::Slice(t) => t.implements_copy(),
-            // We cannot get the information of the Rust type so we assume it is not Copy.
-            RsTypeKind::BridgeType { .. } => false,
+            RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+                BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
+                BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
+                // We cannot get the information of the Rust type so we assume it is not Copy.
+                BridgeRsTypeKind::Annotation { .. } => false,
+            },
             RsTypeKind::TypeMapOverride { .. } => true,
         }
     }
@@ -1220,19 +1287,59 @@ impl RsTypeKind {
                 let type_arg = t.to_token_stream(db);
                 quote! {[#type_arg]}
             }
-            RsTypeKind::BridgeType { name, original_type, .. } => {
-                let is_crate_path = name.starts_with("::");
-                // If the name starts with "::", then it is a crate path. In this case, we
-                // need to skip the first part of the split, since it returns the empty string.
-                let name_parts = name.split("::").skip(is_crate_path as usize).map(make_rs_ident);
-                let path_lead = if is_crate_path {
-                    quote! {}
-                } else if db.ir().is_current_target(&original_type.owning_target) {
-                    quote! {crate}
-                } else {
-                    make_rs_ident(original_type.owning_target.target_name()).to_token_stream()
-                };
-                quote! { #path_lead::#(#name_parts)::* }
+            RsTypeKind::BridgeType { bridge_type, original_type, .. } => {
+                match bridge_type {
+                    BridgeRsTypeKind::Annotation {
+                        rust_name,
+                        rust_to_cpp_converter,
+                        cpp_to_rust_converter,
+                        template_types,
+                    } => {
+                        let is_absolute_path = rust_name.starts_with("::");
+                        // If the name starts with "::", then it is an absolute path. In this case, we
+                        // need to skip the first part of the split, since it returns the empty string.
+                        let name_parts = rust_name
+                            .split("::")
+                            .skip(is_absolute_path as usize)
+                            .map(make_rs_ident);
+                        let prefix = if is_absolute_path {
+                            quote! {}
+                        } else if db.ir().is_current_target(&original_type.owning_target) {
+                            quote! {crate}
+                        } else {
+                            make_rs_ident(original_type.owning_target.target_name())
+                                .to_token_stream()
+                        };
+                        let path = quote! { #prefix :: #(#name_parts)::* };
+
+                        // For void pointer bridging, we're done.
+                        if !rust_to_cpp_converter.is_empty() || !cpp_to_rust_converter.is_empty() {
+                            return path;
+                        }
+
+                        // If there are no template types, then we're done.
+                        if template_types.is_empty() {
+                            return path;
+                        }
+
+                        let template_types_tokens =
+                            template_types.iter().map(|t| t.to_token_stream(db));
+                        quote! { #path < #(#template_types_tokens),* > }
+                    }
+                    _ => {
+                        // TODO(okabayashi): once composable bridging is enabled, match on the other
+                        // variants here. For now, treat std::optional and std::pair as if they were
+                        // just opaque monomorphized records in order to not break existing code.
+                        let ir = db.ir();
+                        let crate_path = CratePath::new(
+                            ir,
+                            ir.namespace_qualifier(original_type.as_ref()),
+                            rs_imported_crate_name(&original_type.owning_target, ir),
+                        );
+                        let ident = make_rs_ident(original_type.rs_name.identifier.as_ref());
+                        quote! { #crate_path #ident }
+                    }
+                }
             }
             RsTypeKind::TypeMapOverride { name, .. } => {
                 name.parse().expect("Invalid RsType::name in the IR")
@@ -1272,7 +1379,14 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         self.todo.extend(param_types.iter().rev());
                     }
                     RsTypeKind::Slice(t) => self.todo.push(t),
-                    RsTypeKind::BridgeType { .. } => {}
+                    RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+                        BridgeRsTypeKind::StdOptional(t) => self.todo.push(t),
+                        BridgeRsTypeKind::StdPair(t1, t2) => {
+                            self.todo.push(t2);
+                            self.todo.push(t1);
+                        }
+                        BridgeRsTypeKind::Annotation { .. } => {}
+                    },
                     RsTypeKind::TypeMapOverride { .. } => {}
                 };
                 Some(curr)

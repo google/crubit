@@ -899,60 +899,7 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
         type_string, import_status.message()));
   }
 
-  CRUBIT_ASSIGN_OR_RETURN(CcType cpp_type,
-                          ConvertTypeDecl(specialization_decl));
-  CRUBIT_ASSIGN_OR_RETURN(
-      std::optional<CcType::Record::BuiltinBridgeType> builtin_bridge_type,
-      AsBuiltinBridgeType(specialization_decl));
-  auto* record = std::get_if<CcType::Record>(&cpp_type.variant);
-  CHECK(record != nullptr);
-  record->builtin_bridge_type = std::move(builtin_bridge_type);
-  return cpp_type;
-}
-
-absl::StatusOr<std::optional<CcType::Record::BuiltinBridgeType>>
-Importer::AsBuiltinBridgeType(
-    const clang::ClassTemplateSpecializationDecl* decl) {
-  const clang::CXXRecordDecl* cxx_record_decl =
-      decl->getSpecializedTemplate()->getTemplatedDecl();
-
-  const clang::DeclContext* context = cxx_record_decl->getDeclContext();
-  bool is_std_namespace = false;
-  while (context) {
-    if (context->isStdNamespace()) {
-      is_std_namespace = true;
-      break;
-    }
-    context = context->getParent();
-  }
-
-  if (!is_std_namespace) {
-    return std::nullopt;
-  }
-
-  clang::StringRef name = cxx_record_decl->getName();
-  auto cc_type_of_arg = [&](int index) {
-    return ConvertQualType(
-        /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
-        /*lifetimes=*/nullptr);
-  };
-
-  if (name == "optional") {
-    CRUBIT_ASSIGN_OR_RETURN(CcType inner, cc_type_of_arg(0));
-    return {CcType::Record::StdOptional{
-        .inner_type = std::make_shared<CcType>(std::move(inner)),
-    }};
-  } else if (name == "pair") {
-    CRUBIT_ASSIGN_OR_RETURN(CcType first, cc_type_of_arg(0));
-    CRUBIT_ASSIGN_OR_RETURN(CcType second, cc_type_of_arg(1));
-    return {CcType::Record::StdPair{
-        .first_type = std::make_shared<CcType>(std::move(first)),
-        .second_type = std::make_shared<CcType>(std::move(second)),
-    }};
-  }
-  // Add builtin bridge types here as needed.
-
-  return std::nullopt;
+  return ConvertTypeDecl(specialization_decl);
 }
 
 absl::StatusOr<CcType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
@@ -961,8 +908,7 @@ absl::StatusOr<CcType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
 
-  ItemId decl_id = GenerateItemId(decl);
-  return CcType(CcType::Record{.id = decl_id});
+  return CcType(GenerateItemId(decl));
 }
 
 static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,

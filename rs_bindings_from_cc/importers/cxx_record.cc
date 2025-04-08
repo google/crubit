@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -126,7 +127,8 @@ absl::StatusOr<RecordType> TranslateRecordType(
   llvm::report_fatal_error("Unrecognized clang::TagKind");
 }
 
-std::optional<BridgeTypeInfo> GetBridgeTypeInfo(
+// Returns the bridge type annotation for the given `record_decl` if it exists.
+std::optional<BridgeType> GetBridgeTypeAnnotation(
     const clang::RecordDecl* record_decl) {
   constexpr absl::string_view kBridgeTypeTag = "crubit_bridge_type";
   constexpr absl::string_view kBridgeTypeRustToCppConverterTag =
@@ -152,10 +154,10 @@ std::optional<BridgeTypeInfo> GetBridgeTypeInfo(
     CHECK(bridge_type_cpp_to_rust_converter.has_value())
         << "Missing " << kBridgeTypeCppToRustConverterTag << " for "
         << kBridgeTypeTag << " " << *bridge_type;
-    return BridgeTypeInfo{
-        .bridge_type = *bridge_type,
+    return BridgeType{BridgeType::Annotation{
+        .rust_name = *bridge_type,
         .rust_to_cpp_converter = *bridge_type_rust_to_cpp_converter,
-        .cpp_to_rust_converter = *bridge_type_cpp_to_rust_converter};
+        .cpp_to_rust_converter = *bridge_type_cpp_to_rust_converter}};
   }
   return std::nullopt;
 }
@@ -376,6 +378,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool is_explicit_class_template_instantiation_definition = false;
   std::optional<BazelLabel> defining_target;
   std::optional<TemplateSpecialization> template_specialization;
+  std::optional<BridgeType> bridge_type;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -421,6 +424,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                                               /*lifetimes=*/nullptr)});
       }
     }
+
+    absl::StatusOr<std::optional<BridgeType>> builtin_bridge_type =
+        GetBuiltinBridgeType(specialization_decl);
+    if (!builtin_bridge_type.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          record_decl, UnsupportedItem::Kind::kType, std::nullopt,
+          FormattedError::FromStatus(std::move(builtin_bridge_type).status()));
+    }
+    bridge_type = *std::move(builtin_bridge_type);
   } else {
     const clang::NamedDecl* named_decl = record_decl;
     if (record_decl->getName().empty()) {
@@ -446,6 +458,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           FormattedError::PrefixedStrCat("Record name is not supported",
                                          record_name.status().message()));
     }
+    bridge_type = GetBridgeTypeAnnotation(record_decl);
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(record_decl);
@@ -561,7 +574,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .template_specialization = std::move(template_specialization),
       .unknown_attr = std::move(unknown_attr),
       .doc_comment = std::move(doc_comment),
-      .bridge_type_info = GetBridgeTypeInfo(record_decl),
+      .bridge_type = std::move(bridge_type),
       .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),
@@ -773,6 +786,50 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
     }
   }
   return bases;
+}
+
+absl::StatusOr<std::optional<BridgeType>>
+CXXRecordDeclImporter::GetBuiltinBridgeType(
+    const clang::ClassTemplateSpecializationDecl* decl) {
+  const clang::CXXRecordDecl* cxx_record_decl =
+      decl->getSpecializedTemplate()->getTemplatedDecl();
+  const clang::DeclContext* context = cxx_record_decl->getDeclContext();
+  bool is_std_namespace = false;
+  while (context) {
+    if (context->isStdNamespace()) {
+      is_std_namespace = true;
+      break;
+    }
+    context = context->getParent();
+  }
+
+  if (!is_std_namespace) {
+    return std::nullopt;
+  }
+
+  clang::StringRef name = cxx_record_decl->getName();
+  auto cc_type_of_arg = [&](int index) {
+    return ictx_.ConvertQualType(
+        /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
+        /*lifetimes=*/nullptr);
+  };
+
+  if (name == "optional") {
+    CRUBIT_ASSIGN_OR_RETURN(CcType inner, cc_type_of_arg(0));
+    return BridgeType{BridgeType::StdOptional{
+        .inner_type = std::make_shared<CcType>(std::move(inner)),
+    }};
+  } else if (name == "pair") {
+    CRUBIT_ASSIGN_OR_RETURN(CcType first, cc_type_of_arg(0));
+    CRUBIT_ASSIGN_OR_RETURN(CcType second, cc_type_of_arg(1));
+    return BridgeType{BridgeType::StdPair{
+        .first_type = std::make_shared<CcType>(std::move(first)),
+        .second_type = std::make_shared<CcType>(std::move(second)),
+    }};
+  }
+  // Add builtin bridge types here as needed.
+
+  return std::nullopt;
 }
 
 }  // namespace crubit

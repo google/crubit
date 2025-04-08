@@ -156,12 +156,12 @@ MATCHER_P(TextIs, text, "") {
 
 // Matches an CcType that has the given decl_id.
 MATCHER_P(CcDeclIdIs, decl_id, "") {
-  const auto* record = std::get_if<CcType::Record>(&arg.variant);
-  if (record != nullptr && record->id == decl_id) return true;
+  const auto* id = std::get_if<ItemId>(&arg.variant);
+  if (id != nullptr && *id == decl_id) return true;
 
   *result_listener << "actual decl_id: ";
-  if (record != nullptr) {
-    *result_listener << record->id;
+  if (id != nullptr) {
+    *result_listener << *id;
   } else {
     *result_listener << "std::nullopt";
   }

@@ -74,11 +74,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 param_types,
             })
         }
-        CcTypeVariant::Record { id, builtin_bridge_type } => {
-            if let Some(_builtin_bridge_type) = builtin_bridge_type {
-                // TODO(okabayashi): change RsTypeKind to understand builtin bridge types,
-                // as opposed to RsTypeKind::BridgeType (which is for custom bridge types).
-            }
+        CcTypeVariant::Record(id) => {
             let ir = db.ir();
             let item = ir.find_untyped_decl(*id);
             let fallback_type = match item {

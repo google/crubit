@@ -131,38 +131,7 @@ llvm::json::Value CcType::ToJson() const {
                  }},
             };
           },
-          [&](const CcType::Record& record) {
-            llvm::json::Value builtin_bridge_type_value = nullptr;
-            if (record.builtin_bridge_type.has_value()) {
-              builtin_bridge_type_value = std::visit(
-                  visitor{
-                      [&](const CcType::Record::StdOptional& std_optional) {
-                        return llvm::json::Object{
-                            {"StdOptional",
-                             llvm::json::Object{
-                                 {"inner_type", *std_optional.inner_type},
-                             }},
-                        };
-                      },
-                      [&](const CcType::Record::StdPair& std_pair) {
-                        return llvm::json::Object{
-                            {"StdPair",
-                             llvm::json::Object{
-                                 {"first_type", *std_pair.first_type},
-                                 {"second_type", *std_pair.second_type},
-                             }},
-                        };
-                      },
-                  },
-                  *record.builtin_bridge_type);
-            }
-            return llvm::json::Object{
-                {"Record",
-                 llvm::json::Object{
-                     {"id", record.id},
-                     {"builtin_bridge_type", builtin_bridge_type_value},
-                 }}};
-          }},
+          [&](ItemId id) { return llvm::json::Object{{"Record", id}}; }},
       variant);
 
   return llvm::json::Object{
@@ -464,12 +433,32 @@ llvm::json::Value SizeAlign::ToJson() const {
   };
 }
 
-llvm::json::Value BridgeTypeInfo::ToJson() const {
-  return llvm::json::Object{
-      {"bridge_type", bridge_type},
-      {"rust_to_cpp_converter", rust_to_cpp_converter},
-      {"cpp_to_rust_converter", cpp_to_rust_converter},
-  };
+llvm::json::Value BridgeType::ToJson() const {
+  return std::visit(
+      visitor{
+          [&](const BridgeType::Annotation& annotation) {
+            return llvm::json::Object{{
+                "Annotation",
+                llvm::json::Object{
+                    {"rust_name", annotation.rust_name},
+                    {"rust_to_cpp_converter", annotation.rust_to_cpp_converter},
+                    {"cpp_to_rust_converter", annotation.cpp_to_rust_converter},
+                },
+            }};
+          },
+          [&](const BridgeType::StdOptional& std_optional) {
+            return llvm::json::Object{
+                {"StdOptional", std_optional.inner_type->ToJson()}};
+          },
+          [&](const BridgeType::StdPair& std_pair) {
+            return llvm::json::Object{
+                {"StdPair", llvm::json::Array{
+                                std_pair.first_type->ToJson(),
+                                std_pair.second_type->ToJson(),
+                            }}};
+          },
+      },
+      variant);
 }
 
 llvm::json::Value TemplateArg::ToJson() const {
@@ -537,7 +526,7 @@ llvm::json::Value Record::ToJson() const {
       {"template_specialization", template_specialization},
       {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},
-      {"bridge_type_info", bridge_type_info},
+      {"bridge_type", bridge_type},
       {"source_loc", source_loc},
       {"unambiguous_public_bases", unambiguous_public_bases},
       {"fields", fields},

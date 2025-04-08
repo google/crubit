@@ -34,7 +34,6 @@
 #include "absl/strings/substitute.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
@@ -168,24 +167,6 @@ struct CcType {
     std::string spelling;
   };
 
-  // A record type. It may or may not be a bridge type.
-  struct Record {
-    struct StdOptional {
-      std::shared_ptr<CcType> inner_type;
-    };
-
-    struct StdPair {
-      std::shared_ptr<CcType> first_type;
-      std::shared_ptr<CcType> second_type;
-    };
-
-    // Add more builtin bridge types here as needed.
-    using BuiltinBridgeType = std::variant<StdOptional, StdPair>;
-
-    ItemId id;
-    std::optional<BuiltinBridgeType> builtin_bridge_type = std::nullopt;
-  };
-
   static CcType PointerTo(CcType pointee_type,
                           std::optional<LifetimeId> lifetime, bool nullable);
 
@@ -205,7 +186,7 @@ struct CcType {
     return primitive != nullptr && primitive->spelling == "void";
   }
 
-  using Variant = std::variant<Primitive, PointerType, FuncPointer, Record>;
+  using Variant = std::variant<Primitive, PointerType, FuncPointer, ItemId>;
 
   explicit CcType(Variant variant) : variant(std::move(variant)) {}
 
@@ -521,12 +502,27 @@ struct SizeAlign {
   int64_t alignment;
 };
 
-struct BridgeTypeInfo {
+// Present on records that are bridge types.
+struct BridgeType {
   llvm::json::Value ToJson() const;
 
-  std::string bridge_type;
-  std::string rust_to_cpp_converter;
-  std::string cpp_to_rust_converter;
+  // A user-provided annotation for a bridge type.
+  struct Annotation {
+    std::string rust_name;
+    std::string rust_to_cpp_converter;
+    std::string cpp_to_rust_converter;
+  };
+
+  struct StdOptional {
+    std::shared_ptr<CcType> inner_type;
+  };
+
+  struct StdPair {
+    std::shared_ptr<CcType> first_type;
+    std::shared_ptr<CcType> second_type;
+  };
+
+  std::variant<Annotation, StdOptional, StdPair> variant;
 };
 
 // TODO: Handle non-type template parameter.
@@ -582,7 +578,7 @@ struct Record {
   std::optional<TemplateSpecialization> template_specialization;
   std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;
-  std::optional<BridgeTypeInfo> bridge_type_info;
+  std::optional<BridgeType> bridge_type;
   std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;

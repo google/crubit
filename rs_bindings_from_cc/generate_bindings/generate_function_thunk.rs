@@ -5,7 +5,9 @@
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use database::db::BindingsGenerator;
-use database::rs_snippet::{format_generic_params, unique_lifetimes, Mutability, RsTypeKind};
+use database::rs_snippet::{
+    format_generic_params, unique_lifetimes, BridgeRsTypeKind, Mutability, RsTypeKind,
+};
 use error_report::{anyhow, bail};
 use ir::*;
 use itertools::Itertools;
@@ -301,7 +303,11 @@ pub fn generate_function_thunk_impl(
         .map(|p| {
             let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
             let arg_type = db.rs_type_kind(p.type_.clone())?;
-            if let RsTypeKind::BridgeType { rust_to_cpp_converter, .. } = &arg_type {
+            if let RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::Annotation { rust_to_cpp_converter, .. },
+                ..
+            } = &arg_type
+            {
                 let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
                 let ident = expect_format_cc_ident(&p.identifier.identifier);
                 let cpp_ident = convert_ident(&ident);
@@ -375,7 +381,10 @@ pub fn generate_function_thunk_impl(
         cc_return_type.is_const = false;
         let return_type_name = cpp_type_name::format_cpp_type(&cc_return_type, &ir)?;
         match &return_type_kind {
-            RsTypeKind::BridgeType { cpp_to_rust_converter, .. } => {
+            RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::Annotation { cpp_to_rust_converter, .. },
+                ..
+            } => {
                 let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
                 conversion_externs.extend(quote! {
                     extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
@@ -424,7 +433,10 @@ pub fn generate_function_thunk_impl(
     let return_stmt = if !is_return_value_c_abi_compatible {
         let out_param = &param_idents[0];
         match &return_type_kind {
-            RsTypeKind::BridgeType { cpp_to_rust_converter, .. } => {
+            RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::Annotation { cpp_to_rust_converter, .. },
+                ..
+            } => {
                 let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
                 quote! {
                     auto __original_cpp_struct = #return_expr;

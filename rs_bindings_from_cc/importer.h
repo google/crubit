@@ -163,11 +163,6 @@ class Importer final : public ImportContext {
   // the template instantiation.
   absl::StatusOr<CcType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type);
-  // Helper function for `ConvertTemplateSpecializationType`.
-  // Returns the bridge type of the given `decl` if it is a builtin bridge type
-  // (e.g., `std::optional`). Otherwise, returns `std::nullopt`.
-  absl::StatusOr<std::optional<CcType::Record::BuiltinBridgeType>>
-  AsBuiltinBridgeType(const clang::ClassTemplateSpecializationDecl* decl);
 
   // The different decl importers. Note that order matters: the first importer
   // to successfully match a decl "wins", and no other importers are tried.
