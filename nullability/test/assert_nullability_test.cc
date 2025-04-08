@@ -14,7 +14,7 @@
 // intended as a weak way of indicating this.
 
 #include "nullability/test/check_diagnostics.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

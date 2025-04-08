@@ -25,8 +25,8 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "llvm/Support/Error.h"
-#include "llvm/Support/JSON.h"
+#include "llvm/include/llvm/Support/Error.h"
+#include "llvm/include/llvm/Support/JSON.h"
 
 ABSL_FLAG(bool, do_nothing, false,
           "if set to true the tool will produce empty files "

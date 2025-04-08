@@ -7,9 +7,9 @@
 
 #include <optional>
 
-#include "clang/AST/Type.h"
-#include "clang/AST/TypeLoc.h"
-#include "llvm/Support/ErrorHandling.h"
+#include "clang/include/clang/AST/Type.h"
+#include "clang/include/clang/AST/TypeLoc.h"
+#include "llvm/include/llvm/Support/ErrorHandling.h"
 
 namespace clang::tidy::nullability {
 
@@ -36,7 +36,7 @@ class TypeAndMaybeLocVisitor {
 #define TYPE(CLASS, PARENT) \
   case Type::CLASS:         \
     DISPATCH(CLASS##Type);
-#include "clang/AST/TypeNodes.inc"
+#include "clang/include/clang/AST/TypeNodes.inc"
     }
     llvm_unreachable("Unknown type class!");
   }
@@ -46,7 +46,7 @@ class TypeAndMaybeLocVisitor {
                            std::optional<CLASS##TypeLoc> L) { \
     DISPATCH(PARENT);                                         \
   }
-#include "clang/AST/TypeNodes.inc"
+#include "clang/include/clang/AST/TypeNodes.inc"
 
   RetTy visitType(const Type *, std::optional<TypeLoc> L) { return RetTy(); }
 };

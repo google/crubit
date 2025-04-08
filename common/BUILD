@@ -50,7 +50,7 @@ crubit_cc_test(
         ":annotation_reader",
         ":status_test_matchers",
         "@abseil-cpp//absl/strings:string_view",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
         "@llvm-project//clang:testing",
     ],
 )
@@ -316,7 +316,7 @@ cc_library(
         ":file_io",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -328,7 +328,7 @@ cc_library(
     deps = [
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 

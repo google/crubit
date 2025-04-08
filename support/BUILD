@@ -181,6 +181,6 @@ cc_test(
     srcs = ["bridge_test.cc"],
     deps = [
         ":bridge_cpp",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

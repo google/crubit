@@ -12,10 +12,10 @@
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/test/run_on_code.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/Expr.h"
-#include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/include/clang/AST/ASTContext.h"
+#include "clang/include/clang/AST/Expr.h"
+#include "clang/include/clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
 
 namespace clang {
 namespace tidy {

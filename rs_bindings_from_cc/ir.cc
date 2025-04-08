@@ -20,7 +20,7 @@
 #include "absl/strings/string_view.h"
 #include "common/string_type.h"
 #include "common/strong_int.h"
-#include "llvm/Support/JSON.h"
+#include "llvm/include/llvm/Support/JSON.h"
 
 namespace crubit {
 namespace {

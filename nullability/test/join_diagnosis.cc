@@ -9,15 +9,15 @@
 
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/test/check_diagnostics.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
-#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
-#include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Testing/Support/Error.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "clang/include/clang/AST/ASTContext.h"
+#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
+#include "clang/include/clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/include/clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
+#include "clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/Testing/Support/Error.h"
+#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 // TODO: The tests in this file test two different things that should be tested
 // separately:

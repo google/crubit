@@ -10,11 +10,11 @@
 
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
-#include "clang/AST/Decl.h"
-#include "clang/Basic/SourceLocation.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "llvm/ADT/DenseSet.h"
-#include "llvm/Support/Error.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "clang/include/clang/Frontend/CompilerInstance.h"
+#include "llvm/include/llvm/ADT/DenseSet.h"
+#include "llvm/include/llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

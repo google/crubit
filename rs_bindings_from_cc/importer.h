@@ -29,14 +29,14 @@
 #include "rs_bindings_from_cc/importers/type_map_override.h"
 #include "rs_bindings_from_cc/importers/var.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/AST/Decl.h"
-#include "clang/AST/DeclCXX.h"
-#include "clang/AST/DeclTemplate.h"
-#include "clang/AST/Mangle.h"
-#include "clang/AST/RawCommentList.h"
-#include "clang/AST/Type.h"
-#include "clang/Basic/SourceLocation.h"
-#include "clang/Sema/Sema.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/AST/DeclCXX.h"
+#include "clang/include/clang/AST/DeclTemplate.h"
+#include "clang/include/clang/AST/Mangle.h"
+#include "clang/include/clang/AST/RawCommentList.h"
+#include "clang/include/clang/AST/Type.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "clang/include/clang/Sema/Sema.h"
 
 namespace crubit {
 

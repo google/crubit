@@ -12,7 +12,7 @@
 #include <optional>
 
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/AST/DeclBase.h"
+#include "clang/include/clang/AST/DeclBase.h"
 
 namespace crubit {
 

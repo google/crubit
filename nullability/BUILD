@@ -267,11 +267,11 @@ cc_library(
     hdrs = ["proto_matchers.h"],
     visibility = [":__subpackages__"],
     deps = [
-        "//third_party/protobuf",
         "@abseil-cpp//absl/base:nullability",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
+        "@protobuf",
     ],
 )
 
@@ -333,11 +333,11 @@ cc_test(
         ":pointer_nullability_analysis",
         ":pointer_nullability_diagnosis",
         ":pragma",
-        "//third_party/benchmark",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+        "@google_benchmark",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",

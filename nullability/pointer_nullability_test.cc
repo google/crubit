@@ -7,14 +7,14 @@
 #include <memory>
 
 #include "nullability/type_nullability.h"
-#include "clang/AST/Type.h"
-#include "clang/Analysis/FlowSensitive/Arena.h"
-#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
-#include "clang/Analysis/FlowSensitive/Formula.h"
-#include "clang/Analysis/FlowSensitive/Value.h"
-#include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
-#include "clang/Basic/Specifiers.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "clang/include/clang/AST/Type.h"
+#include "clang/include/clang/Analysis/FlowSensitive/Arena.h"
+#include "clang/include/clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
+#include "clang/include/clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/include/clang/Analysis/FlowSensitive/Value.h"
+#include "clang/include/clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
+#include "clang/include/clang/Basic/Specifiers.h"
+#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

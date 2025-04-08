@@ -16,13 +16,13 @@
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/Attr.h"
-#include "clang/AST/Decl.h"
-#include "clang/AST/DeclBase.h"
-#include "clang/AST/DeclTemplate.h"
-#include "clang/AST/Type.h"
-#include "llvm/Support/Casting.h"
+#include "clang/include/clang/AST/ASTContext.h"
+#include "clang/include/clang/AST/Attr.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "clang/include/clang/AST/DeclTemplate.h"
+#include "clang/include/clang/AST/Type.h"
+#include "llvm/include/llvm/Support/Casting.h"
 
 namespace crubit {
 namespace {

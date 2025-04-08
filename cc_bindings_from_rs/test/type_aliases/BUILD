@@ -29,6 +29,6 @@ crubit_cc_test(
     srcs = ["type_aliases_test.cc"],
     deps = [
         ":type_aliases_cc_api",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

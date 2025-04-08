@@ -2,8 +2,7 @@
 
 load("@bazel_tools//tools/build_defs/cc:cc_embed_data.bzl", "cc_embed_data")
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("//third_party/bazel_rules/rules_cc/cc:cc_library.bzl", "cc_library")
-load("//third_party/protobuf/bazel:proto_library.bzl", "proto_library")
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -80,12 +79,12 @@ cc_test(
         ":inference_cc_proto",
         ":merge",
         "//nullability:proto_matchers",
-        "//third_party/protobuf",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
+        "@protobuf",
     ],
 )
 

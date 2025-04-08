@@ -5,7 +5,7 @@
 #define CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_SUBSTITUTIONS_H_
 
 #include "lifetime_annotations/lifetime.h"
-#include "llvm/ADT/DenseMap.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
 
 namespace clang {
 namespace tidy {

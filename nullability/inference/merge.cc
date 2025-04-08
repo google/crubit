@@ -10,8 +10,8 @@
 
 #include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/STLExtras.h"
+#include "llvm/include/llvm/ADT/ArrayRef.h"
+#include "llvm/include/llvm/ADT/STLExtras.h"
 
 namespace clang::tidy::nullability {
 namespace {

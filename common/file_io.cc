@@ -11,9 +11,9 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "llvm/Support/ErrorOr.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/include/llvm/Support/ErrorOr.h"
+#include "llvm/include/llvm/Support/MemoryBuffer.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 namespace crubit {
 

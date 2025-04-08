@@ -10,8 +10,8 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/FormatVariadic.h"
+#include "llvm/include/llvm/Support/ErrorHandling.h"
+#include "llvm/include/llvm/Support/FormatVariadic.h"
 
 namespace crubit {
 

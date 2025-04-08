@@ -26,7 +26,7 @@ crubit_cc_test(
     deps = [
         ":definition",
         ":forward_declaration",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 

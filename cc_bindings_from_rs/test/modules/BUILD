@@ -30,6 +30,6 @@ crubit_cc_test(
     srcs = ["modules_test.cc"],
     deps = [
         ":modules_cc_api",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

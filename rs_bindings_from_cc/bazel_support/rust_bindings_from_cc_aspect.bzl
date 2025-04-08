@@ -30,7 +30,7 @@ load(
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
-load("//third_party/protobuf/rust/bazel:aspects.bzl", "rust_cc_proto_library_aspect")
+load("@protobuf//rust:aspects.bzl", "rust_cc_proto_library_aspect")
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -162,7 +162,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # 1. We don't need Crubit bindings for `_cc_lib` for protobuf interop, we use protoc for that.
     # 2. We know that transitive deps of `_cc_lib` will get Crubit bindings through the "3 aspects"
     #    path if they are needed.
-    if "//third_party/protobuf/bazel/private:google_cc_proto_library.bzl%cc_proto_aspect" not in ctx.aspect_ids:
+    if "@protobuf//bazel/private:google_cc_proto_library.bzl%cc_proto_aspect" not in ctx.aspect_ids:
         return []
 
     # We use a fake generator only when we are building the real one, in order to avoid
@@ -305,7 +305,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx),
         should_generate_bindings = (
             has_public_headers or extra_rs_srcs
-        ) and not _is_proto_library(target),
+        ) and not _is_cc_proto_library(target),
     )
 
 rust_bindings_from_cc_aspect = aspect(

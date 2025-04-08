@@ -14,14 +14,14 @@
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/pragma.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/DeclBase.h"
-#include "clang/Basic/SourceManager.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/STLFunctionalExtras.h"
-#include "llvm/Support/Error.h"
-#include "llvm/Support/raw_ostream.h"
+#include "clang/include/clang/AST/ASTContext.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "clang/include/clang/Basic/SourceManager.h"
+#include "llvm/include/llvm/ADT/ArrayRef.h"
+#include "llvm/include/llvm/ADT/STLExtras.h"
+#include "llvm/include/llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/include/llvm/Support/Error.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
 namespace {

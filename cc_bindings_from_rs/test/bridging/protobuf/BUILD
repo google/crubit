@@ -1,6 +1,8 @@
 """End-to-end tests of `cc_bindings_from_rs`, focusing on bridging Protobuf types."""
 
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
+load("@protobuf//rust:defs.bzl", "rust_proto_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
@@ -14,8 +16,6 @@ load(
     "golden_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
-load("//third_party/protobuf/bazel:proto_library.bzl", "proto_library")
-load("//third_party/protobuf/rust:defs.bzl", "rust_proto_library")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -65,6 +65,6 @@ crubit_cc_test(
     deps = [
         ":foo_cc_proto",
         ":foo_lib_cc_api",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

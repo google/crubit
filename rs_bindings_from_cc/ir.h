@@ -34,12 +34,12 @@
 #include "absl/strings/substitute.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "clang/AST/DeclBase.h"
-#include "clang/AST/RawCommentList.h"
-#include "llvm/ADT/APSInt.h"
-#include "llvm/Support/FormatVariadic.h"
-#include "llvm/Support/JSON.h"
-#include "llvm/Support/raw_ostream.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "clang/include/clang/AST/RawCommentList.h"
+#include "llvm/include/llvm/ADT/APSInt.h"
+#include "llvm/include/llvm/Support/FormatVariadic.h"
+#include "llvm/include/llvm/Support/JSON.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 namespace crubit {
 

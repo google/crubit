@@ -28,8 +28,8 @@
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/Serialization/PCHContainerOperations.h"
-#include "clang/Tooling/Tooling.h"
+#include "clang/include/clang/Serialization/PCHContainerOperations.h"
+#include "clang/include/clang/Tooling/Tooling.h"
 
 namespace crubit {
 

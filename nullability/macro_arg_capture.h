@@ -8,7 +8,7 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
 #define CRUBIT_NULLABILITY_INFERENCE_MACRO_ARG_CAPTURE_H_
 
-#include "llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 inline constexpr llvm::StringRef ArgCaptureAbortIfFalse =

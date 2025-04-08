@@ -34,6 +34,6 @@ crubit_cc_test(
     srcs = ["crate_flags_test.cc"],
     deps = [
         ":crate_flags_cc_api",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

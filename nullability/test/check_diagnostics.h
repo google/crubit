@@ -5,8 +5,8 @@
 #ifndef CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
 #define CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
 
-#include "clang/Testing/CommandLineArgs.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/include/clang/Testing/CommandLineArgs.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

@@ -23,8 +23,8 @@ cc_test(
         "//util/utf8/public:unilib",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/strings:string_view",
-        "@com_google_fuzztest//:fuzztest",
-        "@com_google_fuzztest//:fuzztest_gtest_main",
-        "@com_google_googletest//:gmock",
+        "@fuzztest",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
     ],
 )

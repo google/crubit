@@ -17,10 +17,10 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
-#include "clang/Basic/Diagnostic.h"
-#include "clang/Basic/SourceLocation.h"
-#include "clang/Basic/SourceManager.h"
-#include "llvm/ADT/SmallString.h"
+#include "clang/include/clang/Basic/Diagnostic.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "clang/include/clang/Basic/SourceManager.h"
+#include "llvm/include/llvm/ADT/SmallString.h"
 
 namespace crubit {
 

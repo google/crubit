@@ -2,4 +2,18 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-bazel_dep(name = "abseil-cpp", version = "20240116.0")
+# TODO: this needs to be paired with a refreshed patch
+# (see WORKSPACE.bzlmod)
+bazel_dep(name = "rules_rust", version = "0.59.2")
+
+bazel_dep(name = "abseil-cpp", version = "20250127.1")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "fuzztest", version = "20250214.0")
+bazel_dep(name = "google_benchmark", version = "1.9.1")
+bazel_dep(name = "googletest", version = "1.16.0")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "protobuf", version = "29.3")
+bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
+bazel_dep(name = "rules_license", version = "1.0.0")
+bazel_dep(name = "rules_proto", version = "7.1.0")
+bazel_dep(name = "rules_python", version = "1.3.0")

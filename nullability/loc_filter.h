@@ -7,9 +7,9 @@
 
 #include <memory>
 
-#include "clang/AST/DeclBase.h"
-#include "clang/Basic/SourceLocation.h"
-#include "clang/Basic/SourceManager.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "clang/include/clang/Basic/SourceManager.h"
 
 namespace clang::tidy::nullability {
 

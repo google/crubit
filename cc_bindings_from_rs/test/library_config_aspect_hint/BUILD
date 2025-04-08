@@ -58,6 +58,6 @@ crubit_cc_test(
     srcs = ["namespace_test.cc"],
     deps = [
         ":namespace_crate2_cc_api",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

@@ -4,8 +4,8 @@
 
 #include "lifetime_annotations/pointee_type.h"
 
-#include "clang/AST/Type.h"
-#include "clang/AST/TypeLoc.h"
+#include "clang/include/clang/AST/Type.h"
+#include "clang/include/clang/AST/TypeLoc.h"
 
 namespace clang {
 namespace tidy {

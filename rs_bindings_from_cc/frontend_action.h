@@ -8,10 +8,10 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/decl_importer.h"
-#include "clang/AST/ASTConsumer.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendAction.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/include/clang/AST/ASTConsumer.h"
+#include "clang/include/clang/Frontend/CompilerInstance.h"
+#include "clang/include/clang/Frontend/FrontendAction.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace crubit {
 

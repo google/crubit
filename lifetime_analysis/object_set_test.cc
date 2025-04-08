@@ -12,7 +12,7 @@
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/test/run_on_code.h"
-#include "clang/AST/ASTContext.h"
+#include "clang/include/clang/AST/ASTContext.h"
 
 namespace clang {
 namespace tidy {

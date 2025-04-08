@@ -6,8 +6,8 @@
 #define CRUBIT_NULLABILITY_INFERENCE_AUGMENTED_TEST_INPUTS_H_
 
 #include "nullability/pragma.h"
-#include "clang/Testing/TestAST.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/include/clang/Testing/TestAST.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 

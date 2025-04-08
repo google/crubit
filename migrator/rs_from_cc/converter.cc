@@ -7,10 +7,10 @@
 #include <string>
 
 #include "absl/strings/str_split.h"
-#include "clang/AST/Decl.h"
-#include "clang/AST/DeclBase.h"
-#include "llvm/Support/raw_ostream.h"
-#include "third_party/re2/re2.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
+#include "re2/re2.h"
 
 namespace crubit_rs_from_cc {
 

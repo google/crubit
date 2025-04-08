@@ -12,7 +12,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "lifetime_annotations/lifetime.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

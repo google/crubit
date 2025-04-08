@@ -37,7 +37,7 @@ crubit_cc_test(
     srcs = ["rs_char_test.cc"],
     deps = [
         ":rs_char",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -91,9 +91,9 @@ crubit_cc_test(
     deps = [
         ":slice_ref",
         "@abseil-cpp//absl/types:span",
-        "@com_google_fuzztest//:fuzztest",
-        "@com_google_fuzztest//:fuzztest_gtest_main",
-        "@com_google_googletest//:gmock",
+        "@fuzztest",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
     ],
 )
 
@@ -127,8 +127,8 @@ crubit_cc_test(
         ":str_ref",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@com_google_fuzztest//:fuzztest",
-        "@com_google_fuzztest//:fuzztest_gtest_main",
-        "@com_google_googletest//:gmock",
+        "@fuzztest",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
     ],
 )

@@ -17,10 +17,10 @@
 #include "absl/types/span.h"
 #include "migrator/rs_from_cc/converter.h"
 #include "migrator/rs_from_cc/frontend_action.h"
-#include "clang/Basic/FileManager.h"
-#include "clang/Basic/FileSystemOptions.h"
-#include "clang/Frontend/FrontendAction.h"
-#include "clang/Tooling/Tooling.h"
+#include "clang/include/clang/Basic/FileManager.h"
+#include "clang/include/clang/Basic/FileSystemOptions.h"
+#include "clang/include/clang/Frontend/FrontendAction.h"
+#include "clang/include/clang/Tooling/Tooling.h"
 
 namespace crubit_rs_from_cc {
 

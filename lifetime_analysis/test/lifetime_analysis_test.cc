@@ -20,12 +20,12 @@
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/test/named_func_lifetimes.h"
-#include "clang/AST/Decl.h"
-#include "clang/AST/DeclCXX.h"
-#include "clang/Basic/LLVM.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/raw_ostream.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/AST/DeclCXX.h"
+#include "clang/include/clang/Basic/LLVM.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 #include "lifetime_annotations/test/run_on_code.h"
 

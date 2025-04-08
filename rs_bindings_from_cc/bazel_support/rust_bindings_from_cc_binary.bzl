@@ -41,7 +41,7 @@ rust_bindings_from_cc_binary = rule(
                    "C++ code."),
         ),
         "_clang_format": attr.label(
-            default = "",
+            default = Label("@llvm_toolchain//:clang-format"),
             executable = True,
             allow_single_file = True,
             cfg = "exec",

@@ -9,9 +9,9 @@
 
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
-#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
-#include "llvm/ADT/DenseSet.h"
-#include "llvm/Support/Error.h"
+#include "clang/include/clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "llvm/include/llvm/ADT/DenseSet.h"
+#include "llvm/include/llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

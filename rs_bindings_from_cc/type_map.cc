@@ -10,7 +10,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/AST/Type.h"
+#include "clang/include/clang/AST/Type.h"
 
 namespace crubit {
 

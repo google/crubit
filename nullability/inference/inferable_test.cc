@@ -4,18 +4,18 @@
 
 #include "nullability/inference/inferable.h"
 
-#include "clang/AST/Decl.h"
-#include "clang/AST/DeclBase.h"
-#include "clang/AST/DeclCXX.h"
-#include "clang/AST/DeclTemplate.h"
-#include "clang/AST/Expr.h"
-#include "clang/AST/ExprCXX.h"
-#include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/ASTMatchers/ASTMatchers.h"
-#include "clang/Basic/LLVM.h"
-#include "clang/Testing/TestAST.h"
-#include "llvm/ADT/StringRef.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "clang/include/clang/AST/DeclCXX.h"
+#include "clang/include/clang/AST/DeclTemplate.h"
+#include "clang/include/clang/AST/Expr.h"
+#include "clang/include/clang/AST/ExprCXX.h"
+#include "clang/include/clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
+#include "clang/include/clang/Basic/LLVM.h"
+#include "clang/include/clang/Testing/TestAST.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
+#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

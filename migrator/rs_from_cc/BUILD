@@ -50,7 +50,6 @@ cc_library(
     hdrs = ["converter.h"],
     deps = [
         "//lifetime_annotations",
-        "//third_party/re2",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/status:statusor",
@@ -60,6 +59,7 @@ cc_library(
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
+        "@re2",
     ],
 )
 
@@ -71,7 +71,7 @@ cc_test(
         "//common:status_test_matchers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
     ],
 )

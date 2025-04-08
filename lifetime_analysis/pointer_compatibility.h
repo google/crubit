@@ -5,7 +5,7 @@
 #ifndef DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_POINTER_COMPATIBILITY_H_
 #define DEVTOOLS_RUST_CC_INTEROP_LIFETIME_ANALYSIS_POINTER_COMPATIBILITY_H_
 
-#include "clang/AST/Type.h"
+#include "clang/include/clang/AST/Type.h"
 
 namespace clang {
 namespace tidy {

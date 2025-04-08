@@ -7,7 +7,7 @@
 
 #include "nullability/inference/eligible_ranges.h"
 #include "nullability/type_nullability.h"
-#include "clang/AST/ASTContext.h"
+#include "clang/include/clang/AST/ASTContext.h"
 
 namespace clang::tidy::nullability {
 /// Collects the ranges of types written in the given AST that are eligible for

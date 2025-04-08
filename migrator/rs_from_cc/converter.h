@@ -18,14 +18,14 @@
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "lifetime_annotations/lifetime_annotations.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/Decl.h"
-#include "clang/AST/Mangle.h"
-#include "clang/AST/RawCommentList.h"
-#include "clang/AST/Type.h"
-#include "clang/Basic/SourceLocation.h"
-#include "clang/Basic/Specifiers.h"
-#include "clang/Sema/Sema.h"
+#include "clang/include/clang/AST/ASTContext.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/AST/Mangle.h"
+#include "clang/include/clang/AST/RawCommentList.h"
+#include "clang/include/clang/AST/Type.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "clang/include/clang/Basic/Specifiers.h"
+#include "clang/include/clang/Sema/Sema.h"
 
 namespace crubit_rs_from_cc {
 

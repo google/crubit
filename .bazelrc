@@ -1,5 +1,5 @@
 # use `MODULE.bazel` and `WORKSPACE.bzlmod`, not `WORKSPACE`.
-common --enable_bzlmod
+build --enable_bzlmod
 
 # generic_clang from @llvm-raw//utils/bazel, but c++20 to match Google
 build:generic_clang --repo_env=CC=clang

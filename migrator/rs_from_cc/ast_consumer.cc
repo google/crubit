@@ -6,8 +6,8 @@
 
 #include "absl/log/check.h"
 #include "migrator/rs_from_cc/converter.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/Frontend/CompilerInstance.h"
+#include "clang/include/clang/AST/ASTContext.h"
+#include "clang/include/clang/Frontend/CompilerInstance.h"
 
 namespace crubit_rs_from_cc {
 

@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
-#include "clang/Testing/TestAST.h"
+#include "clang/include/clang/Testing/TestAST.h"
 
 namespace crubit {
 namespace {

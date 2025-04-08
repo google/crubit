@@ -12,7 +12,7 @@
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "llvm/Support/FormatVariadic.h"
+#include "llvm/include/llvm/Support/FormatVariadic.h"
 
 namespace crubit {
 

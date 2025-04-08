@@ -11,7 +11,7 @@
 
 #include <cstdint>
 
-#include "llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 

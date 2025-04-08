@@ -14,9 +14,9 @@
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/type_nullability.h"
-#include "clang/AST/DeclBase.h"
-#include "llvm/ADT/STLFunctionalExtras.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "llvm/include/llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 

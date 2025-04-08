@@ -16,13 +16,13 @@
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/type_lifetimes.h"
-#include "clang/AST/Decl.h"
-#include "clang/AST/Expr.h"
-#include "clang/AST/ExprCXX.h"
-#include "clang/AST/Type.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/Support/Allocator.h"
-#include "llvm/Support/Error.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/AST/Expr.h"
+#include "clang/include/clang/AST/ExprCXX.h"
+#include "clang/include/clang/AST/Type.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
+#include "llvm/include/llvm/Support/Allocator.h"
+#include "llvm/include/llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

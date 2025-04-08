@@ -8,9 +8,9 @@
 
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/ast_consumer.h"
-#include "clang/AST/ASTConsumer.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/include/clang/AST/ASTConsumer.h"
+#include "clang/include/clang/Frontend/CompilerInstance.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace crubit {
 

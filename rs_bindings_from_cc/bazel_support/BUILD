@@ -22,7 +22,7 @@ bzl_library(
         ":rust_bindings_from_cc_cli_flag_aspect_hint",
         ":rust_bindings_from_cc_utils_bzl",
         "//features:crubit_feature_hint_bzl",
-        "//third_party/protobuf/rust/bazel:aspects_bzl",
+        "@protobuf//rust/bazel:aspects_bzl",
     ],
 )
 

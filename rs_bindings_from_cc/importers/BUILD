@@ -180,5 +180,5 @@ cc_library(
 crubit_cc_test(
     name = "override_final_test",
     srcs = ["override_final_test.cc"],
-    deps = ["@com_google_googletest//:gtest_main"],
+    deps = ["@googletest//:gtest_main"],
 )

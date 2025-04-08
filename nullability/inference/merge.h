@@ -14,7 +14,7 @@
 #define CRUBIT_NULLABILITY_INFERENCE_MERGE_H_
 
 #include "nullability/inference/inference.proto.h"
-#include "llvm/ADT/ArrayRef.h"
+#include "llvm/include/llvm/ADT/ArrayRef.h"
 
 namespace clang::tidy::nullability {
 

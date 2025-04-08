@@ -9,8 +9,8 @@
 #include <system_error>
 #include <utility>
 
-#include "llvm/Support/Error.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/include/llvm/Support/Error.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

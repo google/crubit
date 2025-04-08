@@ -11,17 +11,17 @@
 
 #include <memory>
 
-#include "clang/AST/ASTConsumer.h"
-#include "clang/Basic/IdentifierTable.h"
-#include "clang/Basic/LLVM.h"
-#include "clang/Basic/SourceLocation.h"
-#include "clang/Basic/SourceManager.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendAction.h"
-#include "clang/Lex/PPCallbacks.h"
-#include "clang/Lex/Preprocessor.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/include/clang/AST/ASTConsumer.h"
+#include "clang/include/clang/Basic/IdentifierTable.h"
+#include "clang/include/clang/Basic/LLVM.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "clang/include/clang/Basic/SourceManager.h"
+#include "clang/include/clang/Frontend/CompilerInstance.h"
+#include "clang/include/clang/Frontend/FrontendAction.h"
+#include "clang/include/clang/Lex/PPCallbacks.h"
+#include "clang/include/clang/Lex/Preprocessor.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 inline constexpr llvm::StringRef ReplacementMacrosHeaderFileName =

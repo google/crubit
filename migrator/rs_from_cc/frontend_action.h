@@ -9,9 +9,9 @@
 
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "migrator/rs_from_cc/converter.h"
-#include "clang/AST/ASTConsumer.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendAction.h"
+#include "clang/include/clang/AST/ASTConsumer.h"
+#include "clang/include/clang/Frontend/CompilerInstance.h"
+#include "clang/include/clang/Frontend/FrontendAction.h"
 
 namespace crubit_rs_from_cc {
 

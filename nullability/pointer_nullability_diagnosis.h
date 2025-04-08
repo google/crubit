@@ -12,11 +12,11 @@
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"
-#include "clang/AST/Decl.h"
-#include "clang/Analysis/FlowSensitive/Solver.h"
-#include "clang/Basic/IdentifierTable.h"
-#include "clang/Basic/SourceLocation.h"
-#include "llvm/ADT/SmallVector.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "clang/include/clang/Analysis/FlowSensitive/Solver.h"
+#include "clang/include/clang/Basic/IdentifierTable.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "llvm/include/llvm/ADT/SmallVector.h"
 
 namespace clang {
 namespace tidy {

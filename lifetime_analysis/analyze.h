@@ -11,8 +11,8 @@
 #include "lifetime_analysis/lifetime_analysis.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_annotations.h"
-#include "clang/AST/Decl.h"
-#include "llvm/ADT/DenseMap.h"
+#include "clang/include/clang/AST/Decl.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
 
 namespace clang {
 namespace tidy {

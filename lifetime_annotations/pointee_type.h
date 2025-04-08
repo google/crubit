@@ -5,8 +5,8 @@
 #ifndef CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
 #define CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
 
-#include "clang/AST/Type.h"
-#include "clang/AST/TypeLoc.h"
+#include "clang/include/clang/AST/Type.h"
+#include "clang/include/clang/AST/TypeLoc.h"
 
 namespace clang {
 namespace tidy {

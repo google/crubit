@@ -10,11 +10,11 @@
 #include <string>
 
 #include "absl/base/nullability.h"
-#include "llvm/ADT/StringRef.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
-#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
-#include "third_party/protobuf/message.h"
-#include "third_party/protobuf/text_format.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
+#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "google/protobuf/message.h"
+#include "google/protobuf/text_format.h"
 
 namespace clang::tidy::nullability {
 namespace {

@@ -4,39 +4,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# https://github.com/bazelbuild/bazel-skylib/releases/tag/1.3.0
-
-http_archive(
-    name = "platforms",
-    sha256 = "3a561c99e7bdbe9173aa653fd579fe849f1d8d67395780ab4770b1f381431d51",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.7/platforms-0.0.7.tar.gz",
-        "https://github.com/bazelbuild/platforms/releases/download/0.0.7/platforms-0.0.7.tar.gz",
-    ],
-)
-
-http_archive(
-    name = "bazel_skylib",
-    sha256 = "74d544d96f4a5bb630d465ca8bbcfe231e3594e5aae57e1edbf17a6eb3ca2506",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
-        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
-    ],
-)
-
-load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
-
-bazel_skylib_workspace()
-
-http_archive(
-    name = "rules_license",
-    sha256 = "6157e1e68378532d0241ecd15d3c45f6e5cfd98fc10846045509fb2a7cc9e381",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_license/releases/download/0.0.4/rules_license-0.0.4.tar.gz",
-        "https://github.com/bazelbuild/rules_license/releases/download/0.0.4/rules_license-0.0.4.tar.gz",
-    ],
-)
-
+# TODO: this is an ancient version; refresh and also wire up in MODULE.bazel
 http_archive(
     name = "rules_rust",
     patch_args = [
@@ -53,7 +21,7 @@ load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_regi
 
 rules_rust_dependencies()
 
-RUST_TOOLCHAIN_VERSION = "nightly/2024-07-20"
+RUST_TOOLCHAIN_VERSION = "nightly/2025-03-20"
 
 rust_register_toolchains(
     allocator_library = "@//common:rust_allocator_shims",
@@ -197,19 +165,3 @@ llvm_loader_repository(name = "llvm-loader")
 load("@llvm-loader//:llvm.bzl", "llvm_repository")
 
 llvm_repository(name = "llvm-project")
-
-# protobuf (used in nullability/; crubit proper should not depend on it)
-http_archive(
-    name = "rules_proto",
-    sha256 = "dc3fb206a2cb3441b485eb1e423165b231235a1ea9b031b4433cf7bc1fa460dd",
-    strip_prefix = "rules_proto-5.3.0-21.7",
-    urls = [
-        "https://github.com/bazelbuild/rules_proto/archive/refs/tags/5.3.0-21.7.tar.gz",
-    ],
-)
-
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-
-rules_proto_dependencies()
-
-rules_proto_toolchains()

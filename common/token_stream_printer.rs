@@ -21,7 +21,7 @@ pub struct RustfmtConfig {
 }
 
 pub const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
-    "third_party/crosstool/rust/unstable/main_sysroot/bin/rustfmt";
+    "rustfmt";
 
 pub const CLANG_FORMAT_EXE_PATH_FOR_TESTING: &str =
     "clang-format";

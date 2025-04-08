@@ -14,10 +14,10 @@
 #include "lifetime_analysis/object.h"
 #include "lifetime_analysis/object_set.h"
 #include "lifetime_annotations/lifetime.h"
-#include "clang/AST/Expr.h"
-#include "clang/Basic/LLVM.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
+#include "clang/include/clang/AST/Expr.h"
+#include "clang/include/clang/Basic/LLVM.h"
+#include "llvm/include/llvm/Support/ErrorHandling.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

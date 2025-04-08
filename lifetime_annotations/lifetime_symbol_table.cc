@@ -10,7 +10,7 @@
 #include <string>
 
 #include "lifetime_annotations/lifetime.h"
-#include "llvm/Support/ErrorHandling.h"
+#include "llvm/include/llvm/Support/ErrorHandling.h"
 
 namespace clang {
 namespace tidy {

@@ -13,9 +13,9 @@
 #ifndef CRUBIT_NULLABILITY_PRAGMA_H_
 #define CRUBIT_NULLABILITY_PRAGMA_H_
 
-#include "clang/Basic/SourceLocation.h"
-#include "clang/Basic/Specifiers.h"
-#include "llvm/ADT/DenseMap.h"
+#include "clang/include/clang/Basic/SourceLocation.h"
+#include "clang/include/clang/Basic/Specifiers.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
 
 namespace clang {
 class Preprocessor;

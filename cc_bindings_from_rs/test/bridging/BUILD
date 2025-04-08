@@ -58,6 +58,6 @@ crubit_cc_test(
     deps = [
         ":rust_pointer_types_cc_api",
         ":rust_type_cc_api",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

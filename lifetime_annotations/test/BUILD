@@ -14,7 +14,7 @@ cc_library(
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:lifetime_symbol_table",
         "//lifetime_annotations:type_lifetimes",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
         "@llvm-project//llvm:Support",
     ],
 )

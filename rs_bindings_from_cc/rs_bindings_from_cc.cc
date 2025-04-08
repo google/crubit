@@ -21,10 +21,10 @@
 #include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/FormatVariadic.h"
-#include "llvm/Support/JSON.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/Support/FormatVariadic.h"
+#include "llvm/include/llvm/Support/JSON.h"
+#include "llvm/include/llvm/Support/raw_ostream.h"
 
 namespace crubit {
 

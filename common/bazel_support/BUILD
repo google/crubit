@@ -72,7 +72,7 @@ rs_bindings_from_cc_toolchain(
 config_setting(
     name = "cpu_arm",
     constraint_values = [
-        "//third_party/bazel_platforms/cpu:aarch64",
+        "@platforms//cpu:aarch64",
     ],
     visibility = [
     ],
@@ -81,7 +81,7 @@ config_setting(
 config_setting(
     name = "cpu_x86",
     constraint_values = [
-        "//third_party/bazel_platforms/cpu:x86_64",
+        "@platforms//cpu:x86_64",
     ],
     visibility = [
     ],

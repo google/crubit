@@ -9,9 +9,9 @@
 #include <string>
 
 #include "lifetime_annotations/lifetime.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/StringMap.h"
-#include "llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
+#include "llvm/include/llvm/ADT/StringMap.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

@@ -16,7 +16,7 @@
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
-#include "llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

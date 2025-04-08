@@ -32,7 +32,7 @@ crubit_cc_test(
     srcs = ["memswap_test.cc"],
     deps = [
         ":bindings_support",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -41,7 +41,7 @@ crubit_cc_test(
     srcs = ["offsetof_test.cc"],
     deps = [
         ":bindings_support",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -52,7 +52,7 @@ crubit_cc_test(
         ":bindings_support",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:check",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -61,6 +61,6 @@ crubit_cc_test(
     srcs = ["sizeof_test.cc"],
     deps = [
         ":bindings_support",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

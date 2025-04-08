@@ -10,9 +10,9 @@
 #include "absl/container/flat_hash_map.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/pragma.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/DeclBase.h"
-#include "llvm/ADT/STLFunctionalExtras.h"
+#include "clang/include/clang/AST/ASTContext.h"
+#include "clang/include/clang/AST/DeclBase.h"
+#include "llvm/include/llvm/ADT/STLFunctionalExtras.h"
 
 namespace clang::tidy::nullability {
 

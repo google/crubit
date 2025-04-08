@@ -12,11 +12,11 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "nullability/type_nullability.h"
-#include "clang/AST/Expr.h"
-#include "clang/Analysis/FlowSensitive/ASTOps.h"
-#include "clang/Analysis/FlowSensitive/CachedConstAccessorsLattice.h"
-#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
-#include "llvm/ADT/FunctionExtras.h"
+#include "clang/include/clang/AST/Expr.h"
+#include "clang/include/clang/Analysis/FlowSensitive/ASTOps.h"
+#include "clang/include/clang/Analysis/FlowSensitive/CachedConstAccessorsLattice.h"
+#include "clang/include/clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "llvm/include/llvm/ADT/FunctionExtras.h"
 
 namespace clang::tidy::nullability {
 class PointerNullabilityLatticeBase {

@@ -9,12 +9,12 @@
 #include <string>
 
 #include "lifetime_annotations/lifetime_annotations.h"
-#include "clang/AST/ASTConsumer.h"
-#include "clang/Frontend/FrontendAction.h"
-#include "clang/Serialization/PCHContainerOperations.h"
-#include "clang/Tooling/Tooling.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/include/clang/AST/ASTConsumer.h"
+#include "clang/include/clang/Frontend/FrontendAction.h"
+#include "clang/include/clang/Serialization/PCHContainerOperations.h"
+#include "clang/include/clang/Tooling/Tooling.h"
+#include "llvm/include/llvm/ADT/ArrayRef.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {
