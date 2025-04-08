@@ -44,8 +44,8 @@ use itertools::Itertools;
 use proc_macro2::TokenStream;
 use query_compiler::{
     count_regions, does_type_implement_trait, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_c_abi_compatible_by_value, is_directly_public, is_exported,
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env,
+    get_tag_size_with_padding, is_c_abi_compatible_by_value, is_copy, is_directly_public,
+    is_exported, liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env,
     public_free_items_in_mod, repr_attrs,
 };
 use quote::{format_ident, quote};
@@ -852,16 +852,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
         let tcx = db.tcx();
         let cc_struct_name = &core.cc_short_name;
 
-        let is_copy = {
-            // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
-            // might need to be replaced with a more thorough check - see
-            // b/258249993#comment4.
-            tcx.type_is_copy_modulo_regions(
-                post_analysis_typing_env(tcx, core.def_id),
-                core.self_ty,
-            )
-        };
-        if is_copy {
+        if is_copy(tcx, core.def_id, core.self_ty) {
             let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                        and assignment operator.";
             let main_api = CcSnippet::new(quote! {

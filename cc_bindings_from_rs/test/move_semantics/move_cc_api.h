@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 
 namespace move {
@@ -66,6 +67,54 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
 // Generated from:
 // cc_bindings_from_rs/test/move_semantics/move.rs;l=27
 void consume_foo(::move::Foo _foo);
+
+// Generated from:
+// cc_bindings_from_rs/test/move_semantics/move.rs;l=30
+struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
+    [[clang::trivial_abi]] Copyable final {
+ public:
+  // Default::default
+  Copyable();
+
+  // No custom `Drop` impl and no custom \"drop glue\" required
+  ~Copyable() = default;
+  Copyable(Copyable&&) = default;
+  Copyable& operator=(Copyable&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Copyable(const Copyable&) = default;
+  Copyable& operator=(const Copyable&) = default;
+  Copyable(::crubit::UnsafeRelocateTag, Copyable&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/move_semantics/move.rs;l=35
+  static ::move::Copyable from_byte(std::uint8_t byte);
+
+  //  Typically, `self`-by-value methods turn into `&&`-qualified methods in
+  //  C++.
+  //
+  //  However, for `Copy` types, there's no need to consume the argument, as it
+  //  will be copied
+  //
+  //  regardless.
+  //
+  // Generated from:
+  // cc_bindings_from_rs/test/move_semantics/move.rs;l=42
+  std::uint8_t consume_self() const;
+
+ public:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/move_semantics/move.rs;l=31
+    std::uint8_t field;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
 
 static_assert(
     sizeof(Foo) == 8,
@@ -126,5 +175,41 @@ inline void consume_foo(::move::Foo _foo) {
   return __crubit_internal::__crubit_thunk_consume_ufoo(_foo_slot.Get());
 }
 
+static_assert(
+    sizeof(Copyable) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(Copyable) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_default(::move::Copyable* __ret_ptr);
+}
+inline Copyable::Copyable() { __crubit_internal::__crubit_thunk_default(this); }
+static_assert(std::is_trivially_destructible_v<Copyable>);
+static_assert(std::is_trivially_move_constructible_v<Copyable>);
+static_assert(std::is_trivially_move_assignable_v<Copyable>);
+static_assert(std::is_trivially_copy_constructible_v<Copyable>);
+static_assert(std::is_trivially_copy_assignable_v<Copyable>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_from_ubyte(std::uint8_t,
+                                          ::move::Copyable* __ret_ptr);
+}
+inline ::move::Copyable Copyable::from_byte(std::uint8_t byte) {
+  crubit::Slot<::move::Copyable> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" std::uint8_t __crubit_thunk_consume_uself(::move::Copyable*);
+}
+inline std::uint8_t Copyable::consume_self() const {
+  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::__crubit_thunk_consume_uself(&self);
+}
+inline void Copyable::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Copyable, field));
+}
 }  // namespace move
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN

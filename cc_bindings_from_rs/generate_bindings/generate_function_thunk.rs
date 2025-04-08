@@ -5,9 +5,8 @@
 use crate::{
     does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
     format_param_types_for_cc, format_ret_ty_for_cc, format_ty_for_rs, is_bridged_type,
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions,
-    post_analysis_typing_env, AllowReferences, BridgedType, BridgedTypeConversionInfo,
-    FullyQualifiedName, RsSnippet,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, AllowReferences,
+    BridgedType, BridgedTypeConversionInfo, FullyQualifiedName, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -18,6 +17,7 @@ use database::{AdtCoreBindings, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
+use query_compiler::post_analysis_typing_env;
 use quote::format_ident;
 use quote::quote;
 use rustc_middle::ty::{self, Ty};

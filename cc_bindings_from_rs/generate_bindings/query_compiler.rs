@@ -154,6 +154,14 @@ pub fn post_analysis_typing_env(tcx: TyCtxt, def_id: DefId) -> ty::TypingEnv {
     ty::TypingEnv { typing_mode: ty::TypingMode::PostAnalysis, param_env: tcx.param_env(def_id) }
 }
 
+/// Returns whether `ty` is copyable inside the given environment (e.g. fn or type def).
+pub fn is_copy<'tcx>(tcx: TyCtxt<'tcx>, environment_id: DefId, ty: Ty<'tcx>) -> bool {
+    // TODO(b/259749095): Once generic ADTs are supported, `is_copy_modulo_regions`
+    // might need to be replaced with a more thorough check - see
+    // b/258249993#comment4.
+    tcx.type_is_copy_modulo_regions(post_analysis_typing_env(tcx, environment_id), ty)
+}
+
 /// Like `TyCtxt::is_directly_public`, but works not only with `LocalDefId`, but
 /// also with `DefId`.
 pub fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {

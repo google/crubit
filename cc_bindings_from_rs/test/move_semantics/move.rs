@@ -25,3 +25,24 @@ impl Foo {
 }
 
 pub fn consume_foo(_foo: Foo) {}
+
+#[derive(Default, Copy, Clone)]
+pub struct Copyable {
+    pub field: u8,
+}
+
+impl Copyable {
+    pub fn from_byte(byte: u8) -> Self {
+        Self { field: byte }
+    }
+
+    /// Typically, `self`-by-value methods turn into `&&`-qualified methods in C++.
+    /// However, for `Copy` types, there's no need to consume the argument, as it will be copied
+    /// regardless.
+    pub fn consume_self(mut self) -> u8 {
+        let old = self.field;
+        // Write a value to be sure that we're writing into a copy rather than the original.
+        self.field = 84;
+        old
+    }
+}

@@ -10,8 +10,8 @@ use crate::generate_function_thunk::{
 use crate::{
     format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
     generate_deprecated_tag, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, AllowReferences,
-    BridgedType, CcType, FullyQualifiedName, RsSnippet,
+    liberate_and_deanonymize_late_bound_regions, AllowReferences, BridgedType, CcType,
+    FullyQualifiedName, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{
@@ -23,6 +23,7 @@ use database::{SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
+use query_compiler::{is_copy, post_analysis_typing_env};
 use quote::quote;
 use rustc_hir::Node;
 use rustc_middle::mir::Mutability;
@@ -410,9 +411,18 @@ pub fn generate_function(
         },
         other => panic!("Unexpected HIR node kind: {other:?}"),
     };
+    let mut takes_self_by_copy = false;
     let method_qualifiers = match method_kind {
         FunctionKind::Free | FunctionKind::StaticMethod => quote! {},
-        FunctionKind::MethodTakingSelfByValue => quote! { && },
+        FunctionKind::MethodTakingSelfByValue => {
+            let self_ty = params[0].ty.mid();
+            if is_copy(tcx, def_id, self_ty) {
+                takes_self_by_copy = true;
+                quote! { const }
+            } else {
+                quote! { && }
+            }
+        }
         FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
             ty::TyKind::Ref(region, _, mutability) => {
                 let lifetime_annotation = format_region_as_cc_lifetime(region);
@@ -525,7 +535,18 @@ pub fn generate_function(
             .enumerate()
             .map(|(i, Param { cc_name, ty, .. })| {
                 if i == 0 && method_kind.has_self_param() {
-                    statements.extend(quote! { auto&& #cc_name = *this; });
+                    if takes_self_by_copy {
+                        // Self-by-copy methods are `const` qualified. The Rust thunk does not
+                        // accept a const pointer, but we can just const_cast since underlying C++
+                        // object is not modified: Rust copies the object before passing it into
+                        // the by-value method.
+                        statements.extend(quote! {
+                            auto& #cc_name = const_cast<
+                                std::remove_cvref_t<decltype(*this)>&>(*this);
+                        });
+                    } else {
+                        statements.extend(quote! { auto&& #cc_name = *this; });
+                    }
                 }
                 cc_param_to_c_abi(
                     db,

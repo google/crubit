@@ -9,7 +9,7 @@ use crate::{
     crate_features, format_ty_for_cc, generate_const, generate_deprecated_tag,
     generate_must_use_tag, generate_trait_thunks, generate_unsupported_def, get_layout,
     get_scalar_int_type, get_tag_size_with_padding, is_bridged_type, is_exported,
-    is_public_or_supported_export, post_analysis_typing_env, RsSnippet, TraitThunks,
+    is_public_or_supported_export, RsSnippet, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
@@ -19,6 +19,7 @@ use database::{AdtCoreBindings, BindingsGenerator, FullyQualifiedName, SugaredTy
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
+use query_compiler::post_analysis_typing_env;
 use quote::format_ident;
 use quote::quote;
 use quote::ToTokens;

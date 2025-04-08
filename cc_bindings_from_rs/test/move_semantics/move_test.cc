@@ -44,4 +44,13 @@ TEST(MoveTest, MoveConstruction) {
   EXPECT_EQ(Foo.read_byte(), 0);
 }
 
+TEST(MoveTest, CopyableBySelfMethodsDontRequireRvalue) {
+  move::Copyable copyable = move::Copyable::from_byte(42);
+  // Ensure that the `consume_self` method is not rvalue-qualified, that it
+  // does not replace `copyable` with a default-constructed value, and  that
+  // modifications to `self` are not reflected in the original object.
+  EXPECT_EQ(copyable.consume_self(), 42);
+  EXPECT_EQ(copyable.consume_self(), 42);
+}
+
 }  // namespace
