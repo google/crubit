@@ -304,7 +304,7 @@ pub fn generate_function_thunk_impl(
             let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
             let arg_type = db.rs_type_kind(p.type_.clone())?;
             if let RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::Annotation { rust_to_cpp_converter, .. },
+                bridge_type: BridgeRsTypeKind::VoidConverters { rust_to_cpp_converter, .. },
                 ..
             } = &arg_type
             {
@@ -382,7 +382,7 @@ pub fn generate_function_thunk_impl(
         let return_type_name = cpp_type_name::format_cpp_type(&cc_return_type, &ir)?;
         match &return_type_kind {
             RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::Annotation { cpp_to_rust_converter, .. },
+                bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
                 ..
             } => {
                 let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
@@ -434,7 +434,7 @@ pub fn generate_function_thunk_impl(
         let out_param = &param_idents[0];
         match &return_type_kind {
             RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::Annotation { cpp_to_rust_converter, .. },
+                bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
                 ..
             } => {
                 let convert_function = expect_format_cc_ident(cpp_to_rust_converter);

@@ -498,14 +498,16 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
         | RsTypeKind::Primitive(..)
         | RsTypeKind::TypeMapOverride { .. } => Ok(false),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
+            // TODO(b/390621592): Should bridge types just delegate to the underlying type?
+            BridgeRsTypeKind::VoidConverters { .. } | BridgeRsTypeKind::CrubitAbi { .. } => {
+                is_record_unsafe(db, &original_type)
+            }
             BridgeRsTypeKind::StdOptional(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
             BridgeRsTypeKind::StdPair(t1, t2) => {
                 let t1_unsafe = db.is_rs_type_kind_unsafe(t1.as_ref().clone())?;
                 let t2_unsafe = db.is_rs_type_kind_unsafe(t2.as_ref().clone())?;
                 Ok(t1_unsafe || t2_unsafe)
             }
-            // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-            BridgeRsTypeKind::Annotation { .. } => is_record_unsafe(db, &original_type),
         },
         RsTypeKind::Record { record, .. } => is_record_unsafe(db, &record),
     }
