@@ -34,8 +34,8 @@ memoized::query_group! {
         #[input]
         fn environment(&self) -> Environment;
 
-        #[break_cycles_with = Ok(false)]
-        fn is_rs_type_kind_unsafe(&self, rs_type_kind: RsTypeKind) -> Result<bool>;
+        #[break_cycles_with = false]
+        fn is_rs_type_kind_unsafe(&self, rs_type_kind: RsTypeKind) -> bool;
 
         fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets>;
 

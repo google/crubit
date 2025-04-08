@@ -18,6 +18,8 @@ flagset::flags! {
 
         Wrapper,
 
+        UnsafeTypes,
+
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -34,6 +36,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
+            Self::UnsafeTypes => "unsafe_types",
             Self::Experimental => "experimental",
         }
     }
@@ -45,6 +48,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "//features:supported",
             Self::Wrapper => "//features:wrapper",
+            Self::UnsafeTypes => "//features:unsafe_types",
             Self::Experimental => "//features:experimental",
         }
     }
@@ -56,6 +60,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"all" => flagset::FlagSet::<CrubitFeature>::full(),
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
+        b"unsafe_types" => CrubitFeature::UnsafeTypes.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         _ => return None,
     };
@@ -157,7 +162,10 @@ mod tests {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"all\"").unwrap();
         assert_eq!(
             features,
-            CrubitFeature::Supported | CrubitFeature::Wrapper | CrubitFeature::Experimental
+            CrubitFeature::Supported
+                | CrubitFeature::Wrapper
+                | CrubitFeature::UnsafeTypes
+                | CrubitFeature::Experimental
         );
     }
 
@@ -179,7 +187,10 @@ mod tests {
         let SerializedCrubitFeatures(features) = serde_json::from_str("[\"all\"]").unwrap();
         assert_eq!(
             features,
-            CrubitFeature::Supported | CrubitFeature::Wrapper | CrubitFeature::Experimental
+            CrubitFeature::Supported
+                | CrubitFeature::Wrapper
+                | CrubitFeature::UnsafeTypes
+                | CrubitFeature::Experimental
         );
     }
 
@@ -189,7 +200,10 @@ mod tests {
             serde_json::from_str("[\"all\", \"supported\", \"experimental\"]").unwrap();
         assert_eq!(
             features,
-            CrubitFeature::Supported | CrubitFeature::Wrapper | CrubitFeature::Experimental
+            CrubitFeature::Supported
+                | CrubitFeature::Wrapper
+                | CrubitFeature::UnsafeTypes
+                | CrubitFeature::Experimental
         );
     }
 }

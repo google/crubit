@@ -653,21 +653,6 @@ impl RsTypeKind {
         }
     }
 
-    /// Returns true if this type is unsafe to pass across function boundaries.
-    ///
-    /// In particular, anything representing a pointer with unknown lifetime is
-    /// unsafe.
-    pub fn is_unsafe(&self, _db: &dyn BindingsGenerator) -> bool {
-        // TODO(b/383284829): Make unsafe types propogate covariantly (e.g., pointer in
-        // public field of a struct makes the struct unsafe, FuncPtr with unsafe return
-        // type is itself an unsafe type).
-        match self {
-            RsTypeKind::Pointer { .. } => true,
-            RsTypeKind::Record { record, .. } => record.is_unsafe_type,
-            _ => false,
-        }
-    }
-
     pub fn is_bridge_type(&self) -> bool {
         matches!(self, RsTypeKind::BridgeType { .. })
     }
@@ -1084,7 +1069,7 @@ impl RsTypeKind {
                     .map(|type_| type_.to_token_stream_replacing_by_self(db, self_record));
                 let return_frag = return_type.format_as_return_type_fragment(db, self_record);
                 let mut tokens = quote! { extern #abi fn( #( #param_types_ ),* ) #return_frag };
-                if param_types.iter().any(|p| p.is_unsafe(db)) {
+                if param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone())) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {
@@ -1237,7 +1222,7 @@ impl RsTypeKind {
                 let mut tokens =
                     quote! { extern #abi fn( #( #param_types_tokens ),* ) #return_frag };
 
-                if param_types.iter().any(|p| p.is_unsafe(db)) {
+                if param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone())) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {

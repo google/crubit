@@ -704,7 +704,9 @@ fn api_func_shape(
     }
 
     let is_unsafe = match func.safety_annotation {
-        SafetyAnnotation::Unannotated => param_types.iter().any(|p| p.is_unsafe(db)),
+        SafetyAnnotation::Unannotated => {
+            param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone()))
+        }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
     };
