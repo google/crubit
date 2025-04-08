@@ -21,6 +21,7 @@ cc_library(
         "//lifetime_annotations:type_lifetimes",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",

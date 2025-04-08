@@ -15,7 +15,7 @@ cc_library(
         ":converter",
     ],
     deps = [
-        "//support/internal:bindings_support",
+        "//support/internal:bindings_support",  # build_cleaner: keep
     ],
 )
 
@@ -42,7 +42,7 @@ cc_library(
         "//features:supported",
     ],
     deps = [
-        "//support/internal:bindings_support",
+        "//support/internal:bindings_support",  # build_cleaner: keep
     ],
 )
 

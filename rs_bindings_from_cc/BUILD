@@ -74,7 +74,7 @@ cc_library(
         "//common:status_macros",
         "@abseil-cpp//absl/flags:parse",
         "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
         "@llvm-project//llvm:Support",
     ],
@@ -96,7 +96,7 @@ cc_library(
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -135,6 +135,7 @@ cc_library(
     deps = [
         "@abseil-cpp//absl/functional:function_ref",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
     ],
@@ -147,7 +148,6 @@ cc_library(
     deps = [
         "//common:string_type",
         "@abseil-cpp//absl/log:check",
-        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -159,7 +159,7 @@ cc_library(
     deps = [
         ":cc_ir",
         "@abseil-cpp//absl/container:flat_hash_set",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
     ],
 )
@@ -195,6 +195,7 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -309,6 +310,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
@@ -348,6 +350,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:optional",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
@@ -427,6 +430,7 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
         "@llvm-project//clang:serialization",
         "@llvm-project//clang:tooling",
@@ -477,7 +481,7 @@ cc_library(
         "//rs_bindings_from_cc/generate_bindings:cc_api",  # buildcleaner: keep
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -507,6 +511,7 @@ cc_library(
         "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
@@ -613,7 +618,7 @@ cc_library(
         ":cc_ir",
         "@abseil-cpp//absl/container:btree",
         "@abseil-cpp//absl/container:flat_hash_map",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//llvm:Support",
     ],
 )

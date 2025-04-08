@@ -65,6 +65,7 @@ cc_library(
         ":pointee_type",
         ":type_lifetimes",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",

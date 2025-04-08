@@ -37,6 +37,7 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
@@ -114,7 +115,7 @@ cc_library(
     deps = [
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -126,7 +127,7 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":ffi_types",  # buildcleaner: keep
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -228,7 +229,7 @@ cc_library(
     hdrs = ["string_type.h"],
     deps = [
         "@abseil-cpp//absl/flags:marshalling",
-        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -316,6 +317,7 @@ cc_library(
         ":file_io",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest",
         "@llvm-project//llvm:Support",
     ],
