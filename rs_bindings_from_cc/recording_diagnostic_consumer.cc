@@ -7,6 +7,7 @@
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -17,6 +18,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
 #include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/SmallString.h"
 
@@ -48,12 +50,17 @@ static ::absl::string_view GetDiagnosticLevelName(
 std::string RecordingDiagnosticConsumer::Diagnostic::FormattedDiagnostics()
     const {
   constexpr absl::string_view kDiagnosticFormat = "%s:%u:%u: %s: %s";
-  return absl::StrFormat(kDiagnosticFormat,
-                         // `getFileName` has the form `./relative/path.h`.
-                         absl::StripPrefix(source_location.getFilename(), "./"),
-                         source_location.getLine(), source_location.getColumn(),
-                         GetDiagnosticLevelName(diagnostic_level),
-                         diagnostic.str());
+  if (source_location.has_value()) {
+    return absl::StrFormat(
+        kDiagnosticFormat,
+        // `getFileName` has the form `./relative/path.h`.
+        absl::StripPrefix(source_location->getFilename(), "./"),
+        source_location->getLine(), source_location->getColumn(),
+        GetDiagnosticLevelName(diagnostic_level), diagnostic.str());
+  } else {
+    return absl::StrFormat("%s: %s", GetDiagnosticLevelName(diagnostic_level),
+                           diagnostic.str());
+  }
 };
 
 void RecordingDiagnosticConsumer::HandleDiagnostic(
@@ -64,7 +71,10 @@ void RecordingDiagnosticConsumer::HandleDiagnostic(
   llvm::SmallString<64> diagnostic;
   info.FormatDiagnostic(diagnostic);
   auto source_loc = info.getLocation();
-  auto presumed_source_loc = info.getSourceManager().getPresumedLoc(source_loc);
+  std::optional<clang::PresumedLoc> presumed_source_loc;
+  if (source_loc.isValid()) {
+    presumed_source_loc = info.getSourceManager().getPresumedLoc(source_loc);
+  }
   diagnostics_.push_back({info.getID(), diagnostic_level, presumed_source_loc,
                           std::move(diagnostic)});
 }

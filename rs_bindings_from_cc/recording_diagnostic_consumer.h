@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -27,7 +28,7 @@ class RecordingDiagnosticConsumer final : public clang::DiagnosticConsumer {
   struct Diagnostic {
     unsigned diagnostic_id;
     clang::DiagnosticsEngine::Level diagnostic_level;
-    clang::PresumedLoc source_location;
+    std::optional<clang::PresumedLoc> source_location;
     // The size of 64 is chosen based on just a few diagnostics; adjust as
     // needed.
     llvm::SmallString<64> diagnostic;

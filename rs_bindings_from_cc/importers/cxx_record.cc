@@ -55,7 +55,7 @@ namespace {
 //
 // In particular, only include a type in `FinalOverrides` if the type has no
 // usable tail padding -- for example, if
-/// `std::has_unique_object_representations_v<T>`, or 3if the type itself is
+/// `std::has_unique_object_representations_v<T>`, or if the type itself is
 // POD for the purpose of layout (in the Itanium ABI).
 //
 // This should be enforced by asserting in `override_final_test.cc` that it

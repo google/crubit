@@ -105,6 +105,15 @@ bool IsFilteredComment(const clang::SourceManager& sm,
   }
   return false;
 }
+
+bool IsBuiltinFunction(const clang::Decl* decl) {
+  const auto* function = clang::dyn_cast<clang::FunctionDecl>(decl);
+  if (function == nullptr) {
+    return false;
+  }
+  return function->getBuiltinID() != 0;
+}
+
 }  // namespace
 
 namespace {
@@ -689,10 +698,21 @@ std::optional<IR::Item> Importer::GetImportedItem(
 }
 
 BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
+  constexpr const char* kSentinelTarget =
+      "//:virtual_clang_resource_dir_target";
+
   // Template instantiations need to be generated in the target that triggered
   // the instantiation (not in the target where the template is defined).
   if (IsFullClassTemplateSpecializationOrChild(decl)) {
     return invocation_.target_;
+  }
+
+  // Built-in functions are defined by the compiler and are not associated with
+  // any target. Without this check, the decl item ID will show up in the IR
+  // as the ID of a top-level item, but the function itself will be missing from
+  // the IR's list of items, resulting in a crash when generating bindings.
+  if (IsBuiltinFunction(decl)) {
+    return BazelLabel(kSentinelTarget);
   }
 
   clang::SourceManager& source_manager = ctx_.getSourceManager();
@@ -722,7 +742,7 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     source_location = source_manager.getIncludeLoc(id);
   }
 
-  return BazelLabel("//:virtual_clang_resource_dir_target");
+  return BazelLabel(kSentinelTarget);
 }
 
 bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {

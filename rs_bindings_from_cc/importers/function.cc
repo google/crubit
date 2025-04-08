@@ -24,6 +24,7 @@
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/Attr.h"
@@ -31,8 +32,10 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/DiagnosticIDs.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
@@ -121,6 +124,32 @@ void ApplyRefQualifierToThisPointer(
     pointer->kind = PointerTypeKind::kRValueRef;
   }
 }
+
+// An RAII guard that sets a fake TU scope for the duration of its lifetime
+// and restores the previous TU scope when it goes out of scope.
+class FakeTUScope {
+ public:
+  // Sets `ctx`'s `Sema`'s `TUScope` to a fake scope that points to the
+  // translation unit declaration.
+  explicit FakeTUScope(ImportContext& ctx)
+      : ctx_(ctx),
+        scope_(std::make_unique<clang::Scope>(nullptr, clang::Scope::DeclScope,
+                                              ctx_.sema_.getDiagnostics())),
+        old_tu_scope_(ctx_.sema_.TUScope) {
+    ctx_.sema_.TUScope = scope_.get();
+    ctx_.sema_.TUScope->setEntity(ctx_.ctx_.getTranslationUnitDecl());
+  }
+
+  ~FakeTUScope() {
+    ctx_.sema_.TUScope->setEntity(nullptr);
+    ctx_.sema_.TUScope = old_tu_scope_;
+  }
+
+ private:
+  ImportContext& ctx_;
+  std::unique_ptr<clang::Scope> scope_;
+  clang::Scope* old_tu_scope_;
+};
 
 }  // namespace
 
@@ -262,6 +291,23 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       }
       crubit::RecordingDiagnosticConsumer diagnostic_recorder =
           crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
+            // Generally, clang is able to instantiate templates like this even
+            // after parsing completes. However, in rare cases it accesses
+            // transient parsing state (Scope) which was already cleaned up.
+            //
+            // HACK: We need to create a fake TU scope to avoid a crash in
+            // `clang::Sema::InstantiateFunctionDefinition` when it tries to
+            // access the translation unit scope, which it incorrectly assumes
+            // is always non-null. This should be fixed in clang.
+            //
+            // Specifically, the crash happens when Crubit instantiates a
+            // class template with a defaulted copy constructor, introducing
+            // lazily-injected builtins such as `memcpy` to be introduced to the
+            // TU scope.
+            //
+            // See b/401857961 where this was observed and cl/265779405 where a
+            // similar issue was fixed in CLIF.
+            FakeTUScope fake_tu_scope(ictx_);
             ictx_.sema_.InstantiateFunctionDefinition(point_of_instantiation,
                                                       function_decl);
           });

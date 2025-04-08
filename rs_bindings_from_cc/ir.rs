@@ -451,9 +451,15 @@ impl Debug for Operator {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
 #[serde(transparent)]
 pub struct ItemId(usize);
+
+impl Debug for ItemId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ItemId({:#x})", self.0)
+    }
+}
 
 impl ItemId {
     pub fn new_for_testing(value: usize) -> Self {
@@ -463,7 +469,8 @@ impl ItemId {
 
 impl ToTokens for ItemId {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        proc_macro2::Literal::usize_unsuffixed(self.0).to_tokens(tokens)
+        use std::str::FromStr;
+        proc_macro2::Literal::from_str(&format!("{:#x}", self.0)).unwrap().to_tokens(tokens)
     }
 }
 
@@ -1802,6 +1809,7 @@ impl IR {
         }
     }
 
+    #[track_caller]
     pub fn find_decl<'a, T>(&'a self, decl_id: ItemId) -> Result<&'a T>
     where
         &'a T: TryFrom<&'a Item>,
@@ -1811,15 +1819,15 @@ impl IR {
         })
     }
 
+    #[track_caller]
     pub fn find_untyped_decl(&self, decl_id: ItemId) -> &Item {
-        let idx = *self
-            .item_id_to_item_idx
-            .get(&decl_id)
-            .unwrap_or_else(|| panic!("Couldn't find decl_id {:?} in the IR.", decl_id));
-        self.flat_ir
-            .items
-            .get(idx)
-            .unwrap_or_else(|| panic!("Couldn't find an item at idx {}", idx))
+        let Some(idx) = self.item_id_to_item_idx.get(&decl_id) else {
+            panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.flat_ir)
+        };
+        let Some(item) = self.flat_ir.items.get(*idx) else {
+            panic!("Couldn't find an item at idx {} in IR:\n{:#?}", idx, self.flat_ir)
+        };
+        item
     }
 
     /// Returns whether `target` is the current target.
@@ -1926,6 +1934,7 @@ impl IR {
         self.namespace_qualifier_from_id(item.id())
     }
 
+    #[track_caller]
     fn namespace_qualifier_from_id(&self, item: ItemId) -> NamespaceQualifier {
         let mut namespaces = vec![];
         let item: &Item = self.find_decl(item).unwrap();

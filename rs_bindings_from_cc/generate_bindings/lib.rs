@@ -386,8 +386,7 @@ pub fn generate_bindings_tokens(
     features.insert(make_rs_ident("cfg_sanitize"));
 
     for top_level_item_id in ir.top_level_item_ids() {
-        let item: &Item =
-            ir.find_decl(*top_level_item_id).context("Failed to look up ir.top_level_item_ids")?;
+        let item: &Item = ir.find_untyped_decl(*top_level_item_id);
         let generated = db.generate_item(item.clone())?;
         items.push(generated.main_api);
         if !generated.thunks.is_empty() {
