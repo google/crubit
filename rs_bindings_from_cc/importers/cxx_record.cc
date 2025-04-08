@@ -378,7 +378,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool is_explicit_class_template_instantiation_definition = false;
   std::optional<BazelLabel> defining_target;
   std::optional<TemplateSpecialization> template_specialization;
-  std::optional<BridgeType> bridge_type;
+  std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(record_decl);
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -425,14 +425,17 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       }
     }
 
-    absl::StatusOr<std::optional<BridgeType>> builtin_bridge_type =
-        GetBuiltinBridgeType(specialization_decl);
-    if (!builtin_bridge_type.ok()) {
-      return ictx_.ImportUnsupportedItem(
-          record_decl, UnsupportedItem::Kind::kType, std::nullopt,
-          FormattedError::FromStatus(std::move(builtin_bridge_type).status()));
+    if (!bridge_type.has_value()) {
+      absl::StatusOr<std::optional<BridgeType>> builtin_bridge_type =
+          GetBuiltinBridgeType(specialization_decl);
+      if (!builtin_bridge_type.ok()) {
+        return ictx_.ImportUnsupportedItem(
+            record_decl, UnsupportedItem::Kind::kType, std::nullopt,
+            FormattedError::FromStatus(
+                std::move(builtin_bridge_type).status()));
+      }
+      bridge_type = *std::move(builtin_bridge_type);
     }
-    bridge_type = *std::move(builtin_bridge_type);
   } else {
     const clang::NamedDecl* named_decl = record_decl;
     if (record_decl->getName().empty()) {
@@ -458,7 +461,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           FormattedError::PrefixedStrCat("Record name is not supported",
                                          record_name.status().message()));
     }
-    bridge_type = GetBridgeTypeAnnotation(record_decl);
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(record_decl);
