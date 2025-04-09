@@ -63,6 +63,17 @@ def generate_and_compile_bindings(
       A RustBindingsFromCcInfo containing the result of the compilation of the generated source
       files, as well a GeneratedBindingsInfo provider containing the generated source files.
     """
+    if not should_generate_bindings:
+        return [
+            RustBindingsFromCcInfo(
+                cc_info = cc_common.merge_cc_infos(cc_infos = deps_for_cc_file),
+                dep_variant_info = None,
+                pass_through_dep_variant_infos = deps_for_rs_file,
+                target_args = target_args,
+                namespaces = None,
+            ),
+        ]
+
     cc_toolchain = find_cpp_toolchain(ctx)
 
     feature_configuration_for_bindings = cc_common.configure_features(
@@ -85,17 +96,6 @@ def generate_and_compile_bindings(
         extra_rs_srcs = extra_rs_srcs,
         extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
     )
-
-    if not should_generate_bindings:
-        return [
-            RustBindingsFromCcInfo(
-                cc_info = cc_common.merge_cc_infos(cc_infos = deps_for_cc_file),
-                dep_variant_info = None,
-                pass_through_dep_variant_infos = deps_for_rs_file,
-                target_args = target_args,
-                namespaces = namespaces_output,
-            ),
-        ]
 
     # Relocate the rs files so that they can be read by rustc using relative paths.
     extra_rs_srcs_relocated = []

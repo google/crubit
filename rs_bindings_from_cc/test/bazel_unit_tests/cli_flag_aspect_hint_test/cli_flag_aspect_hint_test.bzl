@@ -36,6 +36,7 @@ def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli():
         aspect_hints = [
             ":disable_generate_source_location_in_doc_comment",
             ":do_nothing",
+            "//features:supported",
         ],
         tags = ["manual"],
     )

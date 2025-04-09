@@ -36,6 +36,7 @@ def _targets_for_namespaces():
         hdrs = [
             "lib.h",
         ],
+        aspect_hints = ["//features:supported"],
     )
 
     attach_aspect(name = "namespaces_json_outputs", dep = ":lib")
