@@ -216,7 +216,7 @@ struct Resugarer {
       // TODO: If the type was substituted from a pack template argument,
       // we must find the slice that pertains to this particular type.
       // For now, just give up on resugaring this type.
-      if (ST->getPackIndex().has_value()) return std::nullopt;
+      if (ST->getPackIndex()) return std::nullopt;
 
       unsigned PointerCount =
           countPointersInType(Specialization->getDeclContext());

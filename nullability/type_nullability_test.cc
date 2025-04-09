@@ -1281,13 +1281,11 @@ TEST_F(GetTypeNullabilityLocsTest, ClassTemplateParamPack) {
 }
 
 TEST_F(GetTypeNullabilityLocsTest, AliasTemplateWithDefaultArg) {
-  // TODO(b/281474380): The range should only enclose the `int *`, but we don't
-  // yet handle default argument sugar correctly.
   Snippet = R"(
     template <typename T1, typename T2 = T1>
     using AliasTemplate = T2;
 
-  using Target = $0(Nullable)[[AliasTemplate<int * _Nullable>]];
+    using Target = AliasTemplate<$0(Nullable)[[int *]] _Nullable>;
   )";
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
 }

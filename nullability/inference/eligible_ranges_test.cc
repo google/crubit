@@ -818,16 +818,13 @@ TEST(EligibleRangesTest, DefaultTemplateArgs) {
   template <typename T1, typename T2 = T1>
   using Alias = T2;
 
-  void target(S<int *$one^> P, $two^Alias<int *> Q);
+  void target(S<int *$one^> P, Alias<int *$two^> Q);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
                 eligibleRange(std::nullopt, Input.point("one")),
-                // TODO(b/281474380) Collect the template
-                // argument instead of the whole alias, when we can see
-                // through the layers of default argument redirection
                 eligibleRange(2, Input.point("two")))));
 }
 
