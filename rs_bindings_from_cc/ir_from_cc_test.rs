@@ -538,7 +538,32 @@ fn test_struct_with_bridge_type_annotation() {
                 bridge_type: Some(Annotation {
                   rust_name: "SomeBridgeType",
                   rust_to_cpp_converter: "cpp_to_rust_converter",
-                  cpp_to_rust_converter: "rust_to_cpp_converter",
+                  cpp_to_rust_converter: "rust_to_cpp_converter", ...
+                }), ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_struct_with_bridge_type_annotation_missing_converters() {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_bridge_type", "RustFoo")]] Foo {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "Foo", ...
+                bridge_type: Some(Annotation {
+                  rust_name: "RustFoo",
+                  rust_to_cpp_converter: "",
+                  cpp_to_rust_converter: "",
                 }), ...
             }
         }

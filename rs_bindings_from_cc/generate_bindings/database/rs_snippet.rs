@@ -514,6 +514,10 @@ impl BridgeRsTypeKind {
 
         Ok(Some(bridge_rs_type_kind))
     }
+
+    pub fn is_void_converters_bridge_type(&self) -> bool {
+        matches!(self, BridgeRsTypeKind::VoidConverters { .. })
+    }
 }
 
 fn is_basic_string_char(record: &Record) -> bool {
@@ -657,8 +661,19 @@ impl RsTypeKind {
         matches!(self, RsTypeKind::BridgeType { .. })
     }
 
+    pub fn is_pointer_bridge_type(&self) -> bool {
+        matches!(
+            self,
+            RsTypeKind::BridgeType { bridge_type: BridgeRsTypeKind::VoidConverters { .. }, .. }
+        )
+    }
+
+    pub fn is_crubit_abi_bridge_type(&self) -> bool {
+        self.is_bridge_type() && !self.is_pointer_bridge_type()
+    }
+
     pub fn is_primitive(&self) -> bool {
-        matches!(self, RsTypeKind::Primitive { .. })
+        matches!(self, RsTypeKind::Primitive(_))
     }
 
     /// Returns the features required to use this type which are not already
@@ -1305,18 +1320,14 @@ impl RsTypeKind {
                             generic_types.iter().map(|t| t.to_token_stream(db));
                         quote! { #path < #(#generic_types_tokens),* > }
                     }
-                    _ => {
-                        // TODO(okabayashi): once composable bridging is enabled, match on the other
-                        // variants here. For now, treat std::optional and std::pair as if they were
-                        // just opaque monomorphized records in order to not break existing code.
-                        let ir = db.ir();
-                        let crate_path = CratePath::new(
-                            ir,
-                            ir.namespace_qualifier(original_type.as_ref()),
-                            rs_imported_crate_name(&original_type.owning_target, ir),
-                        );
-                        let ident = make_rs_ident(original_type.rs_name.identifier.as_ref());
-                        quote! { #crate_path #ident }
+                    BridgeRsTypeKind::StdOptional(inner) => {
+                        let inner = inner.to_token_stream(db);
+                        quote! { ::core::option::Option< #inner > }
+                    }
+                    BridgeRsTypeKind::StdPair(first, second) => {
+                        let first = first.to_token_stream(db);
+                        let second = second.to_token_stream(db);
+                        quote! { (#first, #second) }
                     }
                 }
             }

@@ -382,3 +382,21 @@ crubit_rust_test(
         "@crate_index//:serde_json",
     ],
 )
+
+rust_library(
+    name = "bridge_schema",
+    srcs = ["bridge_schema.rs"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+    ],
+)
+
+crubit_rust_test(
+    name = "bridge_schema_test",
+    crate = ":bridge_schema",
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

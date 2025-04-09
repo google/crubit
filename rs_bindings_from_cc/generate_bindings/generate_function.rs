@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{ensure, Context, Result};
+use bridge_schema::BridgeSchemaToRustTokens;
 use code_gen_utils::make_rs_ident;
 use database::code_snippet::ApiSnippets;
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
@@ -897,7 +898,7 @@ fn generate_func_body(
     thunk_ident: Ident,
     thunk_prepare: TokenStream,
     thunk_args: Vec<TokenStream>,
-) -> TokenStream {
+) -> Result<TokenStream> {
     let ParamValueAdjustments { clone_prefixes, clone_suffixes } = param_value_adjustments;
 
     if let ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } = &impl_kind {
@@ -909,13 +910,13 @@ fn generate_func_body(
         // change once the bindings generator starts supporting
         // reference fields). TODO(b/213243309): Double-check if
         // zero-initialization is desirable here.
-        quote! {
+        Ok(quote! {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut ::core::ffi::c_void #( , #thunk_args )* );
                 tmp.assume_init()
             }
-        }
+        })
     } else {
         // Note: for the time being, all !Unpin values are treated as if they were not
         // trivially relocatable. We could, in the special case of trivial !Unpin types,
@@ -937,7 +938,20 @@ fn generate_func_body(
                 };
                 return_type.to_token_stream_replacing_by_self(db, record)
             };
-            if return_type.is_unpin() {
+            if return_type.is_crubit_abi_bridge_type() {
+                let bridge_schema = db.bridge_schema(return_type.clone())?;
+                let bridge_schema_tokens = BridgeSchemaToRustTokens(&bridge_schema);
+                quote! {
+                    let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<{
+                        <#return_type_or_self as ::bridge_rust::CrubitAbi<#bridge_schema_tokens>>::SIZE
+                    }>();
+                    #crate_root_path::detail::#thunk_ident(
+                        __return_abi_buffer.as_mut_ptr() as *mut u8,
+                        #(#clone_prefixes #thunk_args #clone_suffixes ),*
+                    );
+                    ::bridge_rust::internal::decode::<#return_type_or_self, #bridge_schema_tokens>(__return_abi_buffer.as_ptr() as *const u8)
+                }
+            } else if return_type.is_unpin() {
                 quote! {
                     let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
                     #crate_root_path::detail::#thunk_ident(
@@ -984,10 +998,10 @@ fn generate_func_body(
         if !impl_kind.is_unsafe() {
             body = quote! { unsafe { #body } };
         }
-        quote! {
+        Ok(quote! {
             #thunk_prepare
             #body
-        }
+        })
     }
 }
 
@@ -1170,7 +1184,7 @@ pub fn generate_function(
                 thunk_ident,
                 thunk_prepare,
                 thunk_args,
-            )
+            )?
         } else {
             quote! {
                 #![allow(unused_variables)]
@@ -1538,7 +1552,30 @@ fn function_signature(
             } else {
                 type_.to_token_stream(db)
             };
-            if type_.is_c_abi_compatible_by_value() {
+            if type_.is_crubit_abi_bridge_type() {
+                let bridge_schema = db
+                    .bridge_schema(type_.clone())
+                    .with_context(|| format!("while generating bridge param '{ident}'"))?;
+                let bridge_schema_tokens = BridgeSchemaToRustTokens(&bridge_schema);
+
+                api_params.push(quote! {#ident: #quoted_type_or_self});
+                thunk_prepare.extend(quote! {
+                    let mut __crubit_abi_arg_buffer = ::bridge_rust::internal::empty_buffer::<{
+                        <#quoted_type_or_self as ::bridge_rust::CrubitAbi<#bridge_schema_tokens>>::SIZE
+                    }>();
+                    // The function body may be wrapped in an unsafe block, which makes this unsafe
+                    // block "unused".
+                    #[allow(unused_unsafe)]
+                    unsafe {
+                        ::bridge_rust::internal::encode::<
+                            #quoted_type_or_self,
+                            #bridge_schema_tokens,
+                        >(__crubit_abi_arg_buffer.as_mut_ptr() as *mut u8, #ident);
+                    }
+                    let #ident = __crubit_abi_arg_buffer;
+                });
+                thunk_args.push(quote! {#ident.as_ptr() as *const u8});
+            } else if type_.is_c_abi_compatible_by_value() {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {#ident});
             } else {

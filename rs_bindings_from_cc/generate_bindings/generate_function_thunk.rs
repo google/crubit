@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
+use bridge_schema::BridgeSchemaToCppTokens;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
@@ -150,6 +151,10 @@ pub fn generate_function_thunk(
         };
         out_param = Some(quote! { *mut ::core::ffi::c_void });
         out_param_ident = Some(param_idents.next().unwrap().clone());
+    } else if return_type.is_crubit_abi_bridge_type() {
+        out_param = Some(quote! { *mut ::core::ffi::c_uchar });
+        out_param_ident = Some(make_rs_ident("__return_abi_buffer"));
+        return_type_fragment = quote! {};
     } else if !return_type.is_c_abi_compatible_by_value() {
         // For return types that can't be passed by value, create a new out parameter.
         out_param = Some(quote! { *mut ::core::ffi::c_void });
@@ -169,11 +174,13 @@ pub fn generate_function_thunk(
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
     let param_types = out_param.into_iter().chain(param_types.map(|param_type| {
-        let param_type_tokens = param_type.to_token_stream(db);
-        if !param_type.is_c_abi_compatible_by_value() {
+        if param_type.is_crubit_abi_bridge_type() {
+            quote! { *const ::core::ffi::c_uchar }
+        } else if !param_type.is_c_abi_compatible_by_value() {
+            let param_type_tokens = param_type.to_token_stream(db);
             quote! {&mut #param_type_tokens}
         } else {
-            param_type_tokens
+            param_type.to_token_stream(db)
         }
     }));
 
@@ -303,11 +310,12 @@ pub fn generate_function_thunk_impl(
         .map(|p| {
             let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
             let arg_type = db.rs_type_kind(p.type_.clone())?;
-            if let RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::VoidConverters { rust_to_cpp_converter, .. },
-                ..
-            } = &arg_type
-            {
+            if let RsTypeKind::BridgeType { bridge_type, .. } = &arg_type {
+                let BridgeRsTypeKind::VoidConverters { rust_to_cpp_converter, .. } = &bridge_type
+                else {
+                    return Ok(quote! { const unsigned char* });
+                };
+
                 let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
                 let ident = expect_format_cc_ident(&p.identifier.identifier);
                 let cpp_ident = convert_ident(&ident);
@@ -335,7 +343,7 @@ pub fn generate_function_thunk_impl(
         .iter()
         .map(|p| {
             let mut ident = expect_format_cc_ident(&p.identifier.identifier);
-            if db.rs_type_kind(p.type_.clone())?.is_bridge_type() {
+            if db.rs_type_kind(p.type_.clone())?.is_pointer_bridge_type() {
                 let formatted_ident = convert_ident(&ident);
                 ident = quote! { &(#formatted_ident.val) };
             }
@@ -355,7 +363,12 @@ pub fn generate_function_thunk_impl(
                 _ => {
                     let rs_type_kind = db.rs_type_kind(p.type_.clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
-                    if !rs_type_kind.is_c_abi_compatible_by_value() {
+                    if rs_type_kind.is_crubit_abi_bridge_type() {
+                        let bridge_schema = db.bridge_schema(rs_type_kind)?;
+                        let bridge_schema_tokens = BridgeSchemaToCppTokens(&bridge_schema);
+                        let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
+                        Ok(quote! { ::crubit::internal::Decode<#cpp_type, #bridge_schema_tokens>(#ident) })
+                    } else if !rs_type_kind.is_c_abi_compatible_by_value() {
                         Ok(quote! { std::move(* #ident) })
                     } else if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {
                         Ok(quote! { #ident })
@@ -373,31 +386,34 @@ pub fn generate_function_thunk_impl(
     // list.)
     let return_type_kind = db.rs_type_kind(func.return_type.clone())?;
     let is_return_value_c_abi_compatible = return_type_kind.is_c_abi_compatible_by_value();
+    let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&func.return_type, ir)?;
 
-    let return_type_name = if !is_return_value_c_abi_compatible {
+    let return_type_name = if return_type_kind.is_crubit_abi_bridge_type() {
+        param_idents.insert(0, expect_format_cc_ident("__return_abi_buffer"));
+        param_types.insert(0, quote! {unsigned char *});
+        quote! { void }
+    } else if !is_return_value_c_abi_compatible {
         param_idents.insert(0, expect_format_cc_ident("__return"));
         // In order to be modified, the return type can't be const.
         let mut cc_return_type = func.return_type.clone();
         cc_return_type.is_const = false;
         let return_type_name = cpp_type_name::format_cpp_type(&cc_return_type, &ir)?;
-        match &return_type_kind {
-            RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
-                ..
-            } => {
-                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
-                conversion_externs.extend(quote! {
-                    extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
-                });
-                param_types.insert(0, quote! {void *});
-            }
-            _ => {
-                param_types.insert(0, quote! {#return_type_name *});
-            }
-        };
+        if let RsTypeKind::BridgeType {
+            bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
+            ..
+        } = &return_type_kind
+        {
+            let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
+            conversion_externs.extend(quote! {
+                extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
+            });
+            param_types.insert(0, quote! {void *});
+        } else {
+            param_types.insert(0, quote! {#return_type_name *});
+        }
         quote! {void}
     } else {
-        cpp_type_name::format_cpp_type(&func.return_type, ir)?
+        return_type_cpp_spelling.clone()
     };
 
     let this_ref_qualification =
@@ -430,24 +446,30 @@ pub fn generate_function_thunk_impl(
         };
 
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
-    let return_stmt = if !is_return_value_c_abi_compatible {
+    let return_stmt = if return_type_kind.is_crubit_abi_bridge_type() {
         let out_param = &param_idents[0];
-        match &return_type_kind {
-            RsTypeKind::BridgeType {
-                bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
-                ..
-            } => {
-                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
-                quote! {
-                    auto __original_cpp_struct = #return_expr;
-                    #convert_function(&__original_cpp_struct, #out_param)
-                }
+        let bridge_schema = db.bridge_schema(return_type_kind)?;
+        let bridge_schema_tokens = BridgeSchemaToCppTokens(&bridge_schema);
+        quote! {
+            ::crubit::internal::Encode<#return_type_cpp_spelling, #bridge_schema_tokens>(#out_param,
+                                                                                    #return_expr)
+        }
+    } else if !is_return_value_c_abi_compatible {
+        let out_param = &param_idents[0];
+        if let RsTypeKind::BridgeType {
+            bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
+            ..
+        } = &return_type_kind
+        {
+            let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
+            quote! {
+                auto __original_cpp_struct = #return_expr;
+                #convert_function(&__original_cpp_struct, #out_param)
             }
-            _ => {
-                // Explicitly use placement `new` so that we get guaranteed copy elision in
-                // C++17.
-                quote! {new(#out_param) auto(#return_expr)}
-            }
+        } else {
+            // Explicitly use placement `new` so that we get guaranteed copy elision in
+            // C++17.
+            quote! {new(#out_param) auto(#return_expr)}
         }
     } else {
         match &func.return_type.variant {

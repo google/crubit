@@ -57,3 +57,31 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "composable_bridging_lib",
+    srcs = ["composable_bridging_lib.cc"],
+    hdrs = ["composable_bridging_lib.h"],
+    aspect_hints = [
+        "//features:experimental",
+        ":additional_composable_bridging_lib_src",
+    ],
+    deps = ["//support:bridge_cpp"],
+)
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "additional_composable_bridging_lib_src",
+    srcs = ["additional_composable_bridging_lib_src.rs"],
+)
+
+crubit_rust_test(
+    name = "composable_bridging_test",
+    srcs = ["composable_bridging_test.rs"],
+    cc_deps = [
+        ":composable_bridging_lib",
+        "//support/cc_std",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

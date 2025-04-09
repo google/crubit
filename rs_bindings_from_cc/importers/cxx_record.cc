@@ -148,16 +148,15 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
       record_decl, kBridgeTypeCppToRustConverterTag);
 
   if (bridge_type.has_value()) {
-    CHECK(bridge_type_rust_to_cpp_converter.has_value())
-        << "Missing " << kBridgeTypeRustToCppConverterTag << " for "
-        << kBridgeTypeTag << " " << *bridge_type;
-    CHECK(bridge_type_cpp_to_rust_converter.has_value())
-        << "Missing " << kBridgeTypeCppToRustConverterTag << " for "
-        << kBridgeTypeTag << " " << *bridge_type;
     return BridgeType{BridgeType::Annotation{
         .rust_name = *bridge_type,
-        .rust_to_cpp_converter = *bridge_type_rust_to_cpp_converter,
-        .cpp_to_rust_converter = *bridge_type_cpp_to_rust_converter}};
+        .rust_to_cpp_converter = bridge_type_rust_to_cpp_converter.has_value()
+                                     ? *bridge_type_rust_to_cpp_converter
+                                     : "",
+        .cpp_to_rust_converter = bridge_type_cpp_to_rust_converter.has_value()
+                                     ? *bridge_type_cpp_to_rust_converter
+                                     : "",
+    }};
   }
   return std::nullopt;
 }

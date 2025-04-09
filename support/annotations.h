@@ -239,7 +239,12 @@
 //     `void rust_to_cpp (void* rust_struct, MyCppStruct* cpp_struct)`.
 //   * `cpp_to_rust` must be valid function name and its signature must be
 //     `void cpp_to_rust (MyCppStruct* cpp_struct, void* rust_struct)`.
-#define CRUBIT_BRIDGE(ty, rust_to_cpp, cpp_to_rust) \
-  CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty, rust_to_cpp, cpp_to_rust)
+// Alternatively, `rust_to_cpp` and `cpp_to_rust` can be omitted, in which case
+// the composable bridging strategy will be used. To do this, the C++ type must
+// implement the `crubit::CrubitAbi` type trait defined in
+// `//support:bridge_cpp`, and the Rust type must implement
+// the `bridge_rust::CrubitAbi` trait.
+#define CRUBIT_BRIDGE(ty, ...) \
+  CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty __VA_OPT__(, ) __VA_ARGS__)
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

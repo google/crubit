@@ -42,6 +42,7 @@ rust_library(
         ":has_bindings",
         ":rs_type_kind",
         "//common:arc_anyhow",
+        "//common:bridge_schema",
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
@@ -269,6 +270,7 @@ rust_library(
     deps = [
         ":cpp_type_name",
         "//common:arc_anyhow",
+        "//common:bridge_schema",
         "//common:code_gen_utils",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
@@ -293,6 +295,7 @@ rust_library(
         ":generate_comment",
         ":generate_function_thunk",
         "//common:arc_anyhow",
+        "//common:bridge_schema",
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",

@@ -75,6 +75,8 @@ rust_bindings_from_cc_cli_flag(
 NON_BUILDABLE_TEST = [
     # The bridge type is not defined in the C++ header so it cannot be built.
     "bridge_type",
+    # We can't support additional Rust srcs so we can't run the test.
+    "composable_bridging",
 ]
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]

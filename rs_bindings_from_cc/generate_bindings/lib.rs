@@ -4,6 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 
 use arc_anyhow::{Context, Result};
+use bridge_schema::BridgeSchema;
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
 use database::db::{BindingsGenerator, Database};
@@ -349,6 +350,7 @@ pub fn new_database<'db>(
         generate_function::is_record_clonable,
         generate_function::get_binding,
         generate_struct_and_union::collect_unqualified_member_functions,
+        bridge_schema,
     )
 }
 
@@ -562,21 +564,31 @@ fn generate_rs_api_impl_includes(
     };
 
     for record in ir.records() {
-        if record.bridge_type.is_some() {
+        // Err means that this bridge type has some issues. For the purpose of generating includes,
+        // we can ignore it.
+        if let Ok(Some(bridge_type)) = BridgeRsTypeKind::new(record, db) {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.into(),
-                "internal/lazy_init.h".into(),
+                if bridge_type.is_void_converters_bridge_type() {
+                    "internal/lazy_init.h".into()
+                } else {
+                    "bridge.h".into()
+                },
             ));
         }
     }
 
     for type_alias in ir.type_aliases() {
-        if let Ok(RsTypeKind::BridgeType { .. }) =
+        if let Ok(RsTypeKind::BridgeType { bridge_type, .. }) =
             RsTypeKind::new_type_alias(db, type_alias.clone())
         {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.into(),
-                "internal/lazy_init.h".into(),
+                if bridge_type.is_void_converters_bridge_type() {
+                    "internal/lazy_init.h".into()
+                } else {
+                    "bridge.h".into()
+                },
             ));
         }
     }
@@ -603,4 +615,43 @@ fn generate_rs_api_impl_includes(
         __COMMENT__ "Public headers of the C++ library being wrapped."
         #( #ir_includes )* __NEWLINE__
     })
+}
+
+/// Returns the [`BridgeSchema`] for the given [`RsTypeKind`].
+fn bridge_schema(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<BridgeSchema> {
+    match rs_type_kind {
+        RsTypeKind::TypeAlias { underlying_type, .. } => {
+            db.bridge_schema(underlying_type.as_ref().clone())
+        }
+        RsTypeKind::Slice(_) => bail!("RsTypeKind::Slice is not supported yet"),
+        RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
+        RsTypeKind::Primitive(..) | RsTypeKind::TypeMapOverride { .. } => {
+            Ok(BridgeSchema::ByTransmute)
+        }
+        RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+            BridgeRsTypeKind::VoidConverters { .. } => {
+                bail!("Void pointer bridge types are not allowed within composable bridging")
+            }
+            BridgeRsTypeKind::CrubitAbi { generic_types, .. } => Ok(BridgeSchema::ByBridge {
+                parameters: generic_types
+                    .iter()
+                    .map(|t: &RsTypeKind| db.bridge_schema(t.clone()))
+                    .collect::<Result<Rc<[BridgeSchema]>>>()?,
+            }),
+            BridgeRsTypeKind::StdOptional(t) => {
+                let t_schema = db.bridge_schema(t.as_ref().clone())?;
+                Ok(BridgeSchema::ByBridge { parameters: Rc::from([t_schema]) })
+            }
+            BridgeRsTypeKind::StdPair(t1, t2) => {
+                let t1_schema = db.bridge_schema(t1.as_ref().clone())?;
+                let t2_schema = db.bridge_schema(t2.as_ref().clone())?;
+                Ok(BridgeSchema::ByBridge { parameters: Rc::from([t1_schema, t2_schema]) })
+            }
+        },
+        RsTypeKind::Record { record, .. } => {
+            database::rs_snippet::check_by_value(record.as_ref())?;
+            Ok(BridgeSchema::ByTransmute)
+        }
+        _ => bail!("Unsupported RsTypeKind: {}", rs_type_kind.display(db)),
+    }
 }
