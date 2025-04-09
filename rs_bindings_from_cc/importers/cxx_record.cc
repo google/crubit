@@ -197,7 +197,7 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
                        trait, "\")` macro."));
     }
 
-    absl::Nullable<TraitImplPolarity*> selected = result.Polarity(trait);
+    TraitImplPolarity* absl_nullable selected = result.Polarity(trait);
     if (selected == nullptr) {
       // Custom (unrecognized) trait.
       if (polarity == TraitImplPolarity::kNegative) {

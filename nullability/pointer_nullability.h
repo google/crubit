@@ -154,7 +154,7 @@ bool isNullable(
 /// condition. Otherwise, returns Unspecified.
 bool isReachableNullptrLiteral(
     const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
+    const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
 /// Returns the strongest provable assertion we can make about `PointerVal`.
 /// If PointerVal may not be null, returns Nonnull.
@@ -177,7 +177,7 @@ clang::NullabilityKind getNullability(
 /// Unspecified.
 clang::NullabilityKind getNullabilityForNullptrT(
     const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints = nullptr);
+    const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>

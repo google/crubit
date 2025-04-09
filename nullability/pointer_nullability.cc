@@ -205,16 +205,15 @@ static bool isPointerStateNullable(
   return Env.allows(*NullableAndMaybeNull);
 }
 
-bool isNullable(
-    const PointerValue &PointerVal, const Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+bool isNullable(const PointerValue &PointerVal, const Environment &Env,
+                const dataflow::Formula *absl_nullable AdditionalConstraints) {
   return isPointerStateNullable(getPointerNullState(PointerVal), Env,
                                 AdditionalConstraints);
 }
 
 bool isReachableNullptrLiteral(
     const Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+    const dataflow::Formula *absl_nullable AdditionalConstraints) {
   auto &A = Env.getDataflowAnalysisContext().arena();
   PointerNullState NullState = {/*FromNullable=*/&A.makeLiteral(true),
                                 /*IsNull=*/&A.makeLiteral(true)};
@@ -244,7 +243,7 @@ NullabilityKind getNullability(
 
 NullabilityKind getNullabilityForNullptrT(
     const dataflow::Environment &Env,
-    absl::Nullable<const dataflow::Formula *> AdditionalConstraints) {
+    const dataflow::Formula *absl_nullable AdditionalConstraints) {
   return isReachableNullptrLiteral(Env, AdditionalConstraints)
              ? NullabilityKind::Nullable
              : NullabilityKind::Unspecified;

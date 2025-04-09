@@ -474,7 +474,7 @@ llvm::json::Value TemplateSpecialization::ToJson() const {
   };
 }
 
-absl::Nullable<TraitImplPolarity*> TraitDerives::Polarity(
+TraitImplPolarity* absl_nullable TraitDerives::Polarity(
     absl::string_view trait) {
   // <internal link> start
   if (trait == "Clone") return &clone;

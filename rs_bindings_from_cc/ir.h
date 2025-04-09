@@ -548,7 +548,7 @@ enum class TraitImplPolarity : int8_t { kNegative, kNone, kPositive };
 struct TraitDerives {
   llvm::json::Value ToJson() const;
 
-  absl::Nullable<TraitImplPolarity*> Polarity(absl::string_view trait);
+  TraitImplPolarity* absl_nullable Polarity(absl::string_view trait);
 
   // <internal link> start
   TraitImplPolarity clone = TraitImplPolarity::kNone;
