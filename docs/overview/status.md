@@ -37,22 +37,23 @@ Unless otherwise specified, the types below are supported and ABI-compatible
 *   function pointers, where the parameters and return type are in this list and
     are ABI-compatible
 *   `std::string_view` / `absl::string_view`
-*   raw pointers to anything in this list
+*   Bridged: `std::string`
+*   Bridged: `&str`
+*   Bridged: Rust tuples (e.g. `(i32, i64)`)
+*   raw pointers to any ABI-compatible or layout-compatible item in this list
 
 We have *experimental* unreleased support for the following types:
 
-*   (2024H2) b/362475441: references and pointers to `MaybeUninit<T>`, which are
+*   (2025H2) b/362475441: references and pointers to `MaybeUninit<T>`, which are
     treated as `T`.
 
 We have planned support for the following types:
 
-*   (2025H1) b/351976622: bridged `std::string`
 *   (2025H1) b/308406733: bridged protocol buffers
 *   (2025H1) b/356221625: bridged `absl::Status`, `absl::StatusOr`
-*   (2025H1) b/271016831: layout-compatible `*const [T]`, `*mut [T]`
+*   (2025H2) b/271016831: layout-compatible `*const [T]`, `*mut [T]`
 *   (2025) `Option<T>` and `std::optional<T>`.
 *   (2025) b/356221873: bridged `std::vector`
-*   (2025) b/262580415 layout-compatible `&str`
 
 The following types are **not** yet supported, among many others:
 
@@ -130,6 +131,7 @@ features, used in public interfaces:
     *   `Drop`
     *   `From`
 *   simple `const` constants
+*   Defining a C++ enum from Rust
 
 We have *experimental* unreleased support for the following language features:
 
@@ -143,7 +145,6 @@ The following features are **not** supported yet, among others:
 *   defining C++ abstractions from Rust
     *   inheriting from a C++ class
     *   defining a C++ base class
-    *   defining a C++ enum
 *   statics and more complex `const` constants
 *   macros
 
