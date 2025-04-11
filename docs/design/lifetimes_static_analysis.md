@@ -1,7 +1,5 @@
 # Static Analysis for C++ Lifetimes
 
-[TOC]
-
 Summary: We describe a static analysis that infers lifetimes in C++ function
 signatures.
 

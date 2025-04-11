@@ -1,7 +1,5 @@
 # Lifetime Annotations for C++
 
-[TOC]
-
 Summary: We propose a scheme for annotating lifetimes for references and
 pointers in C++.
 

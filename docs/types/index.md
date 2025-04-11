@@ -1,7 +1,5 @@
 # Types
 
-[TOC]
-
 ## Overview
 
 <internal link>/overview/status#types outlines the current and future status of
