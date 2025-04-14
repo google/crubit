@@ -1370,9 +1370,18 @@ mod test {
     #[gtest]
     fn test_ctor_macro_manuallydrop_struct() {
         struct MyStruct {
+            /// Invariant: must be initialized before drop.
             x: ManuallyDrop<Vec<u32>>,
             y: u64,
         }
+        impl Drop for MyStruct {
+            fn drop(&mut self) {
+                // Don't leak memory, it breaks tests. :)
+                // SAFETY: x is initialized before drop, below.
+                unsafe { ManuallyDrop::drop(&mut self.x) }
+            }
+        }
+
         unsafe impl RecursivelyPinned for MyStruct {
             type CtorInitializedFields = Self;
         }
