@@ -98,12 +98,6 @@ LIBCXX_HEADERS = [
 LIBC_HEADERS = []
 
 filegroup(
-    name = "empty_filegroup",
-    srcs = [],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
     name = "crubit_internal_helper_headers",
     srcs = [
         "conversion_function_helpers.h",

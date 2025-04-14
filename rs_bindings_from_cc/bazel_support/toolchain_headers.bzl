@@ -97,8 +97,6 @@ def _bindings_for_toolchain_headers_impl(ctx):
 bindings_for_toolchain_headers = rule(
     implementation = _bindings_for_toolchain_headers_impl,
     attrs = bindings_attrs | {
-        # TODO(b/336981839): Delete this once cl/671582196 makes it to stable.
-        "hdrs": attr.label(default = "//support/cc_std:empty_filegroup"),
         # Additional internal headers that are not part of the standard library. These headers will
         # receive bindings which are exposed along with the standard library bindings.
         # Everything inside these under should be hidden within namespace `crubit_cc_std_internal`.
