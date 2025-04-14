@@ -35,7 +35,7 @@ mod test_is_same_3 {
 
 #[gtest]
 fn test_conversions() {
-    use ::forward_declare::CcCast as _; // test becomes too verbose otherwise.
+    use ::forward_declare::CppCast as _; // test becomes too verbose otherwise.
     struct MyType;
     type MyTypeSymbol = ::forward_declare::symbol!("X");
     ::forward_declare::unsafe_define!(MyTypeSymbol, MyType);
@@ -51,44 +51,44 @@ fn test_conversions() {
 
     // & -> &
     {
-        let incomplete_ref: &MyTypeIncomplete = (&complete).cc_cast();
-        let complete_ref: &MyType = incomplete_ref.cc_cast();
+        let incomplete_ref: &MyTypeIncomplete = (&complete).cpp_cast();
+        let complete_ref: &MyType = incomplete_ref.cpp_cast();
         assert_eq!(ptr_location(incomplete_ref), ptr_location(complete_ref));
     }
 
     // Pin<&> <-> Pin<&>
     {
         let incomplete_pin_ref: ::std::pin::Pin<&MyTypeIncomplete> =
-            ::std::pin::Pin::new(&complete).cc_cast();
-        let complete_pin_ref: ::std::pin::Pin<&MyType> = incomplete_pin_ref.cc_cast();
+            ::std::pin::Pin::new(&complete).cpp_cast();
+        let complete_pin_ref: ::std::pin::Pin<&MyType> = incomplete_pin_ref.cpp_cast();
         assert_eq!(ptr_location(incomplete_pin_ref), loc);
         assert_eq!(ptr_location(complete_pin_ref), loc);
-        let complete_unpinned_ref: &MyType = incomplete_pin_ref.cc_cast();
+        let complete_unpinned_ref: &MyType = incomplete_pin_ref.cpp_cast();
         assert_eq!(ptr_location(complete_unpinned_ref), loc);
     }
 
     // Pin<&mut> <-> Pin<&mut>
     {
         let incomplete_pin_mut: ::std::pin::Pin<&mut MyTypeIncomplete> =
-            ::std::pin::Pin::new(&mut complete).cc_cast();
+            ::std::pin::Pin::new(&mut complete).cpp_cast();
         assert_eq!(ptr_location(&*incomplete_pin_mut), loc);
-        let complete_pin_mut: ::std::pin::Pin<&mut MyType> = incomplete_pin_mut.cc_cast();
+        let complete_pin_mut: ::std::pin::Pin<&mut MyType> = incomplete_pin_mut.cpp_cast();
         assert_eq!(ptr_location(complete_pin_mut), loc);
     }
 
     {
         // &mut -> Pin<&mut>
         let mut incomplete_pin_mut: ::std::pin::Pin<&mut MyTypeIncomplete> =
-            (&mut complete).cc_cast();
+            (&mut complete).cpp_cast();
         assert_eq!(ptr_location(&*incomplete_pin_mut), loc);
         // Pin<&mut> -> &mut
         {
-            let complete_unpinned_mut: &mut MyType = incomplete_pin_mut.as_mut().cc_cast();
+            let complete_unpinned_mut: &mut MyType = incomplete_pin_mut.as_mut().cpp_cast();
             assert_eq!(ptr_location(complete_unpinned_mut), loc);
         }
         // Pin<&mut> -> &
         {
-            let complete_unpinned_ref: &MyType = incomplete_pin_mut.as_ref().cc_cast();
+            let complete_unpinned_ref: &MyType = incomplete_pin_mut.as_ref().cpp_cast();
             assert_eq!(ptr_location(complete_unpinned_ref), loc);
         }
     }
@@ -103,9 +103,9 @@ fn test_conversions() {
         let complete_vec: Vec<&MyType> = vec![&complete];
         let loc = slice_location(&complete_vec);
 
-        let incomplete_vec: Vec<&MyTypeIncomplete> = complete_vec.cc_cast();
+        let incomplete_vec: Vec<&MyTypeIncomplete> = complete_vec.cpp_cast();
         assert_eq!(slice_location(&incomplete_vec), loc);
-        let complete_vec: Vec<&MyType> = incomplete_vec.cc_cast();
+        let complete_vec: Vec<&MyType> = incomplete_vec.cpp_cast();
         assert_eq!(slice_location(&complete_vec), loc);
     }
 
@@ -115,18 +115,18 @@ fn test_conversions() {
         let complete_slice: &[&MyType] = complete_vec.as_slice();
         let loc = slice_location(complete_slice);
 
-        let incomplete_slice: &[&MyTypeIncomplete] = complete_slice.cc_cast();
+        let incomplete_slice: &[&MyTypeIncomplete] = complete_slice.cpp_cast();
         assert_eq!(slice_location(incomplete_slice), loc);
-        let complete_slice: &[&MyType] = incomplete_slice.cc_cast();
+        let complete_slice: &[&MyType] = incomplete_slice.cpp_cast();
         assert_eq!(slice_location(complete_slice), loc);
     }
 
     // [&; N] <-> [&; N]
     {
         let complete_array: [&MyType; 2] = [&complete, &complete];
-        let incomplete_array: [&MyTypeIncomplete; 2] = complete_array.cc_cast();
+        let incomplete_array: [&MyTypeIncomplete; 2] = complete_array.cpp_cast();
         // TODO(jeanpierreda, lukasza): Avoid copying the array to a different memory location
-        // (maybe by tweaking `cc_cast()` to use `std::mem::transmute`
+        // (maybe by tweaking `cpp_cast()` to use `std::mem::transmute`
         // instead of `std::mem::transmute_copy` when the input and output types
         // are both `Sized`).  Once that is done, we should be able to add
         // asserts that say:
@@ -136,7 +136,7 @@ fn test_conversions() {
         //      assert_eq!(slice_location(&incomplete_array), loc)
         //      ...
         //      assert_eq!(slice_location(&complete_array), loc)
-        let _complete_array: [&MyType; 2] = incomplete_array.cc_cast();
+        let _complete_array: [&MyType; 2] = incomplete_array.cpp_cast();
     }
 }
 
@@ -161,7 +161,7 @@ fn test_hygiene() {
 /// idiomatic code.)
 #[gtest]
 fn test_formerly_incomplete() {
-    use ::forward_declare::CcCast as _; // test becomes too verbose otherwise.
+    use ::forward_declare::CppCast as _; // test becomes too verbose otherwise.
     struct MyType;
     ::forward_declare::unsafe_define!(::forward_declare::symbol!("X"), MyType);
 
@@ -179,23 +179,23 @@ fn test_formerly_incomplete() {
     // and works.
     let x = MyType;
     let x = &x;
-    takes_incomplete(x.cc_cast()); // before
-    takes_complete(x.cc_cast()); // after
+    takes_incomplete(x.cpp_cast()); // before
+    takes_complete(x.cpp_cast()); // after
 
     // Calls which previously were converting an incomplete type to an incomplete
     // will also continue to work. In fact, this is required, since different crates
     // will define different incomplete types.
-    let x: &caller::MyType = x.cc_cast();
-    takes_incomplete(x.cc_cast()); // before
-    takes_complete(x.cc_cast()); // after
+    let x: &caller::MyType = x.cpp_cast();
+    takes_incomplete(x.cpp_cast()); // before
+    takes_complete(x.cpp_cast()); // after
 
     // However, if you passed an incomplete type in without calling
-    // .cc_cast(), that will no longer work.
+    // .cpp_cast(), that will no longer work.
     // takes_incomplete(x);  // COMPILATION ERROR
     // takes_complete(x);  // COMPILATION ERROR
 
     // Symmetrically, you can also convert complete types to incomplete if all
-    // callers call .cc_cast(), but this is much less reasonable a
+    // callers call .cpp_cast(), but this is much less reasonable a
     // requirement.
 }
 
@@ -214,7 +214,7 @@ fn test_formerly_incomplete() {
 #[gtest]
 fn test_vector_alike() {
     use ::forward_declare::{
-        forward_declare, internal::CcType, symbol, unsafe_define, CcCast, Complete,
+        forward_declare, internal::CcType, symbol, unsafe_define, Complete, CppCast,
     };
     struct MyComplete;
     unsafe_define!(symbol!("T"), MyComplete);
@@ -250,14 +250,14 @@ fn test_vector_alike() {
     fn expects_complete(_: &Vector<MyComplete>) {}
 
     let complete = &Vector(0 as *mut MyComplete, 0);
-    let incomplete: &Vector<MyIncomplete> = complete.cc_cast();
+    let incomplete: &Vector<MyIncomplete> = complete.cpp_cast();
 
-    expects_incomplete(complete.cc_cast());
-    expects_incomplete(incomplete.cc_cast());
-    expects_complete(incomplete.cc_cast());
-    expects_complete(complete.cc_cast());
+    expects_incomplete(complete.cpp_cast());
+    expects_incomplete(incomplete.cpp_cast());
+    expects_complete(incomplete.cpp_cast());
+    expects_complete(complete.cpp_cast());
 
     assert!(complete.back().is_none()); // works fine
-    // incomplete.back() // compilation error due to unsatisfied trait bounds
-    // (`!Complete`)
+                                        // incomplete.back() // compilation error due to unsatisfied trait bounds
+                                        // (`!Complete`)
 }

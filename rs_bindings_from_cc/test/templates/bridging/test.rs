@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod tests {
-    use forward_declare::CcCast;
+    use forward_declare::CppCast;
     use googletest::prelude::*;
 
     #[gtest]
@@ -15,7 +15,7 @@ mod tests {
         // `class_template_instantiation2` create, but `x` is from the
         // `class_template_instantiation1` crate instead.  Because of that an
         // explicit cast is required.
-        let v = class_template_instantiation2::GetValue((&x).cc_cast());
+        let v = class_template_instantiation2::GetValue((&x).cpp_cast());
 
         assert_eq!(123, v);
     }

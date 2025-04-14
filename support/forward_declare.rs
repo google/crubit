@@ -34,11 +34,11 @@
 //! We can translate it to this equivalent Rust:
 //!
 //! ```
-//! use forward_declare::{forward_declare, CcCast};
+//! use forward_declare::{forward_declare, CppCast};
 //!
 //! forward_declare!(pub Foo = symbol!("foo::Foo"));
 //! fn MyFunction(foo: &mut Foo) {
-//!   some_other_library::OtherFunction(foo.cc_cast());
+//!   some_other_library::OtherFunction(foo.cpp_cast());
 //! }
 //! ```
 //!
@@ -143,20 +143,20 @@
 //!
 //! ## Passing around values
 //!
-//! Compound data types implement the `CcCast` trait, which allows for
+//! Compound data types implement the `CppCast` trait, which allows for
 //! converting between complete and incomplete types. To convert from complete
 //! to incomplete, incomplete to complete, or incomplete to incomplete when
-//! crossing crate boundaries, use `.cc_cast()` to perform the conversion.
+//! crossing crate boundaries, use `.cpp_cast()` to perform the conversion.
 //!
 //! ```
 //! forward_declare!(pub Foo = symbol!("foo::Foo"));
 //!
 //! fn takes_incomplete(foo: &mut Foo) {
-//!   some_other_library::other_function(foo.cc_cast());
+//!   some_other_library::other_function(foo.cpp_cast());
 //! }
 //!
 //! fn takes_complete(foo: &mut RealFoo) {
-//!   takes_incomplete(foo.cc_cast());
+//!   takes_incomplete(foo.cpp_cast());
 //! }
 //! ```
 //!
@@ -174,7 +174,7 @@
 //! This is partially enforced by the type system: every forward declaration of
 //! a type is unique, and every crate should have its own forward declaration,
 //! not reusing the forward declaration of another crate. As a result, you must
-//! call `cc_cast()` when crossing crate boundaries, and failure to do
+//! call `cpp_cast()` when crossing crate boundaries, and failure to do
 //! so is an error:
 //!
 //!
@@ -191,8 +191,8 @@
 //!
 //! If that example were valid, then removing a forward declaration and
 //! replacing it with the real type would break the caller, requiring a change
-//! to call `cc_cast()`. But since we always require the caller to call`
-//! cc_cast()` *anyway*, even if it already has an incomplete
+//! to call `cpp_cast()`. But since we always require the caller to call`
+//! cpp_cast()` *anyway*, even if it already has an incomplete
 //! type, `other_crate::function` is free to remove the forward declaration
 //! without breaking this caller.
 //!
@@ -204,7 +204,7 @@
 //! #
 //! # forward_declare!(pub ForwardDeclared = symbol!("foo::Type"));
 //! # let x: &ForwardDeclared = unimplemented!();
-//! other_crate::function(x.cc_cast());  // Works whether `function` takes incomplete or complete type.
+//! other_crate::function(x.cpp_cast());  // Works whether `function` takes incomplete or complete type.
 //! ```
 
 pub use forward_declare_proc_macros::*;
@@ -559,28 +559,28 @@ mod mut_ref_transmutability {
 }
 
 /// Like `Into<T>`, but for completeness conversions.
-pub trait CcCast<T> {
-    fn cc_cast(self) -> T;
+pub trait CppCast<T> {
+    fn cpp_cast(self) -> T;
 }
 
-impl<T, U> CcCast<U> for T
+impl<T, U> CppCast<U> for T
 where
     T: CcType,
     U: CcType<Name = T::Name>,
 {
-    fn cc_cast(self) -> U {
+    fn cpp_cast(self) -> U {
         assert_eq!(std::mem::size_of::<T>(), std::mem::size_of::<U>());
         let x = std::mem::ManuallyDrop::new(self);
         unsafe { std::mem::transmute_copy(&*x) }
     }
 }
 
-impl<'a, T: ?Sized, U: ?Sized> CcCast<Vec<&'a U>> for Vec<&'a T>
+impl<'a, T: ?Sized, U: ?Sized> CppCast<Vec<&'a U>> for Vec<&'a T>
 where
     T: CcType,
     U: CcType<Name = T::Name>,
 {
-    fn cc_cast(self) -> Vec<&'a U> {
+    fn cpp_cast(self) -> Vec<&'a U> {
         let (p, len, capacity) = self.into_raw_parts();
         unsafe { Vec::from_raw_parts(p as *mut &'a U, len, capacity) }
     }

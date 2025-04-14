@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod tests {
-    use forward_declare::CcCast;
+    use forward_declare::CppCast;
     use googletest::prelude::*;
 
     #[gtest]
@@ -27,7 +27,7 @@ mod tests {
 
         // Template instantiation from `type_alias_in_different_target` can be cast
         // (i.e. transmuted) into identical instantiation from `type_alias` crate.
-        let s2: type_alias::MyTypeAlias = s.cc_cast();
+        let s2: type_alias::MyTypeAlias = s.cpp_cast();
         assert_eq!(789, *s2.value());
     }
 }
