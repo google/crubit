@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
-use arc_anyhow::{Context, Result};
-use bridge_schema::BridgeSchema;
-use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
+use arc_anyhow::{anyhow, ensure, Context, Result};
+use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
+use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
 use database::db::{BindingsGenerator, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
@@ -17,7 +17,7 @@ use generate_struct_and_union::generate_incomplete_record;
 use has_bindings::{has_bindings, HasBindings};
 use ir::*;
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use rs_type_kind::rs_type_kind;
 use std::collections::BTreeSet;
@@ -350,7 +350,7 @@ pub fn new_database<'db>(
         generate_function::is_record_clonable,
         generate_function::get_binding,
         generate_struct_and_union::collect_unqualified_member_functions,
-        bridge_schema,
+        crubit_abi_type,
     )
 }
 
@@ -496,7 +496,7 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
         | RsTypeKind::TypeMapOverride { .. } => false,
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-            BridgeRsTypeKind::VoidConverters { .. } | BridgeRsTypeKind::CrubitAbi { .. } => {
+            BridgeRsTypeKind::BridgeVoidConverters { .. } | BridgeRsTypeKind::Bridge { .. } => {
                 is_record_unsafe(db, &original_type)
             }
             BridgeRsTypeKind::StdOptional(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
@@ -572,7 +572,7 @@ fn generate_rs_api_impl_includes(
                 if bridge_type.is_void_converters_bridge_type() {
                     "internal/lazy_init.h".into()
                 } else {
-                    "bridge.h".into()
+                    "bridge_cpp.h".into()
                 },
             ));
         }
@@ -587,7 +587,7 @@ fn generate_rs_api_impl_includes(
                 if bridge_type.is_void_converters_bridge_type() {
                     "internal/lazy_init.h".into()
                 } else {
-                    "bridge.h".into()
+                    "bridge_cpp.h".into()
                 },
             ));
         }
@@ -617,41 +617,159 @@ fn generate_rs_api_impl_includes(
     })
 }
 
-/// Returns the [`BridgeSchema`] for the given [`RsTypeKind`].
-fn bridge_schema(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<BridgeSchema> {
+/// Returns the [`CrubitAbiType`] for the given [`RsTypeKind`].
+fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
         RsTypeKind::TypeAlias { underlying_type, .. } => {
-            db.bridge_schema(underlying_type.as_ref().clone())
+            // We don't actually _have_ to expand the type alias here
+            db.crubit_abi_type(underlying_type.as_ref().clone())
         }
         RsTypeKind::Slice(_) => bail!("RsTypeKind::Slice is not supported yet"),
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
-        RsTypeKind::Primitive(..) | RsTypeKind::TypeMapOverride { .. } => {
-            Ok(BridgeSchema::ByTransmute)
+        RsTypeKind::TypeMapOverride { .. } => {
+            bail!("RsTypeKind::TypeMapOverride is not supported yet")
         }
-        RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
-            BridgeRsTypeKind::VoidConverters { .. } => {
+        RsTypeKind::Primitive(primitive) => {
+            let inner = match primitive {
+                Primitive::Bool => CrubitAbiType::new("bool", "bool"),
+                Primitive::Void => bail!("values of type `void` cannot be bridged by value"),
+                Primitive::Float => CrubitAbiType::new("f32", "float"),
+                Primitive::Double => CrubitAbiType::new("f64", "double"),
+                Primitive::Char => CrubitAbiType::new("::core::ffi::c_char", "char"),
+                Primitive::SignedChar => CrubitAbiType::SignedChar,
+                Primitive::UnsignedChar => CrubitAbiType::UnsignedChar,
+                Primitive::Short => CrubitAbiType::new("::core::ffi::c_short", "short"),
+                Primitive::Int => CrubitAbiType::new("::core::ffi::c_int", "int"),
+                Primitive::Long => CrubitAbiType::new("::core::ffi::c_long", "long"),
+                Primitive::LongLong => CrubitAbiType::LongLong,
+                Primitive::UnsignedShort => CrubitAbiType::UnsignedShort,
+                Primitive::UnsignedInt => CrubitAbiType::UnsignedInt,
+                Primitive::UnsignedLong => CrubitAbiType::UnsignedLong,
+                Primitive::UnsignedLongLong => CrubitAbiType::UnsignedLongLong,
+                Primitive::Char16T => CrubitAbiType::new("u16", "char16_t"),
+                Primitive::Char32T => CrubitAbiType::new("u32", "char32_t"),
+                Primitive::PtrdiffT => CrubitAbiType::new("isize", "ptrdiff_t"),
+                Primitive::IntptrT => CrubitAbiType::new("isize", "intptr_t"),
+                Primitive::StdPtrdiffT => CrubitAbiType::new("isize", "std::ptrdiff_t"),
+                Primitive::StdIntptrT => CrubitAbiType::new("isize", "std::intptr_t"),
+                Primitive::SizeT => CrubitAbiType::new("usize", "size_t"),
+                Primitive::UintptrT => CrubitAbiType::new("usize", "uintptr_t"),
+                Primitive::StdSizeT => CrubitAbiType::new("usize", "std::size_t"),
+                Primitive::StdUintptrT => CrubitAbiType::new("usize", "std::uintptr_t"),
+                Primitive::Int8T => CrubitAbiType::new("i8", "int8_t"),
+                Primitive::Int16T => CrubitAbiType::new("i16", "int16_t"),
+                Primitive::Int32T => CrubitAbiType::new("i32", "int32_t"),
+                Primitive::Int64T => CrubitAbiType::new("i64", "int64_t"),
+                Primitive::StdInt8T => CrubitAbiType::new("i8", "std::int8_t"),
+                Primitive::StdInt16T => CrubitAbiType::new("i16", "std::int16_t"),
+                Primitive::StdInt32T => CrubitAbiType::new("i32", "std::int32_t"),
+                Primitive::StdInt64T => CrubitAbiType::new("i64", "std::int64_t"),
+                Primitive::Uint8T => CrubitAbiType::new("u8", "uint8_t"),
+                Primitive::Uint16T => CrubitAbiType::new("u16", "uint16_t"),
+                Primitive::Uint32T => CrubitAbiType::new("u32", "uint32_t"),
+                Primitive::Uint64T => CrubitAbiType::new("u64", "uint64_t"),
+                Primitive::StdUint8T => CrubitAbiType::new("u8", "std::uint8_t"),
+                Primitive::StdUint16T => CrubitAbiType::new("u16", "std::uint16_t"),
+                Primitive::StdUint32T => CrubitAbiType::new("u32", "std::uint32_t"),
+                Primitive::StdUint64T => CrubitAbiType::new("u64", "std::uint64_t"),
+            };
+
+            Ok(CrubitAbiType::Type {
+                rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
+                cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
+                type_args: Rc::from([inner]),
+            })
+        }
+        RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
+            BridgeRsTypeKind::BridgeVoidConverters { .. } => {
                 bail!("Void pointer bridge types are not allowed within composable bridging")
             }
-            BridgeRsTypeKind::CrubitAbi { generic_types, .. } => Ok(BridgeSchema::ByBridge {
-                parameters: generic_types
+            BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
+                let rust_abi_path =
+                    make_rust_abi_path(&abi_rust, db.ir(), &original_type.owning_target);
+
+                let cpp_abi_path = make_cpp_abi_path(&abi_cpp)?;
+
+                let type_args = generic_types
                     .iter()
-                    .map(|t: &RsTypeKind| db.bridge_schema(t.clone()))
-                    .collect::<Result<Rc<[BridgeSchema]>>>()?,
-            }),
-            BridgeRsTypeKind::StdOptional(t) => {
-                let t_schema = db.bridge_schema(t.as_ref().clone())?;
-                Ok(BridgeSchema::ByBridge { parameters: Rc::from([t_schema]) })
+                    .map(|t: &RsTypeKind| db.crubit_abi_type(t.clone()))
+                    .collect::<Result<Rc<[CrubitAbiType]>>>()?;
+
+                Ok(CrubitAbiType::Type { rust_abi_path, cpp_abi_path, type_args })
             }
-            BridgeRsTypeKind::StdPair(t1, t2) => {
-                let t1_schema = db.bridge_schema(t1.as_ref().clone())?;
-                let t2_schema = db.bridge_schema(t2.as_ref().clone())?;
-                Ok(BridgeSchema::ByBridge { parameters: Rc::from([t1_schema, t2_schema]) })
+            BridgeRsTypeKind::StdOptional(inner) => {
+                let inner_abi = db.crubit_abi_type(inner.as_ref().clone())?;
+                Ok(CrubitAbiType::Type {
+                    rust_abi_path: FullyQualifiedPath::new("::bridge_rust::OptionAbi"),
+                    cpp_abi_path: FullyQualifiedPath::new("::crubit::OptionAbi"),
+                    type_args: Rc::from([inner_abi]),
+                })
+            }
+            BridgeRsTypeKind::StdPair(first, second) => {
+                let first_abi = db.crubit_abi_type(first.as_ref().clone())?;
+                let second_abi = db.crubit_abi_type(second.as_ref().clone())?;
+                Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
         },
-        RsTypeKind::Record { record, .. } => {
-            database::rs_snippet::check_by_value(record.as_ref())?;
-            Ok(BridgeSchema::ByTransmute)
-        }
         _ => bail!("Unsupported RsTypeKind: {}", rs_type_kind.display(db)),
+    }
+}
+
+/// Parses the given Rust path into a [`FullyQualifiedPath`]. If the path doesn't start with "::",
+/// it will be prepended with the crate name, or the keyword "crate" if the type is owned by the
+/// current target.
+fn make_rust_abi_path(
+    mut rust_path: &str,
+    ir: &IR,
+    owning_target: &BazelLabel,
+) -> FullyQualifiedPath {
+    let start_with_colon2 = strip_leading_colon2(&mut rust_path);
+    let prefix = if start_with_colon2 {
+        None
+    } else if ir.is_current_target(owning_target) {
+        Some(Ident::new("crate", proc_macro2::Span::call_site()))
+    } else {
+        Some(make_rs_ident(owning_target.target_name()))
+    };
+    FullyQualifiedPath {
+        start_with_colon2,
+        parts: prefix
+            .into_iter()
+            .chain(rust_path.split("::").map(make_rs_ident))
+            .collect::<Rc<[Ident]>>(),
+    }
+}
+
+/// Parses the given C++ path into a [`FullyQualifiedPath`].
+fn make_cpp_abi_path(mut cpp_path: &str) -> Result<FullyQualifiedPath> {
+    let start_with_colon2 = strip_leading_colon2(&mut cpp_path);
+    Ok(FullyQualifiedPath {
+        start_with_colon2,
+        parts: cpp_path
+            .split("::")
+            .map(|part| {
+                ensure!(!part.is_empty(), "cpp path has an empty part: {cpp_path}");
+                ensure!(
+                    !is_cpp_reserved_keyword(part),
+                    "cpp path has a reserved keyword: {cpp_path}"
+                );
+                // Can't reuse machinery in code_gen_utils because that returns
+                // a TokenStream. We _need_ an Ident because it implements Hash.
+                syn::parse_str::<Ident>(part)
+                    .map_err(|err| anyhow!("Can't format `{part}` as a C++ identifier: {err}"))
+            })
+            .collect::<Result<Rc<[Ident]>>>()?,
+    })
+}
+
+/// Strips the leading `::` from the given path if it exists.
+///
+/// Returns true if the path was modified, false otherwise.
+fn strip_leading_colon2(path: &mut &str) -> bool {
+    if let Some(stripped) = path.strip_prefix("::") {
+        *path = stripped;
+        true
+    } else {
+        false
     }
 }

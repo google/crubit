@@ -77,7 +77,7 @@
 #define CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(t) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_type_cpp_to_rust_converter", t)
 
-// See CRUBIT_BRIDGE in annotations.h.
+// See CRUBIT_BRIDGE_VOID_CONVERTERS in annotations.h.
 #define CRUBIT_INTERNAL_BRIDGE_SUPPORT(ty, rust_to_cpp, cpp_to_rust) \
   CRUBIT_INTERNAL_BRIDGE_TYPE(ty)                                    \
   CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \

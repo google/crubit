@@ -436,13 +436,23 @@ llvm::json::Value SizeAlign::ToJson() const {
 llvm::json::Value BridgeType::ToJson() const {
   return std::visit(
       visitor{
-          [&](const BridgeType::Annotation& annotation) {
+          [&](const BridgeType::BridgeVoidConverters& annotation) {
             return llvm::json::Object{{
-                "Annotation",
+                "BridgeVoidConverters",
                 llvm::json::Object{
                     {"rust_name", annotation.rust_name},
                     {"rust_to_cpp_converter", annotation.rust_to_cpp_converter},
                     {"cpp_to_rust_converter", annotation.cpp_to_rust_converter},
+                },
+            }};
+          },
+          [&](const BridgeType::Bridge& annotation) {
+            return llvm::json::Object{{
+                "Bridge",
+                llvm::json::Object{
+                    {"rust_name", annotation.rust_name},
+                    {"abi_rust", annotation.abi_rust},
+                    {"abi_cpp", annotation.abi_cpp},
                 },
             }};
           },

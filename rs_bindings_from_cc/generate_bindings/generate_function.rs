@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{ensure, Context, Result};
-use bridge_schema::BridgeSchemaToRustTokens;
 use code_gen_utils::make_rs_ident;
+use crubit_abi_type::CrubitAbiTypeToRustTokens;
 use database::code_snippet::ApiSnippets;
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
@@ -939,17 +939,17 @@ fn generate_func_body(
                 return_type.to_token_stream_replacing_by_self(db, record)
             };
             if return_type.is_crubit_abi_bridge_type() {
-                let bridge_schema = db.bridge_schema(return_type.clone())?;
-                let bridge_schema_tokens = BridgeSchemaToRustTokens(&bridge_schema);
+                let crubit_abi_type = db.crubit_abi_type(return_type.clone())?;
+                let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
                 quote! {
                     let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<{
-                        <#return_type_or_self as ::bridge_rust::CrubitAbi<#bridge_schema_tokens>>::SIZE
+                        <#crubit_abi_type_tokens as ::bridge_rust::CrubitAbi>::SIZE
                     }>();
                     #crate_root_path::detail::#thunk_ident(
                         __return_abi_buffer.as_mut_ptr() as *mut u8,
                         #(#clone_prefixes #thunk_args #clone_suffixes ),*
                     );
-                    ::bridge_rust::internal::decode::<#return_type_or_self, #bridge_schema_tokens>(__return_abi_buffer.as_ptr() as *const u8)
+                    ::bridge_rust::internal::decode::<#crubit_abi_type_tokens>(__return_abi_buffer.as_ptr() as *const u8)
                 }
             } else if return_type.is_unpin() {
                 quote! {
@@ -1553,23 +1553,22 @@ fn function_signature(
                 type_.to_token_stream(db)
             };
             if type_.is_crubit_abi_bridge_type() {
-                let bridge_schema = db
-                    .bridge_schema(type_.clone())
+                let crubit_abi_type = db
+                    .crubit_abi_type(type_.clone())
                     .with_context(|| format!("while generating bridge param '{ident}'"))?;
-                let bridge_schema_tokens = BridgeSchemaToRustTokens(&bridge_schema);
+                let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
 
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_prepare.extend(quote! {
                     let mut __crubit_abi_arg_buffer = ::bridge_rust::internal::empty_buffer::<{
-                        <#quoted_type_or_self as ::bridge_rust::CrubitAbi<#bridge_schema_tokens>>::SIZE
+                        <#crubit_abi_type_tokens as ::bridge_rust::CrubitAbi>::SIZE
                     }>();
                     // The function body may be wrapped in an unsafe block, which makes this unsafe
                     // block "unused".
                     #[allow(unused_unsafe)]
                     unsafe {
                         ::bridge_rust::internal::encode::<
-                            #quoted_type_or_self,
-                            #bridge_schema_tokens,
+                            #crubit_abi_type_tokens,
                         >(__crubit_abi_arg_buffer.as_mut_ptr() as *mut u8, #ident);
                     }
                     let #ident = __crubit_abi_arg_buffer;

@@ -6,7 +6,7 @@ use crate::code_snippet::ApiSnippets;
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::Result;
-use bridge_schema::BridgeSchema;
+use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use ir::{CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
@@ -63,7 +63,7 @@ memoized::query_group! {
             record: Rc<Record>,
         ) -> Rc<[Rc<Func>]>;
 
-        fn bridge_schema(&self, rs_type_kind: RsTypeKind) -> Result<BridgeSchema>;
+        fn crubit_abi_type(&self, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType>;
     }
     pub struct Database;
 }

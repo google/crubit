@@ -153,7 +153,7 @@ rust_test(
 
 rust_library(
     name = "bridge_rust",
-    srcs = ["bridge.rs"],
+    srcs = ["bridge_rust.rs"],
     visibility = [
         "//:__subpackages__",
     ],
@@ -161,7 +161,7 @@ rust_library(
 
 rust_test(
     name = "bridge_rust_test",
-    srcs = ["bridge.rs"],
+    srcs = ["bridge_rust.rs"],
     deps = [
         "@crate_index//:googletest",
     ],
@@ -169,7 +169,7 @@ rust_test(
 
 cc_library(
     name = "bridge_cpp",
-    hdrs = ["bridge.h"],
+    hdrs = ["bridge_cpp.h"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
@@ -178,7 +178,7 @@ cc_library(
 
 cc_test(
     name = "bridge_cpp_test",
-    srcs = ["bridge_test.cc"],
+    srcs = ["bridge_cpp_test.cc"],
     deps = [
         ":bridge_cpp",
         "@googletest//:gtest_main",

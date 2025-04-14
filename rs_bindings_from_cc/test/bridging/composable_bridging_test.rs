@@ -6,17 +6,6 @@ use composable_bridging_lib::*;
 use googletest::prelude::*;
 
 #[gtest]
-fn test_string_view() {
-    let s: MyStringView = MakeHello();
-    // SAFETY: The C++ function returns a string_view to a static string.
-    let bytes: &[u8] = unsafe { &*s.view.as_raw_bytes() };
-
-    expect_eq!(bytes, b"Hello");
-    let does_say_hello = SaysHello(s);
-    expect_eq!(does_say_hello, true);
-}
-
-#[gtest]
 fn test_vec3() {
     expect_eq!(MakeVec3(1.0, 2.0, 3.0), Vec3 { x: 1.0, y: 2.0, z: 3.0 });
 }

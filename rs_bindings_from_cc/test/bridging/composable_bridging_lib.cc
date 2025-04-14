@@ -5,12 +5,7 @@
 #include "rs_bindings_from_cc/test/bridging/composable_bridging_lib.h"
 
 #include <optional>
-#include <string_view>
 #include <utility>
-
-bool SaysHello(MyStringView view) { return view.view == "Hello"; }
-
-MyStringView MakeHello() { return {.view = "Hello"}; }
 
 Vec3<float> MakeVec3(float x, float y, float z) {
   return {

@@ -859,10 +859,15 @@ pub struct SizeAlign {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum BridgeType {
-    Annotation {
+    BridgeVoidConverters {
         rust_name: Rc<str>,
         rust_to_cpp_converter: Rc<str>,
         cpp_to_rust_converter: Rc<str>,
+    },
+    Bridge {
+        rust_name: Rc<str>,
+        abi_rust: Rc<str>,
+        abi_cpp: Rc<str>,
     },
     StdOptional(CcType),
     StdPair(CcType, CcType),

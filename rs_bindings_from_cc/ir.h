@@ -506,11 +506,18 @@ struct SizeAlign {
 struct BridgeType {
   llvm::json::Value ToJson() const;
 
-  // A user-provided annotation for a bridge type.
-  struct Annotation {
+  // From CRUBIT_BRIDGE_VOID_CONVERTERS.
+  struct BridgeVoidConverters {
     std::string rust_name;
     std::string rust_to_cpp_converter;
     std::string cpp_to_rust_converter;
+  };
+
+  // From CRUBIT_BRIDGE.
+  struct Bridge {
+    std::string rust_name;
+    std::string abi_rust;
+    std::string abi_cpp;
   };
 
   struct StdOptional {
@@ -522,7 +529,7 @@ struct BridgeType {
     std::shared_ptr<CcType> second_type;
   };
 
-  std::variant<Annotation, StdOptional, StdPair> variant;
+  std::variant<BridgeVoidConverters, Bridge, StdOptional, StdPair> variant;
 };
 
 // TODO: Handle non-type template parameter.

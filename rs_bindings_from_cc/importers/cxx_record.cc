@@ -5,6 +5,8 @@
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -127,35 +129,57 @@ absl::StatusOr<RecordType> TranslateRecordType(
   llvm::report_fatal_error("Unrecognized clang::TagKind");
 }
 
+// Returns the values of the given keys in `record_decl` if they all exist and
+// are strings. Otherwise, returns `std::nullopt`.
+template <size_t N>
+std::optional<std::array<std::string, N>> GetKeyValues(
+    const clang::RecordDecl& record_decl,
+    std::array<absl::string_view, N> keys) {
+  std::array<std::string, N> values;
+  for (int i = 0; i < N; ++i) {
+    CHECK_OK(RequireSingleStringArgIfExists(&record_decl, keys[i]));
+    std::optional<std::string> value =
+        GetAnnotateArgAsStringByAttribute(&record_decl, keys[i]);
+    if (!value.has_value()) {
+      CHECK_EQ(i, 0) << "Missing value for key: '" << keys[i]
+                     << "'; use the provided annotation to ensure that all "
+                        "keys are present";
+      return std::nullopt;
+    }
+    values[i] = *std::move(value);
+  }
+  return values;
+}
+
 // Returns the bridge type annotation for the given `record_decl` if it exists.
 std::optional<BridgeType> GetBridgeTypeAnnotation(
-    const clang::RecordDecl* record_decl) {
-  constexpr absl::string_view kBridgeTypeTag = "crubit_bridge_type";
-  constexpr absl::string_view kBridgeTypeRustToCppConverterTag =
-      "crubit_bridge_type_rust_to_cpp_converter";
-  constexpr absl::string_view kBridgeTypeCppToRustConverterTag =
-      "crubit_bridge_type_cpp_to_rust_converter";
-  CHECK_OK(RequireSingleStringArgIfExists(record_decl, kBridgeTypeTag));
-  CHECK_OK(RequireSingleStringArgIfExists(record_decl,
-                                          kBridgeTypeRustToCppConverterTag));
-  CHECK_OK(RequireSingleStringArgIfExists(record_decl,
-                                          kBridgeTypeCppToRustConverterTag));
-  auto bridge_type =
-      GetAnnotateArgAsStringByAttribute(record_decl, kBridgeTypeTag);
-  auto bridge_type_rust_to_cpp_converter = GetAnnotateArgAsStringByAttribute(
-      record_decl, kBridgeTypeRustToCppConverterTag);
-  auto bridge_type_cpp_to_rust_converter = GetAnnotateArgAsStringByAttribute(
-      record_decl, kBridgeTypeCppToRustConverterTag);
+    const clang::RecordDecl& record_decl) {
+  auto void_converter_values = GetKeyValues<3>(
+      record_decl,
+      {"crubit_bridge_type", "crubit_bridge_type_rust_to_cpp_converter",
+       "crubit_bridge_type_cpp_to_rust_converter"});
+  auto crubit_abi_values = GetKeyValues<3>(
+      record_decl, {"crubit_bridge_rust_name", "crubit_bridge_abi_rust",
+                    "crubit_bridge_abi_cpp"});
+  CHECK(!void_converter_values.has_value() || !crubit_abi_values.has_value())
+      << "CRUBIT_BRIDGE_VOID_CONVERTERS and CRUBIT_BRIDGE are mutually "
+         "exclusive, and cannot be used on the same type.";
 
-  if (bridge_type.has_value()) {
-    return BridgeType{BridgeType::Annotation{
-        .rust_name = *bridge_type,
-        .rust_to_cpp_converter = bridge_type_rust_to_cpp_converter.has_value()
-                                     ? *bridge_type_rust_to_cpp_converter
-                                     : "",
-        .cpp_to_rust_converter = bridge_type_cpp_to_rust_converter.has_value()
-                                     ? *bridge_type_cpp_to_rust_converter
-                                     : "",
+  if (void_converter_values.has_value()) {
+    auto [rust_name, rust_to_cpp_converter, cpp_to_rust_converter] =
+        *void_converter_values;
+    return BridgeType{BridgeType::BridgeVoidConverters{
+        .rust_name = std::move(rust_name),
+        .rust_to_cpp_converter = std::move(rust_to_cpp_converter),
+        .cpp_to_rust_converter = std::move(cpp_to_rust_converter),
+    }};
+  }
+  if (crubit_abi_values.has_value()) {
+    auto [rust_name, abi_rust, abi_cpp] = *crubit_abi_values;
+    return BridgeType{BridgeType::Bridge{
+        .rust_name = std::move(rust_name),
+        .abi_rust = std::move(abi_rust),
+        .abi_cpp = std::move(abi_cpp),
     }};
   }
   return std::nullopt;
@@ -377,7 +401,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool is_explicit_class_template_instantiation_definition = false;
   std::optional<BazelLabel> defining_target;
   std::optional<TemplateSpecialization> template_specialization;
-  std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(record_decl);
+  std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(*record_decl);
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {

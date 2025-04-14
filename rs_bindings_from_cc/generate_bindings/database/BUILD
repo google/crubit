@@ -21,8 +21,8 @@ rust_library(
     ],
     deps = [
         "//common:arc_anyhow",
-        "//common:bridge_schema",
         "//common:code_gen_utils",
+        "//common:crubit_abi_type",
         "//common:crubit_feature",
         "//common:error_report",
         "//common:errors",

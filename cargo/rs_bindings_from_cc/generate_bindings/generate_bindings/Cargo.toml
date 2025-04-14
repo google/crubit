@@ -21,8 +21,8 @@ generate_struct_and_union = { path = "../../../../cargo/rs_bindings_from_cc/gene
 has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings" }
 rs_type_kind = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/rs_type_kind" }
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
-bridge_schema = { path = "../../../../cargo/common/bridge_schema" }
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils" }
+crubit_abi_type = { path = "../../../../cargo/common/crubit_abi_type" }
 crubit_feature = { path = "../../../../cargo/common/crubit_feature" }
 error_report = { path = "../../../../cargo/common/error_report" }
 errors = { path = "../../../../cargo/common/errors" }

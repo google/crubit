@@ -315,13 +315,15 @@ pub enum RsTypeKind {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum BridgeRsTypeKind {
-    VoidConverters {
+    BridgeVoidConverters {
         rust_name: Rc<str>,
         cpp_to_rust_converter: Rc<str>,
         rust_to_cpp_converter: Rc<str>,
     },
-    CrubitAbi {
+    Bridge {
         rust_name: Rc<str>,
+        abi_rust: Rc<str>,
+        abi_cpp: Rc<str>,
         generic_types: Rc<[RsTypeKind]>,
     },
     StdOptional(Rc<RsTypeKind>),
@@ -338,33 +340,34 @@ impl BridgeRsTypeKind {
         };
 
         let bridge_rs_type_kind = match bridge_type.clone() {
-            BridgeType::Annotation { rust_name, cpp_to_rust_converter, rust_to_cpp_converter } => {
-                if !cpp_to_rust_converter.is_empty() || !rust_to_cpp_converter.is_empty() {
-                    BridgeRsTypeKind::VoidConverters {
-                        rust_name,
-                        cpp_to_rust_converter,
-                        rust_to_cpp_converter,
-                    }
-                } else {
-                    BridgeRsTypeKind::CrubitAbi {
-                        rust_name,
-                        generic_types: record
-                            .template_specialization
-                            .as_ref()
-                            .map(|template_spec| &template_spec.template_args[..])
-                            .unwrap_or_default()
-                            .iter()
-                            .map(|template_arg: &TemplateArg| {
-                                let type_ = template_arg.type_.as_ref().map_err(|err| {
-                                    anyhow!("Failed to get type from template arg: {}", err)
-                                })?;
+            BridgeType::BridgeVoidConverters {
+                rust_name,
+                cpp_to_rust_converter,
+                rust_to_cpp_converter,
+            } => BridgeRsTypeKind::BridgeVoidConverters {
+                rust_name,
+                cpp_to_rust_converter,
+                rust_to_cpp_converter,
+            },
+            BridgeType::Bridge { rust_name, abi_rust, abi_cpp } => BridgeRsTypeKind::Bridge {
+                rust_name,
+                abi_rust,
+                abi_cpp,
+                generic_types: record
+                    .template_specialization
+                    .as_ref()
+                    .map(|template_spec| &template_spec.template_args[..])
+                    .unwrap_or_default()
+                    .iter()
+                    .map(|template_arg: &TemplateArg| {
+                        let type_ = template_arg.type_.as_ref().map_err(|err| {
+                            anyhow!("Failed to get type from template arg: {}", err)
+                        })?;
 
-                                db.rs_type_kind(type_.clone())
-                            })
-                            .collect::<Result<Rc<[RsTypeKind]>>>()?,
-                    }
-                }
-            }
+                        db.rs_type_kind(type_.clone())
+                    })
+                    .collect::<Result<Rc<[RsTypeKind]>>>()?,
+            },
             BridgeType::StdOptional(t) => {
                 BridgeRsTypeKind::StdOptional(Rc::new(db.rs_type_kind(t)?))
             }
@@ -378,7 +381,7 @@ impl BridgeRsTypeKind {
     }
 
     pub fn is_void_converters_bridge_type(&self) -> bool {
-        matches!(self, BridgeRsTypeKind::VoidConverters { .. })
+        matches!(self, BridgeRsTypeKind::BridgeVoidConverters { .. })
     }
 }
 
@@ -399,8 +402,8 @@ fn create_string_bridge_type(record: &Record) -> Result<RsTypeKind> {
     }
     Ok(RsTypeKind::BridgeType {
         // TODO(okabayashi): std::string should be its own builtin variant, not
-        // BridgeRsTypeKind::VoidConverters.
-        bridge_type: BridgeRsTypeKind::VoidConverters {
+        // BridgeRsTypeKind::BridgeVoidConverters.
+        bridge_type: BridgeRsTypeKind::BridgeVoidConverters {
             rust_name: Rc::from("::cc_std::std::string"),
             cpp_to_rust_converter: Rc::from("cpp_string_to_rust_string"),
             rust_to_cpp_converter: Rc::from("rust_string_to_cpp_string"),
@@ -526,7 +529,10 @@ impl RsTypeKind {
     pub fn is_pointer_bridge_type(&self) -> bool {
         matches!(
             self,
-            RsTypeKind::BridgeType { bridge_type: BridgeRsTypeKind::VoidConverters { .. }, .. }
+            RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::BridgeVoidConverters { .. },
+                ..
+            }
         )
     }
 
@@ -655,7 +661,7 @@ impl RsTypeKind {
                 RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::BridgeType { bridge_type, original_type } => {
                     let is_pointer_bridge =
-                        matches!(bridge_type, BridgeRsTypeKind::VoidConverters { .. });
+                        matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
 
                     if original_type.template_specialization.is_none()
                         || TEMPLATE_INSTANTIATION_ALLOWLIST
@@ -825,7 +831,7 @@ impl RsTypeKind {
             RsTypeKind::Slice(t) => t.implements_copy(),
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                 // We cannot get the information of the Rust type so we assume it is not Copy.
-                BridgeRsTypeKind::VoidConverters { .. } | BridgeRsTypeKind::CrubitAbi { .. } => {
+                BridgeRsTypeKind::BridgeVoidConverters { .. } | BridgeRsTypeKind::Bridge { .. } => {
                     false
                 }
                 BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
@@ -1186,7 +1192,7 @@ impl RsTypeKind {
                 let type_arg = t.to_token_stream(db);
                 quote! {[#type_arg]}
             }
-            RsTypeKind::BridgeType { bridge_type, original_type, .. } => {
+            RsTypeKind::BridgeType { bridge_type, original_type } => {
                 let make_path = |rust_name: &str| {
                     let is_absolute_path = rust_name.starts_with("::");
                     // If the name starts with "::", then it is an absolute path. In this case, we
@@ -1203,8 +1209,10 @@ impl RsTypeKind {
                     quote! { #prefix :: #(#name_parts)::* }
                 };
                 match bridge_type {
-                    BridgeRsTypeKind::VoidConverters { rust_name, .. } => make_path(rust_name),
-                    BridgeRsTypeKind::CrubitAbi { rust_name, generic_types } => {
+                    BridgeRsTypeKind::BridgeVoidConverters { rust_name, .. } => {
+                        make_path(rust_name)
+                    }
+                    BridgeRsTypeKind::Bridge { rust_name, generic_types, .. } => {
                         let path = make_path(rust_name);
 
                         // If there are no generic types, then we're done.
@@ -1266,8 +1274,8 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                     }
                     RsTypeKind::Slice(t) => self.todo.push(t),
                     RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
-                        BridgeRsTypeKind::VoidConverters { .. }
-                        | BridgeRsTypeKind::CrubitAbi { .. } => {}
+                        BridgeRsTypeKind::BridgeVoidConverters { .. }
+                        | BridgeRsTypeKind::Bridge { .. } => {}
                         BridgeRsTypeKind::StdOptional(t) => self.todo.push(t),
                         BridgeRsTypeKind::StdPair(t1, t2) => {
                             self.todo.push(t2);

@@ -14,17 +14,21 @@
 #![allow(dead_code)]
 #![deny(warnings)]
 
+// Note: a real example would require that Crubit implements CrubitAbiTrait in
+// order for the generated code to properly compile. This example just serves to
+// illustrate what the generated code will look like.
+
 #[inline(always)]
 pub fn ReturnCppStruct() -> crate::RustStruct {
     unsafe {
         let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<
-            { <crate::RustStruct as ::bridge_rust::CrubitAbi<::bridge_rust::ByBridge<()>>>::SIZE },
+            { <crate::RustStructAbi as ::bridge_rust::CrubitAbi>::SIZE },
         >();
         crate::detail::__rust_thunk___Z15ReturnCppStructv(
             __return_abi_buffer.as_mut_ptr() as *mut u8
         );
-        ::bridge_rust::internal::decode::<crate::RustStruct, ::bridge_rust::ByBridge<()>>(
-            __return_abi_buffer.as_ptr() as *const u8,
+        ::bridge_rust::internal::decode::<crate::RustStructAbi>(
+            __return_abi_buffer.as_ptr() as *const u8
         )
     }
 }
@@ -32,11 +36,11 @@ pub fn ReturnCppStruct() -> crate::RustStruct {
 #[inline(always)]
 pub fn TakeCppStruct(__param_0: crate::RustStruct) {
     let mut __crubit_abi_arg_buffer = ::bridge_rust::internal::empty_buffer::<
-        { <crate::RustStruct as ::bridge_rust::CrubitAbi<::bridge_rust::ByBridge<()>>>::SIZE },
+        { <crate::RustStructAbi as ::bridge_rust::CrubitAbi>::SIZE },
     >();
     #[allow(unused_unsafe)]
     unsafe {
-        ::bridge_rust::internal::encode::<crate::RustStruct, ::bridge_rust::ByBridge<()>>(
+        ::bridge_rust::internal::encode::<crate::RustStructAbi>(
             __crubit_abi_arg_buffer.as_mut_ptr() as *mut u8,
             __param_0,
         );
@@ -81,74 +85,11 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Vec3"), crate::Vec3);
 // Error while generating bindings for item 'Vec3::operator=':
 // Parameter #0 is not supported: Unsupported type 'Vec3 &&': Unsupported type: && without lifetime
 
-#[inline(always)]
-pub fn MakeOptionalVec3(
-    x: f32,
-    y: f32,
-    z: f32,
-    is_present: bool,
-) -> ::core::option::Option<crate::Vec3> {
-    unsafe {
-        let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<
-            {
-                <::core::option::Option<crate::Vec3> as ::bridge_rust::CrubitAbi<
-                    ::bridge_rust::ByBridge<::bridge_rust::ByTransmute>,
-                >>::SIZE
-            },
-        >();
-        crate::detail::__rust_thunk___Z16MakeOptionalVec3fffb(
-            __return_abi_buffer.as_mut_ptr() as *mut u8,
-            x,
-            y,
-            z,
-            is_present,
-        );
-        ::bridge_rust::internal::decode::<
-            ::core::option::Option<crate::Vec3>,
-            ::bridge_rust::ByBridge<::bridge_rust::ByTransmute>,
-        >(__return_abi_buffer.as_ptr() as *const u8)
-    }
-}
+// Error while generating bindings for item 'MakeOptionalVec3':
+// Unsupported RsTypeKind: crate::Vec3
 
-#[inline(always)]
-pub fn MapMultiply(
-    v: ::core::option::Option<crate::Vec3>,
-    factor: f32,
-) -> ::core::option::Option<crate::Vec3> {
-    let mut __crubit_abi_arg_buffer = ::bridge_rust::internal::empty_buffer::<
-        {
-            <::core::option::Option<crate::Vec3> as ::bridge_rust::CrubitAbi<
-                ::bridge_rust::ByBridge<::bridge_rust::ByTransmute>,
-            >>::SIZE
-        },
-    >();
-    #[allow(unused_unsafe)]
-    unsafe {
-        ::bridge_rust::internal::encode::<
-            ::core::option::Option<crate::Vec3>,
-            ::bridge_rust::ByBridge<::bridge_rust::ByTransmute>,
-        >(__crubit_abi_arg_buffer.as_mut_ptr() as *mut u8, v);
-    }
-    let v = __crubit_abi_arg_buffer;
-    unsafe {
-        let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<
-            {
-                <::core::option::Option<crate::Vec3> as ::bridge_rust::CrubitAbi<
-                    ::bridge_rust::ByBridge<::bridge_rust::ByTransmute>,
-                >>::SIZE
-            },
-        >();
-        crate::detail::__rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
-            __return_abi_buffer.as_mut_ptr() as *mut u8,
-            v.as_ptr() as *const u8,
-            factor,
-        );
-        ::bridge_rust::internal::decode::<
-            ::core::option::Option<crate::Vec3>,
-            ::bridge_rust::ByBridge<::bridge_rust::ByTransmute>,
-        >(__return_abi_buffer.as_ptr() as *const u8)
-    }
-}
+// Error while generating bindings for item 'MapMultiply':
+// while generating bridge param 'v': Unsupported RsTypeKind: crate::Vec3
 
 mod detail {
     #[allow(unused_imports)]
@@ -159,18 +100,6 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z13TakeCppStruct9CppStruct(
             __param_0: *const ::core::ffi::c_uchar,
-        );
-        pub(crate) unsafe fn __rust_thunk___Z16MakeOptionalVec3fffb(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
-            x: f32,
-            y: f32,
-            z: f32,
-            is_present: bool,
-        );
-        pub(crate) unsafe fn __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
-            __return_abi_buffer: *mut ::core::ffi::c_uchar,
-            v: *const ::core::ffi::c_uchar,
-            factor: f32,
         );
     }
 }

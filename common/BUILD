@@ -384,8 +384,8 @@ crubit_rust_test(
 )
 
 rust_library(
-    name = "bridge_schema",
-    srcs = ["bridge_schema.rs"],
+    name = "crubit_abi_type",
+    srcs = ["crubit_abi_type.rs"],
     visibility = ["//:__subpackages__"],
     deps = [
         "@crate_index//:proc-macro2",
@@ -394,8 +394,8 @@ rust_library(
 )
 
 crubit_rust_test(
-    name = "bridge_schema_test",
-    crate = ":bridge_schema",
+    name = "crubit_abi_type_test",
+    crate = ":crubit_abi_type",
     deps = [
         "@crate_index//:googletest",
     ],

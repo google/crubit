@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use bridge_schema::BridgeSchemaToCppTokens;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
+use crubit_abi_type::CrubitAbiTypeToCppTokens;
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
     format_generic_params, unique_lifetimes, BridgeRsTypeKind, Mutability, RsTypeKind,
@@ -311,7 +311,8 @@ pub fn generate_function_thunk_impl(
             let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
             let arg_type = db.rs_type_kind(p.type_.clone())?;
             if let RsTypeKind::BridgeType { bridge_type, .. } = &arg_type {
-                let BridgeRsTypeKind::VoidConverters { rust_to_cpp_converter, .. } = &bridge_type
+                let BridgeRsTypeKind::BridgeVoidConverters { rust_to_cpp_converter, .. } =
+                    &bridge_type
                 else {
                     return Ok(quote! { const unsigned char* });
                 };
@@ -364,10 +365,9 @@ pub fn generate_function_thunk_impl(
                     let rs_type_kind = db.rs_type_kind(p.type_.clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
                     if rs_type_kind.is_crubit_abi_bridge_type() {
-                        let bridge_schema = db.bridge_schema(rs_type_kind)?;
-                        let bridge_schema_tokens = BridgeSchemaToCppTokens(&bridge_schema);
-                        let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
-                        Ok(quote! { ::crubit::internal::Decode<#cpp_type, #bridge_schema_tokens>(#ident) })
+                        let crubit_abi_type = db.crubit_abi_type(rs_type_kind)?;
+                        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                        Ok(quote! { ::crubit::internal::Decode<#crubit_abi_type_tokens>(#ident) })
                     } else if !rs_type_kind.is_c_abi_compatible_by_value() {
                         Ok(quote! { std::move(* #ident) })
                     } else if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {
@@ -399,7 +399,7 @@ pub fn generate_function_thunk_impl(
         cc_return_type.is_const = false;
         let return_type_name = cpp_type_name::format_cpp_type(&cc_return_type, &ir)?;
         if let RsTypeKind::BridgeType {
-            bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
+            bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
             ..
         } = &return_type_kind
         {
@@ -448,16 +448,15 @@ pub fn generate_function_thunk_impl(
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
     let return_stmt = if return_type_kind.is_crubit_abi_bridge_type() {
         let out_param = &param_idents[0];
-        let bridge_schema = db.bridge_schema(return_type_kind)?;
-        let bridge_schema_tokens = BridgeSchemaToCppTokens(&bridge_schema);
+        let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
+        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
         quote! {
-            ::crubit::internal::Encode<#return_type_cpp_spelling, #bridge_schema_tokens>(#out_param,
-                                                                                    #return_expr)
+            ::crubit::internal::Encode<#crubit_abi_type_tokens>(#out_param, #return_expr)
         }
     } else if !is_return_value_c_abi_compatible {
         let out_param = &param_idents[0];
         if let RsTypeKind::BridgeType {
-            bridge_type: BridgeRsTypeKind::VoidConverters { cpp_to_rust_converter, .. },
+            bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
             ..
         } = &return_type_kind
         {

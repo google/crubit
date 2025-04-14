@@ -8,14 +8,25 @@
 // Note: a real example would require that Crubit implements CrubitAbiTrait in
 // order for the generated code to properly compile. This example just serves to
 // illustrate what the generated code will look like.
-struct [[clang::annotate("crubit_bridge_type", "RustStruct")]] CppStruct {};
+struct
+    // clang-format off
+    [[clang::annotate("crubit_bridge_rust_name", "RustStruct")]]
+    [[clang::annotate("crubit_bridge_abi_rust", "RustStructAbi")]]
+    [[clang::annotate("crubit_bridge_abi_cpp", "::crubit::CppStructAbi")]]
+    // clang-format on
+    CppStruct {};
 
 CppStruct ReturnCppStruct();
 
 void TakeCppStruct(CppStruct);
 
 template <typename T>
-struct [[clang::annotate("crubit_bridge_type", "::core::option::Option")]]
+// clang-format off
+struct
+    [[clang::annotate("crubit_bridge_rust_name", "MyOption")]]
+    [[clang::annotate("crubit_bridge_abi_rust", "MyOptionAbi")]]
+    [[clang::annotate("crubit_bridge_abi_cpp", "::crubit::MyOptionAbi")]]
+// clang-format on
 MyOption {
   // std::optional<T> value;
 };
