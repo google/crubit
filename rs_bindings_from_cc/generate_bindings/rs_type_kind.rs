@@ -15,7 +15,7 @@ use std::rc::Rc;
 pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind> {
     ensure!(ty.unknown_attr.is_empty(), "unknown attribute(s): {}", ty.unknown_attr);
     match &ty.variant {
-        CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive((*primitive).into())),
+        CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive(*primitive)),
         CcTypeVariant::Pointer(pointer) => {
             // In Rust, we have no such concept of a "const" type. All types can be either
             // mutable or immutable depending on the context. However, we do have mutable and

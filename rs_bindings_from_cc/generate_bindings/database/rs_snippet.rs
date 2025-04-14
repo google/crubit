@@ -233,145 +233,6 @@ pub fn check_by_value(record: &Record) -> Result<()> {
     Ok(())
 }
 
-#[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum PrimitiveType {
-    /// (), void
-    Unit,
-    bool,
-    u8,
-    i8,
-    u16,
-    i16,
-    u32,
-    i32,
-    u64,
-    i64,
-    usize,
-    isize,
-    f32,
-    f64,
-    c_char,
-    c_uchar,
-    c_schar,
-    c_ushort,
-    c_short,
-    c_uint,
-    c_int,
-    c_ulong,
-    c_long,
-    c_ulonglong,
-    c_longlong,
-}
-
-impl PrimitiveType {
-    pub fn from_str(s: &str) -> Option<Self> {
-        Some(match s {
-            "()" => Self::Unit,
-            "bool" => Self::bool,
-            "u8" => Self::u8,
-            "i8" => Self::i8,
-            "u16" => Self::u16,
-            "i16" => Self::i16,
-            "u32" => Self::u32,
-            "i32" => Self::i32,
-            "u64" => Self::u64,
-            "i64" => Self::i64,
-            "usize" => Self::usize,
-            "isize" => Self::isize,
-            "f32" => Self::f32,
-            "f64" => Self::f64,
-            "::core::ffi::c_char" => Self::c_char,
-            "::core::ffi::c_uchar" => Self::c_uchar,
-            "::core::ffi::c_schar" => Self::c_schar,
-            "::core::ffi::c_ushort" => Self::c_ushort,
-            "::core::ffi::c_short" => Self::c_short,
-            "::core::ffi::c_uint" => Self::c_uint,
-            "::core::ffi::c_int" => Self::c_int,
-            "::core::ffi::c_ulong" => Self::c_ulong,
-            "::core::ffi::c_long" => Self::c_long,
-            "::core::ffi::c_ulonglong" => Self::c_ulonglong,
-            "::core::ffi::c_longlong" => Self::c_longlong,
-            _ => return None,
-        })
-    }
-}
-
-impl From<Primitive> for PrimitiveType {
-    fn from(cc_primitive: Primitive) -> Self {
-        match cc_primitive {
-            Primitive::Bool => Self::bool,
-            Primitive::Void => Self::Unit,
-            Primitive::Float => Self::f32,
-            Primitive::Double => Self::f64,
-            Primitive::Char => Self::c_char,
-            Primitive::SignedChar => Self::c_schar,
-            Primitive::UnsignedChar => Self::c_uchar,
-            Primitive::Short => Self::c_short,
-            Primitive::Int => Self::c_int,
-            Primitive::Long => Self::c_long,
-            Primitive::LongLong => Self::c_longlong,
-            Primitive::UnsignedShort => Self::c_ushort,
-            Primitive::UnsignedInt => Self::c_uint,
-            Primitive::UnsignedLong => Self::c_ulong,
-            Primitive::UnsignedLongLong => Self::c_ulonglong,
-            Primitive::Char16T => Self::u16,
-            Primitive::Char32T => Self::u32,
-            Primitive::PtrdiffT
-            | Primitive::StdPtrdiffT
-            | Primitive::IntptrT
-            | Primitive::StdIntptrT => Self::isize,
-            Primitive::SizeT
-            | Primitive::StdSizeT
-            | Primitive::UintptrT
-            | Primitive::StdUintptrT => Self::usize,
-            Primitive::Int8T | Primitive::StdInt8T => Self::i8,
-            Primitive::Int16T | Primitive::StdInt16T => Self::i16,
-            Primitive::Int32T | Primitive::StdInt32T => Self::i32,
-            Primitive::Int64T | Primitive::StdInt64T => Self::i64,
-            Primitive::Uint8T | Primitive::StdUint8T => Self::u8,
-            Primitive::Uint16T | Primitive::StdUint16T => Self::u16,
-            Primitive::Uint32T | Primitive::StdUint32T => Self::u32,
-            Primitive::Uint64T | Primitive::StdUint64T => Self::u64,
-        }
-    }
-}
-
-impl ToTokens for PrimitiveType {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            // This doesn't affect void in function return values, as those are special-cased to be
-            // omitted.
-            Self::Unit => quote! {::core::ffi::c_void},
-            Self::bool => quote! {bool},
-            Self::u8 => quote! {u8},
-            Self::i8 => quote! {i8},
-            Self::u16 => quote! {u16},
-            Self::i16 => quote! {i16},
-            Self::u32 => quote! {u32},
-            Self::i32 => quote! {i32},
-            Self::u64 => quote! {u64},
-            Self::i64 => quote! {i64},
-            Self::usize => quote! {usize},
-            Self::isize => quote! {isize},
-            Self::f32 => quote! {f32},
-            Self::f64 => quote! {f64},
-            Self::c_char => quote! {::core::ffi::c_char},
-            Self::c_uchar => quote! {::core::ffi::c_uchar},
-            Self::c_schar => quote! {::core::ffi::c_schar},
-            Self::c_ushort => quote! {::core::ffi::c_ushort},
-            Self::c_short => quote! {::core::ffi::c_short},
-            Self::c_uint => quote! {::core::ffi::c_uint},
-            Self::c_int => quote! {::core::ffi::c_int},
-            Self::c_ulong => quote! {::core::ffi::c_ulong},
-            Self::c_long => quote! {::core::ffi::c_long},
-            Self::c_ulonglong => quote! {::core::ffi::c_ulonglong},
-            Self::c_longlong => quote! {::core::ffi::c_longlong},
-        }
-        .to_tokens(tokens)
-    }
-}
-
 // TODO(b/351976622): Allow std::basic_string.
 static TEMPLATE_INSTANTIATION_ALLOWLIST: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     ["std::string_view", "std::wstring_view", "std::string"].into_iter().collect()
@@ -438,7 +299,7 @@ pub enum RsTypeKind {
         underlying_type: Rc<RsTypeKind>,
         crate_path: Rc<CratePath>,
     },
-    Primitive(PrimitiveType),
+    Primitive(Primitive),
     Slice(Rc<RsTypeKind>),
     /// Types that require custom logic to translate.
     BridgeType {
@@ -451,6 +312,7 @@ pub enum RsTypeKind {
         is_same_abi: bool,
     },
 }
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum BridgeRsTypeKind {
     VoidConverters {
@@ -886,7 +748,7 @@ impl RsTypeKind {
         self_record: Option<&Record>,
     ) -> TokenStream {
         match self {
-            RsTypeKind::Primitive(PrimitiveType::Unit) => quote! {},
+            RsTypeKind::Primitive(Primitive::Void) => quote! {},
             other_type => {
                 let other_type_ = other_type.to_token_stream_replacing_by_self(db, self_record);
                 quote! { -> #other_type_ }
@@ -1001,7 +863,7 @@ impl RsTypeKind {
 
     pub fn is_bool(&self) -> bool {
         match self {
-            RsTypeKind::Primitive(PrimitiveType::bool) => true,
+            RsTypeKind::Primitive(Primitive::Bool) => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_bool(),
             _ => false,
         }
@@ -1285,7 +1147,41 @@ impl RsTypeKind {
                 let ident = make_rs_ident(&type_alias.rs_name.identifier);
                 quote! { #crate_path #ident }
             }
-            RsTypeKind::Primitive(primitive) => quote! {#primitive},
+            RsTypeKind::Primitive(primitive) => match primitive {
+                Primitive::Bool => quote! { bool },
+                Primitive::Void => quote! { ::core::ffi::c_void },
+                Primitive::Float => quote! { f32 },
+                Primitive::Double => quote! { f64 },
+                Primitive::Char => quote! { ::core::ffi::c_char },
+                Primitive::SignedChar => quote! { ::core::ffi::c_schar },
+                Primitive::UnsignedChar => quote! { ::core::ffi::c_uchar },
+                Primitive::Short => quote! { ::core::ffi::c_short },
+                Primitive::Int => quote! { ::core::ffi::c_int },
+                Primitive::Long => quote! { ::core::ffi::c_long },
+                Primitive::LongLong => quote! { ::core::ffi::c_longlong },
+                Primitive::UnsignedShort => quote! { ::core::ffi::c_ushort },
+                Primitive::UnsignedInt => quote! { ::core::ffi::c_uint },
+                Primitive::UnsignedLong => quote! { ::core::ffi::c_ulong },
+                Primitive::UnsignedLongLong => quote! { ::core::ffi::c_ulonglong },
+                Primitive::Char16T => quote! { u16 },
+                Primitive::Char32T => quote! { u32 },
+                Primitive::PtrdiffT
+                | Primitive::StdPtrdiffT
+                | Primitive::IntptrT
+                | Primitive::StdIntptrT => quote! { isize },
+                Primitive::SizeT
+                | Primitive::StdSizeT
+                | Primitive::UintptrT
+                | Primitive::StdUintptrT => quote! { usize },
+                Primitive::Int8T | Primitive::StdInt8T => quote! { i8 },
+                Primitive::Int16T | Primitive::StdInt16T => quote! { i16 },
+                Primitive::Int32T | Primitive::StdInt32T => quote! { i32 },
+                Primitive::Int64T | Primitive::StdInt64T => quote! { i64 },
+                Primitive::Uint8T | Primitive::StdUint8T => quote! { u8 },
+                Primitive::Uint16T | Primitive::StdUint16T => quote! { u16 },
+                Primitive::Uint32T | Primitive::StdUint32T => quote! { u32 },
+                Primitive::Uint64T | Primitive::StdUint64T => quote! { u64 },
+            },
             RsTypeKind::Slice(t) => {
                 let type_arg = t.to_token_stream(db);
                 quote! {[#type_arg]}
@@ -1482,7 +1378,7 @@ mod tests {
     #[gtest]
     fn test_required_crubit_features() {
         let no_types: &[RsTypeKind] = &[];
-        let int = RsTypeKind::Primitive(PrimitiveType::i32);
+        let int = RsTypeKind::Primitive(Primitive::Int32T);
         let reference = RsTypeKind::Reference {
             option: false,
             referent: Rc::new(int.clone()),

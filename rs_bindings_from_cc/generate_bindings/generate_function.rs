@@ -9,7 +9,7 @@ use database::code_snippet::ApiSnippets;
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
-    should_derive_clone, unique_lifetimes, Lifetime, Mutability, PrimitiveType, RsTypeKind,
+    should_derive_clone, unique_lifetimes, Lifetime, Mutability, RsTypeKind,
 };
 use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
@@ -823,7 +823,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
         if param.is_unpin() {
             continue;
         }
-        let value = std::mem::replace(param, RsTypeKind::Primitive(PrimitiveType::Unit)); // Temporarily swap in a garbage value.
+        let value = std::mem::replace(param, RsTypeKind::Primitive(Primitive::Void)); // Temporarily swap in a garbage value.
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
@@ -1595,12 +1595,12 @@ fn function_signature(
     };
     match trait_name {
         Some(TraitName::PartialOrd { .. } | TraitName::PartialEq { .. }) => {
-            if *return_type != RsTypeKind::Primitive(PrimitiveType::bool) {
+            if *return_type != RsTypeKind::Primitive(Primitive::Bool) {
                 errors.add(anyhow!(
                     "comparison operator return type must be `bool`, found: {}",
                     return_type.display(db),
                 ));
-                *return_type = RsTypeKind::Primitive(PrimitiveType::bool);
+                *return_type = RsTypeKind::Primitive(Primitive::Bool);
             }
         }
         Some(TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)) => {
@@ -1670,7 +1670,7 @@ fn function_signature(
         Some(TraitName::Other { .. }) | None => {}
     }
 
-    let return_type_fragment = if return_type == &RsTypeKind::Primitive(PrimitiveType::Unit) {
+    let return_type_fragment = if return_type == &RsTypeKind::Primitive(Primitive::Void) {
         quote! {}
     } else {
         let ty = quoted_return_type.unwrap_or_else(|| return_type.to_token_stream(db));
