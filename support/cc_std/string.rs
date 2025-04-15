@@ -36,6 +36,39 @@ impl string {
     pub fn as_slice(&self) -> &[u8] {
         self.as_ref()
     }
+
+    /// Returns a `*const c_void` pointing to the underlying C++
+    /// `std::string` object.
+    ///
+    /// The caller must ensure that the `string` outlives the pointer.
+    ///
+    /// This method guarantees that for the purpose of the aliasing
+    /// model, this method does not materialize a reference to the
+    /// underlying data the string owns, and thus the returned
+    /// pointer will remain valid when mixed with other calls to
+    /// `as_void_ptr` and `as_mut_void_ptr`.
+    pub fn as_void_ptr(&self) -> *const c_void {
+        self.owned_cpp_string.as_ptr() as *const _
+    }
+
+    /// Returns a `*mut c_void` pointing to the underlying C++
+    /// `std::string` object.
+    ///
+    /// The caller must ensure that the `string` outlives the pointer.
+    ///
+    /// This method guarantees that for the purpose of the aliasing
+    /// model, this method does not materialize a reference to the
+    /// underlying data the string owns, and thus the returned
+    /// pointer will remain valid when mixed with other calls to
+    /// `as_void_ptr` and `as_mut_void_ptr`.
+    ///
+    /// However, note that writing to the pointer will invalidate references to
+    /// the underlying data. For example, the behavior is undefined if the
+    /// underlying string is mutated through this pointer during the lifetime
+    /// of a slice as returned by `as_slice`.
+    pub fn as_mut_void_ptr(&mut self) -> *mut c_void {
+        self.owned_cpp_string.as_ptr()
+    }
 }
 
 impl PartialEq for string {
