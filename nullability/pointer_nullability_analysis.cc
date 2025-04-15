@@ -1629,6 +1629,20 @@ void transferType_CopyOrMoveConstruct(
   });
 }
 
+TypeNullability computeTypeNullabilityForCallExpr(
+    const CallExpr *absl_nonnull CE,
+    TransferState<PointerNullabilityLattice> &State) {
+  TypeNullability CalleeNullability =
+      getNullabilityForChild(CE->getCallee(), State);
+  ArrayRef ResultNullability = CalleeNullability;
+  if (CE->getCallee()->getType()->isPointerType())  // Callee is usually fptr.
+    ResultNullability = ResultNullability.drop_front();
+  // Return value nullability is at the front of the function type.
+  ResultNullability =
+      ResultNullability.take_front(countPointersInType(CE->getType()));
+  return ResultNullability.vec();
+}
+
 void transferType_CallExpr(const CallExpr *absl_nonnull CE,
                            const MatchFinder::MatchResult &MR,
                            TransferState<PointerNullabilityLattice> &State) {
@@ -1639,15 +1653,44 @@ void transferType_CallExpr(const CallExpr *absl_nonnull CE,
       return getNullabilityForChild(CE->getArg(0), State);
     }
 
-    TypeNullability CalleeNullability =
-        getNullabilityForChild(CE->getCallee(), State);
-    ArrayRef ResultNullability = CalleeNullability;
-    if (CE->getCallee()->getType()->isPointerType())  // Callee is usually fptr.
-      ResultNullability = ResultNullability.drop_front();
-    // Return value nullability is at the front of the function type.
-    ResultNullability =
-        ResultNullability.take_front(countPointersInType(CE->getType()));
-    return ResultNullability.vec();
+    return computeTypeNullabilityForCallExpr(CE, State);
+  });
+}
+
+void transferType_CXXOperatorCallExpr(
+    const CXXOperatorCallExpr *absl_nonnull CE,
+    const MatchFinder::MatchResult &MR,
+    TransferState<PointerNullabilityLattice> &State) {
+  computeNullability(CE, State, [&]() {
+    // If this is a method call, see if it is a template specialization
+    // and whether resugaring with the Base (arg 0)'s nullability helps
+    // refine the return type nullability, similar to transferType_MemberExpr.
+    // This only helps refine the return type nullability, not callee's
+    // nullability including the params. TODO(b/405355053): see if we can refine
+    // the params too.
+    if (auto *Callee = dyn_cast<CXXMethodDecl>(CE->getCalleeDecl())) {
+      const auto *Base = CE->getArg(0);
+      TypeNullability BaseNullability = getNullabilityForChild(Base, State);
+      Resugarer Resugar(State.Lattice.defaults());
+      if (const auto *RT = Base->getType()->getAs<RecordType>()) {
+        if (auto *CTSpec =
+                dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+          Resugar.Enclosing.push_back({CTSpec, BaseNullability});
+        }
+      }
+
+      TypeNullability Nullability =
+          getTypeNullability(*Callee, State.Lattice.defaults(), Resugar);
+      State.Lattice.overrideNullabilityFromDecl(Callee, Nullability);
+      ArrayRef ResultNullability = Nullability;
+      // Return value nullability is at the front of the function type.
+      ResultNullability =
+          ResultNullability.take_front(countPointersInType(CE->getType()));
+      return ResultNullability.vec();
+    }
+
+    // Not a member operator call.
+    return computeTypeNullabilityForCallExpr(CE, State);
   });
 }
 
@@ -1788,6 +1831,8 @@ auto buildTypeTransferer() {
           transferType_MaterializeTemporaryExpr)
       .CaseOfCFGStmt<CXXBindTemporaryExpr>(ast_matchers::cxxBindTemporaryExpr(),
                                            transferType_CXXBindTemporaryExpr)
+      .CaseOfCFGStmt<CXXOperatorCallExpr>(ast_matchers::cxxOperatorCallExpr(),
+                                          transferType_CXXOperatorCallExpr)
       .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(), transferType_CallExpr)
       .CaseOfCFGStmt<UnaryOperator>(ast_matchers::unaryOperator(),
                                     transferType_UnaryOperator)

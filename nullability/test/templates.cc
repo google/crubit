@@ -1079,6 +1079,104 @@ TEST(PointerNullabilityTest, FunctionTemplates) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, OperatorSubscript) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct Vec {
+      typedef T value_type;
+      typedef value_type& reference;
+      typedef const value_type& const_reference;
+
+      reference operator[](int n);
+      reference at(int n);
+      void push_back(const_reference v);
+    };
+
+    void target(Vec<int* _Nullable> nullable, Vec<int* _Nonnull> nonnull) {
+      // read
+      *nullable[0];     // [[unsafe]]
+      *nullable.at(0);  // [[unsafe]]
+      *nonnull[0];
+      *nonnull.at(0);
+
+      // write
+      nullable[0] = nullptr;
+      nullable.push_back(nullptr);
+      nonnull[0] = nullptr;        // [[unsafe]]
+      nonnull.push_back(nullptr);  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OperatorSubscriptPointerIndexType) {
+  // Try a case where there is more than one pointer type in the method
+  // signature (e.g., the index is nonnull while the return type is nullable)
+  // to check we aren't mixing up the nullability vector slots.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct Vec {
+      typedef T value_type;
+      typedef value_type& reference;
+      typedef const value_type& const_reference;
+
+      reference operator[](int* _Nonnull p);
+      reference at(int* _Nonnull p);
+    };
+
+    void target(Vec<int* _Nullable> nullable, Vec<int* _Nonnull> nonnull) {
+      int x;
+      // read
+      *nullable[&x];     // [[unsafe]]
+      *nullable.at(&x);  // [[unsafe]]
+      *nonnull[&x];
+      *nonnull.at(&x);
+
+      // write
+      nullable[&x] = nullptr;
+      nonnull[&x] = nullptr;  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, OperatorStarAndEquals) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct Optional {
+      using value_type = T;
+
+      const value_type& operator*() const&;
+      const value_type& value() const&;
+      Optional<T>& operator=(const value_type& v);
+    };
+
+    // Try a non-member operator* too, to make sure we don't crash.
+    template <typename T>
+    static Optional<T> operator*(const Optional<T>& L, const Optional<T>& R);
+
+    void target(Optional<int* _Nullable> nullable,
+                Optional<int* _Nonnull> nonnull) {
+      // read
+      *(*nullable);         // [[unsafe]]
+      *(nullable.value());  // [[unsafe]]
+      *(*nonnull);
+      *(nonnull.value());
+
+      // write
+      nullable = nullptr;
+      // TODO(b/405355053): This should be unsafe but we are only getting
+      // the return type from resugaring member operator calls. We aren't yet
+      // get the argument nullability attached to the parameter of each
+      // instance yet (compare to `CallInstantiatedMember` test below for
+      // non-operator member functions).
+      nonnull = nullptr;
+
+      // non-member operator*
+      Optional<int* _Nullable> nullable2 = nullable * nullable;
+      Optional<int* _Nullable> nonnull2 = nonnull * nonnull;
+    }
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, ParenTypeInTemplate1) {
   checkDiagnostics(R"cc(
     template <typename T>
