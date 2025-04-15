@@ -2,43 +2,16 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{anyhow, Error};
-use database::code_snippet::{required_crubit_features, RequiredCrubitFeature};
+use arc_anyhow::anyhow;
+use database::code_snippet::{required_crubit_features, HasBindings, NoBindingsReason};
 use database::BindingsGenerator;
 use ir::{GenericItem, Item};
-use std::rc::Rc;
-
-#[derive(Clone, PartialEq, Eq)]
-pub enum HasBindings {
-    /// This item will have bindings. This is *guaranteed*, if the item isn't a `Func`.
-    Yes,
-
-    /// These bindings are guaranteed not to exist.
-    No(NoBindingsReason),
-}
-
-#[derive(Clone, PartialEq, Eq)]
-pub enum NoBindingsReason {
-    MissingRequiredFeatures {
-        context: Rc<str>,
-        missing_features: Vec<RequiredCrubitFeature>,
-    },
-    DependencyFailed {
-        context: Rc<str>,
-        error: Error,
-    },
-    /// This is directly unsupported.
-    Unsupported {
-        context: Rc<str>,
-        error: Error,
-    },
-}
 
 #[must_use]
-pub fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
+pub fn has_bindings(db: &dyn BindingsGenerator, item: Item) -> HasBindings {
     let ir = db.ir();
 
-    match required_crubit_features(db, item) {
+    match required_crubit_features(db, &item) {
         Ok(missing_features) if missing_features.is_empty() => {}
         Ok(missing_features) => {
             return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
@@ -57,7 +30,7 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
     if let Some(parent) = item.enclosing_item_id() {
         let parent = ir.find_untyped_decl(parent);
 
-        match has_bindings(db, parent) {
+        match db.has_bindings(parent.clone()) {
             HasBindings::No(no_parent_bindings) => {
                 return HasBindings::No(NoBindingsReason::DependencyFailed {
                     context: item.debug_name(&ir),
@@ -88,7 +61,7 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
                 error,
             }),
         },
-        Item::Enum(enum_) => match db.generate_enum(Rc::clone(enum_)) {
+        Item::Enum(enum_) => match db.generate_enum(enum_.clone()) {
             Ok(_) => HasBindings::Yes,
             Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
                 context: enum_.debug_name(ir),
@@ -97,29 +70,5 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
         },
         // TODO(b/392882224): Records might not generated if an error occurs in generation.
         _ => HasBindings::Yes,
-    }
-}
-
-impl From<NoBindingsReason> for Error {
-    fn from(reason: NoBindingsReason) -> Error {
-        match reason {
-            NoBindingsReason::MissingRequiredFeatures { context, missing_features } => {
-                // This maybe could use .context(), but the ordering is backward.
-                let mut all_missing = vec![];
-                for missing in missing_features {
-                    all_missing.push(missing.to_string());
-                }
-                anyhow!(
-                    "Can't generate bindings for {context}, because of missing required features (<internal link>):\n{}",
-                    all_missing.join("\n")
-                )
-            }
-            NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
-                "Can't generate bindings for {context} due to missing bindings for its dependency"
-            )),
-            NoBindingsReason::Unsupported { context, error } => error.context(format!(
-                "Can't generate bindings for {context}, because it is unsupported"
-            )),
-        }
     }
 }

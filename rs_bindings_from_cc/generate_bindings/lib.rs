@@ -6,7 +6,7 @@
 use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
-use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
+use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens, HasBindings};
 use database::db::{BindingsGenerator, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -14,7 +14,6 @@ use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
-use has_bindings::{has_bindings, HasBindings};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -231,7 +230,7 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
             UnsupportedItem::new_with_cause(db.ir(), &enum_, Some(unsupported_item_path), err)
         }
         _ => {
-            if has_bindings(db, &item) == HasBindings::Yes && !matches!(item, Item::Func(_)) {
+            if db.has_bindings(item.clone()) == HasBindings::Yes && !matches!(item, Item::Func(_)) {
                 return Err(err);
             }
             // FIXME(cramertj): get paths here in more cases. It may be that
@@ -321,7 +320,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
     };
 
     // Suppress bindings at the last minute, to collect other errors first.
-    if let HasBindings::No(reason) = has_bindings(db, item) {
+    if let HasBindings::No(reason) = db.has_bindings(item.clone()) {
         return Err(reason.into());
     }
 
@@ -341,6 +340,7 @@ pub fn new_database<'db>(
         fatal_errors,
         environment,
         is_rs_type_kind_unsafe,
+        has_bindings::has_bindings,
         generate_enum::generate_enum,
         generate_item,
         generate_struct_and_union::generate_record,

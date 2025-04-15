@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, bail, ensure, Result};
+use database::code_snippet::{HasBindings, NoBindingsReason};
 use database::rs_snippet::{CratePath, Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
-use has_bindings::{has_bindings, HasBindings, NoBindingsReason};
 use ir::{
     rs_imported_crate_name, CcCallingConv, CcType, CcTypeVariant, GenericItem, Item,
     PointerTypeKind,
@@ -89,7 +89,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 ir::Item::TypeAlias(alias) => Some(&alias.underlying_type),
                 _ => None,
             };
-            match (has_bindings(db, item), fallback_type) {
+            match (db.has_bindings(item.clone()), fallback_type) {
                 (HasBindings::Yes, _) => {}
                 // Additionally, we should not "see through" type aliases that are specifically not
                 // on targets that intend to support Rust users of those type aliases.

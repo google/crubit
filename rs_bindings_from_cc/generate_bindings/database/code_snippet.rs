@@ -8,7 +8,7 @@ use crate::db::BindingsGenerator;
 use proc_macro2::{Ident, TokenStream};
 
 use crate::rs_snippet::{RsTypeKind, TypeLocation};
-use arc_anyhow::Result;
+use arc_anyhow::{anyhow, Error, Result};
 use ffi_types::FfiU8SliceBox;
 use ir::{BazelLabel, GenericItem, Item, UnqualifiedIdentifier};
 use std::collections::BTreeSet;
@@ -312,4 +312,54 @@ pub fn required_crubit_features(
         }
     }
     Ok(missing_features)
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub enum HasBindings {
+    /// This item will have bindings. This is *guaranteed*, if the item isn't a `Func`.
+    Yes,
+
+    /// These bindings are guaranteed not to exist.
+    No(NoBindingsReason),
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub enum NoBindingsReason {
+    MissingRequiredFeatures {
+        context: Rc<str>,
+        missing_features: Vec<RequiredCrubitFeature>,
+    },
+    DependencyFailed {
+        context: Rc<str>,
+        error: Error,
+    },
+    /// This is directly unsupported.
+    Unsupported {
+        context: Rc<str>,
+        error: Error,
+    },
+}
+
+impl From<NoBindingsReason> for Error {
+    fn from(reason: NoBindingsReason) -> Error {
+        match reason {
+            NoBindingsReason::MissingRequiredFeatures { context, missing_features } => {
+                // This maybe could use .context(), but the ordering is backward.
+                let mut all_missing = vec![];
+                for missing in missing_features {
+                    all_missing.push(missing.to_string());
+                }
+                anyhow!(
+                    "Can't generate bindings for {context}, because of missing required features (<internal link>):\n{}",
+                    all_missing.join("\n")
+                )
+            }
+            NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
+                "Can't generate bindings for {context} due to missing bindings for its dependency"
+            )),
+            NoBindingsReason::Unsupported { context, error } => error.context(format!(
+                "Can't generate bindings for {context}, because it is unsupported"
+            )),
+        }
+    }
 }
