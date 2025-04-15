@@ -10,15 +10,8 @@ use std::rc::Rc;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum HasBindings {
-    /// This item is guaranteed to have bindings. If the translation unit
-    /// defining the item fails to generate bindings for it, it will not
-    /// compile.
+    /// This item will have bindings. This is *guaranteed*, if the item isn't a `Func`.
     Yes,
-
-    /// This item is not guaranteed to have bindings. There is no way to tell if
-    /// bindings were generated unless the item is defined in the current
-    /// translation unit.
-    Maybe,
 
     /// These bindings are guaranteed not to exist.
     No(NoBindingsReason),
@@ -71,13 +64,6 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
                     error: no_parent_bindings.into(),
                 });
             }
-            HasBindings::Maybe => {
-                // This shouldn't happen, Maybe is meant for Func items.
-                return HasBindings::No(NoBindingsReason::DependencyFailed {
-                    context: item.debug_name(&ir),
-                    error: anyhow!("parent item might not be defined"),
-                });
-            }
             HasBindings::Yes => {}
         }
 
@@ -95,9 +81,6 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: &Item) -> HasBindings {
     }
 
     match item {
-        // Function bindings aren't guaranteed, because they don't _need_ to be guaranteed. We
-        // choose not to generate code which relies on functions existing in other TUs.
-        Item::Func(..) => HasBindings::Maybe,
         Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.clone()) {
             Ok(_) => HasBindings::Yes,
             Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {

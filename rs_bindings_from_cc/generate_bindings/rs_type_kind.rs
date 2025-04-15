@@ -103,12 +103,6 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 {
                     return db.rs_type_kind(fallback_type.clone());
                 }
-                (HasBindings::Maybe, _) => {
-                    bail!(
-                        "Type {} may or may not exist, and cannot be used.",
-                        item.debug_name(&ir)
-                    );
-                }
                 (HasBindings::No(reason), _) => {
                     return Err(reason.into());
                 }
