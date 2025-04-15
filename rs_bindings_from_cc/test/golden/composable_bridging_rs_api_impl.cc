@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc
 
-#include "support/bridge_cpp.h"
+#include "support/bridge.h"
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"

@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <utility>
 
-#include "support/bridge_cpp.h"
+#include "support/bridge.h"
 
 // clang-format off
 #define CRUBIT_BRIDGE(rust_name, abi_rust, abi_cpp)         \

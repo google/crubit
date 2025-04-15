@@ -572,7 +572,7 @@ fn generate_rs_api_impl_includes(
                 if bridge_type.is_void_converters_bridge_type() {
                     "internal/lazy_init.h".into()
                 } else {
-                    "bridge_cpp.h".into()
+                    "bridge.h".into()
                 },
             ));
         }
@@ -587,7 +587,7 @@ fn generate_rs_api_impl_includes(
                 if bridge_type.is_void_converters_bridge_type() {
                     "internal/lazy_init.h".into()
                 } else {
-                    "bridge_cpp.h".into()
+                    "bridge.h".into()
                 },
             ));
         }

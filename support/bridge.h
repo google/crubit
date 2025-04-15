@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_CPP_H_
-#define THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_CPP_H_
+#ifndef THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_H_
+#define THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_H_
 
 #include <concepts>
 #include <cstddef>
@@ -359,4 +359,4 @@ typename Abi::Value Decode(const unsigned char* buf) {
 
 }  // namespace crubit
 
-#endif  // THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_CPP_H_
+#endif  // THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_H_

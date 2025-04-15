@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "support/bridge_cpp.h"
+#include "support/bridge.h"
 
 #include <tuple>
 
