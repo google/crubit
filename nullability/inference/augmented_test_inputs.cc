@@ -29,10 +29,7 @@ TestInputs getAugmentedTestInputs(llvm::StringRef Source,
   for (const auto& Entry : llvm::ArrayRef(ctn_replacement_macros_create(),
                                           ctn_replacement_macros_size()))
     Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
-  // TODO: b/357760487 -- use the flag until the issue is resolved or we find a
-  // workaround.
-  Inputs.ExtraArgs.push_back(
-      "-fretain-subst-template-type-parm-type-ast-nodes");
+
   Inputs.ExtraArgs.push_back("-I.");
   Inputs.ExtraArgs.push_back("-include");
   Inputs.ExtraArgs.push_back("nullability_annotations.h");

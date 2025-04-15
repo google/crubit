@@ -418,10 +418,6 @@ class GetTypeNullabilityTest : public ::testing::Test {
     Inputs.ExtraArgs.push_back("nullability.h");
     Inputs.ExtraArgs.push_back("-include");
     Inputs.ExtraArgs.push_back("header.h");
-    // TODO: b/357760487 -- use the flag until the issue is resolved or we find
-    // a workaround.
-    Inputs.ExtraArgs.push_back(
-        "-fretain-subst-template-type-parm-type-ast-nodes");
     Inputs.ExtraFiles["nullability.h"] = R"cpp(
       template <class X>
       using Nullable [[clang::annotate("Nullable")]] = X _Nullable;
@@ -793,10 +789,6 @@ std::vector<ComparableNullabilityLoc> getComparableNullabilityLocs(
   TestInputs Inputs(AnnotatedInput.code());
   Inputs.MakeAction = makeRegisterPragmasAction(Pragmas);
   Inputs.Language = TestLanguage::Lang_CXX17;
-  // TODO: b/357760487 -- use the flag until the issue is resolved or we find a
-  // workaround.
-  Inputs.ExtraArgs.push_back(
-      "-fretain-subst-template-type-parm-type-ast-nodes");
   if (!HeaderWithAttributes.empty()) {
     Inputs.ExtraFiles["header.h"] = HeaderWithAttributes;
     Inputs.ExtraArgs.push_back("-include");

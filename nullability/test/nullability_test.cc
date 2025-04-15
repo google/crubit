@@ -647,14 +647,10 @@ int main(int argc, const char **argv) {
   // Run in C++17 and C++20 mode to cover differences in the AST between modes
   // (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
   for (const char *CxxMode : {"-std=c++17", "-std=c++20"})
-    require(Executor.execute(
-        clang::tooling::newFrontendActionFactory(&F, &F),
-        clang::tooling::getInsertArgumentAdjuster(
-            // Ensure test_headers are on the include path.
-            {"-isystem.", CxxMode,
-             // TODO: b/357760487 -- use the flag until the issue is resolved or
-             // we find a workaround.
-             "-Xclang", "-fretain-subst-template-type-parm-type-ast-nodes"},
-            clang::tooling::ArgumentInsertPosition::END)));
+    require(Executor.execute(clang::tooling::newFrontendActionFactory(&F, &F),
+                             clang::tooling::getInsertArgumentAdjuster(
+                                 // Ensure test_headers are on the include path.
+                                 {"-isystem.", CxxMode},
+                                 clang::tooling::ArgumentInsertPosition::END)));
   return F.Output.hadErrors() ? 1 : 0;
 }
