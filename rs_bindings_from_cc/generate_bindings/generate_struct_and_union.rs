@@ -327,8 +327,8 @@ fn field_definition(
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
-    let record_rs_type_kind = RsTypeKind::new_record(db, record.clone(), &db.ir())?;
-    if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = record_rs_type_kind
+    let record_rs_type_kind = db.rs_type_kind(record.as_ref().into())?;
+    if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = &record_rs_type_kind
     {
         return Ok(ApiSnippets::default());
     }
@@ -659,7 +659,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     };
     features.insert(make_rs_ident("negative_impls"));
     let record_trait_assertions = {
-        let record_type_name = RsTypeKind::new_record(db, record.clone(), ir)?.to_token_stream(db);
+        let record_type_name = record_rs_type_kind.to_token_stream(db);
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -876,17 +876,23 @@ fn cc_struct_upcast_impl(
         let base_record: &Rc<Record> = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
-        let base_type = RsTypeKind::new_record(db, base_record.clone(), ir)?;
+        let Ok(base_type) = db.rs_type_kind(base_record.as_ref().into()) else {
+            // The base type is unknown to Crubit, so don't generate upcast code for it.
+            let base_name = &base_record.cc_name;
+            let derived_name = &record.cc_name;
+            let comment = format!("'{derived_name}' cannot be upcasted to '{base_name}' because the base type doesn't have Crubit bindings.");
+            impls.push(quote! { __NEWLINE__ __COMMENT__ #comment __NEWLINE__ });
+            continue;
+        };
         if base_type.is_bridge_type() {
             // The base class isn't directly represented in Rust, so we can't upcast to it.
             continue;
         }
         let base_name = base_type.to_token_stream(db);
-        let derived_name = RsTypeKind::new_record(db, record.clone(), ir)?.to_token_stream(db);
-        let body;
-        if let Some(offset) = base.offset {
+        let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
+        let body = if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);
-            body = quote! {(derived as *const _ as *const u8).offset(#offset) as *const #base_name};
+            quote! { (derived as *const _ as *const u8).offset(#offset) as *const #base_name }
         } else {
             let cast_fn_name = make_rs_ident(&format!(
                 "__crubit_dynamic_upcast__{derived}__to__{base}_{odr_suffix}",
@@ -905,10 +911,10 @@ fn cc_struct_upcast_impl(
                 pub fn #cast_fn_name (from: *const #derived_name) -> *const #base_name;
             });
             let crate_root_path = ir.crate_root_path_tokens();
-            body = quote! {
+            quote! {
                 #crate_root_path::detail::#cast_fn_name(derived)
-            };
-        }
+            }
+        };
         impls.push(quote! {
             unsafe impl oops::Inherits<#base_name> for #derived_name {
                 unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {

@@ -213,6 +213,16 @@ impl CcType {
     }
 }
 
+impl From<&Record> for CcType {
+    fn from(record: &Record) -> Self {
+        CcType {
+            variant: CcTypeVariant::Record(record.id),
+            is_const: false,
+            unknown_attr: Rc::default(),
+        }
+    }
+}
+
 #[derive(Copy, Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum PointerTypeKind {

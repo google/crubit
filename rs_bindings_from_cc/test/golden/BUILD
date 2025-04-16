@@ -79,8 +79,6 @@ NON_BUILDABLE_TEST = [
     "bridge_type",
     # We can't support additional Rust srcs so we can't run the test.
     "composable_bridging",
-    # shows an example of a test that explicitly doesn't build.
-    "uses_not_crubit_exposed",
 ]
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]

@@ -369,7 +369,7 @@ pub fn generate_bindings_tokens(
     let mut items = vec![];
     let mut thunks = vec![];
     let mut cc_details = vec![
-        generate_rs_api_impl_includes(&db, crubit_support_path_format)?,
+        generate_rs_api_impl_includes(&db, crubit_support_path_format),
         quote! {
             __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
             // Disable Clang thread-safety-analysis warnings that would otherwise
@@ -547,10 +547,7 @@ fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
     false
 }
 
-fn generate_rs_api_impl_includes(
-    db: &Database,
-    crubit_support_path_format: &str,
-) -> Result<TokenStream> {
+fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str) -> TokenStream {
     let ir = db.ir();
 
     let mut internal_includes = BTreeSet::new();
@@ -609,12 +606,12 @@ fn generate_rs_api_impl_includes(
     let ir_includes =
         ir.public_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
 
-    Ok(quote! {
+    quote! {
         #internal_includes
         __NEWLINE__
         __COMMENT__ "Public headers of the C++ library being wrapped."
         #( #ir_includes )* __NEWLINE__
-    })
+    }
 }
 
 /// Returns the [`CrubitAbiType`] for the given [`RsTypeKind`].

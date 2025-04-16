@@ -50,11 +50,7 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'CannotUpcastInCrubit::operator=':
 // Parameter #0 is not supported: Unsupported type 'CannotUpcastInCrubit &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<not_crubit_exposed::NotCrubitExposed> for crate::CannotUpcastInCrubit {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const not_crubit_exposed::NotCrubitExposed {
-        (derived as *const _ as *const u8).offset(0) as *const not_crubit_exposed::NotCrubitExposed
-    }
-}
+// 'CannotUpcastInCrubit' cannot be upcasted to 'NotCrubitExposed' because the base type doesn't have Crubit bindings.
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::CannotUpcastInCrubit>() == 4);
