@@ -15,27 +15,38 @@ In brief, Crubit supports:
 
 ## ABI-Compatibility
 
-Some types have restrictions on where they can be used. We can categorize types
-into three categories:
+Certain references to C++ or Rust types will not receive Crubit bindings.
+Some types may only be usable in certain locations due to current Crubit
+limitations, inherent properties of the type, or both. Supported types fall into
+one of three categories ranging from "most widely supported" to
+"most restricted":
 
-*   **ABI-compatible**: the type can be used by value or by pointer, in fields,
-    functions, function pointers. All primitive and pointer types are
-    ABI-compatible.
-*   **Layout-compatible**: the type can be used anywhere an ABI-compatible type
-    can be used, except that it cannot be accepted or returned by value in
-    functions in the following circumstances:
-    *   if the type is not movable in C++, or
-    *   if the FFI is performed manually, without using Crubit, or
-    *   the function is a function pointer.
-*   **Bridged**: the type can only be passed or returned directly by value. It
-    cannot be used by pointer, in struct fields, or in function pointers in any
-    way.
+* **ABI-compatible**: these types have a C-ABI-equivalent representation which
+    can be used anywhere a value of this type is expected from both C++ and
+    Rust.
+* **Layout-compatible**: these types have equivalent in-memory representations
+    in C++ and Rust but cannot be represented using standard C ABI. These types
+    will only be usable as by-value function arguments if they are C++-movable.
+    For example, `Box<i32>` is not C++-movable because it has no `nullptr` /
+    moved-from representation.
+* **Bridged**: these types may have different in-memory representations in C++
+    and Rust, and so can only be passed by-value between the two languages.
+    Examples include Rust tuples, which are bridged by-value into C++
+    `std::tuple`.
+
+| Level of Support            | Example             | Pass by-reference |         Pass by-value        |        Return by-value       | Fields | In Function Pointer Types |
+|-----------------------------|---------------------|:-----------------:|:----------------------------:|:----------------------------:|:------:|:-------------------------:|
+| ABI Compatible              | `i32`               |         Y         |               Y              |               Y              |    Y   |             Y             |
+| Layout-compatible C++ type  | `absl::string_view` |         Y         | if trivially relocatable[^1] | if trivially relocatable[^2] |    Y   |             N             |
+| Layout-compatible Rust type | `UserDefinedStruct` |         Y         |      if C++ movable[^3]      |               Y              |    Y   |             N             |
+| Bridged                     | `(i32, i32)`        |         N         |               Y              |               Y              |    N   |             N             |
+
+[^1]: See <internal link>/cpp/classes_and_structs#trivially_relocatable
+[^2]: See <internal link>/cpp/classes_and_structs#trivially_relocatable
+[^3]: See <internal link>/rust/movable_types
 
 NOTE: All primitive and pointer types are ABI-compatible. However, due to
 b/369895805, all non-bridged user-defined types are **only** layout-compatible.
-
-For example, Rust's `i32` is an ABI-compatible type: it maps to C++'s `int32_t`,
-and can even be passed by value as an `int32_t` in function pointers.
 
 In the following examples, `foo` receives bindings, but `bad_foo` will not
 receive bindings, because while the types it uses in its function signature are
