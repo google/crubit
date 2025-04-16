@@ -43,3 +43,5 @@ std::pair<std::optional<int>, std::optional<std::pair<float, Vec3<float>>>>
 MakeStuff() {
   return {std::nullopt, {{3.14f, {1.0f, 2.0f, 3.0f}}}};
 }
+
+Vec3<Stuff> MakeVec3OfStructs(Stuff x, Stuff y, Stuff z) { return {x, y, z}; }

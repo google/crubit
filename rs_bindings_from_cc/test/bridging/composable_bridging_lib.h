@@ -57,4 +57,13 @@ std::pair<std::pair<int, float>, bool> MakePair(int a, float b, bool c);
 std::pair<std::optional<int>, std::optional<std::pair<float, Vec3<float>>>>
 MakeStuff();
 
+// Not a bridge type!
+struct [[clang::annotate("crubit_internal_trait_derive", "Debug", "PartialEq")]]
+Stuff {
+  int i;
+  float f;
+};
+
+Vec3<Stuff> MakeVec3OfStructs(Stuff x, Stuff y, Stuff z);
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

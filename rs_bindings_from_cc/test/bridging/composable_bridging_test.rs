@@ -34,3 +34,11 @@ fn test_map_multiply() {
 fn test_stuff() {
     expect_eq!(MakeStuff(), (None, Some((3.14, Vec3 { x: 1.0, y: 2.0, z: 3.0 }))));
 }
+
+#[gtest]
+fn test_vec3_of_structs() {
+    expect_eq!(
+        MakeVec3OfStructs(Stuff { i: 1, f: 2.0 }, Stuff { i: 3, f: 4.0 }, Stuff { i: 5, f: 6.0 }),
+        Vec3 { x: Stuff { i: 1, f: 2.0 }, y: Stuff { i: 3, f: 4.0 }, z: Stuff { i: 5, f: 6.0 } }
+    );
+}

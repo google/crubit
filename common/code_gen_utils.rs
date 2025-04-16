@@ -215,7 +215,7 @@ pub fn make_rs_ident(ident: &str) -> Ident {
     }
 }
 
-fn check_valid_cc_name(name: &str) -> Result<()> {
+pub fn check_valid_cc_name(name: &str) -> Result<()> {
     ensure!(!name.is_empty(), "Empty string is not a valid C++ identifier");
 
     // C++ doesn't have an equivalent of

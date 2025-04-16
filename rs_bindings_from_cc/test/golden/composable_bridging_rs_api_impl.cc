@@ -36,4 +36,22 @@ static_assert(CRUBIT_OFFSET_OF(x, struct Vec3) == 0);
 static_assert(CRUBIT_OFFSET_OF(y, struct Vec3) == 4);
 static_assert(CRUBIT_OFFSET_OF(z, struct Vec3) == 8);
 
+extern "C" void __rust_thunk___Z16MakeOptionalVec3fffb(
+    unsigned char* __return_abi_buffer, float x, float y, float z,
+    bool is_present) {
+  ::crubit::internal::Encode<
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
+      __return_abi_buffer, MakeOptionalVec3(x, y, z, is_present));
+}
+
+extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
+    unsigned char* __return_abi_buffer, const unsigned char* v, float factor) {
+  ::crubit::internal::Encode<
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
+      __return_abi_buffer,
+      MapMultiply(::crubit::internal::Decode<
+                      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(v),
+                  factor));
+}
+
 #pragma clang diagnostic pop

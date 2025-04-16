@@ -8,6 +8,7 @@ use crate::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
+use crubit_abi_type::FullyQualifiedPath;
 use crubit_feature::CrubitFeature;
 use error_report::{anyhow, bail, ensure};
 use ir::*;
@@ -127,6 +128,21 @@ impl CratePath {
     ) -> CratePath {
         let crate_root_path = NamespaceQualifier::new(ir.crate_root_path());
         CratePath { crate_ident, crate_root_path, namespace_qualifier }
+    }
+
+    pub fn to_fully_qualified_path(&self, item: Ident) -> FullyQualifiedPath {
+        let crate_ident = self
+            .crate_ident
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| Ident::new("crate", proc_macro2::Span::call_site()));
+        FullyQualifiedPath {
+            start_with_colon2: self.crate_ident.is_some(),
+            parts: std::iter::once(crate_ident)
+                .chain(self.namespace_qualifier.0.iter().map(|ns| make_rs_ident(ns)))
+                .chain(std::iter::once(item))
+                .collect(),
+        }
     }
 }
 
