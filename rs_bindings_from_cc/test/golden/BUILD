@@ -15,6 +15,7 @@ TESTS = [name[:-2] for name in glob(
     ["*.h"],
     exclude = [
         "*namespaces_json.h",
+        "not_crubit_exposed.h",
     ],
 )]
 
@@ -41,6 +42,7 @@ DEPS = {
     "definition_of_forward_declaration": [
         "forward_declaration",
     ],
+    "uses_not_crubit_exposed": ["not_crubit_exposed"],
 }
 
 TAGS = {}
@@ -77,6 +79,8 @@ NON_BUILDABLE_TEST = [
     "bridge_type",
     # We can't support additional Rust srcs so we can't run the test.
     "composable_bridging",
+    # shows an example of a test that explicitly doesn't build.
+    "uses_not_crubit_exposed",
 ]
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]
@@ -111,4 +115,9 @@ bzl_library(
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
     ],
+)
+
+cc_library(
+    name = "not_crubit_exposed",
+    srcs = ["not_crubit_exposed.h"],
 )
