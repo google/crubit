@@ -1113,7 +1113,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
         TransformedArgs.push_back(Visit(Arg));
       return Ctx.getTemplateSpecializationType(
           TemplateName(CTSD->getSpecializedTemplate()), TransformedArgs,
-          QualType(RT, 0));
+          TransformedArgs, QualType(RT, 0));
     }
     return QualType(RT, 0);
   }

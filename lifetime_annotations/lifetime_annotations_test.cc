@@ -748,8 +748,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplateWithCtor) {
               IsOkAndHolds(LifetimesAre({{"S::S<Args...>", "a:"},
                                          {"S<type-parameter-0-0, "
                                           "type-parameter-0-1...>::"
-                                          "S<type-parameter-0-0, "
-                                          "type-parameter-0-1...>",
+                                          "S<T, Args...>",
                                           "a: (), ()"},
                                          {"target", "a, b"}})));
 }
