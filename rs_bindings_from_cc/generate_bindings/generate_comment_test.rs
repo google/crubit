@@ -11,7 +11,7 @@ use ffi_types::Environment;
 use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
 use googletest::prelude::gtest;
-use ir::{ItemId, UnsupportedItem, UnsupportedItemKind, IR};
+use ir::{BazelLabel, ItemId, UnsupportedItem, UnsupportedItemKind, IR};
 use ir_testing::make_ir_from_items;
 use quote::quote;
 use std::rc::Rc;
@@ -79,6 +79,9 @@ struct TestItem {
 impl ir::GenericItem for TestItem {
     fn id(&self) -> ItemId {
         ItemId::new_for_testing(123)
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         "test_item".into()

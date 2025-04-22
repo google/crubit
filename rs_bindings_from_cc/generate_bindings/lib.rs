@@ -248,7 +248,7 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
 fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
     let ir = db.ir();
     if let Some(owning_target) = item.owning_target() {
-        if !ir.is_current_target(owning_target) {
+        if !ir.is_current_target(&owning_target) {
             return Ok(ApiSnippets::default());
         }
     }

@@ -128,7 +128,7 @@ pub fn required_crubit_features(
             // We refuse to generate bindings if either the definition of an item, or
             // instantiation (if it is a template) of an item are in a translation unit
             // which doesn't have the required Crubit features.
-            for target in item.defining_target().into_iter().chain(item.owning_target()) {
+            for target in item.defining_target().into_iter().chain(item.owning_target().as_ref()) {
                 let enabled_features = ir.target_crubit_features(target);
                 if (alternative_required_features & enabled_features).is_empty() {
                     missing_features.push(RequiredCrubitFeature {
@@ -144,7 +144,7 @@ pub fn required_crubit_features(
     let require_rs_type_kind = |missing_features: &mut Vec<RequiredCrubitFeature>,
                                 rs_type_kind: &RsTypeKind,
                                 context: &dyn Fn() -> Rc<str>| {
-        for target in item.defining_target().into_iter().chain(item.owning_target()) {
+        for target in item.defining_target().into_iter().chain(item.owning_target().as_ref()) {
             let (missing, desc) =
                 rs_type_kind.required_crubit_features(db, ir.target_crubit_features(target));
             if !missing.is_empty() {

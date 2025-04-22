@@ -22,6 +22,9 @@ use std::rc::Rc;
 pub trait GenericItem {
     fn id(&self) -> ItemId;
 
+    /// The Bazel target which owns the bindings for this item.
+    fn owning_target(&self) -> Option<BazelLabel>;
+
     /// The name of the item, readable by programmers.
     ///
     /// For example, `void Foo();` should have name `Foo`.
@@ -51,6 +54,9 @@ where
 {
     fn id(&self) -> ItemId {
         (**self).id()
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        (**self).owning_target()
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         (**self).debug_name(ir)
@@ -714,6 +720,9 @@ impl GenericItem for Func {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
+    }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         let record: Option<Rc<str>> = ir.record_for_member_func(self).map(|r| r.debug_name(ir));
         let record: Option<&str> = record.as_deref();
@@ -823,6 +832,9 @@ pub struct IncompleteRecord {
 impl GenericItem for IncompleteRecord {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.cc_name.identifier.clone()
@@ -966,6 +978,9 @@ impl GenericItem for Record {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.cc_name.identifier.clone()
     }
@@ -1063,6 +1078,9 @@ impl GenericItem for GlobalVar {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.rs_name.identifier.clone()
     }
@@ -1104,6 +1122,9 @@ pub struct Enum {
 impl GenericItem for Enum {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.rs_name.identifier.clone()
@@ -1150,6 +1171,9 @@ pub struct TypeAlias {
 impl GenericItem for TypeAlias {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.rs_name.identifier.clone()
@@ -1242,6 +1266,9 @@ impl GenericItem for UnsupportedItem {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        None
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.name.clone()
     }
@@ -1333,6 +1360,9 @@ impl GenericItem for Comment {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        None
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         "comment".into()
     }
@@ -1371,6 +1401,9 @@ impl GenericItem for Namespace {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
+    }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.rs_name.to_string().into()
     }
@@ -1400,6 +1433,9 @@ pub struct UseMod {
 impl GenericItem for UseMod {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         format!("[internal] use mod {}::* = {}", self.mod_name, self.path).into()
@@ -1434,6 +1470,9 @@ pub struct TypeMapOverride {
 impl GenericItem for TypeMapOverride {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
         self.cc_name.clone()
@@ -1490,6 +1529,13 @@ impl GenericItem for Item {
         forward_item! {
             match self {
                 _(x) => x.id()
+            }
+        }
+    }
+    fn owning_target(&self) -> Option<BazelLabel> {
+        forward_item! {
+            match self {
+                _(x) => x.owning_target()
             }
         }
     }
@@ -1564,23 +1610,6 @@ impl Item {
         match self {
             Item::Record(record) => record.defining_target.as_ref(),
             _ => None,
-        }
-    }
-
-    /// Returns the target that this should generate source code in.
-    pub fn owning_target(&self) -> Option<&BazelLabel> {
-        match self {
-            Item::Func(func) => Some(&func.owning_target),
-            Item::IncompleteRecord(record) => Some(&record.owning_target),
-            Item::Record(record) => Some(&record.owning_target),
-            Item::Enum(e) => Some(&e.owning_target),
-            Item::GlobalVar(b) => Some(&b.owning_target),
-            Item::TypeAlias(type_alias) => Some(&type_alias.owning_target),
-            Item::UnsupportedItem(..) => None,
-            Item::Comment(..) => None,
-            Item::Namespace(ns) => Some(&ns.owning_target),
-            Item::UseMod(..) => None,
-            Item::TypeMapOverride(type_override) => Some(&type_override.owning_target),
         }
     }
 
