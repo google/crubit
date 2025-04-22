@@ -321,7 +321,7 @@ impl !Sync for NonCopyUnion2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
 #[diagnostic::on_unimplemented(
-    message = "binding genertion for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
+    message = "binding generation for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
 )]
 pub trait BindingFailedFor_ZN13NonCopyUnion2C1ERKS_ {}
 impl<'error> Clone for NonCopyUnion2
@@ -339,7 +339,7 @@ where
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding genertion for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
+    message = "binding generation for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
 )]
 pub trait BindingFailedFor_ZN13NonCopyUnion2C1EOS_ {}
 impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for NonCopyUnion2

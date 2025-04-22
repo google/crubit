@@ -1290,7 +1290,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignPro
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding genertion for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
+    message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
 )]
 pub trait BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi {}
 impl<'error> ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignProhibitedConstMember
@@ -1372,7 +1372,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding genertion for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedFriendConstLhs"
+    message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedFriendConstLhs"
 )]
 pub trait BindingFailedFor_ZpLRK33AddAssignProhibitedFriendConstLhsi {}
 impl<'error> ::core::ops::AddAssign<::core::ffi::c_int> for crate::AddAssignProhibitedFriendConstLhs

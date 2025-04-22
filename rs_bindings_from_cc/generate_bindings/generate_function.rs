@@ -1027,7 +1027,7 @@ struct ErrorsAsUnsatisfiedTraitBound {
 /// This generates code like:
 ///
 /// ```
-/// #[diagnostic::on_unimplemented(message = "binding genertion for function failed\n...")]
+/// #[diagnostic::on_unimplemented(message = "binding generation for function failed\n...")]
 /// pub trait BindingFailedFor{unique_id} {}
 ///
 /// fn generated_api_func<'a>() where &'error (): BindingFailedFor{unique_id} { unreachable!() }
@@ -1045,7 +1045,7 @@ fn errors_as_unsatisfied_trait_bound(
     let lt = Lifetime::new("error");
     let trait_name = format_ident!("BindingFailedFor{}", unique_id);
     let unsatisfied_where_clause = quote! { where & #lt (): #trait_name };
-    let message = format!("binding genertion for function failed\n{reportable_errors}");
+    let message = format!("binding generation for function failed\n{reportable_errors}");
     let unimplemented_trait_def = quote! {
         #[diagnostic::on_unimplemented(message = #message)]
         pub trait #trait_name {}

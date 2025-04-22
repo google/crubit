@@ -907,7 +907,7 @@ impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivi
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding genertion for function failed\nExpected first operator== param reference to be immutable, but found mutable reference: &'a mut crate::NontrivialByValue\ncomparison operator return type must be `bool`, found: crate::NontrivialByValue"
+    message = "binding generation for function failed\nExpected first operator== param reference to be immutable, but found mutable reference: &'a mut crate::NontrivialByValue\ncomparison operator return type must be `bool`, found: crate::NontrivialByValue"
 )]
 pub trait BindingFailedFor_ZN17NontrivialByValueeqES_ {}
 impl<'error> PartialEq for NontrivialByValue
@@ -967,7 +967,7 @@ impl Nonmovable {
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding genertion for function failed\nNon-movable, non-trivial_abi type 'crate::Nonmovable' is not supported by value as parameter #0"
+    message = "binding generation for function failed\nNon-movable, non-trivial_abi type 'crate::Nonmovable' is not supported by value as parameter #0"
 )]
 pub trait BindingFailedFor_Z22TakesNonmovableByValue10Nonmovable {}
 #[inline(always)]
