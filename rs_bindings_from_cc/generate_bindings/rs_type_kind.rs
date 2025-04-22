@@ -6,10 +6,7 @@ use arc_anyhow::{anyhow, bail, ensure, Result};
 use database::code_snippet::{HasBindings, NoBindingsReason};
 use database::rs_snippet::{CratePath, Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
-use ir::{
-    rs_imported_crate_name, CcCallingConv, CcType, CcTypeVariant, GenericItem, Item,
-    PointerTypeKind,
-};
+use ir::{rs_imported_crate_name, CcCallingConv, CcType, CcTypeVariant, Item, PointerTypeKind};
 use std::rc::Rc;
 
 pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind> {
