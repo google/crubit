@@ -117,5 +117,5 @@ bzl_library(
 
 cc_library(
     name = "not_crubit_exposed",
-    srcs = ["not_crubit_exposed.h"],
+    hdrs = ["not_crubit_exposed.h"],
 )
