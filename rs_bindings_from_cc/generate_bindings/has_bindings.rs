@@ -4,27 +4,28 @@
 
 use arc_anyhow::anyhow;
 use database::code_snippet::{
-    required_crubit_features, BindingsInfo, HasBindings, NoBindingsReason, RequiredCrubitFeature,
-    Visibility,
+    required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature, Visibility,
 };
 use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
 use ir::{Func, GenericItem, Item};
 
-#[must_use]
-pub fn has_bindings(db: &dyn BindingsGenerator, item: Item) -> HasBindings {
+pub fn has_bindings(
+    db: &dyn BindingsGenerator,
+    item: Item,
+) -> Result<BindingsInfo, NoBindingsReason> {
     let ir = db.ir();
 
     match required_crubit_features(db, &item) {
         Ok(missing_features) if missing_features.is_empty() => {}
         Ok(missing_features) => {
-            return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
+            return Err(NoBindingsReason::MissingRequiredFeatures {
                 context: item.debug_name(&db.ir()),
                 missing_features,
             });
         }
         Err(error) => {
-            return HasBindings::No(NoBindingsReason::DependencyFailed {
+            return Err(NoBindingsReason::DependencyFailed {
                 context: item.debug_name(&db.ir()),
                 error,
             });
@@ -34,21 +35,18 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: Item) -> HasBindings {
     if let Some(parent) = item.enclosing_item_id() {
         let parent = ir.find_untyped_decl(parent);
 
-        match db.has_bindings(parent.clone()) {
-            HasBindings::No(no_parent_bindings) => {
-                return HasBindings::No(NoBindingsReason::DependencyFailed {
-                    context: item.debug_name(&ir),
-                    error: no_parent_bindings.into(),
-                });
-            }
-            HasBindings::Yes(..) => {}
+        if let Err(no_parent_bindings) = db.has_bindings(parent.clone()) {
+            return Err(NoBindingsReason::DependencyFailed {
+                context: item.debug_name(ir),
+                error: no_parent_bindings.into(),
+            });
         }
 
         // TODO(b/200067824): Allow nested type items inside records.
         if item.is_type_definition() {
             if let ir::Item::Record(_) = parent {
-                return HasBindings::No(NoBindingsReason::Unsupported {
-                    context: item.debug_name(&ir),
+                return Err(NoBindingsReason::Unsupported {
+                    context: item.debug_name(ir),
                     error: anyhow!(
                         "b/200067824: type definitions nested inside records are not yet supported"
                     ),
@@ -60,26 +58,27 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: Item) -> HasBindings {
     match item {
         Item::Func(func) => func_has_bindings(db, &func),
         Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.clone()) {
-            Ok(_) => HasBindings::Yes(BindingsInfo { visibility: Visibility::Public }),
-            Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
-                context: alias.debug_name(&ir),
-                error,
-            }),
+            Ok(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
+            Err(error) => {
+                Err(NoBindingsReason::DependencyFailed { context: alias.debug_name(ir), error })
+            }
         },
         Item::Enum(enum_) => match db.generate_enum(enum_.clone()) {
-            Ok(_) => HasBindings::Yes(BindingsInfo { visibility: Visibility::Public }),
-            Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
-                context: enum_.debug_name(ir),
-                error,
-            }),
+            Ok(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
+            Err(error) => {
+                Err(NoBindingsReason::DependencyFailed { context: enum_.debug_name(ir), error })
+            }
         },
         // TODO(b/392882224): Records might not generated if an error occurs in generation.
-        _ => HasBindings::Yes(BindingsInfo { visibility: Visibility::Public }),
+        _ => Ok(BindingsInfo { visibility: Visibility::Public }),
     }
 }
 
-/// Returns function-specific `HasBindings` information.
-fn func_has_bindings(db: &dyn BindingsGenerator, func: &Func) -> HasBindings {
+/// Returns function-specific `has_bindings` information.
+fn func_has_bindings(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+) -> Result<BindingsInfo, NoBindingsReason> {
     let ir = db.ir();
     let target = &func.owning_target;
     let enabled_features = ir.target_crubit_features(target);
@@ -132,14 +131,14 @@ fn func_has_bindings(db: &dyn BindingsGenerator, func: &Func) -> HasBindings {
     }
 
     if !missing_features.is_empty() {
-        return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
+        return Err(NoBindingsReason::MissingRequiredFeatures {
             context: func.debug_name(db.ir()),
             missing_features,
         });
     }
 
     if has_nonunpin && !enabled_features.contains(crubit_feature::CrubitFeature::Experimental) {
-        return HasBindings::Yes(BindingsInfo { visibility: Visibility::PubCrate });
+        return Ok(BindingsInfo { visibility: Visibility::PubCrate });
     }
-    HasBindings::Yes(BindingsInfo { visibility: Visibility::Public })
+    Ok(BindingsInfo { visibility: Visibility::Public })
 }

@@ -6,7 +6,7 @@
 use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
-use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens, HasBindings};
+use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
 use database::db::{BindingsGenerator, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -230,9 +230,7 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
             UnsupportedItem::new_with_cause(db.ir(), &enum_, Some(unsupported_item_path), err)
         }
         _ => {
-            if matches!(db.has_bindings(item.clone()), HasBindings::Yes(..))
-                && !matches!(item, Item::Func(_))
-            {
+            if db.has_bindings(item.clone()).is_ok() && !matches!(item, Item::Func(_)) {
                 return Err(err);
             }
             // FIXME(cramertj): get paths here in more cases. It may be that
@@ -322,9 +320,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
     };
 
     // Suppress bindings at the last minute, to collect other errors first.
-    if let HasBindings::No(reason) = db.has_bindings(item.clone()) {
-        return Err(reason.into());
-    }
+    let _ = db.has_bindings(item.clone())?;
 
     Ok(generated_item)
 }

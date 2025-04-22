@@ -6,6 +6,7 @@
 /// gating, etc.
 use crate::db::BindingsGenerator;
 use proc_macro2::{Ident, TokenStream};
+use quote::{quote, ToTokens};
 
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::{anyhow, Error, Result};
@@ -299,27 +300,39 @@ pub fn required_crubit_features(
     Ok(missing_features)
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+/// Visibility of an item.
+///
+/// Generally speaking, if an error occurs (e.g. a bindings doesn't exist), then
+/// the way to "keep going" to catch more errors is to pretend that the missing
+/// item is `Public`.
+#[derive(Copy, Clone, PartialEq, Eq, Default)]
 pub enum Visibility {
+    /// The item has `pub` visibility.
+    #[default]
     Public,
+    /// The item has `pub(crate)` visibility.
     PubCrate,
 }
 
+impl ToTokens for Visibility {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Visibility::Public => quote! {pub}.to_tokens(tokens),
+            Visibility::PubCrate => quote! {pub(crate)}.to_tokens(tokens),
+        }
+    }
+}
+
 /// Information about the bindings that this item will have.
-#[derive(Copy, Clone, PartialEq, Eq)]
+///
+/// When this is returned, and the item is not a `Func`, then the bindings are
+/// guaranteed to exist.
+#[derive(Copy, Clone, PartialEq, Eq, Default)]
 pub struct BindingsInfo {
     pub visibility: Visibility,
 }
 
-#[derive(Clone, PartialEq, Eq)]
-pub enum HasBindings {
-    /// This item will have bindings. This is *guaranteed*, if the item isn't a `Func`.
-    Yes(BindingsInfo),
-
-    /// These bindings are guaranteed not to exist.
-    No(NoBindingsReason),
-}
-
+/// Information about why bindings do not exist.
 #[derive(Clone, PartialEq, Eq)]
 pub enum NoBindingsReason {
     MissingRequiredFeatures {
@@ -335,6 +348,18 @@ pub enum NoBindingsReason {
         context: Rc<str>,
         error: Error,
     },
+}
+
+impl Display for NoBindingsReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        <Error as Display>::fmt(&Error::from(self.clone()), f)
+    }
+}
+
+impl std::fmt::Debug for NoBindingsReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        <Error as std::fmt::Debug>::fmt(&Error::from(self.clone()), f)
+    }
 }
 
 impl From<NoBindingsReason> for Error {

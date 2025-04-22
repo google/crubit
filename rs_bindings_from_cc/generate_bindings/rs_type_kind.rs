@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, bail, ensure, Result};
-use database::code_snippet::{HasBindings, NoBindingsReason};
+use database::code_snippet::NoBindingsReason;
 use database::rs_snippet::{CratePath, Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
 use ir::{rs_imported_crate_name, CcCallingConv, CcType, CcTypeVariant, Item, PointerTypeKind};
@@ -87,7 +87,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 _ => None,
             };
             match (db.has_bindings(item.clone()), fallback_type) {
-                (HasBindings::Yes(..), _) => {}
+                (Ok(_), _) => {}
                 // Additionally, we should not "see through" type aliases that are specifically not
                 // on targets that intend to support Rust users of those type aliases.
                 // (If we did, then a C++ library owner could break Rust callers, which is a
@@ -95,12 +95,12 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 (has_bindings, Some(fallback_type))
                     if !matches!(
                         has_bindings,
-                        HasBindings::No(NoBindingsReason::MissingRequiredFeatures { .. })
+                        Err(NoBindingsReason::MissingRequiredFeatures { .. })
                     ) =>
                 {
                     return db.rs_type_kind(fallback_type.clone());
                 }
-                (HasBindings::No(reason), _) => {
+                (Err(reason), _) => {
                     return Err(reason.into());
                 }
             }

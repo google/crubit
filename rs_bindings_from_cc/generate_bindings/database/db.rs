@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::code_snippet::{ApiSnippets, HasBindings};
+use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason};
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::Result;
@@ -38,7 +38,7 @@ memoized::query_group! {
         #[break_cycles_with = false]
         fn is_rs_type_kind_unsafe(&self, rs_type_kind: RsTypeKind) -> bool;
 
-        fn has_bindings(&self, item: ir::Item) -> HasBindings;
+        fn has_bindings(&self, item: ir::Item) -> Result<BindingsInfo, NoBindingsReason>;
 
         fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets>;
 
