@@ -105,19 +105,14 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 }
             }
             match item {
-                Item::IncompleteRecord(incomplete_record) => Ok(RsTypeKind::IncompleteRecord {
-                    incomplete_record: incomplete_record.clone(),
-                    crate_path: Rc::new(CratePath::new(
-                        &ir,
-                        ir.namespace_qualifier(incomplete_record),
-                        rs_imported_crate_name(&incomplete_record.owning_target, ir),
-                    )),
-                }),
-                Item::Record(record) => RsTypeKind::new_record(db, record.clone(), ir),
-                Item::Enum(enum_) => RsTypeKind::new_enum(enum_.clone(), &ir),
+                Item::IncompleteRecord(incomplete_record) => {
+                    RsTypeKind::new_incomplete_record(db, incomplete_record.clone())
+                }
+                Item::Record(record) => RsTypeKind::new_record(db, record.clone()),
+                Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_.clone()),
                 Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias.clone()),
                 Item::TypeMapOverride(type_map_override) => {
-                    RsTypeKind::new_type_map_override(db, type_map_override)
+                    RsTypeKind::new_type_map_override(db, type_map_override.clone())
                 }
                 other_item => bail!("Item does not define a type: {other_item:?}"),
             }

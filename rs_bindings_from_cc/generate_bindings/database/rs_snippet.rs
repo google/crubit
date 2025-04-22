@@ -471,7 +471,8 @@ impl RsTypeKind {
         Ok(result)
     }
 
-    pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>, ir: &IR) -> Result<Self> {
+    pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<Self> {
+        let ir = db.ir();
         if let Some(bridge_type) = BridgeRsTypeKind::new(&record, db)? {
             return Ok(RsTypeKind::BridgeType { bridge_type, original_type: record });
         }
@@ -488,7 +489,21 @@ impl RsTypeKind {
         Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
     }
 
-    pub fn new_enum(enum_: Rc<Enum>, ir: &IR) -> Result<Self> {
+    pub fn new_incomplete_record(
+        db: &dyn BindingsGenerator,
+        incomplete_record: Rc<IncompleteRecord>,
+    ) -> Result<Self> {
+        let ir = db.ir();
+        let crate_path = Rc::new(CratePath::new(
+            ir,
+            ir.namespace_qualifier(&incomplete_record),
+            rs_imported_crate_name(&incomplete_record.owning_target, ir),
+        ));
+        Ok(RsTypeKind::IncompleteRecord { incomplete_record, crate_path })
+    }
+
+    pub fn new_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<Self> {
+        let ir = db.ir();
         let crate_path = Rc::new(CratePath::new(
             ir,
             ir.namespace_qualifier(&enum_),
@@ -499,7 +514,7 @@ impl RsTypeKind {
 
     pub fn new_type_map_override(
         db: &dyn BindingsGenerator,
-        type_map_override: &TypeMapOverride,
+        type_map_override: Rc<TypeMapOverride>,
     ) -> Result<Self> {
         if type_map_override.rs_name.as_ref() == SLICE_REF_NAME_RS {
             let [slice_type_inner] = &type_map_override.type_parameters[..] else {

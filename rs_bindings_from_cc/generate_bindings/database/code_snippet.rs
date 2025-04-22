@@ -255,7 +255,7 @@ pub fn required_crubit_features(
         Item::Record(record) => {
             require_rs_type_kind(
                 &mut missing_features,
-                &RsTypeKind::new_record(db, record.clone(), &db.ir())?,
+                &RsTypeKind::new_record(db, record.clone())?,
                 &|| "".into(),
             );
         }
@@ -269,7 +269,7 @@ pub fn required_crubit_features(
         Item::Enum(e) => {
             require_rs_type_kind(
                 &mut missing_features,
-                &RsTypeKind::new_enum(e.clone(), &db.ir())?,
+                &RsTypeKind::new_enum(db, e.clone())?,
                 &|| "".into(),
             );
         }

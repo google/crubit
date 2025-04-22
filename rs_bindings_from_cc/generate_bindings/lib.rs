@@ -296,7 +296,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
             .into()
         }
         Item::TypeMapOverride(type_override) => {
-            let rs_type_kind = RsTypeKind::new_type_map_override(db, type_override)?;
+            let rs_type_kind = RsTypeKind::new_type_map_override(db, type_override.clone())?;
             let disable_comment = format!(
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type_kind})",
