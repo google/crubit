@@ -24,6 +24,7 @@
 #include "absl/strings/substitute.h"
 #include "absl/types/span.h"
 #include "common/status_macros.h"
+#include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/frontend_action.h"
@@ -219,10 +220,11 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
                         options.headers_to_targets);
   if (!clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
-          virtual_input_file_content, args_as_strings, kVirtualInputPath,
+          virtual_input_file_content, args_as_strings,
+          StringRefFromStringView(kVirtualInputPath),
           // Passing the path to the driver script here allows Clang to find the
           // resource directory relative to this path.
-          options.driver_path,
+          StringRefFromStringView(options.driver_path),
           std::make_shared<clang::PCHContainerOperations>(), file_contents)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Could not compile header contents");

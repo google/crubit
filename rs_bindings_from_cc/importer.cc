@@ -32,6 +32,7 @@
 #include "absl/strings/substitute.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
+#include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/annotations_consumer.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -163,7 +164,7 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
   }
   return absl::UnimplementedError(
       absl::StrCat("Unsupported calling convention: ",
-                   absl::string_view(
+                   StringViewFromStringRef(
                        clang::FunctionType::getNameForCallConv(cc_call_conv))));
 }
 
@@ -495,7 +496,8 @@ std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
 void Importer::ImportFreeComments() {
   clang::SourceManager& sm = ctx_.getSourceManager();
   for (const auto& header : invocation_.public_headers_) {
-    if (auto file = sm.getFileManager().getFileRef(header.IncludePath())) {
+    if (auto file = sm.getFileManager().getFileRef(
+            StringRefFromStringView(header.IncludePath()))) {
       if (auto comments_in_file = ctx_.Comments.getCommentsInFile(
               sm.getOrCreateFileID(*file, clang::SrcMgr::C_User))) {
         for (const auto& [_, comment] : *comments_in_file) {
@@ -796,7 +798,7 @@ static bool ShouldKeepCommentLine(absl::string_view line) {
       "(NOLINT|NOLINTNEXTLINE|NOLINTBEGIN|NOLINTEND)"
       "(\\([^)[:space:]]*\\)?)?"  // Optional (...)
       "[[:space:]]*$");           // Whitespace
-  return !patterns_to_ignore.match(line);
+  return !patterns_to_ignore.match(StringRefFromStringView(line));
 }
 
 std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
@@ -835,7 +837,8 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
       };
   constexpr absl::string_view kSourceLocUnknown = "<unknown location>";
   std::string spelling_loc_str;
-  if (absl::string_view spelling_filename = sm.getFilename(spelling_loc);
+  if (absl::string_view spelling_filename =
+          StringViewFromStringRef(sm.getFilename(spelling_loc));
       spelling_filename.empty()) {
     spelling_loc_str = kSourceLocUnknown;
   } else {
@@ -851,7 +854,8 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   }
   const clang::SourceLocation& expansion_loc = sm.getExpansionLoc(loc);
   std::string expansion_loc_str;
-  if (absl::string_view expansion_filename = sm.getFilename(expansion_loc);
+  if (absl::string_view expansion_filename =
+          StringViewFromStringRef(sm.getFilename(expansion_loc));
       expansion_filename.empty()) {
     expansion_loc_str = kSourceLocUnknown;
   } else {

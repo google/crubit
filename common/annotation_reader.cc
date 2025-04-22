@@ -14,6 +14,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/status_macros.h"
+#include "common/string_view_conversion.h"
 #include "clang/include/clang/AST/APValue.h"
 #include "clang/include/clang/AST/ASTContext.h"
 #include "clang/include/clang/AST/Attr.h"
@@ -61,7 +62,7 @@ static absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
     return error();
   }
 
-  return {string_literal->getString()};
+  return StringViewFromStringRef(string_literal->getString());
 }
 
 // Returns the `AnnotateAttr` with the given `annotation_name` if it exists. If
@@ -154,11 +155,12 @@ static absl::Status CheckAnnotationsConsistent(
     const clang::AnnotateAttr* annotate1, const clang::AnnotateAttr* annotate2,
     const clang::ASTContext& ast_context) {
   if (annotate1->args_size() != annotate2->args_size())
-    return InconsistentAnnotationsError(annotate1->getAnnotation());
+    return InconsistentAnnotationsError(
+        StringViewFromStringRef(annotate1->getAnnotation()));
   for (int i = 0; i < annotate1->args_size(); ++i) {
     CRUBIT_RETURN_IF_ERROR(CheckExpressionsAreSameConstant(
         *annotate1->args_begin()[i], *annotate2->args_begin()[i],
-        annotate1->getAnnotation(), ast_context));
+        StringViewFromStringRef(annotate1->getAnnotation()), ast_context));
   }
   return absl::OkStatus();
 }

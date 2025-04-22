@@ -22,9 +22,11 @@
 #include "absl/strings/substitute.h"
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
+#include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/include/llvm/ADT/StringRef.h"
 #include "llvm/include/llvm/Support/Error.h"
 #include "llvm/include/llvm/Support/JSON.h"
 
@@ -146,8 +148,8 @@ absl::Status ParseTargetArgs(absl::string_view target_args_str,
   if (target_args_str.empty()) {
     return absl::InvalidArgumentError("please specify --target_args");
   }
-  auto target_args =
-      llvm::json::parse<std::vector<TargetArgs>>(std::move(target_args_str));
+  auto target_args = llvm::json::parse<std::vector<TargetArgs>>(
+      StringRefFromStringView(target_args_str));
   if (auto err = target_args.takeError()) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Malformed `--target_args` argument: ", toString(std::move(err))));

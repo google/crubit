@@ -33,6 +33,7 @@ cc_library(
     hdrs = ["annotation_reader.h"],
     deps = [
         ":status_macros",
+        ":string_view_conversion",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -113,6 +114,7 @@ cc_library(
     srcs = ["file_io.cc"],
     hdrs = ["file_io.h"],
     deps = [
+        ":string_view_conversion",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
@@ -338,6 +340,15 @@ cc_library(
     name = "rust_allocator_shims",
     srcs = ["rust_allocator_shims.c"],
     visibility = ["@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:__subpackages__"],
+)
+
+cc_library(
+    name = "string_view_conversion",
+    hdrs = ["string_view_conversion.h"],
+    deps = [
+        "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//llvm:Support",
+    ],
 )
 
 rust_library(
