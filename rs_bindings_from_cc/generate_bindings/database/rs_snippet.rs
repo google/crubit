@@ -17,7 +17,6 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::HashSet;
 use std::rc::Rc;
-use std::sync::LazyLock;
 use token_stream_printer::write_unformatted_tokens;
 
 const SLICE_REF_NAME_RS: &str = "&[]";
@@ -249,10 +248,13 @@ pub fn check_by_value(record: &Record) -> Result<()> {
     Ok(())
 }
 
-// TODO(b/351976622): Allow std::basic_string.
-static TEMPLATE_INSTANTIATION_ALLOWLIST: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
-    ["std::string_view", "std::wstring_view", "std::string"].into_iter().collect()
-});
+fn is_allowed_template_instantiation(record: &Record) -> bool {
+    // TODO(b/351976622): Allow std::basic_string.
+    matches!(
+        record.cc_preferred_name.as_ref(),
+        "std::string_view" | "std::wstring_view" | "std::string"
+    )
+}
 
 /// Location where a type is used.
 // TODO: Merge with `TypeLocation` in the other direction.
@@ -654,9 +656,7 @@ impl RsTypeKind {
                     // std::string_view so we create an allow list fo them. This is just a temporary
                     // solution until we have a better way to handle template
                     // instantiations.
-                    if record.defining_target.is_none()
-                        || TEMPLATE_INSTANTIATION_ALLOWLIST
-                            .contains(&record.cc_preferred_name.as_ref())
+                    if record.defining_target.is_none() || is_allowed_template_instantiation(record)
                     {
                         require_feature(CrubitFeature::Supported, None)
                     } else if record.defining_target.is_some() {
@@ -680,8 +680,7 @@ impl RsTypeKind {
                         matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
 
                     if original_type.template_specialization.is_none()
-                        || TEMPLATE_INSTANTIATION_ALLOWLIST
-                            .contains(&original_type.cc_preferred_name.as_ref())
+                        || is_allowed_template_instantiation(original_type)
                         || !is_pointer_bridge
                     {
                         require_feature(CrubitFeature::Supported, None)
