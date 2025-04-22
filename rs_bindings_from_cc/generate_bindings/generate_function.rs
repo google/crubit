@@ -1701,29 +1701,30 @@ fn function_signature(
         Some(TraitName::Other { .. }) | None => {}
     }
 
-    let return_type_fragment = if return_type == &RsTypeKind::Primitive(Primitive::Void) {
-        quote! {}
-    } else {
-        let ty = quoted_return_type.unwrap_or_else(|| return_type.to_token_stream(db));
-        if return_type.is_unpin() {
-            ty
+    let return_type_fragment =
+        if matches!(return_type.unalias(), RsTypeKind::Primitive(Primitive::Void)) {
+            quote! {}
         } else {
-            // TODO(jeanpierreda): use `-> impl Ctor` instead of `-> Self::X` where `X = impl
-            // Ctor`. The latter requires `impl_trait_in_assoc_type`, the former
-            // was stabilized in 1.75. Directly returning an unnameable `impl
-            // Ctor` is sufficient for us, and makes traits like `CtorNew` more
-            // similar to top-level functions.)
-
-            // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = if lifetimes.is_empty() {
-                quote! {}
+            let ty = quoted_return_type.unwrap_or_else(|| return_type.to_token_stream(db));
+            if return_type.is_unpin() {
+                ty
             } else {
-                quote! {+ use<#(#lifetimes),*> }
-            };
-            features.insert(make_rs_ident("impl_trait_in_assoc_type"));
-            quote! {impl ::ctor::Ctor<Output=#ty> #extra_lifetimes }
-        }
-    };
+                // TODO(jeanpierreda): use `-> impl Ctor` instead of `-> Self::X` where `X = impl
+                // Ctor`. The latter requires `impl_trait_in_assoc_type`, the former
+                // was stabilized in 1.75. Directly returning an unnameable `impl
+                // Ctor` is sufficient for us, and makes traits like `CtorNew` more
+                // similar to top-level functions.)
+
+                // The returned lazy FnCtor depends on all inputs.
+                let extra_lifetimes = if lifetimes.is_empty() {
+                    quote! {}
+                } else {
+                    quote! {+ use<#(#lifetimes),*> }
+                };
+                features.insert(make_rs_ident("impl_trait_in_assoc_type"));
+                quote! {impl ::ctor::Ctor<Output=#ty> #extra_lifetimes }
+            }
+        };
 
     // Change `__this: &'a SomeStruct` into `&'a self` if needed.
     if impl_kind.format_first_param_as_self() {

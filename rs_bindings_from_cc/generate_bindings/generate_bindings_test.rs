@@ -484,7 +484,7 @@ fn test_type_alias() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t) { f(std::move(t)); }
+            extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t) { f(t); }
         }
     );
     Ok(())

@@ -529,24 +529,31 @@ impl RsTypeKind {
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
     pub fn is_unpin(&self) -> bool {
-        match self {
+        match self.unalias() {
             RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, known_generic_monomorphization, .. } => {
                 known_generic_monomorphization.is_some() || record.is_unpin()
             }
-            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(),
             RsTypeKind::BridgeType { .. } => true,
             _ => true,
         }
     }
 
+    /// Recursively follows type aliases until an underlying nonalias type is reached.
+    pub fn unalias(&self) -> &Self {
+        match self {
+            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.unalias(),
+            _ => self,
+        }
+    }
+
     pub fn is_bridge_type(&self) -> bool {
-        matches!(self, RsTypeKind::BridgeType { .. })
+        matches!(self.unalias(), RsTypeKind::BridgeType { .. })
     }
 
     pub fn is_pointer_bridge_type(&self) -> bool {
         matches!(
-            self,
+            self.unalias(),
             RsTypeKind::BridgeType {
                 bridge_type: BridgeRsTypeKind::BridgeVoidConverters { .. },
                 ..
@@ -559,7 +566,7 @@ impl RsTypeKind {
     }
 
     pub fn is_primitive(&self) -> bool {
-        matches!(self, RsTypeKind::Primitive(_))
+        matches!(self.unalias(), RsTypeKind::Primitive(_))
     }
 
     /// Returns the features required to use this type which are not already
@@ -687,10 +694,7 @@ impl RsTypeKind {
     /// Returns true if the type can be passed by value through `extern "C"` ABI
     /// thunks.
     pub fn is_c_abi_compatible_by_value(&self) -> bool {
-        match self {
-            RsTypeKind::TypeAlias { underlying_type, .. } => {
-                underlying_type.is_c_abi_compatible_by_value()
-            }
+        match self.unalias() {
             RsTypeKind::IncompleteRecord { .. } => {
                 // Incomplete record (forward declaration) as parameter type or return type is
                 // unusual but it's a valid cc_library and such a header can be made to work
@@ -719,13 +723,10 @@ impl RsTypeKind {
     /// For the purposes of this method, references are considered
     /// move-constructible (as if they were pointers).
     pub fn is_move_constructible(&self) -> bool {
-        match self {
+        match self.unalias() {
             RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, .. } => {
                 record.move_constructor != ir::SpecialMemberFunc::Unavailable
-            }
-            RsTypeKind::TypeAlias { underlying_type, .. } => {
-                underlying_type.is_move_constructible()
             }
             RsTypeKind::BridgeType { .. } => true,
             _ => true,
@@ -735,9 +736,8 @@ impl RsTypeKind {
     /// Returns Ok if the type can be used by value, or an error describing why
     /// it can't.
     pub fn check_by_value(&self) -> Result<()> {
-        match self {
+        match self.unalias() {
             RsTypeKind::Record { record, .. } => check_by_value(record),
-            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.check_by_value(),
             _ => Ok(()),
         }
     }
@@ -747,10 +747,10 @@ impl RsTypeKind {
         db: &dyn BindingsGenerator,
         self_record: Option<&Record>,
     ) -> TokenStream {
-        match self {
+        match self.unalias() {
             RsTypeKind::Primitive(Primitive::Void) => quote! {},
-            other_type => {
-                let other_type_ = other_type.to_token_stream_replacing_by_self(db, self_record);
+            _ => {
+                let other_type_ = self.to_token_stream_replacing_by_self(db, self_record);
                 quote! { -> #other_type_ }
             }
         }
@@ -836,7 +836,7 @@ impl RsTypeKind {
     }
 
     pub fn is_ref_to(&self, expected_record: &Record) -> bool {
-        match self {
+        match self.unalias() {
             RsTypeKind::Reference { referent, .. } => referent.is_record(expected_record),
             RsTypeKind::RvalueReference { referent, .. } => referent.is_record(expected_record),
             _ => false,
@@ -844,7 +844,7 @@ impl RsTypeKind {
     }
 
     pub fn is_shared_ref_to(&self, expected_record: &Record) -> bool {
-        match self {
+        match self.unalias() {
             RsTypeKind::Reference { referent, mutability: Mutability::Const, .. } => {
                 referent.is_record(expected_record)
             }
@@ -853,7 +853,7 @@ impl RsTypeKind {
     }
 
     pub fn is_record(&self, expected_record: &Record) -> bool {
-        match self {
+        match self.unalias() {
             RsTypeKind::Record { record: actual_record, .. } => {
                 actual_record.id == expected_record.id
             }
@@ -862,11 +862,7 @@ impl RsTypeKind {
     }
 
     pub fn is_bool(&self) -> bool {
-        match self {
-            RsTypeKind::Primitive(Primitive::Bool) => true,
-            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_bool(),
-            _ => false,
-        }
+        matches!(self.unalias(), RsTypeKind::Primitive(Primitive::Bool))
     }
 
     /// Iterates over `self` and all the nested types (e.g. pointees, generic
@@ -884,7 +880,7 @@ impl RsTypeKind {
 
     /// Returns the pointer or reference target.
     pub fn referent(&self) -> Option<&RsTypeKind> {
-        match self {
+        match self.unalias() {
             Self::Pointer { pointee: p, .. }
             | Self::Reference { referent: p, .. }
             | Self::RvalueReference { referent: p, .. } => Some(&**p),
@@ -894,7 +890,7 @@ impl RsTypeKind {
 
     /// Returns the reference lifetime, or None if this is not a reference.
     pub fn lifetime(&self) -> Option<Lifetime> {
-        match self {
+        match self.unalias() {
             Self::Reference { lifetime, .. } | Self::RvalueReference { lifetime, .. } => {
                 Some(lifetime.clone())
             }

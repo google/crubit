@@ -310,9 +310,9 @@ pub fn generate_function_thunk_impl(
         .map(|p| {
             let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
             let arg_type = db.rs_type_kind(p.type_.clone())?;
-            if let RsTypeKind::BridgeType { bridge_type, .. } = &arg_type {
+            if let RsTypeKind::BridgeType { bridge_type, .. } = arg_type.unalias() {
                 let BridgeRsTypeKind::BridgeVoidConverters { rust_to_cpp_converter, .. } =
-                    &bridge_type
+                    bridge_type
                 else {
                     return Ok(quote! { const unsigned char* });
                 };
@@ -401,7 +401,7 @@ pub fn generate_function_thunk_impl(
         if let RsTypeKind::BridgeType {
             bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
             ..
-        } = &return_type_kind
+        } = return_type_kind.unalias()
         {
             let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
             conversion_externs.extend(quote! {
@@ -458,7 +458,7 @@ pub fn generate_function_thunk_impl(
         if let RsTypeKind::BridgeType {
             bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
             ..
-        } = &return_type_kind
+        } = return_type_kind.unalias()
         {
             let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
             quote! {

@@ -27,7 +27,7 @@ extern "C" struct MyI8 __rust_thunk___Z3ffi4MyI81X(struct MyI8 a, struct X* b) {
 }
 
 extern "C" void __rust_thunk___Z1fiPvi(MyTypedefDecl a, void* b, int c) {
-  f(std::move(a), b, c);
+  f(a, b, c);
 }
 
 #pragma clang diagnostic pop

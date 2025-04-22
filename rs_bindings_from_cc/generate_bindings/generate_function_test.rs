@@ -1827,7 +1827,7 @@ fn test_c_abi_compatible_type_by_value_with_move() -> Result<()> {
         rs_api_impl,
         quote! {
             extern "C" void __rust_thunk___Z1fiPvi(MyTypedefDecl a, void* b, int c) {
-                f(std::move(a), b, c);
+                f(a, b, c);
             }
         }
     );
