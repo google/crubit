@@ -1359,32 +1359,27 @@ pub fn generate_function(
             };
 
             let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
-            let extra_items;
             let trait_lifetime_params = error_lifetime_param.as_slice();
             // NOTE: `trait_generic_params` may include lifetimes!
             let formatted_trait_generic_params =
                 format_generic_params(trait_lifetime_params, &*trait_generic_params);
-            match &trait_name {
-                TraitName::CtorNew(params) => {
-                    if params.len() == 1 {
-                        let single_param_ = format_tuple_except_singleton_replacing_by_self(
-                            db,
-                            params,
-                            Some(&trait_record),
-                        );
-                        extra_items = quote! {
-                            impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name #unsatisfied_where_clause {
-                                #extra_body
+            let extra_items = match &trait_name {
+                TraitName::CtorNew(params) if params.len() == 1 => {
+                    let single_param_ = format_tuple_except_singleton_replacing_by_self(
+                        db,
+                        params,
+                        Some(&trait_record),
+                    );
+                    quote! {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name #unsatisfied_where_clause {
+                            #extra_body
 
-                                #[inline (always)]
-                                fn ctor_new(args: (#single_param_,)) -> Self::CtorType {
-                                    let (arg,) = args;
-                                    <Self as ::ctor::CtorNew<#single_param_>>::ctor_new(arg)
-                                }
+                            #[inline (always)]
+                            fn ctor_new(args: (#single_param_,)) -> Self::CtorType {
+                                let (arg,) = args;
+                                <Self as ::ctor::CtorNew<#single_param_>>::ctor_new(arg)
                             }
                         }
-                    } else {
-                        extra_items = quote! {}
                     }
                 }
                 TraitName::UnpinConstructor { name, params }
@@ -1395,8 +1390,8 @@ pub fn generate_function(
                         params,
                         Some(&trait_record),
                     );
-                    extra_items = quote! {
-                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #unsatisfied_where_clause {
+                    quote! {
+                            impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #unsatisfied_where_clause {
                             type CtorType = Self;
 
                             #[inline (always)]
@@ -1407,7 +1402,7 @@ pub fn generate_function(
                     }
                 }
                 _ => {
-                    extra_items = quote! {};
+                    quote! {}
                 }
             };
             let record_qualifier = ir.namespace_qualifier(&trait_record).format_for_rs();
