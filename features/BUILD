@@ -25,13 +25,22 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+_WRAPPER_FEATURES = ["wrapper"]
+
+# A feature set containing wrapper-library Crubit features, in addition to the officially supported
+# features.
+crubit_feature_hint(
+    name = "wrapper",
+    crubit_features = SUPPORTED_FEATURES + _WRAPPER_FEATURES,
+    visibility = _EXPERIMENTAL_CLIENTS,
+)
+
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 crubit_feature_hint(
     name = "experimental",
-    crubit_features = SUPPORTED_FEATURES + [
-        "experimental",
-    ],
+    # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
+    crubit_features = SUPPORTED_FEATURES + ["experimental"],
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
