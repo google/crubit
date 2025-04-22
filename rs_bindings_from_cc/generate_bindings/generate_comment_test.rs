@@ -124,12 +124,13 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let db = factory.make_db(Environment::Production);
     let actual = generate_unsupported(
         &db,
-        &UnsupportedItem::new_with_static_message(
+        UnsupportedItem::new_with_static_message(
             &db.ir(),
             &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
             /* path= */ None,
             "unsupported_message",
-        ),
+        )
+        .into(),
     );
     let expected = "Generated from: some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
     assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
@@ -145,12 +146,13 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     let db = factory.make_db(Environment::Production);
     let actual = generate_unsupported(
         &db,
-        &UnsupportedItem::new_with_static_message(
+        UnsupportedItem::new_with_static_message(
             &db.ir(),
             &TestItem { source_loc: None },
             /* path= */ None,
             "unsupported_message",
-        ),
+        )
+        .into(),
     );
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
     assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
@@ -163,12 +165,13 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let db = factory.make_db(Environment::GoldenTest);
     let actual = generate_unsupported(
         &db,
-        &UnsupportedItem::new_with_static_message(
+        UnsupportedItem::new_with_static_message(
             &db.ir(),
             &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
             /* path= */ None,
             "unsupported_message",
-        ),
+        )
+        .into(),
     );
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
     assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});

@@ -79,9 +79,12 @@ pub fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Result<ApiSnippets> {
+fn generate_type_alias(
+    db: &dyn BindingsGenerator,
+    type_alias: Rc<TypeAlias>,
+) -> Result<ApiSnippets> {
     // Skip the type alias if it maps to a bridge type.
-    let rs_type_kind = RsTypeKind::new_type_alias(db, Rc::new(type_alias.clone()))?;
+    let rs_type_kind = RsTypeKind::new_type_alias(db, type_alias.clone())?;
     if rs_type_kind.is_bridge_type() {
         return Ok(ApiSnippets::default());
     }
@@ -103,7 +106,7 @@ fn generate_type_alias(db: &dyn BindingsGenerator, type_alias: &TypeAlias) -> Re
     .into())
 }
 
-fn generate_global_var(db: &dyn BindingsGenerator, var: &GlobalVar) -> Result<ApiSnippets> {
+fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
     let ident = make_rs_ident(&var.rs_name.identifier);
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
@@ -124,7 +127,7 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: &GlobalVar) -> Result<Ap
     .into())
 }
 
-fn generate_namespace(db: &dyn BindingsGenerator, namespace: &Namespace) -> Result<ApiSnippets> {
+fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
@@ -239,7 +242,7 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
         }
     };
 
-    Ok(generate_unsupported(db, &unsupported_item))
+    Ok(generate_unsupported(db, unsupported_item.into()))
 }
 
 /// The implementation of generate_item, without the error recovery logic.
@@ -270,15 +273,15 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
             }
         },
         Item::IncompleteRecord(incomplete_record) => {
-            generate_incomplete_record(db, incomplete_record)?
+            generate_incomplete_record(db, incomplete_record.clone())?
         }
-        Item::Record(record) => db.generate_record(Rc::clone(record))?,
-        Item::Enum(enum_) => db.generate_enum(Rc::clone(enum_))?,
-        Item::GlobalVar(var) => generate_global_var(db, var)?,
-        Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias)?,
-        Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported),
-        Item::Comment(comment) => generate_comment(comment)?,
-        Item::Namespace(namespace) => generate_namespace(db, namespace)?,
+        Item::Record(record) => db.generate_record(record.clone())?,
+        Item::Enum(enum_) => db.generate_enum(enum_.clone())?,
+        Item::GlobalVar(var) => generate_global_var(db, var.clone())?,
+        Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias.clone())?,
+        Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported.clone()),
+        Item::Comment(comment) => generate_comment(comment.clone())?,
+        Item::Namespace(namespace) => generate_namespace(db, namespace.clone())?,
         Item::UseMod(use_mod) => {
             let UseMod { path, mod_name, .. } = &**use_mod;
             let mod_name = make_rs_ident(&mod_name.identifier);

@@ -12,6 +12,7 @@ use ir::{Comment, GenericItem, UnsupportedItem, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::fmt::Write as _;
+use std::rc::Rc;
 
 /// Top-level comments that help identify where the generated bindings came
 /// from.
@@ -86,7 +87,7 @@ pub fn generate_doc_comment(
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-pub fn generate_unsupported(db: &dyn BindingsGenerator, item: &UnsupportedItem) -> ApiSnippets {
+pub fn generate_unsupported(db: &dyn BindingsGenerator, item: Rc<UnsupportedItem>) -> ApiSnippets {
     for error in item.errors() {
         db.errors().report(error);
     }
@@ -123,7 +124,7 @@ pub fn generate_unsupported(db: &dyn BindingsGenerator, item: &UnsupportedItem) 
 }
 
 /// Generates Rust source code for a given `Comment`.
-pub fn generate_comment(comment: &Comment) -> Result<ApiSnippets> {
+pub fn generate_comment(comment: Rc<Comment>) -> Result<ApiSnippets> {
     let text = comment.text.as_ref();
     Ok(quote! { __COMMENT__ #text }.into())
 }

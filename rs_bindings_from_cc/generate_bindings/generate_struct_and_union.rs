@@ -46,11 +46,11 @@ fn needs_manually_drop(ty: &RsTypeKind) -> bool {
 /// Generates Rust source code for a given incomplete record declaration.
 pub fn generate_incomplete_record(
     db: &dyn BindingsGenerator,
-    incomplete_record: &IncompleteRecord,
+    incomplete_record: Rc<IncompleteRecord>,
 ) -> Result<ApiSnippets> {
     let ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
     let cc_type = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
-    let namespace_qualifier = db.ir().namespace_qualifier(incomplete_record).format_for_cc()?;
+    let namespace_qualifier = db.ir().namespace_qualifier(&incomplete_record).format_for_cc()?;
     let symbol = quote! {#namespace_qualifier #cc_type}.to_string();
     Ok(quote! {
         forward_declare::forward_declare!(
