@@ -7,7 +7,7 @@
 use crate::db::BindingsGenerator;
 use proc_macro2::{Ident, TokenStream};
 
-use crate::rs_snippet::{RsTypeKind, TypeLocation};
+use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::{anyhow, Error, Result};
 use ffi_types::FfiU8SliceBox;
 use ir::{BazelLabel, GenericItem, Item, UnqualifiedIdentifier};
@@ -142,14 +142,10 @@ pub fn required_crubit_features(
 
     let require_rs_type_kind = |missing_features: &mut Vec<RequiredCrubitFeature>,
                                 rs_type_kind: &RsTypeKind,
-                                type_location: TypeLocation,
                                 context: &dyn Fn() -> Rc<str>| {
         for target in item.defining_target().into_iter().chain(item.owning_target()) {
-            let (missing, desc) = rs_type_kind.required_crubit_features(
-                db,
-                ir.target_crubit_features(target),
-                type_location,
-            );
+            let (missing, desc) =
+                rs_type_kind.required_crubit_features(db, ir.target_crubit_features(target));
             if !missing.is_empty() {
                 let context = context();
                 let capability_description = if desc.is_empty() {
@@ -190,20 +186,12 @@ pub fn required_crubit_features(
                 );
             } else {
                 let return_type = db.rs_type_kind(func.return_type.clone())?;
-                require_rs_type_kind(
-                    &mut missing_features,
-                    &return_type,
-                    TypeLocation::FnReturn,
-                    &|| "return type".into(),
-                );
+                require_rs_type_kind(&mut missing_features, &return_type, &|| "return type".into());
                 for (i, param) in func.params.iter().enumerate() {
                     let param_type = db.rs_type_kind(param.type_.clone())?;
-                    require_rs_type_kind(
-                        &mut missing_features,
-                        &param_type,
-                        TypeLocation::FnParam,
-                        &|| format!("the type of {} (parameter #{i})", &param.identifier).into(),
-                    );
+                    require_rs_type_kind(&mut missing_features, &param_type, &|| {
+                        format!("the type of {} (parameter #{i})", &param.identifier).into()
+                    });
                 }
                 if func.is_extern_c {
                     require_any_feature(
@@ -267,7 +255,6 @@ pub fn required_crubit_features(
             require_rs_type_kind(
                 &mut missing_features,
                 &RsTypeKind::new_record(db, record.clone(), &db.ir())?,
-                TypeLocation::Other,
                 &|| "".into(),
             );
         }
@@ -275,7 +262,6 @@ pub fn required_crubit_features(
             require_rs_type_kind(
                 &mut missing_features,
                 &RsTypeKind::new_type_alias(db, alias.clone())?,
-                TypeLocation::Other,
                 &|| "".into(),
             );
         }
@@ -283,7 +269,6 @@ pub fn required_crubit_features(
             require_rs_type_kind(
                 &mut missing_features,
                 &RsTypeKind::new_enum(e.clone(), &db.ir())?,
-                TypeLocation::Other,
                 &|| "".into(),
             );
         }
@@ -314,10 +299,22 @@ pub fn required_crubit_features(
     Ok(missing_features)
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum Visibility {
+    Public,
+    PubCrate,
+}
+
+/// Information about the bindings that this item will have.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct BindingsInfo {
+    pub visibility: Visibility,
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub enum HasBindings {
     /// This item will have bindings. This is *guaranteed*, if the item isn't a `Func`.
-    Yes,
+    Yes(BindingsInfo),
 
     /// These bindings are guaranteed not to exist.
     No(NoBindingsReason),

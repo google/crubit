@@ -5,7 +5,7 @@
 use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustTokens;
-use database::code_snippet::ApiSnippets;
+use database::code_snippet::{ApiSnippets, HasBindings, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
@@ -1195,8 +1195,21 @@ pub fn generate_function(
             }
         };
 
+        let restricted_visibility = match db.has_bindings(Item::Func(func.clone())) {
+            HasBindings::Yes(info) if info.visibility == Visibility::PubCrate => true,
+            _ => false,
+        };
         let pub_ = match impl_kind {
-            ImplKind::None { .. } | ImplKind::Struct { .. } => quote! { pub },
+            ImplKind::None { .. } | ImplKind::Struct { .. } => {
+                if restricted_visibility {
+                    quote! { pub(crate) }
+                } else {
+                    quote! {pub}
+                }
+            }
+            ImplKind::Trait { .. } if restricted_visibility => {
+                bail!("Trait implementations cannot be restricted to wrappers with pub(crate)")
+            }
             ImplKind::Trait { .. } => quote! {},
         };
         let unsafe_ = if impl_kind.is_unsafe() {

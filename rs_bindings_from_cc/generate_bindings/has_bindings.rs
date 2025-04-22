@@ -3,9 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::anyhow;
-use database::code_snippet::{required_crubit_features, HasBindings, NoBindingsReason};
+use database::code_snippet::{
+    required_crubit_features, BindingsInfo, HasBindings, NoBindingsReason, RequiredCrubitFeature,
+    Visibility,
+};
+use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
-use ir::{GenericItem, Item};
+use ir::{Func, GenericItem, Item};
 
 #[must_use]
 pub fn has_bindings(db: &dyn BindingsGenerator, item: Item) -> HasBindings {
@@ -37,7 +41,7 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: Item) -> HasBindings {
                     error: no_parent_bindings.into(),
                 });
             }
-            HasBindings::Yes => {}
+            HasBindings::Yes(..) => {}
         }
 
         // TODO(b/200067824): Allow nested type items inside records.
@@ -54,21 +58,88 @@ pub fn has_bindings(db: &dyn BindingsGenerator, item: Item) -> HasBindings {
     }
 
     match item {
+        Item::Func(func) => func_has_bindings(db, &func),
         Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.clone()) {
-            Ok(_) => HasBindings::Yes,
+            Ok(_) => HasBindings::Yes(BindingsInfo { visibility: Visibility::Public }),
             Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
                 context: alias.debug_name(&ir),
                 error,
             }),
         },
         Item::Enum(enum_) => match db.generate_enum(enum_.clone()) {
-            Ok(_) => HasBindings::Yes,
+            Ok(_) => HasBindings::Yes(BindingsInfo { visibility: Visibility::Public }),
             Err(error) => HasBindings::No(NoBindingsReason::DependencyFailed {
                 context: enum_.debug_name(ir),
                 error,
             }),
         },
         // TODO(b/392882224): Records might not generated if an error occurs in generation.
-        _ => HasBindings::Yes,
+        _ => HasBindings::Yes(BindingsInfo { visibility: Visibility::Public }),
     }
+}
+
+/// Returns function-specific `HasBindings` information.
+fn func_has_bindings(db: &dyn BindingsGenerator, func: &Func) -> HasBindings {
+    let ir = db.ir();
+    let target = &func.owning_target;
+    let enabled_features = ir.target_crubit_features(target);
+    // Check for non-Unpin return/parameter types.
+    // When we release non-Unpin types by value, this whole complicated check will go away.
+
+    let mut missing_features = vec![];
+    let mut has_nonunpin = false;
+
+    let mut require_nonunpin =
+        |missing_features: &mut Vec<RequiredCrubitFeature>,
+         rs_type_kind: RsTypeKind,
+         location: &dyn Fn() -> std::borrow::Cow<'static, str>| {
+            if rs_type_kind.is_unpin() {
+                return;
+            }
+            has_nonunpin = true;
+            // TODO(b/409128537): On next binary release, add `"wrapper"` to `:experimental`,
+            // and then change this to:
+            //  `!enabled_features.contains(crubit_feature::CrubitFeature::Wrapper)`.
+            if !enabled_features.is_disjoint(
+                crubit_feature::CrubitFeature::Experimental
+                    | crubit_feature::CrubitFeature::Wrapper,
+            ) {
+                return;
+            }
+            let location = location();
+            missing_features.push(RequiredCrubitFeature {
+                target: target.clone(),
+                item: func.debug_name(ir),
+                missing_features: crubit_feature::CrubitFeature::Wrapper.into(),
+                capability_description: format!(
+                    "<internal link>_relocatable_error: {location} is not rust-movable"
+                )
+                .into(),
+            });
+        };
+
+    require_nonunpin(
+        &mut missing_features,
+        db.rs_type_kind(func.return_type.clone()).unwrap(),
+        &|| "the return type".into(),
+    );
+    for (i, param) in func.params.iter().enumerate() {
+        require_nonunpin(
+            &mut missing_features,
+            db.rs_type_kind(param.type_.clone()).unwrap(),
+            &|| format!("{} (parameter #{i})", &param.identifier).into(),
+        );
+    }
+
+    if !missing_features.is_empty() {
+        return HasBindings::No(NoBindingsReason::MissingRequiredFeatures {
+            context: func.debug_name(db.ir()),
+            missing_features,
+        });
+    }
+
+    if has_nonunpin && !enabled_features.contains(crubit_feature::CrubitFeature::Experimental) {
+        return HasBindings::Yes(BindingsInfo { visibility: Visibility::PubCrate });
+    }
+    HasBindings::Yes(BindingsInfo { visibility: Visibility::Public })
 }

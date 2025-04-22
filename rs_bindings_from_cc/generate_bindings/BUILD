@@ -294,6 +294,7 @@ rust_library(
     deps = [
         ":generate_comment",
         ":generate_function_thunk",
+        ":has_bindings",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
@@ -345,6 +346,7 @@ rust_library(
     ],
     deps = [
         "//common:arc_anyhow",
+        "//common:crubit_feature",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
     ],

@@ -580,11 +580,7 @@ impl RsTypeKind {
         &self,
         db: &dyn BindingsGenerator,
         enabled_features: flagset::FlagSet<CrubitFeature>,
-        type_location: TypeLocation,
     ) -> (flagset::FlagSet<CrubitFeature>, String) {
-        // TODO(b/318006909): Explain why a given feature is required, don't just return
-        // a FlagSet.
-
         let mut missing_features = <flagset::FlagSet<CrubitFeature>>::default();
         let mut reasons = <std::collections::BTreeSet<std::borrow::Cow<'static, str>>>::new();
         let mut require_feature =
@@ -599,23 +595,6 @@ impl RsTypeKind {
                     }
                 }
             };
-
-        // !Unpin types are allowed everywhere except as by-value parameter or return
-        // types.
-        if !self.is_unpin()
-            && matches!(type_location, TypeLocation::FnReturn | TypeLocation::FnParam)
-        {
-            require_feature(
-                CrubitFeature::Experimental,
-                Some(&|| {
-                    format!(
-                        "<internal link>_relocatable_error: {} is not rust-movable",
-                        self.display(db),
-                    )
-                    .into()
-                }),
-            )
-        }
 
         for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
@@ -1422,12 +1401,14 @@ mod tests {
                 param_types: Rc::from([reference]),
             },
         ] {
-            let (missing_features, reason) = func_ptr.required_crubit_features(
+            let (all_required_features, reason) = func_ptr.required_crubit_features(
                 &EmptyDatabase,
                 <flagset::FlagSet<CrubitFeature>>::default(),
-                TypeLocation::Other,
             );
-            assert_eq!(missing_features, CrubitFeature::Experimental | CrubitFeature::Supported);
+            assert_eq!(
+                all_required_features,
+                CrubitFeature::Experimental | CrubitFeature::Supported
+            );
             assert_eq!(reason, "references are not supported");
         }
     }

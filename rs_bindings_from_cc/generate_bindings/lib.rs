@@ -230,7 +230,9 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
             UnsupportedItem::new_with_cause(db.ir(), &enum_, Some(unsupported_item_path), err)
         }
         _ => {
-            if db.has_bindings(item.clone()) == HasBindings::Yes && !matches!(item, Item::Func(_)) {
+            if matches!(db.has_bindings(item.clone()), HasBindings::Yes(..))
+                && !matches!(item, Item::Func(_))
+            {
                 return Err(err);
             }
             // FIXME(cramertj): get paths here in more cases. It may be that

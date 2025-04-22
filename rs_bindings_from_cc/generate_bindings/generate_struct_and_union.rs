@@ -7,7 +7,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::ApiSnippets;
-use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind, TypeLocation};
+use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
 use database::BindingsGenerator;
 use error_report::{bail, ensure};
 use generate_comment::generate_doc_comment;
@@ -111,8 +111,7 @@ fn get_field_rs_type_kind_for_layout(
 
     for target in record.defining_target.iter().chain([&record.owning_target]) {
         let enabled_features = db.ir().target_crubit_features(target);
-        let (missing_features, reason) =
-            type_kind.required_crubit_features(db, enabled_features, TypeLocation::Other);
+        let (missing_features, reason) = type_kind.required_crubit_features(db, enabled_features);
         ensure!(
             missing_features.is_empty(),
             "missing features: [{missing_features}]: {reason}",

@@ -87,7 +87,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                 _ => None,
             };
             match (db.has_bindings(item.clone()), fallback_type) {
-                (HasBindings::Yes, _) => {}
+                (HasBindings::Yes(..), _) => {}
                 // Additionally, we should not "see through" type aliases that are specifically not
                 // on targets that intend to support Rust users of those type aliases.
                 // (If we did, then a C++ library owner could break Rust callers, which is a
