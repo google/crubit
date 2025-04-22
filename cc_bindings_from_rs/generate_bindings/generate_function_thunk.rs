@@ -280,7 +280,7 @@ pub fn thunk_param_names(
     tcx: ty::TyCtxt<'_>,
     fn_def_id: DefId,
 ) -> impl Iterator<Item = Ident> + '_ {
-    tcx.fn_arg_names(fn_def_id).iter().enumerate().map(|(i, ident)| {
+    tcx.fn_arg_idents(fn_def_id).iter().enumerate().map(|(i, ident)| {
         let Some(ident) = ident_or_opt_ident(ident) else {
             return format_ident!("__param_{i}");
         };
@@ -550,10 +550,11 @@ pub fn generate_trait_thunks<'tcx>(
     let mut method_name_to_cc_thunk_name = HashMap::new();
     let mut cc_thunk_decls = CcSnippet::default();
     let mut rs_thunk_impls = RsSnippet::default();
-    let methods = tcx
-        .associated_items(trait_id)
-        .in_definition_order()
-        .filter(|item| item.kind == ty::AssocKind::Fn);
+    let methods =
+        tcx.associated_items(trait_id).in_definition_order().filter(|item| match item.kind {
+            ty::AssocKind::Fn { name: _, has_self: _ } => true,
+            _ => false,
+        });
     for method in methods {
         let substs = {
             let generics = tcx.generics_of(method.def_id);
@@ -573,7 +574,7 @@ pub fn generate_trait_thunks<'tcx>(
 
         let thunk_name = {
             if db.no_thunk_name_mangling() {
-                format!("__crubit_thunk_{}", &escape_non_identifier_chars(method.name.as_str()))
+                format!("__crubit_thunk_{}", &escape_non_identifier_chars(method.name().as_str()))
             } else {
                 let instance = ty::Instance::new(method.def_id, substs);
                 let symbol = tcx.symbol_name(instance);
@@ -584,7 +585,7 @@ pub fn generate_trait_thunks<'tcx>(
                 )
             }
         };
-        method_name_to_cc_thunk_name.insert(method.name, format_cc_ident(db, &thunk_name)?);
+        method_name_to_cc_thunk_name.insert(method.name(), format_cc_ident(db, &thunk_name)?);
 
         let sig_mid = liberate_and_deanonymize_late_bound_regions(
             tcx,
@@ -596,14 +597,15 @@ pub fn generate_trait_thunks<'tcx>(
         // to for traits defined or implemented in the current crate.
         let sig_hir = None;
 
-        let allow_references =
-            if method.name == sym::clone_from && Some(trait_id) == tcx.lang_items().clone_trait() {
-                // We specially handle aliases in `operator=` so that clone_from cannot be
-                // called with an alias. (`if (this != &other) {...}`)
-                AllowReferences::UnsafeAll
-            } else {
-                AllowReferences::Safe
-            };
+        let allow_references = if method.name() == sym::clone_from
+            && Some(trait_id) == tcx.lang_items().clone_trait()
+        {
+            // We specially handle aliases in `operator=` so that clone_from cannot be
+            // called with an alias. (`if (this != &other) {...}`)
+            AllowReferences::UnsafeAll
+        } else {
+            AllowReferences::Safe
+        };
 
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(db, &thunk_name)?;
@@ -628,7 +630,7 @@ pub fn generate_trait_thunks<'tcx>(
                 let fully_qualified_fn_name = {
                     let fully_qualified_trait_name =
                         FullyQualifiedName::new(db, trait_id).format_for_rs();
-                    let method_name = make_rs_ident(method.name.as_str());
+                    let method_name = make_rs_ident(method.name().as_str());
                     quote! { <#struct_name as #fully_qualified_trait_name>::#method_name }
                 };
                 generate_thunk_impl(

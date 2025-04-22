@@ -355,7 +355,7 @@ pub fn generate_function(
         ty: SugaredTy<'tcx>,
     }
     let params = {
-        let names = tcx.fn_arg_names(def_id).iter();
+        let names = tcx.fn_arg_idents(def_id).iter();
         let cpp_types =
             format_param_types_for_cc(db, &sig_mid, Some(sig_hir), AllowReferences::Safe)?;
         names
@@ -393,7 +393,7 @@ pub fn generate_function(
 
     let method_kind = match tcx.hir_node_by_def_id(local_def_id) {
         Node::Item(_) => FunctionKind::Free,
-        Node::ImplItem(_) => match tcx.fn_arg_names(def_id).first().and_then(ident_or_opt_ident) {
+        Node::ImplItem(_) => match tcx.fn_arg_idents(def_id).first().and_then(ident_or_opt_ident) {
             Some(ident) if ident.name == kw::SelfLower => {
                 let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
                 if params[0].ty.mid() == self_ty {

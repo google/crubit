@@ -156,6 +156,7 @@ fn run_compiler_for_testing_impl(
         locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec(),
         ice_file: None,
         expanded_args: vec![],
+        extra_symbols: vec![],
         using_internal_features: &USING_INTERNAL_FEATURES,
     };
 

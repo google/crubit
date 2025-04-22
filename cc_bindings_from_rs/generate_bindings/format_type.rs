@@ -544,16 +544,6 @@ fn format_core_alias_for_cc<'tcx>(
             let TypeNs(actual_elem) = actual[i].data else {
                 return false;
             };
-            #[rustversion::since(2025-03-10)]
-            match actual_elem {
-                None => return false,
-                Some(sym) => {
-                    if sym.as_str() != expected[i] {
-                        return false;
-                    }
-                }
-            }
-            #[rustversion::before(2025-03-10)]
             if actual_elem.as_str() != expected[i] {
                 return false;
             }
@@ -586,9 +576,6 @@ fn format_core_alias_for_cc<'tcx>(
     let TypeNs(item) = item.data else {
         return None;
     };
-
-    #[rustversion::since(2025-03-10)]
-    let item = item?;
 
     let cpp_type = match item.as_str() {
         "c_char" => quote! { char},
