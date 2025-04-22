@@ -57,6 +57,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base0 {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base0 {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for Base0 {
     #[inline(always)]
@@ -116,6 +123,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base1 {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base1 {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for Base1 {
     #[inline(always)]
@@ -172,6 +186,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base2 {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base2 {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for Base2 {
     #[inline(always)]
@@ -224,6 +245,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Derived {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -663,6 +691,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for MethodBase1 {
     #[inline(always)]
@@ -746,6 +781,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for MethodBase2 {
     #[inline(always)]
@@ -813,6 +855,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodDerived {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodDerived {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 

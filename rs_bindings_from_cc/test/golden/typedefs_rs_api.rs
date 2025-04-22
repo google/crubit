@@ -50,6 +50,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeStruct {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
     #[inline(always)]
@@ -114,6 +121,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeOtherStruct {
     #[inline(always)]
@@ -167,6 +181,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeUnion {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -225,6 +246,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 

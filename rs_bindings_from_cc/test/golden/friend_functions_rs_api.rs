@@ -50,6 +50,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeClass {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeClass {
     #[inline(always)]

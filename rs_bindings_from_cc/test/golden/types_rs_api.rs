@@ -56,6 +56,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeStruct {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
     #[inline(always)]
@@ -143,6 +150,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 

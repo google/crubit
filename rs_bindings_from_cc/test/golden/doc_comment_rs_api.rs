@@ -45,6 +45,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for DocCommentSlashes {
     #[inline(always)]
@@ -92,6 +99,13 @@ impl From<::core::ffi::c_int> for DocCommentSlashes {
             );
             tmp.assume_init()
         }
+    }
+}
+impl ::ctor::CtorNew<::core::ffi::c_int> for DocCommentSlashes {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
+        <Self as From<::core::ffi::c_int>>::from(args)
     }
 }
 
@@ -161,6 +175,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for DocCommentBang {
     #[inline(always)]
@@ -223,6 +244,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for MultilineCommentTwoStars {
     #[inline(always)]
@@ -280,6 +308,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for LineComment {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for LineComment {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -342,6 +377,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -429,6 +471,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIiE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
@@ -498,6 +547,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIfE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
@@ -562,6 +618,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst13OuterTemp
             crate::detail::__rust_thunk___ZN13OuterTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst13OuterTemplateIiE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 

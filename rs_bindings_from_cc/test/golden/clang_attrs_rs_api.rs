@@ -53,6 +53,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for HasCustomAlignment {
     #[inline(always)]
@@ -111,6 +118,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for HasFieldWithCustomAlignment {
     #[inline(always)]
@@ -167,6 +181,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for InheritsFromBaseWithCustomA
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
+    for InheritsFromBaseWithCustomAlignment
+{
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -241,6 +264,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAt
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAttr {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> ::ctor::UnpinAssign<&'b Self> for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
@@ -312,6 +342,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
             crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+{
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 

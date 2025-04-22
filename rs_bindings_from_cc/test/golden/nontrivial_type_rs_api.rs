@@ -644,6 +644,13 @@ impl From<::core::ffi::c_int> for NontrivialUnpin {
         }
     }
 }
+impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialUnpin {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
+        <Self as From<::core::ffi::c_int>>::from(args)
+    }
+}
 
 // Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
 // Constructors with more than one parameter are not yet supported. See b/216648347.
@@ -675,6 +682,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
         }
     }
 }
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+    }
+}
 
 impl<'b> From<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpin {
     #[inline(always)]
@@ -687,6 +701,13 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpi
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpin {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, crate::Nontrivial>>>::from(args)
     }
 }
 
@@ -868,6 +889,13 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
             );
             tmp.assume_init()
         }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 

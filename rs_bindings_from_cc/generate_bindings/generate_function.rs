@@ -1374,6 +1374,25 @@ pub fn generate_function(
                         extra_items = quote! {}
                     }
                 }
+                TraitName::UnpinConstructor { name, params }
+                    if *name == Rc::from("From") && reportable_status.is_ok() =>
+                {
+                    let single_param_ = format_tuple_except_singleton_replacing_by_self(
+                        db,
+                        params,
+                        Some(&trait_record),
+                    );
+                    extra_items = quote! {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #unsatisfied_where_clause {
+                            type CtorType = Self;
+
+                            #[inline (always)]
+                            fn ctor_new(args: #single_param_) -> Self::CtorType {
+                                <Self as From<#single_param_>>::from(args)
+                            }
+                        }
+                    }
+                }
                 _ => {
                     extra_items = quote! {};
                 }

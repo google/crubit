@@ -54,6 +54,13 @@ pub mod test_namespace_bindings {
             }
         }
     }
+    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for S {
+        type CtorType = Self;
+        #[inline(always)]
+        fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+            <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        }
+    }
 
     impl<'b> ::ctor::UnpinAssign<&'b Self> for S {
         #[inline(always)]
@@ -153,6 +160,13 @@ pub mod test_namespace_bindings_reopened_0 {
                 }
             }
         }
+        impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for S {
+            type CtorType = Self;
+            #[inline(always)]
+            fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+                <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+            }
+        }
 
         impl<'b> ::ctor::UnpinAssign<&'b Self> for S {
             #[inline(always)]
@@ -242,6 +256,13 @@ pub mod test_namespace_bindings_inline {
                     crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
                     tmp.assume_init()
                 }
+            }
+        }
+        impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for StructInInlineNamespace {
+            type CtorType = Self;
+            #[inline(always)]
+            fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+                <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
             }
         }
 
