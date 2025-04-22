@@ -10,6 +10,7 @@ mod tests {
 
     #[test]
     fn test_ctime() {
+        let zone: Vec<u8> = "zone\0".into();
         // Tests of items from the `<ctime>` header.
         let _t = tm {
             tm_gmtoff: 0,
@@ -22,7 +23,7 @@ mod tests {
             tm_wday: 7,
             tm_yday: 8,
             tm_year: 9,
-            tm_zone: "zone".as_ptr() as *const core::ffi::c_char,
+            tm_zone: zone.as_ptr() as *mut core::ffi::c_char,
         };
     }
 
