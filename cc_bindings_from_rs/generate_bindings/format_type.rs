@@ -26,6 +26,7 @@ use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use std::rc::Rc;
 
+/// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
 pub fn format_top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
     let crate_name = if krate == LOCAL_CRATE {
         "self".to_string()
@@ -43,6 +44,7 @@ pub fn format_cc_ident_symbol(db: &dyn BindingsGenerator, ident: Symbol) -> Resu
     format_cc_ident(db, ident.as_str())
 }
 
+/// Implementation of `BindingsGenerator::format_cc_ident`.
 pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<TokenStream> {
     // TODO(b/254104998): Check whether the crate where the identifier is defined is
     // enabled for the feature. Right now if the dep enables the feature but the
@@ -188,8 +190,7 @@ pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
 }
 
-/// Formats `ty` into a `CcSnippet` that represents how the type should be
-/// spelled in a C++ declaration of a function parameter or field.
+/// Implementation of `BindingsGenerator::format_ty_for_cc`.
 pub fn format_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: SugaredTy<'tcx>,

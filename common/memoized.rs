@@ -54,7 +54,9 @@
 ///     //
 ///     // As a rule of thumb, anything which is a constant for the lifetime of an execution, but
 ///     // is not an actual compile time constant, should be an input.
+///
 ///     #[input]
+///     /// Doc comment goes after `#[input]`.
 ///     fn some_input(&self) -> InputType;
 ///     //...
 ///
@@ -81,9 +83,12 @@
 ///     // that returns <default_value> if a cycle is detected, but will _not_ cache the result.
 ///     // All `#[break_cycles_with = ..]` functions must appear before all
 ///     // non-`#[break_cycles_with = ..]` functions.
+///
 ///     #[break_cycles_with = ReturnType::default()]
+///     /// Doc comment goes after `#[break_cycles_with = ..]`.
 ///     fn may_be_cyclic(&self, arg: ArgType) -> ReturnType;
 ///
+///     /// Doc comment goes here.
 ///     fn some_function(&self, arg: ArgType) -> ReturnType;
 ///   }
 ///   // The concrete type for the storage of inputs and memoized values.
@@ -161,15 +166,17 @@ macro_rules! query_group {
   (
     $trait_vis:vis trait $trait:ident $(<$($type_param:tt),*>)?{
       $(
-        $(#[doc = $input_doc:literal])*
+        // TODO(jeanpierreda): Ideally would allow putting the doc-comment first,
+        // but this causes parsing ambiguity.
         #[input]
+        $(#[doc = $input_doc:literal])*
         fn $input_function:ident(&self $(,)?) -> $input_type:ty;
       )*
       $(
-        // TODO(jeanpierreda): Ideally would like to preserve doc comments here, but it introduces a
-        // parsing ambiguity with how the macro is currently structured.
-        // $(#[doc = $break_cycles_doc:literal])*
+        // TODO(jeanpierreda): Ideally would allow putting the doc-comment first,
+        // but this causes parsing ambiguity.
         #[break_cycles_with = $break_cycles_default_value:expr]
+        $(#[doc = $break_cycles_doc:literal])*
         fn $break_cycles_function:ident(
           &self
           $(
@@ -179,9 +186,7 @@ macro_rules! query_group {
         ) -> $break_cycles_return_type:ty;
       )*
       $(
-        // TODO(jeanpierreda): Ideally would like to preserve doc comments here, but it introduces a
-        // parsing ambiguity with how the macro is currently structured.
-        // $(#[doc = $function_doc:literal])?
+        $(#[doc = $function_doc:literal])*
         fn $function:ident(
           &self
           $(
@@ -201,6 +206,7 @@ macro_rules! query_group {
         fn $input_function(&self) -> $input_type { unimplemented!(concat!("input function '", stringify!($input_function), "'")) }
       )*
       $(
+        $(#[doc = $break_cycles_doc])*
         fn $break_cycles_function(
           &self,
           $(
@@ -209,6 +215,7 @@ macro_rules! query_group {
         ) -> $break_cycles_return_type { _ = ($($break_cycles_arg),*); unimplemented!(concat!("break cycles function '", stringify!($break_cycles_function), "'")) }
       )*
       $(
+        $(#[doc = $function_doc])*
         fn $function(
           &self,
           $(
@@ -431,11 +438,11 @@ pub mod tests {
     fn test_basic_memoization() {
         crate::query_group! {
           pub trait Add10 {
+            #[input]
             /// Tracker for how many times this function is called so we can check
             /// that memoization is indeed happening. This is just for testing;
             /// memoized functions in non-test code shouldn't have side effects,
             /// and inputs in non-test code shouldn't have internal mutability.
-            #[input]
             fn call_counter(&self) -> Rc<Cell<i32>>;
             fn add10(&self, arg: i32) -> i32;
           }

@@ -9,6 +9,7 @@ use database::BindingsGenerator;
 use ir::{rs_imported_crate_name, CcCallingConv, CcType, CcTypeVariant, Item, PointerTypeKind};
 use std::rc::Rc;
 
+/// Implementation of `BindingsGenerator::rs_type_kind`.
 pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind> {
     ensure!(ty.unknown_attr.is_empty(), "unknown attribute(s): {}", ty.unknown_attr);
     match &ty.variant {

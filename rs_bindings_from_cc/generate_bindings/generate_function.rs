@@ -744,8 +744,7 @@ fn api_func_shape_if_some(
     shape
 }
 
-/// Returns the generated bindings for a function with the given name and param
-/// types. If none exists, returns None.
+/// Implementation of `BindingsGenerator::get_binding`.
 pub fn get_binding(
     db: &dyn BindingsGenerator,
     expected_function_name: UnqualifiedIdentifier,
@@ -770,8 +769,7 @@ pub fn get_binding(
         })
 }
 
-/// Returns whether the given record either implements or derives the Clone
-/// trait.
+/// Implementation of `BindingsGenerator::is_record_clonable`.
 pub fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> bool {
     if !record.is_unpin() {
         return false;
@@ -1057,18 +1055,7 @@ fn errors_as_unsatisfied_trait_bound(
     }
 }
 
-/// Generates Rust source code for a given `Func`.
-/// `derived_record` is a derived class type which re-exports `func` as a
-/// method on this record.`func` must be a method on a base class of
-/// `derived_record`.
-///
-/// Returns:
-///
-///  * `Err(_)`: couldn't import the function, emit an `UnsupportedItem`.
-///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
-///    destructor might be mapped to no `Drop` impl at all.)
-///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
-///    thunk FFI definition, and function ID.
+/// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
@@ -1824,9 +1811,7 @@ fn format_tuple_except_singleton_replacing_by_self(
     }
 }
 
-/// Identifies all functions having overloads that we can't import (yet).
-///
-/// TODO(b/213280424): Implement support for overloaded functions.
+/// Implementation of `BindingsGenerator::overloaded_funcs`.
 pub fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
     let mut seen_funcs = HashSet::new();
     let mut overloaded_funcs = HashSet::new();

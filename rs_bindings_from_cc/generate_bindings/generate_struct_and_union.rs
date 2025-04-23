@@ -166,6 +166,7 @@ fn collect_unqualified_member_functions_from_all_bases(
         .collect()
 }
 
+/// Implementation of `BindingsGenerator::collect_unqualified_member_functions`.
 pub fn collect_unqualified_member_functions(
     db: &dyn BindingsGenerator,
     record: Rc<Record>,
@@ -323,8 +324,7 @@ fn field_definition(
     Ok(quote! { #padding #doc_comment #access #ident: #field_type })
 }
 
-/// Generates Rust source code for a given `Record` and associated assertions as
-/// a tuple.
+/// Implementation of `BindingsGenerator::generate_record`.
 pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
     let record_rs_type_kind = db.rs_type_kind(record.as_ref().into())?;
     if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = &record_rs_type_kind

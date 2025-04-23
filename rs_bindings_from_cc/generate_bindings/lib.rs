@@ -222,8 +222,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
     })
 }
 
-/// Returns generated bindings for an item, or `Err` if bindings generation
-/// failed in such a way as to make the generated bindings as a whole invalid.
+/// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> {
     let err = match generate_item_impl(db, &item) {
         Ok(generated) => return Ok(generated),
@@ -482,6 +481,7 @@ pub fn generate_bindings_tokens(
     })
 }
 
+/// Implementation of `BindingsGenerator::is_rs_type_kind_unsafe`.
 fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> bool {
     match rs_type_kind {
         RsTypeKind::Pointer { .. } => true,
@@ -627,7 +627,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
     }
 }
 
-/// Returns the [`CrubitAbiType`] for the given [`RsTypeKind`].
+/// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
         RsTypeKind::TypeAlias { underlying_type, .. } => {

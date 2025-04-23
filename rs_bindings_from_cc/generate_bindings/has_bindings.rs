@@ -10,6 +10,7 @@ use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
 use ir::{Func, GenericItem, Item};
 
+/// Implementation of `BindingsGenerator::has_bindings`.
 pub fn has_bindings(
     db: &dyn BindingsGenerator,
     item: Item,

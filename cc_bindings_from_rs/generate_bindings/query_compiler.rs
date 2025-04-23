@@ -219,8 +219,7 @@ fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
     }
 }
 
-// TODO: Replace calls to this function with direct call to `repr.transparent()`
-// and `repr.c()` etc.
+/// Implementation of `BindingsGenerator::repr_attrs`.
 pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_attr_data_structures::ReprAttr]> {
     let mut result = Vec::new();
     let ty = tcx.type_of(def_id).instantiate_identity();

@@ -68,6 +68,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
 
+/// Implementation of `BindingsGenerator::support_header`.
 fn support_header<'tcx>(db: &dyn BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
 }
@@ -286,8 +287,7 @@ fn symbols_from_extern_crate(db: &dyn BindingsGenerator<'_>) -> Vec<(DefId, Full
     visitor.symbols
 }
 
-/// Computes a mapping from a `DefId` to a `FullyQualifiedName` for all
-/// not-directly-public symbols that are reexported by a `use` statement.
+/// Implementation of `BindingsGenerator::reexported_symbol_canonical_name_mapping`.
 // TODO(b/350772554): Don't generate bindings for ambiguous symbols.
 fn reexported_symbol_canonical_name_mapping(
     db: &dyn BindingsGenerator<'_>,
@@ -778,10 +778,7 @@ fn is_public_or_supported_export(db: &dyn BindingsGenerator<'_>, def_id: DefId) 
             && db.reexported_symbol_canonical_name_mapping().contains_key(&def_id))
 }
 
-/// Formats a default constructor for an ADT if possible (i.e. if the `Default`
-/// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
-/// there is no `Default` impl, then the default constructor will be
-/// `=delete`d in the returned snippet).
+/// Implementation of `BindingsGenerator::generate_default_ctor`.
 fn generate_default_ctor<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
@@ -837,10 +834,7 @@ fn generate_default_ctor<'tcx>(
     })
 }
 
-/// Formats the copy constructor and the copy-assignment operator for an ADT if
-/// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
-/// error otherwise (e.g. if there is no `Clone` impl, then the copy constructor
-/// and assignment operator will be `=delete`d in the returned snippet).
+/// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
 fn generate_copy_ctor_and_assignment_operator<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
@@ -924,10 +918,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
     })
 }
 
-/// Formats the move constructor and the move-assignment operator for an ADT if
-/// possible (it depends on various factors like `needs_drop`, `is_unpin` and
-/// implementations of `Default` and/or `Clone` traits).  Returns an error
-/// otherwise (the error's `ApiSnippets` contain a `=delete`d declaration).
+/// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
 fn generate_move_ctor_and_assignment_operator<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
@@ -1096,10 +1087,7 @@ fn item_name(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Symbol
         .unwrap_or_else(|| Symbol::intern("<unknown>"))
 }
 
-/// Formats a HIR item idenfied by `def_id`.  Returns `None` if the item
-/// can be ignored. Returns an `Err` if the definition couldn't be formatted.
-///
-/// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
+/// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item(
     db: &dyn BindingsGenerator<'_>,
     local_def_id: LocalDefId,

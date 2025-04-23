@@ -477,23 +477,7 @@ pub fn generate_adt<'tcx>(
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
-/// Formats the core of an algebraic data type (an ADT - a struct, an enum, or a
-/// union) represented by `def_id`.
-///
-/// The "core" means things that are necessary for a succesful binding (e.g.
-/// inability to generate a correct C++ destructor means that the ADT cannot
-/// have any bindings).  "core" excludes things that are A) infallible (e.g.
-/// struct or union fields which can always be translated into private, opaque
-/// blobs of bytes) or B) optional (e.g. a problematic instance method
-/// can just be ignored, unlike a problematic destructor).  The split between
-/// fallible "core" and non-fallible "rest" is motivated by the need to avoid
-/// cycles / infinite recursion (e.g. when processing fields that refer back to
-/// the struct type, possible with an indirection of a pointer).
-///
-/// `generate_adt_core` is used both to 1) format bindings for the core of an
-/// ADT, and 2) check if formatting would have succeeded (e.g. when called from
-/// `format_ty`).  The 2nd case is needed for ADTs defined in any crate - this
-/// is why the `def_id` parameter is a DefId rather than LocalDefId.
+/// Implementation of `BindingsGenerator::generate_adt_core`.
 pub fn generate_adt_core<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,

@@ -311,11 +311,7 @@ fn cc_return_value_from_c_abi<'tcx>(
     }
 }
 
-/// Formats a function with the given `local_def_id`.
-///
-/// Will panic if `local_def_id`
-/// - is invalid
-/// - doesn't identify a function,
+/// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function(
     db: &dyn BindingsGenerator<'_>,
     local_def_id: LocalDefId,
