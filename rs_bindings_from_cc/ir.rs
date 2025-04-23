@@ -229,6 +229,26 @@ impl From<&Record> for CcType {
     }
 }
 
+impl From<&TypeAlias> for CcType {
+    fn from(alias: &TypeAlias) -> Self {
+        CcType {
+            variant: CcTypeVariant::Record(alias.id),
+            is_const: false,
+            unknown_attr: Rc::default(),
+        }
+    }
+}
+
+impl From<&TypeMapOverride> for CcType {
+    fn from(type_map_override: &TypeMapOverride) -> Self {
+        CcType {
+            variant: CcTypeVariant::Record(type_map_override.id),
+            is_const: false,
+            unknown_attr: Rc::default(),
+        }
+    }
+}
+
 #[derive(Copy, Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum PointerTypeKind {

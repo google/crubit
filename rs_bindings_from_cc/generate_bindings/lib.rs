@@ -84,7 +84,7 @@ fn generate_type_alias(
     type_alias: Rc<TypeAlias>,
 ) -> Result<ApiSnippets> {
     // Skip the type alias if it maps to a bridge type.
-    let rs_type_kind = RsTypeKind::new_type_alias(db, type_alias.clone())?;
+    let rs_type_kind = db.rs_type_kind((&*type_alias).into())?;
     if rs_type_kind.unalias().is_bridge_type() {
         let disable_comment = format!(
             "Type alias for {cpp_type} suppressed due to being a bridge type",
@@ -304,7 +304,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
             .into()
         }
         Item::TypeMapOverride(type_override) => {
-            let rs_type_kind = RsTypeKind::new_type_map_override(db, type_override.clone())?;
+            let rs_type_kind = db.rs_type_kind((&**type_override).into())?;
             let disable_comment = format!(
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type_kind})",
@@ -587,7 +587,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
     }
 
     for type_alias in ir.type_aliases() {
-        let Ok(rs_type_kind) = RsTypeKind::new_type_alias(db, type_alias.clone()) else {
+        let Ok(rs_type_kind) = db.rs_type_kind((&**type_alias).into()) else {
             continue;
         };
 
