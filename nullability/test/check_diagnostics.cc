@@ -8,68 +8,43 @@
 #include <array>
 #include <iterator>
 #include <memory>
+#include <set>
+#include <string>
 #include <vector>
 
 #include "nullability/pointer_nullability_diagnosis.h"
 #include "nullability/pragma.h"
 #include "nullability/test/test_headers.h"
 #include "clang/include/clang/AST/ASTConsumer.h"
+#include "clang/include/clang/AST/ASTContext.h"
 #include "clang/include/clang/AST/Decl.h"
 #include "clang/include/clang/ASTMatchers/ASTMatchers.h"
 #include "clang/include/clang/Analysis/CFG.h"
+#include "clang/include/clang/Basic/LLVM.h"
 #include "clang/include/clang/Frontend/FrontendActions.h"
 #include "clang/include/clang/Testing/CommandLineArgs.h"
 #include "clang/include/clang/Testing/TestAST.h"
 #include "clang/include/clang/Tooling/Tooling.h"
 #include "clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/include/llvm/ADT/ArrayRef.h"
+#include "llvm/include/llvm/ADT/DenseMap.h"
 #include "llvm/include/llvm/ADT/StringRef.h"
 #include "llvm/include/llvm/Support/raw_ostream.h"
-#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
+#include "llvm/include/llvm/Testing/Annotations/Annotations.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 
-static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
-                             bool AllowUntracked) {
+bool checkDiagnostics(ASTContext &AST, llvm::Annotations AnnotatedCode,
+                      const NullabilityPragmas &Pragmas, bool AllowUntracked) {
   using ast_matchers::BoundNodes;
   using ast_matchers::hasName;
   using ast_matchers::match;
   using ast_matchers::stmt;
   using ast_matchers::valueDecl;
 
-  llvm::Annotations AnnotatedCode(SourceCode);
-  clang::TestInputs Inputs(AnnotatedCode.code());
-  Inputs.Language = Lang;
-  Inputs.ExtraArgs = {
-      "-fsyntax-only",
-      "-Wno-unused-value",
-      "-Wno-nonnull",
-      "-include",
-      "check_diagnostics_preamble.h",
-      "-I.",
-  };
-  for (const auto &Entry :
-       llvm::ArrayRef(test_headers_create(), test_headers_size()))
-    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
-  NullabilityPragmas Pragmas;
-  Inputs.MakeAction = [&] {
-    struct Action : public SyntaxOnlyAction {
-      NullabilityPragmas &Pragmas;
-      Action(NullabilityPragmas &Pragmas) : Pragmas(Pragmas) {}
-
-      std::unique_ptr<ASTConsumer> CreateASTConsumer(
-          CompilerInstance &CI, llvm::StringRef File) override {
-        registerPragmaHandler(CI.getPreprocessor(), Pragmas);
-        return SyntaxOnlyAction::CreateASTConsumer(CI, File);
-      }
-    };
-    return std::make_unique<Action>(Pragmas);
-  };
-  clang::TestAST AST(Inputs);
-
   SmallVector<BoundNodes, 1> MatchResult =
-      match(valueDecl(hasName("target")).bind("target"), AST.context());
+      match(valueDecl(hasName("target")).bind("target"), AST);
   if (MatchResult.empty()) {
     ADD_FAILURE() << "didn't find target declaration";
     return false;
@@ -88,10 +63,10 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
 
     llvm::DenseMap<unsigned, std::string> Annotations =
         dataflow::test::buildLineToAnnotationMapping(
-            AST.sourceManager(), AST.context().getLangOpts(),
-            Target->getSourceRange(), AnnotatedCode);
+            AST.getSourceManager(), AST.getLangOpts(), Target->getSourceRange(),
+            AnnotatedCode);
 
-    llvm::SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+    SmallVector<PointerNullabilityDiagnostic> Diagnostics;
     if (llvm::Error Err =
             diagnosePointerNullability(Target, Pragmas).moveInto(Diagnostics)) {
       ADD_FAILURE() << Err;
@@ -109,8 +84,8 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
       // consider those if explicitly requested by AllowUntracked.
       if (AllowUntracked ||
           Diag.Code != PointerNullabilityDiagnostic::ErrorCode::Untracked) {
-        ActualLines.insert(
-            AST.sourceManager().getPresumedLineNumber(Diag.Range.getBegin()));
+        ActualLines.insert(AST.getSourceManager().getPresumedLineNumber(
+            Diag.Range.getBegin()));
       }
     }
     if (ActualLines != ExpectedLines) {
@@ -118,8 +93,8 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
 
       // Clang's line numbers are one-based, so add an extra empty line at the
       // beginning.
-      llvm::SmallVector<llvm::StringRef> Lines = {""};
-      SourceCode.split(Lines, '\n');
+      SmallVector<llvm::StringRef> Lines = {""};
+      AnnotatedCode.code().split(Lines, '\n');
 
       std::vector<unsigned> ExpectedButNotFound;
       std::set_difference(ExpectedLines.begin(), ExpectedLines.end(),
@@ -154,6 +129,41 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
   }
 
   return Success;
+}
+
+static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
+                             bool AllowUntracked) {
+  llvm::Annotations AnnotatedCode(SourceCode);
+  clang::TestInputs Inputs(AnnotatedCode.code());
+  Inputs.Language = Lang;
+  Inputs.ExtraArgs = {
+      "-fsyntax-only",
+      "-Wno-unused-value",
+      "-Wno-nonnull",
+      "-include",
+      "check_diagnostics_preamble.h",
+      "-I.",
+  };
+  for (const auto &Entry :
+       llvm::ArrayRef(test_headers_create(), test_headers_size()))
+    Inputs.ExtraFiles.try_emplace(Entry.name, Entry.data);
+  NullabilityPragmas Pragmas;
+  Inputs.MakeAction = [&] {
+    struct Action : public SyntaxOnlyAction {
+      NullabilityPragmas &Pragmas;
+      Action(NullabilityPragmas &Pragmas) : Pragmas(Pragmas) {}
+
+      std::unique_ptr<ASTConsumer> CreateASTConsumer(
+          CompilerInstance &CI, llvm::StringRef File) override {
+        registerPragmaHandler(CI.getPreprocessor(), Pragmas);
+        return SyntaxOnlyAction::CreateASTConsumer(CI, File);
+      }
+    };
+    return std::make_unique<Action>(Pragmas);
+  };
+  clang::TestAST AST(Inputs);
+  return checkDiagnostics(AST.context(), AnnotatedCode, Pragmas,
+                          AllowUntracked);
 }
 
 // Run in C++17 and C++20 mode to cover differences in the AST between modes

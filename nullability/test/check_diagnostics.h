@@ -5,8 +5,11 @@
 #ifndef CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
 #define CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
 
+#include "nullability/pragma.h"
+#include "clang/include/clang/AST/ASTContext.h"
 #include "clang/include/clang/Testing/CommandLineArgs.h"
 #include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/include/llvm/Testing/Annotations/Annotations.h"
 
 namespace clang {
 namespace tidy {
@@ -23,6 +26,10 @@ bool checkDiagnostics(llvm::StringRef SourceCode);
 bool checkDiagnosticsHasUntracked(llvm::StringRef SourceCode);
 
 bool checkDiagnosticsWithMin(llvm::StringRef SourceCode, TestLanguage Min);
+
+bool checkDiagnostics(ASTContext& AST, llvm::Annotations AnnotatedCode,
+                      const NullabilityPragmas& Pragmas = NullabilityPragmas(),
+                      bool AllowUntracked = false);
 
 }  // namespace nullability
 }  // namespace tidy
