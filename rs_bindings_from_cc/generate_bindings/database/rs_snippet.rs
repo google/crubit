@@ -1159,12 +1159,16 @@ impl RsTypeKind {
                     // need to skip the first part of the split, since it returns the empty string.
                     let name_parts =
                         rust_name.split("::").skip(is_absolute_path as usize).map(make_rs_ident);
+                    let target = original_type
+                        .defining_target
+                        .as_ref()
+                        .unwrap_or(&original_type.owning_target);
                     let prefix = if is_absolute_path {
                         quote! {}
-                    } else if db.ir().is_current_target(&original_type.owning_target) {
+                    } else if db.ir().is_current_target(target) {
                         quote! {crate}
                     } else {
-                        make_rs_ident(original_type.owning_target.target_name()).to_token_stream()
+                        make_rs_ident(target.target_name()).to_token_stream()
                     };
                     quote! { #prefix :: #(#name_parts)::* }
                 };

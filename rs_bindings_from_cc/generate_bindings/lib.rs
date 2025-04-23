@@ -695,8 +695,9 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 bail!("Void pointer bridge types are not allowed within composable bridging")
             }
             BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
-                let rust_abi_path =
-                    make_rust_abi_path(&abi_rust, db.ir(), &original_type.owning_target);
+                let target =
+                    original_type.defining_target.as_ref().unwrap_or(&original_type.owning_target);
+                let rust_abi_path = make_rust_abi_path(&abi_rust, db.ir(), target);
 
                 let cpp_abi_path = make_cpp_abi_path(&abi_cpp)?;
 
@@ -754,18 +755,14 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
 /// Parses the given Rust path into a [`FullyQualifiedPath`]. If the path doesn't start with "::",
 /// it will be prepended with the crate name, or the keyword "crate" if the type is owned by the
 /// current target.
-fn make_rust_abi_path(
-    mut rust_path: &str,
-    ir: &IR,
-    owning_target: &BazelLabel,
-) -> FullyQualifiedPath {
+fn make_rust_abi_path(mut rust_path: &str, ir: &IR, target: &BazelLabel) -> FullyQualifiedPath {
     let start_with_colon2 = strip_leading_colon2(&mut rust_path);
     let prefix = if start_with_colon2 {
         None
-    } else if ir.is_current_target(owning_target) {
+    } else if ir.is_current_target(target) {
         Some(Ident::new("crate", proc_macro2::Span::call_site()))
     } else {
-        Some(make_rs_ident(owning_target.target_name()))
+        Some(make_rs_ident(target.target_name()))
     };
     FullyQualifiedPath {
         start_with_colon2,

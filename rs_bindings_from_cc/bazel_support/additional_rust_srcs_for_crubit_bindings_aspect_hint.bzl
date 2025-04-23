@@ -54,6 +54,7 @@ load("@bazel_skylib//lib:collections.bzl", "collections")
 
 visibility([
     # <internal link> start
+    "//examples/...",
     "//rs_bindings_from_cc/...",
     "//support/...",
     # <internal link> end
