@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/test/bridging/composable_bridging_lib.h"
 
 #include <optional>
+#include <string>
 #include <utility>
 
 Vec3<float> MakeVec3(float x, float y, float z) {
@@ -45,3 +46,13 @@ MakeStuff() {
 }
 
 Vec3<Stuff> MakeVec3OfStructs(Stuff x, Stuff y, Stuff z) { return {x, y, z}; }
+
+std::string ReturnProperGreeting() { return "Hello, world!"; }
+
+bool IsProperGreeting(std::string greeting) {
+  return greeting == "Hello, world!";
+}
+
+std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff) {
+  return {"Hello, world!", stuff};
+}

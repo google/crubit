@@ -51,6 +51,11 @@ pub enum CrubitAbiType {
     LongLong,
     UnsignedLongLong,
     Pair(Rc<CrubitAbiType>, Rc<CrubitAbiType>),
+    StdString {
+        /// If true, use `crate::std::BoxedCppStringAbi` instead of
+        /// `::cc_std::std::BoxedCppStringAbi` in Rust tokens.
+        in_cc_std: bool,
+    },
     Type {
         rust_abi_path: FullyQualifiedPath,
         cpp_abi_path: FullyQualifiedPath,
@@ -95,6 +100,14 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                 quote! { ::bridge_rust::TupleAbi<(#first_tokens, #second_tokens)> }
                     .to_tokens(tokens);
             }
+            CrubitAbiType::StdString { in_cc_std } => {
+                let root = if *in_cc_std {
+                    quote! { crate }
+                } else {
+                    quote! { ::cc_std }
+                };
+                quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
+            }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
                 rust_abi_path.to_tokens(tokens);
                 if !type_args.is_empty() {
@@ -120,6 +133,9 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
                 let first_tokens = CrubitAbiTypeToCppTokens(first);
                 let second_tokens = CrubitAbiTypeToCppTokens(second);
                 quote! { ::crubit::PairAbi<#first_tokens, #second_tokens> }.to_tokens(tokens);
+            }
+            CrubitAbiType::StdString { .. } => {
+                quote! { ::crubit::BoxedAbi<std::string> }.to_tokens(tokens)
             }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
                 cpp_abi_path.to_tokens(tokens);

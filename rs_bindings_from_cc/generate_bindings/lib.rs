@@ -85,8 +85,17 @@ fn generate_type_alias(
 ) -> Result<ApiSnippets> {
     // Skip the type alias if it maps to a bridge type.
     let rs_type_kind = RsTypeKind::new_type_alias(db, type_alias.clone())?;
-    if rs_type_kind.is_bridge_type() {
-        return Ok(ApiSnippets::default());
+    if rs_type_kind.unalias().is_bridge_type() {
+        let disable_comment = format!(
+            "Type alias for {cpp_type} suppressed due to being a bridge type",
+            cpp_type = type_alias.debug_name(db.ir()),
+        );
+        return Ok(ApiSnippets {
+            main_api: quote! {
+                __COMMENT__ #disable_comment
+            },
+            ..Default::default()
+        });
     }
     let ident = make_rs_ident(&type_alias.rs_name.identifier);
     let doc_comment = generate_doc_comment(
@@ -505,6 +514,7 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
                 db.is_rs_type_kind_unsafe(t1.as_ref().clone())
                     || db.is_rs_type_kind_unsafe(t2.as_ref().clone())
             }
+            BridgeRsTypeKind::StdString { .. } => false,
         },
         RsTypeKind::Record { record, .. } => is_record_unsafe(db, &record),
     }
@@ -577,9 +587,11 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
     }
 
     for type_alias in ir.type_aliases() {
-        if let Ok(RsTypeKind::BridgeType { bridge_type, .. }) =
-            RsTypeKind::new_type_alias(db, type_alias.clone())
-        {
+        let Ok(rs_type_kind) = RsTypeKind::new_type_alias(db, type_alias.clone()) else {
+            continue;
+        };
+
+        if let RsTypeKind::BridgeType { bridge_type, .. } = rs_type_kind.unalias() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.into(),
                 if bridge_type.is_void_converters_bridge_type() {
@@ -708,6 +720,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 let second_abi = db.crubit_abi_type(second.as_ref().clone())?;
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
+            BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
         },
         RsTypeKind::Record { record, crate_path, .. } => {
             database::rs_snippet::check_by_value(record.as_ref())?;

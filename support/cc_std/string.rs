@@ -7,11 +7,12 @@ extern crate alloc;
 use crate::crubit_cc_std_internal::conversion_function_helpers;
 use alloc::string::String;
 use alloc::vec::Vec;
+use bridge_rust::{CrubitAbi, Decoder, Encoder};
 use core::clone::Clone;
 use core::cmp::Eq;
 use core::cmp::PartialEq;
 use core::ffi::c_void;
-use core::mem::MaybeUninit;
+use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::ptr::NonNull;
 
@@ -198,6 +199,35 @@ impl core::fmt::Display for string {
         String::from_utf8_lossy(self.as_slice()).fmt(f)
     }
 }
+
+/// The Crubit ABI for C++ `std::string`. It is specified as one pointer.
+///
+/// This pointer should point to a heap allocated `std::string` object, where the pointer is the
+/// owner of the allocation. Alternatively, the pointer can be null if and only if the allocation
+/// failed, in which case it's okay to panic.
+pub struct BoxedCppStringAbi;
+
+unsafe impl CrubitAbi for BoxedCppStringAbi {
+    type Value = string;
+
+    const SIZE: usize = core::mem::size_of::<*mut c_void>();
+
+    fn encode(value: Self::Value, encoder: &mut Encoder) {
+        encoder.encode_transmute(ManuallyDrop::new(value).as_mut_void_ptr());
+    }
+
+    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+        // SAFETY: the caller guarantees that the buffer contains an allocated or null pointer to a
+        // C++ `std::string` object.
+        let ptr: *mut c_void = unsafe { decoder.decode_transmute() };
+
+        Self::Value {
+            owned_cpp_string: NonNull::new(ptr).expect("Boxing a std::string shouldn't fail"),
+        }
+    }
+}
+
+// Void pointer converters are needed for cc_bindings_from_rs.
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn rust_string_to_cpp_string(input: *const c_void, output: *mut c_void) {

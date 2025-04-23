@@ -467,6 +467,9 @@ llvm::json::Value BridgeType::ToJson() const {
                                 std_pair.second_type->ToJson(),
                             }}};
           },
+          [&](const BridgeType::StdString& std_string) {
+            return llvm::json::Object{{"StdString", nullptr}};
+          },
       },
       variant);
 }

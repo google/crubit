@@ -529,7 +529,10 @@ struct BridgeType {
     std::shared_ptr<CcType> second_type;
   };
 
-  std::variant<BridgeVoidConverters, Bridge, StdOptional, StdPair> variant;
+  struct StdString {};
+
+  std::variant<BridgeVoidConverters, Bridge, StdOptional, StdPair, StdString>
+      variant;
 };
 
 // TODO: Handle non-type template parameter.

@@ -893,6 +893,7 @@ pub enum BridgeType {
     },
     StdOptional(CcType),
     StdPair(CcType, CcType),
+    StdString,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

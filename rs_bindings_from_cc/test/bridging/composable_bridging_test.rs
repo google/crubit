@@ -42,3 +42,18 @@ fn test_vec3_of_structs() {
         Vec3 { x: Stuff { i: 1, f: 2.0 }, y: Stuff { i: 3, f: 4.0 }, z: Stuff { i: 5, f: 6.0 } }
     );
 }
+
+#[gtest]
+fn test_greeting() {
+    expect_eq!(ReturnProperGreeting(), cc_std::std::string::from("Hello, world!"));
+    expect_true!(IsProperGreeting(cc_std::std::string::from("Hello, world!")));
+    expect_false!(IsProperGreeting(cc_std::std::string::from("Hi, world!")));
+}
+
+#[gtest]
+fn test_properly_greet_stuff() {
+    expect_eq!(
+        ProperlyGreetStuff(Stuff { i: 1, f: 2.0 }),
+        (cc_std::std::string::from("Hello, world!"), Stuff { i: 1, f: 2.0 })
+    );
+}

@@ -249,11 +249,7 @@ pub fn check_by_value(record: &Record) -> Result<()> {
 }
 
 fn is_allowed_template_instantiation(record: &Record) -> bool {
-    // TODO(b/351976622): Allow std::basic_string.
-    matches!(
-        record.cc_preferred_name.as_ref(),
-        "std::string_view" | "std::wstring_view" | "std::string"
-    )
+    matches!(record.cc_preferred_name.as_ref(), "std::string_view" | "std::wstring_view")
 }
 
 /// Location where a type is used.
@@ -346,6 +342,9 @@ pub enum BridgeRsTypeKind {
     },
     StdOptional(Rc<RsTypeKind>),
     StdPair(Rc<RsTypeKind>, Rc<RsTypeKind>),
+    StdString {
+        in_cc_std: bool,
+    },
 }
 
 impl BridgeRsTypeKind {
@@ -393,6 +392,12 @@ impl BridgeRsTypeKind {
                 Rc::new(db.rs_type_kind(t1)?),
                 Rc::new(db.rs_type_kind(t2)?),
             ),
+            BridgeType::StdString => {
+                let in_cc_std = db.ir().is_current_target(&record.owning_target)
+                    && record.owning_target.target_name_escaped() == "cc_std";
+
+                BridgeRsTypeKind::StdString { in_cc_std }
+            }
         };
 
         Ok(Some(bridge_rs_type_kind))
@@ -403,72 +408,24 @@ impl BridgeRsTypeKind {
     }
 }
 
-fn is_basic_string_char(record: &Record) -> bool {
-    record.cc_preferred_name.as_ref() == "std::string"
-}
-
-fn create_string_bridge_type(record: &Record) -> Result<RsTypeKind> {
-    let owning_crate = make_rs_ident(&record.owning_target.target_name_escaped());
-    // This is needed to avoid backword reference error. The current conversion
-    // functions are written in Rust and fed into cc_std as additional rust source
-    // files. If we don't disable the original std::string alias in cc_std, the
-    // generated thunk `cc_std_rs_impl.so` will refer to the lib_cc_std.so, causing
-    // a backward reference error.
-    // TODO: Relocate the conversion functions.
-    if owning_crate == "cc_std" {
-        return Err(anyhow!("Disable the original std::string in cc_std"));
-    }
-    Ok(RsTypeKind::BridgeType {
-        // TODO(okabayashi): std::string should be its own builtin variant, not
-        // BridgeRsTypeKind::BridgeVoidConverters.
-        bridge_type: BridgeRsTypeKind::BridgeVoidConverters {
-            rust_name: Rc::from("::cc_std::std::string"),
-            cpp_to_rust_converter: Rc::from("cpp_string_to_rust_string"),
-            rust_to_cpp_converter: Rc::from("rust_string_to_cpp_string"),
-        },
-        original_type: record.clone().into(),
-    })
-}
-
-fn map_record_to_bridge_type(record: &Record) -> Option<Result<RsTypeKind>> {
-    if is_basic_string_char(record) {
-        Some(create_string_bridge_type(record))
-    } else {
-        None
-    }
-}
-
-fn map_alias_to_bridge_type(type_alias: &RsTypeKind) -> Option<Result<RsTypeKind>> {
-    match type_alias {
-        RsTypeKind::TypeAlias { underlying_type, .. } => match underlying_type.as_ref() {
-            RsTypeKind::Record { record, .. }
-            | RsTypeKind::BridgeType { original_type: record, .. } => {
-                if record.cc_preferred_name.as_ref() == "std::string" {
-                    Some(create_string_bridge_type(record))
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        },
-        _ => None,
-    }
-}
-
 impl RsTypeKind {
     pub fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
         let ir = db.ir();
-        let underlying_type = Rc::new(db.rs_type_kind(type_alias.underlying_type.clone())?);
+        let underlying_type = db.rs_type_kind(type_alias.underlying_type.clone())?;
+        // Bridge types cannot be aliased
+        if underlying_type.unalias().is_bridge_type() {
+            return Ok(underlying_type);
+        }
         let crate_path = Rc::new(CratePath::new(
             &ir,
             ir.namespace_qualifier(&type_alias),
             rs_imported_crate_name(&type_alias.owning_target, &ir),
         ));
-        let result = RsTypeKind::TypeAlias { type_alias, crate_path, underlying_type };
-        if let Some(result) = map_alias_to_bridge_type(&result) {
-            return result;
-        }
-        Ok(result)
+        Ok(RsTypeKind::TypeAlias {
+            type_alias,
+            crate_path,
+            underlying_type: Rc::new(underlying_type),
+        })
     }
 
     pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<Self> {
@@ -483,9 +440,6 @@ impl RsTypeKind {
         ));
         let known_generic_monomorphization =
             map_to_supported_generic(db, &record.template_specialization).map(Rc::new);
-        if let Some(result) = map_record_to_bridge_type(&record) {
-            return result;
-        }
         Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
     }
 
@@ -845,6 +799,7 @@ impl RsTypeKind {
                 }
                 BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
+                BridgeRsTypeKind::StdString { .. } => false,
             },
             RsTypeKind::TypeMapOverride { .. } => true,
         }
@@ -1238,6 +1193,13 @@ impl RsTypeKind {
                         let second = second.to_token_stream(db);
                         quote! { (#first, #second) }
                     }
+                    BridgeRsTypeKind::StdString { in_cc_std } => {
+                        if *in_cc_std {
+                            quote! { crate::std::string }
+                        } else {
+                            quote! { ::cc_std::std::string }
+                        }
+                    }
                 }
             }
             RsTypeKind::TypeMapOverride { name, .. } => {
@@ -1286,6 +1248,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                             self.todo.push(t2);
                             self.todo.push(t1);
                         }
+                        BridgeRsTypeKind::StdString { .. } => {}
                     },
                     RsTypeKind::TypeMapOverride { .. } => {}
                 };

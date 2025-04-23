@@ -6,6 +6,8 @@
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_
 
 #include <cstddef>
+#include <optional>
+#include <string>
 #include <utility>
 
 #include "support/bridge.h"
@@ -65,5 +67,11 @@ Stuff {
 };
 
 Vec3<Stuff> MakeVec3OfStructs(Stuff x, Stuff y, Stuff z);
+
+std::string ReturnProperGreeting();
+
+bool IsProperGreeting(std::string greeting);
+
+std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

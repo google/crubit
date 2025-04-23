@@ -339,6 +339,23 @@ struct OptionAbi {
   }
 };
 
+template <typename T>
+  requires(std::move_constructible<T>)
+struct BoxedAbi {
+  using Value = T;
+  static constexpr size_t kSize = sizeof(void*);
+  static void Encode(Value value, Encoder& encoder) {
+    void* box = new Value(std::move(value));
+    encoder.EncodeTransmute(box);
+  }
+  static Value Decode(Decoder& decoder) {
+    Value* box = reinterpret_cast<Value*>(decoder.DecodeTransmute<void*>());
+    Value value(std::move(*box));
+    delete box;
+    return value;
+  }
+};
+
 namespace internal {
 
 template <typename Abi>

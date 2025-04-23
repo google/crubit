@@ -844,13 +844,24 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
     return BridgeType{BridgeType::StdOptional{
         .inner_type = std::make_shared<CcType>(std::move(inner)),
     }};
-  } else if (name == "pair") {
+  }
+
+  if (name == "pair") {
     CRUBIT_ASSIGN_OR_RETURN(CcType first, cc_type_of_arg(0));
     CRUBIT_ASSIGN_OR_RETURN(CcType second, cc_type_of_arg(1));
     return BridgeType{BridgeType::StdPair{
         .first_type = std::make_shared<CcType>(std::move(first)),
         .second_type = std::make_shared<CcType>(std::move(second)),
     }};
+  }
+
+  if (name == "basic_string") {
+    CRUBIT_ASSIGN_OR_RETURN(CcType char_type, cc_type_of_arg(0));
+    if (const auto* primitive =
+            std::get_if<CcType::Primitive>(&char_type.variant);
+        primitive != nullptr && primitive->spelling == "char") {
+      return BridgeType{BridgeType::StdString{}};
+    }
   }
   // Add builtin bridge types here as needed.
 
