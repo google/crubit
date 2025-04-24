@@ -10,15 +10,14 @@ cc_deps = ["//support/cc_std"]
 
 This crate provides, for example:
 
-- The `cc_std::std::string_view` type alias (corresponding to
-  [`std::string_view`](https://en.cppreference.com/w/cpp/header/string_view)
-  in C++)
-- The `cc_std::tm` struct (corresponding to
-  [`tm`](https://en.cppreference.com/w/c/chrono/tm)
-  in C++)
+-   The `cc_std::std::raw_string_view` type alias (corresponding to
+    [`std::string_view`](https://en.cppreference.com/w/cpp/header/string_view)
+    in C++)
+-   The `cc_std::tm` struct (corresponding to
+    [`tm`](https://en.cppreference.com/w/c/chrono/tm) in C++)
 
 In addition to automatically generated bindings, the crate also provides
 manually authored trait implementations that supplement the automated bindings.
 For example:
 
-- `impl From<&'static str> for string_view`
+-   `impl From<&'static str> for raw_string_view`
