@@ -80,7 +80,7 @@ std::string GetClassTemplateSpecializationCcName(
   // Canonicalize types -- in particular, the template parameter types must be
   // desugared out of an `ElaboratedType` so that their namespaces are written
   // down.
-  policy.PrintCanonicalTypes = true;
+  policy.PrintAsCanonical = true;
   policy.UsePreferredNames = use_preferred_names;
   // Use type suffix (e.g. `123u` rather than just `123`) to avoid the
   // `-Wimplicitly-unsigned-literal` warning.  See also b/244616557.

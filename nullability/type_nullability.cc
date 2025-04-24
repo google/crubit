@@ -1144,9 +1144,9 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
                                       AT->getIndexTypeCVRQualifiers());
   }
   QualType VisitVariableArrayType(const VariableArrayType *absl_nonnull AT) {
-    return Ctx.getVariableArrayType(
-        Visit(AT->getElementType()), AT->getSizeExpr(), AT->getSizeModifier(),
-        AT->getIndexTypeCVRQualifiers(), AT->getBracketsRange());
+    return Ctx.getVariableArrayType(Visit(AT->getElementType()),
+                                    AT->getSizeExpr(), AT->getSizeModifier(),
+                                    AT->getIndexTypeCVRQualifiers());
   }
 
  private:
