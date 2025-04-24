@@ -56,6 +56,17 @@ pub fn has_bindings(
         }
     }
 
+    if let Item::Enum(enum_) = &item {
+        if enum_.enumerators.is_none() {
+            return Err(NoBindingsReason::Unsupported {
+                context: enum_.debug_name(ir),
+                error: anyhow!(
+                    "b/322391132: Forward-declared (opaque) enums are not implemented yet"
+                ),
+            });
+        }
+    }
+
     match item {
         Item::Func(func) => func_has_bindings(db, &func),
         Item::TypeAlias(_) => {
@@ -68,12 +79,6 @@ pub fn has_bindings(
                 }
             }
         }
-        Item::Enum(enum_) => match db.generate_enum(enum_.clone()) {
-            Ok(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
-            Err(error) => {
-                Err(NoBindingsReason::DependencyFailed { context: enum_.debug_name(ir), error })
-            }
-        },
         // TODO(b/392882224): Records might not generated if an error occurs in generation.
         _ => Ok(BindingsInfo { visibility: Visibility::Public }),
     }

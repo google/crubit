@@ -22,13 +22,7 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
     let name = make_rs_ident(&enum_.rs_name.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
-    let Some(enumerators) = &enum_.enumerators else {
-        bail!(
-            "b/322391132: Forward-declared (opaque) enums are not supported yet: {}",
-            enum_.cc_name.identifier
-        )
-    };
-    let enumerators = enumerators.iter().map(|enumerator| {
+    let enumerators = enum_.enumerators.iter().flatten().map(|enumerator| {
         if let Some(unknown_attr) = &enumerator.unknown_attr {
             let comment = format!(
                 "Omitting bindings for {ident}\nreason: unknown attribute(s): {unknown_attr}",

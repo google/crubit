@@ -229,26 +229,16 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
         Err(err) => err,
     };
 
+    if db.has_bindings(item.clone()).is_ok() && !matches!(item, Item::Func(_)) {
+        return Err(err);
+    }
     // We didn't guarantee that bindings would exist, so it is not invalid to
     // write down the error but continue.
-    let unsupported_item = match item {
-        Item::Enum(enum_) => {
-            // For now, we special case on enums because they previously reported their own errors from generate_enum and it has more information than the general case.
-            let unsupported_item_path = UnsupportedItemPath {
-                ident: UnqualifiedIdentifier::Identifier(enum_.cc_name.clone()),
-                enclosing_item_id: enum_.enclosing_item_id,
-            };
-            UnsupportedItem::new_with_cause(db.ir(), &enum_, Some(unsupported_item_path), err)
-        }
-        _ => {
-            if db.has_bindings(item.clone()).is_ok() && !matches!(item, Item::Func(_)) {
-                return Err(err);
-            }
-            // FIXME(cramertj): get paths here in more cases. It may be that
-            // `generate_item_impl` failed in such a way that the path is still available.
-            UnsupportedItem::new_with_cause(db.ir(), &item, /* path= */ None, err)
-        }
-    };
+
+    // FIXME(cramertj): get paths here in more cases. It may be that
+    // `generate_item_impl` failed in such a way that the path is still available.
+    let unsupported_item =
+        UnsupportedItem::new_with_cause(db.ir(), &item, /* path= */ None, err);
 
     Ok(generate_unsupported(db, unsupported_item.into()))
 }
