@@ -58,12 +58,16 @@ pub fn has_bindings(
 
     match item {
         Item::Func(func) => func_has_bindings(db, &func),
-        Item::TypeAlias(alias) => match db.rs_type_kind(alias.underlying_type.clone()) {
-            Ok(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
-            Err(error) => {
-                Err(NoBindingsReason::DependencyFailed { context: alias.debug_name(ir), error })
+        Item::TypeAlias(_) => {
+            // has_bindings is called from `rs_type_kind()`, so we can't use
+            // `BindingsGenerator::rs_type_kind()` here.
+            match RsTypeKind::from_item_raw(db, item.clone()) {
+                Ok(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
+                Err(error) => {
+                    Err(NoBindingsReason::DependencyFailed { context: item.debug_name(ir), error })
+                }
             }
-        },
+        }
         Item::Enum(enum_) => match db.generate_enum(enum_.clone()) {
             Ok(_) => Ok(BindingsInfo { visibility: Visibility::Public }),
             Err(error) => {
