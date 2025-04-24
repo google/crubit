@@ -409,7 +409,32 @@ impl BridgeRsTypeKind {
 }
 
 impl RsTypeKind {
-    pub fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
+    /// Directly creates an `RsTypeKind` from an `Item` that defines a type.
+    ///
+    /// WARNING: this is a low-level function that bypasses the validity checks
+    /// that are normally performed by `BindingsGenerator::rs_type_kind()`. In particular,
+    /// this function should only be called by functions that are themselves called by
+    /// `rs_type_kind()`, in order to avoid cycles while introspecting types.
+    ///
+    /// Returns an error if the item does not define a type (e.g. it is a function declaration),
+    /// or if the `RsTypeKind` cannot be created (e.g. a type alias which points to a type that
+    /// cannot receive an `RsTypeKind`).
+    pub fn from_item_raw(db: &dyn BindingsGenerator, item: Item) -> Result<Self> {
+        match item {
+            Item::IncompleteRecord(incomplete_record) => {
+                RsTypeKind::new_incomplete_record(db, incomplete_record)
+            }
+            Item::Record(record) => RsTypeKind::new_record(db, record),
+            Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
+            Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias),
+            Item::TypeMapOverride(type_map_override) => {
+                RsTypeKind::new_type_map_override(db, type_map_override)
+            }
+            other_item => bail!("Item does not define a type: {other_item:?}"),
+        }
+    }
+
+    fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
         let ir = db.ir();
         let underlying_type = db.rs_type_kind(type_alias.underlying_type.clone())?;
         // Bridge types cannot be aliased
@@ -428,7 +453,7 @@ impl RsTypeKind {
         })
     }
 
-    pub fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<Self> {
+    fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<Self> {
         let ir = db.ir();
         if let Some(bridge_type) = BridgeRsTypeKind::new(&record, db)? {
             return Ok(RsTypeKind::BridgeType { bridge_type, original_type: record });
@@ -443,7 +468,7 @@ impl RsTypeKind {
         Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
     }
 
-    pub fn new_incomplete_record(
+    fn new_incomplete_record(
         db: &dyn BindingsGenerator,
         incomplete_record: Rc<IncompleteRecord>,
     ) -> Result<Self> {
@@ -456,7 +481,7 @@ impl RsTypeKind {
         Ok(RsTypeKind::IncompleteRecord { incomplete_record, crate_path })
     }
 
-    pub fn new_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<Self> {
+    fn new_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<Self> {
         let ir = db.ir();
         let crate_path = Rc::new(CratePath::new(
             ir,
@@ -466,7 +491,7 @@ impl RsTypeKind {
         Ok(RsTypeKind::Enum { enum_, crate_path })
     }
 
-    pub fn new_type_map_override(
+    fn new_type_map_override(
         db: &dyn BindingsGenerator,
         type_map_override: Rc<TypeMapOverride>,
     ) -> Result<Self> {

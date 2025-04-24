@@ -252,24 +252,13 @@ pub fn required_crubit_features(
                 }
             }
         }
-        Item::Record(record) => {
+        Item::Record(_) | Item::TypeAlias(_) | Item::Enum(_) => {
             require_rs_type_kind(
                 &mut missing_features,
-                &RsTypeKind::new_record(db, record.clone())?,
-                &|| "".into(),
-            );
-        }
-        Item::TypeAlias(alias) => {
-            require_rs_type_kind(
-                &mut missing_features,
-                &RsTypeKind::new_type_alias(db, alias.clone())?,
-                &|| "".into(),
-            );
-        }
-        Item::Enum(e) => {
-            require_rs_type_kind(
-                &mut missing_features,
-                &RsTypeKind::new_enum(db, e.clone())?,
+                // We use from_item_raw here because required_crubit_features is itself called
+                // by `BindingsGenerator::rs_type_kind()` in order to decide if it should return
+                // an error.
+                &RsTypeKind::from_item_raw(db, item.clone())?,
                 &|| "".into(),
             );
         }

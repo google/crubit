@@ -2,11 +2,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{anyhow, bail, ensure, Result};
+use arc_anyhow::{anyhow, ensure, Result};
 use database::code_snippet::NoBindingsReason;
-use database::rs_snippet::{CratePath, Lifetime, Mutability, RsTypeKind};
+use database::rs_snippet::{Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
-use ir::{rs_imported_crate_name, CcCallingConv, CcType, CcTypeVariant, Item, PointerTypeKind};
+use ir::{CcCallingConv, CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::rs_type_kind`.
@@ -105,18 +105,10 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                     return Err(reason.into());
                 }
             }
-            match item {
-                Item::IncompleteRecord(incomplete_record) => {
-                    RsTypeKind::new_incomplete_record(db, incomplete_record.clone())
-                }
-                Item::Record(record) => RsTypeKind::new_record(db, record.clone()),
-                Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_.clone()),
-                Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias.clone()),
-                Item::TypeMapOverride(type_map_override) => {
-                    RsTypeKind::new_type_map_override(db, type_map_override.clone())
-                }
-                other_item => bail!("Item does not define a type: {other_item:?}"),
-            }
+            // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
+            // course we can't call `rs_type_kind` here, and instead reuse the raw construction
+            // logic.
+            RsTypeKind::from_item_raw(db, item.clone())
         }
     }
 }
