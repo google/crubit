@@ -229,3 +229,30 @@ re-declare the tool caused us to migrate away to using `#[doc]` attributes.
 We use custom attributes so that Crubit can round-trip a type correctly, or to
 implement automated bridging so that a C++ `Status` becomes a Rust `Result<(),
 StatusError>`, or what have you.
+
+### `super_let`
+
+Crubit's `ctor.rs` crate uses a syntax like `emplace!{let x = ...}` to in-place
+initialize a pinned value using a C++ constructor. It cannot use the same trick
+that `pin!()` does, because it needs to actually call a function to initialize
+the memory, and so lifetime extension would not apply: the memory, being passed
+to a function, would have its lifetime end at the end of the statement.
+
+`super_let` would allow us to instead write `let x = emplace!(...)`, with the
+macro expanding to a use of `super` to lifetime-extend the storage
+subexpression.
+
+For example:
+
+```rust
+macro_rules! emplace {
+    ($expr:expr) => {
+        super($crate::Slot::unsafe_new())
+            .unsafe_construct($expr)
+            .unsafe_as_pin_unchecked()
+    };
+}
+```
+
+Until `super_let` is stabilized, the outer `emplace!{}` works OK, it's just
+unexpected and causes code formatting problems.
