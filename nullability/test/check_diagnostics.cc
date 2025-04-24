@@ -28,6 +28,7 @@
 #include "clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/include/llvm/ADT/ArrayRef.h"
 #include "llvm/include/llvm/ADT/DenseMap.h"
+#include "llvm/include/llvm/ADT/SmallVector.h"
 #include "llvm/include/llvm/ADT/StringRef.h"
 #include "llvm/include/llvm/Support/raw_ostream.h"
 #include "llvm/include/llvm/Testing/Annotations/Annotations.h"
@@ -38,13 +39,13 @@ namespace clang::tidy::nullability {
 bool checkDiagnostics(ASTContext &AST, llvm::Annotations AnnotatedCode,
                       const NullabilityPragmas &Pragmas, bool AllowUntracked) {
   using ast_matchers::BoundNodes;
-  using ast_matchers::hasName;
+  using ast_matchers::hasAnyName;
   using ast_matchers::match;
   using ast_matchers::stmt;
   using ast_matchers::valueDecl;
 
   SmallVector<BoundNodes, 1> MatchResult =
-      match(valueDecl(hasName("target")).bind("target"), AST);
+      match(valueDecl(hasAnyName("target", "~target")).bind("target"), AST);
   if (MatchResult.empty()) {
     ADD_FAILURE() << "didn't find target declaration";
     return false;
