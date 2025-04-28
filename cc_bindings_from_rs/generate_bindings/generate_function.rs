@@ -448,6 +448,8 @@ pub fn generate_function(
         .skip(if method_kind.has_self_param() { 1 } else { 0 })
         .map(|Param { cc_name, cpp_type, .. }| quote! { #cpp_type #cc_name })
         .collect_vec();
+    let rs_return_type = SugaredTy::fn_output(&sig_mid, Some(sig_hir));
+    let fn_never_returns = *rs_return_type.mid().kind() == ty::TyKind::Never;
     let main_api = {
         let doc_comment = {
             let doc_comment = generate_doc_comment(tcx, local_def_id);
@@ -490,6 +492,10 @@ pub fn generate_function(
             if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, parent_def_id) {
                 attributes.push(cc_deprecated_tag);
             }
+        }
+        // Attribute: noreturn
+        if fn_never_returns {
+            attributes.push(quote! {[[noreturn]]});
         }
 
         CcSnippet {
@@ -555,12 +561,18 @@ pub fn generate_function(
             })
             .collect::<Result<Vec<TokenStream>>>()?;
 
-        let rs_return_type = SugaredTy::fn_output(&sig_mid, Some(sig_hir));
         let impl_body: TokenStream = if is_bridged_type(db, rs_return_type.mid())?.is_none()
             && is_c_abi_compatible_by_value(rs_return_type.mid())
         {
+            // C++ compilers can emit diagnostics if a function marked [[noreturn]] looks like it
+            // might return. In this scenario, we just call the (also [[noreturn]]) thunk.
+            let return_expr = if fn_never_returns {
+                quote! {}
+            } else {
+                quote! {return}
+            };
             quote! {
-                return __crubit_internal::#thunk_name(#( #thunk_args ),*);
+                #return_expr __crubit_internal::#thunk_name(#( #thunk_args ),*);
             }
         } else {
             let ReturnConversion { storage_name, unpack_expr } = cc_return_value_from_c_abi(
@@ -572,6 +584,8 @@ pub fn generate_function(
                 /*recursive=*/ false,
             )?;
             thunk_args.push(quote! { #storage_name });
+            // We don't have to worry about the [[noreturn]] situation described above because all
+            // [[noreturn]] functions will take that branch.
             quote! {
                 __crubit_internal::#thunk_name(#( #thunk_args ),*);
                 return #unpack_expr;

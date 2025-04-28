@@ -181,8 +181,6 @@ fn test_format_item_fn_never_return_type() {
             }
         "#;
     test_format_item(test_src, "never_returning_function", |result| {
-        // TODO(b/254507801): The function should be annotated with the `[[noreturn]]`
-        // attribute.
         // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
         // details).
         let result = result.unwrap().unwrap();
@@ -191,7 +189,7 @@ fn test_format_item_fn_never_return_type() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                extern "C" void never_returning_function();
+                extern "C" [[noreturn]] void never_returning_function();
             }
         );
     })

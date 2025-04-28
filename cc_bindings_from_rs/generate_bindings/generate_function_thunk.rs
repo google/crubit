@@ -13,7 +13,7 @@ use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcConstQualifier;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
-use database::{AdtCoreBindings, BindingsGenerator};
+use database::{AdtCoreBindings, BindingsGenerator, SugaredTy};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -103,11 +103,19 @@ pub fn generate_thunk_decl<'tcx>(
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
     };
+
+    let mut attributes = vec![];
+    // Attribute: noreturn
+    let rs_return_type = SugaredTy::fn_output(sig_mid, sig_hir);
+    if *rs_return_type.mid().kind() == ty::TyKind::Never {
+        attributes.push(quote! {[[noreturn]]});
+    }
+
     Ok(CcSnippet {
         prereqs,
         tokens: quote! {
             namespace __crubit_internal {
-                extern "C" #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
+                extern "C" #(#attributes)* #thunk_ret_type #thunk_name ( #( #thunk_params ),* );
             }
         },
     })
