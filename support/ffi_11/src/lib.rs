@@ -227,9 +227,15 @@ pub type c_ulong = long_integers::c_ulong;
 
 // NOTE: We could also force inclusion of `stddef.h` and use `nullptr_t`.
 #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(nullptr)")]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct c_nullptr_t(*mut c_void);
+
+impl Default for c_nullptr_t {
+    fn default() -> Self {
+        Self(core::ptr::null_mut())
+    }
+}
 
 // The C++ charN_t types
 new_integer! {
