@@ -166,7 +166,7 @@
 //! that currently-incomplete types stay incomplete forever; code owners should
 //! feel free to replace an incomplete type with a complete type.
 //!
-//! In Rust, unlike C++, the incomplete type and incomplete type are different
+//! In Rust, unlike C++, the incomplete type and complete type are different
 //! types. It is in theory a backwards-incompatible change to change from
 //! incomplete to complete. Callers must try as much as possible to ease that
 //! transition, since forward declarations are expected to be removed over time.
@@ -330,8 +330,6 @@ unsafe impl<Name, Declarer> CcType for Incomplete<Name, Declarer> {
 /// Safety: if more than one type claim to be the definition, then they may be
 /// transmuted into each other in safe code. The safety requirements for
 /// `std::mem::transmute` apply.
-// Each `rustfmt` invocation would indent the `type Name...` line further and further to the right.
-#[rustfmt::skip]
 #[macro_export]
 macro_rules! unsafe_define {
     // TODO(jeanpierreda): support generic complete type (e.g. `symbol!("xyz") <-> Foo<T> where T : Bar`)
@@ -353,8 +351,8 @@ where
 }
 
 /// If `T` can be transmuted into `U`, then one can also transmute between `*mut
-/// T`, and `* mut U`. (This are always "thin" pointers - with the same size as
-/// `usize`.)
+/// T`, and `*mut U`. These are always "thin" pointers - with the same size as
+/// `usize`.
 unsafe impl<T: ?Sized> CcType for *mut T
 where
     T: CcType,
