@@ -44,20 +44,6 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
-# A feature set with a stable expansion, only for use in Bazel unit tests.
-crubit_feature_hint(
-    name = "internal_testonly_supported",
-    crubit_features = ["supported"],
-    visibility = ["//:__subpackages__"],
-)
-
-# A feature set with a stable expansion, only for use in Bazel unit tests.
-crubit_feature_hint(
-    name = "internal_testonly_experimental",
-    crubit_features = ["experimental"],
-    visibility = ["//:__subpackages__"],
-)
-
 # Implementation details follow.
 
 bzl_library(
