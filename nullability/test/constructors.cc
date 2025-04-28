@@ -78,9 +78,7 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
         *ptr_nonnull;      // [[unsafe]]
         *ptr_nullable;     // [[unsafe]]
         *ptr_unannotated;  // [[unsafe]]
-      // We get a warning on the following line because the constructor leaves
-      // `ptr_nonnull` in a null state.
-      /* [[unsafe]] */}
+      }
     };
   )cc"));
 

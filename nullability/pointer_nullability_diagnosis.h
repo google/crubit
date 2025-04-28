@@ -34,9 +34,6 @@ struct PointerNullabilityDiagnostic {
     InconsistentAnnotationsForReturn,
     /// A moved-from nonnull pointer was accessed.
     AccessingMovedFromNonnullPointer,
-    /// A nonnull pointer field is nullable at method exit.
-    /// `NoteRange` refers to the field declaration.
-    NonnullPointerFieldNullableAtExit,
     /// A pointer-typed expression was encountered with no corresponding model.
     Untracked,
     /// A nullability assertion was violated.

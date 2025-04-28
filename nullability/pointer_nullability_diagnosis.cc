@@ -81,13 +81,10 @@ using ast_matchers::onImplicitObjectArgument;
 using ast_matchers::unaryOperator;
 using ast_matchers::unless;
 using dataflow::CFGMatchSwitchBuilder;
-using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
-using dataflow::FieldSet;
 using dataflow::PointerValue;
 using dataflow::RecordInitListHelper;
 using dataflow::RecordStorageLocation;
-using dataflow::StorageLocation;
 using ::llvm::SmallVector;
 
 namespace {
@@ -847,92 +844,6 @@ void checkAnnotationsConsistent(
   }
 }
 
-CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl &Method) {
-  if (!Method.hasBody()) {
-    // If the method doesn't have a body, fall back to using the entire method
-    // source range (which should be the source range for the declaration).
-    CharSourceRange::getTokenRange(Method.getSourceRange());
-  }
-
-  auto *Body = dyn_cast<CompoundStmt>(Method.getBody());
-  if (Body == nullptr) {
-    return CharSourceRange::getTokenRange(Method.getBody()->getSourceRange());
-  }
-
-  return CharSourceRange::getTokenRange(Body->getRBracLoc(),
-                                        Body->getRBracLoc());
-}
-
-void diagnoseNonnullPointerFieldNullableAtExit(
-    const FunctionDecl &Func,
-    const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
-        &StateAtExit,
-    DataflowAnalysisContext &AnalysisContext,
-    llvm::SmallVector<PointerNullabilityDiagnostic> &Diags) {
-  const auto *Method = dyn_cast<CXXMethodDecl>(&Func);
-  if (Method == nullptr) return;
-
-  // It isn't possible to access fields after the destructor exits, so don't
-  // analyze destructors.
-  if (isa<CXXDestructorDecl>(Method)) return;
-
-  RecordStorageLocation *RecordLoc =
-      StateAtExit.Env.getThisPointeeStorageLocation();
-  if (RecordLoc == nullptr) return;
-
-  const CXXRecordDecl *RD = Method->getParent();
-  FieldSet ModeledFields =
-      AnalysisContext.getModeledFields(RecordLoc->getType());
-  for (const FieldDecl *Field : RD->fields()) {
-    // If the field isn't modeled, we can't access it below -- but it also can't
-    // be moved from because the method obviously doesn't refer to it.
-    if (!ModeledFields.contains(Field)) continue;
-
-    bool SmartPointer;
-    if (isSupportedRawPointerType(Field->getType())) {
-      SmartPointer = false;
-    } else if (isSupportedSmartPointerType(Field->getType())) {
-      SmartPointer = true;
-    } else {
-      continue;
-    }
-
-    TypeNullability FieldNullability =
-        getTypeNullability(*Field, StateAtExit.Lattice.defaults());
-    if (FieldNullability.empty() ||
-        FieldNullability.front().concrete() != NullabilityKind::NonNull) {
-      continue;
-    }
-
-    StorageLocation *FieldLoc = RecordLoc->getChild(*Field);
-    if (FieldLoc == nullptr) continue;
-
-    PointerValue *Val;
-    if (SmartPointer) {
-      Val = getPointerValueFromSmartPointer(
-          cast<RecordStorageLocation>(FieldLoc), StateAtExit.Env);
-    } else {
-      Val = StateAtExit.Env.get<PointerValue>(*FieldLoc);
-    }
-    if (Val == nullptr) {
-      Diags.push_back(
-          {PointerNullabilityDiagnostic::ErrorCode::Untracked,
-           PointerNullabilityDiagnostic::Context::Other,
-           CharSourceRange::getTokenRange(Field->getSourceRange())});
-      continue;
-    }
-
-    if (isNullable(*Val, StateAtExit.Env)) {
-      Diags.push_back(
-          {PointerNullabilityDiagnostic::ErrorCode::
-               NonnullPointerFieldNullableAtExit,
-           PointerNullabilityDiagnostic::Context::Other,
-           getMethodClosingBraceRange(*Method), nullptr, nullptr,
-           CharSourceRange::getTokenRange(Field->getSourceRange())});
-    }
-  }
-}
-
 DiagTransferFunc pointerNullabilityDiagnoserBefore() {
   // Almost all diagnosis callbacks should be run before the transfer function
   // has been applied because we want to check preconditions for the operation
@@ -1062,7 +973,7 @@ diagnosePointerNullability(const ValueDecl *VD,
   if (!CFG) return CFG.takeError();
 
   std::unique_ptr<dataflow::Solver> Solver = MakeSolver();
-  DataflowAnalysisContext AnalysisContext(*Solver);
+  dataflow::DataflowAnalysisContext AnalysisContext(*Solver);
   Environment Env(AnalysisContext, *Func);
 
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
@@ -1091,14 +1002,6 @@ diagnosePointerNullability(const ValueDecl *VD,
   if (Solver->reachedLimit())
     return llvm::createStringError(llvm::errc::interrupted,
                                    "SAT solver timed out");
-
-  const std::optional<
-      dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
-      &ExitBlockState = (*Result)[CFG->getCFG().getExit().getBlockID()];
-  if (ExitBlockState.has_value()) {
-    diagnoseNonnullPointerFieldNullableAtExit(*Func, *ExitBlockState,
-                                              AnalysisContext, Diags);
-  }
 
   return Diags;
 }
