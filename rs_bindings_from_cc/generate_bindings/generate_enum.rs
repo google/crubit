@@ -8,7 +8,6 @@ use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use database::code_snippet::ApiSnippets;
 use database::BindingsGenerator;
-use error_report::bail;
 use ir::Enum;
 use proc_macro2::Literal;
 use quote::{quote, ToTokens};
