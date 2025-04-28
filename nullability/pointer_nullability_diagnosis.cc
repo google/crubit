@@ -619,18 +619,18 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
   CHECK(CI->isAnyMemberInitializer());
   auto *Member = CI->getAnyMember();
   const auto *InitExpr = CI->getInit();
-  if (!CI->isWritten()) {
-    // Don't warn if a nonnull pointer field is merely default-initialized to
-    // null. (If the constructor doesn't initialize the field to nonnull, we'll
-    // catch this in diagnoseNonnullSmartPointerFieldMovedFromAtExit.)
-    if (!isa<CXXDefaultInitExpr>(InitExpr)) return {};
-    // Do warn if a nonnull pointer field has an in-class initializer that
-    // explicitly initializes it to null.
+  // Sometimes the initializing expression is a call to the default constructor
+  // of a member (often in the default constructor of the member's parent class)
+  // in which case the diagnostic will simply highlight the start of the
+  // member's parent constructor, potentially confusing the developer. In such
+  // cases, we want the diagnostic to instead highlight the member that is being
+  // initialized.
+  if (!CI->isWritten() && dyn_cast<CXXConstructExpr>(InitExpr)) {
     return diagnoseAssignmentLike(
         Member->getType(),
         getTypeNullability(*Member, State.Lattice.defaults()), InitExpr,
         State.Env, *Result.Context,
-        PointerNullabilityDiagnostic::Context::Initializer, nullptr, nullptr,
+        PointerNullabilityDiagnostic::Context::InitializerLHS, nullptr, nullptr,
         CharSourceRange::getTokenRange(Member->getSourceRange()));
   }
   return diagnoseAssignmentLike(
