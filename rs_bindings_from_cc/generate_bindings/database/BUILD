@@ -16,9 +16,7 @@ rust_library(
         "lib.rs",
         "rs_snippet.rs",
     ],
-    visibility = [
-        "//rs_bindings_from_cc:__subpackages__",
-    ],
+    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
