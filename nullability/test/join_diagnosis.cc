@@ -4,19 +4,8 @@
 
 // Tests for joining different nullability types.
 
-#include <memory>
-#include <string>
-
-#include "nullability/pointer_nullability_analysis.h"
 #include "nullability/test/check_diagnostics.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
-#include "clang/include/clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/include/clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
-#include "clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
-#include "llvm/include/llvm/ADT/DenseMap.h"
 #include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/Testing/Support/Error.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 // TODO: The tests in this file test two different things that should be tested
@@ -370,6 +359,31 @@ TEST(PointerNullabilityTest, JoinPointerLValues) {
         }
       }
     }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, JoinAfterNonConstMemberFnCallFalseNegative) {
+  // This is a repro for a false negative.
+  // The false negative is related to our treatment of non-const member
+  // functions; if `non_const_member_fn()` is made const, we correctly issue a
+  // diagnostic.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    class A {
+     public:
+      void target(bool b) {
+        if (b)
+          p_ = nullptr;
+        else
+          non_const_member_fn();
+        // TODO(b/414707531): Should issue a diagnostic that `p_` may be null.
+        *p_;
+      }
+
+      void non_const_member_fn();
+
+     private:
+      int* p_;
+    };
   )cc"));
 }
 
