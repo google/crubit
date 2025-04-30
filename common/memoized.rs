@@ -195,6 +195,11 @@ macro_rules! query_group {
           $(,)?
         ) -> $return_type:ty;
       )*
+      $(
+        #[provided]
+        $(#[doc = $provided_doc:literal])*
+        fn $provided_function:ident(&$provided_self:ident $(, $provided_arg:ident : $provided_arg_type:ty)* $(,)?) -> $provided_type:ty { $($provided_body:tt)* }
+      )*
     }
 
     $struct_vis:vis struct $database_struct:ident;
@@ -222,6 +227,10 @@ macro_rules! query_group {
             $arg : $arg_type
           ),*
         ) -> $return_type { _ = ($($arg),*); unimplemented!(concat!("function '", stringify!($function), "'")) }
+      )*
+      $(
+        $(#[doc = $provided_doc])*
+        fn $provided_function(&$provided_self $(, $provided_arg: $provided_arg_type)*) -> $provided_type { $($provided_body)* }
       )*
     }
 
@@ -691,5 +700,21 @@ pub mod tests {
         let argless_return_2 = db.argless_function();
         assert_eq!(db.call_counter().get(), 1);
         assert!(Rc::ptr_eq(&argless_return, &argless_return_2));
+    }
+
+    #[gtest]
+    fn test_provided_fn() {
+        crate::query_group! {
+          pub trait Db {
+            #[input]
+            fn input_fn(&self) -> i32;
+            #[provided]
+            fn provided_fn(&self, x: i32) -> i32 { self.input_fn() + x }
+          }
+          pub struct Database;
+        }
+        let db = Database::new(42);
+        let result = db.provided_fn(10);
+        expect_eq!(result, 52);
     }
 }
