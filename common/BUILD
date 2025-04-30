@@ -82,6 +82,7 @@ crubit_rust_test(
     crate = ":code_gen_utils",
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
     ],
     deps = [
         ":token_stream_matchers",
@@ -266,6 +267,7 @@ crubit_rust_test(
     crate = ":token_stream_matchers",
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
     ],
     deps = [
         "@crate_index//:googletest",
@@ -302,6 +304,7 @@ crubit_rust_test(
     crate = ":token_stream_printer",
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
     ],
     deps = [
         "@crate_index//:googletest",

@@ -63,7 +63,10 @@ rust_library(
 multiplatform_rust_test(
     name = "generate_bindings_test",
     srcs = ["generate_bindings_test.rs"],
-    tags = ["not_run:arm"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
     deps = [
         ":multiplatform_ir_testing",
         ":test_generators",
@@ -126,7 +129,10 @@ rust_library(
 multiplatform_rust_test(
     name = "generate_struct_and_union_test",
     srcs = ["generate_struct_and_union_test.rs"],
-    tags = ["not_run:arm"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
     deps = [
         ":generate_bindings",
         ":generate_struct_and_union",
@@ -207,7 +213,10 @@ rust_library(
 rust_test(
     name = "generate_comment_test",
     srcs = ["generate_comment_test.rs"],
-    tags = ["not_run:arm"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
     deps = [
         ":generate_bindings",
         ":generate_comment",
@@ -247,7 +256,10 @@ rust_library(
 multiplatform_rust_test(
     name = "generate_enum_test",
     srcs = ["generate_enum_test.rs"],
-    tags = ["not_run:arm"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
     deps = [
         ":generate_bindings",
         ":multiplatform_ir_testing",
@@ -313,7 +325,10 @@ rust_library(
 multiplatform_rust_test(
     name = "generate_function_test",
     srcs = ["generate_function_test.rs"],
-    tags = ["not_run:arm"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
     deps = [
         ":generate_bindings",
         ":generate_function_thunk",

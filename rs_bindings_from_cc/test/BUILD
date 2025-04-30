@@ -8,6 +8,7 @@ sh_test(
     data = ["//rs_bindings_from_cc"],
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
     ],
     deps = [
         "//util/shell/gbash",

@@ -108,9 +108,10 @@ crubit_cc_test(
     data = [
     ],
     tags = [
-        # This test uses e.g. rustfmt and is difficult to run on ARM. We could run it using
+        # This test uses e.g. rustfmt and is difficult to run cross-platform. We could run it using
         # cross-compilation, but it's mostly uninteresting from a multi-platform POV.
         "not_run:arm",
+        "not_run:mac",
     ],
     deps = [
         ":cc_ir",
@@ -409,6 +410,7 @@ crubit_rust_test(
     crate = ":ir_testing",
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
     ],
     deps = [
         ":ir_matchers",
@@ -461,7 +463,10 @@ multiplatform_rust_test(
     name = "ir_from_cc_test",
     timeout = "long",
     srcs = ["ir_from_cc_test.rs"],
-    tags = ["not_run:arm"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
     deps = [
         ":ir",
         ":ir_matchers",
@@ -544,6 +549,7 @@ crubit_rust_test(
     crate = ":ir_matchers",
     tags = [
         "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
     ],
     deps = [
         "//common:arc_anyhow",

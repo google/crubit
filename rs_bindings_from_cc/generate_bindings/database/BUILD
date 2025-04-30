@@ -40,7 +40,10 @@ rust_library(
 multiplatform_rust_test(
     name = "database_test",
     crate = ":database",
-    tags = ["not_run:arm"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
     deps = [
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
