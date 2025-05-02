@@ -769,7 +769,7 @@ TEST(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
   EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST(CollectEvidenceFromDefinitionTest, ReferenceArgsPassed) {
+TEST(CollectEvidenceFromDefinitionTest, LValueReferenceArgsPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void constCallee(int* const& A, int* const& B, int* const& C);
     void mutableCallee(int*& A, int*& B, int*& C);
@@ -793,6 +793,33 @@ TEST(CollectEvidenceFromDefinitionTest, ReferenceArgsPassed) {
                    functionNamed("mutableCallee")),
           evidence(paramSlot(2), Evidence::UNKNOWN_REFERENCE_ARGUMENT,
                    functionNamed("mutableCallee"))));
+}
+
+TEST(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <utility>
+
+    template <typename T>
+    void universalRef(T&& p);
+
+    void target(int* q) {
+      if (!q) {
+        universalRef(std::move(q));  // Nullable
+        return;
+      }
+      universalRef(std::move(q));  // Nonnull
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
+              UnorderedElementsAre(
+                  // RValue references don't have the same invariance as lvalue
+                  // references, because accesses through the reference and
+                  // through the original variable can't be interleaved. So, we
+                  // treat them like non-reference arguments.
+                  evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("universalRef<#*I>")),
+                  evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                           functionNamed("universalRef<#*I>"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NoEvidenceForFullyAnnotatedFunctions) {

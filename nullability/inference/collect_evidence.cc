@@ -400,7 +400,7 @@ static TypeNullability getReturnTypeNullabilityAnnotationsWithOverrides(
 
 static Evidence::Kind getArgEvidenceKindFromNullability(
     NullabilityKind Nullability, QualType ParamType) {
-  bool IsReference = ParamType->isReferenceType();
+  bool IsReference = ParamType->isLValueReferenceType();
   switch (Nullability) {
     case NullabilityKind::Nullable:
       return IsReference ? Evidence::NULLABLE_REFERENCE_ARGUMENT
