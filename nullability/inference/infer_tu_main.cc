@@ -107,7 +107,8 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
     for (const auto &[Slot, SlotInference] : InferencesBySlot) {
       if (!IncludeTrivial && SlotInference.trivial()) continue;
       Diags.Report(D.getLocation(), DiagInferHere)
-          << slotName(Slot, D) << Nullability_Name(SlotInference.nullability());
+          << slotName(Slot, D) << Nullability_Name(SlotInference.nullability())
+          << (SlotInference.conflict() ? " with a conflict" : "");
       if (PrintEvidence) {
         for (const auto &Sample : SlotInference.sample_evidence()) {
           if (SourceLocation Loc = parseLoc(Sample.location()); Loc.isValid())
@@ -150,7 +151,7 @@ class DiagnosticPrinter : public RecursiveASTVisitor<DiagnosticPrinter> {
   DiagnosticPrinter(InferenceResults All, DiagnosticsEngine &Diags)
       : InferencesByUSR(std::move(All)), Diags(Diags) {
     DiagInferHere = Diags.getCustomDiagID(DiagnosticsEngine::Remark,
-                                          "would mark %0 as %1 here");
+                                          "would mark %0 as %1 here%2");
     DiagSample = Diags.getCustomDiagID(DiagnosticsEngine::Note, "%0 here");
   }
 
