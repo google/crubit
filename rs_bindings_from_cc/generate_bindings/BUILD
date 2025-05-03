@@ -159,9 +159,7 @@ rust_library(
     name = "multiplatform_ir_testing",
     testonly = True,
     srcs = ["multiplatform_ir_testing.rs"],
-    visibility = [
-        "//rs_bindings_from_cc:__subpackages__",
-    ],
+    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
@@ -174,9 +172,7 @@ rust_library(
     name = "test_generators",
     testonly = True,
     srcs = ["test_generators.rs"],
-    visibility = [
-        "//rs_bindings_from_cc:__subpackages__",
-    ],
+    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         ":generate_bindings",
         ":multiplatform_ir_testing",
@@ -193,9 +189,7 @@ rust_library(
     srcs = [
         "generate_comment.rs",
     ],
-    visibility = [
-        "//rs_bindings_from_cc:__subpackages__",
-    ],
+    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
@@ -238,9 +232,7 @@ rust_library(
     srcs = [
         "generate_enum.rs",
     ],
-    visibility = [
-        "//rs_bindings_from_cc:__subpackages__",
-    ],
+    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         ":generate_comment",
         "//common:arc_anyhow",
