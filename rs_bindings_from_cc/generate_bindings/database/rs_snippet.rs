@@ -535,10 +535,11 @@ impl RsTypeKind {
 
     /// Recursively follows type aliases until an underlying nonalias type is reached.
     pub fn unalias(&self) -> &Self {
-        match self {
-            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.unalias(),
-            _ => self,
+        let mut unaliased = self;
+        while let RsTypeKind::TypeAlias { underlying_type, .. } = unaliased {
+            unaliased = underlying_type;
         }
+        unaliased
     }
 
     pub fn is_bridge_type(&self) -> bool {
