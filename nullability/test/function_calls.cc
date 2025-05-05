@@ -1101,6 +1101,43 @@ TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
   )cc"));
 }
 
+TEST(SmartPointerTest, JoinCausesLossOfNullabilityPropertiesAtExit) {
+  // This is a regression test for the crash seen in b/414348238.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    class A {
+     public:
+      void target(bool b) {
+        if (b) return;
+        // Calling a non-const member function clears out the framework-produced
+        // value for `p_` but (crucially) without mentioning `p_` in an
+        // expression (which would initialize the nullability properties for the
+        // previous value of `p_`).
+        non_const_member_fn();
+        // We now mention `p_` in an expression to make sure the nullability
+        // properties for `p_` are initialized.
+        p_;
+        // At function exit, we see the joined state from two blocks:
+        // - The block containing the return statement above. Here, `p_` has the
+        //   value that the framework initialized it with. Because we never
+        //   saw the expression `p_` on this path, we didn't initialize the
+        //   nullability properties for this value.
+        // - The block that follows the if statement. Here, `p_` has a different
+        //   value, which is associated with nullablility properties, as
+        //   explained above.
+        // When we join these two values, because one of them does not have
+        // nullability properties, we also don't associate nullability
+        // properties with the joined value. It's important to test for this;
+        // our failure to do this previously resulted in the crash.
+      }
+
+      void non_const_member_fn();
+
+     private:
+      Nonnull<int*> p_;
+    };
+  )cc"));
+}
+
 TEST(PointerNullabilityTest, OptionalOperatorArrowAndStarCall) {
   // Check that repeated accesses to a pointer behind an optional are considered
   // to yield the same pointer -- but only if the optional is not modified in

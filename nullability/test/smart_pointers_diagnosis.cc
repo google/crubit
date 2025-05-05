@@ -216,10 +216,13 @@ TEST(SmartPointerTest, InitializeMemberWithNullable) {
       target(Nullable<std::shared_ptr<int>> NullablePtr)
           : NonnullMember(NullablePtr),  // [[unsafe]]
             NullableMember(NullablePtr),
-            UnannotatedMember(NullablePtr) {}
-      Nonnull<std::shared_ptr<int>> NonnullMember;
-      Nullable<std::shared_ptr<int>> NullableMember;
-      std::shared_ptr<int> UnannotatedMember;
+            UnannotatedMember(NullablePtr) {
+      // We get a warning on the following line because the constructor leaves
+      // `NonnullMember` in a null state.
+      /* [[unsafe]] */ }
+          Nonnull<std::shared_ptr<int>> NonnullMember;
+          Nullable<std::shared_ptr<int>> NullableMember;
+          std::shared_ptr<int> UnannotatedMember;
     };
   )cc"));
 }
@@ -581,6 +584,99 @@ TEST(SmartPointerTest, DerivedFromSmartPointerTemplateInstantiation) {
           // field because the derived class was not seen as a smart pointer and
           // did not have the synthetic field.
           : target::SmartPtr(static_cast<target::SmartPtr &&>(Other)) {}
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, NonnullSmartPointerFieldMovedFromAtExit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() {
+        std::unique_ptr<SomeResource> some_resource = std::move(some_resource_);
+      /* [[unsafe]] */ }
+
+         private:
+          Nonnull<std::unique_ptr<SomeResource>> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, NonnullSmartPointerFieldNotMovedFromAtExit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() {
+        // The function doesn't move from the nonnull smart pointer field (in
+        // fact, it doesn't even access it), so this is fine.
+        // This also tests that the analysis doesn't try to access the field
+        // when it isn't modeled.
+      }
+
+     private:
+      Nonnull<std::unique_ptr<SomeResource>> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldMovedFromThenResetToNonnullAtExit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() {
+        // It's permissible to move from the nonnull smart pointer field during
+        // execution of the method, as long as it is reset to a nonnull state
+        // before exiting the method.
+        std::unique_ptr<SomeResource> some_resource = std::move(some_resource_);
+        some_resource_ = std::make_unique<SomeResource>();
+      }
+
+     private:
+      Nonnull<std::unique_ptr<SomeResource>> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, NonnullSmartPointerFieldMovedFromAtDestructorExit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      ~target() {
+        // Don't warn if the nonnull smart pointer field is moved from at
+        // destructor exit, because it's not possible to access the field after
+        // this point.
+        std::unique_ptr<SomeResource> some_resource = std::move(some_resource_);
+      }
+
+     private:
+      Nonnull<std::unique_ptr<SomeResource>> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest, NullableSmartPointerFieldMovedFromAtExit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() {
+        // `some_resource_` is nullable, so it's fine for it to be in the
+        // moved-from state when this member function exits.
+        std::unique_ptr<SomeResource> some_resource = std::move(some_resource_);
+      }
+
+     private:
+      Nullable<std::unique_ptr<SomeResource>> some_resource_;
     };
   )cc"));
 }
