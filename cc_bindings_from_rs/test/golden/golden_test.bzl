@@ -147,14 +147,18 @@ def golden_test(
         ]
         owned_files.append(golden_rs)
 
-    native.sh_test(
-        name = name,
-        srcs = ["//common:golden_test.sh"],
-        args = args,
-        data = data,
-        tags = tags,
-        testonly = True,
-    )
+    # Only actually generate the test if this is in //:
+    # when copied over to a release directory, the header guards won't
+    # match.
+    if not native.package_name().startswith("third_party/crosstool/"):
+        native.sh_test(
+            name = name,
+            srcs = ["//common:golden_test.sh"],
+            args = args,
+            data = data,
+            tags = tags,
+            testonly = True,
+        )
     native.filegroup(
         name = basename + ".build_cleaner_optout",
         srcs = owned_files,
