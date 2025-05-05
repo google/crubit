@@ -49,8 +49,6 @@ struct PointerNullabilityDiagnostic {
     NullableDereference,
     /// Initializing a variable.
     Initializer,
-    // Initializing a member via a default constructor.
-    InitializerLHS,
     /// Assigning to a pointer.
     Assignment,
     /// Value of a return statement.
