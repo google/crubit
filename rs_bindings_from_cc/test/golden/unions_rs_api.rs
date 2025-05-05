@@ -30,37 +30,42 @@ impl !Send for EmptyUnion {}
 impl !Sync for EmptyUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
-impl Default for EmptyUnion {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN10EmptyUnionC1Ev {}
+impl<'error> Default for EmptyUnion
+where
+    &'error (): BindingFailedFor_ZN10EmptyUnionC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
+// Error while generating bindings for item 'EmptyUnion::EmptyUnion':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN10EmptyUnionC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for EmptyUnion
+where
+    &'error (): BindingFailedFor_ZN10EmptyUnionC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -148,37 +153,42 @@ impl !Send for RenamedUnion {}
 impl !Sync for RenamedUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("UnionToRename"), crate::RenamedUnion);
 
-impl Default for RenamedUnion {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN13UnionToRenameC1Ev {}
+impl<'error> Default for RenamedUnion
+where
+    &'error (): BindingFailedFor_ZN13UnionToRenameC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13UnionToRenameC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for RenamedUnion {
+// Error while generating bindings for item 'UnionToRename::UnionToRename':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN13UnionToRenameC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for RenamedUnion
+where
+    &'error (): BindingFailedFor_ZN13UnionToRenameC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13UnionToRenameC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for RenamedUnion {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -267,37 +277,42 @@ impl !Send for NonEmptyUnion {}
 impl !Sync for NonEmptyUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
 
-impl Default for NonEmptyUnion {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN13NonEmptyUnionC1Ev {}
+impl<'error> Default for NonEmptyUnion
+where
+    &'error (): BindingFailedFor_ZN13NonEmptyUnionC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
+// Error while generating bindings for item 'NonEmptyUnion::NonEmptyUnion':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN13NonEmptyUnionC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion
+where
+    &'error (): BindingFailedFor_ZN13NonEmptyUnionC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -342,7 +357,7 @@ impl !Sync for NonCopyUnion2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
 #[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
 )]
 pub trait BindingFailedFor_ZN13NonCopyUnion2C1ERKS_ {}
 impl<'error> Clone for NonCopyUnion2
@@ -360,7 +375,7 @@ where
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.\nCan't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor"
 )]
 pub trait BindingFailedFor_ZN13NonCopyUnion2C1EOS_ {}
 impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for NonCopyUnion2
@@ -410,37 +425,42 @@ forward_declare::unsafe_define!(
     crate::UnionWithOpaqueField
 );
 
-impl Default for UnionWithOpaqueField {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN20UnionWithOpaqueFieldC1Ev {}
+impl<'error> Default for UnionWithOpaqueField
+where
+    &'error (): BindingFailedFor_ZN20UnionWithOpaqueFieldC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
+// Error while generating bindings for item 'UnionWithOpaqueField::UnionWithOpaqueField':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN20UnionWithOpaqueFieldC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField
+where
+    &'error (): BindingFailedFor_ZN20UnionWithOpaqueFieldC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -540,37 +560,42 @@ forward_declare::unsafe_define!(
     crate::UnionWithInheritable
 );
 
-impl Default for UnionWithInheritable {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN20UnionWithInheritableC1Ev {}
+impl<'error> Default for UnionWithInheritable
+where
+    &'error (): BindingFailedFor_ZN20UnionWithInheritableC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
+// Error while generating bindings for item 'UnionWithInheritable::UnionWithInheritable':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN20UnionWithInheritableC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable
+where
+    &'error (): BindingFailedFor_ZN20UnionWithInheritableC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -602,37 +627,42 @@ impl !Send for TypedefUnion {}
 impl !Sync for TypedefUnion {}
 forward_declare::unsafe_define!(forward_declare::symbol!("TypedefUnion"), crate::TypedefUnion);
 
-impl Default for TypedefUnion {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN12TypedefUnionC1Ev {}
+impl<'error> Default for TypedefUnion
+where
+    &'error (): BindingFailedFor_ZN12TypedefUnionC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
+// Error while generating bindings for item 'TypedefUnion::TypedefUnion':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN12TypedefUnionC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnion
+where
+    &'error (): BindingFailedFor_ZN12TypedefUnionC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -667,37 +697,42 @@ forward_declare::unsafe_define!(
     crate::TypedefUnionWithInheritable
 );
 
-impl Default for TypedefUnionWithInheritable {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN27TypedefUnionWithInheritableC1Ev {}
+impl<'error> Default for TypedefUnionWithInheritable
+where
+    &'error (): BindingFailedFor_ZN27TypedefUnionWithInheritableC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable {
+// Error while generating bindings for item 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN27TypedefUnionWithInheritableC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable
+where
+    &'error (): BindingFailedFor_ZN27TypedefUnionWithInheritableC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -723,11 +758,6 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionaSERKS_<'a, 'b>(
             __this: &'a mut crate::EmptyUnion,
             __param_0: &'b crate::EmptyUnion,
@@ -742,11 +772,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1EOS_<'b>(
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::RenamedUnion>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameaSERKS_<'a, 'b>(
             __this: &'a mut crate::RenamedUnion,
@@ -774,11 +799,6 @@ mod detail {
         >(
             __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionaSERKS_<'a, 'b>(
             __this: &'a mut crate::NonEmptyUnion,
             __param_0: &'b crate::NonEmptyUnion,
@@ -795,13 +815,6 @@ mod detail {
             __this: &'a mut crate::NonCopyUnion2,
             __param_0: ::ctor::RvalueReference<'b, crate::NonCopyUnion2>,
         ) -> &'a mut crate::NonCopyUnion2;
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_<'a, 'b>(
             __this: &'a mut crate::UnionWithOpaqueField,
             __param_0: &'b crate::UnionWithOpaqueField,
@@ -825,13 +838,6 @@ mod detail {
             __this: &'a mut crate::TrivialButInheritable,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialButInheritable>,
         ) -> &'a mut crate::TrivialButInheritable;
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithInheritable>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableaSERKS_<'a, 'b>(
             __this: &'a mut crate::UnionWithInheritable,
             __param_0: &'b crate::UnionWithInheritable,
@@ -840,11 +846,6 @@ mod detail {
             __this: &'a mut crate::UnionWithInheritable,
             __param_0: ::ctor::RvalueReference<'b, crate::UnionWithInheritable>,
         ) -> &'a mut crate::UnionWithInheritable;
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionaSERKS_<'a, 'b>(
             __this: &'a mut crate::TypedefUnion,
             __param_0: &'b crate::TypedefUnion,
@@ -853,13 +854,6 @@ mod detail {
             __this: &'a mut crate::TypedefUnion,
             __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
         ) -> &'a mut crate::TypedefUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_<'a, 'b>(
             __this: &'a mut crate::TypedefUnionWithInheritable,
             __param_0: &'b crate::TypedefUnionWithInheritable,

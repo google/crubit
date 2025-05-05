@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // tuples_golden
-// Features: experimental, supported
+// Features: experimental, supported, unsafe_types, wrapper
 
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]

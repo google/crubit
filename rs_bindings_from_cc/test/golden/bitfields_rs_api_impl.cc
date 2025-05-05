@@ -47,17 +47,6 @@ extern "C" struct WithBitfields* __rust_thunk___ZN13WithBitfieldsaSEOS_(
 static_assert(CRUBIT_SIZEOF(struct AlignmentRegressionTest) == 4);
 static_assert(alignof(struct AlignmentRegressionTest) == 4);
 
-extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
-    struct AlignmentRegressionTest* __this) {
-  crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1EOS_(
-    struct AlignmentRegressionTest* __this,
-    struct AlignmentRegressionTest* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
 extern "C" struct AlignmentRegressionTest*
 __rust_thunk___ZN23AlignmentRegressionTestaSERKS_(
     struct AlignmentRegressionTest* __this,

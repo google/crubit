@@ -52,16 +52,6 @@ static_assert(sizeof(struct ContainingStruct) == 1);
 static_assert(alignof(struct ContainingStruct) == 1);
 static_assert(CRUBIT_OFFSET_OF(nested_struct, struct ContainingStruct) == 0);
 
-extern "C" void __rust_thunk___ZN16ContainingStructC1Ev(
-    struct ContainingStruct* __this) {
-  crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN16ContainingStructC1EOS_(
-    struct ContainingStruct* __this, struct ContainingStruct* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
 extern "C" struct ContainingStruct* __rust_thunk___ZN16ContainingStructaSERKS_(
     struct ContainingStruct* __this, const struct ContainingStruct* __param_0) {
   return &__this->operator=(*__param_0);

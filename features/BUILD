@@ -40,7 +40,7 @@ crubit_feature_hint(
 crubit_feature_hint(
     name = "experimental",
     # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
-    crubit_features = SUPPORTED_FEATURES + ["experimental"],
+    crubit_features = ["all"],
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 

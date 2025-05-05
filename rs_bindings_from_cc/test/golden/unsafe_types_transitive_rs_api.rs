@@ -149,22 +149,20 @@ pub unsafe fn DerefPointer(p: *mut ::core::ffi::c_int) -> ::core::ffi::c_int {
 }
 
 #[inline(always)]
-pub fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::core::ffi::c_int {
-    unsafe { crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p) }
+pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::core::ffi::c_int {
+    crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p)
 }
 
 #[inline(always)]
-pub fn DerefTransitivePublicPointer(mut p: crate::TransitivePublicPointer) -> ::core::ffi::c_int {
-    unsafe {
-        crate::detail::__rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(
-            &mut p,
-        )
-    }
+pub unsafe fn DerefTransitivePublicPointer(
+    mut p: crate::TransitivePublicPointer,
+) -> ::core::ffi::c_int {
+    crate::detail::__rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(&mut p)
 }
 
 #[inline(always)]
-pub fn ReadUnion(mut u: crate::Union) -> ::core::ffi::c_int {
-    unsafe { crate::detail::__rust_thunk___Z9ReadUnion5Union(&mut u) }
+pub unsafe fn ReadUnion(mut u: crate::Union) -> ::core::ffi::c_int {
+    crate::detail::__rust_thunk___Z9ReadUnion5Union(&mut u)
 }
 
 mod detail {

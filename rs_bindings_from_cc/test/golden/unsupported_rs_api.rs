@@ -160,37 +160,42 @@ forward_declare::unsafe_define!(
     crate::ContainingStruct
 );
 
-impl Default for ContainingStruct {
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN16ContainingStructC1Ev {}
+impl<'error> Default for ContainingStruct
+where
+    &'error (): BindingFailedFor_ZN16ContainingStructC1Ev,
+{
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
-            tmp.assume_init()
-        }
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
+// Error while generating bindings for item 'ContainingStruct::ContainingStruct':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN16ContainingStructC1EOS_ {}
+impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct
+where
+    &'error (): BindingFailedFor_ZN16ContainingStructC1EOS_,
+{
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
-    type CtorType = Self;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
     }
 }
 
@@ -238,13 +243,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'b>(
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructaSERKS_<'a, 'b>(
             __this: &'a mut crate::ContainingStruct,
