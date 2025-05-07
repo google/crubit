@@ -1076,6 +1076,15 @@ impl Record {
             SpecialMemberFunc::Unavailable => false,
         }
     }
+
+    /// Whether this is a template instantiation that is generally available.
+    ///
+    /// We special-case a handful of template specializations, such as `std::string_view`,
+    /// AKA `basic_string_view<char>`, even though we do not make `basic_string_view` itself
+    /// available to all.
+    pub fn is_allowed_template_instantiation(self: &Record) -> bool {
+        matches!(self.cc_preferred_name.as_ref(), "std::string_view" | "std::wstring_view")
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

@@ -286,12 +286,13 @@ fn type_target_restriction_shallow(
         RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
             Some(&incomplete_record.owning_target)
         }
-        // TODO(b/410575605): check for the template instantiation allowlist (string_view etc.),
-        // and do:
-        //
-        // RsTypeKind::Record { record, .. } if record.defining_target.is_some() && !allowlist => {
-        //     Some(&record.owning_target)
-        // }
+        // Template types (except for the special-cased ones like `string_view`).
+        RsTypeKind::Record { record, .. }
+            if record.defining_target.is_some() && !record.is_allowed_template_instantiation() =>
+        {
+            Some(&record.owning_target)
+        }
+        // All other types are `pub` if they receive bindings.
         _ => None,
     };
 

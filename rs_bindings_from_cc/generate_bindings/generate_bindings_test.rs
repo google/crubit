@@ -1186,8 +1186,7 @@ fn test_default_crubit_features_disabled_dependency_supported_function_parameter
 }
 
 #[gtest]
-fn test_default_crubit_features_disabled_dependency_experimental_function_parameter() -> Result<()>
-{
+fn test_default_crubit_features_disabled_dependency_wrapper_function_parameter() -> Result<()> {
     let mut ir = ir_from_cc_dependency(
         "void Func(NotPresent);",
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;",
@@ -1200,7 +1199,7 @@ fn test_default_crubit_features_disabled_dependency_experimental_function_parame
         Generated from: ir_from_cc_virtual_header.h;l=3\n\
         Error while generating bindings for item 'Func':\n\
         Failed to format type of parameter 0: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
-        //test:dependency needs [//features:experimental] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
+        //test:dependency needs [//features:wrapper] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
     assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())
 }
@@ -1222,8 +1221,7 @@ fn test_default_crubit_features_disabled_dependency_supported_function_return_ty
 }
 
 #[gtest]
-fn test_default_crubit_features_disabled_dependency_experimental_function_return_type() -> Result<()>
-{
+fn test_default_crubit_features_disabled_dependency_wrapper_function_return_type() -> Result<()> {
     let mut ir = ir_from_cc_dependency(
         "NotPresent Func();",
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;")?;
@@ -1235,7 +1233,7 @@ fn test_default_crubit_features_disabled_dependency_experimental_function_return
         Generated from: ir_from_cc_virtual_header.h;l=3\n\
         Error while generating bindings for item 'Func':\n\
         Failed to format return type: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
-        //test:dependency needs [//features:experimental] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
+        //test:dependency needs [//features:wrapper] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
     assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())
 }

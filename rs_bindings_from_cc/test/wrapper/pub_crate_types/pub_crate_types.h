@@ -7,6 +7,8 @@
 
 #include "rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h"
 
+// Forward-declared types are a simple instance of a `pub(crate)` type.
+
 struct ForwardDeclared;
 
 using ForwardDeclaredAlias = ForwardDeclared;
@@ -30,5 +32,14 @@ inline void OtherPubCrateTypes(ForwardDeclared2*) {}
 // because it sees the types earlier.
 // inline void MixedPubCrateTypes(std::pair<ForwardDeclared*,
 // ForwardDeclared2*>) {}
+
+// Other types are essentially the same, and just get an abbreviated test:
+
+template <typename T>
+struct Template {
+  T value;
+};
+
+inline Template<int> GetTemplateInt() { return Template<int>{42}; }
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_WRAPPER_WRAPPED_LIBRARY_H_

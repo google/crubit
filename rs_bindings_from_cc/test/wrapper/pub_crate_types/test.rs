@@ -26,3 +26,10 @@ fn test_forward_declared_type_visibility() {
 fn test_other_pub_crate_types() {
     expect_pred!(!value_exists!(pub_crate_types::OtherPubCrateTypes));
 }
+
+#[gtest]
+fn test_templated_type() {
+    expect_pred!(!type_exists!(pub_crate_types::Template));
+
+    expect_that!(pub_crate_types::get_int_from_template_int(), eq(42));
+}

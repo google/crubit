@@ -63,8 +63,8 @@ pub mod repro {
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=24
     // Error while generating bindings for item 'crash':
     // Failed to format type of parameter 0: Can't generate bindings for repro::Nullable<repro::Interval>, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:experimental] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
-    // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:experimental] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
+    // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
+    // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
 }
 
 // namespace repro
@@ -74,14 +74,14 @@ pub mod repro {
 // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=11
 // Error while generating bindings for item 'repro::optional<repro::Interval>':
 // Can't generate bindings for repro::optional<repro::Interval>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:experimental] for repro::optional<repro::Interval> (crate::__CcTemplateInstN5repro8optionalINS_8IntervalEEE is a template instantiation)
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:experimental] for repro::optional<repro::Interval> (crate::__CcTemplateInstN5repro8optionalINS_8IntervalEEE is a template instantiation)
+// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::optional<repro::Interval> (crate::__CcTemplateInstN5repro8optionalINS_8IntervalEEE is a template instantiation)
+// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::optional<repro::Interval> (crate::__CcTemplateInstN5repro8optionalINS_8IntervalEEE is a template instantiation)
 
 // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=20
 // Error while generating bindings for item 'repro::Nullable<repro::Interval>':
 // Can't generate bindings for repro::Nullable<repro::Interval>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:experimental] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
-// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:experimental] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
+// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
+// //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::repro::Interval>() == 1);

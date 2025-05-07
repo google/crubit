@@ -248,10 +248,6 @@ pub fn check_by_value(record: &Record) -> Result<()> {
     Ok(())
 }
 
-fn is_allowed_template_instantiation(record: &Record) -> bool {
-    matches!(record.cc_preferred_name.as_ref(), "std::string_view" | "std::wstring_view")
-}
-
 /// Location where a type is used.
 // TODO: Merge with `TypeLocation` in the other direction.
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
@@ -637,12 +633,13 @@ impl RsTypeKind {
                     // std::string_view so we create an allow list fo them. This is just a temporary
                     // solution until we have a better way to handle template
                     // instantiations.
-                    if record.defining_target.is_none() || is_allowed_template_instantiation(record)
+                    if record.defining_target.is_none()
+                        || record.is_allowed_template_instantiation()
                     {
                         require_feature(CrubitFeature::Supported, None)
                     } else if record.defining_target.is_some() {
                         require_feature(
-                            CrubitFeature::Experimental,
+                            CrubitFeature::Wrapper,
                             Some(&|| {
                                 format!("{} is a template instantiation", rs_type_kind.display(db),)
                                     .into()
@@ -661,7 +658,7 @@ impl RsTypeKind {
                         matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
 
                     if original_type.template_specialization.is_none()
-                        || is_allowed_template_instantiation(original_type)
+                        || original_type.is_allowed_template_instantiation()
                         || !is_pointer_bridge
                     {
                         require_feature(CrubitFeature::Supported, None)

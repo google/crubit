@@ -7,3 +7,7 @@ pub fn create_and_consume_forward_declared() -> core::ffi::c_int {
     let p: *mut crate::ForwardDeclaredAlias = crate::CreateForwardDeclared();
     crate::ConsumeCompoundDataType(crate::CompoundDataType { forward_declared: p })
 }
+
+pub fn get_int_from_template_int() -> i32 {
+    crate::GetTemplateInt().value
+}
