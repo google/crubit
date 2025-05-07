@@ -7,12 +7,18 @@
 bazel_dep(name = "rules_rust", version = "0.59.2")
 
 bazel_dep(name = "abseil-cpp", version = "20250127.1")
+git_override(  # with nullability support
+    module_name = "abseil-cpp",
+    commit = "e3a2008867c5dc5c0f4c7a4e64fb568df70f23be",
+    remote = "https://github.com/abseil/abseil-cpp",
+)
+
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "fuzztest", version = "20250214.0")
 bazel_dep(name = "google_benchmark", version = "1.9.1")
 bazel_dep(name = "googletest", version = "1.16.0")
 bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "protobuf", version = "29.3")
+bazel_dep(name = "protobuf", version = "31.0-rc2")
 bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
