@@ -85,8 +85,6 @@
 
 #![no_std]
 #![allow(nonstandard_style)]
-#![cfg_attr(feature = "crubit", feature(register_tool))]
-#![cfg_attr(feature = "crubit", register_tool(__crubit))]
 extern crate core;
 mod newtype;
 
@@ -115,7 +113,7 @@ pub type c_double = f64;
 // change the ABI. The actual platform sign is hidden from users, though they can convert to
 // `core::ffi::c_char` if they need it.
 new_integer! {
-    #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char(0))")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char(0))")]
     pub struct c_char(u8);
 }
 
@@ -143,19 +141,19 @@ impl From<i8> for c_char {
 // if it worked. But the results are less readable than if we directly used the correct
 // type: `signed char` instead of `std::int8_t`, `unsigned char` instead of `std::uint8_t`, etc.
 
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=signed char")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=signed char")]
 pub type c_schar = i8;
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=unsigned char")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned char")]
 pub type c_uchar = u8;
 
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=short")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=short")]
 pub type c_short = i16;
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=unsigned short")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned short")]
 pub type c_ushort = u16;
 
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=int")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=int")]
 pub type c_int = i32;
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=unsigned int")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned int")]
 pub type c_uint = u32;
 
 /// LP64 with long int64_t.
@@ -192,9 +190,9 @@ mod long_integers {
 mod long_integers {
     use super::*;
     new_integer! {
-      #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
       pub struct c_long(i32);
-      #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
       pub struct c_ulong(u32);
     }
 
@@ -209,24 +207,24 @@ mod long_integers {
     pub type c_ulonglong = u64;
 }
 
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
 pub type c_long = long_integers::c_long;
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
 pub type c_ulong = long_integers::c_ulong;
 
 // TODO(b/333759161): Uncomment these when we have a decision on what to do with long
 // long.
 
-// #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=long long")] pub type c_longlong = long_integers::c_longlong;
+// #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")] pub type c_longlong = long_integers::c_longlong;
 
-// #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")] pub type c_ulonglong = long_integers::c_ulonglong;
+// #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")] pub type c_ulonglong = long_integers::c_ulonglong;
 
 // ====================================
 // Newtypes for other fundamental types
 // ====================================
 
 // NOTE: We could also force inclusion of `stddef.h` and use `nullptr_t`.
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(nullptr)")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(nullptr)")]
 #[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct c_nullptr_t(*mut c_void);
@@ -239,11 +237,11 @@ impl Default for c_nullptr_t {
 
 // The C++ charN_t types
 new_integer! {
-    #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char8_t(0))")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char8_t(0))")]
     pub struct c_char8_t(u8);
-    #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char16_t(0))")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char16_t(0))")]
     pub struct c_char16_t(u16);
-    #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char32_t(0))")]
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char32_t(0))")]
     pub struct c_char32_t(u32);
 }
 
@@ -261,7 +259,7 @@ wrapped_to_wrapped! {
 mod wchar_type {
     use super::*;
     new_integer! {
-        #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(wchar_t(0))")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(wchar_t(0))")]
         pub struct c_wchar_t(u32);
     }
 
@@ -279,7 +277,7 @@ mod wchar_type {
 mod wchar_type {
     use super::*;
     new_integer! {
-        #[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=decltype(wchar_t(0))")]
+        #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(wchar_t(0))")]
         pub struct c_wchar_t(u16);
     }
 
@@ -293,5 +291,5 @@ mod wchar_type {
     }
 }
 
-#[cfg_attr(feature = "crubit", doc = "CRUBIT_ANNOTATE: cpp_type=wchar_t")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=wchar_t")]
 pub type c_wchar_t = wchar_type::c_wchar_t;
