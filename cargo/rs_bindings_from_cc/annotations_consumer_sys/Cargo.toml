@@ -1,0 +1,22 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the cc_library annotations_consumer_sys.
+
+[package]
+name = "annotations_consumer_sys"
+edition = "2021"
+
+build = "build.rs"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
+annotation_reader_sys = { path = "../../../cargo/common/annotation_reader_sys" }
+
+
+[build-dependencies]
+crubit_build = { path =  "../../../cargo/build"}

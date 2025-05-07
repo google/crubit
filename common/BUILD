@@ -400,7 +400,9 @@ crubit_rust_test(
 rust_library(
     name = "crubit_abi_type",
     srcs = ["crubit_abi_type.rs"],
-    visibility = ["//:__subpackages__"],
+    visibility = [
+        "//:__subpackages__",
+    ],
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",

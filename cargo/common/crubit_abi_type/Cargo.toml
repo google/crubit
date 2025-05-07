@@ -1,0 +1,16 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate crubit_abi_type.
+
+[package]
+name = "crubit_abi_type"
+edition = "2021"
+
+[lib]
+path = "../../../common/crubit_abi_type.rs"
+
+[dependencies]
+proc-macro2.workspace = true
+quote.workspace = true

@@ -1,0 +1,30 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate database.
+
+[package]
+name = "database"
+edition = "2021"
+
+[lib]
+path = "../../../../../rs_bindings_from_cc/generate_bindings/database/lib.rs"
+
+[dependencies]
+arc_anyhow = { path = "../../../../../cargo/common/arc_anyhow" }
+code_gen_utils = { path = "../../../../../cargo/common/code_gen_utils" }
+crubit_abi_type = { path = "../../../../../cargo/common/crubit_abi_type" }
+crubit_feature = { path = "../../../../../cargo/common/crubit_feature" }
+error_report = { path = "../../../../../cargo/common/error_report" }
+errors = { path = "../../../../../cargo/common/errors" }
+ffi_types = { path = "../../../../../cargo/common/ffi_types" }
+memoized = { path = "../../../../../cargo/common/memoized" }
+token_stream_printer = { path = "../../../../../cargo/common/token_stream_printer" }
+ir = { path = "../../../../../cargo/rs_bindings_from_cc/ir" }
+flagset.workspace = true
+itertools.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true
+serde_json.workspace = true
+syn.workspace = true

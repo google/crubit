@@ -189,7 +189,9 @@ rust_library(
     srcs = [
         "generate_comment.rs",
     ],
-    visibility = ["//rs_bindings_from_cc:__subpackages__"],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
     deps = [
         "//common:arc_anyhow",
         "//common:code_gen_utils",
@@ -232,7 +234,9 @@ rust_library(
     srcs = [
         "generate_enum.rs",
     ],
-    visibility = ["//rs_bindings_from_cc:__subpackages__"],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
     deps = [
         ":generate_comment",
         "//common:arc_anyhow",
