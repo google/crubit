@@ -11,10 +11,10 @@
 
 namespace clang::tidy::nullability {
 
-testing::Matcher<const proto2::Message&> EqualsProto(llvm::StringRef Textual);
+testing::Matcher<const google::protobuf::Message&> EqualsProto(llvm::StringRef Textual);
 
-testing::Matcher<const proto2::Message&> EqualsProto(
-    const proto2::Message& Expected);
+testing::Matcher<const google::protobuf::Message&> EqualsProto(
+    const google::protobuf::Message& Expected);
 
 }  // namespace clang::tidy::nullability
 

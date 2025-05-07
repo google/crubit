@@ -20,7 +20,7 @@ namespace {
 template <typename T>
 T proto(llvm::StringRef Text) {
   T Result;
-  CHECK(proto2::TextFormat::ParseFromString(Text, &Result));
+  CHECK(google::protobuf::TextFormat::ParseFromString(Text, &Result));
   return Result;
 }
 

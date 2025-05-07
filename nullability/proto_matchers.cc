@@ -20,34 +20,34 @@ namespace clang::tidy::nullability {
 namespace {
 
 class EqualsProtoMatcher
-    : public testing::MatcherInterface<const proto2::Message &> {
+    : public testing::MatcherInterface<const google::protobuf::Message &> {
   std::string Expected;
 
  public:
   EqualsProtoMatcher(llvm::StringRef Expected) : Expected(Expected) {}
 
-  EqualsProtoMatcher(const proto2::Message &ExpectedProto) {
-    if (!proto2::TextFormat::PrintToString(ExpectedProto, &Expected)) {
+  EqualsProtoMatcher(const google::protobuf::Message &ExpectedProto) {
+    if (!google::protobuf::TextFormat::PrintToString(ExpectedProto, &Expected)) {
       Expected = "Failed to print expected proto!";
     }
   }
 
   bool MatchAndExplain(
-      const proto2::Message &M,
+      const google::protobuf::Message &M,
       testing::MatchResultListener *absl_nonnull Listener) const override {
-    std::unique_ptr<proto2::Message> Parsed(M.New());
-    if (!proto2::TextFormat::ParseFromString(Expected, Parsed.get())) {
+    std::unique_ptr<google::protobuf::Message> Parsed(M.New());
+    if (!google::protobuf::TextFormat::ParseFromString(Expected, Parsed.get())) {
       *Listener << "where <<<\n"
                 << Expected << "\n>>> doesn't parse as " << M.GetTypeName();
       return false;
     }
     // Compare textual representations.
     std::string PrintedExpected, PrintedActual;
-    if (!proto2::TextFormat::PrintToString(*Parsed, &PrintedExpected)) {
+    if (!google::protobuf::TextFormat::PrintToString(*Parsed, &PrintedExpected)) {
       *Listener << "where expected message failed to print!";
       return false;
     }
-    if (!proto2::TextFormat::PrintToString(M, &PrintedActual)) {
+    if (!google::protobuf::TextFormat::PrintToString(M, &PrintedActual)) {
       *Listener << "where actual message failed to print!";
       return false;
     }
@@ -62,12 +62,12 @@ class EqualsProtoMatcher
 
 }  // namespace
 
-testing::Matcher<const proto2::Message &> EqualsProto(llvm::StringRef Textual) {
+testing::Matcher<const google::protobuf::Message &> EqualsProto(llvm::StringRef Textual) {
   return testing::MakeMatcher(new EqualsProtoMatcher(Textual));
 }
 
-testing::Matcher<const proto2::Message &> EqualsProto(
-    const proto2::Message &Expected) {
+testing::Matcher<const google::protobuf::Message &> EqualsProto(
+    const google::protobuf::Message &Expected) {
   return testing::MakeMatcher(new EqualsProtoMatcher(Expected));
 }
 
