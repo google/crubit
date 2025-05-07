@@ -28,7 +28,7 @@ void Converter::Convert(const clang::TranslationUnitDecl* translation_unit) {
 void Converter::Convert(const clang::Decl* decl) {
   switch (decl->getKind()) {
     case clang::Decl::TranslationUnit:
-      Convert(dynamic_cast<const clang::TranslationUnitDecl*>(decl));
+      Convert(static_cast<const clang::TranslationUnitDecl*>(decl));
       break;
 
     default:
