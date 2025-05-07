@@ -273,7 +273,7 @@ pub fn required_crubit_features(
         Item::IncompleteRecord(_) => {
             require_any_feature(
                 &mut missing_features,
-                crubit_feature::CrubitFeature::Experimental.into(),
+                crubit_feature::CrubitFeature::Wrapper.into(),
                 &|| "incomplete type".into(),
             );
         }

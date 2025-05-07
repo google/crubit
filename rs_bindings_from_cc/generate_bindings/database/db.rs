@@ -2,14 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason};
+use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason, Visibility};
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::RsTypeKind;
-use arc_anyhow::Result;
+use arc_anyhow::{anyhow, Result};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
-use ir::{CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
+use ir::{BazelLabel, CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashSet;
 use std::rc::Rc;
@@ -64,6 +64,14 @@ memoized::query_group! {
         fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets>;
 
         /// Returns the Rust type kind of the given C++ type.
+        ///
+        /// An `Ok()` return value does not necessarily imply that the resulting `RsTypeKind` is
+        /// usable in APIs: callers must also check the result of `db::type_visibility()` for
+        /// the type, to see if it is usable within a specific crate. Eventually, all types will
+        /// have a successful non-error return value, even if the type is not generally usable.
+        /// Instead, restrictions will always be done via `type_visibility`.
+        ///
+        /// TODO(b/409128537): never return `Err` here, instead check `type_visibility`.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind
         fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind>;
@@ -125,6 +133,30 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:crubit_abi_type
         fn crubit_abi_type(&self, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType>;
+
+        // You should probably use db::type_visibility instead of this function.
+        fn type_target_restriction(&self, rs_type_kind: RsTypeKind) -> Result<Option<BazelLabel>>;
     }
     pub struct Database;
+}
+
+/// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
+// TODO(jeanpierreda): it would be nice if this was a `#[provided]` function,
+// but because it calls `display`, it would need to convert to a
+// `dyn BindingsGenerator`, which is not reasonably possible.
+//
+// See e.g. https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=10f937bb0f13d2ea05f20f676c37439a
+pub fn type_visibility(
+    db: &dyn BindingsGenerator,
+    library: &BazelLabel,
+    rs_type_kind: RsTypeKind,
+) -> Result<Visibility> {
+    match db.type_target_restriction(rs_type_kind.clone())? {
+        None => Ok(Visibility::Public),
+        Some(label) if &label != library => {
+            let rs_type_kind = rs_type_kind.display(db);
+            Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
+        }
+        Some(_) => Ok(Visibility::PubCrate),
+    }
 }

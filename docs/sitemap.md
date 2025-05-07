@@ -7,6 +7,8 @@
     *   [Overview](/docs/types/)
     *   [Primitive Types](/docs/types/primitive)
     *   [Pointer Types](/docs/types/pointer)
+    *   <hr>
+    *   [Visibility](/docs/types/visibility)
 
 *   Rust Bindings for C++ Libraries
 

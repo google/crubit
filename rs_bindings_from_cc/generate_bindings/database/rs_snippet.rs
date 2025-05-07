@@ -618,7 +618,7 @@ impl RsTypeKind {
                     }
                 }
                 RsTypeKind::IncompleteRecord { .. } => require_feature(
-                    CrubitFeature::Experimental,
+                    CrubitFeature::Wrapper,
                     Some(&|| {
                         format!("{} is not a complete type)", rs_type_kind.display(db)).into()
                     }),

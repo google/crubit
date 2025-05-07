@@ -1148,9 +1148,12 @@ fn test_default_crubit_features_disabled_supported() -> Result<()> {
     Ok(())
 }
 
-/// The default crubit feature set currently doesn't include experimetnal.
+/// The default crubit feature set currently doesn't include wrapper.
+/// (Note that all experimental features are intended to also be included in
+/// the wrapper feature set, so this subsumes any `disabled_experimental`
+/// test.)
 #[gtest]
-fn test_default_crubit_features_disabled_experimental() -> Result<()> {
+fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
     let mut ir = ir_from_cc("struct NotPresent;")?;
     ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
@@ -1159,7 +1162,7 @@ fn test_default_crubit_features_disabled_experimental() -> Result<()> {
     let expected = "\
         Error while generating bindings for item 'NotPresent':\n\
         Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-        //test:testing_target needs [//features:experimental] for NotPresent (incomplete type)";
+        //test:testing_target needs [//features:wrapper] for NotPresent (incomplete type)";
     assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())
 }

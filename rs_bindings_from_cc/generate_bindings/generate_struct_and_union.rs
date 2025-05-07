@@ -7,6 +7,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::ApiSnippets;
+use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
 use database::BindingsGenerator;
 use error_report::{bail, ensure};
@@ -48,13 +49,18 @@ pub fn generate_incomplete_record(
     db: &dyn BindingsGenerator,
     incomplete_record: Rc<IncompleteRecord>,
 ) -> Result<ApiSnippets> {
+    // If the record won't have bindings, we default to `public` to keep going anyway.
+    let pub_ = db
+        .has_bindings(ir::Item::IncompleteRecord(incomplete_record.clone()))
+        .unwrap_or_default()
+        .visibility;
     let ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
     let cc_type = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(&incomplete_record).format_for_cc()?;
     let symbol = quote! {#namespace_qualifier #cc_type}.to_string();
     Ok(quote! {
         forward_declare::forward_declare!(
-            pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
+            #pub_ #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
         );
     }
     .into())
@@ -295,7 +301,10 @@ fn field_definition(
         }
     };
     let access = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
-        quote! { pub }
+        let pub_ =
+            db::type_visibility(db, &record.owning_target, field_rs_type_kind.clone().unwrap())
+                .unwrap_or_default();
+        quote! { #pub_ }
     } else {
         quote! { pub(crate) }
     };
@@ -632,6 +641,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
             }
         }
     };
+    let pub_ = db.has_bindings(ir::Item::Record(record.clone())).unwrap_or_default().visibility;
 
     let crubit_annotation = format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}");
     let record_tokens = quote! {
@@ -641,7 +651,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         #must_use
         #[repr(#( #repr_attributes ),*)]
         #[doc=#crubit_annotation]
-        pub #record_kind #ident {
+        #pub_ #record_kind #ident {
             #head_padding
             #( #field_definitions, )*
         }

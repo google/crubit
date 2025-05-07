@@ -36,7 +36,9 @@ pub fn with_lifetime_macros(source: &str) -> String {
 pub const TESTING_TARGET: &str = "//test:testing_target";
 static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature>> =
     LazyLock::new(|| {
-        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported
+        crubit_feature::CrubitFeature::Experimental
+            | crubit_feature::CrubitFeature::Wrapper
+            | crubit_feature::CrubitFeature::Supported
     });
 
 /// Update the IR to have common test-only items.
@@ -163,7 +165,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Experimental))
+                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|Experimental))
                     ...
                 }
             }
@@ -177,7 +179,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Experimental))
+                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|Experimental))
                     ...
                 }
             }

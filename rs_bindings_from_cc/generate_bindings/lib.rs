@@ -7,7 +7,7 @@ use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
-use database::db::{BindingsGenerator, Database};
+use database::db::{self, BindingsGenerator, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
@@ -108,9 +108,10 @@ fn generate_type_alias(
         .with_context(|| format!("Failed to format underlying type for {}", type_alias))?;
 
     let underlying_type_tokens = underlying_type.to_token_stream(db);
+    let pub_ = db::type_visibility(db, &type_alias.owning_target, rs_type_kind).unwrap_or_default();
     Ok(quote! {
         #doc_comment
-        pub type #ident = #underlying_type_tokens;
+        #pub_ type #ident = #underlying_type_tokens;
     }
     .into())
 }
@@ -127,10 +128,11 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result
     };
     let mutness = if !var.type_.is_const { quote!(mut) } else { quote!() };
     let type_tokens = type_.to_token_stream(db);
+    let pub_ = db::type_visibility(db, &var.owning_target, type_).unwrap_or_default();
     Ok(quote! {
         extern "C" {
             #link_name
-            pub static #mutness #ident: #type_tokens;
+            #pub_ static #mutness #ident: #type_tokens;
         }
     }
     .into())
@@ -350,6 +352,7 @@ pub fn new_database<'db>(
         generate_function::get_binding,
         generate_struct_and_union::collect_unqualified_member_functions,
         crubit_abi_type,
+        has_bindings::type_target_restriction,
     )
 }
 
