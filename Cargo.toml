@@ -30,3 +30,6 @@ clap = { version = "4", features = [ "derive" ] }
 [workspace.package]
 
 edition = "2024"
+license-file = "LICENSE"
+repository = "https://github.com/google/crubit"
+categories = ["development-tools::ffi"]

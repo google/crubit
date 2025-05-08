@@ -8,6 +8,10 @@
 name = "token_stream_matchers"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../common/token_stream_matchers.rs"
 

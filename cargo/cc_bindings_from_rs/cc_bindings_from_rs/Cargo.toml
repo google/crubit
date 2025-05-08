@@ -8,6 +8,10 @@
 name = "cc_bindings_from_rs"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [[bin]]
 name = "cc_bindings_from_rs"
 path = "../../../cc_bindings_from_rs/cc_bindings_from_rs.rs"

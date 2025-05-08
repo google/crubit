@@ -7,6 +7,9 @@
 [package]
 name = "src_code_gen_sys"
 edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
 
 build = "build.rs"
 

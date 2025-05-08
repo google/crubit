@@ -8,6 +8,10 @@
 name = "cmdline"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../cc_bindings_from_rs/cmdline.rs"
 

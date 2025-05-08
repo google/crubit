@@ -7,6 +7,9 @@
 [package]
 name = "rs_bindings_from_cc_type_alias_sys"
 edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
 
 build = "build.rs"
 

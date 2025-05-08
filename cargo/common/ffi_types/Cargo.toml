@@ -8,6 +8,10 @@
 name = "ffi_types"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../common/ffi_types.rs"
 

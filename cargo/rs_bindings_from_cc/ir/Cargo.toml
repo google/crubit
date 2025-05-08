@@ -8,6 +8,10 @@
 name = "ir"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../rs_bindings_from_cc/ir.rs"
 

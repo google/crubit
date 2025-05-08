@@ -8,6 +8,10 @@
 name = "arc_anyhow"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../common/arc_anyhow.rs"
 

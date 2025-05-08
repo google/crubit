@@ -8,6 +8,10 @@
 name = "rs_bindings_from_cc_generate_enum"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../../rs_bindings_from_cc/generate_bindings/generate_enum.rs"
 

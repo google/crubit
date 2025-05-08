@@ -8,6 +8,10 @@
 name = "error_report"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../common/error_report.rs"
 

@@ -8,6 +8,10 @@
 name = "crubit_feature"
 edition.workspace = true
 
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
 [lib]
 path = "../../../common/crubit_feature.rs"
 
