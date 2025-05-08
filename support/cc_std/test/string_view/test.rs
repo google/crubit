@@ -5,6 +5,7 @@
 use cc_std::std::raw_string_view;
 use cc_std::std::string_view;
 use googletest::prelude::*;
+use std::sync::LazyLock;
 use string_view_apis::crubit_string_view::GetDefault;
 use string_view_apis::crubit_string_view::GetHelloWorld;
 
@@ -81,20 +82,26 @@ fn test_len_livetype() {
     assert_eq!(sv.len(), original.len());
 }
 
-static TEST_LITERAL: &'static str = "Leak-able static string";
+static TEST_LITERAL: &'static str = "static string";
 
-// Helper function to get a 'static raw_string_view by leaking.
-fn get_leaked_static_rsv() -> &'static raw_string_view {
-    let rsv = raw_string_view::from(TEST_LITERAL);
-    // Box::leak turns Box<T> into &'static T, by promising the memory will never be freed.
-    Box::leak(Box::new(rsv))
+fn get_static_string_view() -> &'static raw_string_view {
+    struct SendSyncStringView(raw_string_view);
+    // SAFETY: only used to share a specific string_view, which
+    // can be safely shared across threads because it's immutable.
+    unsafe impl Send for SendSyncStringView {}
+    unsafe impl Sync for SendSyncStringView {}
+
+    static STATIC_STRING: LazyLock<SendSyncStringView> =
+        LazyLock::new(|| SendSyncStringView(TEST_LITERAL.into()));
+
+    &STATIC_STRING.0
 }
 
 #[gtest]
-fn exercise_as_static_live_with_leak() {
-    let static_rsv: &'static raw_string_view = get_leaked_static_rsv();
+fn exercise_as_static_live() {
+    let static_rsv: &'static raw_string_view = get_static_string_view();
 
-    // SAFETY: `static_rsv` is 'static (thanks to Box::leak) and points to
+    // SAFETY: `static_rsv` is 'static (thanks to LazyLock) and points to
     // `TEST_LITERAL` which is also 'static. The safety contract is upheld.
     let sv_static: string_view<'static> = unsafe { static_rsv.as_static_live() };
 
