@@ -6,7 +6,7 @@
 
 [package]
 name = "toposort"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../cc_bindings_from_rs/toposort.rs"

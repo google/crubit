@@ -6,7 +6,7 @@
 
 [package]
 name = "memoized"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../common/memoized.rs"

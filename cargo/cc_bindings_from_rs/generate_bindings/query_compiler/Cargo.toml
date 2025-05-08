@@ -6,7 +6,7 @@
 
 [package]
 name = "cc_bindings_from_rs_query_compiler"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../../cc_bindings_from_rs/generate_bindings/query_compiler.rs"

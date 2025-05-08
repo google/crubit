@@ -27,3 +27,6 @@ unicode-ident = "1"
 either = "1"
 clap = { version = "4", features = [ "derive" ] }
 
+[workspace.package]
+
+edition = "2024"

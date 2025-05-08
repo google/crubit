@@ -6,7 +6,7 @@
 
 [package]
 name = "ir"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../rs_bindings_from_cc/ir.rs"

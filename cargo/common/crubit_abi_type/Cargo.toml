@@ -6,7 +6,7 @@
 
 [package]
 name = "crubit_abi_type"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../common/crubit_abi_type.rs"

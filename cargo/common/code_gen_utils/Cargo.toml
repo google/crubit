@@ -6,7 +6,7 @@
 
 [package]
 name = "code_gen_utils"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../common/code_gen_utils.rs"

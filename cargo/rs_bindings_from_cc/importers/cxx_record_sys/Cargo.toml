@@ -6,7 +6,7 @@
 
 [package]
 name = "rs_bindings_from_cc_cxx_record_sys"
-edition = "2021"
+edition.workspace = true
 
 build = "build.rs"
 

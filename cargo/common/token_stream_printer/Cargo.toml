@@ -6,7 +6,7 @@
 
 [package]
 name = "token_stream_printer"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../common/token_stream_printer.rs"

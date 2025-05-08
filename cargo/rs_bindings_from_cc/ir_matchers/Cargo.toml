@@ -6,7 +6,7 @@
 
 [package]
 name = "ir_matchers"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../rs_bindings_from_cc/ir_matchers.rs"

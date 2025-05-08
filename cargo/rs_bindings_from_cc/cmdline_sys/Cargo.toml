@@ -6,7 +6,7 @@
 
 [package]
 name = "cmdline_sys"
-edition = "2021"
+edition.workspace = true
 
 build = "build.rs"
 

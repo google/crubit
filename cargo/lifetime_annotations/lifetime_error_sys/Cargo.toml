@@ -6,7 +6,7 @@
 
 [package]
 name = "lifetime_error_sys"
-edition = "2021"
+edition.workspace = true
 
 build = "build.rs"
 

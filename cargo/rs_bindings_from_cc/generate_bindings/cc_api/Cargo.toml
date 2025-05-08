@@ -6,7 +6,7 @@
 
 [package]
 name = "rs_bindings_from_cc_cc_api"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../../rs_bindings_from_cc/generate_bindings/cc_api.rs"

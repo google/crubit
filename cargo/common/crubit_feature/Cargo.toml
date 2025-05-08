@@ -6,7 +6,7 @@
 
 [package]
 name = "crubit_feature"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../common/crubit_feature.rs"

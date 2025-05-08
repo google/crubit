@@ -6,7 +6,7 @@
 
 [package]
 name = "error_report"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../common/error_report.rs"

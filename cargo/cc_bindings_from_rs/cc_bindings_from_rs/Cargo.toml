@@ -6,7 +6,7 @@
 
 [package]
 name = "cc_bindings_from_rs"
-edition = "2021"
+edition.workspace = true
 
 [[bin]]
 name = "cc_bindings_from_rs"

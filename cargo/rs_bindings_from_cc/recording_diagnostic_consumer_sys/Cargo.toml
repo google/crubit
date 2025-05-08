@@ -6,7 +6,7 @@
 
 [package]
 name = "recording_diagnostic_consumer_sys"
-edition = "2021"
+edition.workspace = true
 
 build = "build.rs"
 

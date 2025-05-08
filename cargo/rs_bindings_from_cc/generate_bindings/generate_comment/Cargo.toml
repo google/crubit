@@ -6,7 +6,7 @@
 
 [package]
 name = "rs_bindings_from_cc_generate_comment"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 path = "../../../../rs_bindings_from_cc/generate_bindings/generate_comment.rs"
