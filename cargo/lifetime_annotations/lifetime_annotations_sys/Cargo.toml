@@ -14,10 +14,10 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-lifetime_sys = { path = "../../../cargo/lifetime_annotations/lifetime_sys" }
-lifetime_symbol_table_sys = { path = "../../../cargo/lifetime_annotations/lifetime_symbol_table_sys" }
-pointee_type_sys = { path = "../../../cargo/lifetime_annotations/pointee_type_sys" }
-type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys" }
+lifetime_sys = { path = "../../../cargo/lifetime_annotations/lifetime_sys"}
+lifetime_symbol_table_sys = { path = "../../../cargo/lifetime_annotations/lifetime_symbol_table_sys"}
+pointee_type_sys = { path = "../../../cargo/lifetime_annotations/pointee_type_sys"}
+type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys"}
 
 
 [build-dependencies]

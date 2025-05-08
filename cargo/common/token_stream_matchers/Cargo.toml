@@ -12,7 +12,7 @@ edition = "2021"
 path = "../../../common/token_stream_matchers.rs"
 
 [dependencies]
-token_stream_matchers_fastpath = { path = "../../../cargo/common/token_stream_matchers_fastpath" }
-token_stream_printer = { path = "../../../cargo/common/token_stream_printer" }
+token_stream_matchers_fastpath = { path = "../../../cargo/common/token_stream_matchers_fastpath"}
+token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
 anyhow.workspace = true
 proc-macro2.workspace = true

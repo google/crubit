@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_library class_template_sys.
+# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_class_template_sys.
 
 [package]
-name = "class_template_sys"
+name = "rs_bindings_from_cc_class_template_sys"
 edition = "2021"
 
 build = "build.rs"
@@ -14,7 +14,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-cc_ir_sys = { path = "../../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
+cc_ir_sys = { path = "../../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
 
 
 [build-dependencies]

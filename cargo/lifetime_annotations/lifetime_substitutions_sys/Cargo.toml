@@ -14,7 +14,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-lifetime_sys = { path = "../../../cargo/lifetime_annotations/lifetime_sys" }
+lifetime_sys = { path = "../../../cargo/lifetime_annotations/lifetime_sys"}
 
 
 [build-dependencies]

@@ -2,17 +2,17 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate rs_type_kind.
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_rs_type_kind.
 
 [package]
-name = "rs_type_kind"
+name = "rs_bindings_from_cc_rs_type_kind"
 edition = "2021"
 
 [lib]
 path = "../../../../rs_bindings_from_cc/generate_bindings/rs_type_kind.rs"
 
 [dependencies]
-has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings" }
-arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
-ir = { path = "../../../../cargo/rs_bindings_from_cc/ir" }
-database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database" }
+has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings", package = "rs_bindings_from_cc_has_bindings"}
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir"}
+database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}

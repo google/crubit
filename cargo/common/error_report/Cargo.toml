@@ -12,7 +12,7 @@ edition = "2021"
 path = "../../../common/error_report.rs"
 
 [dependencies]
-arc_anyhow = { path = "../../../cargo/common/arc_anyhow" }
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 anyhow.workspace = true
 regex.workspace = true
 serde.workspace = true

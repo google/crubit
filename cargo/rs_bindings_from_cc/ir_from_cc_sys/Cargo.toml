@@ -14,8 +14,8 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
-frontend_action_sys = { path = "../../../cargo/rs_bindings_from_cc/frontend_action_sys" }
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
+frontend_action_sys = { path = "../../../cargo/rs_bindings_from_cc/frontend_action_sys"}
 
 
 [build-dependencies]

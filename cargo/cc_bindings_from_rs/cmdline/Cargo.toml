@@ -14,5 +14,5 @@ path = "../../../cc_bindings_from_rs/cmdline.rs"
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
-crubit_feature = { path = "../../../cargo/common/crubit_feature" }
+crubit_feature = { path = "../../../cargo/common/crubit_feature"}
 flagset.workspace = true

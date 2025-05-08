@@ -2,27 +2,27 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate generate_bindings.
+# Automatically @generated Cargo.toml for the Rust crate cc_bindings_from_rs_generate_bindings.
 
 [package]
-name = "generate_bindings"
+name = "cc_bindings_from_rs_generate_bindings"
 edition = "2021"
 
 [lib]
 path = "../../../../cc_bindings_from_rs/generate_bindings/lib.rs"
 
 [dependencies]
-query_compiler = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/query_compiler" }
-crubit_attr = { path = "../../../../cargo/cc_bindings_from_rs/crubit_attr" }
-run_compiler = { path = "../../../../cargo/cc_bindings_from_rs/run_compiler" }
-toposort = { path = "../../../../cargo/cc_bindings_from_rs/toposort" }
-database = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/database/database" }
-code_gen_utils = { path = "../../../../cargo/common/code_gen_utils" }
-arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
-error_report = { path = "../../../../cargo/common/error_report" }
+query_compiler = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/query_compiler", package = "cc_bindings_from_rs_query_compiler"}
+crubit_attr = { path = "../../../../cargo/cc_bindings_from_rs/crubit_attr"}
+run_compiler = { path = "../../../../cargo/cc_bindings_from_rs/run_compiler"}
+toposort = { path = "../../../../cargo/cc_bindings_from_rs/toposort"}
+database = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/database/database", package = "cc_bindings_from_rs_database"}
+code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+error_report = { path = "../../../../cargo/common/error_report"}
 itertools.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true
 syn.workspace = true
-crubit_feature = { path = "../../../../cargo/common/crubit_feature" }
+crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 flagset.workspace = true

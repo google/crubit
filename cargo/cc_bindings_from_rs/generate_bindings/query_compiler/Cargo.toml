@@ -2,15 +2,15 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate query_compiler.
+# Automatically @generated Cargo.toml for the Rust crate cc_bindings_from_rs_query_compiler.
 
 [package]
-name = "query_compiler"
+name = "cc_bindings_from_rs_query_compiler"
 edition = "2021"
 
 [lib]
 path = "../../../../cc_bindings_from_rs/generate_bindings/query_compiler.rs"
 
 [dependencies]
-arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
-error_report = { path = "../../../../cargo/common/error_report" }
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+error_report = { path = "../../../../cargo/common/error_report"}

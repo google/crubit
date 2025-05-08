@@ -12,10 +12,10 @@ edition = "2021"
 path = "../../../rs_bindings_from_cc/ir_matchers.rs"
 
 [dependencies]
-ir = { path = "../../../cargo/rs_bindings_from_cc/ir" }
-ir_testing = { path = "../../../cargo/rs_bindings_from_cc/ir_testing" }
-token_stream_matchers = { path = "../../../cargo/common/token_stream_matchers" }
-token_stream_printer = { path = "../../../cargo/common/token_stream_printer" }
+ir = { path = "../../../cargo/rs_bindings_from_cc/ir"}
+ir_testing = { path = "../../../cargo/rs_bindings_from_cc/ir_testing"}
+token_stream_matchers = { path = "../../../cargo/common/token_stream_matchers"}
+token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
 anyhow.workspace = true
 itertools.workspace = true
 proc-macro2.workspace = true

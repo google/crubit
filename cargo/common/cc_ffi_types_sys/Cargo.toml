@@ -14,7 +14,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-ffi_types = { path = "../../../cargo/common/ffi_types" }
+ffi_types = { path = "../../../cargo/common/ffi_types"}
 
 
 [build-dependencies]

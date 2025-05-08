@@ -2,21 +2,21 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate generate_enum.
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_generate_enum.
 
 [package]
-name = "generate_enum"
+name = "rs_bindings_from_cc_generate_enum"
 edition = "2021"
 
 [lib]
 path = "../../../../rs_bindings_from_cc/generate_bindings/generate_enum.rs"
 
 [dependencies]
-generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment" }
-arc_anyhow = { path = "../../../../cargo/common/arc_anyhow" }
-code_gen_utils = { path = "../../../../cargo/common/code_gen_utils" }
-error_report = { path = "../../../../cargo/common/error_report" }
-ir = { path = "../../../../cargo/rs_bindings_from_cc/ir" }
-database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database" }
+generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment", package = "rs_bindings_from_cc_generate_comment"}
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
+error_report = { path = "../../../../cargo/common/error_report"}
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir"}
+database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
 proc-macro2.workspace = true
 quote.workspace = true

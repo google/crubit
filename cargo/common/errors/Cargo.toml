@@ -12,6 +12,6 @@ edition = "2021"
 path = "../../../common/errors.rs"
 
 [dependencies]
-arc_anyhow = { path = "../../../cargo/common/arc_anyhow" }
-error_report = { path = "../../../cargo/common/error_report" }
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
+error_report = { path = "../../../cargo/common/error_report"}
 anyhow.workspace = true

@@ -14,23 +14,23 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-annotations_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/annotations_consumer_sys" }
-ast_util_sys = { path = "../../../cargo/rs_bindings_from_cc/ast_util_sys" }
-cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
-recording_diagnostic_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys" }
-type_map_sys = { path = "../../../cargo/rs_bindings_from_cc/type_map_sys" }
-annotation_reader_sys = { path = "../../../cargo/common/annotation_reader_sys" }
-type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys" }
-class_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/class_template_sys" }
-cxx_record_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/cxx_record_sys" }
-enum_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/enum_sys" }
-friend_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/friend_sys" }
-function_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/function_sys" }
-function_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/function_template_sys" }
-namespace_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/namespace_sys" }
-type_alias_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/type_alias_sys" }
-type_map_override_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/type_map_override_sys" }
-var_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/var_sys" }
+annotations_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/annotations_consumer_sys"}
+ast_util_sys = { path = "../../../cargo/rs_bindings_from_cc/ast_util_sys"}
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
+recording_diagnostic_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys"}
+type_map_sys = { path = "../../../cargo/rs_bindings_from_cc/type_map_sys"}
+annotation_reader_sys = { path = "../../../cargo/common/annotation_reader_sys"}
+type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys"}
+class_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/class_template_sys", package = "rs_bindings_from_cc_class_template_sys"}
+cxx_record_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/cxx_record_sys", package = "rs_bindings_from_cc_cxx_record_sys"}
+enum_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/enum_sys", package = "rs_bindings_from_cc_enum_sys"}
+friend_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/friend_sys", package = "rs_bindings_from_cc_friend_sys"}
+function_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/function_sys", package = "rs_bindings_from_cc_function_sys"}
+function_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/function_template_sys", package = "rs_bindings_from_cc_function_template_sys"}
+namespace_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/namespace_sys", package = "rs_bindings_from_cc_namespace_sys"}
+type_alias_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/type_alias_sys", package = "rs_bindings_from_cc_type_alias_sys"}
+type_map_override_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/type_map_override_sys", package = "rs_bindings_from_cc_type_map_override_sys"}
+var_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/var_sys", package = "rs_bindings_from_cc_var_sys"}
 
 
 [build-dependencies]

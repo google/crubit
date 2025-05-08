@@ -13,14 +13,14 @@ name = "cc_bindings_from_rs"
 path = "../../../cc_bindings_from_rs/cc_bindings_from_rs.rs"
 
 [dependencies]
-generate_bindings = { path = "../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings" }
-cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline" }
-run_compiler = { path = "../../../cargo/cc_bindings_from_rs/run_compiler" }
-code_gen_utils = { path = "../../../cargo/common/code_gen_utils" }
-token_stream_printer = { path = "../../../cargo/common/token_stream_printer" }
-arc_anyhow = { path = "../../../cargo/common/arc_anyhow" }
-error_report = { path = "../../../cargo/common/error_report" }
+generate_bindings = { path = "../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
+cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline"}
+run_compiler = { path = "../../../cargo/cc_bindings_from_rs/run_compiler"}
+code_gen_utils = { path = "../../../cargo/common/code_gen_utils"}
+token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
+error_report = { path = "../../../cargo/common/error_report"}
 clap.workspace = true
 itertools.workspace = true
-crubit_feature = { path = "../../../cargo/common/crubit_feature" }
+crubit_feature = { path = "../../../cargo/common/crubit_feature"}
 flagset.workspace = true

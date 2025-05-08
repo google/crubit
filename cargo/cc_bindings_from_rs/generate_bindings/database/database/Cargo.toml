@@ -2,22 +2,22 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate database.
+# Automatically @generated Cargo.toml for the Rust crate cc_bindings_from_rs_database.
 
 [package]
-name = "database"
+name = "cc_bindings_from_rs_database"
 edition = "2021"
 
 [lib]
 path = "../../../../../cc_bindings_from_rs/generate_bindings/database/lib.rs"
 
 [dependencies]
-crubit_attr = { path = "../../../../../cargo/cc_bindings_from_rs/crubit_attr" }
-arc_anyhow = { path = "../../../../../cargo/common/arc_anyhow" }
-code_gen_utils = { path = "../../../../../cargo/common/code_gen_utils" }
-crubit_feature = { path = "../../../../../cargo/common/crubit_feature" }
-error_report = { path = "../../../../../cargo/common/error_report" }
-memoized = { path = "../../../../../cargo/common/memoized" }
+crubit_attr = { path = "../../../../../cargo/cc_bindings_from_rs/crubit_attr"}
+arc_anyhow = { path = "../../../../../cargo/common/arc_anyhow"}
+code_gen_utils = { path = "../../../../../cargo/common/code_gen_utils"}
+crubit_feature = { path = "../../../../../cargo/common/crubit_feature"}
+error_report = { path = "../../../../../cargo/common/error_report"}
+memoized = { path = "../../../../../cargo/common/memoized"}
 flagset.workspace = true
 itertools.workspace = true
 proc-macro2.workspace = true

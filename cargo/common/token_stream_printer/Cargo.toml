@@ -12,6 +12,6 @@ edition = "2021"
 path = "../../../common/token_stream_printer.rs"
 
 [dependencies]
-ffi_types = { path = "../../../cargo/common/ffi_types" }
+ffi_types = { path = "../../../cargo/common/ffi_types"}
 anyhow.workspace = true
 proc-macro2.workspace = true

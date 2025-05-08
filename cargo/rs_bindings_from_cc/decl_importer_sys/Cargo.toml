@@ -14,9 +14,9 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
-lifetime_annotations_sys = { path = "../../../cargo/lifetime_annotations/lifetime_annotations_sys" }
-type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys" }
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
+lifetime_annotations_sys = { path = "../../../cargo/lifetime_annotations/lifetime_annotations_sys"}
+type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys"}
 
 
 [build-dependencies]

@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_library cxx_record_sys.
+# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_cxx_record_sys.
 
 [package]
-name = "cxx_record_sys"
+name = "rs_bindings_from_cc_cxx_record_sys"
 edition = "2021"
 
 build = "build.rs"
@@ -14,11 +14,11 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-annotation_reader_sys = { path = "../../../../cargo/common/annotation_reader_sys" }
-type_lifetimes_sys = { path = "../../../../cargo/lifetime_annotations/type_lifetimes_sys" }
-ast_convert_sys = { path = "../../../../cargo/rs_bindings_from_cc/ast_convert_sys" }
-ast_util_sys = { path = "../../../../cargo/rs_bindings_from_cc/ast_util_sys" }
-cc_ir_sys = { path = "../../../../cargo/rs_bindings_from_cc/cc_ir_sys" }
+annotation_reader_sys = { path = "../../../../cargo/common/annotation_reader_sys"}
+type_lifetimes_sys = { path = "../../../../cargo/lifetime_annotations/type_lifetimes_sys"}
+ast_convert_sys = { path = "../../../../cargo/rs_bindings_from_cc/ast_convert_sys"}
+ast_util_sys = { path = "../../../../cargo/rs_bindings_from_cc/ast_util_sys"}
+cc_ir_sys = { path = "../../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
 
 
 [build-dependencies]

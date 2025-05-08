@@ -14,7 +14,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-importer_sys = { path = "../../../cargo/rs_bindings_from_cc/importer_sys" }
+importer_sys = { path = "../../../cargo/rs_bindings_from_cc/importer_sys"}
 
 
 [build-dependencies]

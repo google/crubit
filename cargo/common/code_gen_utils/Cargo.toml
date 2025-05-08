@@ -12,7 +12,7 @@ edition = "2021"
 path = "../../../common/code_gen_utils.rs"
 
 [dependencies]
-arc_anyhow = { path = "../../../cargo/common/arc_anyhow" }
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 proc-macro2.workspace = true
 quote.workspace = true
 syn.workspace = true
