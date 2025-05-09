@@ -387,9 +387,6 @@ cc_bindings_from_rust_aspect = aspect(
     doc = "Aspect for generating C++ bindings for a Rust library.",
     attr_aspects = ["deps"],
     attrs = {
-        "_cc_toolchain": attr.label(
-            default = "@bazel_tools//tools/cpp:current_cc_toolchain",
-        ),
         "_clang_format": attr.label(
             default = Label("@llvm_toolchain//:clang-format"),
             executable = True,
