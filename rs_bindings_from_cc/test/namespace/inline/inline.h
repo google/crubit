@@ -7,6 +7,7 @@
 
 #pragma clang lifetime_elision
 
+
 namespace foo {
 inline namespace inline1 {
 
@@ -30,5 +31,6 @@ inline int GetStructValue4(const foo::inline1::MyStruct& s) { return s.value; }
 }  // namespace inline1
 #pragma clang diagnostic pop
 }  // namespace foo
+
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
