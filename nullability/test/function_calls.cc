@@ -4,1336 +4,965 @@
 
 // Tests for function calls.
 
-#include "nullability/test/check_diagnostics.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
-
-namespace clang::tidy::nullability {
-namespace {
-
-TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeFreeFunction) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    int *_Nonnull makeNonnull();
-    int *_Nullable makeNullable();
-    int *makeUnannotated();
-    void target() {
-      *makeNonnull();
-      *makeNullable();  // [[unsafe]]
-      *makeUnannotated();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeMemberFunction) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct Foo {
-      int *_Nonnull makeNonnull();
-      int *_Nullable makeNullable();
-      int *makeUnannotated();
-    };
-    void target(Foo foo) {
-      *foo.makeNonnull();
-      *foo.makeNullable();  // [[unsafe]]
-      *foo.makeUnannotated();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeFunctionPointer) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nonnull (*makeNonnull)(),
-                int *_Nullable (*makeNullable)(), int *(*makeUnannotated)()) {
-      *makeNonnull();
-      *makeNullable();  // [[unsafe]]
-      *makeUnannotated();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest,
-     CallExprWithPointerReturnTypePointerToFunctionPointer) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nonnull (**makeNonnull)(),
-                int *_Nullable (**makeNullable)(), int *(**makeUnannotated)()) {
-      *(*makeNonnull)();
-      *(*makeNullable)();  // [[unsafe]]
-      *(*makeUnannotated)();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest,
-     CallExprWithPointerReturnTypeFunctionPointerNested) {
-  // function returning a function pointer which returns a pointer
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    typedef int *_Nonnull (*MakeNonnullT)();
-    typedef int *_Nullable (*MakeNullableT)();
-    typedef int *(*MakeUnannotatedT)();
-    void target(MakeNonnullT (*makeNonnull)(), MakeNullableT (*makeNullable)(),
-                MakeUnannotatedT (*makeUnannotated)()) {
-      *(*makeNonnull)()();
-      *(*makeNullable)()();  // [[unsafe]]
-      *(*makeUnannotated)()();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallExprWithPointerReturnTypePointerRef) {
-  // free function returns reference to pointer
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    int *_Nonnull &makeNonnull();
-    int *_Nullable &makeNullable();
-    int *&makeUnannotated();
-    void target() {
-      *makeNonnull();
-      *makeNullable();  // [[unsafe]]
-      *makeUnannotated();
-
-      // Check that we can take the address of the returned reference and still
-      // see the correct nullability "behind" the resulting pointer.
-      __assert_nullability<NK_nonnull, NK_nonnull>(&makeNonnull());
-      __assert_nullability<NK_nonnull, NK_nullable>(&makeNullable());
-      __assert_nullability<NK_nonnull, NK_unspecified>(&makeUnannotated());
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallExprWithPointerReturnTypeInLoop) {
-  // function called in loop
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    int *_Nullable makeNullable();
-    bool makeBool();
-    void target() {
-      bool first = true;
-      while (true) {
-        int *x = makeNullable();
-        if (first && x == nullptr) return;
-        first = false;
-        *x;  // [[unsafe]]
-      }
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterBasic) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(int** p);
-    void target() {
-      int* p = nullptr;
-      maybeModifyPtr(&p);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterReference) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(int*& r);
-    void target() {
-      int* p = nullptr;
-      maybeModifyPtr(p);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterReferenceConst) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void pointerNotModified(int* const& r);
-    void target() {
-      int* p = nullptr;
-      pointerNotModified(p);
-      *p;  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterReferencePointerToPointer) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(int**& r);
-    void target() {
-      int** pp = nullptr;
-      maybeModifyPtr(pp);
-      *pp;
-      **pp;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterMemberPointerToPointer) {
-  // This is a crash repro. We don't yet support pointers-to-members -- we just
-  // care that this doesn't cause the analysis to crash.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct S {
-      int *p;
-    };
-
-    void callee(int *S::*);
-
-    void target(int *S::*ptr_to_member_ptr) { callee(ptr_to_member_ptr); }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterConst) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void pointerNotModified(int* const* p);
-    void target(int* _Nullable p) {
-      pointerNotModified(&p);
-      *p;  // [[unsafe]]
-    }
-  )cc"));
-
-  // The only const qualifier that should be considered is on the inner
-  // pointer, otherwise this pattern should be considered safe.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(const int** const p);
-    void target() {
-      const int* p = nullptr;
-      maybeModifyPtr(&p);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterNonnull) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void pointerNotModified(int* _Nonnull* p);
-    void target(int* _Nonnull p) {
-      pointerNotModified(&p);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterCheckedNullable) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModify(int* _Nullable* p);
-    void target(int* _Nullable p) {
-      if (!p) return;
-      maybeModify(&p);
-      *p;  // false negative: this dereference is actually unsafe!
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterNullable) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(int* _Nullable* p);
-    void target() {
-      int* p = nullptr;
-      maybeModifyPtr(&p);
-      *p;  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterConditional) {
-  // This tests that flow sensitivity is preserved, to catch for example if the
-  // underlying pointer was always set to Nonnull once it's passed as an
-  // output parameter.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(int** p);
-    void target(int* _Nullable j, bool b) {
-      if (b) {
-        maybeModifyPtr(&j);
-      }
-      if (b) {
-        *j;
-      }
-      if (!b) {
-        *j;  // [[unsafe]]
-      }
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterWithoutAmpersandOperator) {
-  // This tests that the call to maybeModifyPtr works as expected if the param
-  // passed in doesn't directly use the & operator
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(int** p);
-    void target(int* _Nullable p) {
-      auto pp = &p;
-      maybeModifyPtr(pp);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterTemplate) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    template <typename T>
-    struct S {
-      void maybeModify(T& ref);
-    };
-    void target(S<int*> s, int* _Nullable p) {
-      s.maybeModify(p);
-      *p;
-    }
-  )cc"));
-
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    template <typename T>
-    struct S {
-      void maybeModify(T& ref);
-    };
-    void target(S<int* _Nullable> s, int* _Nullable p) {
-      s.maybeModify(p);
-      *p;  // false negative
-    }
-  )cc"));
-
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    template <typename T>
-    struct S {
-      void maybeModify(T& ref);
-    };
-    void target(S<int* _Nonnull> s, int* _Nonnull p) {
-      s.maybeModify(p);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterVariadicCallee) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void maybeModifyPtr(int** p, ...);
-    void target() {
-      int* p = nullptr;
-      maybeModifyPtr(&p, 0);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, OutputParameterMemberOperator) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct MaybeModifyPtr {
-      void operator()(int** p);
-    };
-    void target() {
-      int* p = nullptr;
-      MaybeModifyPtr()(&p);
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallExprParamAssignment) {
-  // free function with single param
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void takeNonnull(int *_Nonnull);
-    void takeNullable(int *_Nullable);
-    void takeUnannotated(int *);
-    void target(int *_Nonnull ptr_nonnull, int *_Nullable ptr_nullable,
-                int *ptr_unannotated) {
-      takeNonnull(nullptr);  // [[unsafe]]
-      takeNonnull(ptr_nonnull);
-      takeNonnull(ptr_nullable);  // [[unsafe]]
-      takeNonnull(ptr_unannotated);
-
-      takeNullable(nullptr);
-      takeNullable(ptr_nonnull);
-      takeNullable(ptr_nullable);
-      takeNullable(ptr_unannotated);
-
-      takeUnannotated(nullptr);
-      takeUnannotated(ptr_nonnull);
-      takeUnannotated(ptr_nullable);
-      takeUnannotated(ptr_unannotated);
-    }
-  )cc"));
-
-  // free function with multiple params of mixed nullability
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void takeMixed(int *, int *_Nullable, int *_Nonnull);
-    void target() {
-      takeMixed(nullptr, nullptr, nullptr);  // [[unsafe]]
-    }
-  )cc"));
-
-  // member function
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct Foo {
-      void takeNonnull(int *_Nonnull);
-      void takeNullable(int *_Nullable);
-      void takeUnannotated(int *);
-    };
-    void target(Foo foo) {
-      foo.takeNonnull(nullptr);  // [[unsafe]]
-      foo.takeNullable(nullptr);
-      foo.takeUnannotated(nullptr);
-    }
-  )cc"));
-
-  // function pointer
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(void (*takeNonnull)(int *_Nonnull),
-                void (*takeNullable)(int *_Nullable),
-                void (*takeUnannotated)(int *)) {
-      takeNonnull(nullptr);  // [[unsafe]]
-      takeNullable(nullptr);
-      takeUnannotated(nullptr);
-    }
-  )cc"));
-
-  // pointer to function pointer
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(void (**takeNonnull)(int *_Nonnull),
-                void (**takeNullable)(int *_Nullable),
-                void (**takeUnannotated)(int *)) {
-      (*takeNonnull)(nullptr);  // [[unsafe]]
-      (*takeNullable)(nullptr);
-      (*takeUnannotated)(nullptr);
-    }
-  )cc"));
-
-  // function returned from function
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    typedef void (*takeNonnullF)(int *_Nonnull);
-    typedef void (*takeNullableF)(int *_Nullable);
-    typedef void (*takeUnannotatedF)(int *);
-    void target(takeNonnullF (*takeNonnull)(), takeNullableF (*takeNullable)(),
-                takeUnannotatedF (*takeUnannotated)()) {
-      (*takeNonnull)()(nullptr);  // [[unsafe]]
-      (*takeNullable)()(nullptr);
-      (*takeUnannotated)()(nullptr);
-    }
-  )cc"));
-
-  // passing a reference to a nonnull pointer
-  //
-  // TODO(b/233582219): Fix false negative. When the nonnull pointer is passed
-  // by reference into the callee which takes a nullable parameter, its value
-  // may be changed to null, making it unsafe to dereference when we return from
-  // the function call. Some possible approaches for handling this case:
-  // (1) Disallow passing a nonnull pointer as a nullable reference - and warn
-  // at the function call.
-  // (2) Assume in worst case the nonnull pointer becomes nullable after the
-  // call - and warn at the dereference.
-  // (3) Sacrifice soundness for reduction in noise, and skip the warning.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void takeNonnullRef(int *_Nonnull &);
-    void takeNullableRef(int *_Nullable &);
-    void takeUnannotatedRef(int *&);
-    void target(int *_Nonnull ptr_nonnull) {
-      takeNonnullRef(ptr_nonnull);
-      *ptr_nonnull;
-
-      // false-negative
-      takeNullableRef(ptr_nonnull);
-      *ptr_nonnull;
-
-      takeUnannotatedRef(ptr_nonnull);
-      *ptr_nonnull;
-    }
-  )cc"));
-
-  // passing a reference to a nullable pointer
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void takeNonnullRef(int *_Nonnull &);
-    void takeNullableRef(int *_Nullable &);
-    void takeUnannotatedRef(int *&);
-    void target(int *_Nullable ptr_nullable) {
-      takeNonnullRef(ptr_nullable);  // [[unsafe]]
-      *ptr_nullable;                 // [[unsafe]]
-
-      takeNullableRef(ptr_nullable);
-      *ptr_nullable;  // [[unsafe]]
-
-      takeUnannotatedRef(ptr_nullable);
-      *ptr_nullable;
-    }
-  )cc"));
-
-  // passing a reference to an unannotated pointer
-  //
-  // TODO(b/233582219): Fix false negative. The unannotated pointer should be
-  // considered nullable if it has been used as a nullable pointer.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void takeNonnullRef(int *_Nonnull &);
-    void takeNullableRef(int *_Nullable &);
-    void takeUnannotatedRef(int *&);
-    void target(int *ptr_unannotated) {
-      takeNonnullRef(ptr_unannotated);
-      *ptr_unannotated;
-
-      takeNullableRef(ptr_unannotated);
-      *ptr_unannotated;  // false-negative
-
-      takeUnannotatedRef(ptr_unannotated);
-      *ptr_unannotated;
-    }
-  )cc"));
-}
-
-// Test that relevant diagnostics are produced for declarations with templated
-// annotations.
-TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateAnnotations) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-#include "nullability_annotations.h"
-
-    void takeNonnull(Nonnull<int *>);
-    void takeNullable(Nullable<int *>);
-    void takeUnknown(NullabilityUnknown<int *>);
-
-    void target(Nonnull<int *> ptr_nonnull, Nullable<int *> ptr_nullable,
-                NullabilityUnknown<int *> ptr_unknown) {
-      takeNonnull(nullptr);  // [[unsafe]]
-      takeNonnull(ptr_nonnull);
-      takeNonnull(ptr_nullable);  // [[unsafe]]
-      takeNonnull(ptr_unknown);
-
-      takeNullable(nullptr);
-      takeNullable(ptr_nonnull);
-      takeNullable(ptr_nullable);
-      takeNullable(ptr_unknown);
-
-      takeUnknown(nullptr);
-      takeUnknown(ptr_nonnull);
-      takeUnknown(ptr_nullable);
-      takeUnknown(ptr_unknown);
-    }
-  )cc"));
-}
-
-// Test that templated annotations work interchangeably, in diagnosis, with the
-// built-in Clang annotations.
-TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateBuiltinMixed) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-#include "nullability_annotations.h"
-
-    void takeNonnull(int *_Nonnull);
-    void takeNullable(int *_Nullable);
-    void takeUnannotated(int *);
-
-    void target(Nonnull<int *> ptr_nonnull, Nullable<int *> ptr_nullable,
-                NullabilityUnknown<int *> ptr_unknown) {
-      takeNonnull(ptr_nonnull);
-      takeNonnull(ptr_nullable);  // [[unsafe]]
-      takeNonnull(ptr_unknown);
-
-      takeNullable(ptr_nonnull);
-      takeNullable(ptr_nullable);
-      takeNullable(ptr_unknown);
-
-      takeUnannotated(ptr_nonnull);
-      takeUnannotated(ptr_nullable);
-      takeUnannotated(ptr_unknown);
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallExprMultiNonnullParams) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void take(int *_Nonnull, int *_Nullable, int *_Nonnull);
-    void target() {
-      take(nullptr,  // [[unsafe]]
-           nullptr,
-           nullptr);  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CanOverwritePtrWithPtrCreatedFromRefReturnType) {
-  // Test that if we create a pointer from a function returning a reference, we
-  // can use that pointer to overwrite an existing nullable pointer and make it
-  // nonnull.
-
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    int &get_int();
-
-    void target(int *_Nullable i) {
-      i = &get_int();
-      *i;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CanOverwritePtrWithPtrReturnedByFunction) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    int *_Nonnull get_int();
-
-    void target(int *_Nullable i) {
-      i = get_int();
-      *i;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallVariadicFunction) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void variadic(int *_Nonnull, ...);
-    void target() {
-      int i = 0;
-      variadic(&i, nullptr, &i);
-      variadic(nullptr, nullptr, &i);  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallVariadicConstructor) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct S {
-      S(int* _Nonnull, ...);
-    };
-    void target() {
-      int i = 0;
-      S(&i, nullptr, &i);
-      S(nullptr, nullptr, &i);  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallMemberOperatorNoParams) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct MakeNonnull {
-      int *_Nonnull operator()();
-    };
-    struct MakeNullable {
-      int *_Nullable operator()();
-    };
-    struct MakeUnannotated {
-      int *operator()();
-    };
-    void target() {
-      MakeNonnull makeNonnull;
-      *makeNonnull();
-
-      MakeNullable makeNullable;
-      *makeNullable();  // [[unsafe]]
-
-      MakeUnannotated makeUnannotated;
-      *makeUnannotated();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallMemberOperatorOneParam) {
-  // overloaded operator with single param
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    // map<int * _Nonnull, int>
-    struct MapWithNonnullKeys {
-      int &operator[](int *_Nonnull key);
-    };
-    // map<int * _Nullable, int>
-    struct MapWithNullableKeys {
-      int &operator[](int *_Nullable key);
-    };
-    // map<int *, int>
-    struct MapWithUnannotatedKeys {
-      int &operator[](int *key);
-    };
-    void target(int *_Nonnull ptr_nonnull, int *_Nullable ptr_nullable,
-                int *ptr_unannotated) {
-      MapWithNonnullKeys nonnull_keys;
-      nonnull_keys[nullptr] = 42;  // [[unsafe]]
-      nonnull_keys[ptr_nonnull] = 42;
-      nonnull_keys[ptr_nullable] = 42;  // [[unsafe]]
-      nonnull_keys[ptr_unannotated] = 42;
-
-      MapWithNullableKeys nullable_keys;
-      nullable_keys[nullptr] = 42;
-      nullable_keys[ptr_nonnull] = 42;
-      nullable_keys[ptr_nullable] = 42;
-      nullable_keys[ptr_unannotated] = 42;
-
-      MapWithUnannotatedKeys unannotated_keys;
-      unannotated_keys[nullptr] = 42;
-      unannotated_keys[ptr_nonnull] = 42;
-      unannotated_keys[ptr_nullable] = 42;
-      unannotated_keys[ptr_unannotated] = 42;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallMemberOperatorMultipleParams) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct TakeMixed {
-      void operator()(int *, int *_Nullable, int *_Nonnull);
-    };
-    void target() {
-      TakeMixed takeMixed;
-      takeMixed(nullptr, nullptr, nullptr);  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallFreeOperator) {
-  // No nullability involved. This is just a regression test to make sure we can
-  // process a call to a free overloaded operator.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct A {};
-    A operator+(A, A);
-    void target() {
-      A a;
-      a = a + a;
-    }
-  )cc"));
-}
-
-// Check that we distinguish between the nullability of the return type and
-// parameters.
-TEST(PointerNullabilityTest, DistinguishFunctionReturnTypeAndParams) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    int *_Nullable callee(int *_Nonnull);
-
-    void target() {
-      int i = 0;
-      __assert_nullability<NK_nullable>(callee(&i));
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, DistinguishMethodReturnTypeAndParams) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct S {
-      int *_Nullable callee(int *_Nonnull);
-    };
-
-    void target(S s) {
-      int i = 0;
-      __assert_nullability<NK_nullable>(s.callee(&i));
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest,
-     ClassTemplate_DistinguishMethodReturnTypeAndParams) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    template <typename T0, typename T1>
-    struct S {
-      T0 callee(T1);
-    };
-
-    void target(S<int *_Nullable, int *_Nonnull> s) {
-      int i = 0;
-      __assert_nullability<NK_nullable>(s.callee(&i));
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest,
-     CallFunctionTemplate_TemplateArgInReturnTypeHasNullTypeSourceInfo) {
-  // This test sets up a function call where we don't have a `TypeSourceInfo`
-  // for the argument to a template parameter used in the return type.
-  // This is a regression test for a crash that we observed on real-world code.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    template <class T>
-    struct A {
-      using Type = T;
-    };
-    template <int, class T>
-    typename A<T>::Type f(T);
-    void target() { f<0>(1); }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallFunctionTemplate_PartiallyDeduced) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    template <int, class T>
-    T f(T);
-    void target() { f<0>(1); }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallBuiltinFunction) {
-  // Crash repro.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target() { __builtin_operator_new(0); }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, CallNoreturnDestructor) {
-  // This test demonstrates that the check considers program execution to end
-  // when a `noreturn` destructor is called.
-  // Among other things, this is intended to demonstrate that Abseil's logging
-  // instruction `LOG(FATAL)` (which creates an object with a `noreturn`
-  // destructor) is correctly interpreted as terminating the program.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct Fatal {
-      __attribute__((noreturn)) ~Fatal();
-      void method(int);
-    };
-    void target(int* _Nullable p) {
-      // Do warn here, as the `*p` dereference happens before the `Fatal` object
-      // is destroyed.
-      Fatal().method(*p);  // [[unsafe]]
-      // Don't warn here: We know that this code never gets executed.
-      *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodNoParamsCheckFirst) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const { return x; }
-      int *_Nullable x = nullptr;
-    };
-    void target() {
-      C obj;
-      if (obj.property() != nullptr) *obj.property();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodNoImpl) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const;
-      void may_mutate();
-      C &operator=(const C &);
-    };
-    void target() {
-      C obj;
-      if (obj.property() != nullptr) {
-        obj.may_mutate();
-        *obj.property();  // [[unsafe]]
-      };
-      if (obj.property() != nullptr) {
-        // A non-const operator call may mutate as well.
-        obj = C();
-        *obj.property();  // [[unsafe]]
-      };
-      if (obj.property() != nullptr) *obj.property();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodReturnsReference) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *const _Nullable &property() const { return x; }
-      int *_Nullable x = nullptr;
-    };
-    void target() {
-      C obj;
-      if (obj.property() != nullptr) *obj.property();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodEarlyReturn) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const;
-    };
-    void target() {
-      C c;
-      if (!c.property()) return;
-      // No false positive in this case, as there is no join.
-      *c.property();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodWithConditional) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const;
-    };
-    bool cond();
-    void some_operation(int);
-    void target() {
-      C c;
-      if (!c.property()) return;
-      if (cond()) {
-        some_operation(1);
-      } else {
-        some_operation(2);
-      }
-      // Verify that we still model `c.property()` as returning the same value
-      // after the join, i.e. a null check performed before control flow
-      // diverges is still valid when the paths rejoin.
-      *c.property();
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodNullPointerCheckOnOnlyOneBranch) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const;
-    };
-    bool cond();
-    void target() {
-      C c;
-      if (cond()) {
-        if (!c.property()) return;
-      }
-      // We didn't check for null on all paths that reach this dereference, so
-      // it is unsafe.
-      *c.property();  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodConditionalWithSeparateNullChecks) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const;
-    };
-    bool cond();
-    void target() {
-      C c;
-      if (cond()) {
-        if (!c.property()) return;
-      } else {
-        if (!c.property()) return;
-      }
-      // TODO: This is a false positive: We checked for null on all paths
-      // that reach this dereference, but the lattice doesn't join the return
-      // values we generated for `c.property()` on the two branches, so we don't
-      // see that this is safe. This pattern is likely to be rare in practice,
-      // so it doesn't seem worth making the join operation more complex to
-      // support this.
-      *c.property();  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodJoinLosesInformation) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct A {
-      bool cond() const;
-    };
-    struct C {
-      int *_Nullable property() const;
-      A a() const;
-    };
-    void target(const C &c1, const C &c2) {
-      if (c1.property() == nullptr || c2.property() == nullptr || c2.a().cond())
-        return;
-      *c1.property();
-      // TODO(b/359457439): This is a false positive, caused by a suboptimal CFG
-      // structure. All of the possible edges out of the if statement's
-      // condition join in a single CFG block before branching out again to
-      // the `return` block on the one hand and the block that performs the
-      // dereferences on the other.
-      // When we perform the join for the various edges out of the condition,
-      // we discard the return value for `c2.property()` because in the case
-      // where `c1.property()` is null, we never evaluate `c2.property()` and
-      // hence don't have a return value for it. When we call `c2.property()`
-      // again, we therefore create a fresh return value for it, and we hence
-      // cannot infer that this value is nonnull.
-      // The false positive does not occur if `c2.a().cond()` is replaced with
-      // a simpler condition, e.g. `c2.cond()` (assuming that `cond()` is
-      // moved to `C`). In this case, the CFG is structured differently: All of
-      // the edges taken when one of the conditions in the if state is true
-      // lead directly to the `return` block, and the edge taken when all
-      // conditions are false leads diresctly to the block that performs the
-      // dereferences. No join is performed, and we can therefore conclude that
-      // `c2.property()` is nonnull.
-      // I am not sure what causes the different CFG structure in the two cases,
-      // but it may be triggered by the `A` temporary that is returned by `a()`.
-      *c2.property();  // [[unsafe]]
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodNoRecordForCallObject) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct S {
-      int* _Nullable property() const;
-    };
-
-    S makeS();
-
-    void target() {
-      if (makeS().property()) {
-        // This is a const member call on a different object, so it's not safe.
-        // But this line and the line above also don't cause any crashes.
-        *(makeS().property());  // [[unsafe]]
-      }
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodReturningBool) {
-  // This tests (indirectly) that we also model const methods returning
-  // booleans. We use `operator bool()` as the specific const method because
-  // this then also gives us coverage of this special case (which is quite
-  // common, for example in `std::function`).
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct S {
-      operator bool() const;
-    };
-
-    void target(S s) {
-      int *p = nullptr;
-      int i = 0;
-      if (s) p = &i;
-      if (s)
-        // Dereference is safe because we know `operator bool()` will return the
-        // same thing both times.
-        *p;
-    }
-  )cc"));
-}
-
-TEST(PointerNullabilityTest, ConstMethodReturningSmartPointer) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
-    struct S {
-      Nullable<std::shared_ptr<int>> property() const;
-    };
-    void target() {
-      S s;
-      if (s.property() != nullptr) {
-        *(s.property());
-      }
-    }
-  )cc"));
+
+#include "nullability_test.h"
+
+namespace std {
+template <class T>
+struct optional {
+  bool has_value() const;
+  T *operator->();
+  const T *operator->() const;
+  const T &operator*() const;
+  const T &value() const;
+};
+}  // namespace std
+
+namespace absl {
+template <typename T>
+class StatusOr {
+ public:
+  bool ok() const;
+  const T &operator*() const &;
+  T &operator*() &;
+  const T *operator->() const;
+  T *operator->();
+  const T &value() const;
+  T &value();
+};
+}  // namespace absl
+
+namespace call_expr_with_pointer_return_type_free_function {
+
+Nonnull<int *> makeNonnull();
+Nullable<int *> makeNullable();
+int *makeUnannotated();
+
+TEST void callExprWithPointerReturnTypeFreeFunction() {
+  nonnull(makeNonnull());
+  nullable(makeNullable());
+  unknown(makeUnannotated());
 }
 
-TEST(PointerNullabilityTest, ConstMethodReturningSmartPointerByReference) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-#include <memory>
-    struct S {
-      const Nullable<std::shared_ptr<int>> &property() const;
-    };
-    void target() {
-      S s;
-      if (s.property() != nullptr) {
-        *(s.property());
-      }
-    }
-  )cc"));
+}  // namespace call_expr_with_pointer_return_type_free_function
+
+namespace call_expr_with_pointer_return_type_member_function {
+
+struct Foo {
+  Nonnull<int *> makeNonnull();
+  Nullable<int *> makeNullable();
+  int *makeUnannotated();
+};
+
+TEST void callExprWithPointerReturnTypeMemberFunction(Foo foo) {
+  nonnull(foo.makeNonnull());
+  nullable(foo.makeNullable());
+  unknown(foo.makeUnannotated());
 }
 
-TEST(PointerNullabilityTest, ConstOperatorReturningPointer) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct S {
-      Nullable<int *> x;
-    };
-    struct SmartPtr {
-      S *operator->() const;
-      void clear();
-    };
-    void target() {
-      SmartPtr ptr;
-      if (ptr->x != nullptr) {
-        *ptr->x;
-        ptr.clear();
-        *ptr->x;  // [[unsafe]]
-      }
-    }
-  )cc"));
+}  // namespace call_expr_with_pointer_return_type_member_function
+
+TEST void callExprWithPointerReturnTypeFunctionPointer(
+    Nonnull<int *> (*makeNonnull)(), Nullable<int *> (*makeNullable)(),
+    int *(*makeUnannotated)()) {
+  nonnull(makeNonnull());
+  nullable(makeNullable());
+  unknown(makeUnannotated());
 }
 
-TEST(PointerNullabilityTest, NonConstMethodClearsSmartPointer) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-#include <memory>
-    struct S {
-      Nullable<std::shared_ptr<int>> property() const;
-      void writer();
-    };
-    void target() {
-      S s;
-      if (s.property() != nullptr) {
-        s.writer();
-        *(s.property());  // [[unsafe]]
-      }
-    }
-  )cc"));
+TEST void callExprWithPointerReturnTypePointerToFunctionPointer(
+    Nonnull<int *> (**makeNonnull)(), Nullable<int *> (**makeNullable)(),
+    int *(**makeUnannotated)()) {
+  nonnull((*makeNonnull)());
+  nullable((*makeNullable)());
+  unknown((*makeUnannotated)());
 }
 
-TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembers) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-#include <memory>
-    struct S {
-      Nullable<int*> p;
-      void writer();
-    };
-    void target(S s) {
-      if (s.p != nullptr) {
-        s.writer();
-        *(s.p);  // [[unsafe]]
-      }
-    }
-  )cc"));
+namespace call_expr_with_pointer_return_type_function_pointer_nested {
+
+// Function returning a function pointer which returns a pointer.
+
+typedef int *_Nonnull (*MakeNonnullT)();
+typedef int *_Nullable (*MakeNullableT)();
+typedef int *(*MakeUnannotatedT)();
+
+TEST void callExprWithPointerReturnTypeFunctionPointerNested(
+    MakeNonnullT (*makeNonnull)(), MakeNullableT (*makeNullable)(),
+    MakeUnannotatedT (*makeUnannotated)()) {
+  nonnull((*makeNonnull)()());
+  nullable((*makeNullable)()());
+  unknown((*makeUnannotated)()());
 }
 
-TEST(PointerNullabilityTest, NonConstMethodDoesNotClearConstPointerMembers) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-#include <memory>
-    struct S {
-      const Nullable<int*> cp;
-      void writer();
-    };
-    void target(S s) {
-      if (s.cp != nullptr) {
-        s.writer();
-        *(s.cp);  // safe
-      }
-    }
-  )cc"));
+}  // namespace call_expr_with_pointer_return_type_function_pointer_nested
+
+namespace call_expr_with_pointer_return_type_pointer_ref {
+
+// Free function returns reference to pointer.
+
+int *_Nonnull &makeNonnull();
+int *_Nullable &makeNullable();
+int *&makeUnannotated();
+
+TEST void callExprWithPointerReturnTypePointerRef() {
+  nonnull(makeNonnull());
+  nullable(makeNullable());
+  unknown(makeUnannotated());
+
+  // Check that we can take the address of the returned reference and still
+  // see the correct nullability "behind" the resulting pointer.
+  type<Nonnull<Nonnull<int *> *>>(&makeNonnull());
+  type<Nonnull<Nullable<int *> *>>(&makeNullable());
+  type<Nonnull<NullabilityUnknown<int *> *>>(&makeUnannotated());
 }
 
-// This is a crash repro.
-TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
-  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
-    void f(char* _Nonnull const&, char* const&);
+}  // namespace call_expr_with_pointer_return_type_pointer_ref
 
-    struct S {
-      void target() {
-        // This used to cause a crash because of a very specific sequence of
-        // events:
-        // - We visit `p` and initialize its nullability properties.
-        // - We visit `returnsPtr()`, causing us to reset all pointer-type
-        //   fields (in this case, `p`). When we did this, we used to create
-        //   fresh `PointerValue`s for the fields, but without nullability
-        //   properties. This would cause a crash in the next step (see below).
-        //   (Instead, we now simply clear the values associated with the
-        //   fields.)
-        // - We visit the function call and check that `p` is non-null, which
-        //   used to crash because `p` had a `PointerValue` associated with it
-        //   that didn't have nullability properties.
-        // Diagnosis produces a "pointer value not modeled" warning on this line
-        // because the value for `p` has been cleared.
-        f(p, returnsPtr());  // [[unsafe]]
-      }
+namespace call_expr_with_pointer_return_type_in_loop {
 
-      char* returnsPtr();
+// Function called in loop.
 
-      char* p;
-    };
-  )cc"));
+Nullable<int *> makeNullable();
+bool makeBool();
+
+TEST void callExprWithPointerReturnTypeInLoop() {
+  bool first = true;
+  while (true) {
+    int *x = makeNullable();
+    if (first && x == nullptr) return;
+    first = false;
+    nullable(x);
+  }
 }
 
-TEST(SmartPointerTest, JoinCausesLossOfNullabilityPropertiesAtExit) {
-  // This is a regression test for the crash seen in b/414348238.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    class A {
-     public:
-      void target(bool b) {
-        if (b) return;
-        // Calling a non-const member function clears out the framework-produced
-        // value for `p_` but (crucially) without mentioning `p_` in an
-        // expression (which would initialize the nullability properties for the
-        // previous value of `p_`).
-        non_const_member_fn();
-        // We now mention `p_` in an expression to make sure the nullability
-        // properties for `p_` are initialized.
-        p_;
-        // At function exit, we see the joined state from two blocks:
-        // - The block containing the return statement above. Here, `p_` has the
-        //   value that the framework initialized it with. Because we never
-        //   saw the expression `p_` on this path, we didn't initialize the
-        //   nullability properties for this value.
-        // - The block that follows the if statement. Here, `p_` has a different
-        //   value, which is associated with nullablility properties, as
-        //   explained above.
-        // When we join these two values, because one of them does not have
-        // nullability properties, we also don't associate nullability
-        // properties with the joined value. It's important to test for this;
-        // our failure to do this previously resulted in the crash.
-      }
+}  // namespace call_expr_with_pointer_return_type_in_loop
 
-      void non_const_member_fn();
+namespace output_parameter_basic {
 
-     private:
-      Nonnull<int*> p_;
-    };
-  )cc"));
+void maybeModifyPtr(int **p);
+
+TEST void outputParameterBasic() {
+  int *p = nullptr;
+  maybeModifyPtr(&p);
+  unknown(p);
 }
 
-TEST(PointerNullabilityTest, OptionalOperatorArrowAndStarCall) {
-  // Check that repeated accesses to a pointer behind an optional are considered
-  // to yield the same pointer -- but only if the optional is not modified in
-  // the meantime.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    namespace std {
-    template <class T>
-    struct optional {
-      bool has_value() const;
-      T* operator->();
-      const T* operator->() const;
-      const T& operator*() const;
-      const T& value() const;
-    };
-    }  // namespace std
+}  // namespace output_parameter_basic
 
-    struct S {
-      int* _Nullable p;
-    };
+namespace output_parameter_reference {
 
-    void target(std::optional<S> opt1, std::optional<S> opt2) {
-      if (!opt1.has_value() || !opt2.has_value()) return;
-      *opt1->p;  // [[unsafe]]
-      if (opt1->p != nullptr) {
-        *opt1->p;
-        *((*opt1).p);
-        *(opt1.value().p);
-        opt1 = opt2;
-        *opt1->p;  // [[unsafe]]
-      }
-    }
-  )cc"));
+void maybeModifyPtr(int *&r);
+
+TEST void outputParameterReference() {
+  int *p = nullptr;
+  maybeModifyPtr(p);
+  unknown(p);
 }
 
-TEST(PointerNullabilityTest, StatusOrOperatorArrowAndStarCall) {
-  // Check that repeated accesses to a pointer behind a StatusOr (or similar
-  // smart pointer-like class) are considered to yield the same pointer --
-  // but only if it is not modified in the meantime.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    namespace absl {
-    template <typename T>
-    class StatusOr {
-     public:
-      bool ok() const;
-      const T& operator*() const&;
-      T& operator*() &;
-      const T* operator->() const;
-      T* operator->();
-      const T& value() const;
-      T& value();
-    };
-    }  // namespace absl
+}  // namespace output_parameter_reference
 
-    struct S {
-      int* _Nullable p;
-    };
+namespace output_parameter_reference_const {
 
-    void target(absl::StatusOr<S> sor1, absl::StatusOr<S> sor2) {
-      if (!sor1.ok() || !sor2.ok()) return;
-      *sor1->p;  // [[unsafe]]
-      if (sor1->p != nullptr) {
-        *sor1->p;
-        *((*sor1).p);
-        *(sor1.value().p);
-        sor1 = sor2;
-        *sor1->p;  // [[unsafe]]
-      }
-    }
-  )cc"));
+void pointerNotModified(int *const &r);
+TEST void outputParameterReferenceConst() {
+  int *p = nullptr;
+  pointerNotModified(p);
+  nullable(p);
 }
 
-TEST(PointerNullabilityTest, FieldUndefinedValue) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const { return x; }
-      int *_Nullable x = nullptr;
-    };
-    C foo();
-    void target() {
-      C obj;
-      if (foo().x != nullptr) *foo().x;  // [[unsafe]]
-    }
-  )cc"));
+}  // namespace output_parameter_reference_const
+
+namespace output_parameter_reference_pointer_to_pointer {
+
+void maybeModifyPtr(int **&r);
+
+TEST void outputParameterReferencePointerToPointer() {
+  int **pp = nullptr;
+  maybeModifyPtr(pp);
+  unknown(pp);
+  unknown(*pp);
 }
 
-TEST(PointerNullabilityTest, Accessor_BaseObjectReturnedByReference) {
-  // Crash repro:
-  // If the base object of the accessor call expression is a reference returned
-  // from a function call, we have a storage location for the object but no
-  // values for its fields. Check that we don't crash in this case.
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const { return x; }
-      int *_Nullable x = nullptr;
-    };
-    C &foo();
-    void target() {
-      if (foo().property() != nullptr) int x = *foo().property();  // [[unsafe]]
-    }
-  )cc"));
+}  // namespace output_parameter_reference_pointer_to_pointer
+
+namespace output_parameter_member_pointer_to_pointer {
+
+// This is a crash repro. We don't yet support pointers-to-members -- we just
+// care that this doesn't cause the analysis to crash.
+
+struct S {
+  int *p;
+};
+
+void callee(int *S::*);
+
+TEST void outputParameterMemberPointerToPointer(int *S::*ptr_to_member_ptr) {
+  callee(ptr_to_member_ptr);
 }
 
-TEST(PointerNullabilityTest, GetReferenceThenCallAccessor) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int* _Nullable property() const { return x; }
-      int* _Nullable x = nullptr;
-    };
-    C& foo();
-    void target() {
-      const C& c = foo();
-      if (c.property() != nullptr) {
-        *c.property();
-      }
-    }
-  )cc"));
+}  // namespace output_parameter_member_pointer_to_pointer
+
+namespace output_parameter_const {
+
+void pointerNotModified(int *const *p);
+
+TEST void outputParameterConst(int *_Nullable p) {
+  pointerNotModified(&p);
+  nullable(p);
 }
 
-TEST(PointerNullabilityTest, AccessorToGetReferenceThenCallAccessor) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int* _Nullable property() const { return x; }
-      int* _Nullable x = nullptr;
-    };
+// The only const qualifier that should be considered is on the inner
+// pointer, otherwise we should assume that the pointer may be modified.
 
-    struct SmartPtrLike {
-      C& operator*() const;
-      C* operator->() const;
-      C* get() const;
-    };
+void maybeModifyPtr(const int **const p);
 
-    void target(SmartPtrLike& d) {
-      const C& obj = *d;
-      if (obj.property() != nullptr) {
-        *obj.property();
-      }
-    }
-  )cc"));
+TEST void innerPointerNotConst() {
+  const int *p = nullptr;
+  maybeModifyPtr(&p);
+  unknown(p);
 }
 
-TEST(PointerNullabilityTest,
-     GetReferenceThenAccessNestedPointerThroughRefField) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct A {
-      int* _Nullable x;
-    };
+}  // namespace output_parameter_const
 
-    struct B {
-      const A& f;
-    };
+namespace output_parameter_nonnull {
 
-    struct C {
-      B& nonConstGetRef();
-    };
+void pointerNotModified(int *_Nonnull *p);
 
-    void target(C c) {
-      B& b = c.nonConstGetRef();
-      if (b.f.x == nullptr) return;
-      // TODO(b/396431434): This should be safe. However we currently don't get
-      // a storage location for `b.f` when we dynamically create the parent
-      // storage location for `b` from the `nonConstGetRef` call. Then
-      // we fail to get nullability properties for `b.f.x`.
-      *b.f.x;  // [[unsafe]]
-    }
-  )cc"));
+TEST void outputParameterNonnull(int *_Nonnull p) {
+  pointerNotModified(&p);
+  nonnull(p);
 }
 
-TEST(PointerNullabilityTest, MethodNoParamsUndefinedValue) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    struct C {
-      int *_Nullable property() const { return x; }
-      int *_Nullable x = nullptr;
-    };
-    void target() {
-      int x = 0;
-      if (C().property() != nullptr) {
-        *C().property();  // [[unsafe]]
-      }
-      C obj;
-      if (obj.property() != nullptr) {
-        *obj.property();
-      }
-    }
-  )cc"));
+}  // namespace output_parameter_nonnull
+
+namespace output_parameter_checked_nullable {
+
+void maybeModify(int *_Nullable *p);
+
+TEST void outputParameterCheckedNullable(int *_Nullable p) {
+  if (!p) return;
+  maybeModify(&p);
+  // The analysis comes to the wrong conclusion here -- the pointer is actually
+  // nullable.
+  nonnull(p);
 }
 
-TEST(PointerNullabilityTest, CallPseudoDestructor) {
-  // Repro for assertion failure:
-  // We used to assert-fail on calls to `CXXPseudoDestructorExpr` because we
-  // didn't detect that they were "bound member function types" (with which we
-  // don't associate nullability as they aren't pointers).
-  EXPECT_TRUE(checkDiagnostics(R"cc(
-    using Int = int;
-    void target(Int i) { i.~Int(); }
-  )cc"));
+}  // namespace output_parameter_checked_nullable
+
+namespace output_parameter_nullable {
+
+void maybeModifyPtr(int *_Nullable *p);
+
+TEST void outputParameterNullable() {
+  int *p = nullptr;
+  maybeModifyPtr(&p);
+  nullable(p);
+}
+
+}  // namespace output_parameter_nullable
+
+namespace output_parameter_conditional {
+
+// This tests that flow sensitivity is preserved, to catch for example if the
+// underlying pointer was always set to Nonnull once it's passed as an
+// output parameter.
+
+void maybeModifyPtr(int **p);
+
+TEST void outputParameterConditional(int *_Nullable j, bool b) {
+  if (b) {
+    maybeModifyPtr(&j);
+  }
+  if (b) {
+    unknown(j);
+  }
+  if (!b) {
+    nullable(j);
+  }
+}
+
+}  // namespace output_parameter_conditional
+
+namespace output_parameter_without_ampersand_operator {
+
+// This tests that the call to maybeModifyPtr works as expected if the param
+// passed in doesn't directly use the & operator
+
+void maybeModifyPtr(int **p);
+
+TEST void outputParameterWithoutAmpersandOperator(int *_Nullable p) {
+  auto pp = &p;
+  maybeModifyPtr(pp);
+  unknown(p);
+}
+
+}  // namespace output_parameter_without_ampersand_operator
+
+namespace output_parameter_template {
+
+template <typename T>
+struct S {
+  void maybeModify(T &ref);
+};
+
+TEST void outputParameterTemplate(S<int *> s, int *_Nullable p) {
+  s.maybeModify(p);
+  unknown(p);
+}
+
+TEST void outputParameterTemplateNullable(S<int *_Nullable> s,
+                                          int *_Nullable p) {
+  s.maybeModify(p);
+  // Doesn't correctly pass on nullability in template argument.
+  unknown(p);
+}
+
+TEST void outputParameterTemplateNonnull(S<int *_Nonnull> s, int *_Nonnull p) {
+  s.maybeModify(p);
+  // Doesn't correctly pass on nullability in template argument.
+  unknown(p);
+}
+
+}  // namespace output_parameter_template
+
+namespace output_parameter_variadic_callee {
+
+void maybeModifyPtr(int **p, ...);
+
+TEST void outputParameterVariadicCallee() {
+  int *p = nullptr;
+  maybeModifyPtr(&p, 0);
+  unknown(p);
+}
+
+}  // namespace output_parameter_variadic_callee
+
+namespace output_parameter_member_operator {
+
+struct MaybeModifyPtr {
+  void operator()(int **p);
+};
+
+TEST void outputParameterMemberOperator() {
+  int *p = nullptr;
+  MaybeModifyPtr()(&p);
+  unknown(p);
+}
+
+}  // namespace output_parameter_member_operator
+
+namespace can_overwrite_ptr_with_ptr_created_from_ref_return_type {
+
+// Test that if we create a pointer from a function returning a reference, we
+// can use that pointer to overwrite an existing nullable pointer and make it
+// nonnull.
+
+int &get_int();
+
+TEST void canOverwritePtrWithPtrCreatedFromRefReturnType(int *_Nullable i) {
+  i = &get_int();
+  nonnull(i);
+}
+
+}  // namespace can_overwrite_ptr_with_ptr_created_from_ref_return_type
+
+namespace can_overwrite_ptr_with_ptr_returned_by_function {
+
+int *_Nonnull get_int();
+
+TEST void canOverwritePtrWithPtrReturnedByFunction(int *_Nullable i) {
+  i = get_int();
+  nonnull(i);
+}
+
+}  // namespace can_overwrite_ptr_with_ptr_returned_by_function
+
+namespace call_member_operator_no_params {
+
+struct MakeNonnull {
+  int *_Nonnull operator()();
+};
+struct MakeNullable {
+  int *_Nullable operator()();
+};
+struct MakeUnannotated {
+  int *operator()();
+};
+
+TEST void callMemberOperatorNoParams() {
+  MakeNonnull makeNonnull;
+  nonnull(makeNonnull());
+
+  MakeNullable makeNullable;
+  nullable(makeNullable());
+
+  MakeUnannotated makeUnannotated;
+  unknown(makeUnannotated());
+}
+
+}  // namespace call_member_operator_no_params
+
+namespace call_free_operator {
+
+// No nullability involved. This is just a regression test to make sure we can
+// process a call to a free overloaded operator.
+
+struct A {};
+A operator+(A, A);
+
+TEST void callFreeOperator() {
+  A a;
+  a = a + a;
+}
+
+}  // namespace call_free_operator
+
+namespace distinguish_function_return_type_and_params {
+
+int *_Nullable callee(int *_Nonnull);
+
+TEST void callExprDistinguishFunctionReturnTypeAndParams() {
+  int i = 0;
+  type<Nullable<int *>>(callee(&i));
+}
+
+}  // namespace distinguish_function_return_type_and_params
+
+namespace distinguish_method_return_type_and_params {
+
+struct S {
+  int *_Nullable callee(int *_Nonnull);
+};
+
+TEST void distinguishMethodReturnTypeAndParams(S s) {
+  int i = 0;
+  type<Nullable<int *>>(s.callee(&i));
+}
+
+}  // namespace distinguish_method_return_type_and_params
+
+namespace class_template_distinguish_method_return_type_and_params {
+
+template <typename T0, typename T1>
+struct S {
+  T0 callee(T1);
+};
+
+TEST void classTemplateDistinguishMethodReturnTypeAndParams(
+    S<int *_Nullable, int *_Nonnull> s) {
+  int i = 0;
+  type<Nullable<int *>>(s.callee(&i));
+}
+
+}  // namespace class_template_distinguish_method_return_type_and_params
+
+namespace call_function_template_template_arg_in_return_type_has_null_type_source_info {
+
+// This test sets up a function call where we don't have a `TypeSourceInfo`
+// for the argument to a template parameter used in the return type.
+// This is a regression test for a crash that we observed on real-world code.
+
+template <class T>
+struct A {
+  using Type = T;
+};
+template <int, class T>
+typename A<T>::Type f(T);
+
+TEST void callFunctionTemplate_TemplateArgInReturnTypeHasNullTypeSourceInfo() {
+  f<0>(1);
 }
 
 }  // namespace
-}  // namespace clang::tidy::nullability
+   // call_function_template_template_arg_in_return_type_has_null_type_source_info
+
+namespace call_function_template_partially_deduced {
+
+template <int, class T>
+T f(T);
+
+TEST void callFunctionTemplate_PartiallyDeduced() { f<0>(1); }
+
+}  // namespace call_function_template_partially_deduced
+
+// Crash repro.
+
+TEST void callBuiltinFunction() { __builtin_operator_new(0); }
+
+namespace const_method_no_params_check_first {
+
+struct C {
+  int *_Nullable property() const { return x; }
+  int *_Nullable x = nullptr;
+};
+
+TEST void constMethodNoParamsCheckFirst() {
+  C obj;
+  if (obj.property() != nullptr) nonnull(obj.property());
+}
+
+}  // namespace const_method_no_params_check_first
+
+namespace const_method_no_impl {
+
+struct C {
+  int *_Nullable property() const;
+  void may_mutate();
+  C &operator=(const C &);
+};
+
+TEST void constMethodNoImpl() {
+  C obj;
+  if (obj.property() != nullptr) {
+    obj.may_mutate();
+    nullable(obj.property());
+  };
+  if (obj.property() != nullptr) {
+    // A non-const operator call may mutate as well.
+    obj = C();
+    nullable(obj.property());
+  };
+  if (obj.property() != nullptr) nonnull(obj.property());
+}
+
+}  // namespace const_method_no_impl
+
+namespace const_method_returns_reference {
+
+struct C {
+  int *const _Nullable &property() const { return x; }
+  int *_Nullable x = nullptr;
+};
+
+TEST void constMethodReturnsReference() {
+  C obj;
+  if (obj.property() != nullptr) nonnull(obj.property());
+}
+
+}  // namespace const_method_returns_reference
+
+namespace const_method_early_return {
+
+struct C {
+  int *_Nullable property() const;
+};
+
+TEST void constMethodEarlyReturn() {
+  C c;
+  if (!c.property()) return;
+  // We correctly deduce nonnull here as there is no join.
+  nonnull(c.property());
+}
+
+}  // namespace const_method_early_return
+
+namespace const_method_with_conditional {
+
+struct C {
+  int *_Nullable property() const;
+};
+bool cond();
+void some_operation(int);
+
+TEST void constMethodWithConditional() {
+  C c;
+  if (!c.property()) return;
+  if (cond()) {
+    some_operation(1);
+  } else {
+    some_operation(2);
+  }
+  // Verify that we still model `c.property()` as returning the same value
+  // after the join, i.e. a null check performed before control flow
+  // diverges is still valid when the paths rejoin.
+  nonnull(c.property());
+}
+
+}  // namespace const_method_with_conditional
+
+namespace const_method_null_check_on_only_one_branch {
+
+struct C {
+  int *_Nullable property() const;
+};
+bool cond();
+
+TEST void constMethodNullCheckOnOnlyOneBranch() {
+  C c;
+  if (cond()) {
+    if (!c.property()) return;
+  }
+  // We didn't check for null on all paths that reach this dereference, so
+  // the return value is still nullable.
+  nullable(c.property());
+}
+
+}  // namespace const_method_null_check_on_only_one_branch
+
+namespace const_method_conditional_with_separate_null_checks {
+
+struct C {
+  int *_Nullable property() const;
+};
+bool cond();
+
+TEST void constMethodConditionalWithSeparateNullChecks() {
+  C c;
+  if (cond()) {
+    if (!c.property()) return;
+  } else {
+    if (!c.property()) return;
+  }
+  // TODO: The analysis reaches a wrong conclusion here: We checked for null on
+  // all paths that reach this point, but the lattice doesn't join the return
+  // values we generated for `c.property()` on the two branches, so we don't see
+  // that the pointer is nonnull. This pattern is likely to be rare in practice,
+  // so it doesn't seem worth making the join operation more complex to support
+  // this.
+  nullable(c.property());
+}
+
+}  // namespace const_method_conditional_with_separate_null_checks
+
+namespace const_method_join_loses_information {
+
+struct A {
+  bool cond() const;
+};
+struct C {
+  int *_Nullable property() const;
+  A a() const;
+};
+
+TEST void constMethodJoinLosesInformation(const C &c1, const C &c2) {
+  if (c1.property() == nullptr || c2.property() == nullptr || c2.a().cond())
+    return;
+  nonnull(c1.property());
+  // TODO(b/359457439): This is a false positive, caused by a suboptimal CFG
+  // structure. All of the possible edges out of the if statement's
+  // condition join in a single CFG block before branching out again to
+  // the `return` block on the one hand and the block that performs the
+  // dereferences on the other.
+  // When we perform the join for the various edges out of the condition,
+  // we discard the return value for `c2.property()` because in the case
+  // where `c1.property()` is null, we never evaluate `c2.property()` and
+  // hence don't have a return value for it. When we call `c2.property()`
+  // again, we therefore create a fresh return value for it, and we hence
+  // cannot infer that this value is nonnull.
+  // The false positive does not occur if `c2.a().cond()` is replaced with
+  // a simpler condition, e.g. `c2.cond()` (assuming that `cond()` is
+  // moved to `C`). In this case, the CFG is structured differently: All of
+  // the edges taken when one of the conditions in the if state is true
+  // lead directly to the `return` block, and the edge taken when all
+  // conditions are false leads diresctly to the block that performs the
+  // dereferences. No join is performed, and we can therefore conclude that
+  // `c2.property()` is nonnull.
+  // I am not sure what causes the different CFG structure in the two cases,
+  // but it may be triggered by the `A` temporary that is returned by `a()`.
+  nullable(c2.property());
+}
+
+}  // namespace const_method_join_loses_information
+
+namespace const_method_no_record_for_call_object {
+
+struct S {
+  int *_Nullable property() const;
+};
+
+S makeS();
+
+TEST void constMethodNoRecordForCallObject() {
+  if (makeS().property()) {
+    // This is a const member call on a different object, so we can't infer
+    // anything about the return value of `makeS().property()`.
+    // But this line and the line above also don't cause any crashes.
+    nullable(makeS().property());
+  }
+}
+
+}  // namespace const_method_no_record_for_call_object
+
+namespace const_method_returning_bool {
+
+// This tests (indirectly) that we also model const methods returning
+// booleans. We use `operator bool()` as the specific const method because
+// this then also gives us coverage of this special case (which is quite
+// common, for example in `std::function`).
+
+struct S {
+  operator bool() const;
+};
+
+TEST void constMethodReturningBool(S s) {
+  int *p = nullptr;
+  int i = 0;
+  if (s) p = &i;
+  if (s)
+    // We know `p` is nonnull because we know `operator bool()` will return the
+    // same thing both times.
+    nonnull(p);
+}
+
+}  // namespace const_method_returning_bool
+
+namespace const_method_returning_smart_pointer {
+
+struct S {
+  Nullable<std::shared_ptr<int>> property() const;
+};
+
+TEST void constMethodReturningSmartPointer() {
+  S s;
+  if (s.property() != nullptr) {
+    nonnull(s.property());
+  }
+}
+
+}  // namespace const_method_returning_smart_pointer
+
+namespace const_method_returning_smart_pointer_by_reference {
+
+struct S {
+  const Nullable<std::shared_ptr<int>> &property() const;
+};
+
+TEST void constMethodReturningSmartPointerByReference() {
+  S s;
+  if (s.property() != nullptr) {
+    nonnull(s.property());
+  }
+}
+
+}  // namespace const_method_returning_smart_pointer_by_reference
+
+namespace const_operator_returning_pointer {
+
+struct S {
+  Nullable<int *> x;
+};
+struct SmartPtr {
+  S *operator->() const;
+  void clear();
+};
+
+TEST void constOperatorReturningPointer() {
+  SmartPtr ptr;
+  if (ptr->x != nullptr) {
+    nonnull(ptr->x);
+    ptr.clear();
+    nullable(ptr->x);
+  }
+}
+
+}  // namespace const_operator_returning_pointer
+
+namespace non_const_method_clears_smart_pointer {
+
+struct S {
+  Nullable<std::shared_ptr<int>> property() const;
+  void writer();
+};
+
+TEST void nonConstMethodClearsSmartPointer() {
+  S s;
+  if (s.property() != nullptr) {
+    s.writer();
+    nullable(s.property());
+  }
+}
+
+}  // namespace non_const_method_clears_smart_pointer
+
+namespace non_const_method_clears_pointer_members {
+
+struct S {
+  Nullable<int *> p;
+  void writer();
+};
+
+TEST void nonConstMethodClearsPointerMembers(S s) {
+  if (s.p != nullptr) {
+    s.writer();
+    nullable(s.p);
+  }
+}
+
+}  // namespace non_const_method_clears_pointer_members
+
+namespace non_const_method_does_not_clear_const_pointer_members {
+
+struct S {
+  const Nullable<int *> cp;
+  void writer();
+};
+
+TEST void nonConstMethodDoesNotClearConstPointerMembers(S s) {
+  if (s.cp != nullptr) {
+    s.writer();
+    nonnull(s.cp);
+  }
+}
+
+}  // namespace non_const_method_does_not_clear_const_pointer_members
+
+namespace optional_operator_arrow_and_star_call {
+
+// Check that repeated accesses to a pointer behind an optional are considered
+// to yield the same pointer -- but only if the optional is not modified in
+// the meantime.
+
+struct S {
+  int *_Nullable p;
+};
+
+TEST void optionalOperatorArrowAndStarCall(std::optional<S> opt1,
+                                           std::optional<S> opt2) {
+  if (!opt1.has_value() || !opt2.has_value()) return;
+  *opt1->p;  // [[unsafe]]
+  if (opt1->p != nullptr) {
+    nonnull(opt1->p);
+    nonnull((*opt1).p);
+    nonnull(opt1.value().p);
+    opt1 = opt2;
+    nullable(opt1->p);
+  }
+}
+
+}  // namespace optional_operator_arrow_and_star_call
+
+namespace status_or_operator_arrow_and_star_call {
+
+// Check that repeated accesses to a pointer behind a StatusOr (or similar
+// smart pointer-like class) are considered to yield the same pointer --
+// but only if it is not modified in the meantime.
+
+struct S {
+  int *_Nullable p;
+};
+
+TEST void statusOrOperatorArrowAndStarCall(absl::StatusOr<S> sor1,
+                                           absl::StatusOr<S> sor2) {
+  if (!sor1.ok() || !sor2.ok()) return;
+  nullable(sor1->p);
+  if (sor1->p != nullptr) {
+    nonnull(sor1->p);
+    nonnull((*sor1).p);
+    nonnull(sor1.value().p);
+    sor1 = sor2;
+    nullable(sor1->p);
+  }
+}
+
+}  // namespace status_or_operator_arrow_and_star_call
+
+namespace field_undefined_value {
+
+struct C {
+  int *_Nullable property() const { return x; }
+  int *_Nullable x = nullptr;
+};
+C foo();
+
+TEST void fieldUndefinedValue() {
+  if (foo().x != nullptr) nullable(foo().x);
+}
+
+}  // namespace field_undefined_value
+
+namespace get_reference_then_call_accessor {
+
+struct C {
+  int *_Nullable property() const { return x; }
+  int *_Nullable x = nullptr;
+};
+C &foo();
+
+TEST void getReferenceThenCallAccessor() {
+  const C &c = foo();
+  if (c.property() != nullptr) {
+    nonnull(c.property());
+  }
+}
+
+}  // namespace get_reference_then_call_accessor
+
+namespace accessor_to_get_reference_then_call_accessor {
+
+struct C {
+  int *_Nullable property() const { return x; }
+  int *_Nullable x = nullptr;
+};
+
+struct SmartPtrLike {
+  C &operator*() const;
+  C *operator->() const;
+  C *get() const;
+};
+
+TEST void accessorToGetReferenceThenCallAccessor(SmartPtrLike &d) {
+  const C &obj = *d;
+  if (obj.property() != nullptr) {
+    nonnull(obj.property());
+  }
+}
+
+}  // namespace accessor_to_get_reference_then_call_accessor
+
+namespace get_reference_then_call_accessor_then_get_reference {
+
+struct A {
+  int *_Nullable x;
+};
+
+struct B {
+  const A &f;
+};
+
+struct C {
+  B &nonConstGetRef();
+};
+
+TEST void getReferenceThenCallAccessorThenGetReference(C c) {
+  B &b = c.nonConstGetRef();
+  if (b.f.x == nullptr) return;
+  // TODO(b/396431434): `b.f.x` should be nullable here. However we currently
+  // don't get a storage location for `b.f` when we dynamically create the
+  // parent storage location for `b` from the `nonConstGetRef` call. Then we
+  // fail to get nullability properties for `b.f.x`.
+  nullable(b.f.x);
+}
+
+}  // namespace get_reference_then_call_accessor_then_get_reference
+
+namespace method_no_params_undefined_value {
+
+struct C {
+  int *_Nullable property() const { return x; }
+  int *_Nullable x = nullptr;
+};
+
+TEST void methodNoParamsUndefinedValue() {
+  if (C().property() != nullptr) {
+    nullable(C().property());
+  }
+  C obj;
+  if (obj.property() != nullptr) {
+    nonnull(obj.property());
+  }
+}
+
+}  // namespace method_no_params_undefined_value
+
+namespace call_pseudo_destructor {
+
+// Repro for assertion failure:
+// We used to assert-fail on calls to `CXXPseudoDestructorExpr` because we
+// didn't detect that they were "bound member function types" (with which we
+// don't associate nullability as they aren't pointers).
+
+using Int = int;
+TEST void callPseudoDestructor(Int i) { i.~Int(); }
+
+}  // namespace call_pseudo_destructor

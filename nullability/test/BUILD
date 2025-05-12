@@ -195,9 +195,14 @@ cc_test(
     ],
 )
 
-cc_test(
+nullability_test(
     name = "function_calls",
     srcs = ["function_calls.cc"],
+)
+
+cc_test(
+    name = "function_calls_diagnosis",
+    srcs = ["function_calls_diagnosis.cc"],
     deps = [
         ":check_diagnostics",
         "@llvm-project//third-party/unittest:gtest",
