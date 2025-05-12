@@ -584,7 +584,11 @@ pub fn generate_trait_thunks<'tcx>(
             if db.no_thunk_name_mangling() {
                 format!("__crubit_thunk_{}", &escape_non_identifier_chars(method.name().as_str()))
             } else {
+                #[rustversion::since(2025-05-06)]
+                let instance = ty::Instance::new_raw(method.def_id, substs);
+                #[rustversion::before(2025-05-06)]
                 let instance = ty::Instance::new(method.def_id, substs);
+
                 let symbol = tcx.symbol_name(instance);
                 format!(
                     "__crubit_thunk_{}_{}",
