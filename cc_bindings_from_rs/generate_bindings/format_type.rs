@@ -327,7 +327,11 @@ pub fn format_ty_for_cc<'tcx>(
             if let Some(BridgedType { include_path, .. }) = is_bridged_type(db, ty.mid())? {
                 prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
             } else {
-                ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
+                let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
+                ensure!(
+                    has_cpp_type || substs.is_empty(),
+                    "Generic types are not supported yet (b/259749095)"
+                );
                 ensure!(
                     is_public_or_supported_export(db, adt.did()),
                     "Not a public or a supported reexported type (b/262052635)."
@@ -700,9 +704,9 @@ pub fn format_ty_for_rs<'tcx>(
             quote! { (#(#rs_types,)*) }
         }
         ty::TyKind::Adt(adt, substs) => {
-            let is_bridged_type = is_bridged_type(db, ty)?.is_some();
+            let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
             ensure!(
-                is_bridged_type || substs.len() == 0,
+                has_cpp_type || substs.is_empty(),
                 "Generic types are not supported yet (b/259749095)"
             );
             FullyQualifiedName::new(db, adt.did()).format_for_rs()

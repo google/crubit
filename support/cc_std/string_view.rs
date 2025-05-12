@@ -16,6 +16,8 @@ use core::ptr;
 /// * This does **not** make any guarantees about mutable aliasing.
 #[allow(non_camel_case_types)]
 #[repr(transparent)]
+#[doc = "CRUBIT_ANNOTATE: cpp_type=std::string_view"]
+#[doc = "CRUBIT_ANNOTATE: include_path=<string_view>"]
 pub struct string_view<'a> {
     raw: raw_string_view,
     phantom_data: core::marker::PhantomData<&'a ()>,

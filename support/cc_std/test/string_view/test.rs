@@ -6,8 +6,8 @@ use cc_std::std::raw_string_view;
 use cc_std::std::string_view;
 use googletest::prelude::*;
 use std::sync::LazyLock;
-use string_view_apis::crubit_string_view::GetDefault;
-use string_view_apis::crubit_string_view::GetHelloWorld;
+use string_view_cc_apis::crubit_string_view::GetDefault;
+use string_view_cc_apis::crubit_string_view::GetHelloWorld;
 
 /// Converts a raw_string_view to a &'static str.
 ///
