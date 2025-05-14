@@ -1357,16 +1357,39 @@ void handleNonConstMemberCall(const CallExpr *absl_nonnull CE,
   // changed (at least, not without UB).
   if (RecordLoc != nullptr) {
     for (const auto [Field, FieldLoc] : RecordLoc->children()) {
-      // We can't produce a new `PointerValue` here because we don't necessarily
-      // know what to initialize its nullability properties with. The record may
-      // be a `ClassTemplateSpecializationDecl`, which uses canonical types for
-      // its type arguments (there only be one specialization for the same
-      // canonical type arguments), so the `FieldDecl` doesn't contain
-      // nullability annotations. The best thing we can do, therefore, is to
-      // clear the value.
       QualType FieldType = Field->getType();
-      if (!FieldType.isConstQualified() && isSupportedRawPointerType(FieldType))
+      if (FieldType.isConstQualified() || !isSupportedRawPointerType(FieldType))
+        continue;
+
+      const auto *FieldStronglyTyped = dyn_cast<FieldDecl>(Field);
+      if (FieldStronglyTyped == nullptr) continue;
+      if (isa<ClassTemplateSpecializationDecl>(
+              FieldStronglyTyped->getParent())) {
+        // We can't produce a new `PointerValue` here because we don't
+        // know what to initialize its nullability properties with: A
+        // `ClassTemplateSpecializationDecl` uses canonical types for
+        // its type arguments (there is only one specialization for the same
+        // canonical type arguments), so the `FieldDecl` doesn't contain
+        // nullability annotations. The best thing we can do, therefore, is to
+        // clear the value.
+        // TODO{mboehme): We should resugar the type of the field, similar to
+        // the way this is done in `transferType_DeclRefExpr()`.
         State.Env.clearValue(*FieldLoc);
+      } else {
+        auto *Val = cast<PointerValue>(
+            State.Env.createValue(FieldStronglyTyped->getType()));
+        State.Env.setValue(*FieldLoc, *Val);
+        TypeNullability N =
+            State.Lattice.getTypeNullabilityWithOverrides(*FieldStronglyTyped);
+        if (N.empty()) {
+          // The field has pointer type, so it should have nullability.
+          // In a release build, just ignore and move on.
+          assert(false);
+          continue;
+        }
+        initPointerNullState(*Val, State.Env.getDataflowAnalysisContext(),
+                             N.front());
+      }
     }
     State.Lattice.clearConstMethodReturnValues(*RecordLoc);
     State.Lattice.clearConstMethodReturnStorageLocations(*RecordLoc);

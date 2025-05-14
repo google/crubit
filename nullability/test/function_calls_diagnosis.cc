@@ -326,6 +326,7 @@ TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
   EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
     void f(char* _Nonnull const&, char* const&);
 
+    template <class T>
     struct S {
       void target() {
         // This used to cause a crash because of a very specific sequence of
@@ -341,7 +342,9 @@ TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
         //   used to crash because `p` had a `PointerValue` associated with it
         //   that didn't have nullability properties.
         // Diagnosis produces a "pointer value not modeled" warning on this line
-        // because the value for `p` has been cleared.
+        // because the value for `p` has been cleared. (This only happens if
+        // `S` is a template, which is why `S` has a template parameter that is
+        // otherwise unused.)
         f(p, returnsPtr());  // [[unsafe]]
       }
 
@@ -349,6 +352,8 @@ TEST(PointerNullabilityTest, NonConstMethodClearsPointerMembersInExpr) {
 
       char* p;
     };
+
+    template class S<int>;
   )cc"));
 }
 

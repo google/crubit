@@ -7,6 +7,8 @@
 #include <memory>
 
 #include "nullability_test.h"
+#include "pragma_none.h"
+#include "pragma_nonnull.h"
 
 namespace std {
 template <class T>
@@ -778,14 +780,24 @@ TEST void nonConstMethodClearsSmartPointer() {
 namespace non_const_method_clears_pointer_members {
 
 struct S {
-  Nullable<int *> p;
+  Nullable<int *> nullable_p;
+  Nonnull<int *> nonnull_p;
+  int *unannotated_p;
+  pragma_none::IntPtr pragma_none_p;
+  pragma_nonnull::IntPtr pragma_nonnull_p;
   void writer();
 };
 
 TEST void nonConstMethodClearsPointerMembers(S s) {
-  if (s.p != nullptr) {
+  if (s.nullable_p != nullptr && s.nonnull_p != nullptr &&
+      s.unannotated_p != nullptr && s.pragma_none_p != nullptr &&
+      s.pragma_nonnull_p != nullptr) {
     s.writer();
-    nullable(s.p);
+    nullable(s.nullable_p);
+    nonnull(s.nonnull_p);
+    unknown(s.unannotated_p);
+    unknown(s.pragma_none_p);
+    nonnull(s.pragma_nonnull_p);
   }
 }
 

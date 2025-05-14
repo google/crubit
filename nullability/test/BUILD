@@ -197,7 +197,12 @@ cc_test(
 
 nullability_test(
     name = "function_calls",
-    srcs = ["function_calls.cc"],
+    srcs = [
+        "function_calls.cc",
+        "pragma_none.h",
+        "pragma_nonnull.h",
+        "pragma_support.h",
+    ],
 )
 
 cc_test(

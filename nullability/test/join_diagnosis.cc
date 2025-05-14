@@ -362,11 +362,9 @@ TEST(PointerNullabilityTest, JoinPointerLValues) {
   )cc"));
 }
 
-TEST(PointerNullabilityTest, JoinAfterNonConstMemberFnCallFalseNegative) {
-  // This is a repro for a false negative.
-  // The false negative is related to our treatment of non-const member
-  // functions; if `non_const_member_fn()` is made const, we correctly issue a
-  // diagnostic.
+TEST(PointerNullabilityTest, JoinAfterNonConstMemberFnCall) {
+  // This is a regression test for a previous false negative, which was
+  // related to our treatment of non-const member functions.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     class A {
      public:
@@ -375,8 +373,7 @@ TEST(PointerNullabilityTest, JoinAfterNonConstMemberFnCallFalseNegative) {
           p_ = nullptr;
         else
           non_const_member_fn();
-        // TODO(b/414707531): Should issue a diagnostic that `p_` may be null.
-        *p_;
+        *p_;  // [[unsafe]]
       }
 
       void non_const_member_fn();
