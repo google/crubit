@@ -1411,10 +1411,8 @@ void transferType_DeclRefExpr(const DeclRefExpr *absl_nonnull DRE,
       }
     }
 
-    auto Nullability =
-        getTypeNullability(*DRE->getDecl(), State.Lattice.defaults(), Resugar);
-    State.Lattice.overrideNullabilityFromDecl(DRE->getDecl(), Nullability);
-    return Nullability;
+    return State.Lattice.getTypeNullabilityWithOverrides(*DRE->getDecl(),
+                                                         Resugar);
   });
 }
 
@@ -1441,10 +1439,7 @@ void transferType_MemberExpr(const MemberExpr *absl_nonnull ME,
     if (ME->hasExplicitTemplateArgs())
       Resugar.addTemplateArgs(ME->getMemberDecl(), ME->template_arguments());
 
-    auto Nullability =
-        getTypeNullability(*Member, State.Lattice.defaults(), Resugar);
-    State.Lattice.overrideNullabilityFromDecl(ME->getMemberDecl(), Nullability);
-    return Nullability;
+    return State.Lattice.getTypeNullabilityWithOverrides(*Member, Resugar);
   });
 }
 
@@ -1680,8 +1675,7 @@ void transferType_CXXOperatorCallExpr(
       }
 
       TypeNullability Nullability =
-          getTypeNullability(*Callee, State.Lattice.defaults(), Resugar);
-      State.Lattice.overrideNullabilityFromDecl(Callee, Nullability);
+          State.Lattice.getTypeNullabilityWithOverrides(*Callee, Resugar);
       ArrayRef ResultNullability = Nullability;
       // Return value nullability is at the front of the function type.
       ResultNullability =

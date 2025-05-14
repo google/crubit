@@ -48,6 +48,21 @@ class PointerNullabilityLatticeBase {
     return I == NFS.ExprToNullability.end() ? nullptr : &I->second;
   }
 
+  /// Extract the nullability of the type of `D`.
+  ///
+  /// The file where the type is written affects the interpretation of
+  /// unannotated pointer types. If the nullability for `D` has been overridden,
+  /// the returned nullability will contain these overrides.
+  TypeNullability getTypeNullabilityWithOverrides(
+      const ValueDecl &D,
+      llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam =
+          nullptr) {
+    TypeNullability Nullability = clang::tidy::nullability::getTypeNullability(
+        D, defaults(), SubstituteTypeParam);
+    overrideNullabilityFromDecl(&D, Nullability);
+    return Nullability;
+  }
+
   // If the `ExprToNullability` map already contains an entry for `E`, does
   // nothing. Otherwise, inserts a new entry with key `E` and value computed by
   // the provided GetNullability.
