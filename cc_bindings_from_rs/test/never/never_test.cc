@@ -16,4 +16,15 @@ TEST(NeverTest, ExternNeverReturnDoesNotReturn) {
   EXPECT_DEATH(never::extern_never_return(), "You can't do that directly!");
 }
 
+TEST(NeverTest, AssocatedFnNeverReturnDoesNotReturn) {
+  EXPECT_DEATH(never::NeverStruct::associated_fn_never_return(),
+               "You can't do that as an associated fn!");
+}
+
+TEST(NeverTest, MethodNeverReturnDoesNotReturn) {
+  never::NeverStruct never_struct;
+  EXPECT_DEATH(never_struct.method_never_return(),
+               "You can't do that as a method!");
+}
+
 }  // namespace
