@@ -324,11 +324,13 @@ static std::pair<const Expr *, SourceLocation> describeDereference(
 }
 
 /// Inferable slots are nullability slots not explicitly annotated in source
-/// code that we are currently capable of handling. This returns a boolean
-/// constraint representing these slots having a) the nullability inferred from
-/// the previous round for this slot or b) Unknown nullability if no inference
-/// was made in the previous round or there was no previous round.
-static const Formula &getInferableSlotsAsInferredOrUnknownConstraint(
+/// code and which we are currently capable of handling. We represent their
+/// nullability symbolically, and then constrain those symbols during inference.
+/// Slots with no previous inference are constrained to Unknown, while those
+/// with inferred annotations are constrained correspondingly. This function
+/// accumulates the constraints on all inferable slots and expresses them as a
+/// single formula.
+static const Formula &getConstraintsOnInferableSlots(
     const std::vector<InferableSlot> &InferableSlots, USRCache &USRCache,
     const PreviousInferences &PreviousInferences, dataflow::Arena &A) {
   const Formula *Constraint = &A.makeLiteral(true);
@@ -1541,7 +1543,7 @@ static void collectEvidenceFromConstructorExitBlock(
 // This allows us to collect references made within forwarding functions, as if
 // they were made directly by the statement. (skipping through the forwarding).
 static llvm::DenseSet<const FunctionDecl *>
-collectLastLayerForwardingFunctionsCalled(Stmt *S) {
+collectLastLayerForwardingFunctionsCalled(Stmt &S) {
   llvm::DenseSet<const FunctionDecl *> Results;
 
   class ForwardingFunctionsCallVisitor : public dataflow::AnalysisASTVisitor {
@@ -1563,12 +1565,12 @@ collectLastLayerForwardingFunctionsCalled(Stmt *S) {
   };
 
   ForwardingFunctionsCallVisitor Visitor(Results);
-  Visitor.TraverseStmt(S);
+  Visitor.TraverseStmt(&S);
   return Results;
 }
 
 static void collectReferencesFromForwardingFunctions(
-    dataflow::ReferencedDecls &ReferencedDecls, Stmt *S) {
+    Stmt &S, dataflow::ReferencedDecls &ReferencedDecls) {
   llvm::DenseSet<const FunctionDecl *> ForwardingFunctions =
       collectLastLayerForwardingFunctionsCalled(S);
   for (const auto *ForwardingFunction : ForwardingFunctions) {
@@ -1605,27 +1607,20 @@ static bool containsInitListExpr(const Expr &E) {
   return Visitor.Found;
 }
 
-llvm::Error collectEvidenceFromDefinition(
-    const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
-    USRCache &USRCache, const NullabilityPragmas &Pragmas,
-    const PreviousInferences &PreviousInferences,
-    const SolverFactory &MakeSolver) {
-  ASTContext &Ctx = Definition.getASTContext();
-  dataflow::ReferencedDecls ReferencedDecls;
-  Stmt *TargetStmt = nullptr;
-  std::optional<DeclStmt> DeclStmtForVarDecl;
-  const auto *TargetAsFunc = dyn_cast<FunctionDecl>(&Definition);
-  if (TargetAsFunc != nullptr) {
+static llvm::Expected<Stmt *absl_nonnull> getTarget(
+    const Decl &Definition, std::optional<DeclStmt> &DeclStmtForVarDecl) {
+  if (const auto *TargetAsFunc = dyn_cast<FunctionDecl>(&Definition)) {
     if (!TargetAsFunc->doesThisDeclarationHaveABody()) {
       return llvm::createStringError(llvm::errc::invalid_argument,
                                      "Function definitions must have a body.");
     }
-    TargetStmt = TargetAsFunc->getBody();
-    ReferencedDecls = dataflow::getReferencedDecls(*TargetAsFunc);
+    Stmt *TargetStmt = TargetAsFunc->getBody();
+    CHECK(TargetStmt) << "TargetStmt should have been assigned a non-null "
+                         "value, because function must have body.";
+    return TargetStmt;
+  }
 
-    if (TargetStmt != nullptr)
-      collectReferencesFromForwardingFunctions(ReferencedDecls, TargetStmt);
-  } else if (auto *Var = dyn_cast<VarDecl>(&Definition)) {
+  if (const auto *Var = dyn_cast<VarDecl>(&Definition)) {
     if (!Var->hasInit()) {
       return llvm::createStringError(
           llvm::errc::invalid_argument,
@@ -1643,40 +1638,24 @@ llvm::Error collectEvidenceFromDefinition(
     // perfectly reflect the CFG or AST for declaration or assignment of a
     // global variable, and it is possible that this may cause unexpected
     // behavior in clang tools/utilities.
-    TargetStmt =
+    Stmt *TargetStmt =
         &DeclStmtForVarDecl.emplace(DeclGroupRef(const_cast<VarDecl *>(Var)),
                                     Var->getBeginLoc(), Var->getEndLoc());
-    ReferencedDecls = dataflow::getReferencedDecls(*TargetStmt);
-    collectReferencesFromForwardingFunctions(ReferencedDecls, TargetStmt);
-
-    if (!isInferenceTarget(*Var) && !hasAnyInferenceTargets(ReferencedDecls)) {
-      // If this variable is not an inference target and the initializer does
-      // not reference any inference targets, we won't be able to collect any
-      // useful evidence from the initializer.
-      return llvm::Error::success();
-    }
-  } else {
-    std::string Msg =
-        "Unable to find a valid target definition from Definition:\n";
-    llvm::raw_string_ostream Stream(Msg);
-    Definition.dump(Stream);
-    return llvm::createStringError(llvm::inconvertibleErrorCode(), Msg);
+    return TargetStmt;
   }
 
-  CHECK(TargetStmt) << "TargetStmt should have been assigned a non-null value.";
+  std::string Msg =
+      "Unable to find a valid target definition from Definition:\n";
+  llvm::raw_string_ostream Stream(Msg);
+  Definition.dump(Stream);
+  return llvm::createStringError(llvm::inconvertibleErrorCode(), Msg);
+}
 
-  llvm::Expected<dataflow::AdornedCFG> ACFG =
-      dataflow::AdornedCFG::build(Definition, *TargetStmt, Ctx);
-  if (!ACFG) return ACFG.takeError();
-
-  std::unique_ptr<dataflow::Solver> Solver = MakeSolver();
-  DataflowAnalysisContext AnalysisContext(*Solver);
-  Environment Env = TargetAsFunc ? Environment(AnalysisContext, *TargetAsFunc)
-                                 : Environment(AnalysisContext, *TargetStmt);
-  PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
-
-  TypeNullabilityDefaults Defaults = TypeNullabilityDefaults(Ctx, Pragmas);
-
+static std::vector<InferableSlot> gatherInferableSlots(
+    TypeNullabilityDefaults Defaults,
+    const FunctionDecl *absl_nullable TargetAsFunc,
+    const dataflow::ReferencedDecls &ReferencedDecls,
+    PointerNullabilityAnalysis &Analysis, dataflow::Arena &Arena) {
   std::vector<InferableSlot> InferableSlots;
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
@@ -1684,9 +1663,9 @@ llvm::Error collectEvidenceFromDefinition(
       if (hasInferable(Parameters[I]->getType()) &&
           !evidenceKindFromDeclaredTypeLoc(
               Parameters[I]->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
-        InferableSlots.emplace_back(Analysis.assignNullabilityVariable(
-                                        Parameters[I], AnalysisContext.arena()),
-                                    paramSlot(I), *TargetAsFunc);
+        InferableSlots.emplace_back(
+            Analysis.assignNullabilityVariable(Parameters[I], Arena),
+            paramSlot(I), *TargetAsFunc);
       }
     }
   }
@@ -1696,8 +1675,7 @@ llvm::Error collectEvidenceFromDefinition(
         !evidenceKindFromDeclaredTypeLoc(
             Field->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Field, AnalysisContext.arena()),
-          Slot(0), *Field);
+          Analysis.assignNullabilityVariable(Field, Arena), Slot(0), *Field);
     }
   }
   for (const VarDecl *Global : ReferencedDecls.Globals) {
@@ -1705,8 +1683,7 @@ llvm::Error collectEvidenceFromDefinition(
         !evidenceKindFromDeclaredTypeLoc(
             Global->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Global, AnalysisContext.arena()),
-          Slot(0), *Global);
+          Analysis.assignNullabilityVariable(Global, Arena), Slot(0), *Global);
     }
   }
   for (const VarDecl *Local : ReferencedDecls.Locals) {
@@ -1714,8 +1691,7 @@ llvm::Error collectEvidenceFromDefinition(
         !evidenceKindFromDeclaredTypeLoc(
             Local->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Local, AnalysisContext.arena()),
-          Slot(0), *Local);
+          Analysis.assignNullabilityVariable(Local, Arena), Slot(0), *Local);
     }
   }
   for (const FunctionDecl *Function : ReferencedDecls.Functions) {
@@ -1723,8 +1699,8 @@ llvm::Error collectEvidenceFromDefinition(
         hasInferable(Function->getReturnType()) &&
         !evidenceKindFromDeclaredReturnType(*Function, Defaults)) {
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Function, AnalysisContext.arena()),
-          SLOT_RETURN_TYPE, *Function);
+          Analysis.assignNullabilityVariable(Function, Arena), SLOT_RETURN_TYPE,
+          *Function);
     }
   }
   for (const ParmVarDecl *Param : ReferencedDecls.LambdaCapturedParams) {
@@ -1738,15 +1714,56 @@ llvm::Error collectEvidenceFromDefinition(
             Param->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       unsigned Index = Param->getFunctionScopeIndex();
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Param, AnalysisContext.arena()),
-          paramSlot(Index), *ContainingFunction);
+          Analysis.assignNullabilityVariable(Param, Arena), paramSlot(Index),
+          *ContainingFunction);
     }
   }
+  return InferableSlots;
+}
 
-  const auto &InferableSlotsConstraint =
-      getInferableSlotsAsInferredOrUnknownConstraint(InferableSlots, USRCache,
-                                                     PreviousInferences,
-                                                     AnalysisContext.arena());
+llvm::Error collectEvidenceFromDefinition(
+    const Decl &Definition, llvm::function_ref<EvidenceEmitter> Emit,
+    USRCache &USRCache, const NullabilityPragmas &Pragmas,
+    const PreviousInferences &PreviousInferences,
+    const SolverFactory &MakeSolver) {
+  std::optional<DeclStmt> DeclStmtForVarDecl;
+  auto T = getTarget(Definition, DeclStmtForVarDecl);
+  if (!T) return T.takeError();
+  Stmt &TargetStmt = **T;
+
+  const auto *absl_nullable TargetFunc = dyn_cast<FunctionDecl>(&Definition);
+  dataflow::ReferencedDecls ReferencedDecls =
+      TargetFunc != nullptr ? dataflow::getReferencedDecls(*TargetFunc)
+                            : dataflow::getReferencedDecls(TargetStmt);
+  collectReferencesFromForwardingFunctions(TargetStmt, ReferencedDecls);
+
+  // TODO: b/416755801, b/416755108 -- We should be able to check functions as
+  // well (and therefore drop the `!TargetFunc` filter), but those 2 bugs make
+  // the `hasAnyInferenceTargets` call fail for certain functions.
+  if (!TargetFunc && !isInferenceTarget(Definition) &&
+      !hasAnyInferenceTargets(ReferencedDecls))
+    return llvm::Error::success();
+
+  ASTContext &Ctx = Definition.getASTContext();
+  llvm::Expected<dataflow::AdornedCFG> ACFG =
+      dataflow::AdornedCFG::build(Definition, TargetStmt, Ctx);
+  if (!ACFG) return ACFG.takeError();
+
+  std::unique_ptr<dataflow::Solver> Solver = MakeSolver();
+  DataflowAnalysisContext AnalysisContext(*Solver);
+  Environment Env = TargetFunc ? Environment(AnalysisContext, *TargetFunc)
+                               : Environment(AnalysisContext, TargetStmt);
+  PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
+
+  std::vector<InferableSlot> InferableSlots =
+      gatherInferableSlots(TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc,
+                           ReferencedDecls, Analysis, AnalysisContext.arena());
+
+  // Here, we overlay new knowledge from past iterations over the symbolic
+  // entities for the InferableSlots (whose symbols are invariant across
+  // inference iterations).
+  const auto &InferableSlotsConstraint = getConstraintsOnInferableSlots(
+      InferableSlots, USRCache, PreviousInferences, AnalysisContext.arena());
 
   ConcreteNullabilityCache ConcreteNullabilityCache;
   Analysis.assignNullabilityOverride(
