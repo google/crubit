@@ -21,33 +21,18 @@
 #[inline(always)]
 pub fn ReturnCppStruct() -> crate::RustStruct {
     unsafe {
-        let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<
-            { <crate::RustStructAbi as ::bridge_rust::CrubitAbi>::SIZE },
-        >();
-        crate::detail::__rust_thunk___Z15ReturnCppStructv(
-            __return_abi_buffer.as_mut_ptr() as *mut u8
-        );
-        ::bridge_rust::internal::decode::<crate::RustStructAbi>(
-            __return_abi_buffer.as_ptr() as *const u8
-        )
+        ::bridge_rust::unstable_return!(crate::RustStructAbi, |__return_abi_buffer| {
+            crate::detail::__rust_thunk___Z15ReturnCppStructv(__return_abi_buffer);
+        })
     }
 }
 
 #[inline(always)]
 pub fn TakeCppStruct(__param_0: crate::RustStruct) {
-    let mut __crubit_abi_arg_buffer = ::bridge_rust::internal::empty_buffer::<
-        { <crate::RustStructAbi as ::bridge_rust::CrubitAbi>::SIZE },
-    >();
-    #[allow(unused_unsafe)]
     unsafe {
-        ::bridge_rust::internal::encode::<crate::RustStructAbi>(
-            __crubit_abi_arg_buffer.as_mut_ptr() as *mut u8,
-            __param_0,
-        );
-    }
-    let __param_0 = __crubit_abi_arg_buffer;
-    unsafe {
-        crate::detail::__rust_thunk___Z13TakeCppStruct9CppStruct(__param_0.as_ptr() as *const u8)
+        crate::detail::__rust_thunk___Z13TakeCppStruct9CppStruct(
+            ::bridge_rust::unstable_encode!(crate::RustStructAbi, __param_0).as_ptr() as *const u8,
+        )
     }
 }
 
@@ -88,52 +73,38 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Vec3"), crate::Vec3);
 #[inline(always)]
 pub fn MakeOptionalVec3(x: f32, y: f32, z: f32, is_present: bool) -> crate::MyOption<crate::Vec3> {
     unsafe {
-        let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<
-            {
-                <crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>as::bridge_rust::CrubitAbi>::SIZE
-            },
-        >();
-        crate::detail::__rust_thunk___Z16MakeOptionalVec3fffb(
-            __return_abi_buffer.as_mut_ptr() as *mut u8,
-            x,
-            y,
-            z,
-            is_present,
-        );
-        ::bridge_rust::internal::decode::<
+        ::bridge_rust::unstable_return!(
             crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,
-        >(__return_abi_buffer.as_ptr() as *const u8)
+            |__return_abi_buffer| {
+                crate::detail::__rust_thunk___Z16MakeOptionalVec3fffb(
+                    __return_abi_buffer,
+                    x,
+                    y,
+                    z,
+                    is_present,
+                );
+            }
+        )
     }
 }
 
 #[inline(always)]
 pub fn MapMultiply(v: crate::MyOption<crate::Vec3>, factor: f32) -> crate::MyOption<crate::Vec3> {
-    let mut __crubit_abi_arg_buffer = ::bridge_rust::internal::empty_buffer::<
-        {
-            <crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>as::bridge_rust::CrubitAbi>::SIZE
-        },
-    >();
-    #[allow(unused_unsafe)]
     unsafe {
-        ::bridge_rust::internal::encode::<
+        ::bridge_rust::unstable_return!(
             crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,
-        >(__crubit_abi_arg_buffer.as_mut_ptr() as *mut u8, v);
-    }
-    let v = __crubit_abi_arg_buffer;
-    unsafe {
-        let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<
-            {
-                <crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>as::bridge_rust::CrubitAbi>::SIZE
-            },
-        >();
-        crate::detail::__rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
-            __return_abi_buffer.as_mut_ptr() as *mut u8,
-            v.as_ptr() as *const u8,
-            factor,
-        );
-        ::bridge_rust::internal::decode::<
-            crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,
-        >(__return_abi_buffer.as_ptr() as *const u8)
+            |__return_abi_buffer| {
+                crate::detail::__rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
+                    __return_abi_buffer,
+                    ::bridge_rust::unstable_encode!(
+                        crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,
+                        v
+                    )
+                    .as_ptr() as *const u8,
+                    factor,
+                );
+            }
+        )
     }
 }
 

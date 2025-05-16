@@ -361,9 +361,44 @@ pub mod internal {
     ///
     /// This function is intended to be used by Crubit generated code.
     pub const fn empty_buffer<const BYTES: usize>() -> [MaybeUninit<u8>; BYTES] {
-        const UNINIT: MaybeUninit<u8> = MaybeUninit::uninit();
-        [UNINIT; BYTES]
+        [const { MaybeUninit::uninit() }; BYTES]
     }
+}
+
+// This cannot be a function because it errors with "constant expression depends on a generic
+// parameter" when constructing the buffer.
+// This macro is unstable, and may be changed. Do not use this unless you have been approved by the
+// Crubit team.
+#[macro_export]
+macro_rules! unstable_encode {
+    {$crubit_abi:ty, $expr:expr} => {{
+        let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::CrubitAbi>::SIZE];
+        let __crubit_tmp_value = $expr;
+        #[allow(unused_unsafe)]
+        unsafe {
+            $crate::internal::encode::<$crubit_abi>(
+                __crubit_tmp_buffer.as_mut_ptr() as *mut u8,
+                __crubit_tmp_value,
+            );
+        }
+        __crubit_tmp_buffer
+    }}
+}
+
+// This cannot be a function because it errors with "constant expression depends on a generic
+// parameter" when constructing the buffer.
+// This macro is unstable, and may be changed. Do not use this unless you have been approved by the
+// Crubit team.
+#[macro_export]
+macro_rules! unstable_return {
+    {$crubit_abi:ty, $cb:expr} => {{
+        let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::CrubitAbi>::SIZE];
+        ($cb)(__crubit_tmp_buffer.as_mut_ptr() as *mut u8);
+        #[allow(unused_unsafe)]
+        unsafe {
+            $crate::internal::decode::<$crubit_abi>(__crubit_tmp_buffer.as_ptr() as *const u8)
+        }
+    }}
 }
 
 #[cfg(test)]
@@ -377,13 +412,10 @@ mod tests {
 
         let original = (1, 2);
 
-        let mut buf = internal::empty_buffer::<{ Abi::SIZE }>();
-        // SAFETY: the buffer is large enough to hold a T encoded as A.
-        unsafe {
-            internal::encode::<Abi>(buf.as_mut_ptr() as *mut u8, original);
-        }
-        // SAFETY: the buffer contains a T encoded as A.
-        let value = unsafe { internal::decode::<Abi>(buf.as_ptr() as *const u8) };
+        // SAFETY: the buffer contains a T encoded as Abi.
+        let value = unsafe {
+            internal::decode::<Abi>(unstable_encode!(Abi, original).as_ptr() as *const u8)
+        };
         expect_eq!(value, original);
     }
 
@@ -396,13 +428,10 @@ mod tests {
 
         let original = (Some((-8, true)), (1, 2.0));
 
-        let mut buf = internal::empty_buffer::<{ Abi::SIZE }>();
-        // SAFETY: the buffer is large enough to hold a T encoded as A.
-        unsafe {
-            internal::encode::<Abi>(buf.as_mut_ptr() as *mut u8, original);
-        }
-        // SAFETY: the buffer contains a T encoded as A.
-        let value = unsafe { internal::decode::<Abi>(buf.as_ptr() as *const u8) };
+        // SAFETY: the buffer contains a T encoded as Abi.
+        let value = unsafe {
+            internal::decode::<Abi>(unstable_encode!(Abi, original).as_ptr() as *const u8)
+        };
         expect_eq!(value, original);
     }
 }

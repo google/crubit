@@ -940,14 +940,12 @@ fn generate_func_body(
                 let crubit_abi_type = db.crubit_abi_type(return_type.clone())?;
                 let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
                 quote! {
-                    let mut __return_abi_buffer = ::bridge_rust::internal::empty_buffer::<{
-                        <#crubit_abi_type_tokens as ::bridge_rust::CrubitAbi>::SIZE
-                    }>();
-                    #crate_root_path::detail::#thunk_ident(
-                        __return_abi_buffer.as_mut_ptr() as *mut u8,
-                        #(#clone_prefixes #thunk_args #clone_suffixes ),*
-                    );
-                    ::bridge_rust::internal::decode::<#crubit_abi_type_tokens>(__return_abi_buffer.as_ptr() as *const u8)
+                    ::bridge_rust::unstable_return!(#crubit_abi_type_tokens, |__return_abi_buffer| {
+                        #crate_root_path::detail::#thunk_ident(
+                            __return_abi_buffer,
+                            #(#clone_prefixes #thunk_args #clone_suffixes ),*
+                        );
+                    })
                 }
             } else if return_type.is_unpin() {
                 quote! {
@@ -1567,21 +1565,7 @@ fn function_signature(
                 let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
 
                 api_params.push(quote! {#ident: #quoted_type_or_self});
-                thunk_prepare.extend(quote! {
-                    let mut __crubit_abi_arg_buffer = ::bridge_rust::internal::empty_buffer::<{
-                        <#crubit_abi_type_tokens as ::bridge_rust::CrubitAbi>::SIZE
-                    }>();
-                    // The function body may be wrapped in an unsafe block, which makes this unsafe
-                    // block "unused".
-                    #[allow(unused_unsafe)]
-                    unsafe {
-                        ::bridge_rust::internal::encode::<
-                            #crubit_abi_type_tokens,
-                        >(__crubit_abi_arg_buffer.as_mut_ptr() as *mut u8, #ident);
-                    }
-                    let #ident = __crubit_abi_arg_buffer;
-                });
-                thunk_args.push(quote! {#ident.as_ptr() as *const u8});
+                thunk_args.push(quote! {::bridge_rust::unstable_encode!(#crubit_abi_type_tokens, #ident).as_ptr() as *const u8});
             } else if type_.is_c_abi_compatible_by_value() {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {#ident});
