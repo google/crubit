@@ -235,6 +235,10 @@ impl Default for c_nullptr_t {
     }
 }
 
+// SAFETY: nullptr_t can only have value 0 / is not mutable.
+unsafe impl Send for c_nullptr_t {}
+unsafe impl Sync for c_nullptr_t {}
+
 // The C++ charN_t types
 new_integer! {
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char8_t(0))")]
