@@ -114,12 +114,12 @@ following C++ API and Rust API are equivalent, using `ffi_11`:
 
 ```c++
 // C++
-long long Foo(signed char, char);
+long Foo(signed char, char);
 ```
 
 ```rust
 // Rust
-pub fn Foo(_: ffi11::c_schar, _: ffi11::c_char) -> ffi11::c_longlong;
+pub fn Foo(_: ffi_11::c_schar, _: ffi_11::c_char) -> ffi_11::c_long;
 
 // NOT EQUIVALENT TO `pub fn Foo(_: i8, _: i8) -> i64;` -- not on any platform.
 ```
@@ -133,6 +133,6 @@ The name is meant to allude to three things:
 
 *   `ffi`, but one-to-one (and onto).
 *   `ffi`, but it also adds C++11 (and above) support. Many things that are
-    C++11-aware is more modern – this is also reminiscent of, for instance,
+    C++11-aware are more modern – this is also reminiscent of, for instance,
     [`pybind11`](https://github.com/pybind/pybind11).
 *   And, of course... it goes to 11!
