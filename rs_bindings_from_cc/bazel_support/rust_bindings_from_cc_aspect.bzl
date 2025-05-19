@@ -13,6 +13,7 @@ load(
 )
 load(
     "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "get_additional_rust_deps",
     "get_additional_rust_srcs",
 )
 load(
@@ -266,6 +267,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         header_includes.append(hdr.path)
 
     extra_rs_srcs = get_additional_rust_srcs(ctx)
+    extra_deps = get_additional_rust_deps(ctx)
     binding_infos = [
         dep[RustBindingsFromCcInfo]
         for dep in all_deps
@@ -295,7 +297,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                 d.dep_variant_info
                 for d in binding_infos
                 if d.dep_variant_info
-            ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
+            ] + extra_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
             transitive = [
                 d.pass_through_dep_variant_infos
                 for d in binding_infos

@@ -4,6 +4,7 @@
 
 """This module contains unit tests for extra_rs_srcs aspect hint."""
 
+load("@rules_rust//rust:defs.bzl", "rust_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
@@ -95,13 +96,90 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_binding
 
 test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers_test = crubit_make_analysis_test(_test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers_impl)
 
+def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate():
+    additional_rust_srcs_for_crubit_bindings(
+        name = "my_cc_lib_additional_rust_srcs",
+        srcs = [
+            "my_cc_lib_rust_api.rs",
+        ],
+        tags = ["manual"],
+        deps = [":a_rust_lib_dep"],
+        cc_deps = [":aspect_for_cc_dep_lib_with_crubit"],
+    )
+    native.cc_library(
+        name = "my_cc_lib_target",
+        hdrs = ["my_cc_lib.h"],
+        aspect_hints = [
+            ":my_cc_lib_additional_rust_srcs",
+        ],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_my_cc_lib_target",
+        dep = ":my_cc_lib_target",
+    )
+
+    additional_rust_srcs_for_crubit_bindings(
+        name = "cc_dep_lib_additional_rust_srcs",
+        srcs = [
+            "cc_dep_lib_rust_api.rs",
+        ],
+        tags = ["manual"],
+    )
+    native.cc_library(
+        name = "cc_dep_lib_with_crubit",
+        hdrs = ["cc_dep_lib.h"],
+        aspect_hints = [
+            ":cc_dep_lib_additional_rust_srcs",
+        ],
+        tags = ["manual"],
+    )
+    attach_aspect(
+        name = "aspect_for_cc_dep_lib_with_crubit",
+        dep = ":cc_dep_lib_with_crubit",
+    )
+
+    rust_library(
+        name = "a_rust_lib_dep",
+        srcs = ["a_rust_lib.rs"],
+    )
+
+    additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test(
+        name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test",
+        target_under_test = ":aspect_for_my_cc_lib_target",
+    )
+
+def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+
+    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "Rustc"][0]
+
+    expected_flag_prefix_deps = "--extern=a_rust_lib_dep="
+    expected_flag_prefix_cc_deps = "--extern=cc_dep_lib_with_crubit="
+    asserts.true(
+        env,
+        True in [flag.startswith(expected_flag_prefix_deps) for flag in analysis_action.argv],
+        "Flag starting with '%s' failed to be passed to rs_bindings_from_cc_driver. Actual flags: %s" % (expected_flag_prefix_deps, analysis_action.argv),
+    )
+    asserts.true(
+        env,
+        True in [flag.startswith(expected_flag_prefix_cc_deps) for flag in analysis_action.argv],
+        "Flag starting with '%s' failed to be passed to rs_bindings_from_cc_driver. Actual flags: %s" % (expected_flag_prefix_cc_deps, analysis_action.argv),
+    )
+    return analysistest.end(env)
+
+additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test = crubit_make_analysis_test(_test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_impl)
+
 def additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite(name):
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli()
     _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers()
+    _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate()
     native.test_suite(
         name = name,
         tests = [
             ":additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli_test",
             ":test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_bindings_when_no_public_headers_test",
+            ":additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_propagate_test",
         ],
     )

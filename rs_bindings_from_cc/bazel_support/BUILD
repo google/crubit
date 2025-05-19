@@ -112,7 +112,11 @@ bzl_library(
 bzl_library(
     name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
     srcs = ["additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl"],
-    deps = ["@bazel_skylib//lib:collections"],
+    deps = [
+        ":providers_bzl",
+        "@bazel_skylib//lib:collections",
+        "@rules_rust//rust/private:providers_bzl",
+    ],
 )
 
 bool_flag(

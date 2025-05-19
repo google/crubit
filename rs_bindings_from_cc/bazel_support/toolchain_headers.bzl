@@ -75,10 +75,14 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes.append("-include")
         header_includes.append(hdr)
     extra_rs_srcs = []
+    extra_rs_deps = []
     for target in ctx.attr.extra_rs_srcs:
         if AdditionalRustSrcsProviderInfo in target:
             for src in target[AdditionalRustSrcsProviderInfo].srcs:
                 extra_rs_srcs.extend([(f, target[AdditionalRustSrcsProviderInfo].namespace_path) for f in src.files.to_list()])
+            extra_rs_deps.extend(target[AdditionalRustSrcsProviderInfo].deps)
+            if target[AdditionalRustSrcsProviderInfo].cc_deps:
+                fail("toolchain_headers do not accept additional Rust cc_deps")
         else:
             extra_rs_srcs.extend([(f, "") for f in target.files.to_list()])
     return [RustToolchainHeadersInfo(headers = std_and_builtin_files)] + generate_and_compile_bindings(
@@ -91,7 +95,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
-        deps_for_rs_file = depset(ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file),
+        deps_for_rs_file = depset(extra_rs_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file),
     )
 
 bindings_for_toolchain_headers = rule(

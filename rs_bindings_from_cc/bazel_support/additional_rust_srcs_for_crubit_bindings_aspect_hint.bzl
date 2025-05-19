@@ -50,7 +50,10 @@ want to implement, cannot conflict with the future Crubit bindings.
 
 """
 
+# buildifier: disable=bzl-visibility
+load("@rules_rust//rust/private:providers.bzl", "BuildInfo", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
+load("@@//rs_bindings_from_cc/bazel_support:providers.bzl", "RustBindingsFromCcInfo")
 
 visibility([
     # <internal link> start
@@ -68,6 +71,11 @@ generated Rust bindings of this C++ target.
     fields = {
         "srcs": "The Rust source files to be included in addition to generated Rust bindings.",
         "namespace_path": "The namespace path for the Rust source files.",
+        "deps": "List of DepVariantInfo of other libraries to be linked to this library target. " +
+                "These can be either other `rust_library` targets or `cc_library` targets if " +
+                "linking a native library.",
+        "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
+                   "will be linked to this library target.",
     },
 )
 
@@ -75,6 +83,8 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
     return [AdditionalRustSrcsProviderInfo(
         srcs = ctx.attr.srcs,
         namespace_path = ctx.attr.namespace_path,
+        deps = _get_additional_rust_deps_variant_info(ctx.attr.deps),
+        cc_deps = _get_additional_cc_deps_variant_info(ctx.attr.cc_deps),
     )]
 
 additional_rust_srcs_for_crubit_bindings = rule(
@@ -89,6 +99,19 @@ additional_rust_srcs_for_crubit_bindings = rule(
 For modules which are not existing namespace names, use `pub mod` statement in the Rust source file instead.""",
             mandatory = False,
             default = "",
+        ),
+        "deps": attr.label_list(
+            doc = """List of other libraries to be linked to this library target.
+
+            This accepts the same deps as rust_library.""",
+            mandatory = False,
+            default = [],
+        ),
+        "cc_deps": attr.label_list(
+            doc = """List of cc_library targets whose crubit-generated bindings will be made available to this library target.""",
+            mandatory = False,
+            default = [],
+            providers = [RustBindingsFromCcInfo],
         ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
@@ -120,3 +143,58 @@ def get_additional_rust_srcs(aspect_ctx):
                 srcs = [(f, ns_path) for f in target.files.to_list()]
                 additional_rust_srcs.extend(srcs)
     return collections.uniq(additional_rust_srcs)
+
+def _create_dep_variant_info(dep):
+    return DepVariantInfo(
+        crate_info = dep[CrateInfo] if CrateInfo in dep else None,
+        dep_info = dep[DepInfo] if DepInfo in dep else None,
+        build_info = dep[BuildInfo] if BuildInfo in dep else None,
+        cc_info = dep[CcInfo] if CcInfo in dep else None,
+    )
+
+def _get_additional_rust_deps_variant_info(deps_list):
+    """Returns DepVariantInfo of `deps` associated with the `_target`.
+
+    Args:
+        deps_list: label list of deps.
+
+    Returns:
+        A list of `DepVariantInfo` of the given `deps`.
+    """
+    return [
+        _create_dep_variant_info(dep)
+        for dep in deps_list
+    ]
+
+def _get_additional_cc_deps_variant_info(cc_deps_list):
+    """Returns DepVariantInfo of `cc_deps` associated with the `_target`.
+
+    Args:
+        cc_deps_list: label list of cc_deps.
+
+    Returns:
+        A list of `DepVariantInfo` of the given `cc_deps`.
+    """
+    additional_cc_deps = []
+    for cc_dep in cc_deps_list:
+        if RustBindingsFromCcInfo not in cc_dep:
+            fail("cc_dep (" + cc_dep + ") does not provide RustBindingsFromCcInfo")
+        if cc_dep[RustBindingsFromCcInfo].dep_variant_info:
+            additional_cc_deps.extend([cc_dep[RustBindingsFromCcInfo].dep_variant_info])
+    return collections.uniq(additional_cc_deps)
+
+def get_additional_rust_deps(aspect_ctx):
+    """Returns DepVariantInfo of `deps` and `cc_deps` associated with the `_target`.
+
+    Args:
+        aspect_ctx: The ctx from an aspect_hint.
+
+    Returns:
+        A list of `DepVariantInfo` of the given `deps` and `cc_deps`.
+    """
+    additional_rust_deps = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].deps)
+            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].cc_deps)
+    return collections.uniq(additional_rust_deps)
