@@ -1750,6 +1750,40 @@ TEST(EligibleRangesTest, StarInFunctionPointerDeclEntirelyInMacro) {
             UnorderedElementsAre(eligibleRange(1, Input.point()))));
 }
 
+TEST(EligibleRangesTest, DotsRemovedFromPath) {
+  auto Header1 = Annotations(R"(
+    void target1(int *$param^);
+  )");
+  auto Header2 = Annotations(R"(
+    int*$return^ target2(int);
+  )");
+  auto Input = Annotations(R"cc(
+#include "./header1.h"
+#include "./dir/../header2.h"
+  )cc");
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs = getAugmentedTestInputs(Input.code(), Pragmas);
+  Inputs.ExtraFiles["header1.h"] = Header1.code();
+  Inputs.ExtraFiles["dir/../header2.h"] = Header2.code();
+  TestAST TU(Inputs);
+  auto Ranges1 =
+      getRanges<FunctionDecl>(TU.context(), functionDecl(hasName("target1")),
+                              TypeNullabilityDefaults(TU.context(), Pragmas));
+  auto Ranges2 =
+      getRanges<FunctionDecl>(TU.context(), functionDecl(hasName("target2")),
+                              TypeNullabilityDefaults(TU.context(), Pragmas));
+
+  EXPECT_THAT(
+      Ranges1,
+      AllOf(Each(AllOf(hasPath("header1.h"), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(1, Header1.point("param")))));
+  EXPECT_THAT(
+      Ranges2,
+      AllOf(Each(AllOf(hasPath("header2.h"), hasNoPragmaNullability())),
+            UnorderedElementsAre(eligibleRange(0, Header2.point("return")))));
+}
+
 MATCHER_P(eligibleRange, Expected, "") {
   return ExplainMatchResult(Expected.Slot, arg.Slot, result_listener) &&
          ExplainMatchResult(EqualsProto(Expected.Range), arg.Range,

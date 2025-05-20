@@ -578,8 +578,9 @@ static std::optional<std::string> getPath(FileID FID,
                                           const SourceManager &SrcMgr) {
   const clang::OptionalFileEntryRef Entry = SrcMgr.getFileEntryRefForID(FID);
   if (!Entry) return std::nullopt;
-  return std::string(
-      llvm::sys::path::remove_leading_dotslash(Entry->getName()));
+  llvm::SmallString<128> Path = Entry->getName();
+  llvm::sys::path::remove_dots(Path, true);
+  return std::string(Path);
 }
 
 static std::optional<Nullability> getPragmaNullability(
