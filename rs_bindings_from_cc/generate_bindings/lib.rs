@@ -722,12 +722,18 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             let rust_abi_path = crate_path
                 .to_fully_qualified_path(make_rs_ident(record.rs_name.identifier.as_ref()));
 
-            // This inlines the logic of code_gen_utils::expect_format_cc_ident, except it creates
-            // an Ident instead of a TokenStream.
-            code_gen_utils::check_valid_cc_name(record.cc_name.identifier.as_ref())
+            // This inlines the logic of code_gen_utils::format_cc_ident, except
+            // it creates an Ident instead of a TokenStream.
+            let cc_name = record.cc_name.identifier.as_ref();
+            code_gen_utils::check_valid_cc_name(cc_name)
                 .expect("IR should only contain valid C++ types");
-            let ident =
-                Ident::new(record.cc_name.identifier.as_ref(), proc_macro2::Span::call_site());
+            let ident = syn::parse_str::<Ident>(cc_name).map_err(|_| {
+                anyhow!(
+                    "The type `{cc_name}` does not parse as an identifier. \
+                    This may be because it contains template parameters, and \
+                    bridging such types by value is not yet supported."
+                )
+            })?;
             let cpp_abi_path =
                 FullyQualifiedPath { start_with_colon2: true, parts: Rc::from([ident]) };
 
