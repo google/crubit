@@ -1577,8 +1577,19 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ManyOperator
     }
 }
 
-// Error while generating bindings for item 'ManyOperators::operator+':
-// Bindings for this kind of operator (operator + with 1 parameter(s)) are not supported
+impl ManyOperators {
+    #[inline(always)]
+    pub fn unary_plus<'a>(&'a self) -> crate::ManyOperators {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                self,
+            );
+            __return.assume_init()
+        }
+    }
+}
 
 impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
@@ -2228,6 +2239,10 @@ mod detail {
             __this: &'a mut crate::ManyOperators,
             __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
         ) -> &'a mut crate::ManyOperators;
+        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorspsEv<'a>(
+            __return: *mut ::core::ffi::c_void,
+            __this: &'a crate::ManyOperators,
+        );
         pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
             __return: *mut ::core::ffi::c_void,
             __this: &'a crate::ManyOperators,

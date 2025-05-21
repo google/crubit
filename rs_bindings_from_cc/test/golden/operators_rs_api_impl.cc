@@ -601,6 +601,11 @@ extern "C" struct ManyOperators* __rust_thunk___ZN13ManyOperatorsaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 
+extern "C" void __rust_thunk___ZNK13ManyOperatorspsEv(
+    struct ManyOperators* __return, const struct ManyOperators* __this) {
+  new (__return) auto(__this->operator+());
+}
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorsngEv(
     struct ManyOperators* __return, const struct ManyOperators* __this) {
   new (__return) auto(__this->operator-());

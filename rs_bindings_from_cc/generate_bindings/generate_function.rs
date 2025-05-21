@@ -347,6 +347,50 @@ fn api_func_shape_for_operator_assign(
     Ok((func_name, impl_kind))
 }
 
+fn api_func_shape_for_operator_unary_plus(
+    db: &dyn BindingsGenerator,
+    param_type: &RsTypeKind,
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
+    let (record, _) = extract_first_operator_parameter(db, param_type, errors)?;
+    Ok((
+        make_rs_ident("unary_plus"),
+        ImplKind::Struct { is_unsafe: false, record, format_first_param_as_self: true },
+    ))
+}
+
+fn extract_first_operator_parameter(
+    db: &dyn BindingsGenerator,
+    param_types: &RsTypeKind,
+    errors: &Errors,
+) -> ErrorsOr<(Rc<Record>, ImplFor)> {
+    match param_types {
+        RsTypeKind::Record { record, .. } => Ok((record.clone(), ImplFor::T)),
+        RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
+            bail_to_errors!(
+                            errors,
+                            "Incomplete record types are not yet supported as first parameter of operator, found {cc_name}", cc_name=incomplete_record.cc_name,
+                        )
+        }
+        RsTypeKind::Reference { referent, .. } => Ok((
+            expect_possibly_incomplete_record(db, referent, "first operator parameter", errors)?
+                .clone(),
+            ImplFor::RefT,
+        )),
+        RsTypeKind::RvalueReference { .. } => {
+            bail_to_errors!(
+                            errors,
+                            "Rvalue reference types are not yet supported as first parameter of operators (b/219826128)",
+                        )
+        }
+        _ => bail_to_errors!(
+            errors,
+            "Non-record-nor-reference operator parameters are not yet supported, found {}",
+            param_types.display(db)
+        ),
+    }
+}
+
 fn expect_possibly_incomplete_record<'a>(
     db: &dyn BindingsGenerator,
     type_kind: &'a RsTypeKind,
@@ -442,6 +486,9 @@ fn api_func_shape_for_operator(
         }
         "<" => api_func_shape_for_operator_lt(db, func, param_types, errors),
         "=" => api_func_shape_for_operator_assign(func, maybe_record, param_types, errors),
+        "+" if param_types.len() == 1 => {
+            api_func_shape_for_operator_unary_plus(db, &param_types[0], errors)
+        }
         _ => {
             let Some(op_metadata) =
                 OPERATOR_METADATA.by_cc_name_and_params.get(&(&op.name, param_types.len()))
@@ -474,30 +521,11 @@ fn api_func_shape_for_operator(
                 };
                 Ok((func_name, impl_kind))
             } else {
-                let (record, impl_for) = match &param_types[0] {
-                    RsTypeKind::Record { record, .. } => (record, ImplFor::T),
-                    RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
-                        bail_to_errors!(
-                            errors,
-                            "Incomplete record types are not yet supported as first parameter of operator, found {cc_name}", cc_name=incomplete_record.cc_name,
-                        )
-                    },
-                    RsTypeKind::Reference { referent, .. } => (
-                        expect_possibly_incomplete_record(db, referent, "first operator parameter", errors)?,
-                        ImplFor::RefT,
-                    ),
-                    RsTypeKind::RvalueReference { .. } => {
-                        bail_to_errors!(
-                            errors,
-                            "Rvalue reference types are not yet supported as first parameter of operators (b/219826128)",
-                        )
-                    }
-                    _ => bail_to_errors!(errors, "Non-record-nor-reference operator parameters are not yet supported, found {}", param_types[0].display(db)),
-                };
-
+                let (record, impl_for) =
+                    extract_first_operator_parameter(db, &param_types[0], errors)?;
                 let func_name = make_rs_ident(op_metadata.method_name);
                 let impl_kind = ImplKind::Trait {
-                    record: record.clone(),
+                    record,
                     trait_name: TraitName::Other {
                         name: Rc::from(format!("::core::ops::{trait_name}")),
                         params: Rc::from(&param_types[1..]),
