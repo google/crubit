@@ -12,6 +12,10 @@ enum Color {
 };
 
 enum [[clang::annotate("crubit_rust_name", "RenamedEnum")]] EnumToRename {};
+enum EnumWithRenamedVariants {
+  kFoo [[clang::annotate("crubit_rust_name", "FOO")]],
+  kBar [[clang::annotate("crubit_rust_name", "BAR")]],
+};
 
 enum Empty {};
 enum EmptyBool : bool {};

@@ -52,6 +52,25 @@ impl From<RenamedEnum> for ::core::ffi::c_uint {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+///CRUBIT_ANNOTATE: cpp_type=EnumWithRenamedVariants
+pub struct EnumWithRenamedVariants(::core::ffi::c_uint);
+impl EnumWithRenamedVariants {
+    pub const FOO: EnumWithRenamedVariants = EnumWithRenamedVariants(0);
+    pub const BAR: EnumWithRenamedVariants = EnumWithRenamedVariants(1);
+}
+impl From<::core::ffi::c_uint> for EnumWithRenamedVariants {
+    fn from(value: ::core::ffi::c_uint) -> EnumWithRenamedVariants {
+        EnumWithRenamedVariants(value)
+    }
+}
+impl From<EnumWithRenamedVariants> for ::core::ffi::c_uint {
+    fn from(value: EnumWithRenamedVariants) -> ::core::ffi::c_uint {
+        value.0
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=Empty
 pub struct Empty(::core::ffi::c_uint);
 impl Empty {}
