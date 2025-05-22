@@ -6,12 +6,11 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
-use database::code_snippet::ApiSnippets;
+use database::code_snippet::{ApiSnippets, Feature};
 use database::BindingsGenerator;
 use ir::Enum;
 use proc_macro2::Literal;
 use quote::{quote, ToTokens};
-use std::collections::BTreeSet;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::generate_enum`.
@@ -71,7 +70,7 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
     };
     Ok(ApiSnippets {
         main_api: item,
-        features: BTreeSet::from([make_rs_ident("register_tool")]),
+        features: Feature::register_tool.into(),
         ..Default::default()
     })
 }

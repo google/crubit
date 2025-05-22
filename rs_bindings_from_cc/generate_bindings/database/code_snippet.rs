@@ -5,14 +5,13 @@
 /// Generate the final bindings, including structures for code snippet, feature
 /// gating, etc.
 use crate::db::BindingsGenerator;
-use proc_macro2::{Ident, TokenStream};
-use quote::{quote, ToTokens};
-
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::{anyhow, Error, Result};
 use ffi_types::FfiU8SliceBox;
+use flagset::FlagSet;
 use ir::{BazelLabel, GenericItem, Item, UnqualifiedIdentifier};
-use std::collections::BTreeSet;
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 
@@ -43,7 +42,7 @@ pub struct ApiSnippets {
     /// - C++ static assertions about struct size, aligment, and field offsets.
     pub cc_details: TokenStream,
 
-    pub features: BTreeSet<Ident>,
+    pub features: FlagSet<Feature>,
 }
 
 impl From<TokenStream> for ApiSnippets {
@@ -372,5 +371,35 @@ impl From<NoBindingsReason> for Error {
                 "Can't generate bindings for {context}, because it is unsupported"
             )),
         }
+    }
+}
+
+flagset::flags! {
+    #[allow(non_camel_case_types)]
+    pub enum Feature: u32 {
+        // <internal link> start
+        allocator_api,
+        arbitrary_self_types,
+        cfg_sanitize,
+        custom_inner_attributes,
+        impl_trait_in_assoc_type,
+        negative_impls,
+        register_tool,
+        // <internal link> end
+    }
+}
+
+impl ToTokens for Feature {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Feature::allocator_api => quote! { allocator_api },
+            Feature::arbitrary_self_types => quote! { arbitrary_self_types },
+            Feature::cfg_sanitize => quote! { cfg_sanitize },
+            Feature::custom_inner_attributes => quote! { custom_inner_attributes },
+            Feature::impl_trait_in_assoc_type => quote! { impl_trait_in_assoc_type },
+            Feature::negative_impls => quote! { negative_impls },
+            Feature::register_tool => quote! { register_tool },
+        }
+        .to_tokens(tokens);
     }
 }

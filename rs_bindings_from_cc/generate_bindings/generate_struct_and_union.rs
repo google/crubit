@@ -6,17 +6,18 @@
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
-use database::code_snippet::ApiSnippets;
+use database::code_snippet::{ApiSnippets, Feature};
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
 use database::BindingsGenerator;
 use error_report::{bail, ensure};
+use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::quote;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 use std::iter;
 use std::rc::Rc;
 
@@ -479,7 +480,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
             }
         })
         .collect_vec();
-    let mut features = BTreeSet::new();
+    let mut features = FlagSet::empty();
 
     let derives = generate_derives(&record);
     let derives = if derives.is_empty() {
@@ -499,7 +500,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         // negative_impls are necessary for universal initialization due to Rust's
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
-        features.insert(make_rs_ident("negative_impls"));
+        features |= Feature::negative_impls;
         if record.should_implement_drop() {
             quote! {#[::ctor::recursively_pinned(PinnedDrop)]}
         } else {
@@ -616,7 +617,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         if !generated.cc_details.is_empty() {
             thunk_impls_from_record_items.push(generated.cc_details);
         }
-        features.extend(generated.features.clone());
+        features |= generated.features;
     }
 
     let send_impl = if record.trait_derives.send {
@@ -666,7 +667,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         __NEWLINE__ __NEWLINE__
         #( #items __NEWLINE__ __NEWLINE__)*
     };
-    features.insert(make_rs_ident("negative_impls"));
+    features |= Feature::negative_impls;
     let record_trait_assertions = {
         let record_type_name = record_rs_type_kind.to_token_stream(db);
         let mut assertions: Vec<TokenStream> = vec![];

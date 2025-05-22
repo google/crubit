@@ -5,7 +5,7 @@
 use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustTokens;
-use database::code_snippet::{ApiSnippets, Visibility};
+use database::code_snippet::{ApiSnippets, Feature, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
@@ -14,6 +14,7 @@ use database::rs_snippet::{
 use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
+use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
 use generate_function_thunk::{
     generate_function_thunk, generate_function_thunk_impl, thunk_ident,
@@ -23,7 +24,7 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 use std::ptr;
 use std::rc::Rc;
@@ -1089,7 +1090,7 @@ pub fn generate_function(
 ) -> Result<Option<GeneratedFunction>> {
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
-    let mut features = BTreeSet::new();
+    let mut features = FlagSet::empty();
     let param_errors = Errors::new();
     let mut param_types: Vec<RsTypeKind> = func
         .params
@@ -1514,7 +1515,7 @@ struct BindingsSignature {
 #[allow(clippy::too_many_arguments)]
 fn function_signature(
     db: &dyn BindingsGenerator,
-    features: &mut BTreeSet<Ident>,
+    features: &mut FlagSet<Feature>,
     func: &Func,
     impl_kind: &ImplKind,
     param_idents: &[Ident],
@@ -1572,7 +1573,7 @@ fn function_signature(
             } else {
                 type_.to_token_stream(db)
             };
-            features.insert(make_rs_ident("impl_trait_in_assoc_type"));
+            *features |= Feature::impl_trait_in_assoc_type;
             api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self>});
             thunk_args
                 .push(quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
@@ -1709,7 +1710,7 @@ fn function_signature(
                 } else {
                     quote! {+ use<#(#lifetimes),*> }
                 };
-                features.insert(make_rs_ident("impl_trait_in_assoc_type"));
+                *features |= Feature::impl_trait_in_assoc_type;
                 quote! {impl ::ctor::Ctor<Output=#ty> #extra_lifetimes }
             }
         };
@@ -1733,7 +1734,7 @@ fn function_signature(
                 if first_api_param.is_c_abi_compatible_by_value() {
                     let rs_snippet = first_api_param.format_as_self_param()?;
                     api_params[0] = rs_snippet.tokens;
-                    features.extend(rs_snippet.features);
+                    *features |= rs_snippet.features;
                     if derived_record.is_some() {
                         thunk_args[0] = quote! { oops::Upcast::<_>::upcast(self) };
                     } else {

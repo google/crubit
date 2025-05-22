@@ -6,11 +6,12 @@
 use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
-use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens};
+use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens, Feature};
 use database::db::{self, BindingsGenerator, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
+use flagset::FlagSet;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
@@ -144,7 +145,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
     let mut thunks = vec![];
     let mut cc_details = vec![];
     let mut assertions = vec![];
-    let mut features = BTreeSet::new();
+    let mut features = FlagSet::empty();
 
     for item_id in namespace.child_item_ids.iter() {
         let item: &Item = ir.find_decl(*item_id).with_context(|| {
@@ -161,7 +162,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
         if !generated.assertions.is_empty() {
             assertions.push(generated.assertions);
         }
-        features.extend(generated.features);
+        features |= generated.features;
     }
 
     let reopened_namespace_idx = ir.get_reopened_namespace_idx(namespace.id)?;
@@ -381,13 +382,13 @@ pub fn generate_bindings_tokens(
     ];
     let mut assertions = vec![];
 
-    let mut features = BTreeSet::new();
+    let mut features = FlagSet::empty();
 
     // For #![rustfmt::skip].
-    features.insert(make_rs_ident("custom_inner_attributes"));
+    features |= Feature::custom_inner_attributes;
     // For the `vector` in `cc_std`.
-    features.insert(make_rs_ident("allocator_api"));
-    features.insert(make_rs_ident("cfg_sanitize"));
+    features |= Feature::allocator_api;
+    features |= Feature::cfg_sanitize;
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item: &Item = ir.find_untyped_decl(*top_level_item_id);
@@ -402,7 +403,7 @@ pub fn generate_bindings_tokens(
         if !generated.cc_details.is_empty() {
             cc_details.push(generated.cc_details);
         }
-        features.extend(generated.features);
+        features |= generated.features;
     }
 
     cc_details.push(quote! {
@@ -429,8 +430,9 @@ pub fn generate_bindings_tokens(
     let features = if features.is_empty() {
         quote! {}
     } else {
+        let feature_iter = features.into_iter();
         quote! {
-            #![feature( #(#features),* )]  __NEWLINE__
+            #![feature( #(#feature_iter),* )]  __NEWLINE__
             #![allow(stable_features)]
         }
     };

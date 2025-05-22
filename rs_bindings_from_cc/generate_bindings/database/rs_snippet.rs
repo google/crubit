@@ -4,6 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 //! Vocabulary types and code generation functions for generating Rust code.
 
+use crate::code_snippet::Feature;
 use crate::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
@@ -11,6 +12,7 @@ use code_gen_utils::NamespaceQualifier;
 use crubit_abi_type::FullyQualifiedPath;
 use crubit_feature::CrubitFeature;
 use error_report::{anyhow, bail, ensure};
+use flagset::FlagSet;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -26,13 +28,13 @@ const SLICE_REF_NAME_RS: &str = "&[]";
 pub struct RsSnippet {
     pub tokens: TokenStream,
     // The Rust features that are needed for `tokens` to work.
-    pub features: HashSet<Ident>,
+    pub features: FlagSet<Feature>,
 }
 
 impl RsSnippet {
     /// Convenience function to initialize RsSnippet with empty `features`.
     pub fn new(tokens: TokenStream) -> RsSnippet {
-        RsSnippet { tokens, features: HashSet::<Ident>::new() }
+        RsSnippet { tokens, features: FlagSet::empty() }
     }
 }
 
@@ -778,16 +780,15 @@ impl RsTypeKind {
             }
             RsTypeKind::RvalueReference { referent: _, lifetime, mutability } => {
                 let lifetime = lifetime.format_for_reference();
-                let arbitrary_self_types = make_rs_ident("arbitrary_self_types");
                 // TODO(b/239661934): Add `use ::ctor::{RvalueReference, ConstRvalueReference}`.
                 match mutability {
                     Mutability::Mut => Ok(RsSnippet {
                         tokens: quote! {self: ::ctor::RvalueReference<#lifetime, Self>},
-                        features: [arbitrary_self_types].into_iter().collect(),
+                        features: Feature::arbitrary_self_types.into(),
                     }),
                     Mutability::Const => Ok(RsSnippet {
                         tokens: quote! {self: ::ctor::ConstRvalueReference<#lifetime, Self>},
-                        features: [arbitrary_self_types].into_iter().collect(),
+                        features: Feature::arbitrary_self_types.into(),
                     }),
                 }
             }
@@ -1356,7 +1357,7 @@ mod tests {
         }
         .format_as_self_param()?;
         assert_rs_matches!(result.tokens, quote! {self: ::ctor::RvalueReference<'a, Self>});
-        assert_eq!(result.features, [make_rs_ident("arbitrary_self_types")].into_iter().collect());
+        assert_eq!(result.features, Feature::arbitrary_self_types);
         Ok(())
     }
 
@@ -1370,7 +1371,7 @@ mod tests {
         }
         .format_as_self_param()?;
         assert_rs_matches!(result.tokens, quote! {self: ::ctor::ConstRvalueReference<'a, Self>});
-        assert_eq!(result.features, [make_rs_ident("arbitrary_self_types")].into_iter().collect());
+        assert_eq!(result.features, Feature::arbitrary_self_types);
         Ok(())
     }
 
