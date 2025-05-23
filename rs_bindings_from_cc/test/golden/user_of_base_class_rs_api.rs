@@ -325,12 +325,9 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Derived2>() == 24);
     assert!(::core::mem::align_of::<crate::Derived2>() == 8);
-    static_assertions::assert_not_impl_any!(crate::Derived2: Copy);
-    static_assertions::assert_not_impl_any!(crate::Derived2: Drop);
+    static_assertions::assert_not_impl_any!(crate::Derived2: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::Derived2, derived_1) == 20);
-
     assert!(::core::mem::size_of::<crate::VirtualDerived2>() == 32);
     assert!(::core::mem::align_of::<crate::VirtualDerived2>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Copy);
-    static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Copy,Drop);
 };

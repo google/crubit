@@ -86,8 +86,7 @@ pub mod repro {
 const _: () = {
     assert!(::core::mem::size_of::<crate::repro::Interval>() == 1);
     assert!(::core::mem::align_of::<crate::repro::Interval>() == 1);
-    static_assertions::assert_impl_all!(crate::repro::Interval: Clone);
-    static_assertions::assert_impl_all!(crate::repro::Interval: Copy);
+    static_assertions::assert_impl_all!(crate::repro::Interval: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::repro::Interval: Drop);
     assert!(::core::mem::offset_of!(crate::repro::Interval, nanos) == 0);
 };

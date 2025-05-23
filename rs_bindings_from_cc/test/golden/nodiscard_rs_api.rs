@@ -80,13 +80,11 @@ forward_declare::unsafe_define!(
 const _: () = {
     assert!(::core::mem::size_of::<crate::NoDiscard>() == 1);
     assert!(::core::mem::align_of::<crate::NoDiscard>() == 1);
-    static_assertions::assert_impl_all!(crate::NoDiscard: Clone);
-    static_assertions::assert_impl_all!(crate::NoDiscard: Copy);
+    static_assertions::assert_impl_all!(crate::NoDiscard: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::NoDiscard: Drop);
 
     assert!(::core::mem::size_of::<crate::NoDiscardWithMessage>() == 1);
     assert!(::core::mem::align_of::<crate::NoDiscardWithMessage>() == 1);
-    static_assertions::assert_impl_all!(crate::NoDiscardWithMessage: Clone);
-    static_assertions::assert_impl_all!(crate::NoDiscardWithMessage: Copy);
+    static_assertions::assert_impl_all!(crate::NoDiscardWithMessage: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::NoDiscardWithMessage: Drop);
 };

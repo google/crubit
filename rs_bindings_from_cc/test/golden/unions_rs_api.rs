@@ -868,31 +868,26 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::EmptyUnion>() == 1);
     assert!(::core::mem::align_of::<crate::EmptyUnion>() == 1);
-    static_assertions::assert_impl_all!(crate::EmptyUnion: Clone);
-    static_assertions::assert_impl_all!(crate::EmptyUnion: Copy);
+    static_assertions::assert_impl_all!(crate::EmptyUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::EmptyUnion: Drop);
 
     assert!(::core::mem::size_of::<crate::Nontrivial>() == 4);
     assert!(::core::mem::align_of::<crate::Nontrivial>() == 4);
-    static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
-    static_assertions::assert_not_impl_any!(crate::Nontrivial: Drop);
+    static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::Nontrivial, field) == 0);
-
     assert!(::core::mem::size_of::<crate::RenamedUnion>() == 1);
     assert!(::core::mem::align_of::<crate::RenamedUnion>() == 1);
-    static_assertions::assert_impl_all!(crate::RenamedUnion: Clone);
-    static_assertions::assert_impl_all!(crate::RenamedUnion: Copy);
+    static_assertions::assert_impl_all!(crate::RenamedUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::RenamedUnion: Drop);
 
     assert!(::core::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
     assert!(::core::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
-    static_assertions::assert_not_impl_any!(crate::TriviallyCopyableButNontriviallyDestructible: Copy);
     static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
+    static_assertions::assert_not_impl_any!(crate::TriviallyCopyableButNontriviallyDestructible: Copy);
 
     assert!(::core::mem::size_of::<crate::NonEmptyUnion>() == 8);
     assert!(::core::mem::align_of::<crate::NonEmptyUnion>() == 8);
-    static_assertions::assert_impl_all!(crate::NonEmptyUnion: Clone);
-    static_assertions::assert_impl_all!(crate::NonEmptyUnion: Copy);
+    static_assertions::assert_impl_all!(crate::NonEmptyUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::NonEmptyUnion: Drop);
     assert!(::core::mem::offset_of!(crate::NonEmptyUnion, bool_field) == 0);
     assert!(::core::mem::offset_of!(crate::NonEmptyUnion, char_field) == 0);
@@ -902,27 +897,21 @@ const _: () = {
     static_assertions::assert_impl_all!(::core::ffi::c_char: Copy);
     static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
     static_assertions::assert_impl_all!(::core::ffi::c_longlong: Copy);
-
     assert!(::core::mem::size_of::<crate::NonCopyUnion>() == 4);
     assert!(::core::mem::align_of::<crate::NonCopyUnion>() == 4);
-    static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy);
-    static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::NonCopyUnion, trivial_member) == 0);
     assert!(::core::mem::offset_of!(crate::NonCopyUnion, nontrivial_member) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
-
     assert!(::core::mem::size_of::<crate::NonCopyUnion2>() == 1);
     assert!(::core::mem::align_of::<crate::NonCopyUnion2>() == 1);
-    static_assertions::assert_not_impl_any!(crate::NonCopyUnion2: Copy);
-    static_assertions::assert_not_impl_any!(crate::NonCopyUnion2: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonCopyUnion2: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::NonCopyUnion2, trivial_member) == 0);
     assert!(::core::mem::offset_of!(crate::NonCopyUnion2, nontrivial_member) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
-
     assert!(::core::mem::size_of::<crate::UnionWithOpaqueField>() == 42);
     assert!(::core::mem::align_of::<crate::UnionWithOpaqueField>() == 1);
-    static_assertions::assert_impl_all!(crate::UnionWithOpaqueField: Clone);
-    static_assertions::assert_impl_all!(crate::UnionWithOpaqueField: Copy);
+    static_assertions::assert_impl_all!(crate::UnionWithOpaqueField: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::UnionWithOpaqueField: Drop);
     assert!(
         ::core::mem::offset_of!(
@@ -930,34 +919,26 @@ const _: () = {
             constant_array_field_not_yet_supported
         ) == 0
     );
-
     assert!(::core::mem::size_of::<crate::TrivialButInheritable>() == 4);
     assert!(::core::mem::align_of::<crate::TrivialButInheritable>() == 4);
-    static_assertions::assert_impl_all!(crate::TrivialButInheritable: Clone);
-    static_assertions::assert_impl_all!(crate::TrivialButInheritable: Copy);
+    static_assertions::assert_impl_all!(crate::TrivialButInheritable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TrivialButInheritable: Drop);
     assert!(::core::mem::offset_of!(crate::TrivialButInheritable, x) == 0);
-
     assert!(::core::mem::size_of::<crate::UnionWithInheritable>() == 4);
     assert!(::core::mem::align_of::<crate::UnionWithInheritable>() == 4);
-    static_assertions::assert_impl_all!(crate::UnionWithInheritable: Clone);
-    static_assertions::assert_impl_all!(crate::UnionWithInheritable: Copy);
+    static_assertions::assert_impl_all!(crate::UnionWithInheritable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::UnionWithInheritable: Drop);
     assert!(::core::mem::offset_of!(crate::UnionWithInheritable, t) == 0);
     static_assertions::assert_impl_all!(crate::TrivialButInheritable: Copy);
-
     assert!(::core::mem::size_of::<crate::TypedefUnion>() == 1);
     assert!(::core::mem::align_of::<crate::TypedefUnion>() == 1);
-    static_assertions::assert_impl_all!(crate::TypedefUnion: Clone);
-    static_assertions::assert_impl_all!(crate::TypedefUnion: Copy);
+    static_assertions::assert_impl_all!(crate::TypedefUnion: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TypedefUnion: Drop);
     assert!(::core::mem::offset_of!(crate::TypedefUnion, trivial_member) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
-
     assert!(::core::mem::size_of::<crate::TypedefUnionWithInheritable>() == 4);
     assert!(::core::mem::align_of::<crate::TypedefUnionWithInheritable>() == 4);
-    static_assertions::assert_impl_all!(crate::TypedefUnionWithInheritable: Clone);
-    static_assertions::assert_impl_all!(crate::TypedefUnionWithInheritable: Copy);
+    static_assertions::assert_impl_all!(crate::TypedefUnionWithInheritable: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TypedefUnionWithInheritable: Drop);
     assert!(::core::mem::offset_of!(crate::TypedefUnionWithInheritable, t) == 0);
     static_assertions::assert_impl_all!(crate::TrivialButInheritable: Copy);

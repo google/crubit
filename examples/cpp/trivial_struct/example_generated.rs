@@ -53,8 +53,7 @@ impl !Sync for Position {}
 const _: () = {
     assert!(::core::mem::size_of::<crate::Position>() == 8);
     assert!(::core::mem::align_of::<crate::Position>() == 4);
-    static_assertions::assert_impl_all!(crate::Position: Clone);
-    static_assertions::assert_impl_all!(crate::Position: Copy);
+    static_assertions::assert_impl_all!(crate::Position: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Position: Drop);
     assert!(::core::mem::offset_of!(crate::Position, x) == 0);
     assert!(::core::mem::offset_of!(crate::Position, y) == 4);

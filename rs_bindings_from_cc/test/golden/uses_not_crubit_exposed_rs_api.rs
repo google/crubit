@@ -55,7 +55,6 @@ forward_declare::unsafe_define!(
 const _: () = {
     assert!(::core::mem::size_of::<crate::CannotUpcastInCrubit>() == 4);
     assert!(::core::mem::align_of::<crate::CannotUpcastInCrubit>() == 4);
-    static_assertions::assert_impl_all!(crate::CannotUpcastInCrubit: Clone);
-    static_assertions::assert_impl_all!(crate::CannotUpcastInCrubit: Copy);
+    static_assertions::assert_impl_all!(crate::CannotUpcastInCrubit: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CannotUpcastInCrubit: Drop);
 };

@@ -6,7 +6,7 @@
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
-use database::code_snippet::{ApiSnippets, Feature};
+use database::code_snippet::{ApiSnippets, AssertableTrait, Assertion, Feature};
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
 use database::BindingsGenerator;
@@ -234,6 +234,7 @@ fn filter_out_ambiguous_member_functions(
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn field_definition(
     db: &dyn BindingsGenerator,
     record: &Record,
@@ -244,7 +245,7 @@ fn field_definition(
     end: usize,
     desc: &[String],
     override_alignment: &mut bool,
-    field_copy_trait_assertions: &mut Vec<TokenStream>,
+    fields_that_must_be_copy: &mut Vec<TokenStream>,
 ) -> Result<TokenStream> {
     // opaque blob representations are always unaligned, even though the actual C++
     // field might be aligned. To put the current field at the right offset, we
@@ -322,9 +323,7 @@ fn field_definition(
                     // case.
                     formatted = quote! { ::core::mem::ManuallyDrop<#formatted> }
                 } else {
-                    field_copy_trait_assertions.push(quote! {
-                        static_assertions::assert_impl_all!(#formatted: Copy);
-                    });
+                    fields_that_must_be_copy.push(formatted.clone());
                 }
             };
             formatted
@@ -356,7 +355,6 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         Some(&record.source_loc),
         db.environment(),
     );
-    let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
 
     struct FieldWithLayout<'a> {
         /// The IR field. Note that bitfields are represented as `None`.
@@ -416,6 +414,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         .collect();
 
     let mut override_alignment = record.override_alignment;
+    let mut fields_that_must_be_copy = vec![];
 
     // Pair up fields with the preceeding and following fields (if any):
     // - the end offset of the previous field determines if we need to insert
@@ -452,34 +451,30 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
                 end,
                 &cur.description,
                 &mut override_alignment,
-                &mut field_copy_trait_assertions,
+                &mut fields_that_must_be_copy,
             )
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let field_offset_assertions: Vec<TokenStream> = fields_with_bounds
-        .iter()
-        .enumerate()
-        .map(|(field_index, field_with_layout)| {
-            let Some(field) = field_with_layout.ir else {
-                return quote! {};
-            };
-            let field_ident = make_rs_field_ident(field, field_index);
+    let field_offset_assertions = Assertion::FieldOffsets {
+        qualified_ident: qualified_ident.clone(),
+        fields_and_expected_offsets: fields_with_bounds
+            .iter()
+            .enumerate()
+            .filter_map(|(field_index, field_with_layout)| {
+                let field = field_with_layout.ir?;
+                let field_ident = make_rs_field_ident(field, field_index);
 
-            // The assertion below reinforces that the division by 8 on the next line is
-            // justified (because the bitfields have been coallesced / filtered out
-            // earlier).
-            assert_eq!(field.offset % 8, 0);
-            let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
+                // The assertion below reinforces that the division by 8 on the next line is
+                // justified (because the bitfields have been coallesced / filtered out
+                // earlier).
+                assert_eq!(field.offset % 8, 0);
+                let expected_offset = field.offset / 8;
 
-            let actual_offset_expr = quote! {
-                ::core::mem::offset_of!(#qualified_ident, #field_ident)
-            };
-            quote! {
-                assert!(#actual_offset_expr == #expected_offset);
-            }
-        })
-        .collect_vec();
+                Some((field_ident, expected_offset))
+            })
+            .collect(),
+    };
     let mut features = FlagSet::empty();
 
     let derives = generate_derives(&record);
@@ -611,9 +606,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         if !generated.thunks.is_empty() {
             thunks_from_record_items.push(generated.thunks);
         }
-        if !generated.assertions.is_empty() {
-            assertions_from_record_items.push(generated.assertions);
-        }
+        assertions_from_record_items.extend(generated.assertions);
         if !generated.cc_details.is_empty() {
             thunk_impls_from_record_items.push(generated.cc_details);
         }
@@ -669,39 +662,43 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     };
     features |= Feature::negative_impls;
     let record_trait_assertions = {
-        let record_type_name = record_rs_type_kind.to_token_stream(db);
-        let mut assertions: Vec<TokenStream> = vec![];
-        let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
-            assertions.push(quote! {
-                static_assertions::#assert_impl_macro (#record_type_name: #trait_name);
-            });
-        };
+        let mut assert_impls = FlagSet::empty();
+        let mut assert_not_impls = FlagSet::empty();
         if should_derive_clone(&record) {
-            add_assertion(quote! { assert_impl_all! }, quote! { Clone });
+            assert_impls |= AssertableTrait::Clone;
         } else {
             // Can't `assert_not_impl_any!` here, because `Clone` may be
             // implemented rather than derived.
         }
-        let mut add_conditional_assertion = |should_impl_trait: bool, trait_name: TokenStream| {
-            let assert_impl_macro = if should_impl_trait {
-                quote! { assert_impl_all! }
-            } else {
-                quote! { assert_not_impl_any! }
-            };
-            add_assertion(assert_impl_macro, trait_name);
-        };
-        add_conditional_assertion(should_derive_copy(&record), quote! { Copy });
-        add_conditional_assertion(record.should_implement_drop(), quote! { Drop });
-        assertions
+        if should_derive_copy(&record) {
+            assert_impls |= AssertableTrait::Copy;
+        } else {
+            assert_not_impls |= AssertableTrait::Copy;
+        }
+        if record.should_implement_drop() {
+            assert_impls |= AssertableTrait::Drop;
+        } else {
+            assert_not_impls |= AssertableTrait::Drop;
+        }
+        Assertion::Impls {
+            type_name: record_rs_type_kind.to_token_stream(db),
+            all_of: assert_impls,
+            none_of: assert_not_impls,
+        }
     };
-    let size_align_assertions = rs_size_align_assertions(qualified_ident, &record.size_align);
-    let assertion_tokens = quote! {
-        #size_align_assertions
-        #( #record_trait_assertions )*
-        #( #field_offset_assertions )*
-        #( #field_copy_trait_assertions )*
-        #( #assertions_from_record_items )*
-    };
+
+    let mut assertions = vec![];
+    assertions.push(rs_size_align_assertions(qualified_ident, &record.size_align));
+    assertions.push(record_trait_assertions);
+    assertions.push(field_offset_assertions);
+    assertions.extend(fields_that_must_be_copy.into_iter().map(|formatted_field_type| {
+        Assertion::Impls {
+            type_name: formatted_field_type,
+            all_of: AssertableTrait::Copy.into(),
+            none_of: FlagSet::empty(),
+        }
+    }));
+    assertions.extend(assertions_from_record_items);
 
     let thunk_tokens = quote! {
         #( #thunks_from_record_items )*
@@ -710,20 +707,15 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     Ok(ApiSnippets {
         main_api: record_tokens,
         features,
-        assertions: assertion_tokens,
+        assertions,
         thunks: thunk_tokens,
         cc_details: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
         ..Default::default()
     })
 }
 
-pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> TokenStream {
-    let size = Literal::usize_unsuffixed(size_align.size);
-    let alignment = Literal::usize_unsuffixed(size_align.alignment);
-    quote! {
-        assert!(::core::mem::size_of::<#type_name>() == #size);
-        assert!(::core::mem::align_of::<#type_name>() == #alignment);
-    }
+pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> Assertion {
+    Assertion::SizeAlign { type_name, size: size_align.size, alignment: size_align.alignment }
 }
 
 pub fn generate_derives(record: &Record) -> Vec<Ident> {

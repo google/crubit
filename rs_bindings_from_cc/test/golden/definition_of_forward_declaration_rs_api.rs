@@ -49,7 +49,6 @@ forward_declare::unsafe_define!(
 const _: () = {
     assert!(::core::mem::size_of::<crate::ForwardDeclaredStruct>() == 1);
     assert!(::core::mem::align_of::<crate::ForwardDeclaredStruct>() == 1);
-    static_assertions::assert_impl_all!(crate::ForwardDeclaredStruct: Clone);
-    static_assertions::assert_impl_all!(crate::ForwardDeclaredStruct: Copy);
+    static_assertions::assert_impl_all!(crate::ForwardDeclaredStruct: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ForwardDeclaredStruct: Drop);
 };

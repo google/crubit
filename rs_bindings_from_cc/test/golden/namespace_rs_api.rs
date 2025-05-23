@@ -428,15 +428,12 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
     assert!(::core::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings::S: Clone);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings::S: Copy);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::S: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::S: Drop);
     assert!(::core::mem::offset_of!(crate::test_namespace_bindings::S, i) == 0);
-
     assert!(::core::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
     assert!(::core::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings_reopened::inner::S: Clone);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings_reopened::inner::S: Copy);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings_reopened::inner::S: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings_reopened::inner::S: Drop);
 
     assert!(
@@ -448,7 +445,6 @@ const _: () = {
             crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         >() == 1
     );
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Clone);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Copy);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Drop);
 };

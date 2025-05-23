@@ -72,8 +72,7 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::foo::Bar>() == 4);
     assert!(::core::mem::align_of::<crate::foo::Bar>() == 4);
-    static_assertions::assert_impl_all!(crate::foo::Bar: Clone);
-    static_assertions::assert_impl_all!(crate::foo::Bar: Copy);
+    static_assertions::assert_impl_all!(crate::foo::Bar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::foo::Bar: Drop);
     assert!(::core::mem::offset_of!(crate::foo::Bar, x) == 0);
 };

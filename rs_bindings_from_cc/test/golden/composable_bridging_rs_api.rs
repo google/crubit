@@ -136,8 +136,7 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Vec3>() == 12);
     assert!(::core::mem::align_of::<crate::Vec3>() == 4);
-    static_assertions::assert_impl_all!(crate::Vec3: Clone);
-    static_assertions::assert_impl_all!(crate::Vec3: Copy);
+    static_assertions::assert_impl_all!(crate::Vec3: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Vec3: Drop);
     assert!(::core::mem::offset_of!(crate::Vec3, x) == 0);
     assert!(::core::mem::offset_of!(crate::Vec3, y) == 4);

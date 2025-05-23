@@ -159,9 +159,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
         if !generated.cc_details.is_empty() {
             cc_details.push(generated.cc_details);
         }
-        if !generated.assertions.is_empty() {
-            assertions.push(generated.assertions);
-        }
+        assertions.extend(generated.assertions);
         features |= generated.features;
     }
 
@@ -220,7 +218,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
         features,
         thunks: quote! { #( #thunks )* },
         cc_details: quote! { #( #cc_details )* },
-        assertions: quote! { #( #assertions )* },
+        assertions,
         ..Default::default()
     })
 }
@@ -304,14 +302,17 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
                 cpp_type = type_override.debug_name(&ir),
                 rs_type_kind = rs_type_kind.display(db),
             );
-            let assertions = if let Some(size_align) = &type_override.size_align {
-                generate_struct_and_union::rs_size_align_assertions(
-                    rs_type_kind.to_token_stream(db),
-                    size_align,
-                )
-            } else {
-                quote! {}
-            };
+            let assertions = type_override
+                .size_align
+                .as_ref()
+                .map(|size_align| {
+                    generate_struct_and_union::rs_size_align_assertions(
+                        rs_type_kind.to_token_stream(db),
+                        size_align,
+                    )
+                })
+                .into_iter()
+                .collect_vec();
 
             ApiSnippets {
                 main_api: quote! {
@@ -397,9 +398,7 @@ pub fn generate_bindings_tokens(
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
         }
-        if !generated.assertions.is_empty() {
-            assertions.push(generated.assertions);
-        }
+        assertions.extend(generated.assertions);
         if !generated.cc_details.is_empty() {
             cc_details.push(generated.cc_details);
         }
@@ -442,7 +441,7 @@ pub fn generate_bindings_tokens(
     } else {
         quote! {
             const _: () = { __NEWLINE__
-                #( #assertions __NEWLINE__ __NEWLINE__ )*
+                #( #assertions __NEWLINE__ )*
             }; __NEWLINE__
         }
     };

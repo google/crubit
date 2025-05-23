@@ -530,23 +530,19 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::TopLevel>() == 1);
     assert!(::core::mem::align_of::<crate::TopLevel>() == 1);
-    static_assertions::assert_impl_all!(crate::TopLevel: Clone);
-    static_assertions::assert_impl_all!(crate::TopLevel: Copy);
+    static_assertions::assert_impl_all!(crate::TopLevel: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TopLevel: Drop);
 
     assert!(::core::mem::size_of::<crate::test_namespace_bindings::Inner>() == 1);
     assert!(::core::mem::align_of::<crate::test_namespace_bindings::Inner>() == 1);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings::Inner: Clone);
-    static_assertions::assert_impl_all!(crate::test_namespace_bindings::Inner: Copy);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::Inner: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Inner: Drop);
 
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateI8TopLevelE, t) == 0);
-
     assert!(
         ::core::mem::size_of::<
             crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
@@ -557,8 +553,7 @@ const _: () = {
             crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
         >() == 1
     );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Drop);
     assert!(
         ::core::mem::offset_of!(
@@ -566,14 +561,11 @@ const _: () = {
             t
         ) == 0
     );
-
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE, t) == 0);
-
     assert!(
         ::core::mem::size_of::<
             crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
@@ -584,8 +576,7 @@ const _: () = {
             crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
         >() == 1
     );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Drop);
     assert!(
         ::core::mem::offset_of!(
@@ -593,39 +584,29 @@ const _: () = {
             t
         ) == 0
     );
-
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIbE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIbE, t) == 0);
-
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIcE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIcE, t) == 0);
-
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIdE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIdE, t) == 0);
-
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, t) == 0);
-
     assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, t) == 0);
 };

@@ -159,15 +159,12 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::CompoundDataType>() == 8);
     assert!(::core::mem::align_of::<crate::CompoundDataType>() == 8);
-    static_assertions::assert_impl_all!(crate::CompoundDataType: Clone);
-    static_assertions::assert_impl_all!(crate::CompoundDataType: Copy);
+    static_assertions::assert_impl_all!(crate::CompoundDataType: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::CompoundDataType: Drop);
     assert!(::core::mem::offset_of!(crate::CompoundDataType, forward_declared) == 0);
-
     assert!(::core::mem::size_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst8TemplateIiE: Clone);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst8TemplateIiE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst8TemplateIiE: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst8TemplateIiE: Drop);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst8TemplateIiE, value) == 0);
 };

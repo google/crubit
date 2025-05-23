@@ -93,6 +93,5 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::CompatibleType>() == 1);
     assert!(::core::mem::align_of::<crate::CompatibleType>() == 1);
-    static_assertions::assert_not_impl_any!(crate::CompatibleType: Copy);
-    static_assertions::assert_not_impl_any!(crate::CompatibleType: Drop);
+    static_assertions::assert_not_impl_any!(crate::CompatibleType: Copy,Drop);
 };

@@ -10,7 +10,7 @@ use arc_anyhow::{anyhow, Error, Result};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use ir::{BazelLabel, GenericItem, Item, UnqualifiedIdentifier};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
@@ -35,7 +35,7 @@ pub struct ApiSnippets {
     /// - A Rust declaration of an `extern "C"` thunk,
     /// - Rust static assertions about struct size, aligment, and field offsets.
     pub thunks: TokenStream,
-    pub assertions: TokenStream,
+    pub assertions: Vec<Assertion>,
 
     /// C++ implementation details - for example:
     /// - A C++ implementation of an `extern "C"` thunk,
@@ -399,6 +399,91 @@ impl ToTokens for Feature {
             Feature::impl_trait_in_assoc_type => quote! { impl_trait_in_assoc_type },
             Feature::negative_impls => quote! { negative_impls },
             Feature::register_tool => quote! { register_tool },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+/// Compile-time assertions for the generated bindings.
+#[derive(Clone, Debug)]
+pub enum Assertion {
+    /// Asserts that a type has a certain size and alignment.
+    SizeAlign { type_name: TokenStream, size: usize, alignment: usize },
+    /// Asserts that a type implements (or does not implement) certain traits.
+    Impls {
+        type_name: TokenStream,
+        /// Assert that all of these traits are implemented.
+        all_of: FlagSet<AssertableTrait>,
+        /// Assert that none of these traits are implemented.
+        none_of: FlagSet<AssertableTrait>,
+    },
+    /// Asserts that a list of fields have their expected offsets using the [`core::mem::offset_of`]
+    /// macro.
+    FieldOffsets { qualified_ident: TokenStream, fields_and_expected_offsets: Vec<(Ident, usize)> },
+}
+
+flagset::flags! {
+    /// Traits that can be asserted as implemented or not implemented on a type, using the
+    /// `static_assertions` macros.
+    // Note: ordering of variants determines iteration order on `FlagSet<AssertableTrait>`.
+    pub enum AssertableTrait: u32 {
+        Copy,
+        Clone,
+        Drop,
+    }
+}
+
+impl ToTokens for Assertion {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Assertion::SizeAlign { type_name, size, alignment } => {
+                let size = Literal::usize_unsuffixed(*size);
+                let alignment = Literal::usize_unsuffixed(*alignment);
+                quote! {
+                    assert!(::core::mem::size_of::<#type_name>() == #size);
+                    assert!(::core::mem::align_of::<#type_name>() == #alignment);
+                }
+                .to_tokens(tokens);
+            }
+            Assertion::Impls { type_name, all_of, none_of } => {
+                assert!(
+                    all_of.is_disjoint(*none_of),
+                    "Found contradicting impl assertions, this is a bug"
+                );
+                if !all_of.is_empty() {
+                    let all_of_iter = all_of.into_iter();
+                    quote! {
+                        static_assertions::assert_impl_all! (#type_name: #(#all_of_iter),*);
+                    }
+                    .to_tokens(tokens);
+                }
+                if !none_of.is_empty() {
+                    let none_of_iter = none_of.into_iter();
+                    quote! {
+                        static_assertions::assert_not_impl_any! (#type_name: #(#none_of_iter),*);
+                    }
+                    .to_tokens(tokens);
+                }
+            }
+            Assertion::FieldOffsets { qualified_ident, fields_and_expected_offsets } => {
+                for (field_ident, expected_offset) in fields_and_expected_offsets {
+                    let expected_offset = Literal::usize_unsuffixed(*expected_offset);
+                    quote! {
+                        assert!(::core::mem::offset_of!(#qualified_ident, #field_ident) == #expected_offset);
+                    }
+                    .to_tokens(tokens);
+                }
+            }
+        }
+    }
+}
+
+impl ToTokens for AssertableTrait {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            AssertableTrait::Copy => quote! { Copy },
+            AssertableTrait::Clone => quote! { Clone },
+            AssertableTrait::Drop => quote! { Drop },
         }
         .to_tokens(tokens);
     }

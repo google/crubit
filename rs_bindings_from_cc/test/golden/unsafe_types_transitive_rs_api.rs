@@ -191,30 +191,23 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::PublicPointer>() == 8);
     assert!(::core::mem::align_of::<crate::PublicPointer>() == 8);
-    static_assertions::assert_impl_all!(crate::PublicPointer: Clone);
-    static_assertions::assert_impl_all!(crate::PublicPointer: Copy);
+    static_assertions::assert_impl_all!(crate::PublicPointer: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::PublicPointer: Drop);
     assert!(::core::mem::offset_of!(crate::PublicPointer, p) == 0);
-
     assert!(::core::mem::size_of::<crate::PrivatePointer>() == 8);
     assert!(::core::mem::align_of::<crate::PrivatePointer>() == 8);
-    static_assertions::assert_impl_all!(crate::PrivatePointer: Clone);
-    static_assertions::assert_impl_all!(crate::PrivatePointer: Copy);
+    static_assertions::assert_impl_all!(crate::PrivatePointer: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::PrivatePointer: Drop);
     assert!(::core::mem::offset_of!(crate::PrivatePointer, p_) == 0);
-
     assert!(::core::mem::size_of::<crate::TransitivePublicPointer>() == 16);
     assert!(::core::mem::align_of::<crate::TransitivePublicPointer>() == 8);
-    static_assertions::assert_impl_all!(crate::TransitivePublicPointer: Clone);
-    static_assertions::assert_impl_all!(crate::TransitivePublicPointer: Copy);
+    static_assertions::assert_impl_all!(crate::TransitivePublicPointer: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::TransitivePublicPointer: Drop);
     assert!(::core::mem::offset_of!(crate::TransitivePublicPointer, r#pub) == 0);
     assert!(::core::mem::offset_of!(crate::TransitivePublicPointer, r#priv) == 8);
-
     assert!(::core::mem::size_of::<crate::Union>() == 4);
     assert!(::core::mem::align_of::<crate::Union>() == 4);
-    static_assertions::assert_impl_all!(crate::Union: Clone);
-    static_assertions::assert_impl_all!(crate::Union: Copy);
+    static_assertions::assert_impl_all!(crate::Union: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Union: Drop);
     assert!(::core::mem::offset_of!(crate::Union, i) == 0);
     assert!(::core::mem::offset_of!(crate::Union, f) == 0);

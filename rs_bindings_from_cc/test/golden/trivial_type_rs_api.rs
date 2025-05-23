@@ -243,8 +243,7 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::ns::Trivial>() == 4);
     assert!(::core::mem::align_of::<crate::ns::Trivial>() == 4);
-    static_assertions::assert_impl_all!(crate::ns::Trivial: Clone);
-    static_assertions::assert_impl_all!(crate::ns::Trivial: Copy);
+    static_assertions::assert_impl_all!(crate::ns::Trivial: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::ns::Trivial: Drop);
     assert!(::core::mem::offset_of!(crate::ns::Trivial, trivial_field) == 0);
 };

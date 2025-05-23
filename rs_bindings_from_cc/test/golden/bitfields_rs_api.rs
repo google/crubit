@@ -206,16 +206,13 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::WithBitfields>() == 32);
     assert!(::core::mem::align_of::<crate::WithBitfields>() == 4);
-    static_assertions::assert_impl_all!(crate::WithBitfields: Clone);
-    static_assertions::assert_impl_all!(crate::WithBitfields: Copy);
+    static_assertions::assert_impl_all!(crate::WithBitfields: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::WithBitfields: Drop);
     assert!(::core::mem::offset_of!(crate::WithBitfields, f2) == 4);
     assert!(::core::mem::offset_of!(crate::WithBitfields, f5) == 20);
     assert!(::core::mem::offset_of!(crate::WithBitfields, f7) == 27);
-
     assert!(::core::mem::size_of::<crate::AlignmentRegressionTest>() == 4);
     assert!(::core::mem::align_of::<crate::AlignmentRegressionTest>() == 4);
-    static_assertions::assert_impl_all!(crate::AlignmentRegressionTest: Clone);
-    static_assertions::assert_impl_all!(crate::AlignmentRegressionTest: Copy);
+    static_assertions::assert_impl_all!(crate::AlignmentRegressionTest: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::AlignmentRegressionTest: Drop);
 };

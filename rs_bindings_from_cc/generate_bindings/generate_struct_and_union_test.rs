@@ -184,8 +184,8 @@ fn test_simple_struct() -> Result<()> {
                 ...
                 assert!(::core::mem::size_of::<crate::SomeStruct>() == 12);
                 assert!(::core::mem::align_of::<crate::SomeStruct>() == 4);
-                static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
                 static_assertions::assert_impl_all!(crate::SomeStruct: Drop);
+                static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
                 assert!(::core::mem::offset_of!(crate::SomeStruct, public_int) == 0);
                 assert!(::core::mem::offset_of!(crate::SomeStruct, protected_int) == 4);
                 assert!(::core::mem::offset_of!(crate::SomeStruct, private_int) == 8);
@@ -1161,8 +1161,7 @@ fn test_union_with_private_fields() -> Result<()> {
                 ...
                 assert!(::core::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
                 assert!(::core::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
-                static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Clone);
-                static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Copy);
+                static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Copy,Clone);
                 static_assertions::assert_not_impl_any!(crate::SomeUnionWithPrivateFields: Drop);
                 ...
             };

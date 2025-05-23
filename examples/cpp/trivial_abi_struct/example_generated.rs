@@ -74,9 +74,8 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Position>() == 8);
     assert!(::core::mem::align_of::<crate::Position>() == 4);
-    static_assertions::assert_impl_all!(crate::Position: Clone);
+    static_assertions::assert_impl_all!(crate::Position: Clone,Drop);
     static_assertions::assert_not_impl_any!(crate::Position: Copy);
-    static_assertions::assert_impl_all!(crate::Position: Drop);
     assert!(::core::mem::offset_of!(crate::Position, x) == 0);
     assert!(::core::mem::offset_of!(crate::Position, y) == 4);
     static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
