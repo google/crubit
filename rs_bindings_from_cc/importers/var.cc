@@ -38,16 +38,21 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
         FormattedError::Static("static data members are not supported"));
   }
 
-  // TODO(tmandry): We don't support compile-time constants yet.
-  // Note that `const T x = /* constant initializer */;` where T is an integer,
-  // enum or reference type acts like constexpr and does not create an external
-  // symbol. To simplify things, we just disallow all const variables with a
-  // constant initializer in the header file for now.
-  if (var_decl->isConstexpr() || (var_decl->getType().isConstQualified() &&
-                                  var_decl->hasConstantInitialization())) {
+  // Note that `[const|inline] T x = /* constant initializer */;` acts like
+  // constexpr and does not create an external symbol in Clang. This was
+  // apparently done to support constexpr-like patterns before it existed in the
+  // language.
+  bool is_const_or_inline =
+      var_decl->getType().isConstQualified() || var_decl->isInline();
+  bool might_not_export =
+      var_decl->isConstexpr() ||
+      (is_const_or_inline && var_decl->hasConstantInitialization());
+  // TODO(b/208945197): We don't support compile-time constants yet.
+  if (might_not_export) {
     return ictx_.ImportUnsupportedItem(
         var_decl, UnsupportedItem::Kind::kValue, std::nullopt,
-        FormattedError::Static("compile-time constants are not supported"));
+        FormattedError::Static(
+            "compile-time and inline constants are not supported"));
   }
 
   if (!var_decl->hasExternalFormalLinkage()) {

@@ -35,16 +35,10 @@ fn test_extern_c_namespaced() {
 }
 
 #[gtest]
-fn test_inline_global() {
-    assert_eq!(unsafe { global_lib::inline_int }, 5);
-    assert_eq!(global_lib::GetInlineIntVal(), 5);
-    unsafe { global_lib::inline_int = 50 };
-    assert_eq!(global_lib::GetInlineIntVal(), 50);
-}
-
-#[gtest]
 fn test_non_generated_items() {
     assert!(!value_exists!(global_lib::kInlineConstInt));
     assert!(!value_exists!(global_lib::kConstexprInt));
     assert!(!value_exists!(global_lib::templated_variable));
+    assert!(!value_exists!(global_lib::inline_int));
+    assert!(!value_exists!(global_lib::foo::inline_int_namespaced));
 }

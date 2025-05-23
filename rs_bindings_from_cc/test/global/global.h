@@ -16,11 +16,13 @@ extern int extern_int_namespaced;
 extern "C" int extern_c_int_namespaced;
 }  // namespace foo
 
-inline int inline_int = 5;
-
 // Make sure we don't choke on these, even though they aren't supported yet.
 extern const inline int kInlineConstInt = 6;
 constexpr int kConstexprInt = 7;
+inline int inline_int = 5;
+namespace foo {
+inline int inline_int_namespaced = 5;
+}  // namespace foo
 
 // Also make sure we don't choke on templated variables.
 template <typename T>
