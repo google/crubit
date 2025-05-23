@@ -520,6 +520,11 @@ struct BridgeType {
     std::string abi_cpp;
   };
 
+  // From CRUBIT_BRIDGE_SLICE_PTR.
+  struct SlicePointer {
+    std::string abi_cpp;
+  };
+
   struct StdOptional {
     std::shared_ptr<CcType> inner_type;
   };
@@ -531,7 +536,8 @@ struct BridgeType {
 
   struct StdString {};
 
-  std::variant<BridgeVoidConverters, Bridge, StdOptional, StdPair, StdString>
+  std::variant<BridgeVoidConverters, Bridge, SlicePointer, StdOptional, StdPair,
+               StdString>
       variant;
 };
 
