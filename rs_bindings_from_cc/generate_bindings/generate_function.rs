@@ -5,7 +5,7 @@
 use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustTokens;
-use database::code_snippet::{ApiSnippets, Feature, Visibility};
+use database::code_snippet::{ApiSnippets, Feature, Thunk, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
@@ -1124,7 +1124,7 @@ pub fn generate_function(
     }
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-    let thunk = generate_function_thunk(
+    let thunk: Option<Thunk> = generate_function_thunk(
         db,
         &func,
         &param_idents,
@@ -1132,10 +1132,10 @@ pub fn generate_function(
         &return_type,
         derived_record.clone(),
     )
-    .unwrap_or_else(|err| {
+    .map_err(|err| {
         errors.add(err);
-        TokenStream::new()
-    });
+    })
+    .ok();
 
     let param_value_adjustments =
         adjust_param_types_for_trait_impl(db, &impl_kind, &mut param_types, &errors);
@@ -1464,7 +1464,10 @@ pub fn generate_function(
 
     let generated_item = ApiSnippets {
         main_api: api_func,
-        thunks: if failed { TokenStream::new() } else { thunk },
+        thunks: match thunk {
+            Some(thunk) if !failed => vec![thunk],
+            _ => vec![],
+        },
         features,
         cc_details,
         ..Default::default()

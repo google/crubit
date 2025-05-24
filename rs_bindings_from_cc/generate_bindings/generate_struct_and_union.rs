@@ -6,7 +6,7 @@
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
-use database::code_snippet::{ApiSnippets, AssertableTrait, Assertion, Feature};
+use database::code_snippet::{ApiSnippets, AssertableTrait, Assertion, Feature, Thunk};
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
 use database::BindingsGenerator;
@@ -603,9 +603,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
 
     for generated in record_generated_items {
         items.push(generated.main_api);
-        if !generated.thunks.is_empty() {
-            thunks_from_record_items.push(generated.thunks);
-        }
+        thunks_from_record_items.extend(generated.thunks);
         assertions_from_record_items.extend(generated.assertions);
         if !generated.cc_details.is_empty() {
             thunk_impls_from_record_items.push(generated.cc_details);
@@ -700,15 +698,11 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     }));
     assertions.extend(assertions_from_record_items);
 
-    let thunk_tokens = quote! {
-        #( #thunks_from_record_items )*
-    };
-
     Ok(ApiSnippets {
         main_api: record_tokens,
         features,
         assertions,
-        thunks: thunk_tokens,
+        thunks: thunks_from_record_items,
         cc_details: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
         ..Default::default()
     })
@@ -909,8 +903,10 @@ fn cc_struct_upcast_impl(
                     return from;
                 }
             });
-            thunks.push(quote! {
-                pub fn #cast_fn_name (from: *const #derived_name) -> *const #base_name;
+            thunks.push(Thunk::Upcast {
+                cast_fn_name: cast_fn_name.clone(),
+                derived_name: derived_name.clone(),
+                base_name: base_name.clone(),
             });
             let crate_root_path = ir.crate_root_path_tokens();
             quote! {
@@ -928,7 +924,7 @@ fn cc_struct_upcast_impl(
 
     Ok(ApiSnippets {
         main_api: quote! {#(#impls)*},
-        thunks: quote! {#(#thunks)*},
+        thunks,
         cc_details: quote! {#(#cc_impls)*},
         ..Default::default()
     })

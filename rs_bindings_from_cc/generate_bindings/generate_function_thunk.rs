@@ -5,6 +5,7 @@
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use crubit_abi_type::CrubitAbiTypeToCppTokens;
+use database::code_snippet::Thunk;
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
     format_generic_params, unique_lifetimes, BridgeRsTypeKind, Mutability, RsTypeKind,
@@ -124,14 +125,7 @@ pub fn generate_function_thunk(
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
     derived_record: Option<Rc<Record>>,
-) -> Result<TokenStream> {
-    let thunk_attr = if can_skip_cc_thunk(db, func) {
-        let mangled_name = func.mangled_name.as_ref();
-        quote! {#[link_name = #mangled_name]}
-    } else {
-        quote! {}
-    };
-
+) -> Result<Thunk> {
     // The first parameter is the output parameter, if any.
     let mut param_types = param_types.iter();
     let mut param_idents = param_idents.iter();
@@ -154,12 +148,12 @@ pub fn generate_function_thunk(
     } else if return_type.is_crubit_abi_bridge_type() {
         out_param = Some(quote! { *mut ::core::ffi::c_uchar });
         out_param_ident = Some(make_rs_ident("__return_abi_buffer"));
-        return_type_fragment = quote! {};
+        return_type_fragment = None;
     } else if !return_type.is_c_abi_compatible_by_value() {
         // For return types that can't be passed by value, create a new out parameter.
         out_param = Some(quote! { *mut ::core::ffi::c_void });
         out_param_ident = Some(make_rs_ident("__return"));
-        return_type_fragment = quote! {};
+        return_type_fragment = None;
     }
 
     // Of the remaining lifetimes, collect them.
@@ -172,25 +166,29 @@ pub fn generate_function_thunk(
     };
 
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
-    let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
-    let param_types = out_param.into_iter().chain(param_types.map(|param_type| {
-        if param_type.is_crubit_abi_bridge_type() {
-            quote! { *const ::core::ffi::c_uchar }
-        } else if !param_type.is_c_abi_compatible_by_value() {
-            let param_type_tokens = param_type.to_token_stream(db);
-            quote! {&mut #param_type_tokens}
-        } else {
-            param_type.to_token_stream(db)
-        }
-    }));
+    let param_idents =
+        out_param_ident.as_ref().into_iter().chain(param_idents).cloned().collect_vec();
+    let param_types = out_param
+        .into_iter()
+        .chain(param_types.map(|param_type| {
+            if param_type.is_crubit_abi_bridge_type() {
+                quote! { *const ::core::ffi::c_uchar }
+            } else if !param_type.is_c_abi_compatible_by_value() {
+                let param_type_tokens = param_type.to_token_stream(db);
+                quote! {&mut #param_type_tokens}
+            } else {
+                param_type.to_token_stream(db)
+            }
+        }))
+        .collect_vec();
 
-    // Note: some of these are `safe`, but _all_ of them are currently wrapped by a
-    // (possibly safe) function, so we leave them all `unsafe` for convenience.
-
-    Ok(quote! {
-        #thunk_attr
-        pub(crate) unsafe fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
-        ) #return_type_fragment ;
+    Ok(Thunk::Function {
+        mangled_name: can_skip_cc_thunk(db, func).then(|| func.mangled_name.clone()),
+        thunk_ident,
+        generic_params,
+        param_idents,
+        param_types,
+        return_type_fragment,
     })
 }
 

@@ -770,13 +770,10 @@ impl RsTypeKind {
         &self,
         db: &dyn BindingsGenerator,
         self_record: Option<&Record>,
-    ) -> TokenStream {
+    ) -> Option<TokenStream> {
         match self.unalias() {
-            RsTypeKind::Primitive(Primitive::Void) => quote! {},
-            _ => {
-                let other_type_ = self.to_token_stream_replacing_by_self(db, self_record);
-                quote! { -> #other_type_ }
-            }
+            RsTypeKind::Primitive(Primitive::Void) => None,
+            _ => Some(self.to_token_stream_replacing_by_self(db, self_record)),
         }
     }
 
@@ -965,8 +962,12 @@ impl RsTypeKind {
                 let param_types_ = param_types
                     .iter()
                     .map(|type_| type_.to_token_stream_replacing_by_self(db, self_record));
-                let return_frag = return_type.format_as_return_type_fragment(db, self_record);
-                let mut tokens = quote! { extern #abi fn( #( #param_types_ ),* ) #return_frag };
+                let mut tokens = quote! { extern #abi fn( #( #param_types_ ),* ) };
+                if let Some(return_frag) =
+                    return_type.format_as_return_type_fragment(db, self_record)
+                {
+                    quote! { -> #return_frag }.to_tokens(&mut tokens);
+                }
                 if param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone())) {
                     tokens = quote! { unsafe #tokens }
                 }
@@ -1115,11 +1116,11 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::FuncPtr { option, abi, return_type, param_types } => {
-                let return_frag = return_type.format_as_return_type_fragment(db, None);
                 let param_types_tokens = param_types.iter().map(|ty| ty.to_token_stream(db));
-                let mut tokens =
-                    quote! { extern #abi fn( #( #param_types_tokens ),* ) #return_frag };
-
+                let mut tokens = quote! { extern #abi fn( #( #param_types_tokens ),* ) };
+                if let Some(return_frag) = return_type.format_as_return_type_fragment(db, None) {
+                    quote! { -> #return_frag }.to_tokens(&mut tokens);
+                }
                 if param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone())) {
                     tokens = quote! { unsafe #tokens }
                 }

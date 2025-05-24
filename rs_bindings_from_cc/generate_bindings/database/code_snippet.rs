@@ -34,7 +34,7 @@ pub struct ApiSnippets {
     /// Rust implementation details - for example:
     /// - A Rust declaration of an `extern "C"` thunk,
     /// - Rust static assertions about struct size, aligment, and field offsets.
-    pub thunks: TokenStream,
+    pub thunks: Vec<Thunk>,
     pub assertions: Vec<Assertion>,
 
     /// C++ implementation details - for example:
@@ -486,5 +486,56 @@ impl ToTokens for AssertableTrait {
             AssertableTrait::Drop => quote! { Drop },
         }
         .to_tokens(tokens);
+    }
+}
+
+/// A Rust function thunk that appears in an `unsafe extern "C"` block.
+#[derive(Clone, Debug)]
+pub enum Thunk {
+    /// Generates a thunk for upcasting from a derived type to a base type.
+    Upcast { cast_fn_name: Ident, derived_name: TokenStream, base_name: TokenStream },
+    /// Generates a thunk for a function.
+    Function {
+        mangled_name: Option<Rc<str>>,
+        thunk_ident: Ident,
+        generic_params: TokenStream,
+        param_idents: Vec<Ident>,
+        param_types: Vec<TokenStream>,
+        return_type_fragment: Option<TokenStream>,
+    },
+}
+
+impl ToTokens for Thunk {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Thunk::Upcast { cast_fn_name, derived_name, base_name } => {
+                quote! {
+                    pub fn #cast_fn_name (from: *const #derived_name) -> *const #base_name;
+                }
+                .to_tokens(tokens);
+            }
+            Thunk::Function {
+                mangled_name,
+                thunk_ident,
+                generic_params,
+                param_idents,
+                param_types,
+                return_type_fragment,
+            } => {
+                if let Some(mangled_name) = mangled_name {
+                    quote! {#[link_name = #mangled_name]}.to_tokens(tokens);
+                }
+
+                let return_type_fragment =
+                    return_type_fragment.as_ref().map(|return_type| quote! { -> #return_type });
+
+                // Note: some of these are `safe`, but _all_ of them are currently wrapped by a
+                // (possibly safe) function, so we leave them all `unsafe` for convenience.
+                quote! {
+                    pub(crate) unsafe fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
+                    ) #return_type_fragment ;
+                }.to_tokens(tokens);
+            }
+        }
     }
 }

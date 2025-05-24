@@ -153,9 +153,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
         })?;
         let generated = db.generate_item(item.clone())?;
         items.push(generated.main_api);
-        if !generated.thunks.is_empty() {
-            thunks.push(generated.thunks);
-        }
+        thunks.extend(generated.thunks);
         if !generated.cc_details.is_empty() {
             cc_details.push(generated.cc_details);
         }
@@ -216,7 +214,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
     Ok(ApiSnippets {
         main_api: namespace_tokens,
         features,
-        thunks: quote! { #( #thunks )* },
+        thunks,
         cc_details: quote! { #( #cc_details )* },
         assertions,
         ..Default::default()
@@ -395,9 +393,7 @@ pub fn generate_bindings_tokens(
         let item: &Item = ir.find_untyped_decl(*top_level_item_id);
         let generated = db.generate_item(item.clone())?;
         items.push(generated.main_api);
-        if !generated.thunks.is_empty() {
-            thunks.push(generated.thunks);
-        }
+        thunks.extend(generated.thunks);
         assertions.extend(generated.assertions);
         if !generated.cc_details.is_empty() {
             cc_details.push(generated.cc_details);
