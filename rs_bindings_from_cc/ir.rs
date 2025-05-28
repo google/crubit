@@ -511,7 +511,7 @@ impl ToTokens for ItemId {
 }
 
 /// A Bazel label, e.g. `//foo:bar`.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, Eq, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct BazelLabel(pub Rc<str>);
 
@@ -581,6 +581,20 @@ impl BazelLabel {
         }
 
         result
+    }
+}
+
+impl PartialEq for BazelLabel {
+    fn eq(&self, other: &Self) -> bool {
+        // Ensure that `//foo` and `//foo:foo` are considered equal.
+        self.target_name() == other.target_name() && self.package_name() == other.package_name()
+    }
+}
+
+impl Hash for BazelLabel {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.target_name().hash(state);
+        self.package_name().hash(state);
     }
 }
 
@@ -2124,6 +2138,13 @@ mod tests {
     fn test_bazel_label_target_dotless() {
         let label: BazelLabel = "//foo".into();
         assert_eq!(label.target_name(), "foo");
+    }
+
+    #[gtest]
+    fn test_bazel_label_implicit_target_equals_explicit_target() {
+        let implicit: BazelLabel = "//foo".into();
+        let explicit: BazelLabel = "//foo:foo".into();
+        assert_eq!(implicit, explicit);
     }
 
     #[gtest]
