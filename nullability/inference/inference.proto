@@ -166,6 +166,9 @@ message SlotInference {
   // separately propagated from one round of inference into the next.
   // e.g. an inference gathered from ANNOTATED_NONNULL Evidence.
   optional bool trivial = 4;
+  // Slot identifiers for which this inference is applicable. Used only for
+  // debugging information.
+  repeated string slot_id = 5;
 }
 
 // Summary of an incomplete set of Evidence for a slot.
@@ -179,6 +182,10 @@ message SlotPartial {
     repeated string location = 1;
   }
   map</*Kind*/ uint32, SampleLocations> kind_samples = 2;
+
+  // Slot identifiers for which this partial is relevant. Used only for
+  // debugging information.
+  repeated string slot_id = 3;
 }
 
 // A half-open source range to be removed: [begin, end).
