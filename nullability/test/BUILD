@@ -437,3 +437,13 @@ cc_test(
         "@llvm-project//third-party/unittest:gtest_main",
     ],
 )
+
+cc_test(
+    name = "nested",
+    srcs = ["nested.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//clang:basic",
+        "@llvm-project//third-party/unittest:gtest",
+    ],
+)
