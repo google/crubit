@@ -900,7 +900,7 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
 #[gtest]
 fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
     let ir = ir_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
-    let record = ir.records().find(|record| *record.rs_name == "S").or_fail()?;
+    let record = ir.records().find(|record| record.rs_name == "S").or_fail()?;
     expect_that!(&**record, field!(&Record.must_bind, eq(true)));
     Ok(())
 }
@@ -3303,7 +3303,7 @@ fn test_record_items() {
     )
     .unwrap();
 
-    let record = ir.records().find(|i| i.rs_name.as_ref() == "TopLevelStruct").unwrap();
+    let record = ir.records().find(|i| i.rs_name == "TopLevelStruct").unwrap();
     let record_items =
         record.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 

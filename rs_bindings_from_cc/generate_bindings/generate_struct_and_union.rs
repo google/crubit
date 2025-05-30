@@ -438,7 +438,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
                     record.is_union() || prev_end <= cur.offset,
                     "Unexpected offset+size for field {:?} in record {}",
                     prev_ir,
-                    record.cc_name.as_ref()
+                    record.cc_name
                 );
             }
             field_definition(

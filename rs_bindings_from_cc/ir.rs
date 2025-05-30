@@ -848,8 +848,8 @@ pub struct BaseClass {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IncompleteRecord {
-    pub cc_name: Rc<Identifier>,
-    pub rs_name: Rc<Identifier>,
+    pub cc_name: Identifier,
+    pub rs_name: Identifier,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     /// A human-readable list of attributes that Crubit doesn't understand.
@@ -968,8 +968,8 @@ pub struct TraitDerives {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Record {
-    pub rs_name: Rc<Identifier>,
-    pub cc_name: Rc<Identifier>,
+    pub rs_name: Identifier,
+    pub cc_name: Identifier,
     pub cc_preferred_name: Rc<str>,
     pub mangled_cc_name: Rc<str>,
     pub id: ItemId,

@@ -240,12 +240,12 @@ pub fn check_by_value(record: &Record) -> Result<()> {
     ensure!(
         record.destructor != SpecialMemberFunc::Unavailable,
         "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
-        record.cc_name.as_ref()
+        record.cc_name
     );
     ensure!(
         !record.is_abstract,
         "Can't directly construct values of type `{}`: it is abstract",
-        record.cc_name.as_ref()
+        record.cc_name
     );
     Ok(())
 }
