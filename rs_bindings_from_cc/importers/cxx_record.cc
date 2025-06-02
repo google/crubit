@@ -469,6 +469,22 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       }
       bridge_type = *std::move(builtin_bridge_type);
     }
+
+    // TODO(b/420696505): Remove this once StatusOr doesn't need to be
+    // hardcoded.
+    if (!bridge_type.has_value()) {
+      const clang::CXXRecordDecl* cxx_record_decl =
+          specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
+      if (ictx_.GetOwningTarget(cxx_record_decl) ==
+              BazelLabel("@abseil-cpp//absl/status:statusor") &&
+          cxx_record_decl->getName() == "StatusOr") {
+        bridge_type = BridgeType{BridgeType::Bridge{
+            .rust_name = "::status::absl::StatusOr",
+            .abi_rust = "::status::absl::StatusOrAbi",
+            .abi_cpp = "::crubit::StatusOrAbi",
+        }};
+      }
+    }
   } else {
     const clang::NamedDecl* named_decl = record_decl;
     if (record_decl->getName().empty()) {
@@ -493,6 +509,19 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           record_decl, UnsupportedItem::Kind::kType, std::nullopt,
           FormattedError::PrefixedStrCat("Record name is not supported",
                                          record_name.status().message()));
+    }
+  }
+
+  // TODO(b/420696505): Remove this once Status doesn't need to be hardcoded.
+  if (!bridge_type.has_value()) {
+    if (ictx_.GetOwningTarget(record_decl) ==
+            BazelLabel("@abseil-cpp//absl/status:status") &&
+        record_decl->getName() == "Status") {
+      bridge_type = BridgeType{BridgeType::Bridge{
+          .rust_name = "absl::Status",
+          .abi_rust = "absl::StatusAbi",
+          .abi_cpp = "::crubit::StatusAbi",
+      }};
     }
   }
 

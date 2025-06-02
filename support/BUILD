@@ -173,6 +173,7 @@ cc_library(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
     ],
 )
 
@@ -181,6 +182,34 @@ cc_test(
     srcs = ["bridge_test.cc"],
     deps = [
         ":bridge_cpp",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "status_bridge_cpp",
+    srcs = ["status_bridge.cc"],
+    hdrs = ["status_bridge.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        ":bridge_cpp",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "status_bridge_cpp_test",
+    srcs = ["status_bridge_test.cc"],
+    deps = [
+        ":bridge_cpp",
+        ":status_bridge_cpp",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )

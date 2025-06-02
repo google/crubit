@@ -574,6 +574,16 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
                     "bridge.h".into()
                 },
             ));
+
+            // TODO(b/420696505): Remove this once Status doesn't need to be hardcoded.
+            if record.owning_target == "@abseil-cpp//absl/status".into()
+                || record.owning_target == "@abseil-cpp//absl/status:statusor".into()
+            {
+                internal_includes.insert(CcInclude::SupportLibHeader(
+                    crubit_support_path_format.into(),
+                    "status_bridge.h".into(),
+                ));
+            }
         }
     }
 
