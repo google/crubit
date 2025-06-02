@@ -153,10 +153,10 @@ TEST(PrimitiveTypesTest, ReturnTypes) {
   static_assert(std::is_same_v<decltype(types::u64()), uint64_t>);
   EXPECT_EQ(types::u64(), 0);
 
-  static_assert(std::is_same_v<decltype(types::isize()), int64_t>);
+  static_assert(std::is_same_v<decltype(types::isize()), intptr_t>);
   EXPECT_EQ(types::isize(), 0);
 
-  static_assert(std::is_same_v<decltype(types::usize()), uint64_t>);
+  static_assert(std::is_same_v<decltype(types::usize()), uintptr_t>);
   EXPECT_EQ(types::usize(), 0);
 
   static_assert(std::is_same_v<decltype(types::f32()), float>);
@@ -196,8 +196,8 @@ TEST(PrimitiveTypesTest, FieldTypes) {
   static_assert(std::is_same_v<decltype(Types::u32), uint32_t>);
   static_assert(std::is_same_v<decltype(Types::i64), int64_t>);
   static_assert(std::is_same_v<decltype(Types::u64), uint64_t>);
-  static_assert(std::is_same_v<decltype(Types::isize), int64_t>);
-  static_assert(std::is_same_v<decltype(Types::usize), uint64_t>);
+  static_assert(std::is_same_v<decltype(Types::isize), intptr_t>);
+  static_assert(std::is_same_v<decltype(Types::usize), uintptr_t>);
   static_assert(std::is_same_v<decltype(Types::f32), float>);
   static_assert(std::is_same_v<decltype(Types::f64), double>);
 
