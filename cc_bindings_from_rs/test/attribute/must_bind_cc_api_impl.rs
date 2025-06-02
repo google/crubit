@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // must_bind_golden
-// Features: supported
+// Features: supported, unsafe_types
 
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]

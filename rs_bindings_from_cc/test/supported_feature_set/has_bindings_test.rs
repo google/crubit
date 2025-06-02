@@ -107,7 +107,7 @@ fn test_crubit_enum_function() {
 
 #[gtest]
 fn test_crubit_union_function() {
-    let u = has_bindings::crubit_union_function(has_bindings::Union { x: 42 });
+    let u = unsafe { has_bindings::crubit_union_function(has_bindings::Union { x: 42 }) };
     assert_eq!(
         // SAFETY: x is initialized, because crubit_union_function is the identity function.
         unsafe { u.x },

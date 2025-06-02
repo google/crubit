@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types
-// Features: supported, wrapper
+// Features: supported, unsafe_types, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -66,10 +66,10 @@ extern "C" {
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=24
 #[inline(always)]
-pub fn ConsumeCompoundDataType(mut container: crate::CompoundDataType) -> ::core::ffi::c_int {
-    unsafe {
-        crate::detail::__rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(&mut container)
-    }
+pub unsafe fn ConsumeCompoundDataType(
+    mut container: crate::CompoundDataType,
+) -> ::core::ffi::c_int {
+    crate::detail::__rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(&mut container)
 }
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=27

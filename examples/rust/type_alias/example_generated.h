@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: supported
+// Features: supported, unsafe_types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
