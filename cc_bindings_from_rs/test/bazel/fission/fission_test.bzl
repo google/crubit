@@ -58,8 +58,12 @@ def _test_fission():
     fission_test(
         name = "fission_test",
         target_under_test = ":cc_library",
+        # Fission isn't supported on macOS, see b/312277119.
+        tags = ["not_run:mac"],
     )
 
+# Tests that Crubit correctly forwards Fission debug info (https://gcc.gnu.org/wiki/DebugFission)
+# from a Rust library.
 def fission_test_suite(name):
     _test_fission()
     native.test_suite(
