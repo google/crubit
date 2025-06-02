@@ -51,6 +51,7 @@ crubit_cc_test(
     deps = [
         ":annotation_reader",
         ":status_test_matchers",
+        ":string_view_conversion",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",

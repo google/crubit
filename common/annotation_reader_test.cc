@@ -9,6 +9,7 @@
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
+#include "common/string_view_conversion.h"
 #include "clang/include/clang/Testing/TestAST.h"
 
 namespace crubit {
@@ -21,7 +22,8 @@ using testing::Ne;
 template <class T>
 T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
   clang::DeclContextLookupResult result =
-      context.getTranslationUnitDecl()->lookup(&context.Idents.get(name));
+      context.getTranslationUnitDecl()->lookup(
+          &context.Idents.get(StringRefFromStringView(name)));
   CHECK(result.isSingleResult());
   return *cast<T>(result.front());
 }
