@@ -19,16 +19,19 @@ def _enable_fission_test_impl(ctx):
     target = tut[DefaultInfo].files.to_list()[0]
 
     ctx.actions.symlink(output = output, target_file = target, is_executable = True)
-    return [
+    providers = [
         DefaultInfo(
             executable = output,
         ),
     ]
+    if testing.ExecutionInfo in tut:
+        providers.append(tut[testing.ExecutionInfo])
+    return providers
 
 enable_fission_test = rule(
     implementation = _enable_fission_test_impl,
     attrs = {
-        "target_under_test": attr.label(mandatory = True, cfg = _enable_fission_transition),
+        "target_under_test": attr.label(mandatory = True, cfg = _enable_fission_transition, executable = True),
     },
     test = True,
 )
