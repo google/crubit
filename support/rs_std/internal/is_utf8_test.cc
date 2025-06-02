@@ -39,7 +39,8 @@ static_assert(rs_std::internal::IsUtf8("abc\xe0\xa0\x80"));
 
 template <int... Bytes>
 constexpr bool BytesAreUtf8() {
-  const std::array<char, sizeof...(Bytes)> bytes_array = {Bytes...};
+  const std::array<char, sizeof...(Bytes)> bytes_array = {
+      static_cast<char>(Bytes)...};
   return rs_std::internal::IsUtf8(
       absl::string_view(bytes_array.data(), bytes_array.size()));
 }

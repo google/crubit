@@ -52,8 +52,10 @@ namespace rs_std::internal {
 
 // Returns whether the given character is ASCII.
 constexpr bool IsAscii(char c) {
-  constexpr char kMaxAscii = '\u007f';
-  return c <= kMaxAscii;
+  // We explicitly use `unsigned char` because the comparison would always be
+  // true if `char` is signed.
+  constexpr unsigned char kMaxAscii = '\u007f';
+  return static_cast<unsigned char>(c) <= kMaxAscii;
 }
 
 // Returns whether the given string is all ASCII.
@@ -127,22 +129,27 @@ constexpr bool IsUtf8Char(absl::string_view str) {
     default:
       return false;
 
+      // We explicitly use `unsigned char` in the following because some of the
+      // comparisons would otherwise be tautological if `char` is signed.
+      // (For example, `fourth` > 0xBF is always false if `fourth` is a
+      // `signed char`.)
+
     case 4: {
-      char fourth = str[3];
+      unsigned char fourth = str[3];
       if (fourth < 0x80 || fourth > 0xBF) {
         return false;
       }
       ABSL_FALLTHROUGH_INTENDED;
     }
     case 3: {
-      char third = str[2];
+      unsigned char third = str[2];
       if (third < 0x80 || third > 0xBF) {
         return false;
       }
       ABSL_FALLTHROUGH_INTENDED;
     }
     case 2: {
-      char second = str[1];
+      unsigned char second = str[1];
       if (second < 0x80 || second > 0xBF) {
         return false;
       }
@@ -180,7 +187,7 @@ constexpr bool IsUtf8Char(absl::string_view str) {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case 1: {
-      char first = str[0];
+      unsigned char first = str[0];
       if (first >= 0x80 && first < 0xC2) {
         return false;
       }
@@ -199,7 +206,9 @@ constexpr bool IsUtf8(absl::string_view str) {
     return true;
   }
   while (!str.empty()) {
-    const uint8_t char_size = kFirstByteToUtf8CharSize[str[0]];
+    // Cast to `unsigned char` to ensure correctness if char is signed.
+    const uint8_t char_size =
+        kFirstByteToUtf8CharSize[static_cast<unsigned char>(str[0])];
     if (char_size > str.size()) {
       return false;
     }
