@@ -46,6 +46,8 @@ crubit_rust_test(
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
+    # We don't yet support running cc_bindings_from_rs itself on macOS (we only target macOS).
+    tags = ["not_run:mac"],
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:regex",
@@ -59,6 +61,8 @@ crubit_sh_test(
     data = [
         ":cc_bindings_from_rs",
     ],
+    # We don't yet support running cc_bindings_from_rs itself on macOS (we only target macOS).
+    tags = ["not_run:mac"],
     deps = [
         "//util/shell/gbash",
         "//util/shell/gbash:unit",
@@ -87,6 +91,8 @@ crubit_rust_test(
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
+    # We don't yet support running rustc itself on macOS (we only target macOS).
+    tags = ["not_run:mac"],
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:itertools",
@@ -111,6 +117,8 @@ crubit_rust_test(
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
+    # We don't yet support running rustc itself on macOS (we only target macOS).
+    tags = ["not_run:mac"],
     deps = [
         ":crubit_attr",
         ":run_compiler_test_support",
@@ -138,6 +146,8 @@ crubit_rust_test(
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
+    # We don't yet support running rustc itself on macOS (we only target macOS).
+    tags = ["not_run:mac"],
     deps = [
         ":run_compiler_test_support",
         "@crate_index//:tempfile",
@@ -167,6 +177,8 @@ crubit_rust_test(
     name = "run_compiler_test_support_test",
     crate = ":run_compiler_test_support",
     rustc_flags = ["--cfg=oss"],
+    # We don't yet support running rustc itself on macOS (we only target macOS).
+    tags = ["not_run:mac"],
 )
 
 rust_library(
