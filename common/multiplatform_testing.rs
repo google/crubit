@@ -11,6 +11,8 @@ use std::sync::LazyLock;
 pub enum Platform {
     X86Linux,
     ArmLinux,
+    X86MacOS,
+    ArmMacOS,
 }
 
 impl Platform {
@@ -18,6 +20,8 @@ impl Platform {
         match self {
             Platform::X86Linux => "x86_64-unknown-linux-gnu",
             Platform::ArmLinux => "aarch64-unknown-linux-gnu",
+            Platform::X86MacOS => "x86_64-apple-darwin",
+            Platform::ArmMacOS => "arm64-apple-darwin",
         }
     }
 }
@@ -34,6 +38,8 @@ static TEST_PLATFORM: LazyLock<Result<Platform, String>> = LazyLock::new(|| {
     let platform = match env.as_str() {
         "x86_linux" => Platform::X86Linux,
         "arm_linux" => Platform::ArmLinux,
+        "darwin_x86_64" => Platform::X86MacOS,
+        "darwin_arm64" => Platform::ArmMacOS,
         _ => return Err(format!("Unknown platform: {env}")),
     };
     Ok(platform)

@@ -11,6 +11,8 @@ load(
 _PLATFORMS = [
     "x86_linux",
     "arm_linux",
+    "darwin_x86_64",
+    "darwin_arm64",
 ]
 
 def multiplatform_rust_test(name, **kwargs):

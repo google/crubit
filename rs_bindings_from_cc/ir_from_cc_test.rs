@@ -80,16 +80,32 @@ fn test_function() {
 #[gtest]
 fn test_function_with_asm_label() {
     let ir = ir_from_cc("int f(int a, int b) asm(\"foo\");").unwrap();
-    assert_ir_matches!(
-        ir,
-        quote! {
-            Func {
-                cc_name: "f",
-                rs_name: "f", ...
-                mangled_name: "foo", ...
-            }
+    match multiplatform_testing::test_platform() {
+        // If a declaration uses an asm label, the Clang mangler adds a '\u{1}' prefix on some
+        // platforms to signify that LLVM should not perform any LLVM-level mangling on it.
+        multiplatform_testing::Platform::ArmMacOS | multiplatform_testing::Platform::X86MacOS => {
+            assert_ir_matches!(
+                ir,
+                quote! {
+                    Func {
+                        cc_name: "f",
+                        rs_name: "f", ...
+                        mangled_name: "\u{1}foo", ...
+                    }
+                }
+            )
         }
-    );
+        _ => assert_ir_matches!(
+            ir,
+            quote! {
+                Func {
+                    cc_name: "f",
+                    rs_name: "f", ...
+                    mangled_name: "foo", ...
+                }
+            }
+        ),
+    }
 }
 
 #[gtest]

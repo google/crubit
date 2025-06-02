@@ -665,10 +665,16 @@ fn test_bridged_base_class() -> Result<()> {
 fn test_base_class_subobject_layout() -> Result<()> {
     let ir = ir_from_cc(
         r#"
-        // We use a class here to force `Derived::z` to live inside the tail padding of `Base`.
+        // We make `Base` non-POD to force `Derived::z` to live inside the tail padding of `Base`.
         // On the Itanium ABI, this would not happen if `Base` were a POD type.
-        class Base {__INT64_TYPE__ x; char y;};
-        struct Derived final : Base {__INT16_TYPE__ z;};
+        struct Base {
+          Base() {}
+          __INT64_TYPE__ x;
+          char y;
+        };
+        struct Derived final : Base {
+          __INT16_TYPE__ z;
+        };
     "#,
     )?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
