@@ -85,7 +85,6 @@ We have *experimental* unreleased support for the following language features:
 *   non-trivial types
 *   b/356224404: non-overloaded member functions, (overloaded) constructors and
     assignment operators
-*   Operator overloading
 *   templated types, bridged to a non-generic concrete type.
     *   e.g. `vector<int>` becomes `struct __crubit_mangled_vector_i`, not
         `struct vector<T>(...)`
