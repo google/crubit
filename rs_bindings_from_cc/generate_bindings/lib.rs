@@ -6,7 +6,9 @@
 use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
-use database::code_snippet::{ApiSnippets, Bindings, BindingsTokens, Feature};
+use database::code_snippet::{
+    ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature,
+};
 use database::db::{self, BindingsGenerator, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -17,8 +19,8 @@ use generate_comment::{generate_comment, generate_doc_comment, generate_unsuppor
 use generate_struct_and_union::generate_incomplete_record;
 use ir::*;
 use itertools::Itertools;
-use proc_macro2::{Ident, TokenStream};
-use quote::quote;
+use proc_macro2::Ident;
+use quote::{quote, ToTokens};
 use rs_type_kind::rs_type_kind;
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
@@ -154,9 +156,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
         let generated = db.generate_item(item.clone())?;
         items.push(generated.main_api);
         thunks.extend(generated.thunks);
-        if !generated.cc_details.is_empty() {
-            cc_details.push(generated.cc_details);
-        }
+        cc_details.extend(generated.cc_details);
         assertions.extend(generated.assertions);
         features |= generated.features;
     }
@@ -215,7 +215,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
         main_api: namespace_tokens,
         features,
         thunks,
-        cc_details: quote! { #( #cc_details )* },
+        cc_details,
         assertions,
         ..Default::default()
     })
@@ -370,15 +370,8 @@ pub fn generate_bindings_tokens(
     let db = new_database(ir, errors, fatal_errors, environment);
     let mut items = vec![];
     let mut thunks = vec![];
-    let mut cc_details = vec![
-        generate_rs_api_impl_includes(&db, crubit_support_path_format),
-        quote! {
-            __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
-            // Disable Clang thread-safety-analysis warnings that would otherwise
-            // complain about thunks that call mutex locking functions in an unpaired way.
-            __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__
-        },
-    ];
+    let mut cc_details =
+        CppDetails::new(generate_rs_api_impl_includes(&db, crubit_support_path_format));
     let mut assertions = vec![];
 
     let mut features = FlagSet::empty();
@@ -395,18 +388,9 @@ pub fn generate_bindings_tokens(
         items.push(generated.main_api);
         thunks.extend(generated.thunks);
         assertions.extend(generated.assertions);
-        if !generated.cc_details.is_empty() {
-            cc_details.push(generated.cc_details);
-        }
+        cc_details.extend(generated.cc_details);
         features |= generated.features;
     }
-
-    cc_details.push(quote! {
-        __NEWLINE__
-        __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__
-        // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
-        __NEWLINE__
-    });
 
     let mod_detail = if thunks.is_empty() {
         quote! {}
@@ -467,7 +451,7 @@ pub fn generate_bindings_tokens(
 
             #assertions
         },
-        rs_api_impl: quote! {#(#cc_details  __NEWLINE__ __NEWLINE__ )*},
+        rs_api_impl: cc_details.into_token_stream(),
     })
 }
 
@@ -549,7 +533,7 @@ fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
     false
 }
 
-fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str) -> TokenStream {
+fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str) -> CppIncludes {
     let ir = db.ir();
 
     let mut internal_includes = BTreeSet::new();
@@ -620,12 +604,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
     let ir_includes =
         ir.public_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
 
-    quote! {
-        #internal_includes
-        __NEWLINE__
-        __COMMENT__ "Public headers of the C++ library being wrapped."
-        #( #ir_includes )* __NEWLINE__
-    }
+    CppIncludes { internal_includes, ir_includes }
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.

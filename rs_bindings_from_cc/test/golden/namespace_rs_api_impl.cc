@@ -51,6 +51,7 @@ extern "C" int __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
     struct test_namespace_bindings::S* s) {
   return test_namespace_bindings::f(std::move(*s));
 }
+
 extern "C" void
 __rust_thunk___ZN23test_namespace_bindings15inline_functionEv() {
   test_namespace_bindings::inline_function();

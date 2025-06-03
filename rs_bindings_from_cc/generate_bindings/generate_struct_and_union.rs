@@ -6,7 +6,9 @@
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
-use database::code_snippet::{ApiSnippets, AssertableTrait, Assertion, Feature, Thunk};
+use database::code_snippet::{
+    ApiSnippets, AssertableTrait, Assertion, Feature, SizeofImpl, Thunk, ThunkImpl,
+};
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
 use database::BindingsGenerator;
@@ -605,9 +607,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         items.push(generated.main_api);
         thunks_from_record_items.extend(generated.thunks);
         assertions_from_record_items.extend(generated.assertions);
-        if !generated.cc_details.is_empty() {
-            thunk_impls_from_record_items.push(generated.cc_details);
-        }
+        thunk_impls_from_record_items.extend(generated.cc_details);
         features |= generated.features;
     }
 
@@ -703,7 +703,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         features,
         assertions,
         thunks: thunks_from_record_items,
-        cc_details: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
+        cc_details: thunk_impls_from_record_items,
         ..Default::default()
     })
 }
@@ -730,47 +730,50 @@ pub fn generate_derives(record: &Record) -> Vec<Ident> {
     derives
 }
 
-fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Result<TokenStream> {
-    let record_ident = expect_format_cc_type_name(record.cc_name.identifier.as_ref());
+fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Result<ThunkImpl> {
     let namespace_qualifier = db.ir().namespace_qualifier(record).format_for_cc()?;
-    let tag_kind = record.cc_tag_kind();
-    let field_assertions = record
+    let fields_and_expected_offsets: Vec<(TokenStream, usize)> = record
         .fields
         .iter()
-        .filter(|f| f.access == AccessSpecifier::Public && f.identifier.is_some())
-        // https://en.cppreference.com/w/cpp/types/offsetof points out that "if member is [...]
-        // a bit-field [...] the behavior [of `offsetof` macro] is undefined.".  In such
-        // scenario clang reports an error: cannot compute offset of bit-field 'field_name'.
-        .filter(|f| !f.is_bitfield)
-        .map(|field| {
+        .filter_map(|field| {
+            if field.access != AccessSpecifier::Public {
+                return None;
+            }
+
+            // https://en.cppreference.com/w/cpp/types/offsetof points out that "if member is [...]
+            // a bit-field [...] the behavior [of `offsetof` macro] is undefined.".  In such
+            // scenario clang reports an error: cannot compute offset of bit-field 'field_name'.
+            if field.is_bitfield {
+                return None;
+            }
+
             // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
             // offset in bytes, so we need to convert.  We can assert that
             // `field.offset` is always at field boundaries, because the
             // bitfields have been filtered out earlier.
             assert_eq!(field.offset % 8, 0);
-            let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
+            let expected_offset = field.offset / 8;
+            let field_ident = expect_format_cc_type_name(&field.identifier.as_ref()?.identifier);
+            Some((field_ident, expected_offset))
+        })
+        .collect();
 
-            let field_ident =
-                expect_format_cc_type_name(&field.identifier.as_ref().unwrap().identifier);
-            let actual_offset = quote! {
-                CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident)
-            };
-
-            quote! { static_assert( #actual_offset == #expected_offset); }
-        });
     // only use CRUBIT_SIZEOF for alignment > 1, so as to simplify the generated
     // code.
-    let size = Literal::usize_unsuffixed(record.size_align.size);
-    let alignment = Literal::usize_unsuffixed(record.size_align.alignment);
-    let sizeof = if record.size_align.alignment == 1 {
-        quote! {sizeof}
+    let sizeof_impl = if record.size_align.alignment > 1 {
+        SizeofImpl::RoundUpToAlignment
     } else {
-        quote! {CRUBIT_SIZEOF}
+        SizeofImpl::Builtin
     };
-    Ok(quote! {
-        static_assert(#sizeof(#tag_kind #namespace_qualifier #record_ident) == #size);
-        static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);
-        #( #field_assertions )*
+
+    Ok(ThunkImpl::LayoutAssertion {
+        tag_kind: if record.is_anon_record_with_typedef { None } else { Some(record.record_type) },
+        namespace_qualifier,
+        record_ident: record.cc_name.identifier.clone(),
+        sizeof_impl,
+        size: record.size_align.size,
+        alignment: record.size_align.alignment,
+        fields_and_expected_offsets,
     })
 }
 
@@ -898,10 +901,10 @@ fn cc_struct_upcast_impl(
             ));
             let base_cc_name = cpp_type_name_for_record(base_record.as_ref(), ir)?;
             let derived_cc_name = cpp_type_name_for_record(record.as_ref(), ir)?;
-            cc_impls.push(quote! {
-                extern "C" const #base_cc_name& #cast_fn_name(const #derived_cc_name& from) {
-                    return from;
-                }
+            cc_impls.push(ThunkImpl::Upcast {
+                base_cc_name: base_cc_name.clone(),
+                cast_fn_name: cast_fn_name.clone(),
+                derived_cc_name: derived_cc_name.clone(),
             });
             thunks.push(Thunk::Upcast {
                 cast_fn_name: cast_fn_name.clone(),
@@ -925,7 +928,7 @@ fn cc_struct_upcast_impl(
     Ok(ApiSnippets {
         main_api: quote! {#(#impls)*},
         thunks,
-        cc_details: quote! {#(#cc_impls)*},
+        cc_details: cc_impls,
         ..Default::default()
     })
 }

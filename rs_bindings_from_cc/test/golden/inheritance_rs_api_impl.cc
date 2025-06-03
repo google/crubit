@@ -208,11 +208,13 @@ __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1___2f_2fthird_5fpar
     const class VirtualDerived& from) {
   return from;
 }
+
 extern "C" const class Base1&
 __crubit_dynamic_upcast__14VirtualDerived__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
     const class VirtualDerived& from) {
   return from;
 }
+
 extern "C" const class VirtualBase2&
 __crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
     const class VirtualDerived& from) {

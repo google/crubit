@@ -1465,7 +1465,7 @@ pub fn generate_function(
     // If we are generating bindings for a derived record, we reuse the base
     // record's thunks, so we don't need to generate thunks.
     let cc_details = if derived_record.is_some() || failed {
-        quote! {}
+        None
     } else {
         generate_function_thunk_impl(db, &func)?
     };
@@ -1477,7 +1477,7 @@ pub fn generate_function(
             _ => vec![],
         },
         features,
-        cc_details,
+        cc_details: cc_details.into_iter().collect(),
         ..Default::default()
     };
     Ok(Some(GeneratedFunction {

@@ -5,7 +5,7 @@
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use crubit_abi_type::CrubitAbiTypeToCppTokens;
-use database::code_snippet::Thunk;
+use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
     format_generic_params, unique_lifetimes, BridgeRsTypeKind, Mutability, RsTypeKind,
@@ -250,9 +250,9 @@ pub fn thunk_ident_for_derived_member_function(func: &Func, derived_record: Rc<R
 pub fn generate_function_thunk_impl(
     db: &dyn BindingsGenerator,
     func: &Func,
-) -> Result<TokenStream> {
+) -> Result<Option<ThunkImpl>> {
     if can_skip_cc_thunk(db, func) {
-        return Ok(quote! {});
+        return Ok(None);
     }
     let ir = db.ir();
     let thunk_ident = thunk_ident(func);
@@ -494,12 +494,13 @@ pub fn generate_function_thunk_impl(
         }
     };
 
-    Ok(quote! {
-        #conversion_externs
-
-        extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
-            #conversion_stmts
-            #return_stmt;
-        }
-    })
+    Ok(Some(ThunkImpl::Function {
+        conversion_externs,
+        return_type_name,
+        thunk_ident,
+        param_types,
+        param_idents,
+        conversion_stmts,
+        return_stmt,
+    }))
 }

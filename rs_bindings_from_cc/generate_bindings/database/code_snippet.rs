@@ -7,9 +7,10 @@
 use crate::db::BindingsGenerator;
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::{anyhow, Error, Result};
+use code_gen_utils::{expect_format_cc_type_name, CcInclude};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
-use ir::{BazelLabel, GenericItem, Item, UnqualifiedIdentifier};
+use ir::{BazelLabel, GenericItem, Item, RecordType, UnqualifiedIdentifier};
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
 use std::fmt::{Display, Formatter};
@@ -40,7 +41,7 @@ pub struct ApiSnippets {
     /// C++ implementation details - for example:
     /// - A C++ implementation of an `extern "C"` thunk,
     /// - C++ static assertions about struct size, aligment, and field offsets.
-    pub cc_details: TokenStream,
+    pub cc_details: Vec<ThunkImpl>,
 
     pub features: FlagSet<Feature>,
 }
@@ -510,7 +511,7 @@ impl ToTokens for Thunk {
         match self {
             Thunk::Upcast { cast_fn_name, derived_name, base_name } => {
                 quote! {
-                    pub fn #cast_fn_name (from: *const #derived_name) -> *const #base_name;
+                    pub fn #cast_fn_name(from: *const #derived_name) -> *const #base_name;
                 }
                 .to_tokens(tokens);
             }
@@ -523,7 +524,10 @@ impl ToTokens for Thunk {
                 return_type_fragment,
             } => {
                 if let Some(mangled_name) = mangled_name {
-                    quote! {#[link_name = #mangled_name]}.to_tokens(tokens);
+                    quote! {
+                        #[link_name = #mangled_name]
+                    }
+                    .to_tokens(tokens);
                 }
 
                 let return_type_fragment =
@@ -532,10 +536,178 @@ impl ToTokens for Thunk {
                 // Note: some of these are `safe`, but _all_ of them are currently wrapped by a
                 // (possibly safe) function, so we leave them all `unsafe` for convenience.
                 quote! {
-                    pub(crate) unsafe fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
+                    pub(crate) unsafe fn #thunk_ident #generic_params(
+                        #( #param_idents: #param_types ),*
                     ) #return_type_fragment ;
-                }.to_tokens(tokens);
+                }
+                .to_tokens(tokens);
             }
         }
+    }
+}
+
+/// Abstract representation of generated C++ code that implements the Rust thunk.
+#[derive(Clone, Debug)]
+pub enum ThunkImpl {
+    /// A function that upcasts from a derived type to a base type.
+    Upcast { base_cc_name: TokenStream, cast_fn_name: Ident, derived_cc_name: TokenStream },
+    /// A function that implements a Rust function thunk.
+    Function {
+        conversion_externs: TokenStream,
+        return_type_name: TokenStream,
+        thunk_ident: Ident,
+        param_types: Vec<TokenStream>,
+        param_idents: Vec<TokenStream>,
+        conversion_stmts: TokenStream,
+        return_stmt: TokenStream,
+    },
+    /// A set of `static_assert`s that check the layout of a record.
+    LayoutAssertion {
+        tag_kind: Option<RecordType>,
+        namespace_qualifier: TokenStream,
+        record_ident: Rc<str>,
+        sizeof_impl: SizeofImpl,
+        size: usize,
+        alignment: usize,
+        fields_and_expected_offsets: Vec<(TokenStream, usize)>,
+    },
+}
+
+impl ToTokens for ThunkImpl {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            ThunkImpl::Upcast { base_cc_name, cast_fn_name, derived_cc_name } => {
+                quote! {
+                    extern "C" const #base_cc_name& #cast_fn_name(const #derived_cc_name& from) {
+                        return from;
+                    }
+                }
+                .to_tokens(tokens);
+            }
+            ThunkImpl::Function {
+                conversion_externs,
+                return_type_name,
+                thunk_ident,
+                param_types,
+                param_idents,
+                conversion_stmts,
+                return_stmt,
+            } => {
+                quote! {
+                    #conversion_externs
+
+                    extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
+                        #conversion_stmts
+                        #return_stmt;
+                    }
+                }
+                .to_tokens(tokens);
+            }
+            ThunkImpl::LayoutAssertion {
+                tag_kind,
+                namespace_qualifier,
+                record_ident,
+                sizeof_impl,
+                size,
+                alignment,
+                fields_and_expected_offsets,
+            } => {
+                let size = Literal::usize_unsuffixed(*size);
+                let alignment = Literal::usize_unsuffixed(*alignment);
+
+                let record_ident = expect_format_cc_type_name(record_ident.as_ref());
+                quote! {
+                    static_assert(#sizeof_impl(#tag_kind #namespace_qualifier #record_ident) == #size);
+                    static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);
+                }.to_tokens(tokens);
+
+                for (field_ident, expected_offset) in fields_and_expected_offsets {
+                    let expected_offset = Literal::usize_unsuffixed(*expected_offset);
+
+                    quote! {
+                        static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident) == #expected_offset);
+                    }.to_tokens(tokens);
+                }
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CppIncludes {
+    pub internal_includes: TokenStream,
+    pub ir_includes: Vec<CcInclude>,
+}
+
+impl ToTokens for CppIncludes {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let CppIncludes { internal_includes, ir_includes } = self;
+        quote! {
+            #internal_includes
+            __NEWLINE__
+            __COMMENT__ "Public headers of the C++ library being wrapped."
+            #( #ir_includes )* __NEWLINE__
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum SizeofImpl {
+    /// The `sizeof` keyword.
+    Builtin,
+    /// Like sizeof, but rounds up to alignment in case the type has a strange
+    /// sizeof.
+    ///
+    /// In particular, this is true of type aliases which override alignment but
+    /// not size, as in e.g. `typedef __attribute__((aligned(N)) struct {} MyAlias;`.
+    RoundUpToAlignment,
+}
+
+impl ToTokens for SizeofImpl {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            SizeofImpl::Builtin => quote! { sizeof },
+            SizeofImpl::RoundUpToAlignment => quote! { CRUBIT_SIZEOF },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+/// Abstract representation of a *_rs_api_impl file.
+pub struct CppDetails {
+    includes: CppIncludes,
+    // The "pragma clang diagnostic push/pop" is automatically inserted around the thunks.
+    thunks: Vec<ThunkImpl>,
+}
+
+impl CppDetails {
+    pub fn new(includes: CppIncludes) -> Self {
+        CppDetails { includes, thunks: vec![] }
+    }
+}
+
+impl Extend<ThunkImpl> for CppDetails {
+    fn extend<T: IntoIterator<Item = ThunkImpl>>(&mut self, iter: T) {
+        self.thunks.extend(iter);
+    }
+}
+
+impl ToTokens for CppDetails {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let CppDetails { includes, thunks } = self;
+        quote! {
+            #includes
+            __NEWLINE__
+            __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
+            // Disable Clang thread-safety-analysis warnings that would otherwise
+            // complain about thunks that call mutex locking functions in an unpaired way.
+            __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__ __NEWLINE__
+
+            #( #thunks __NEWLINE__ __NEWLINE__ )*
+
+            __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__
+        }
+        .to_tokens(tokens);
     }
 }
