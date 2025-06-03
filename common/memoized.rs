@@ -415,11 +415,10 @@ pub mod internal {
             }
             self.active.borrow_mut().insert(args.clone(), FoundCycle::No);
             let return_value = f(args.clone());
-            let found_cycle = self
-                .active
-                .borrow_mut()
-                .remove(&args)
-                .expect("This call frame inserted args and nobody removed them");
+            let found_cycle = self.active.borrow_mut().remove(&args).expect(
+                "Internal error: currently-active cycle detection args not found. \
+                      Most likely this is because of a buggy Clone/Eq/Hash impl.",
+            );
 
             if found_cycle == FoundCycle::Yes {
                 // We did hit outselves in a cycle but now we've broken out of it.

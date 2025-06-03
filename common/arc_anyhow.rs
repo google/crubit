@@ -87,7 +87,7 @@ impl Error {
 
 impl PartialEq for Error {
     fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(&*self, &*other)
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 
@@ -344,5 +344,12 @@ mod tests {
         })()
         .unwrap_err();
         assert_eq!(&format!("{err}"), "message");
+    }
+
+    #[gtest]
+    fn test_cloned_equality() {
+        let e1 = anyhow!("message");
+        let e2 = e1.clone();
+        assert_eq!(e1, e2);
     }
 }
