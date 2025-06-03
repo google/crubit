@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use std::collections::hash_map::HashMap;
-use std::rc::Rc;
 use std::sync::LazyLock;
 
 use arc_anyhow::Result;
