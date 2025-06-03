@@ -93,6 +93,12 @@ impl PartialEq for Error {
 
 impl Eq for Error {}
 
+impl std::hash::Hash for Error {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        Arc::as_ptr(&self.0).hash(state)
+    }
+}
+
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         Display::fmt(&*self.0, f)
@@ -348,8 +354,17 @@ mod tests {
 
     #[gtest]
     fn test_cloned_equality() {
+        fn hash(e: &Error) -> u64 {
+            use std::hash::Hash;
+            use std::hash::Hasher;
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            e.hash(&mut hasher);
+            hasher.finish()
+        }
+
         let e1 = anyhow!("message");
         let e2 = e1.clone();
         assert_eq!(e1, e2);
+        assert_eq!(hash(&e1), hash(&e2));
     }
 }
