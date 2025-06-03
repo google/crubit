@@ -29,7 +29,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   // Default::default
   TypeWithStr();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~TypeWithStr() = default;
   TypeWithStr(TypeWithStr&&) = default;
   TypeWithStr& operator=(TypeWithStr&&) = default;

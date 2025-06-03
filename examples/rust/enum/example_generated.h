@@ -25,7 +25,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   // Default::default
   Color();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~Color() = default;
   Color(Color&&) = default;
   Color& operator=(Color&&) = default;

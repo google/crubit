@@ -28,7 +28,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `X` doesn't implement the `Default` trait
   X() = delete;
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~X() = default;
   X(X&&) = default;
   X& operator=(X&&) = default;

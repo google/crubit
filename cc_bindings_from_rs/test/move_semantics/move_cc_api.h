@@ -76,7 +76,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   // Default::default
   Copyable();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~Copyable() = default;
   Copyable(Copyable&&) = default;
   Copyable& operator=(Copyable&&) = default;

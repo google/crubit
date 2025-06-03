@@ -43,7 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `AdtHoldingFiveAndSix` doesn't implement the `Default` trait
   AdtHoldingFiveAndSix() = delete;
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~AdtHoldingFiveAndSix() = default;
   AdtHoldingFiveAndSix(AdtHoldingFiveAndSix&&) = default;
   AdtHoldingFiveAndSix& operator=(AdtHoldingFiveAndSix&&) = default;

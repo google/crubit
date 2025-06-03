@@ -35,7 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   // Default::default
   NeverStruct();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~NeverStruct() = default;
   NeverStruct(NeverStruct&&) = default;
   NeverStruct& operator=(NeverStruct&&) = default;
@@ -60,7 +60,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   union {
     //  Having a non-ZST field avoids hitting the following error:
     //
-    //  \"Zero-sized types (ZSTs) are not supported (b/258259459)\"
+    //  "Zero-sized types (ZSTs) are not supported (b/258259459)"
     //
     // Generated from:
     // cc_bindings_from_rs/test/never/never.rs;l=21

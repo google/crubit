@@ -39,7 +39,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `test_use_glob::X1` doesn't implement the `Default` trait
   X1() = delete;
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~X1() = default;
   X1(X1&&) = default;
   X1& operator=(X1&&) = default;
@@ -78,7 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
   // `private_module::Bar` doesn't implement the `Default` trait
   Bar() = delete;
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~Bar() = default;
   Bar(Bar&&) = default;
   Bar& operator=(Bar&&) = default;
@@ -109,7 +109,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   // `private_module::Foo` doesn't implement the `Default` trait
   Foo() = delete;
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;
   Foo& operator=(Foo&&) = default;
@@ -172,7 +172,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   // `m1::m2::InnerX` doesn't implement the `Default` trait
   InnerX() = delete;
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~InnerX() = default;
   InnerX(InnerX&&) = default;
   InnerX& operator=(InnerX&&) = default;

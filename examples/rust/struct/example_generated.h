@@ -27,7 +27,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
   // Default::default
   Struct();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~Struct() = default;
   Struct(Struct&&) = default;
   Struct& operator=(Struct&&) = default;

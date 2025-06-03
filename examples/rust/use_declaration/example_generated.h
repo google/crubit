@@ -34,7 +34,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   Type();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~Type() = default;
   Type(Type&&) = default;
   Type& operator=(Type&&) = default;

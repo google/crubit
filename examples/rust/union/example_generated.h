@@ -27,7 +27,7 @@ ReprCUnion final {
   // Default::default
   ReprCUnion();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~ReprCUnion() = default;
   ReprCUnion(ReprCUnion&&) = default;
   ReprCUnion& operator=(ReprCUnion&&) = default;

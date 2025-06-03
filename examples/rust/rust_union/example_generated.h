@@ -28,7 +28,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   ReprRustUnion();
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~ReprRustUnion() = default;
   ReprRustUnion(ReprRustUnion&&) = default;
   ReprRustUnion& operator=(ReprRustUnion&&) = default;

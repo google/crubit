@@ -138,7 +138,10 @@ pub fn write_unformatted_tokens(
                     writeln!(
                         result,
                         "// {}",
-                        lit.to_string().trim_matches('"').replace("\\n", "\n// ")
+                        lit.to_string()
+                            .trim_matches('"')
+                            .replace("\\\"", "\"")
+                            .replace("\\n", "\n// ")
                     )?;
                 } else {
                     bail!("__COMMENT__ must be followed by a literal")
@@ -520,5 +523,15 @@ void foo() {}
 void bar() {}
 }  // namespace ns"#
         );
+    }
+
+    #[gtest]
+    fn test_quote_in_comment() -> Result<()> {
+        assert_eq!(
+            tokens_to_string(quote! { a __COMMENT__ "test \" - quote" })?,
+            r#"a // test " - quote
+"#
+        );
+        Ok(())
     }
 }

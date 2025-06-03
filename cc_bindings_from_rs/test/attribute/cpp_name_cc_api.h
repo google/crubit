@@ -30,7 +30,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   // `Original` doesn't implement the `Default` trait
   Replaced() = delete;
 
-  // No custom `Drop` impl and no custom \"drop glue\" required
+  // No custom `Drop` impl and no custom "drop glue" required
   ~Replaced() = default;
   Replaced(Replaced&&) = default;
   Replaced& operator=(Replaced&&) = default;
