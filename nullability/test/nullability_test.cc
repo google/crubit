@@ -420,7 +420,8 @@ class TestOutput : public DiagnosticConsumer {
     // We should find a way to avoid this.
     std::string Rendered;
     llvm::raw_string_ostream OS(Rendered);
-    TextDiagnostic(OS, LangOpts, new DiagnosticOptions())
+    clang::DiagnosticOptions DiagOpts;
+    TextDiagnostic(OS, LangOpts, DiagOpts)
         .emitDiagnostic(
             FullSourceLoc(Info.getLocation(), Info.getSourceManager()), Level,
             Message, Info.getRanges(), Info.getFixItHints());
