@@ -1175,11 +1175,19 @@ pub fn generate_function(
     let reportable_status: Result<(), ErrorList> = errors.consolidate();
     let failed = reportable_status.is_err();
 
+    let (derived_class_prefix, sep) = if let Some(ref derived_record) = derived_record {
+        (derived_record.mangled_cc_name.as_ref(), "_")
+    } else {
+        ("", "")
+    };
     let ErrorsAsUnsatisfiedTraitBound {
         lifetime_param: error_lifetime_param,
         mut unsatisfied_where_clause,
         unimplemented_trait_def,
-    } = errors_as_unsatisfied_trait_bound(&reportable_status, &func.mangled_name);
+    } = errors_as_unsatisfied_trait_bound(
+        &reportable_status,
+        &format!("{sep}{derived_class_prefix}{sep}{}", &func.mangled_name),
+    );
 
     let api_func_def = {
         let thunk_ident = if let Some(ref derived_record) = derived_record {
