@@ -109,6 +109,8 @@ bindings_for_toolchain_headers = rule(
         "public_libcxx_hdrs": attr.string_list(),
         "extra_rs_srcs": attr.label_list(allow_files = True),
         "_stl": attr.label(default = "//third_party/stl:stl"),
+        # TODO: b/421934470 - Fix uses of exec groups and re-enable AEG
+        "_use_auto_exec_groups": attr.bool(default = False),
     },
     toolchains = [
         "@rules_rust//rust:toolchain_type",

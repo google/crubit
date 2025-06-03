@@ -326,6 +326,8 @@ rust_bindings_from_cc_aspect = aspect(
         "_std": attr.label(
             default = "//support/cc_std",
         ),
+        # TODO: b/421934470 - Fix uses of exec groups and re-enable AEG
+        "_use_auto_exec_groups": attr.bool(default = False),
     },
     toolchains = [
         "@rules_rust//rust:toolchain_type",

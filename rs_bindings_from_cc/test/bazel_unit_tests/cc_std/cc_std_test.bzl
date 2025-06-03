@@ -103,6 +103,8 @@ cc_std_test = rule(
         "_llvm_builtin_headers": attr.label(
             default = "@llvm-project//clang:builtin_headers_filegroup",
         ),
+        # TODO: b/421934470 - Fix uses of exec groups and re-enable AEG
+        "_use_auto_exec_groups": attr.bool(default = False),
     },
     toolchains = [
         "@bazel_tools//tools/cpp:toolchain_type",
