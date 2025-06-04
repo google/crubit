@@ -115,4 +115,7 @@ struct Nonmovable final {
 
 inline Nonmovable ReturnsNonmovable() { return Nonmovable(); }
 
+// This doesn't receive bindings, because parameter types must be movable.
+inline Nonmovable DisabledFunction(Nonmovable) { return Nonmovable(); }
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NONUNPIN_NONUNPIN_H_

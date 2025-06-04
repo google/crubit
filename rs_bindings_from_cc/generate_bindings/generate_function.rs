@@ -1198,13 +1198,20 @@ pub fn generate_function(
                 thunk_args,
             )?
         } else {
-            quote! {
+            let mut result = quote! {
                 #![allow(unused_variables)]
                 unreachable!(
                     "This impl can never be instantiated. \
                     If this message appears at runtime, please report a <internal link>."
                 )
+            };
+            if !return_type.is_unpin() {
+                result.extend(quote! {
+                    ; #[allow(unreachable_code)]
+                    ::ctor::UnreachableCtor::new()
+                });
             }
+            result
         };
 
         // If there are no bindings, use `Public` for the sake of "keeping on going" when

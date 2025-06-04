@@ -422,6 +422,39 @@ impl<T> Ctor for RustMoveCtor<T> {
     }
 }
 
+/// A `Ctor` which represents unreachable control flow.
+///
+/// This can be used instead of `!`, when an `impl Ctor` is needed:
+///
+/// ```
+/// pub fn foo() -> impl Ctor<Output=Bar> {
+///     todo!("TODO: implement foo");
+///     #[allow(unreachable_code)]
+///     UnreachableCtor::new()
+/// }
+/// ```
+///
+/// Unfortunately, it is not enough to have just a `todo!()`, because
+/// `!` doesn't implement `Ctor<Output=Bar>`. (Or, if it did, it would
+/// not implement `Ctor<Output=Baz>`.) `UnreachableCtor` implements
+/// `Ctor<Output=T>` for any `T`, and can be used to satisfy the type
+/// obligations.
+#[must_use = must_use_ctor!()]
+#[derive(Copy, Clone)]
+pub struct UnreachableCtor<T>(PhantomData<T>);
+impl<T> UnreachableCtor<T> {
+    pub fn new() -> Self {
+        UnreachableCtor(PhantomData::default())
+    }
+}
+impl<T> !Unpin for UnreachableCtor<T> {}
+impl<T> Ctor for UnreachableCtor<T> {
+    type Output = T;
+    unsafe fn ctor(self, _: Pin<&mut MaybeUninit<T>>) {
+        unreachable!();
+    }
+}
+
 /// All Rust types are C++-default-constructible if safe (i.e. Unpin + Default).
 impl<T: Unpin + Default + Sized> CtorNew<()> for T {
     type CtorType = RustMoveCtor<Self>;
