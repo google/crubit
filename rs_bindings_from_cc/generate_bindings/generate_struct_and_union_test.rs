@@ -1675,7 +1675,7 @@ fn test_derived_class_inherits_unambiguous_public_functions_bases() -> Result<()
                 ...
                 #[inline(always)]
                 pub unsafe fn NonColliding(__this: *mut Self) {
-                    crate::detail::__rust_thunk___ZN4test5Base112NonCollidingEv_Derived(oops::UnsafeUpcast::<_>::unsafe_upcast(__this))
+                    crate::detail::__rust_thunk___ZN4test5Base112NonCollidingEv(oops::UnsafeUpcast::<_>::unsafe_upcast(__this))
                 }
             }
             ...

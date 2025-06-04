@@ -887,7 +887,7 @@ impl MethodDerived {
     #[inline(always)]
     pub fn Equals<'a, 'b>(&'a mut self, __param_0: Option<&'b crate::MethodBase1>) {
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS__MethodDerived(
+            crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(
                 oops::Upcast::<_>::upcast(self),
                 __param_0,
             )
@@ -899,9 +899,7 @@ impl MethodDerived {
     #[inline(always)]
     pub fn Public<'a>(&'a mut self) {
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase16PublicEv_MethodDerived(
-                oops::Upcast::<_>::upcast(self),
-            )
+            crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(oops::Upcast::<_>::upcast(self))
         }
     }
 }
@@ -1109,15 +1107,6 @@ mod detail {
             __this: &'a mut crate::MethodDerived,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
         ) -> &'a mut crate::MethodDerived;
-        #[link_name = "_ZN11MethodBase16EqualsEPKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16EqualsEPKS__MethodDerived<'a, 'b>(
-            __this: &'a mut crate::MethodBase1,
-            __param_0: Option<&'b crate::MethodBase1>,
-        );
-        #[link_name = "_ZN11MethodBase16PublicEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16PublicEv_MethodDerived<'a>(
-            __this: &'a mut crate::MethodBase1,
-        );
     }
 }
 

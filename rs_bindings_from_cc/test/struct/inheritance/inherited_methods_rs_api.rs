@@ -213,9 +213,7 @@ impl Derived {
     #[inline(always)]
     pub fn has_bindings<'a>(&'a self) -> bool {
         unsafe {
-            crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv_Derived(
-                oops::Upcast::<_>::upcast(self),
-            )
+            crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(oops::Upcast::<_>::upcast(self))
         }
     }
 }
@@ -279,9 +277,6 @@ mod detail {
             __this: &'a mut crate::Derived,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived>,
         ) -> &'a mut crate::Derived;
-        pub(crate) unsafe fn __rust_thunk___ZNK4Base12has_bindingsEv_Derived<'a>(
-            __this: &'a crate::Base,
-        ) -> bool;
     }
 }
 

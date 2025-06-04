@@ -16,10 +16,7 @@ use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
 use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
-use generate_function_thunk::{
-    generate_function_thunk, generate_function_thunk_impl, thunk_ident,
-    thunk_ident_for_derived_member_function,
-};
+use generate_function_thunk::{generate_function_thunk, generate_function_thunk_impl, thunk_ident};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -1124,18 +1121,15 @@ pub fn generate_function(
     }
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-    let thunk: Option<Thunk> = generate_function_thunk(
-        db,
-        &func,
-        &param_idents,
-        &param_types,
-        &return_type,
-        derived_record.clone(),
-    )
-    .map_err(|err| {
-        errors.add(err);
-    })
-    .ok();
+    let thunk: Option<Thunk> = if derived_record.is_some() {
+        None
+    } else {
+        generate_function_thunk(db, &func, &param_idents, &param_types, &return_type)
+            .map_err(|err| {
+                errors.add(err);
+            })
+            .ok()
+    };
 
     let param_value_adjustments =
         adjust_param_types_for_trait_impl(db, &impl_kind, &mut param_types, &errors);
@@ -1190,11 +1184,7 @@ pub fn generate_function(
     );
 
     let api_func_def = {
-        let thunk_ident = if let Some(ref derived_record) = derived_record {
-            thunk_ident_for_derived_member_function(&func, derived_record.clone())
-        } else {
-            thunk_ident(&func)
-        };
+        let thunk_ident = thunk_ident(&func);
 
         let func_body = if reportable_status.is_ok() {
             generate_func_body(

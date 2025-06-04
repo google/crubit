@@ -124,7 +124,6 @@ pub fn generate_function_thunk(
     param_idents: &[Ident],
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
-    derived_record: Option<Rc<Record>>,
 ) -> Result<Thunk> {
     // The first parameter is the output parameter, if any.
     let mut param_types = param_types.iter();
@@ -159,11 +158,7 @@ pub fn generate_function_thunk(
     // Of the remaining lifetimes, collect them.
     let lifetimes: Vec<_> = unique_lifetimes(param_types.clone()).collect();
 
-    let thunk_ident = if let Some(derived_record) = derived_record {
-        thunk_ident_for_derived_member_function(func, derived_record)
-    } else {
-        thunk_ident(func)
-    };
+    let thunk_ident = thunk_ident(func);
 
     let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents =
@@ -231,19 +226,6 @@ pub fn thunk_ident(func: &Func) -> Ident {
     format_ident!(
         "__rust_thunk__{}{odr_suffix}",
         ident_fragment_from_mangled_name(func.mangled_name.as_ref())
-    )
-}
-
-pub fn thunk_ident_for_derived_member_function(func: &Func, derived_record: Rc<Record>) -> Ident {
-    let odr_suffix = if func.is_member_or_descendant_of_class_template {
-        func.owning_target.convert_to_cc_identifier()
-    } else {
-        String::new()
-    };
-    format_ident!(
-        "__rust_thunk__{}{odr_suffix}_{}",
-        ident_fragment_from_mangled_name(func.mangled_name.as_ref()),
-        derived_record.rs_name.identifier.as_ref()
     )
 }
 
