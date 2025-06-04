@@ -13,7 +13,13 @@
 use anyhow::{bail, ensure, Result};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
-use rustc_span::symbol::{kw, Symbol};
+use rustc_span::symbol::Symbol;
+
+#[rustversion::before(2025-05-27)]
+use rustc_span::symbol::kw;
+
+#[rustversion::since(2025-05-27)]
+use rustc_span::symbol::sym;
 
 /// A collection of attributes applied via `#[crubit_annotate::...]`.
 ///
@@ -102,6 +108,12 @@ pub struct CrubitAttrs {
     pub must_bind: bool,
 }
 
+#[rustversion::before(2025-05-27)]
+const EMPTY_SYMBOL: Symbol = kw::Empty;
+
+#[rustversion::since(2025-05-27)]
+const EMPTY_SYMBOL: Symbol = sym::empty;
+
 impl CrubitAttrs {
     const CPP_TYPE: &'static str = "cpp_type";
     const CPP_NAME: &'static str = "cpp_name";
@@ -120,7 +132,7 @@ impl CrubitAttrs {
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
             // MUST_BIND is a boolean attribute, so it does not have a Symbol value.
-            CrubitAttrs::MUST_BIND => self.must_bind.then_some(kw::Empty),
+            CrubitAttrs::MUST_BIND => self.must_bind.then_some(EMPTY_SYMBOL),
             _ => bail!("Invalid attribute name: \"{name}\""),
         })
     }

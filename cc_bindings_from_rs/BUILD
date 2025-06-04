@@ -103,6 +103,9 @@ crubit_rust_test(
 rust_library(
     name = "crubit_attr",
     srcs = ["crubit_attr.rs"],
+    proc_macro_deps = [
+        "@crate_index//:rustversion",
+    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
