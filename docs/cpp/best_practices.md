@@ -1,6 +1,6 @@
 # Best Practices Writing Rust Bindings for Existing C++ Libraries
 
-# Introduction
+## Introduction
 
 This document is an attempt at guidance for how Rust changes can be made to
 existing C++ libraries, including core foundational libraries.
@@ -11,11 +11,9 @@ For an introduction, see [Rust Bindings for C++ Libraries](index).
 
 For technical reasons, it is generally necessary for the C++ library and its
 Rust bindings to be the same Bazel target. It is not possible to define the Rust
-bindings for a target as a completely separate and independent target.
-
-It is not productive to try to isolate the Rust part, and keep it away from the
-C++ part. And in particular, the configuration for the Rust bindings must be
-placed on the C++ target itself.
+bindings for a target as a completely separate and independent target. The
+automatically generated bindings, and their configuration, must be on and in the
+C++ target itself.
 
 <section class="zippy" markdown="1">
 
@@ -211,7 +209,8 @@ this work transparently requires an ever-expanding network of wrapper types, one
 for every compound data type that might contain `T`:
 
 *   `T` must become `WrappedT`
-*   `T&`, if it is supported at all, must become something like `TRef<'a>`.
+*   `const T&`, if it is supported at all, must become something like
+    `TRef<'a>`, or a dynamically sized `&TView`.
 *   `std::vector<T>`, if it is supported at all, must become something like
     `TVector`.
 *   `struct MyStruct {T x;}` must become a wrapped `WrappedMyStruct`.
