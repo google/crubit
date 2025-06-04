@@ -4,8 +4,7 @@
 
 //! Generate comments for the bindings.
 
-use arc_anyhow::Result;
-use database::code_snippet::ApiSnippets;
+use database::code_snippet::{ApiSnippets, MainApi};
 use database::BindingsGenerator;
 use ffi_types::Environment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
@@ -120,11 +119,10 @@ pub fn generate_unsupported(db: &dyn BindingsGenerator, item: Rc<UnsupportedItem
         db.fatal_errors().report(&must_bind_message);
     }
 
-    ApiSnippets { main_api: quote! { __COMMENT__ #message }, ..Default::default() }
+    MainApi::Comment { message: message.into() }.into()
 }
 
 /// Generates Rust source code for a given `Comment`.
-pub fn generate_comment(comment: Rc<Comment>) -> Result<ApiSnippets> {
-    let text = comment.text.as_ref();
-    Ok(quote! { __COMMENT__ #text }.into())
+pub fn generate_comment(comment: Rc<Comment>) -> ApiSnippets {
+    MainApi::Comment { message: comment.text.clone() }.into()
 }

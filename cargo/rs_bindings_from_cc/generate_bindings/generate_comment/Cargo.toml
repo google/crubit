@@ -16,7 +16,6 @@ categories.workspace = true
 path = "../../../../rs_bindings_from_cc/generate_bindings/generate_comment.rs"
 
 [dependencies]
-arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 error_report = { path = "../../../../cargo/common/error_report"}

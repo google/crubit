@@ -134,11 +134,13 @@ unsafe impl oops::Inherits<inheritance_cc::Base0> for crate::Derived2 {
         crate::detail::__crubit_dynamic_upcast__8Derived2__to__5Base0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)
     }
 }
+
 unsafe impl oops::Inherits<inheritance_cc::Base1> for crate::Derived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
         (derived as *const _ as *const u8).offset(8) as *const inheritance_cc::Base1
     }
 }
+
 unsafe impl oops::Inherits<inheritance_cc::Base2> for crate::Derived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base2 {
         (derived as *const _ as *const u8).offset(18) as *const inheritance_cc::Base2
@@ -256,11 +258,13 @@ unsafe impl oops::Inherits<inheritance_cc::VirtualBase1> for crate::VirtualDeriv
         crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)
     }
 }
+
 unsafe impl oops::Inherits<inheritance_cc::Base1> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
         crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__5Base1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)
     }
 }
+
 unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase2 {
         crate::detail::__crubit_dynamic_upcast__15VirtualDerived2__to__12VirtualBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3auser_5fof_5fbase_5fclass_5fcc(derived)

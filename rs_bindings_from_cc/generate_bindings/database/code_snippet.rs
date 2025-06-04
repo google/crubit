@@ -30,7 +30,7 @@ pub struct ApiSnippets {
     /// Main API - for example:
     /// - A Rust definition of a function (with a doc comment),
     /// - A Rust definition of a struct (with a doc comment).
-    pub main_api: TokenStream,
+    pub main_api: Vec<MainApi>,
 
     /// Rust implementation details - for example:
     /// - A Rust declaration of an `extern "C"` thunk,
@@ -46,9 +46,9 @@ pub struct ApiSnippets {
     pub features: FlagSet<Feature>,
 }
 
-impl From<TokenStream> for ApiSnippets {
-    fn from(main_api: TokenStream) -> Self {
-        ApiSnippets { main_api, ..Default::default() }
+impl From<MainApi> for ApiSnippets {
+    fn from(main_api: MainApi) -> Self {
+        ApiSnippets { main_api: vec![main_api], ..Default::default() }
     }
 }
 
@@ -371,6 +371,39 @@ impl From<NoBindingsReason> for Error {
             NoBindingsReason::Unsupported { context, error } => error.context(format!(
                 "Can't generate bindings for {context}, because it is unsupported"
             )),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum MainApi {
+    Comment { message: Rc<str> },
+    Enum(TokenStream),
+    Func(TokenStream),
+    Record(TokenStream),
+    Newline,
+    UpcastImpl(TokenStream),
+    Namespace(TokenStream),
+    ForwardDeclare(TokenStream),
+    UseMod(TokenStream),
+    GlobalVar(TokenStream),
+    TypeAlias(TokenStream),
+}
+
+impl ToTokens for MainApi {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            MainApi::Comment { message } => quote! { __COMMENT__ #message }.to_tokens(tokens),
+            MainApi::Enum(enum_item) => enum_item.to_tokens(tokens),
+            MainApi::Func(func_item) => func_item.to_tokens(tokens),
+            MainApi::Record(record_item) => record_item.to_tokens(tokens),
+            MainApi::Newline => quote! { __NEWLINE__ }.to_tokens(tokens),
+            MainApi::UpcastImpl(upcast_impl) => upcast_impl.to_tokens(tokens),
+            MainApi::Namespace(namespace_item) => namespace_item.to_tokens(tokens),
+            MainApi::ForwardDeclare(forward_declare_item) => forward_declare_item.to_tokens(tokens),
+            MainApi::UseMod(use_mod_item) => use_mod_item.to_tokens(tokens),
+            MainApi::GlobalVar(global_var_item) => global_var_item.to_tokens(tokens),
+            MainApi::TypeAlias(type_alias_item) => type_alias_item.to_tokens(tokens),
         }
     }
 }

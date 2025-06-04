@@ -7,7 +7,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
-    ApiSnippets, AssertableTrait, Assertion, Feature, SizeofImpl, Thunk, ThunkImpl,
+    ApiSnippets, AssertableTrait, Assertion, Feature, MainApi, SizeofImpl, Thunk, ThunkImpl,
 };
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
@@ -61,11 +61,11 @@ pub fn generate_incomplete_record(
     let cc_type = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(&incomplete_record).format_for_cc()?;
     let symbol = quote! {#namespace_qualifier #cc_type}.to_string();
-    Ok(quote! {
+    Ok(MainApi::ForwardDeclare(quote! {
         forward_declare::forward_declare!(
             #pub_ #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
         );
-    }
+    })
     .into())
 }
 
@@ -604,7 +604,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     let mut assertions_from_record_items = vec![];
 
     for generated in record_generated_items {
-        items.push(generated.main_api);
+        items.extend(generated.main_api);
         thunks_from_record_items.extend(generated.thunks);
         assertions_from_record_items.extend(generated.assertions);
         thunk_impls_from_record_items.extend(generated.cc_details);
@@ -699,7 +699,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     assertions.extend(assertions_from_record_items);
 
     Ok(ApiSnippets {
-        main_api: record_tokens,
+        main_api: vec![MainApi::Record(record_tokens)],
         features,
         assertions,
         thunks: thunks_from_record_items,
@@ -879,8 +879,13 @@ fn cc_struct_upcast_impl(
             // The base type is unknown to Crubit, so don't generate upcast code for it.
             let base_name = &base_record.cc_name;
             let derived_name = &record.cc_name;
-            let comment = format!("'{derived_name}' cannot be upcasted to '{base_name}' because the base type doesn't have Crubit bindings.");
-            impls.push(quote! { __NEWLINE__ __COMMENT__ #comment __NEWLINE__ });
+            impls.extend([
+                MainApi::Newline,
+                MainApi::Comment {
+                    message: format!("'{derived_name}' cannot be upcasted to '{base_name}' because the base type doesn't have Crubit bindings.").into(),
+                },
+                MainApi::Newline,
+            ]);
             continue;
         };
         if base_type.is_bridge_type() {
@@ -916,19 +921,14 @@ fn cc_struct_upcast_impl(
                 #crate_root_path::detail::#cast_fn_name(derived)
             }
         };
-        impls.push(quote! {
+        impls.push(MainApi::UpcastImpl(quote! {
             unsafe impl oops::Inherits<#base_name> for #derived_name {
                 unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
                     #body
                 }
             }
-        });
+        }));
     }
 
-    Ok(ApiSnippets {
-        main_api: quote! {#(#impls)*},
-        thunks,
-        cc_details: cc_impls,
-        ..Default::default()
-    })
+    Ok(ApiSnippets { main_api: impls, thunks, cc_details: cc_impls, ..Default::default() })
 }

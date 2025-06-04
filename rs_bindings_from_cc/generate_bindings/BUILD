@@ -194,7 +194,6 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
-        "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",

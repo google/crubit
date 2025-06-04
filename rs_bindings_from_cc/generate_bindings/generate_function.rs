@@ -5,7 +5,7 @@
 use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustTokens;
-use database::code_snippet::{ApiSnippets, Feature, Thunk, Visibility};
+use database::code_snippet::{ApiSnippets, Feature, MainApi, Thunk, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
@@ -1468,7 +1468,7 @@ pub fn generate_function(
     };
 
     let generated_item = ApiSnippets {
-        main_api: api_func,
+        main_api: vec![MainApi::Func(api_func)],
         thunks: match thunk {
             Some(thunk) if !failed => vec![thunk],
             _ => vec![],

@@ -131,9 +131,10 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
             "unsupported_message",
         )
         .into(),
-    );
+    )
+    .main_api;
     let expected = "Generated from: some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
-    assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
+    assert_rs_matches!(quote! { #(#actual)* }, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
@@ -153,9 +154,10 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
             "unsupported_message",
         )
         .into(),
-    );
+    )
+    .main_api;
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
-    assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
+    assert_rs_matches!(quote! { #(#actual)* }, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
@@ -172,8 +174,9 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
             "unsupported_message",
         )
         .into(),
-    );
+    )
+    .main_api;
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
-    assert_rs_matches!(actual.main_api, quote! { __COMMENT__ #expected});
+    assert_rs_matches!(quote! { #(#actual)* }, quote! { __COMMENT__ #expected});
     Ok(())
 }

@@ -6,7 +6,7 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
-use database::code_snippet::{ApiSnippets, Feature};
+use database::code_snippet::{ApiSnippets, Feature, MainApi};
 use database::BindingsGenerator;
 use ir::Enum;
 use proc_macro2::Literal;
@@ -69,7 +69,7 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
         }
     };
     Ok(ApiSnippets {
-        main_api: item,
+        main_api: vec![MainApi::Enum(item)],
         features: Feature::register_tool.into(),
         ..Default::default()
     })

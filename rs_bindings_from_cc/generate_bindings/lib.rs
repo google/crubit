@@ -7,7 +7,7 @@ use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use database::code_snippet::{
-    ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature,
+    ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, MainApi,
 };
 use database::db::{self, BindingsGenerator, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
@@ -93,12 +93,7 @@ fn generate_type_alias(
             "Type alias for {cpp_type} suppressed due to being a bridge type",
             cpp_type = type_alias.debug_name(db.ir()),
         );
-        return Ok(ApiSnippets {
-            main_api: quote! {
-                __COMMENT__ #disable_comment
-            },
-            ..Default::default()
-        });
+        return Ok(MainApi::Comment { message: disable_comment.into() }.into());
     }
     let ident = make_rs_ident(&type_alias.rs_name.identifier);
     let doc_comment = generate_doc_comment(
@@ -112,10 +107,10 @@ fn generate_type_alias(
 
     let underlying_type_tokens = underlying_type.to_token_stream(db);
     let pub_ = db::type_visibility(db, &type_alias.owning_target, rs_type_kind).unwrap_or_default();
-    Ok(quote! {
+    Ok(MainApi::TypeAlias(quote! {
         #doc_comment
         #pub_ type #ident = #underlying_type_tokens;
-    }
+    })
     .into())
 }
 
@@ -132,12 +127,12 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result
     let mutness = if !var.type_.is_const { quote!(mut) } else { quote!() };
     let type_tokens = type_.to_token_stream(db);
     let pub_ = db::type_visibility(db, &var.owning_target, type_).unwrap_or_default();
-    Ok(quote! {
+    Ok(MainApi::GlobalVar(quote! {
         extern "C" {
             #link_name
             #pub_ static #mutness #ident: #type_tokens;
         }
-    }
+    })
     .into())
 }
 
@@ -154,7 +149,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
             format!("Failed to look up namespace.child_item_ids for {:?}", namespace)
         })?;
         let generated = db.generate_item(item.clone())?;
-        items.push(generated.main_api);
+        items.extend(generated.main_api);
         thunks.extend(generated.thunks);
         cc_details.extend(generated.cc_details);
         assertions.extend(generated.assertions);
@@ -212,7 +207,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
     };
 
     Ok(ApiSnippets {
-        main_api: namespace_tokens,
+        main_api: vec![MainApi::Namespace(namespace_tokens)],
         features,
         thunks,
         cc_details,
@@ -277,19 +272,19 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
         Item::GlobalVar(var) => generate_global_var(db, var.clone())?,
         Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias.clone())?,
         Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported.clone()),
-        Item::Comment(comment) => generate_comment(comment.clone())?,
+        Item::Comment(comment) => generate_comment(comment.clone()),
         Item::Namespace(namespace) => generate_namespace(db, namespace.clone())?,
         Item::UseMod(use_mod) => {
             let UseMod { path, mod_name, .. } = &**use_mod;
             let mod_name = make_rs_ident(&mod_name.identifier);
             // TODO(b/308949532): Skip re-export if the module being used is empty
             // (transitively).
-            quote! {
+            MainApi::UseMod(quote! {
                 #[path = #path]
                 mod #mod_name;
                 __HASH_TOKEN__ [allow(unused_imports)]
                 pub use #mod_name::*;
-            }
+            })
             .into()
         }
         Item::TypeMapOverride(type_override) => {
@@ -313,9 +308,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
                 .collect_vec();
 
             ApiSnippets {
-                main_api: quote! {
-                    __COMMENT__ #disable_comment
-                },
+                main_api: vec![MainApi::Comment { message: disable_comment.into() }],
                 assertions,
                 ..Default::default()
             }
@@ -385,7 +378,7 @@ pub fn generate_bindings_tokens(
     for top_level_item_id in ir.top_level_item_ids() {
         let item: &Item = ir.find_untyped_decl(*top_level_item_id);
         let generated = db.generate_item(item.clone())?;
-        items.push(generated.main_api);
+        items.extend(generated.main_api);
         thunks.extend(generated.thunks);
         assertions.extend(generated.assertions);
         cc_details.extend(generated.cc_details);
