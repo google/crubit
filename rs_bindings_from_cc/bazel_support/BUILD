@@ -23,6 +23,7 @@ bzl_library(
         ":rust_bindings_from_cc_utils_bzl",
         "//features:crubit_feature_hint_bzl",
         "@protobuf//rust/bazel:aspects_bzl",
+        "@rules_rust//allowlists:bzl_lib",
     ],
 )
 

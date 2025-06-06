@@ -31,7 +31,7 @@ load(
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
-load("@protobuf//rust:aspects.bzl", "rust_cc_proto_library_aspect")
+load("@protobuf//rust:aspects.bzl", "RustProtoInfo", "rust_cc_proto_library_aspect")
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -92,6 +92,24 @@ def _collect_hdrs(ctx, crubit_features):
     if not crubit_features:
         public_hdrs = []
     return public_hdrs, all_standalone_hdrs
+
+def _make_all_deps_and_target_args(ctx, extra_rule_specific_deps, direct):
+    all_deps = getattr(ctx.rule.attr, "deps", []) + extra_rule_specific_deps + [
+        # TODO(b/217667751): This contains a huge list of headers_and_targets; pass them as a file
+        # instead.
+        ctx.attr._std,
+    ]
+
+    target_args = depset(
+        direct = direct,
+        transitive = [
+            t[RustBindingsFromCcInfo].target_args
+            for t in all_deps
+            if RustBindingsFromCcInfo in t
+        ],
+    )
+
+    return (all_deps, target_args)
 
 def _is_cc_proto_library(rule):
     return rule.kind == "cc_proto_library"
@@ -187,7 +205,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         return []
 
     if _is_cc_proto_library(ctx.rule):
-        # This is cc_proto_library, we are interested in RustBindingsFromCcInfo provider of the
+        # This is a cc_proto_library, we are interested in RustBindingsFromCcInfo provider of the
         # proto_library.
         return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
 
@@ -226,12 +244,6 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         all_standalone_hdrs = all_standalone_hdrs + public_hdrs
         extra_cc_compilation_action_inputs = public_hdrs
 
-    all_deps = getattr(ctx.rule.attr, "deps", []) + extra_rule_specific_deps + [
-        # TODO(b/217667751): This contains a huge list of headers_and_targets; pass them as a file
-        # instead.
-        ctx.attr._std,
-    ]
-
     # At execution time we convert this depset to a json array that gets passed to our tool through
     # the --target_args flag.
     # We can improve upon this solution if:
@@ -250,14 +262,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     else:
         direct = []
 
-    target_args = depset(
-        direct = direct,
-        transitive = [
-            t[RustBindingsFromCcInfo].target_args
-            for t in all_deps
-            if RustBindingsFromCcInfo in t
-        ],
-    )
+    (all_deps, target_args) = _make_all_deps_and_target_args(ctx, extra_rule_specific_deps, direct)
 
     header_includes = []
     for hdr in public_hdrs:
