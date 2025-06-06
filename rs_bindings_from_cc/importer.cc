@@ -147,7 +147,7 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
     case clang::CC_X86RegCall:    // __attribute__((regcall))
     case clang::CC_IntelOclBicc:  // __attribute__((intel_ocl_bicc))
     case clang::CC_SpirFunction:  // default for OpenCL functions on SPIR target
-    case clang::CC_OpenCLKernel:  // inferred for OpenCL kernels
+    case clang::CC_DeviceKernel:  // __attribute__((device_kernel))
     case clang::CC_Swift:         // __attribute__((swiftcall))
     case clang::CC_SwiftAsync:    // __attribute__((swiftasynccall))
     case clang::CC_PreserveMost:  // __attribute__((preserve_most))
