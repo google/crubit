@@ -232,12 +232,30 @@ TEST(EligibleRangesTest, NestedPointeeConst) {
                                eligibleRange(std::nullopt, Input.point("i")))));
 }
 
-TEST(EligibleRangesTest,
-     TemplateAnnotatedSlotsInsertionOffsetInsideTemplateArg) {
+TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetRanges) {
   auto Input = Annotations(R"(
-  void target(Nonnull<int *$one^> NonnullP,
-           Nullable<int *$two^> NullableP,
-           NullabilityUnknown<int *$three^> UnknownP);
+  namespace custom {
+  namespace internal {
+  template <typename T>
+  using CustomNonnull = absl_nonnull T;
+  template <typename T>
+  using CustomNullable = absl_nullable T;
+  template <typename T>
+  using CustomUnknown = absl_nullability_unknown T;
+  }
+  
+  template <typename T>
+  using CustomNonnull = internal::CustomNonnull<T>;
+  template <typename T>
+  using CustomNullable = internal::CustomNullable<T>;
+  template <typename T>
+  using CustomUnknown = internal::CustomUnknown<T>;
+  }
+
+  // Aliases of any depth that apply a nullability annotation are detected.
+  void target(custom::CustomNonnull<int *$one^> NonnullP,
+           custom::CustomNullable<int *$two^> NullableP,
+           custom::CustomUnknown<int *$three^> UnknownP);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
@@ -248,38 +266,14 @@ TEST(EligibleRangesTest,
                 eligibleRange(3, Input.point("three"), Nullability::UNKNOWN))));
 }
 
-TEST(EligibleRangesTest, NamespacedAliasAnnotatedSlotsGetRanges) {
-  auto Input = Annotations(R"(
-  namespace custom {
-  template <typename T>
-  using CustomNonnull = Nonnull<T>;
-  template <typename T>
-  using CustomNullable = Nullable<T>;
-  template <typename T>
-  using CustomUnknown = NullabilityUnknown<T>;
-  }
-
-  // Note also that these custom annotations are aliases for the nullability
-  // annotations, not themselves annotated. Aliases of any depth for a
-  // nullability annotation are considered an annotation.
-  void target(custom::CustomNonnull<int *$one^> NonnullP,
-           custom::CustomNullable<int *$two^> NullableP,
-           custom::CustomUnknown<int *$three^> UnknownP);
-  )");
+TEST(EligibleRangesTest, DuplicateAnnotationsGetOneRange) {
+  auto Input =
+      Annotations(R"(void target(int *^ absl_nonnull absl_nonnull P);)");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(eligibleRange(1, Input.point("one")),
-                                 eligibleRange(2, Input.point("two")),
-                                 eligibleRange(3, Input.point("three")))));
-}
-
-TEST(EligibleRangesTest, NestedAnnotationsGetOneRange) {
-  auto Input = Annotations(R"(void target(Nonnull<Nonnull<int *^>> P);)");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(eligibleRange(1, Input.point()))));
+            UnorderedElementsAre(
+                eligibleRange(1, Input.point(), Nullability::NONNULL))));
 }
 
 TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
@@ -289,22 +283,22 @@ TEST(EligibleRangesTest, NestedPointersOuterAnnotated) {
   class unique_ptr;
   }
   void target(
-      Nonnull<int *$one_i^*$one_o^> P,
-      Nonnull<$two_o^std::unique_ptr<int*$two_i^>> Q,
-      Nonnull<$three_i^std::unique_ptr<int>*$three_o^> R,
-      Nonnull<$four_o^std::unique_ptr<$four_i^std::unique_ptr<int>>> S);
+      int *$one_i^*$one_o^ absl_nonnull P,
+      absl_nonnull $two_o^std::unique_ptr<int*$two_i^> Q,
+      $three_i^std::unique_ptr<int>*$three_o^ absl_nonnull R,
+      absl_nonnull $four_o^std::unique_ptr<$four_i^std::unique_ptr<int>> S);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
-                eligibleRange(1, Input.point("one_o")),
+                eligibleRange(1, Input.point("one_o"), Nullability::NONNULL),
                 eligibleRange(std::nullopt, Input.point("one_i")),
-                eligibleRange(2, Input.point("two_o")),
+                eligibleRange(2, Input.point("two_o"), Nullability::NONNULL),
                 eligibleRange(std::nullopt, Input.point("two_i")),
-                eligibleRange(3, Input.point("three_o")),
+                eligibleRange(3, Input.point("three_o"), Nullability::NONNULL),
                 eligibleRange(std::nullopt, Input.point("three_i")),
-                eligibleRange(4, Input.point("four_o")),
+                eligibleRange(4, Input.point("four_o"), Nullability::NONNULL),
                 eligibleRange(std::nullopt, Input.point("four_i")))));
 }
 
@@ -316,23 +310,27 @@ TEST(EligibleRangesTest, NestedPointersInnerAnnotated) {
   }
 
   void target(
-      Nonnull<int *$one_i^>*$one_o^ P,
-      $two_o^std::unique_ptr<Nonnull<int*$two_i^>> Q,
-      Nonnull<$three_i^std::unique_ptr<int>>*$three_o^ R,
-      $four_o^std::unique_ptr<Nonnull<$four_i^std::unique_ptr<int>>> S);
+      int *$one_i^absl_nonnull *$one_o^P,
+      $two_o^std::unique_ptr<int *$two_i^absl_nonnull> Q,
+      absl_nonnull $three_i^std::unique_ptr<int> *$three_o^R,
+      $four_o^std::unique_ptr<absl_nonnull $four_i^std::unique_ptr<int>> S);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
                 eligibleRange(1, Input.point("one_o")),
-                eligibleRange(std::nullopt, Input.point("one_i")),
+                eligibleRange(std::nullopt, Input.point("one_i"),
+                              Nullability::NONNULL),
                 eligibleRange(2, Input.point("two_o")),
-                eligibleRange(std::nullopt, Input.point("two_i")),
+                eligibleRange(std::nullopt, Input.point("two_i"),
+                              Nullability::NONNULL),
                 eligibleRange(3, Input.point("three_o")),
-                eligibleRange(std::nullopt, Input.point("three_i")),
+                eligibleRange(std::nullopt, Input.point("three_i"),
+                              Nullability::NONNULL),
                 eligibleRange(4, Input.point("four_o")),
-                eligibleRange(std::nullopt, Input.point("four_i")))));
+                eligibleRange(std::nullopt, Input.point("four_i"),
+                              Nullability::NONNULL))));
 }
 
 TEST(EligibleRangesTest, RefToPointer) {
@@ -388,13 +386,14 @@ TEST(EligibleRangesTest, SmartPointer) {
   }
 
   void target($one^std::unique_ptr<int> StdSmart,
-           Nonnull<$two^std::unique_ptr<int>> NonnullStdSmart);
+           absl_nonnull $two^std::unique_ptr<int> NonnullStdSmart);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(eligibleRange(1, Input.point("one")),
-                                 eligibleRange(2, Input.point("two")))));
+            UnorderedElementsAre(
+                eligibleRange(1, Input.point("one")),
+                eligibleRange(2, Input.point("two"), Nullability::NONNULL))));
 }
 
 TEST(EligibleRangesTest,
@@ -420,13 +419,14 @@ TEST(EligibleRangesTest, UserDefinedSmartPointer) {
   };
 
   void target($one^MySmartIntPtr UserDefinedSmart,
-           Nonnull<$two^MySmartIntPtr> NonnullUserDefinedSmart);
+           absl_nonnull $two^MySmartIntPtr NonnullUserDefinedSmart);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(eligibleRange(1, Input.point("one")),
-                                 eligibleRange(2, Input.point("two")))));
+            UnorderedElementsAre(
+                eligibleRange(1, Input.point("one")),
+                eligibleRange(2, Input.point("two"), Nullability::NONNULL))));
 }
 
 TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
@@ -435,13 +435,14 @@ TEST(EligibleRangesTest, UserDefinedTemplatedSmartPointer) {
   struct _Nullable MySmartPtr {};
 
   void target($one^MySmartPtr<int> UserDefinedSmart,
-           Nonnull<$two^MySmartPtr<int>> NonnullUserDefinedSmart);
+           absl_nonnull $two^MySmartPtr<int> NonnullUserDefinedSmart);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(eligibleRange(1, Input.point("one")),
-                                 eligibleRange(2, Input.point("two")))));
+            UnorderedElementsAre(
+                eligibleRange(1, Input.point("one")),
+                eligibleRange(2, Input.point("two"), Nullability::NONNULL))));
 }
 
 TEST(EligibleRangesTest, SimpleAlias) {
@@ -520,13 +521,15 @@ TEST(EligibleRangesTest, DependentAliasAnnotated) {
     using type = T;
   };
 
-  void target(S<Nullable<int *$template^>>::type P, S<int *$qualifier^ _Nullable>::type Q);
+  void target(S<int *$macro^absl_nullable>::type P, S<int *$qualifier^ _Nullable>::type Q);
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(eligibleRange(1, Input.point("template")),
-                                 eligibleRange(2, Input.point("qualifier")))));
+            UnorderedElementsAre(
+                eligibleRange(1, Input.point("macro"), Nullability::NULLABLE),
+                eligibleRange(2, Input.point("qualifier"),
+                              Nullability::NULLABLE))));
 }
 
 TEST(EligibleRangesTest, DependentAliasOfDependentAlias) {
