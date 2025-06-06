@@ -77,72 +77,8 @@ static SourceLocation getLocationAfterNewlinePrefixesIfIdentifier(Token Tok) {
   return Tok.getLocation().getLocWithOffset(OffsetForEscapedNewlines);
 }
 
-/// If the tokens immediately before `Begin` are an absl::NullabilityUnknown<
-/// annotation start, returns the start location of the absl token. Else,
-/// returns std::nullopt.
-static std::pair<std::optional<unsigned>, std::optional<unsigned>>
-getStartAndEndOffsetsOfImmediateAbslAnnotation(SourceLocation Begin,
-                                               SourceLocation End,
-                                               const SourceManager &SM,
-                                               const LangOptions &LangOpts,
-                                               const FileID &DeclFID) {
-  // absl::NullabilityUnknown< is 4 tokens, one for the `<`, one for the `::`,
-  // and one for each identifier. Same for absl::Nonnull< and absl::Nullable<.
-  Token PrevTok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
-  if (!PrevTok.is(tok::less)) return {};
-  if (PrevTok =
-          utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
-      !PrevTok.is(tok::raw_identifier))
-    return {};
-  if (const StringRef ID =
-          skipEscapedNewLinePrefixes(PrevTok.getRawIdentifier());
-      ID != AbslTemplateUnknown && ID != AbslTemplateNullable &&
-      ID != AbslTemplateNonnull)
-    return {};
-  if (PrevTok =
-          utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
-      PrevTok.isNot(tok::coloncolon))
-    return {};
-  if (PrevTok =
-          utils::lexer::getPreviousToken(PrevTok.getLocation(), SM, LangOpts);
-      !PrevTok.is(tok::raw_identifier))
-    return {};
-  if (skipEscapedNewLinePrefixes(PrevTok.getRawIdentifier()) !=
-      AbslTemplateNamespace)
-    return {};
-
-  auto [PrevTokFID, PrevTokOffset] =
-      SM.getDecomposedLoc(getLocationAfterNewlinePrefixesIfIdentifier(PrevTok));
-  if (PrevTokFID != DeclFID) return {};
-
-  Token NextTok;
-  // If the token immediately at `End` is a `>`, use the end location of that
-  // token. Otherwise, look for the next non-comment token, which should be a
-  // `>`.
-  if (bool Failed = Lexer::getRawToken(End, NextTok, SM, LangOpts,
-                                       /*IgnoreWhiteSpace=*/true))
-    return {};
-  if (!NextTok.is(tok::greater) && !NextTok.is(tok::greatergreater)) {
-    std::optional<Token> MaybeNextTok =
-        utils::lexer::findNextTokenSkippingComments(End, SM, LangOpts);
-    if (!MaybeNextTok || (!MaybeNextTok->is(tok::greater) &&
-                          !MaybeNextTok->is(tok::greatergreater)))
-      return {};
-    NextTok = *MaybeNextTok;
-  }
-
-  auto [NextTokFID, NextTokOffset] = SM.getDecomposedLoc(NextTok.getEndLoc());
-  if (NextTokFID != DeclFID) return {};
-  if (NextTok.is(tok::greatergreater)) {
-    // We need to step back one character.
-    --NextTokOffset;
-  }
-
-  return {PrevTokOffset, NextTokOffset};
-}
-
 static bool isQualifierPositionAnnotation(StringRef Identifier) {
-  return llvm::StringSwitch<bool>(Identifier)
+  return llvm::StringSwitch<bool>(skipEscapedNewLinePrefixes(Identifier))
       .Case(ClangNullable, true)
       .Case(ClangNonnull, true)
       .Case(ClangUnknown, true)
@@ -210,8 +146,8 @@ static bool isCVR(llvm::StringRef ID) {
 }
 
 static SourceLocation includePrecedingCVRQualifiers(
-    SourceLocation Begin, const SourceManager &SM,
-    const LangOptions &LangOpts) {
+    SourceLocation Begin, const SourceManager &SM, const LangOptions &LangOpts,
+    bool AfterNewlinePrefixesIfIdentifier = true) {
   std::optional<Token> FinalQualifierSeen;
   // Update `Begin` as we search and find qualifier tokens.
   Token Tok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
@@ -223,7 +159,8 @@ static SourceLocation includePrecedingCVRQualifiers(
     Tok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
   }
 
-  if (!FinalQualifierSeen.has_value()) return Begin;
+  if (!FinalQualifierSeen.has_value() || !AfterNewlinePrefixesIfIdentifier)
+    return Begin;
   assert(FinalQualifierSeen->is(tok::raw_identifier));
   return getLocationAfterNewlinePrefixesIfIdentifier(*FinalQualifierSeen);
 }
@@ -260,21 +197,6 @@ static void addExistingAnnotationRemovalRanges(
     unsigned BeginOffset, unsigned EndOffset, unsigned EndOfStarOffset,
     bool IsComplexDeclarator, const FileID &DeclFID, const SourceManager &SM,
     const LangOptions &LangOpts, SlotRange &Range) {
-  if (!IsComplexDeclarator) {
-    auto [AnnotationStartOffset, AnnotationEndOffset] =
-        getStartAndEndOffsetsOfImmediateAbslAnnotation(Begin, End, SM, LangOpts,
-                                                       DeclFID);
-    if (AnnotationStartOffset && AnnotationEndOffset) {
-      RemovalRange *Removal = Range.add_existing_annotation_removal_range();
-      Removal->set_begin(*AnnotationStartOffset);
-      Removal->set_end(BeginOffset);
-
-      Removal = Range.add_existing_annotation_removal_range();
-      Removal->set_begin(EndOffset);
-      Removal->set_end(*AnnotationEndOffset);
-      return;
-    }
-  }
   if (std::optional<unsigned> AttributeEndOffset =
           getEndOffsetOfEastQualifierAnnotation(EndOfStar, SM, LangOpts,
                                                 DeclFID)) {
@@ -480,21 +402,7 @@ static void addRangesQualifierAware(const DeclaratorDecl *absl_nullable Decl,
     assert(R->getBegin().isValid() && R->getEnd().isValid());
     if (R->getBegin().isInvalid() || R->getEnd().isInvalid()) continue;
 
-    // For raw pointers, expand the range to include any preceding CVR
-    // qualifiers. These are qualifiers of the pointee type, so we want to
-    // include them in the range, but they are unhelpfully not contained in the
-    // TypeLoc source range, so we need to do this manually. Leaving the
-    // qualifiers out of the range would cause them to apply to the pointer type
-    // when adding template alias annotations.
-    // For smart pointers, a preceding qualifier is a qualifier of the smart
-    // pointer type, so we don't want to include it in the range, as a spelling
-    // preference for template alias annotations.
-    SourceLocation Begin =
-        isSupportedRawPointerType(MaybeLoc->getType())
-            ? includePrecedingCVRQualifiers(R->getBegin(), SM, LangOpts)
-            : R->getBegin();
-
-    auto [FID, BeginOffset] = SM.getDecomposedLoc(Begin);
+    auto [FID, BeginOffset] = SM.getDecomposedLoc(R->getBegin());
     // If the type comes from a different file, then don't attempt to edit -- it
     // might need manual intervention.
     if (FID != DeclFID) continue;
@@ -536,7 +444,7 @@ static void addRangesQualifierAware(const DeclaratorDecl *absl_nullable Decl,
       unsigned EndOfStarOrEndOffset =
           UseEndOfStarLoc ? *EndOfStarOffset : EndOffset;
       addExistingAnnotationRemovalRanges(
-          Begin, R->getEnd(), EndOfStarOrEnd, BeginOffset, EndOffset,
+          R->getBegin(), R->getEnd(), EndOfStarOrEnd, BeginOffset, EndOffset,
           EndOfStarOrEndOffset, IsComplexDeclarator, DeclFID, SM, LangOpts,
           Range.Range);
 
@@ -548,8 +456,12 @@ static void addRangesQualifierAware(const DeclaratorDecl *absl_nullable Decl,
         // potential combinations of CVR placements, but having more than one of
         // these on a single type is very rare and would trigger
         // -Wduplicate-decl-specifier.
-        SourceLocation BeginWithCVRs =
-            includePrecedingCVRQualifiers(Begin, SM, LangOpts);
+        SourceLocation BeginWithCVRs = includePrecedingCVRQualifiers(
+            R->getBegin(), SM, LangOpts,
+            // Intentionally get the location prior to any escaped newlines that
+            // are considered part of the CVR qualifier token, since this is a
+            // starting point for moving further backwards.
+            /*AfterNewlinePrefixesIfIdentifier=*/false);
         unsigned BeginWithCVRsOffset = SM.getFileOffset(BeginWithCVRs);
         SourceLocation EndWithCVRs =
             includeFollowingCVRQualifiers(R->getEnd(), SM, LangOpts);

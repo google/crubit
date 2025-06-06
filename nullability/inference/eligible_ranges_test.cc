@@ -44,7 +44,6 @@ using ::llvm::Annotations;
 using ::testing::AllOf;
 using ::testing::Contains;
 using ::testing::Each;
-using ::testing::ElementsAre;
 using ::testing::ExplainMatchResult;
 using ::testing::IsEmpty;
 using ::testing::Not;
@@ -991,17 +990,14 @@ TEST(EligibleRangesTest, RangesEntirelyWithinMacro) {
 // `const`s when passing over the line continuation in multi-line macros.
 TEST(EligibleRangesTest, RangesInMultiLineMacro) {
   auto Input = Annotations(R"(
-  namespace absl {
-  template <typename T>
-  using Nonnull = ::Nonnull<T>;
-  }
+  using IntPtr = int*;
 
-  #define MACRO(IpGlobalVar, funcName) int *$return^ funcName##Func(                \
-                                        const char*$param_one^ p,                   \
-                                        const                                       \
-                                        int*$param_two^ p2,                         \
-                                        $removal_before_3[[absl::Nonnull<]]const    \
-                                        int*$param_three^$removal_after_3[[>]] p3)  \
+  #define MACRO(IpGlobalVar, funcName) int *$return^ funcName##Func(                             \
+                                        const char*$param_one^ p,                                \
+                                        const                                                    \
+                                        int*$param_two^ p2,                                      \
+                                        $removal_before_3[[absl_nonnull ]]const                  \
+                                                     $param_three^IntPtr p3)                     \
                                            {return IpGlobalVar;}
   int* GlobalVar;
   MACRO(GlobalVar, getVar);
@@ -1015,30 +1011,27 @@ TEST(EligibleRangesTest, RangesInMultiLineMacro) {
                 eligibleRange(2, Input.point("param_two")),
                 AllOf(eligibleRange(3, Input.point("param_three"),
                                     Nullability::NONNULL),
-                      removalRanges({Input.range("removal_before_3"),
-                                     Input.range("removal_after_3")})))));
+                      removalRanges({Input.range("removal_before_3")})))));
 }
 
-// We saw specific difficulty finding the post-line-continuation start of a
-// const or similar that begins with no unescaped whitespace between the `\` and
-// the token's first character. Clang considers each of the `const`s in this
-// tests to begin at the preceding `\` location, but we'd rather add the
-// nullability annotation after the newline.
+// We saw specific difficulty finding starts of tokens that begin with no
+// unescaped whitespace between the `\` and the token's first character. Clang
+// considers the tokens to begin at the preceding `\` location. Any oddities
+// produced by edits using these locations are fixed by auto-formatting after
+// applying edits.
 TEST(EligibleRangesTest, RangesInMultiLineMacroNoIndentation) {
   auto Input = Annotations(R"(
-  namespace absl {
-  template <typename T>
-  using Nonnull = ::Nonnull<T>;
-  }
+  using IntPtr = int*;
 
-  #define MACRO(IpGlobalVar, funcName) int *$return^ funcName##Func(  \
-                                                                      \
-const char*$param_one^ p,                                             \
-const                                                                 \
-int*$param_two^ p2,                                                   \
-$removal_before_3[[absl  \
-::Nonnull<]]const                              \
-int*$param_three^$removal_after_3[[>]] p3)                            \
+  #define MACRO(IpGlobalVar, funcName) int *$return^ funcName##Func( $removal_before_west[[\
+absl_nonnull                                                                             ]]\
+const                                                                          $param_west^\
+IntPtr                                                                                     \
+p,                                                                                         \
+int*$param_east^                                                                           \
+const$removal_before_east[[                                                                \
+absl_nullable]]                                                                            \
+p2)                                                                                        \
     {return IpGlobalVar;}
 
   int* GlobalVar;
@@ -1049,12 +1042,12 @@ int*$param_three^$removal_after_3[[>]] p3)                            \
       AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
             UnorderedElementsAre(
                 eligibleRange(0, Input.point("return")),
-                eligibleRange(1, Input.point("param_one")),
-                eligibleRange(2, Input.point("param_two")),
-                AllOf(eligibleRange(3, Input.point("param_three"),
+                AllOf(eligibleRange(1, Input.point("param_west"),
                                     Nullability::NONNULL),
-                      removalRanges({Input.range("removal_before_3"),
-                                     Input.range("removal_after_3")})))));
+                      removalRanges({Input.range("removal_before_west")})),
+                AllOf(eligibleRange(2, Input.point("param_east"),
+                                    Nullability::NULLABLE),
+                      removalRanges({Input.range("removal_before_east")})))));
 }
 
 TEST(EligibleRangesTest, BareAutoTypeGetsNoRanges) {
@@ -1175,80 +1168,10 @@ TEST(EligibleRangesTest, AutoStarGetsRanges) {
                     std::nullopt, Input.point("var_auto_star_inner")))));
 }
 
-TEST(EligibleRangesTest,
-     TemplateAnnotationBeforePointeeConstDetectedForRemoval) {
-  auto Input = Annotations(R"(
-  namespace absl {
-  template <typename T>
-  using NullabilityUnknown = ::NullabilityUnknown<T>;
-  }
-
-  void target($removal_before[[absl::NullabilityUnknown<]]const int *^$removal_after[[>]]P);
-  )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, Input.point()),
-                      removalRanges({Input.range("removal_before"),
-                                     Input.range("removal_after")})))));
-}
-
-TEST(RemovalRangesTest, AbslTemplate) {
-  auto Input = Annotations(R"(
-  namespace std {
-  template <typename T>
-  class unique_ptr;
-  }
-
-  namespace absl {
-  template <typename T>
-  using NullabilityUnknown = ::NullabilityUnknown<T>;
-  template <typename T>
-  using Nullable = ::Nullable<T>;
-  template <typename T>
-  using Nonnull = ::Nonnull<T>;
-  }
-  void target(int *$no^ P,
-      $yes_removal_before[[absl::NullabilityUnknown<]]int *$yes^$yes_removal_after[[>]] Q,
-      $with_comments_removal_before[[absl::/* a comment*/NullabilityUnknown< /* a comment */
-          ]]int*$with_comments^$with_comments_removal_after[[ /* a comment */  >]] R,
-      $nullable_removal_before[[absl::Nullable<]]int *$nullable^$nullable_removal_after[[>]] S,
-      $nonnull_removal_before[[absl::Nonnull<]]int *$nonnull^$nonnull_removal_after[[>]] T,
-      $const_removal_before[[absl::Nonnull<]]int*$const_inside^ const$const_removal_after[[>]] U);
-    )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(
-          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-          ElementsAre(
-              AllOf(eligibleRange(1, Input.point("no")), hasNoRemovalRanges()),
-              AllOf(eligibleRange(2, Input.point("yes")),
-                    removalRanges({Input.range("yes_removal_before"),
-                                   Input.range("yes_removal_after")})),
-              AllOf(
-                  eligibleRange(3, Input.point("with_comments")),
-                  removalRanges({Input.range("with_comments_removal_before"),
-                                 Input.range("with_comments_removal_after")})),
-              AllOf(eligibleRange(4, Input.point("nullable")),
-                    removalRanges({Input.range("nullable_removal_before"),
-                                   Input.range("nullable_removal_after")})),
-              AllOf(eligibleRange(5, Input.point("nonnull")),
-                    removalRanges({Input.range("nonnull_removal_before"),
-                                   Input.range("nonnull_removal_after")})),
-              AllOf(eligibleRange(6, Input.point("const_inside")),
-                    removalRanges({Input.range("const_removal_before"),
-                                   Input.range("const_removal_after")})))));
-}
-
 TEST(RemovalRangesTest, AnnotationInMacro) {
   auto Input = Annotations(R"(
-  namespace absl {
-  template <typename T>
-  using NullabilityUnknown = ::NullabilityUnknown<T>;
-  }
 
-  #define UNKNOWN(T) absl::NullabilityUnknown<T>
+  #define UNKNOWN(T) T absl_nullability_unknown
 
   void target(UNKNOWN(int *^) P);
   )");
@@ -1262,115 +1185,6 @@ TEST(RemovalRangesTest, AnnotationInMacro) {
                       // paren as the preceding token and report no
                       // existing ranges to remove.
                       hasNoRemovalRanges()))));
-}
-
-TEST(RemovalRangesTest, AbslTemplateUniquePtr) {
-  auto Input = Annotations(R"(
-  namespace std {
-  template <typename T>
-  class unique_ptr;
-  }
-  namespace absl {
-  template <typename T>
-  using NullabilityUnknown = ::NullabilityUnknown<T>;
-  }
-
-  void target($removal_before[[absl::NullabilityUnknown<]]^std::unique_ptr<int>$removal_after[[>]] P,
-      $pre_const_removal_before[[absl::NullabilityUnknown<]]const $pre_const^std::unique_ptr<int>$pre_const_removal_after[[>]] Q,
-      $post_const_removal_before[[absl::NullabilityUnknown<]]$post_const^std::unique_ptr<int> const$post_const_removal_after[[>]] R);
-  )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, Input.point("")),
-                      removalRanges({Input.range("removal_before"),
-                                     Input.range("removal_after")})),
-                AllOf(eligibleRange(2, Input.point("pre_const")),
-                      removalRanges({Input.range("pre_const_removal_before"),
-                                     Input.range("pre_const_removal_after")})),
-                AllOf(eligibleRange(3, Input.point("post_const")),
-                      removalRanges(
-                          {Input.range("post_const_removal_before"),
-                           Input.range("post_const_removal_after")})))));
-}
-
-// Removing absl template annotations from complex declarators is not supported.
-// These cases are so rare that we don't plan to support this behavior.
-TEST(RemovalRangesTest, AbslTemplateWithFunctionPointer) {
-  auto Input = Annotations(R"(
-  namespace absl {
-  template <typename T>
-  using Nonnull = ::Nonnull<T>;
-  }
-
-  void target(absl::Nonnull<void (*^)(int)> P);
-  )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, Input.point(""), Nullability::NONNULL),
-                      hasNoRemovalRanges()))));
-}
-
-// This behavior means that if the annotation is actually removed, the type of
-// the parameter will change from `int* const` to `const int*`. This isn't
-// ideal, but it's also very uncommon, and the most likely consequence is that
-// the modified code will fail to compile. If compilation succeeds, then neither
-// potential `const` position was very load-bearing.
-//
-// Handling the movement of the `const` is not currently worth the effort,
-// particularly since absl::Nonnull is very soon to be deprecated and will be
-// largely removed by way of other tooling which does handle moving the `const`.
-TEST(RemovalRangesTest, AbslTemplateWithPrecedingConstOutsideAnnotation) {
-  auto Input = Annotations(R"(
-  namespace absl {
-  template <typename T>
-  using Nonnull = ::Nonnull<T>;
-  }
-
-  void target(const $removal_before[[absl::Nonnull<]]int *^$removal_after[[>]] P);
-  )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, Input.point(), Nullability::NONNULL),
-                      removalRanges({Input.range("removal_before"),
-                                     Input.range("removal_after")})))));
-}
-
-TEST(RemovalRangesTest, DoubleClosingAngleBrackets) {
-  auto Input = Annotations(R"(
-  namespace absl {
-  template <typename T>
-  using NullabilityUnknown = ::NullabilityUnknown<T>;
-  }
-
-  template <typename T>
-  using MyTemplateAlias = T;
-
-  void target(
-      MyTemplateAlias<$nothing_removal_before[[absl::NullabilityUnknown<]]int *$nothing^$nothing_removal_after[[>]]> P,
-      MyTemplateAlias<$comment_removal_before[[absl::NullabilityUnknown<]]int *$comment^$comment_removal_after[[/* a comment */>]]> Q,
-      MyTemplateAlias<$whitespace_removal_before[[absl::NullabilityUnknown<]]int *$whitespace^$whitespace_removal_after[[>]]
-  > R);
-  )");
-  EXPECT_THAT(
-      getFunctionRanges(Input.code()),
-      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
-            UnorderedElementsAre(
-                AllOf(eligibleRange(1, Input.point("nothing")),
-                      removalRanges({Input.range("nothing_removal_before"),
-                                     Input.range("nothing_removal_after")})),
-                AllOf(eligibleRange(2, Input.point("comment")),
-                      removalRanges({Input.range("comment_removal_before"),
-                                     Input.range("comment_removal_after")})),
-                AllOf(eligibleRange(3, Input.point("whitespace")),
-                      removalRanges(
-                          {Input.range("whitespace_removal_before"),
-                           Input.range("whitespace_removal_after")})))));
 }
 
 TEST(RemovalRangesTest, ClangAttribute) {
@@ -1492,6 +1306,134 @@ TEST(RemovalRangesTest, ClangAttributeSmartPointersWithNearerConst) {
 TEST(RemovalRangesTest, ClangAttributeWithFunctionPointer) {
   auto Input = Annotations(R"(
   void target(void (*^[[ _Nonnull]] P)(int));
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, Input.point(""), Nullability::NONNULL),
+                      removalRanges({Input.range("")})))));
+}
+
+TEST(RemovalRangesTest, AbslMacro) {
+  auto Input = Annotations(R"(
+  void target(int *$no^ P, int *$yes^$yes_removal[[ absl_nullability_unknown]] Q,
+              int*$no_space^$no_space_removal[[absl_nullability_unknown]] R,
+              int*$with_comment^$with_comment_removal[[/* a comment */absl_nullability_unknown]] S,
+              int *$nullable^$nullable_removal[[ absl_nullable]] T,
+              int *$nonnull^$nonnull_removal[[ absl_nonnull]] U);
+    )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(
+              AllOf(eligibleRange(1, Input.point("no")), hasNoRemovalRanges()),
+              AllOf(eligibleRange(2, Input.point("yes")),
+                    removalRanges({Input.range("yes_removal")})),
+              AllOf(eligibleRange(3, Input.point("no_space")),
+                    removalRanges({Input.range("no_space_removal")})),
+              AllOf(eligibleRange(4, Input.point("with_comment")),
+                    removalRanges({Input.range("with_comment_removal")})),
+              AllOf(eligibleRange(5, Input.point("nullable")),
+                    removalRanges({Input.range("nullable_removal")})),
+              AllOf(eligibleRange(6, Input.point("nonnull")),
+                    removalRanges({Input.range("nonnull_removal")})))));
+}
+
+TEST(RemovalRangesTest, AbslMacroSmartPointersEast) {
+  auto Input = Annotations(R"(
+  namespace std {
+  template <typename T>
+  class unique_ptr;
+  }
+
+  void target($no^std::unique_ptr<int> P,
+              $yes^std::unique_ptr<int>$yes_removal[[ absl_nullability_unknown]] Q,
+              $no_space^std::unique_ptr<int>$no_space_removal[[absl_nullability_unknown]] R,
+              $with_comment^std::unique_ptr<int>$with_comment_removal[[/* a comment */absl_nullability_unknown]] S,
+              $nullable^std::unique_ptr<int>$nullable_removal[[ absl_nullable]] T,
+              $nonnull^std::unique_ptr<int>$nonnull_removal[[ absl_nonnull]] U);
+    )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(
+              AllOf(eligibleRange(1, Input.point("no")), hasNoRemovalRanges()),
+              AllOf(eligibleRange(2, Input.point("yes")),
+                    removalRanges({Input.range("yes_removal")})),
+              AllOf(eligibleRange(3, Input.point("no_space")),
+                    removalRanges({Input.range("no_space_removal")})),
+              AllOf(eligibleRange(4, Input.point("with_comment")),
+                    removalRanges({Input.range("with_comment_removal")})),
+              AllOf(eligibleRange(5, Input.point("nullable")),
+                    removalRanges({Input.range("nullable_removal")})),
+              AllOf(eligibleRange(6, Input.point("nonnull")),
+                    removalRanges({Input.range("nonnull_removal")})))));
+}
+
+TEST(RemovalRangesTest, AbslMacroSmartPointersWest) {
+  auto Input = Annotations(R"(
+  namespace std {
+  template <typename T>
+  class unique_ptr;
+  }
+
+  void target($no^std::unique_ptr<int> P,
+              $yes_removal[[absl_nullability_unknown ]]$yes^std::unique_ptr<int> Q,
+              $with_comment_removal[[absl_nullability_unknown/* a comment */]]$with_comment^std::unique_ptr<int> R,
+              $nullable_removal[[absl_nullable ]]$nullable^std::unique_ptr<int> S,
+              $nonnull_removal[[absl_nonnull ]]$nonnull^std::unique_ptr<int> T);
+    )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(
+              AllOf(eligibleRange(1, Input.point("no")), hasNoRemovalRanges()),
+              AllOf(eligibleRange(2, Input.point("yes")),
+                    removalRanges({Input.range("yes_removal")})),
+              AllOf(eligibleRange(3, Input.point("with_comment")),
+                    removalRanges({Input.range("with_comment_removal")})),
+              AllOf(eligibleRange(4, Input.point("nullable")),
+                    removalRanges({Input.range("nullable_removal")})),
+              AllOf(eligibleRange(5, Input.point("nonnull")),
+                    removalRanges({Input.range("nonnull_removal")})))));
+}
+
+TEST(RemovalRangesTest, AbslMacroSmartPointersWithNearerConst) {
+  auto Input = Annotations(R"(
+  namespace std {
+  template <typename T>
+  class unique_ptr;
+  }
+
+  void target($const_west_removal[[absl_nullable ]]const $insert_const_west^std::unique_ptr<int> P,
+              $insert_const_east^std::unique_ptr<int> const$const_east_removal[[ absl_nullable]] Q,
+              $insert_const_east_no_space^std::unique_ptr<int>const$const_east_removal_no_space[[ absl_nullable]] R,
+              $insert_const_east_comment^std::unique_ptr<int>/* a comment */const$const_east_removal_comment[[ absl_nullable]] S);
+    )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(
+          Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+          UnorderedElementsAre(
+              AllOf(eligibleRange(1, Input.point("insert_const_west")),
+                    removalRanges({Input.range("const_west_removal")})),
+              AllOf(eligibleRange(2, Input.point("insert_const_east")),
+                    removalRanges({Input.range("const_east_removal")})),
+              AllOf(
+                  eligibleRange(3, Input.point("insert_const_east_no_space")),
+                  removalRanges({Input.range("const_east_removal_no_space")})),
+              AllOf(eligibleRange(4, Input.point("insert_const_east_comment")),
+                    removalRanges(
+                        {Input.range("const_east_removal_comment")})))));
+}
+
+TEST(RemovalRangesTest, AbslMacroWithFunctionPointer) {
+  auto Input = Annotations(R"(
+  void target(void (*^[[ absl_nonnull]] P)(int));
   )");
   EXPECT_THAT(
       getFunctionRanges(Input.code()),
