@@ -61,8 +61,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=8
     std::int32_t b_;
   };
-
- private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=9

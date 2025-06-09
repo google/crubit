@@ -62,8 +62,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     // cc_bindings_from_rs/test/tuples/tuples.rs;l=20
     std::int32_t five;
   };
-
- private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/tuples/tuples.rs;l=21

@@ -228,8 +228,9 @@ fn test_format_item_struct_with_fields() {
                         SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
                           memcpy(this, &value, sizeof(value));
                         }
-                    public: union { ... std::int32_t x; };
-                    public: union { ... std::int32_t y; };
+                    public:
+                        union { ... std::int32_t x; };
+                        union { ... std::int32_t y; };
                     private:
                         static void __crubit_field_offset_assertions();
                 };
@@ -294,8 +295,9 @@ fn test_format_item_struct_with_tuple() {
                         TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
                           memcpy(this, &value, sizeof(value));
                         }
-                    public: union { ... std::int32_t __field0; };
-                    public: union { ... std::int32_t __field1; };
+                    public:
+                        union { ... std::int32_t __field0; };
+                        union { ... std::int32_t __field1; };
                     private:
                         static void __crubit_field_offset_assertions();
                 };
@@ -354,9 +356,10 @@ fn test_format_item_struct_with_reordered_field_offsets() {
                     // The particular order below is not guaranteed,
                     // so we may need to adjust this test assertion
                     // (if Rust changes how it lays out the fields).
-                    public: union { ... std::int32_t field2; };
-                    public: union { ... std::int16_t field1; };
-                    public: union { ... std::int16_t field3; };
+                    public:
+                        union { ... std::int32_t field2; };
+                        union { ... std::int16_t field1; };
+                        union { ... std::int16_t field3; };
                     private:
                         static void __crubit_field_offset_assertions();
                 };
@@ -414,8 +417,9 @@ fn test_format_item_struct_with_packed_layout() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] __attribute__((packed)) SomeStruct final {
                     ...
-                    public: union { ... std::uint16_t field1; };
-                    public: union { ... std::uint32_t field2; };
+                    public:
+                        union { ... std::uint16_t field1; };
+                        union { ... std::uint32_t field2; };
                     private:
                         static void __crubit_field_offset_assertions();
                 };
@@ -469,8 +473,9 @@ fn test_format_item_struct_with_explicit_padding_in_generated_code() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                     ...
-                    public: union { ... std::uint32_t f2; };
-                    public: union { ... std::uint8_t f1; };
+                    public:
+                        union { ... std::uint32_t f2; };
+                        union { ... std::uint8_t f1; };
                     private: unsigned char __padding0[3];
                     private:
                         static void __crubit_field_offset_assertions();
@@ -498,6 +503,62 @@ fn test_format_item_struct_with_explicit_padding_in_generated_code() {
                 const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
                 const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, f2) == 0);
                 const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, f1) == 4);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_with_explicit_padding_on_private_field_in_generated_code() {
+    let test_src = r#"
+            pub struct SomeStruct {
+                #[allow(dead_code)]
+                f1: u8,
+                pub f2: u32,
+            }
+            const _: () = assert!(::std::mem::size_of::<SomeStruct>() == 8);
+            const _: () = assert!(::std::mem::align_of::<SomeStruct>() == 4);
+        "#;
+    test_format_item(test_src, "SomeStruct", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert!(!main_api.prereqs.is_empty());
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
+                    ...
+                    public:
+                        union { ... std::uint32_t f2; };
+                    private:
+                        union { ... std::uint8_t f1; };
+                        unsigned char __padding0[3];
+                    private:
+                        static void __crubit_field_offset_assertions();
+                };
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                static_assert(sizeof(SomeStruct) == 8, ...);
+                static_assert(alignof(SomeStruct) == 4, ...);
+                static_assert(std::is_trivially_destructible_v<SomeStruct>);
+                static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+                static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+                inline void SomeStruct::__crubit_field_offset_assertions() {
+                  static_assert(0 == offsetof(SomeStruct, f2));
+                  static_assert(4 == offsetof(SomeStruct, f1));
+                }
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
+                const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
+                const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeStruct, f2) == 0);
             }
         );
     });
@@ -1347,7 +1408,6 @@ fn test_repr_c_enum_fields() {
                         struct alignas(...) __crubit_D_struct {
                             public:
                                 std::int32_t foo;
-                            public:
                                 std::int32_t bar;
                         };
                         ...

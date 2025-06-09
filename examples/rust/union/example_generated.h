@@ -43,8 +43,6 @@ ReprCUnion final {
   // Generated from:
   // examples/rust/union/example.rs;l=7
   std::int32_t a;
-
- public:
   // Generated from:
   // examples/rust/union/example.rs;l=8
   double b;

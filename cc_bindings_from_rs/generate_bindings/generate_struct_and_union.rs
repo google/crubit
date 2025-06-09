@@ -994,8 +994,34 @@ fn generate_fields<'tcx>(
             && variants_fields.iter().flatten().all(|field| field.type_info.is_ok());
 
         let mut prereqs = CcPrerequisites::default();
+
+        #[derive(Debug, Default)]
+        struct CcFieldVisState {
+            is_public: Option<bool>,
+        }
+        impl CcFieldVisState {
+            /// Ensures the current field visibility matches `is_public` by returning tokens to
+            /// switch from `private:` to `public:` or vice versa. If the current access specifier
+            /// already matches the requested one, no specifier is returned.
+            fn set_is_public(&mut self, is_public: bool) -> TokenStream {
+                if self.is_public == Some(is_public) {
+                    quote! {}
+                } else {
+                    self.is_public = Some(is_public);
+                    if is_public {
+                        quote! { public: }
+                    } else {
+                        quote! { private: }
+                    }
+                }
+            }
+        }
+
         // Takes a field and converts it to a token stream.
-        let get_field_tokens = |field: Field, prereqs: &mut CcPrerequisites| -> TokenStream {
+        let get_field_tokens = |field: Field,
+                                prereqs: &mut CcPrerequisites,
+                                current_visibility: &mut CcFieldVisState|
+         -> TokenStream {
             let cc_name = &field.cc_name;
             match field.type_info {
                 Err(ref err) => {
@@ -1004,12 +1030,14 @@ fn generate_fields<'tcx>(
 
                     // Empty arrays are ill-formed, but also unnecessary for padding.
                     if size > 0 {
+                        let visibility = current_visibility.set_is_public(false);
                         let size = Literal::u64_unsuffixed(size);
-                        quote! {
-                            private: __NEWLINE__
+                        let tokens = quote! {
+                            #visibility __NEWLINE__
                                 __COMMENT__ #msg
                                 unsigned char #cc_name[#size];
-                        }
+                        };
+                        tokens
                     } else {
                         // TODO(b/258259459): Generate bindings for ZST fields.
                         let msg = format!(
@@ -1028,43 +1056,46 @@ fn generate_fields<'tcx>(
                         ty::AdtKind::Union => field.offset,
                     };
 
-                    // Omit explicit padding if:
-                    //   1. The type is repr(C) and has known types for all fields, so we can reuse
-                    //      the natural repr(C) padding.
-                    //   2. There is no padding
-                    // TODO(jeanpierreda): also omit padding for the final field?
-                    let padding = if always_omit_padding || padding == 0 {
-                        quote! {}
-                    } else {
-                        let padding = Literal::u64_unsuffixed(padding);
-                        let ident = format_ident!("__padding{}", field.index);
-                        quote! { private: unsigned char #ident[#padding]; }
-                    };
-                    let visibility = if field.is_public {
-                        quote! { public: }
-                    } else {
-                        quote! { private: }
-                    };
+                    // Visibility specifier needed by the current field.
+                    // We have to update this field's visibility before calculating its padding,
+                    // since the padding may update the current visibility to private.
+                    let visibility = current_visibility.set_is_public(field.is_public);
+
                     let cpp_type = cpp_type.into_tokens(prereqs);
                     let doc_comment = field.doc_comment;
                     let attributes = field.attributes;
 
-                    match adt_def.adt_kind() {
-                        ty::AdtKind::Struct => quote! {
-                            #visibility __NEWLINE__
-                                // The anonymous union gives more control over when exactly
-                                // the field constructors and destructors run. For example,
-                                // this lets us initialize the fields for the first time via
-                                // memcpy, in the move or UnsafeRelocateTag constructor, and lets
-                                // us destroy them only by calling into Rust.
-                                // See also b/288138612.
-                                union {  __NEWLINE__
-                                    #doc_comment
-                                    #(#attributes)*
-                                    #cpp_type #cc_name;
-                                };
-                            #padding
-                        },
+                    let tokens = match adt_def.adt_kind() {
+                        ty::AdtKind::Struct => {
+                            // Omit explicit padding if:
+                            //   1. The type is repr(C) and has known types for all fields, so we can reuse
+                            //      the natural repr(C) padding.
+                            //   2. There is no padding
+                            // TODO(jeanpierreda): also omit padding for the final field?
+                            let padding = if always_omit_padding || padding == 0 {
+                                quote! {}
+                            } else {
+                                let padding = Literal::u64_unsuffixed(padding);
+                                let ident = format_ident!("__padding{}", field.index);
+                                let padding_visibility = current_visibility.set_is_public(false);
+                                quote! { #padding_visibility unsigned char #ident[#padding]; }
+                            };
+                            quote! {
+                                #visibility __NEWLINE__
+                                    // The anonymous union gives more control over when exactly
+                                    // the field constructors and destructors run. For example,
+                                    // this lets us initialize the fields for the first time via
+                                    // memcpy, in the move or UnsafeRelocateTag constructor, and lets
+                                    // us destroy them only by calling into Rust.
+                                    // See also b/288138612.
+                                    union {  __NEWLINE__
+                                        #doc_comment
+                                        #(#attributes)*
+                                        #cpp_type #cc_name;
+                                    };
+                                #padding
+                            }
+                        }
                         ty::AdtKind::Union => {
                             if repr_attrs.contains(&rustc_attr_data_structures::ReprC) {
                                 quote! {
@@ -1095,7 +1126,8 @@ fn generate_fields<'tcx>(
                                 #visibility __NEWLINE__ #cpp_type #cc_name;
                             }
                         }
-                    }
+                    };
+                    tokens
                 }
             }
         };
@@ -1103,15 +1135,18 @@ fn generate_fields<'tcx>(
         // For structs and unions, we can just flatten the fields variant. For enums, we
         // need to handle each variant separately.
         let fields = match adt_def.adt_kind() {
-            ty::AdtKind::Struct | ty::AdtKind::Union => variants_fields
-                .into_iter()
-                .flatten()
-                .map(|field| get_field_tokens(field, &mut prereqs))
-                .collect(),
+            ty::AdtKind::Struct | ty::AdtKind::Union => {
+                let mut current_visibility = CcFieldVisState::default();
+                variants_fields
+                    .into_iter()
+                    .flatten()
+                    .map(|field| get_field_tokens(field, &mut prereqs, &mut current_visibility))
+                    .collect()
+            }
             ty::AdtKind::Enum if !is_supported_enum => variants_fields
                 .into_iter()
                 .flatten()
-                .map(|field| get_field_tokens(field, &mut prereqs))
+                .map(|field| get_field_tokens(field, &mut prereqs, &mut Default::default()))
                 .collect(),
             ty::AdtKind::Enum => {
                 // We need three things:
@@ -1167,10 +1202,13 @@ fn generate_fields<'tcx>(
                     Vec::with_capacity(variants_fields.len());
 
                 for fields_for_variant in variants_fields.into_iter() {
+                    let mut current_visibility = CcFieldVisState::default();
                     tokens_per_variant.push(
                         fields_for_variant
                             .into_iter()
-                            .map(|field| get_field_tokens(field, &mut prereqs))
+                            .map(|field| {
+                                get_field_tokens(field, &mut prereqs, &mut current_visibility)
+                            })
                             .collect(),
                     );
                 }
