@@ -150,7 +150,7 @@ pub struct ContainingStruct {
     /// Doc comment for an unsupported field.
     ///
     /// Reason for representing this field as a blob of bytes:
-    /// Can't generate bindings for NestedStruct, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported
+    /// Unsupported type 'struct ContainingStruct::NestedStruct': No generated bindings found for 'NestedStruct'
     pub(crate) nested_struct: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ContainingStruct {}
@@ -217,8 +217,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ContainingSt
     }
 }
 
-// Error while generating bindings for item 'NestedStruct':
-// Can't generate bindings for NestedStruct, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported
+// Error while generating bindings for item 'ContainingStruct::NestedStruct':
+// Nested classes are not supported yet
 
 mod detail {
     #[allow(unused_imports)]

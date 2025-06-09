@@ -546,6 +546,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         error);
   };
 
+  if (decl_context->isRecord()) {
+    return unsupported(
+        FormattedError::Static("Nested classes are not supported yet"));
+  }
+
   if (record_decl->isDependentContext()) {
     // We can't pass this to getASTRecordLayout() or it'll segfault.
     // TODO(jeanpierreda): investigate what we can do to support dependent records?

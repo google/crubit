@@ -862,7 +862,7 @@ TEST(ImporterTest, RecordItemIds) {
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
-  ASSERT_EQ(records.size(), 2);
+  ASSERT_EQ(records.size(), 1);
 
   std::vector<IR::Item> items;
   for (const auto& id : records[0]->child_item_ids) {
@@ -874,6 +874,8 @@ TEST(ImporterTest, RecordItemIds) {
   EXPECT_THAT(items,
               AllOf(Contains(VariantWith<Comment>(TextIs("A free comment"))),
                     Contains(VariantWith<Func>(IdentifierIs("bar"))),
+                    Contains(VariantWith<UnsupportedItem>(
+                        UnsupportedItemNameIs("TopLevelStruct::Nested"))),
                     Contains(VariantWith<Func>(IdentifierIs("baz")))));
 }
 
