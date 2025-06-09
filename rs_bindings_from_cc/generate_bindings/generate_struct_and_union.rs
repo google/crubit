@@ -7,8 +7,10 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
-    ApiSnippets, AssertableTrait, Assertion, Feature, MainApi, SizeofImpl, Thunk, ThunkImpl,
-    UpcastImplBody,
+    ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeriveAttr,
+    DocCommentAttr, Feature, FieldDefinition, FieldType, MainApi, MustUseAttr,
+    NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk, ThunkImpl,
+    UpcastImplBody, Visibility,
 };
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
@@ -18,10 +20,11 @@ use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
 use ir::*;
 use itertools::Itertools;
-use proc_macro2::{Ident, Literal, TokenStream};
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::collections::HashMap;
 use std::iter;
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 
 /// Returns whether fields of type `ty` need to be wrapped in `ManuallyDrop<T>`
@@ -144,13 +147,6 @@ fn get_field_rs_type_kind_for_layout(
     Ok(type_kind)
 }
 
-/// Returns the type of a type-less, unaligned block of memory that can hold a
-/// specified number of bits, rounded up to the next multiple of 8.
-fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
-    let padding_size = Literal::usize_unsuffixed((padding_size_in_bits + 7) / 8);
-    quote! { [::core::mem::MaybeUninit<u8>; #padding_size] }
-}
-
 fn collect_unqualified_member_functions_from_all_bases(
     db: &dyn BindingsGenerator,
     record: &Record,
@@ -244,10 +240,10 @@ fn field_definition(
     prev_end: usize,
     offset: usize,
     end: usize,
-    desc: &[String],
+    desc: &[BitfieldComment],
     override_alignment: &mut bool,
     fields_that_must_be_copy: &mut Vec<TokenStream>,
-) -> Result<TokenStream> {
+) -> Result<FieldDefinition> {
     // opaque blob representations are always unaligned, even though the actual C++
     // field might be aligned. To put the current field at the right offset, we
     // might need to insert some extra padding.
@@ -258,8 +254,7 @@ fn field_definition(
     //
     // We also don't need padding if we're in a union.
     let padding_size_in_bits = if record.is_union()
-        || (field.is_some()
-            && get_field_rs_type_kind_for_layout(db, record, field.unwrap()).is_ok())
+        || field.map(|f| get_field_rs_type_kind_for_layout(db, record, f).is_ok()).unwrap_or(false)
     {
         0
     } else {
@@ -267,71 +262,76 @@ fn field_definition(
         offset - padding_start
     };
 
-    let padding = if padding_size_in_bits == 0 {
-        quote! {}
-    } else {
-        let padding_name = make_rs_ident(&format!("__padding{}", field_index));
-        let padding_type = bit_padding(padding_size_in_bits);
-        quote! { #padding_name: #padding_type, }
-    };
+    let padding = NonZeroUsize::new(padding_size_in_bits).map(BitPadding);
 
     // Bitfields get represented by private padding to ensure overall
     // struct layout is compatible.
-    if field.is_none() {
-        let name = make_rs_ident(&format!("__bitfields{}", field_index));
-        let bitfield_padding = bit_padding(end - offset);
+    let Some(field) = field else {
         *override_alignment = true;
-        return Ok(quote! {
-            __NEWLINE__ #(  __COMMENT__ #desc )*
-            #padding #name: #bitfield_padding
+        return Ok(FieldDefinition::Bitfield {
+            field_index,
+            desc: desc.to_vec(),
+            padding,
+            bits: BitPadding(
+                NonZeroUsize::new(end - offset)
+                    .expect("Bit padding should always be greater than 0"),
+            ),
         });
-    }
-    let field = field.unwrap();
+    };
 
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
     let doc_comment = match &field_rs_type_kind {
         Ok(_) => generate_doc_comment(field.doc_comment.as_deref(), None, db.environment()),
         Err(msg) => {
-            *override_alignment = true;
-            let supplemental_text =
-                format!("Reason for representing this field as a blob of bytes:\n{:#}", msg);
-            let new_text = match &field.doc_comment {
-                None => supplemental_text,
-                Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
-            };
+            use std::fmt::Write;
+
+            let mut new_text = field
+                .doc_comment
+                .as_deref()
+                .map(|doc_comment| format!("{doc_comment}\n\n"))
+                .unwrap_or_default();
+            let _ = write!(
+                &mut new_text,
+                "Reason for representing this field as a blob of bytes:\n{msg:#}"
+            );
             generate_doc_comment(Some(new_text.as_str()), None, db.environment())
         }
     };
-    let access = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
-        let pub_ =
-            db::type_visibility(db, &record.owning_target, field_rs_type_kind.clone().unwrap())
-                .unwrap_or_default();
-        quote! { #pub_ }
+    let visibility = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
+        db::type_visibility(db, &record.owning_target, field_rs_type_kind.clone().unwrap())
+            .unwrap_or_default()
     } else {
-        quote! { pub(crate) }
+        Visibility::PubCrate
     };
 
     let field_type = match field_rs_type_kind {
-        Err(_) => bit_padding(end - field.offset),
+        Err(_) => {
+            *override_alignment = true;
+            FieldType::Erased(BitPadding(
+                NonZeroUsize::new(end - field.offset)
+                    .expect("Bit padding should always be greater than 0"),
+            ))
+        }
         Ok(type_kind) => {
-            let mut formatted = type_kind.to_token_stream(db);
+            let ty = type_kind.to_token_stream(db);
+            let mut wrap_in_manually_drop = false;
             if record.should_implement_drop() || record.is_union() {
                 if needs_manually_drop(&type_kind) {
                     // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
                     // if we can ask Rust to preserve field destruction order if the
                     // destructor is the SpecialMemberFunc::NontrivialMembers
                     // case.
-                    formatted = quote! { ::core::mem::ManuallyDrop<#formatted> }
+                    wrap_in_manually_drop = true;
                 } else {
-                    fields_that_must_be_copy.push(formatted.clone());
+                    fields_that_must_be_copy.push(ty.clone());
                 }
             };
-            formatted
+            FieldType::Type { needs_manually_drop: wrap_in_manually_drop, ty }
         }
     };
 
-    Ok(quote! { #padding #doc_comment #access #ident: #field_type })
+    Ok(FieldDefinition::Field { field_index, padding, doc_comment, visibility, ident, field_type })
 }
 
 /// Implementation of `BindingsGenerator::generate_record`.
@@ -351,11 +351,6 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
-    let doc_comment = generate_doc_comment(
-        record.doc_comment.as_deref(),
-        Some(&record.source_loc),
-        db.environment(),
-    );
 
     struct FieldWithLayout<'a> {
         /// The IR field. Note that bitfields are represented as `None`.
@@ -364,13 +359,16 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         offset: usize,
         /// The offset of the end of the field or `None` for opaque fields.
         end: Option<usize>,
-        description: Vec<String>,
+        description: Vec<BitfieldComment>,
     }
 
-    let fields_with_bounds: Vec<FieldWithLayout> = (record.fields.iter())
-        .filter(|field| field.size != 0)
-        .map(|field| {
-            FieldWithLayout {
+    let fields_with_bounds: Vec<FieldWithLayout> = record
+        .fields
+        .iter()
+        .filter_map(|field| {
+            let size = NonZeroUsize::new(field.size)?;
+
+            Some(FieldWithLayout {
                 // We don't represent bitfields directly in Rust. We drop the field itself here
                 // and only retain the offset information. Adjacent bitfields then get merged in
                 // the next step.
@@ -391,12 +389,11 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
                         }
                     }
                 },
-                description: vec![format!(
-                    "{} : {} bits",
-                    field.identifier.as_ref().map(|i| i.identifier.clone()).unwrap_or("".into()),
-                    field.size
-                )],
-            }
+                description: vec![BitfieldComment {
+                    field_name: field.identifier.as_ref().map(|i| i.identifier.clone()),
+                    bits: size,
+                }],
+            })
         })
         // Merge consecutive bitfields. This is necessary because they may share storage in the
         // same byte.
@@ -478,37 +475,15 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     };
     let mut features = FlagSet::empty();
 
-    let derives = generate_derives(&record);
-    let derives = if derives.is_empty() {
-        quote! {}
-    } else {
-        quote! {#[derive( #(#derives),* )]}
-    };
-    let record_kind = if record.is_union() {
-        quote! { union }
-    } else {
-        quote! { struct }
-    };
-
-    let recursively_pinned_attribute = if record.is_unpin() {
-        quote! {}
+    let recursively_pinned_attr = if record.is_unpin() {
+        None
     } else {
         // negative_impls are necessary for universal initialization due to Rust's
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
         features |= Feature::negative_impls;
-        if record.should_implement_drop() {
-            quote! {#[::ctor::recursively_pinned(PinnedDrop)]}
-        } else {
-            quote! {#[::ctor::recursively_pinned]}
-        }
+        Some(RecursivelyPinnedAttr { pinned_drop: record.should_implement_drop() })
     };
-
-    let mut repr_attributes = vec![quote! {C}];
-    if override_alignment && record.size_align.alignment > 1 {
-        let alignment = Literal::usize_unsuffixed(record.size_align.alignment);
-        repr_attributes.push(quote! {align(#alignment)});
-    }
 
     // Adjust the struct to also include base class subobjects, vtables, etc.
     let head_padding = if let Some(first_field) = record.fields.first() {
@@ -532,14 +507,8 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     //
     // TODO(b/232969667): Protect unions from direct initialization, too.
     let allow_direct_init = record.is_aggregate || record.is_union();
-    let head_padding = if head_padding > 0 || !allow_direct_init {
-        let n = proc_macro2::Literal::usize_unsuffixed(head_padding);
-        quote! {
-            __non_field_data: [::core::mem::MaybeUninit<u8>; #n],
-        }
-    } else {
-        quote! {}
-    };
+    let head_padding =
+        if head_padding > 0 || !allow_direct_init { Some(head_padding) } else { None };
 
     let fully_qualified_cc_name = cpp_tagless_type_name_for_record(&record, ir)?.to_string();
 
@@ -563,10 +532,8 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     .filter_map(|unambiguous_base_class_member_function| -> Option<ApiSnippets> {
         let item = ir.find_untyped_decl(unambiguous_base_class_member_function.id);
         let Item::Func(ir_func) = item else { panic!("Unexpected item type: {:?}", item) };
-        let Ok(Some(generated_func)) = db.generate_function(ir_func.clone(), Some(record.clone()))
-        else {
-            return None;
-        };
+        let generated_func =
+            db.generate_function(ir_func.clone(), Some(record.clone())).ok().flatten()?;
         Some((*generated_func.snippets).clone())
     })
     .collect();
@@ -585,16 +552,16 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
             cc_struct_no_unique_address_impl(db, &record)?
         } else {
-            quote! {}
+            vec![]
         };
     let incomplete_definition = if crubit_features
         .contains(crubit_feature::CrubitFeature::Experimental)
     {
-        quote! {
+        Some(quote! {
             forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
-        }
+        })
     } else {
-        quote! {}
+        None
     };
 
     let mut items = vec![];
@@ -610,52 +577,40 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         features |= generated.features;
     }
 
-    let send_impl = if record.trait_derives.send {
-        quote! {unsafe impl Send for #ident {}}
-    } else {
-        quote! {impl !Send for #ident {}}
-    };
-
-    let sync_impl = if record.trait_derives.sync {
-        quote! {unsafe impl Sync for #ident {}}
-    } else {
-        quote! {impl !Sync for #ident {}}
-    };
-
-    let must_use = match &record.nodiscard {
-        None => quote! {},
-        Some(message) => {
-            if message.is_empty() {
-                quote! { #[must_use] }
-            } else {
-                quote! { #[must_use = #message] }
-            }
-        }
-    };
-    let pub_ = db.has_bindings(ir::Item::Record(record.clone())).unwrap_or_default().visibility;
-
-    let crubit_annotation = format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}");
-    let record_tokens = quote! {
-        #doc_comment
-        #derives
-        #recursively_pinned_attribute
-        #must_use
-        #[repr(#( #repr_attributes ),*)]
-        #[doc=#crubit_annotation]
-        #pub_ #record_kind #ident {
-            #head_padding
-            #( #field_definitions, )*
-        }
-
-        #send_impl
-        #sync_impl
-
-        #incomplete_definition
-
-        #no_unique_address_accessors
-
-        __NEWLINE__ __NEWLINE__
-        #( #items __NEWLINE__ __NEWLINE__)*
+    let record_tokens = database::code_snippet::Record {
+        doc_comment_attr: generate_doc_comment(
+            record.doc_comment.as_deref(),
+            Some(&record.source_loc),
+            db.environment(),
+        ),
+        derive_attr: generate_derives(&record),
+        recursively_pinned_attr,
+        must_use_attr: record.nodiscard.clone().map(MustUseAttr),
+        align: if override_alignment && record.size_align.alignment > 1 {
+            Some(record.size_align.alignment)
+        } else {
+            None
+        },
+        crubit_annotation: DocCommentAttr(
+            format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}").into(),
+        ),
+        visibility: db
+            .has_bindings(ir::Item::Record(record.clone()))
+            .unwrap_or_default()
+            .visibility,
+        struct_or_union: if record.is_union() {
+            StructOrUnion::Union
+        } else {
+            StructOrUnion::Struct
+        },
+        ident,
+        head_padding,
+        field_definitions,
+        implements_send: record.trait_derives.send,
+        implements_sync: record.trait_derives.sync,
+        incomplete_definition,
+        no_unique_address_accessors,
+        items,
     };
     features |= Feature::negative_impls;
     let record_trait_assertions = {
@@ -711,7 +666,7 @@ pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAli
     Assertion::SizeAlign { type_name, size: size_align.size, alignment: size_align.alignment }
 }
 
-pub fn generate_derives(record: &Record) -> Vec<Ident> {
+pub fn generate_derives(record: &Record) -> DeriveAttr {
     let mut derives = vec![];
     if should_derive_clone(record) {
         derives.push(make_rs_ident("Clone"));
@@ -726,7 +681,7 @@ pub fn generate_derives(record: &Record) -> Vec<Ident> {
         // Breaks for paths right now...
         derives.push(make_rs_ident(custom_trait));
     }
-    derives
+    DeriveAttr(derives)
 }
 
 fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Result<ThunkImpl> {
@@ -780,11 +735,8 @@ fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Re
 fn cc_struct_no_unique_address_impl(
     db: &dyn BindingsGenerator,
     record: &Record,
-) -> Result<TokenStream> {
-    let mut fields = vec![];
-    let mut types = vec![];
-    let mut field_offsets = vec![];
-    let mut doc_comments = vec![];
+) -> Result<Vec<NoUniqueAddressAccessor>> {
+    let mut no_unique_address_accessors = vec![];
     for field in &record.fields {
         if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
             continue;
@@ -797,67 +749,33 @@ fn cc_struct_no_unique_address_impl(
         // Can't use `get_field_rs_type_kind_for_layout` here, because we want to dig
         // into no_unique_address fields, despite laying them out as opaque
         // blobs of bytes.
-        if let Ok(cpp_type) = field.type_.as_ref() {
-            fields.push(make_rs_ident(
+        let Ok(cpp_type) = field.type_.as_ref() else {
+            continue;
+        };
+
+        let type_ident = db.rs_type_kind(cpp_type.clone()).with_context(|| {
+            format!("Failed to format type for field {field:?} on record {record:?}")
+        })?;
+        no_unique_address_accessors.push(NoUniqueAddressAccessor {
+            doc_comment: if field.size == 0 {
+                // These fields are not generated at all, so they need to be documented here.
+                generate_doc_comment(field.doc_comment.as_deref(), None, db.environment())
+            } else {
+                // all other fields already have a doc-comment at the point they were defined.
+                None
+            },
+            field: make_rs_ident(
                 &field
                     .identifier
                     .as_ref()
                     .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
                     .identifier,
-            ));
-            let type_ident = db.rs_type_kind(cpp_type.clone()).with_context(|| {
-                format!("Failed to format type for field {:?} on record {:?}", field, record)
-            })?;
-            types.push(type_ident.to_token_stream(db));
-            field_offsets.push(Literal::usize_unsuffixed(field.offset / 8));
-            if field.size == 0 {
-                // These fields are not generated at all, so they need to be documented here.
-                doc_comments.push(generate_doc_comment(
-                    field.doc_comment.as_deref(),
-                    None,
-                    db.environment(),
-                ));
-            } else {
-                // all other fields already have a doc-comment at the point they were defined.
-                doc_comments.push(None);
-            }
-        }
+            ),
+            type_: type_ident.to_token_stream(db),
+            byte_offset: field.offset / 8,
+        });
     }
-    if fields.is_empty() {
-        return Ok(quote! {});
-    }
-    let ident = make_rs_ident(record.rs_name.identifier.as_ref());
-    // SAFETY: even if there is a named field in Rust for this subobject, it is not
-    // safe to just cast the pointer. A `struct S {[[no_unique_address]] A a;
-    // char b};` will be represented in Rust using a too-short field `a` (e.g.
-    // with `[MaybeUninit<u8>; 3]`, where the trailing fourth byte is actually
-    // `b`). We cannot cast this to something wider, which includes `b`, even
-    // though the `a` object does in fact include `b` in C++. This is Rust, and
-    // these are distinct object allocations. We don't have provenance.
-    //
-    // However, we can start from the pointer to **S** and perform pointer
-    // arithmetic on it to get a correctly-sized `A` reference. This is
-    // equivalent to transmuting the type to one where the potentially-overlapping
-    // subobject exists, but the fields next to it, which it overlaps, do not.
-    // As if it were `struct S {A a;};`. However, we do not use transmutes, and
-    // instead reimplement field access using pointer arithmetic.
-    //
-    // The resulting pointer is valid and correctly aligned, and does not violate
-    // provenance. It also does not result in mutable aliasing, because this
-    // borrows `self`, not just `a`.
-    Ok(quote! {
-        impl #ident {
-            #(
-                #doc_comments
-                pub fn #fields(&self) -> &#types {
-                    unsafe {
-                        let ptr = (self as *const Self as *const u8).offset(#field_offsets);
-                        &*(ptr as *const #types)
-                    }
-                }
-            )*
-        }
-    })
+    Ok(no_unique_address_accessors)
 }
 
 /// Returns the implementation of base class conversions, for converting a type

@@ -14,6 +14,7 @@ use ir::{BazelLabel, GenericItem, Item, RecordType, UnqualifiedIdentifier};
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
 use std::fmt::{Display, Formatter};
+use std::num::NonZeroUsize;
 use std::rc::Rc;
 
 /// FFI equivalent of `Bindings`.
@@ -382,7 +383,7 @@ pub enum MainApi {
     },
     Enum(TokenStream),
     Func(TokenStream),
-    Record(TokenStream),
+    Record(Record),
     Newline,
     UpcastImpl {
         base_name: TokenStream,
@@ -525,6 +526,102 @@ impl ToTokens for MainApi {
 }
 
 #[derive(Clone, Debug)]
+pub struct Record {
+    pub doc_comment_attr: Option<DocCommentAttr>,
+    pub derive_attr: DeriveAttr,
+    pub recursively_pinned_attr: Option<RecursivelyPinnedAttr>,
+    pub must_use_attr: Option<MustUseAttr>,
+    pub align: Option<usize>,
+    pub crubit_annotation: DocCommentAttr,
+    pub visibility: Visibility,
+    pub struct_or_union: StructOrUnion,
+    pub ident: Ident,
+    pub head_padding: Option<usize>,
+    pub field_definitions: Vec<FieldDefinition>,
+    pub implements_send: bool,
+    pub implements_sync: bool,
+    pub incomplete_definition: Option<TokenStream>,
+    pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
+    pub items: Vec<MainApi>,
+}
+
+impl ToTokens for Record {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self {
+            doc_comment_attr,
+            derive_attr,
+            recursively_pinned_attr,
+            must_use_attr,
+            align,
+            crubit_annotation,
+            visibility,
+            struct_or_union,
+            ident,
+            head_padding,
+            field_definitions,
+            implements_send,
+            implements_sync,
+            incomplete_definition,
+            no_unique_address_accessors,
+            items,
+        } = self;
+
+        let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
+            let align = Literal::usize_unsuffixed(align);
+            quote! { align(#align) }
+        }));
+
+        let head_padding = head_padding.map(|n| {
+            let n = Literal::usize_unsuffixed(n);
+            quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
+        });
+
+        let send_impl = match implements_send {
+            true => quote! { unsafe impl Send for #ident {} },
+            false => quote! { impl !Send for #ident {} },
+        };
+        let sync_impl = match implements_sync {
+            true => quote! { unsafe impl Sync for #ident {} },
+            false => quote! { impl !Sync for #ident {} },
+        };
+
+        let no_unique_address_accessors_impl = if !no_unique_address_accessors.is_empty() {
+            Some(quote! {
+                impl #ident {
+                    #( #no_unique_address_accessors )*
+                }
+            })
+        } else {
+            None
+        };
+
+        quote! {
+            #doc_comment_attr
+            #derive_attr
+            #recursively_pinned_attr
+            #must_use_attr
+            #[repr(#(#repr_attrs),*)]
+            #crubit_annotation
+            #visibility #struct_or_union #ident {
+                #head_padding
+                #( #field_definitions )*
+            }
+
+            #send_impl
+            #sync_impl
+
+            #incomplete_definition
+
+            #no_unique_address_accessors_impl
+
+            __NEWLINE__ __NEWLINE__
+            #( #items __NEWLINE__ __NEWLINE__ )*
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum UpcastImplBody {
     PointerOffset { offset: i64 },
     CastThunk { crate_root_path: Option<Ident>, cast_fn_name: Ident },
@@ -537,6 +634,218 @@ impl ToTokens for DocCommentAttr {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let Self(doc_comment) = self;
         quote! { #[doc = #doc_comment] }.to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct DeriveAttr(pub Vec<Ident>);
+
+impl ToTokens for DeriveAttr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self(derives) = self;
+        if !derives.is_empty() {
+            quote! { #[derive(#(#derives),*)] }.to_tokens(tokens);
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct RecursivelyPinnedAttr {
+    pub pinned_drop: bool,
+}
+
+impl ToTokens for RecursivelyPinnedAttr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self.pinned_drop {
+            true => quote! { #[::ctor::recursively_pinned(PinnedDrop)] },
+            false => quote! { #[::ctor::recursively_pinned] },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct MustUseAttr(pub Rc<str>);
+
+impl ToTokens for MustUseAttr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self.0.as_ref() {
+            "" => quote! { #[must_use] },
+            message => quote! { #[must_use = #message] },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum StructOrUnion {
+    Struct,
+    Union,
+}
+
+impl ToTokens for StructOrUnion {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            StructOrUnion::Struct => quote! { struct },
+            StructOrUnion::Union => quote! { union },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+/// Quotes as the type of a type-less, unaligned block of memory that can hold a
+/// specified number of bits, rounded up to the next multiple of 8.
+#[derive(Copy, Clone, Debug)]
+pub struct BitPadding(pub NonZeroUsize);
+
+impl BitPadding {
+    fn padding_size_in_bytes(self) -> usize {
+        self.0.get().div_ceil(8)
+    }
+}
+
+impl ToTokens for BitPadding {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let n = Literal::usize_unsuffixed(self.padding_size_in_bytes());
+        quote! { [::core::mem::MaybeUninit<u8>; #n] }.to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct BitfieldComment {
+    pub field_name: Option<Rc<str>>,
+    pub bits: NonZeroUsize,
+}
+
+impl ToTokens for BitfieldComment {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let s = format!("{} : {} bits", self.field_name.as_deref().unwrap_or(""), self.bits.get());
+        quote! { __COMMENT__ #s }.to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum FieldDefinition {
+    Bitfield {
+        field_index: usize,
+        desc: Vec<BitfieldComment>,
+        padding: Option<BitPadding>,
+        bits: BitPadding,
+    },
+    Field {
+        field_index: usize,
+        padding: Option<BitPadding>,
+        doc_comment: Option<DocCommentAttr>,
+        visibility: Visibility,
+        ident: Ident,
+        field_type: FieldType,
+    },
+}
+
+impl ToTokens for FieldDefinition {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            FieldDefinition::Bitfield { field_index, desc, padding, bits } => {
+                let padding_field = padding.map(|padding| {
+                    let padding_name =
+                        syn::parse_str::<Ident>(&format!("__padding{field_index}")).unwrap();
+                    quote! { #padding_name: #padding, }
+                });
+                let bitfield_name =
+                    syn::parse_str::<Ident>(&format!("__bitfields{field_index}")).unwrap();
+                quote! {
+                    __NEWLINE__ #( #desc )*
+                    #padding_field
+                    #bitfield_name: #bits,
+                }
+                .to_tokens(tokens);
+            }
+            FieldDefinition::Field {
+                field_index,
+                padding,
+                doc_comment,
+                visibility,
+                ident,
+                field_type,
+            } => {
+                let padding_field = padding.map(|padding| {
+                    let padding_name =
+                        syn::parse_str::<Ident>(&format!("__padding{field_index}")).unwrap();
+                    quote! { #padding_name: #padding, }
+                });
+                quote! {
+                    #padding_field
+                    #doc_comment
+                    #visibility #ident: #field_type,
+                }
+                .to_tokens(tokens);
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum FieldType {
+    Erased(BitPadding),
+    Type { needs_manually_drop: bool, ty: TokenStream },
+}
+
+impl ToTokens for FieldType {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            FieldType::Erased(padding) => padding.to_tokens(tokens),
+            FieldType::Type { needs_manually_drop, ty } => {
+                if *needs_manually_drop {
+                    quote! { ::core::mem::ManuallyDrop<#ty> }.to_tokens(tokens)
+                } else {
+                    ty.to_tokens(tokens)
+                }
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct NoUniqueAddressAccessor {
+    pub doc_comment: Option<DocCommentAttr>,
+    pub field: Ident,
+    pub type_: TokenStream,
+    pub byte_offset: usize,
+}
+
+impl ToTokens for NoUniqueAddressAccessor {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self { doc_comment, field, type_, byte_offset } = self;
+        let byte_offset = Literal::usize_unsuffixed(*byte_offset);
+
+        // SAFETY: even if there is a named field in Rust for this subobject, it is not
+        // safe to just cast the pointer. A `struct S {[[no_unique_address]] A a;
+        // char b};` will be represented in Rust using a too-short field `a` (e.g.
+        // with `[MaybeUninit<u8>; 3]`, where the trailing fourth byte is actually
+        // `b`). We cannot cast this to something wider, which includes `b`, even
+        // though the `a` object does in fact include `b` in C++. This is Rust, and
+        // these are distinct object allocations. We don't have provenance.
+        //
+        // However, we can start from the pointer to **S** and perform pointer
+        // arithmetic on it to get a correctly-sized `A` reference. This is
+        // equivalent to transmuting the type to one where the potentially-overlapping
+        // subobject exists, but the fields next to it, which it overlaps, do not.
+        // As if it were `struct S {A a;};`. However, we do not use transmutes, and
+        // instead reimplement field access using pointer arithmetic.
+        //
+        // The resulting pointer is valid and correctly aligned, and does not violate
+        // provenance. It also does not result in mutable aliasing, because this
+        // borrows `self`, not just `a`.
+        quote! {
+            #doc_comment
+            pub fn #field(&self) -> &#type_ {
+                unsafe {
+                    let ptr = (self as *const Self as *const u8).offset(#byte_offset);
+                    &*(ptr as *const #type_)
+                }
+            }
+        }
+        .to_tokens(tokens);
     }
 }
 

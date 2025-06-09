@@ -596,35 +596,35 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
 #[gtest]
 fn test_copy_derives() {
     let record = ir_record("S");
-    assert_eq!(generate_derives(&record), &["Clone", "Copy"]);
+    assert_eq!(generate_derives(&record).0, &["Clone", "Copy"]);
 }
 
 #[gtest]
 fn test_copy_derives_not_is_trivial_abi() {
     let mut record = ir_record("S");
     record.is_trivial_abi = false;
-    assert_eq!(generate_derives(&record), &[""; 0]);
+    assert_eq!(generate_derives(&record).0, &[""; 0]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_deleted() {
     let mut record = ir_record("S");
     record.copy_constructor = ir::SpecialMemberFunc::Unavailable;
-    assert_eq!(generate_derives(&record), &[""; 0]);
+    assert_eq!(generate_derives(&record).0, &[""; 0]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_members() {
     let mut record = ir_record("S");
     record.copy_constructor = ir::SpecialMemberFunc::NontrivialMembers;
-    assert_eq!(generate_derives(&record), &[""; 0]);
+    assert_eq!(generate_derives(&record).0, &[""; 0]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_self() {
     let mut record = ir_record("S");
     record.copy_constructor = ir::SpecialMemberFunc::NontrivialUserDefined;
-    assert_eq!(generate_derives(&record), &[""; 0]);
+    assert_eq!(generate_derives(&record).0, &[""; 0]);
 }
 
 /// In Rust, a Drop type cannot be Copy.
@@ -635,7 +635,7 @@ fn test_copy_derives_dtor_nontrivial_self() {
         [ir::SpecialMemberFunc::NontrivialUserDefined, ir::SpecialMemberFunc::NontrivialMembers]
     {
         record.destructor = definition;
-        assert_eq!(generate_derives(&record), &["Clone"]);
+        assert_eq!(generate_derives(&record).0, &["Clone"]);
     }
 }
 
