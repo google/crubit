@@ -20,13 +20,13 @@ use token_stream_matchers::assert_rs_matches;
 #[gtest]
 fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment_production() {
     let actual = generate_doc_comment(None, None, Environment::Production);
-    assert!(actual.is_empty());
+    assert!(actual.is_none());
 }
 
 #[gtest]
 fn test_generate_doc_comment_with_no_comment_with_source_loc_with_environment_production() {
     let actual = generate_doc_comment(None, Some("some/header;l=11"), Environment::Production);
-    assert_rs_matches!(actual, quote! {#[doc = " some/header;l=11"]});
+    assert_rs_matches!(quote! { #actual }, quote! {#[doc = " some/header;l=11"]});
 }
 
 #[gtest]
@@ -36,25 +36,28 @@ fn test_generate_doc_comment_with_comment_with_source_loc_with_environment_produ
         Some("some/header;l=12"),
         Environment::Production,
     );
-    assert_rs_matches!(actual, quote! {#[doc = " Some doc comment\n \n some/header;l=12"]});
+    assert_rs_matches!(
+        quote! { #actual },
+        quote! {#[doc = " Some doc comment\n \n some/header;l=12"]}
+    );
 }
 
 #[gtest]
 fn test_generate_doc_comment_with_comment_with_no_source_loc_with_environment_production() {
     let actual = generate_doc_comment(Some("Some doc comment"), None, Environment::Production);
-    assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    assert_rs_matches!(quote! { #actual }, quote! {#[doc = " Some doc comment"]});
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment_golden_test() {
     let actual = generate_doc_comment(None, None, Environment::GoldenTest);
-    assert!(actual.is_empty());
+    assert!(actual.is_none());
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_no_comment_with_source_loc_with_environment_golden_test() {
     let actual = generate_doc_comment(None, Some("some/header;l=13"), Environment::GoldenTest);
-    assert!(actual.is_empty());
+    assert!(actual.is_none());
 }
 
 #[gtest]
@@ -64,13 +67,13 @@ fn test_no_generate_doc_comment_with_comment_with_source_loc_with_environment_go
         Some("some/header;l=14"),
         Environment::GoldenTest,
     );
-    assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    assert_rs_matches!(quote! { #actual }, quote! {#[doc = " Some doc comment"]});
 }
 
 #[gtest]
 fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_environment_golden_test() {
     let actual = generate_doc_comment(Some("Some doc comment"), None, Environment::GoldenTest);
-    assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
+    assert_rs_matches!(quote! { #actual }, quote! {#[doc = " Some doc comment"]});
 }
 
 struct TestItem {

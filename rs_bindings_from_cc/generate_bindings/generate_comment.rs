@@ -4,12 +4,10 @@
 
 //! Generate comments for the bindings.
 
-use database::code_snippet::{ApiSnippets, MainApi};
+use database::code_snippet::{ApiSnippets, DocCommentAttr, MainApi};
 use database::BindingsGenerator;
 use ffi_types::Environment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
-use proc_macro2::TokenStream;
-use quote::quote;
 use std::fmt::Write as _;
 use std::rc::Rc;
 
@@ -68,21 +66,20 @@ pub fn generate_doc_comment(
     comment: Option<&str>,
     source_loc: Option<&str>,
     environment: Environment,
-) -> TokenStream {
+) -> Option<DocCommentAttr> {
     let source_loc = match environment {
         Environment::Production => source_loc,
         Environment::GoldenTest => None,
     };
     let (comment, sep, source_loc) = match (comment, source_loc) {
-        (None, None) => return quote! {},
+        (None, None) => return None,
         (None, Some(source_loc)) => ("", "", source_loc),
         (Some(comment), Some(source_loc)) => (comment, "\n\n", source_loc),
         (Some(comment), None) => (comment, "", ""),
     };
     // token_stream_printer (and rustfmt) don't put a space between /// and the doc
     // comment, let's add it here so our comments are pretty.
-    let doc_comment = format!(" {comment}{sep}{source_loc}").replace('\n', "\n ");
-    quote! {#[doc = #doc_comment]}
+    Some(DocCommentAttr(format!(" {comment}{sep}{source_loc}").replace('\n', "\n ").into()))
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.

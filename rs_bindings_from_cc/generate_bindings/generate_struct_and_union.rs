@@ -8,6 +8,7 @@ use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
     ApiSnippets, AssertableTrait, Assertion, Feature, MainApi, SizeofImpl, Thunk, ThunkImpl,
+    UpcastImplBody,
 };
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
@@ -53,19 +54,17 @@ pub fn generate_incomplete_record(
     incomplete_record: Rc<IncompleteRecord>,
 ) -> Result<ApiSnippets> {
     // If the record won't have bindings, we default to `public` to keep going anyway.
-    let pub_ = db
+    let visibility = db
         .has_bindings(ir::Item::IncompleteRecord(incomplete_record.clone()))
         .unwrap_or_default()
         .visibility;
-    let ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
     let cc_type = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(&incomplete_record).format_for_cc()?;
-    let symbol = quote! {#namespace_qualifier #cc_type}.to_string();
-    Ok(MainApi::ForwardDeclare(quote! {
-        forward_declare::forward_declare!(
-            #pub_ #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
-        );
-    })
+    Ok(MainApi::ForwardDeclare {
+        visibility,
+        ident: make_rs_ident(incomplete_record.rs_name.identifier.as_ref()),
+        symbol: quote! {#namespace_qualifier #cc_type}.to_string(),
+    }
     .into())
 }
 
@@ -820,7 +819,7 @@ fn cc_struct_no_unique_address_impl(
                 ));
             } else {
                 // all other fields already have a doc-comment at the point they were defined.
-                doc_comments.push(quote! {});
+                doc_comments.push(None);
             }
         }
     }
@@ -868,9 +867,9 @@ fn cc_struct_upcast_impl(
     record: &Rc<Record>,
     ir: &IR,
 ) -> Result<ApiSnippets> {
-    let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
+    let mut main_api = Vec::with_capacity(record.unambiguous_public_bases.len());
     let mut thunks = vec![];
-    let mut cc_impls = vec![];
+    let mut cc_details = vec![];
     for base in &record.unambiguous_public_bases {
         let base_record: &Rc<Record> = ir
             .find_decl(base.base_record_id)
@@ -879,7 +878,7 @@ fn cc_struct_upcast_impl(
             // The base type is unknown to Crubit, so don't generate upcast code for it.
             let base_name = &base_record.cc_name;
             let derived_name = &record.cc_name;
-            impls.extend([
+            main_api.extend([
                 MainApi::Newline,
                 MainApi::Comment {
                     message: format!("'{derived_name}' cannot be upcasted to '{base_name}' because the base type doesn't have Crubit bindings.").into(),
@@ -895,8 +894,7 @@ fn cc_struct_upcast_impl(
         let base_name = base_type.to_token_stream(db);
         let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
         let body = if let Some(offset) = base.offset {
-            let offset = Literal::i64_unsuffixed(offset);
-            quote! { (derived as *const _ as *const u8).offset(#offset) as *const #base_name }
+            UpcastImplBody::PointerOffset { offset }
         } else {
             let cast_fn_name = make_rs_ident(&format!(
                 "__crubit_dynamic_upcast__{derived}__to__{base}_{odr_suffix}",
@@ -906,7 +904,7 @@ fn cc_struct_upcast_impl(
             ));
             let base_cc_name = cpp_type_name_for_record(base_record.as_ref(), ir)?;
             let derived_cc_name = cpp_type_name_for_record(record.as_ref(), ir)?;
-            cc_impls.push(ThunkImpl::Upcast {
+            cc_details.push(ThunkImpl::Upcast {
                 base_cc_name: base_cc_name.clone(),
                 cast_fn_name: cast_fn_name.clone(),
                 derived_cc_name: derived_cc_name.clone(),
@@ -916,19 +914,14 @@ fn cc_struct_upcast_impl(
                 derived_name: derived_name.clone(),
                 base_name: base_name.clone(),
             });
-            let crate_root_path = ir.crate_root_path_tokens();
-            quote! {
-                #crate_root_path::detail::#cast_fn_name(derived)
+
+            UpcastImplBody::CastThunk {
+                crate_root_path: ir.crate_root_path().as_deref().map(make_rs_ident),
+                cast_fn_name,
             }
         };
-        impls.push(MainApi::UpcastImpl(quote! {
-            unsafe impl oops::Inherits<#base_name> for #derived_name {
-                unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
-                    #body
-                }
-            }
-        }));
+        main_api.push(MainApi::UpcastImpl { base_name, derived_name, body });
     }
 
-    Ok(ApiSnippets { main_api: impls, thunks, cc_details: cc_impls, ..Default::default() })
+    Ok(ApiSnippets { main_api, thunks, cc_details, ..Default::default() })
 }

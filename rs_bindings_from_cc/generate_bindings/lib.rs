@@ -95,44 +95,34 @@ fn generate_type_alias(
         );
         return Ok(MainApi::Comment { message: disable_comment.into() }.into());
     }
-    let ident = make_rs_ident(&type_alias.rs_name.identifier);
-    let doc_comment = generate_doc_comment(
-        type_alias.doc_comment.as_deref(),
-        Some(&type_alias.source_loc),
-        db.environment(),
-    );
     let underlying_type = db
         .rs_type_kind(type_alias.underlying_type.clone())
         .with_context(|| format!("Failed to format underlying type for {}", type_alias))?;
 
-    let underlying_type_tokens = underlying_type.to_token_stream(db);
-    let pub_ = db::type_visibility(db, &type_alias.owning_target, rs_type_kind).unwrap_or_default();
-    Ok(MainApi::TypeAlias(quote! {
-        #doc_comment
-        #pub_ type #ident = #underlying_type_tokens;
-    })
+    Ok(MainApi::TypeAlias {
+        doc_comment: generate_doc_comment(
+            type_alias.doc_comment.as_deref(),
+            Some(&type_alias.source_loc),
+            db.environment(),
+        ),
+        visibility: db::type_visibility(db, &type_alias.owning_target, rs_type_kind)
+            .unwrap_or_default(),
+        ident: make_rs_ident(&type_alias.rs_name.identifier),
+        underlying_type: underlying_type.to_token_stream(db),
+    }
     .into())
 }
 
 fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
-    let ident = make_rs_ident(&var.rs_name.identifier);
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
-    let link_name = if let Some(mangled_name) = &var.mangled_name {
-        let mangled_name = &**mangled_name;
-        quote! { #[link_name = #mangled_name] }
-    } else {
-        quote! {}
-    };
-    let mutness = if !var.type_.is_const { quote!(mut) } else { quote!() };
-    let type_tokens = type_.to_token_stream(db);
-    let pub_ = db::type_visibility(db, &var.owning_target, type_).unwrap_or_default();
-    Ok(MainApi::GlobalVar(quote! {
-        extern "C" {
-            #link_name
-            #pub_ static #mutness #ident: #type_tokens;
-        }
-    })
+    Ok(MainApi::GlobalVar {
+        link_name: var.mangled_name.clone(),
+        is_mut: !var.type_.is_const,
+        ident: make_rs_ident(&var.rs_name.identifier),
+        type_tokens: type_.to_token_stream(db),
+        visibility: db::type_visibility(db, &var.owning_target, type_).unwrap_or_default(),
+    }
     .into())
 }
 
@@ -168,46 +158,18 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
         make_rs_ident(&format!("{}_{}", &namespace.rs_name.identifier, reopened_namespace_idx))
     };
 
-    let use_stmt_for_previous_namespace = if reopened_namespace_idx == 0 {
-        quote! {}
-    } else {
-        let previous_namespace_ident = make_rs_ident(&format!(
-            "{}_{}",
-            &namespace.rs_name.identifier,
-            reopened_namespace_idx - 1
-        ));
-        // unused_imports warns a re-export of an empty module. Currently, there is no
-        // infra in Crubit to tell if the (generated) module is empty, so we
-        // emit `allow(unused_imports)`. TODO(b/308949532): Skip re-export if
-        // previous module is empty (transitively).
-        quote! {
-          __HASH_TOKEN__ [allow(unused_imports)]
-          pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__
-        }
-    };
-    let use_stmt_for_inline_namespace = if namespace.is_inline && is_canonical_namespace_module {
-        // TODO(b/308949532): Skip re-export if the canonical module is empty
-        // (transitively).
-        quote! {
-          __HASH_TOKEN__ [allow(unused_imports)]
-          pub use #name::*; __NEWLINE__
-        }
-    } else {
-        quote! {}
-    };
-
-    let namespace_tokens = quote! {
-        pub mod #name {
-            #use_stmt_for_previous_namespace
-
-            #( #items __NEWLINE__ __NEWLINE__ )*
-        }
-        __NEWLINE__
-        #use_stmt_for_inline_namespace
-    };
+    let previous_namespace_to_use = reopened_namespace_idx.checked_sub(1).map(|prev_index| {
+        make_rs_ident(&format!("{}_{}", &namespace.rs_name.identifier, prev_index))
+    });
+    let insert_use_stmt_for_inline_namespace = namespace.is_inline && is_canonical_namespace_module;
 
     Ok(ApiSnippets {
-        main_api: vec![MainApi::Namespace(namespace_tokens)],
+        main_api: vec![MainApi::Namespace {
+            name,
+            previous_namespace_to_use,
+            items,
+            insert_use_stmt_for_inline_namespace,
+        }],
         features,
         thunks,
         cc_details,
@@ -279,13 +241,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
             let mod_name = make_rs_ident(&mod_name.identifier);
             // TODO(b/308949532): Skip re-export if the module being used is empty
             // (transitively).
-            MainApi::UseMod(quote! {
-                #[path = #path]
-                mod #mod_name;
-                __HASH_TOKEN__ [allow(unused_imports)]
-                pub use #mod_name::*;
-            })
-            .into()
+            MainApi::UseMod { path: path.clone(), mod_name }.into()
         }
         Item::TypeMapOverride(type_override) => {
             let rs_type_kind = db.rs_type_kind((&**type_override).into())?;

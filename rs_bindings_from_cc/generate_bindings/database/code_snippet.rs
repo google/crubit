@@ -294,7 +294,7 @@ pub fn required_crubit_features(
 /// Generally speaking, if an error occurs (e.g. a bindings doesn't exist), then
 /// the way to "keep going" to catch more errors is to pretend that the missing
 /// item is `Public`.
-#[derive(Copy, Clone, PartialEq, Eq, Default)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 pub enum Visibility {
     /// The item has `pub` visibility.
     #[default]
@@ -377,17 +377,46 @@ impl From<NoBindingsReason> for Error {
 
 #[derive(Clone, Debug)]
 pub enum MainApi {
-    Comment { message: Rc<str> },
+    Comment {
+        message: Rc<str>,
+    },
     Enum(TokenStream),
     Func(TokenStream),
     Record(TokenStream),
     Newline,
-    UpcastImpl(TokenStream),
-    Namespace(TokenStream),
-    ForwardDeclare(TokenStream),
-    UseMod(TokenStream),
-    GlobalVar(TokenStream),
-    TypeAlias(TokenStream),
+    UpcastImpl {
+        base_name: TokenStream,
+        derived_name: TokenStream,
+        body: UpcastImplBody,
+    },
+    Namespace {
+        name: Ident,
+        previous_namespace_to_use: Option<Ident>,
+        items: Vec<MainApi>,
+        insert_use_stmt_for_inline_namespace: bool,
+    },
+    ForwardDeclare {
+        visibility: Visibility,
+        ident: Ident,
+        symbol: String,
+    },
+    UseMod {
+        path: Rc<str>,
+        mod_name: Ident,
+    },
+    GlobalVar {
+        link_name: Option<Rc<str>>,
+        visibility: Visibility,
+        is_mut: bool,
+        ident: Ident,
+        type_tokens: TokenStream,
+    },
+    TypeAlias {
+        doc_comment: Option<DocCommentAttr>,
+        visibility: Visibility,
+        ident: Ident,
+        underlying_type: TokenStream,
+    },
 }
 
 impl ToTokens for MainApi {
@@ -398,13 +427,116 @@ impl ToTokens for MainApi {
             MainApi::Func(func_item) => func_item.to_tokens(tokens),
             MainApi::Record(record_item) => record_item.to_tokens(tokens),
             MainApi::Newline => quote! { __NEWLINE__ }.to_tokens(tokens),
-            MainApi::UpcastImpl(upcast_impl) => upcast_impl.to_tokens(tokens),
-            MainApi::Namespace(namespace_item) => namespace_item.to_tokens(tokens),
-            MainApi::ForwardDeclare(forward_declare_item) => forward_declare_item.to_tokens(tokens),
-            MainApi::UseMod(use_mod_item) => use_mod_item.to_tokens(tokens),
-            MainApi::GlobalVar(global_var_item) => global_var_item.to_tokens(tokens),
-            MainApi::TypeAlias(type_alias_item) => type_alias_item.to_tokens(tokens),
+            MainApi::UpcastImpl { base_name, derived_name, body } => {
+                let body = match body {
+                    UpcastImplBody::PointerOffset { offset } => {
+                        let offset = Literal::i64_unsuffixed(*offset);
+                        quote! { (derived as *const _ as *const u8).offset(#offset) as *const #base_name }
+                    }
+                    UpcastImplBody::CastThunk { crate_root_path, cast_fn_name } => {
+                        let path = if let Some(crate_root_path) = crate_root_path {
+                            quote! { crate :: #crate_root_path }
+                        } else {
+                            quote! { crate }
+                        };
+                        quote! { #path::detail::#cast_fn_name(derived) }
+                    }
+                };
+
+                quote! {
+                    unsafe impl oops::Inherits<#base_name> for #derived_name {
+                        unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
+                            #body
+                        }
+                    }
+                }
+                .to_tokens(tokens);
+            }
+            MainApi::Namespace {
+                name,
+                previous_namespace_to_use,
+                items,
+                insert_use_stmt_for_inline_namespace,
+            } => {
+                let use_stmt_for_previous_namespace =
+                    previous_namespace_to_use.as_ref().map(|previous_namespace_ident| {
+                        quote! {
+                          __HASH_TOKEN__ [allow(unused_imports)]
+                          pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__
+                        }
+                    });
+
+                quote! {
+                    pub mod #name {
+                        #use_stmt_for_previous_namespace
+
+                        #( #items __NEWLINE__ __NEWLINE__ )*
+                    }
+                    __NEWLINE__
+                }
+                .to_tokens(tokens);
+
+                if *insert_use_stmt_for_inline_namespace {
+                    // TODO(b/308949532): Skip re-export if the canonical module is empty
+                    // (transitively).
+                    quote! {
+                        __HASH_TOKEN__ [allow(unused_imports)]
+                        pub use #name::*;
+                    }
+                    .to_tokens(tokens);
+                }
+            }
+            MainApi::ForwardDeclare { visibility, ident, symbol } => {
+                quote! {
+                    forward_declare::forward_declare!(
+                        #visibility #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
+                    );
+                }
+                .to_tokens(tokens);
+            }
+            MainApi::UseMod { path, mod_name } => quote! {
+                #[path = #path]
+                mod #mod_name;
+                __HASH_TOKEN__ [allow(unused_imports)]
+                pub use #mod_name::*;
+            }
+            .to_tokens(tokens),
+            MainApi::GlobalVar { link_name, visibility, is_mut, ident, type_tokens } => {
+                let link_name_attr =
+                    link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
+                let mut_kw = if *is_mut { Some(quote! { mut }) } else { None };
+                quote! {
+                    extern "C" {
+                        #link_name_attr
+                        #visibility static #mut_kw #ident: #type_tokens;
+                    }
+                }
+                .to_tokens(tokens);
+            }
+            MainApi::TypeAlias { doc_comment, visibility, ident, underlying_type } => {
+                quote! {
+                    #doc_comment
+                    #visibility type #ident = #underlying_type;
+                }
+                .to_tokens(tokens);
+            }
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum UpcastImplBody {
+    PointerOffset { offset: i64 },
+    CastThunk { crate_root_path: Option<Ident>, cast_fn_name: Ident },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct DocCommentAttr(pub Rc<str>);
+
+impl ToTokens for DocCommentAttr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self(doc_comment) = self;
+        quote! { #[doc = #doc_comment] }.to_tokens(tokens);
     }
 }
 
