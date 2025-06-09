@@ -43,8 +43,8 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 // Error while generating bindings for item 'Foo::operator=':
 // Parameter #0 is not supported: Unsupported type 'Foo &&': Unsupported type: && without lifetime
 
-// Error while generating bindings for item 'Foo::Bar':
-// Nested classes are not supported yet
+// Error while generating bindings for item 'Bar':
+// Can't generate bindings for Bar, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::Foo>() == 4);

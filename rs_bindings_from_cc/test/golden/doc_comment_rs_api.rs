@@ -433,7 +433,7 @@ pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 // Class templates are not supported yet
 
 // Error while generating bindings for item 'ConcreteNestedStruct':
-// Unsupported type 'struct OuterTemplate<int>::NestedStruct': No generated bindings found for 'NestedStruct'
+// Can't generate bindings for NestedStruct, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported
 
 /// Class template.
 #[derive(Clone, Copy)]
@@ -650,8 +650,8 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 // Doc comment for the nested struct.
 
-// Error while generating bindings for item 'OuterTemplate<int>::NestedStruct':
-// Nested classes are not supported yet
+// Error while generating bindings for item 'NestedStruct':
+// Can't generate bindings for NestedStruct, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported
 
 // Data member in a nested struct.
 

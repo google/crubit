@@ -659,7 +659,7 @@ fn test_struct_with_unnamed_struct_and_union_members() {
     .unwrap();
 
     // TODO(b/200067824): `type_` should not be `Err(...)` in the expectations below
-    // / we should support nested structs eventually.
+    // we should support nested structs eventually.
     assert_ir_matches!(
         ir,
         quote! {
@@ -2187,35 +2187,14 @@ fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
 }
 
 #[gtest]
-fn test_records_nested_in_records_not_supported_yet() {
-    let ir = ir_from_cc("struct SomeStruct { struct NestedStruct {}; };").unwrap();
-    assert_ir_matches!(
-        ir,
-        quote! { UnsupportedItem {
-            name: "SomeStruct::NestedStruct",
-            kind: Type,
-            path: Some(UnsupportedItemPath {
-                ident: "NestedStruct",
-                enclosing_item_id: Some(ItemId(...)),
-            }),
-            errors: [FormattedError {
-                ..., message: "Nested classes are not supported yet", ...
-            }], ...
-        }}
-    );
-}
-
-#[gtest]
 fn test_record_with_unsupported_field_type() -> Result<()> {
-    // Using a nested struct because it's currently not supported.
+    // Using a volatile-qualified type because it's currently not supported.
     // But... any other unsupported type would also work for this test.
     let ir = ir_from_cc(
         r#"
         struct StructWithUnsupportedField {
-          struct NestedStruct {};
-
           // Doc comment for `my_field`.
-          NestedStruct my_field;
+          volatile int my_field;
         };
     "#,
     )?;
@@ -2229,12 +2208,10 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                fields: [Field {
                    identifier: Some("my_field"),
                    doc_comment: Some("Doc comment for `my_field`."),
-                   type_: Err(
-                       "Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'",
-                   ),
+                   type_: Err("Unsupported `volatile` qualifier: volatile int"),
                    access: Public,
                    offset: 0,
-                   size: 8,
+                   size: 32,
                    unknown_attr: None,
                    is_no_unique_address: false,
                    is_bitfield: false,
@@ -2242,27 +2219,11 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                }],
                ...
                 size_align: SizeAlign {
-                    size: 1,
-                    alignment: 1,
+                    size: 4,
+                    alignment: 4,
                 } ...
                ...
            }
-        }
-    );
-    assert_ir_matches!(
-        ir,
-        quote! {
-            UnsupportedItem {
-                name: "StructWithUnsupportedField::NestedStruct",
-                kind: Type,
-                path: Some(UnsupportedItemPath {
-                    ident: "NestedStruct",
-                    enclosing_item_id: Some(ItemId(...)),
-                }),
-                errors: [FormattedError {
-                    ..., message: "Nested classes are not supported yet", ...
-                }], ...
-            }
         }
     );
     Ok(())
@@ -2270,22 +2231,27 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
 
 #[gtest]
 fn test_record_with_unsupported_base() -> Result<()> {
+    // We need to extend a class that is not supported. Currently, bridge types with unsupported
+    // types are not supported, so we use that.
     let ir = ir_from_cc(
-        r#" struct OuterStruct {
-              struct NestedStruct {
-                // Having a field here avoids empty base class optimization
-                // and forces `derived_field` to be at a non-zero offset.
-                // See also: https://en.cppreference.com/w/cpp/language/ebo
-                char nested_field;
-              };
-            };
+        r#"
+        template <typename T>
+        struct [[clang::annotate("crubit_bridge_rust_name", "X")]]
+        [[clang::annotate("crubit_bridge_abi_rust", "X")]]
+        [[clang::annotate("crubit_bridge_abi_cpp", "X")]] X {
+          // Having a field here avoids empty base class optimization
+          // and forces `derived_field` to be at a non-zero offset.
+          // See also: https://en.cppreference.com/w/cpp/language/ebo
+          char nested_field;
+        };
 
-            // Using a nested struct as a base class because nested structs are
-            // currently unsupported.  But... any other unsupported base class
-            // would also work for this test.
-            struct DerivedClass : public OuterStruct::NestedStruct {
-              int derived_field;
-            }; "#,
+        // Using a nested struct as a base class because nested structs are
+        // currently unsupported.  But... any other unsupported base class
+        // would also work for this test.
+        struct DerivedClass : public X<volatile int> {
+          int derived_field;
+        };
+        "#,
     )?;
     // Verify that `unambiguous_public_bases` are empty (instead of containing a
     // dangling `ItemId` of the `NestedStruct` (which got imported as
@@ -2304,8 +2270,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
               template_specialization: None,
               unknown_attr: None,
               doc_comment: Some(...),
-              bridge_type: None,
-              source_loc: "Generated from: ir_from_cc_virtual_header.h;l=15",
+              bridge_type: None, ...
               unambiguous_public_bases: [],
               fields: [Field {
                   identifier: Some("derived_field"), ...
@@ -2321,64 +2286,41 @@ fn test_record_with_unsupported_base() -> Result<()> {
            }
         }
     );
-    // Verify that the NestedStruct is unsupported (this is mostly verification
-    // that the test input correctly sets up the test scenario;  the real
-    // verification is above).
-    assert_ir_matches!(
-        ir,
-        quote! {
-           UnsupportedItem {
-                name: "OuterStruct::NestedStruct",
-                kind: Type,
-                path: Some(UnsupportedItemPath {
-                    ident: "NestedStruct",
-                    enclosing_item_id: Some(ItemId(...)),
-                }),
-                errors: [FormattedError {
-                    ..., message: "Nested classes are not supported yet", ...
-                }], ...
-           }
-        }
-    );
     Ok(())
 }
 
 #[gtest]
 fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
-    // only using nested struct as an example of a record we cannot import yet.
+    // only using volatile type as an example of a record we cannot import yet.
     let ir = ir_from_cc(
         "
         struct SomeStruct {
-          struct NestedStruct {
-            static void StaticMemberFunction();
-          };
+          static void StaticMemberFunction(volatile int);
         };",
     )
     .unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "SomeStruct::NestedStruct::StaticMemberFunction" ...
+          name: "SomeStruct::StaticMemberFunction" ...
         }}
     );
 }
 
 #[gtest]
 fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet() {
-    // only using nested struct as an example of a record we cannot import yet.
+    // only using volatile type as an example of a record we cannot import yet.
     let ir = ir_from_cc(
         "
         struct SomeStruct {
-          struct NestedStruct {
-            void NonStaticMemberFunction();
-          };
+          void NonStaticMemberFunction(volatile int);
         };",
     )
     .unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
-          name: "SomeStruct::NestedStruct::NonStaticMemberFunction" ...
+          name: "SomeStruct::NonStaticMemberFunction" ...
         }}
     );
 }
@@ -2843,41 +2785,30 @@ fn test_destructor_function_name() {
 
 #[gtest]
 fn test_unsupported_items_are_emitted() -> Result<()> {
-    // We will have to rewrite this test to use something else that is unsupported
-    // once we start importing nested structs.
-    let ir = ir_from_cc("struct X { struct Y {}; };")?;
+    // We use the constructor here because it is unsupported (no lifetime annotations).
+    let ir = ir_from_cc("struct X {};")?;
     assert_strings_contain(
         ir.unsupported_items().map(|i| i.name.as_ref()).collect_vec().as_slice(),
-        "X::Y",
+        "X::X",
     );
     Ok(())
 }
 
 #[gtest]
-fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
-    // We will have to rewrite this test to use something else that is unsupported
-    // once we start importing nested structs.
+fn test_dont_emit_items_that_depend_on_unsupported_items() -> Result<()> {
     let ir = ir_from_cc_dependency(
-        "struct MyOtherStruct { OuterStruct::NestedStructIsUnsupported my_field; };",
-        "struct OuterStruct { struct NestedStructIsUnsupported {}; };",
+        "struct MyOtherStruct { OuterStruct my_field; };",
+        "struct OuterStruct { volatile int n; };",
     )?;
     let names = ir.unsupported_items().map(|i| i.name.as_ref()).collect_vec();
     assert_strings_dont_contain(names.as_slice(), "OuterStruct");
-    assert_strings_dont_contain(names.as_slice(), "NestedStructIsUnsupported");
     Ok(())
 }
 
 #[gtest]
 fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
-    // We will have to rewrite this test to use something else that is unsupported
-    // once we start importing nested structs.
-    let ir = ir_from_cc(
-        r#"struct S { struct Nested {int x;}; int y; };
-           void f(S::Nested n);
-        "#,
-    )?;
+    let ir = ir_from_cc("void f(volatile int n);")?;
     let names = ir.unsupported_items().map(|i| i.name.as_ref()).collect_vec();
-    assert_strings_contain(names.as_ref(), "S::Nested");
     assert_strings_contain(names.as_ref(), "f");
     Ok(())
 }
@@ -3219,9 +3150,8 @@ fn test_literal_operator_unsupported() {
 
 #[gtest]
 fn test_unsupported_item_has_item_id() {
-    let ir = ir_from_cc("struct SomeStruct { struct NestedStruct {}; };").unwrap();
-    let unsupported =
-        ir.unsupported_items().find(|i| i.name.as_ref() == "SomeStruct::NestedStruct").unwrap();
+    let ir = ir_from_cc("int read(volatile int* foo);").unwrap();
+    let unsupported = ir.unsupported_items().find(|i| i.name.as_ref() == "read").unwrap();
     assert_ne!(unsupported.id, ItemId::new_for_testing(0));
 }
 
@@ -3355,7 +3285,7 @@ fn test_record_items() {
               ... Func { ... rs_name: "bar" ... }
             },
             quote! {
-              ... UnsupportedItem { ... name: "TopLevelStruct::Nested" ... }
+              ... Record { ... rs_name: "Nested" ... }
             },
             quote! {
               ...Func {

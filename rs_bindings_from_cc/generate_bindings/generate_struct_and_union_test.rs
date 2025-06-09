@@ -322,7 +322,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithUnsupportedField"]
             pub struct StructWithUnsupportedField {
-                #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'"]
+                #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Can't generate bindings for NestedStruct, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported"]
                 pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
             }
             ...
