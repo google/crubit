@@ -26,13 +26,21 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
             // mutability of the Rust pointer, e.g. ty.is_const).
             let mutability =
                 if pointer.pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
-            let pointee = Rc::new(db.rs_type_kind(pointer.pointee_type.as_ref().clone())?);
+            let mut pointee = db.rs_type_kind(pointer.pointee_type.as_ref().clone())?;
 
             // TODO(b/351976044): Support bridge types by pointer/reference.
-            ensure!(
-                !pointee.is_bridge_type(),
-                "Bridging types are not supported as pointee/referent types."
-            );
+            if let RsTypeKind::BridgeType { original_type, .. } = pointee.unalias() {
+                pointee = RsTypeKind::Error {
+                    symbol: cpp_type_name::cpp_tagless_type_name_for_record(
+                        original_type,
+                        db.ir(),
+                    )?
+                    .to_string()
+                    .into(),
+                    error: anyhow!("Bridging types are not supported as pointee/referent types."),
+                };
+            }
+            let pointee = Rc::new(pointee);
 
             let Some(lifetime_id) = pointer.lifetime else {
                 return Ok(RsTypeKind::Pointer { pointee, mutability });

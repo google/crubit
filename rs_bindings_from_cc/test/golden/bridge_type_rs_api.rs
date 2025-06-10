@@ -30,11 +30,18 @@ pub fn TakeCppStruct(mut __param_0: crate::RustStruct) {
     unsafe { crate::detail::__rust_thunk___Z13TakeCppStruct9CppStruct(&mut __param_0) }
 }
 
-// Error while generating bindings for item 'TakeCppStructByPtr':
-// Failed to format type of parameter 0: Bridging types are not supported as pointee/referent types.
+#[inline(always)]
+pub(crate) unsafe fn TakeCppStructByPtr(
+    __param_0: *mut ::forward_declare::Incomplete<::forward_declare::symbol!("CppStruct"), ()>,
+) {
+    crate::detail::__rust_thunk___Z18TakeCppStructByPtrP9CppStruct(__param_0)
+}
 
-// Error while generating bindings for item 'ReturnCppStructByPtr':
-// Failed to format return type: Bridging types are not supported as pointee/referent types.
+#[inline(always)]
+pub(crate) fn ReturnCppStructByPtr(
+) -> *mut ::forward_declare::Incomplete<::forward_declare::symbol!("CppStruct"), ()> {
+    unsafe { crate::detail::__rust_thunk___Z20ReturnCppStructByPtrv() }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -44,5 +51,15 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z13TakeCppStruct9CppStruct(
             __param_0: &mut crate::RustStruct,
         );
+        #[link_name = "_Z18TakeCppStructByPtrP9CppStruct"]
+        pub(crate) unsafe fn __rust_thunk___Z18TakeCppStructByPtrP9CppStruct(
+            __param_0: *mut ::forward_declare::Incomplete<
+                ::forward_declare::symbol!("CppStruct"),
+                (),
+            >,
+        );
+        #[link_name = "_Z20ReturnCppStructByPtrv"]
+        pub(crate) unsafe fn __rust_thunk___Z20ReturnCppStructByPtrv(
+        ) -> *mut ::forward_declare::Incomplete<::forward_declare::symbol!("CppStruct"), ()>;
     }
 }

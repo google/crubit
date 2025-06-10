@@ -200,6 +200,28 @@ impl core::fmt::Display for string {
     }
 }
 
+// Allow converting a cc_std::std::string reference to a "real" C++ string pointer.
+
+type StringSymbol = forward_declare::symbol!(
+    "std :: basic_string < char , std :: char_traits < char >, std :: allocator < char >>"
+);
+
+impl<'a, Crate> forward_declare::CppCast<*const forward_declare::Incomplete<StringSymbol, Crate>>
+    for &'a string
+{
+    fn cpp_cast(self) -> *const forward_declare::Incomplete<StringSymbol, Crate> {
+        self.owned_cpp_string.as_ptr() as *const _ as *const _
+    }
+}
+
+impl<'a, Crate> forward_declare::CppCast<*mut forward_declare::Incomplete<StringSymbol, Crate>>
+    for &'a mut string
+{
+    fn cpp_cast(self) -> *mut forward_declare::Incomplete<StringSymbol, Crate> {
+        self.owned_cpp_string.as_ptr() as *mut _
+    }
+}
+
 /// The Crubit ABI for C++ `std::string`. It is specified as one pointer.
 ///
 /// This pointer should point to a heap allocated `std::string` object, where the pointer is the
