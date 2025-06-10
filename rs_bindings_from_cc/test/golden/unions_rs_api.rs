@@ -104,14 +104,9 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(dest as *mut ::core::ffi::c_void);
+            })
         }
     }
 }
@@ -122,15 +117,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -240,11 +232,9 @@ impl<'b> ::ctor::CtorNew<&'b Self> for TriviallyCopyableButNontriviallyDestructi
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(::core::pin::Pin::into_inner_unchecked(dest)as*mut _ as*mut::core::ffi::c_void,__param_0);
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(dest as*mut::core::ffi::c_void,__param_0);
+            })
         }
     }
 }

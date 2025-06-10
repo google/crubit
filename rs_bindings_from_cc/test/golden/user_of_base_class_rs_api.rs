@@ -42,14 +42,9 @@ impl ::ctor::CtorNew<()> for Derived2 {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN8Derived2C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN8Derived2C1Ev(dest as *mut ::core::ffi::c_void);
+            })
         }
     }
 }
@@ -60,15 +55,12 @@ impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN8Derived2C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN8Derived2C1ERKS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -87,15 +79,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN8Derived2C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN8Derived2C1EOS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -166,14 +155,11 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN15VirtualDerived2C1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN15VirtualDerived2C1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
         }
     }
 }
@@ -184,15 +170,12 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN15VirtualDerived2C1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN15VirtualDerived2C1ERKS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -211,15 +194,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN15VirtualDerived2C1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN15VirtualDerived2C1EOS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }

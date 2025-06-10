@@ -989,9 +989,9 @@ fn generate_func_body(
                 // here.
                 quote! {
                     ::ctor::FnCtor::new(
-                        move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<#return_type_or_self>>| {
+                        move |dest: *mut #return_type_or_self| {
                         #crate_root_path::detail::#thunk_ident(
-                            ::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void
+                            dest as *mut ::core::ffi::c_void
                             #( , #thunk_args )*
                         );
                     })

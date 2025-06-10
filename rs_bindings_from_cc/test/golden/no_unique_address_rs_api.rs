@@ -249,14 +249,11 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
         }
     }
 }
@@ -267,15 +264,12 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding_InnerStruct {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -348,15 +342,12 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -375,15 +366,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddi
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1EOS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1EOS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -434,17 +422,14 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_ch
     ) -> Self::CtorType {
         let (inner_int, inner_char, outer_char) = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        inner_int,
-                        inner_char,
-                        outer_char,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
+                    dest as *mut ::core::ffi::c_void,
+                    inner_int,
+                    inner_char,
+                    outer_char,
+                );
+            })
         }
     }
 }

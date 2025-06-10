@@ -135,10 +135,19 @@ macro_rules! must_use_ctor_assign {
 // ~Unchanged from moveit
 // ======================
 
+// TODO(jeanpierreda): make Ctor an unsafe trait, as it has safety postconditions.
 #[must_use = must_use_ctor!()]
 pub trait Ctor {
     type Output;
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Self::Output>>);
+    /// Constructs a value in place.
+    ///
+    /// Before this call, `dest` is uninitialized. After this call, `dest` is
+    /// initialized to the constructed value.
+    ///
+    /// # Safety
+    ///
+    /// `dest` is valid for writes, pinned, and uninitialized.
+    unsafe fn ctor(self, dest: *mut Self::Output);
 
     /// Returns a chained Ctor, which will invoke `f` after construction.
     ///
@@ -168,25 +177,24 @@ impl<T> Emplace<T> for Box<T> {
     fn emplace<C: Ctor<Output = T>>(ctor: C) -> Pin<Box<T>> {
         let mut uninit = Box::new(MaybeUninit::<T>::uninit());
         unsafe {
-            let pinned = Pin::new_unchecked(&mut *uninit);
-            ctor.ctor(pinned);
+            ctor.ctor(uninit.as_mut_ptr());
             Pin::new_unchecked(Box::from_raw(Box::into_raw(uninit).cast::<T>()))
         }
     }
 }
 
 #[must_use = must_use_ctor!()]
-pub struct FnCtor<Output, F: FnOnce(Pin<&mut MaybeUninit<Output>>)>(pub F, PhantomData<fn(Output)>);
-impl<Output, F: FnOnce(Pin<&mut MaybeUninit<Output>>)> FnCtor<Output, F> {
+pub struct FnCtor<Output, F: FnOnce(*mut Output)>(pub F, PhantomData<fn(Output)>);
+impl<Output, F: FnOnce(*mut Output)> FnCtor<Output, F> {
     pub fn new(f: F) -> Self {
         Self(f, PhantomData)
     }
 }
 
-impl<Output, F: FnOnce(Pin<&mut MaybeUninit<Output>>)> Ctor for FnCtor<Output, F> {
+impl<Output, F: FnOnce(*mut Output)> Ctor for FnCtor<Output, F> {
     type Output = Output;
 
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Output>>) {
+    unsafe fn ctor(self, dest: *mut Output) {
         self.0(dest);
     }
 }
@@ -207,7 +215,7 @@ pub struct Copy<P: Deref>(P);
 impl<Output: for<'a> CtorNew<&'a Output>, P: Deref<Target = Output>> Ctor for Copy<P> {
     type Output = Output;
 
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Output>>) {
+    unsafe fn ctor(self, dest: *mut Output) {
         Output::ctor_new(&*self.0).ctor(dest);
     }
 }
@@ -276,7 +284,7 @@ where
 {
     type Output = T;
 
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<T>>) {
+    unsafe fn ctor(self, dest: *mut T) {
         T::ctor_new(self).ctor(dest);
     }
 }
@@ -343,7 +351,7 @@ where
 {
     type Output = T;
 
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<T>>) {
+    unsafe fn ctor(self, dest: *mut T) {
         T::ctor_new(self).ctor(dest);
     }
 }
@@ -406,8 +414,8 @@ macro_rules! const_mov {
 /// to be restricted to `Unpin` types for safety.
 impl<T: Unpin> Ctor for T {
     type Output = T;
-    unsafe fn ctor(self, mut dest: Pin<&mut MaybeUninit<Self>>) {
-        dest.as_mut_ptr().write(self);
+    unsafe fn ctor(self, dest: *mut Self) {
+        dest.write(self);
     }
 }
 
@@ -417,8 +425,8 @@ pub struct RustMoveCtor<T>(T);
 impl<T> !Unpin for RustMoveCtor<T> {}
 impl<T> Ctor for RustMoveCtor<T> {
     type Output = T;
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<T>>) {
-        Pin::into_inner_unchecked(dest).as_mut_ptr().write(self.0);
+    unsafe fn ctor(self, dest: *mut T) {
+        dest.write(self.0);
     }
 }
 
@@ -450,7 +458,7 @@ impl<T> UnreachableCtor<T> {
 impl<T> !Unpin for UnreachableCtor<T> {}
 impl<T> Ctor for UnreachableCtor<T> {
     type Output = T;
-    unsafe fn ctor(self, _: Pin<&mut MaybeUninit<T>>) {
+    unsafe fn ctor(self, _: *mut T) {
         unreachable!();
     }
 }
@@ -491,9 +499,9 @@ pub struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> {
 
 impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> Ctor for CtorThen<C, F> {
     type Output = C::Output;
-    unsafe fn ctor(self, mut dest: Pin<&mut MaybeUninit<Self::Output>>) {
-        self.ctor.ctor(dest.as_mut());
-        let dest = Pin::new_unchecked(Pin::into_inner_unchecked(dest).assume_init_mut());
+    unsafe fn ctor(self, dest: *mut Self::Output) {
+        self.ctor.ctor(dest);
+        let dest = Pin::new_unchecked(&mut *dest);
         (self.f)(dest)
     }
 }
@@ -630,8 +638,10 @@ impl<T> Slot<T> {
         {
             let Self { is_initialized, maybe_uninit } =
                 unsafe { Pin::into_inner_unchecked(self.as_mut()) };
+            // SAFETY: the memory is struturally pinned and valid for writes,
+            // and it's uninitialized because of the .clear() call above.
             unsafe {
-                value.ctor(Pin::new_unchecked(maybe_uninit));
+                value.ctor(maybe_uninit.as_mut_ptr());
             }
             *is_initialized = true;
         }
@@ -683,7 +693,7 @@ impl<T> Slot<T> {
     /// Safety: must not have already been constructed, as that would violate
     /// the pin guarantee.
     pub fn unsafe_construct(&mut self, ctor: impl Ctor<Output = T>) -> &mut Self {
-        unsafe { ctor.ctor(Pin::new_unchecked(&mut self.maybe_uninit)) };
+        unsafe { ctor.ctor(self.maybe_uninit.as_mut_ptr()) };
         self.is_initialized = true;
         self
     }
@@ -739,11 +749,9 @@ pub mod macro_internal {
     ///
     /// Safety: the field must satisfy the Pin guarantee.
     pub unsafe fn init_field<T>(field: *mut T, ctor: impl Ctor<Output = T>) -> impl Drop {
-        // safety: MaybeUninit<T> is the same layout as T, the caller guarantees it's
+        // safety: the field is not yet initialized, the caller guarantees it's
         // pinned.
-        let maybe_uninit = field as *mut MaybeUninit<T>;
-        let pinned = Pin::new_unchecked(&mut *maybe_uninit);
-        Ctor::ctor(ctor, pinned);
+        Ctor::ctor(ctor, field);
         UnsafeDropGuard(field)
     }
 
@@ -871,11 +879,10 @@ macro_rules! ctor {
     ( $t:ident $(:: $ts:ident)* {$( $name:tt: $sub_ctor:expr ),* $(,)?} ) => {
         {
             use $t $(:: $ts)* as Type;
-            $crate::FnCtor::new(|x: $crate::macro_internal::Pin<&mut $crate::macro_internal::MaybeUninit<Type>>| {
+            $crate::FnCtor::new(|x: *mut Type| {
                 struct DropGuard;
                 let drop_guard = DropGuard;
-                let x_mut = unsafe{$crate::macro_internal::Pin::into_inner_unchecked(x)}.as_mut_ptr();
-                let _ = &x_mut; // silence unused_variables warning if Type is fieldless.
+                let _ = &x; // silence unused_variables warning if Type is fieldless.
 
                 // Enforce that the ctor!() expression resembles a valid direct initialization
                 // expression, by using the names in a conventional literal.
@@ -890,7 +897,8 @@ macro_rules! ctor {
                     // fill in each field.
                     #[allow(unreachable_code, unused_unsafe)] $crate::macro_internal::Identity::<
                         <Type as $crate::RecursivelyPinned>::CtorInitializedFields> {
-                            // unsafe {} block is in case this is a *union* literal, rather than
+                            // SAFETY: this code is not executed.
+                            // The unsafe {} block is in case this is a *union* literal, rather than
                             // a struct literal.
                             $($name: panic!("{}", unsafe {&x.$name} as *const _ as usize),)*
                         };
@@ -905,7 +913,7 @@ macro_rules! ctor {
                         // SAFETY: the place is in bounds, just uninitialized. See e.g. second
                         // example: https://doc.rust-lang.org/nightly/std/ptr/macro.addr_of_mut.html
                         $crate::macro_internal::init_field(
-                            &raw mut (*x_mut).$name,
+                            &raw mut (*x).$name,
                             sub_ctor)
                     };
                     let drop_guard = (drop_guard, field_drop);
@@ -981,8 +989,7 @@ pub trait ReconstructUnchecked: Sized {
         let self_ptr = Pin::into_inner_unchecked(self) as *mut _;
         core::ptr::drop_in_place(self_ptr);
         abort_on_unwind(move || {
-            let maybe_uninit_self = &mut *(self_ptr as *mut MaybeUninit<Self>);
-            ctor.ctor(Pin::new_unchecked(maybe_uninit_self));
+            ctor.ctor(self_ptr);
         });
     }
 }
@@ -1100,7 +1107,7 @@ impl<'a, T: Unpin + CtorNew<&'a T>> Assign<&'a T> for T {
         if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
-                T::ctor_new(src).ctor(Pin::new(&mut constructed));
+                T::ctor_new(src).ctor(constructed.as_mut_ptr());
                 *self = constructed.assume_init();
             }
         } else {
@@ -1114,7 +1121,7 @@ impl<'a, T: Unpin + CtorNew<RvalueReference<'a, T>>> Assign<RvalueReference<'a, 
         if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
-                T::ctor_new(src).ctor(Pin::new(&mut constructed));
+                T::ctor_new(src).ctor(constructed.as_mut_ptr());
                 *self = constructed.assume_init();
             }
         } else {
@@ -1130,7 +1137,7 @@ impl<'a, T: Unpin + CtorNew<ConstRvalueReference<'a, T>>> Assign<ConstRvalueRefe
         if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
-                T::ctor_new(src).ctor(Pin::new(&mut constructed));
+                T::ctor_new(src).ctor(constructed.as_mut_ptr());
                 *self = constructed.assume_init();
             }
         } else {
@@ -1207,7 +1214,7 @@ pub trait CtorNew<ConstructorArgs> {
 pub struct PhantomPinnedCtor;
 impl Ctor for PhantomPinnedCtor {
     type Output = core::marker::PhantomPinned;
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Self::Output>>) {
+    unsafe fn ctor(self, dest: *mut Self::Output) {
         RustMoveCtor(core::marker::PhantomPinned).ctor(dest)
     }
 }
@@ -1232,12 +1239,10 @@ impl<T: Ctor> ManuallyDropCtor<T> {
 
 impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
     type Output = ManuallyDrop<T::Output>;
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Self::Output>>) {
+    unsafe fn ctor(self, dest: *mut Self::Output) {
         // Safety: ManuallyDrop<T> and T have the same layout.
-        let dest = Pin::into_inner_unchecked(dest);
-        let dest = &mut *(dest as *mut _ as *mut MaybeUninit<T::Output>);
-        let dest = Pin::new_unchecked(dest);
-        self.0.ctor(dest);
+        // All other preconditions are satisfied by the caller.
+        self.0.ctor(dest as *mut _);
     }
 }
 
@@ -1520,7 +1525,7 @@ mod test {
 
     impl<'a> Ctor for PanicCtor<'a> {
         type Output = DropNotify<'a>;
-        unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Self::Output>>) {
+        unsafe fn ctor(self, dest: *mut Self::Output) {
             self.0.ctor(dest);
             panic!();
         }
@@ -1584,6 +1589,7 @@ mod test {
         }
 
         pub struct CtorOnlyPubFields {
+            #[allow(unused)]
             pub field: i32,
         }
 
@@ -1602,7 +1608,7 @@ mod test {
     #[gtest]
     fn ctor_initialized_fields_tuple_struct() {
         pub struct CtorOnly(pub i32, [(); 0]);
-        pub struct CtorOnlyPubFields(i32);
+        pub struct CtorOnlyPubFields(#[allow(unused)] i32);
 
         unsafe impl RecursivelyPinned for CtorOnly {
             type CtorInitializedFields = CtorOnlyPubFields;
@@ -1634,9 +1640,9 @@ mod test {
 
     impl<'a> Ctor for LoggingCtor<'a> {
         type Output = DropCtorLogger<'a>;
-        unsafe fn ctor(self, mut dest: Pin<&mut MaybeUninit<Self::Output>>) {
+        unsafe fn ctor(self, dest: *mut Self::Output) {
             self.log.borrow_mut().push(self.ctor_message);
-            dest.as_mut_ptr().write(DropCtorLogger { log: self.log });
+            dest.write(DropCtorLogger { log: self.log });
         }
     }
     impl !Unpin for LoggingCtor<'_> {}
@@ -1760,8 +1766,11 @@ mod test {
     #[gtest]
     fn test_ctor_trait_captures() {
         fn adder<'a, 'b>(x: &'a i32, y: &'b i32) -> impl Ctor<Output = i32> + use<'a, 'b> {
-            FnCtor::new(|mut dest: Pin<&mut core::mem::MaybeUninit<i32>>| {
-                dest.write(*x + *y);
+            FnCtor::new(|dest: *mut i32| {
+                // SAFETY: dest is valid and uninitialized.
+                unsafe {
+                    dest.write(*x + *y);
+                }
             })
         }
 

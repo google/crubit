@@ -58,14 +58,9 @@ impl ::ctor::PinnedDrop for Nontrivial {
 #[inline(always)]
 pub(crate) fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial> {
     unsafe {
-        ::ctor::FnCtor::new(
-            move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
-                crate::detail::__rust_thunk___Z6Createv(
-                    ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                        as *mut ::core::ffi::c_void,
-                );
-            },
-        )
+        ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
+            crate::detail::__rust_thunk___Z6Createv(dest as *mut ::core::ffi::c_void);
+        })
     }
 }
 

@@ -70,7 +70,7 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 
         impl ::ctor::Ctor for #struct_ctor_name {
             type Output = #struct_name;
-            unsafe fn ctor(self, dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self::Output>>) {
+            unsafe fn ctor(self, dest: *mut Self::Output) {
                 ::ctor::ctor!(
                     #struct_name #fields
                 ).ctor(dest)

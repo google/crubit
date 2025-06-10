@@ -39,14 +39,9 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(dest as *mut ::core::ffi::c_void);
+            })
         }
     }
 }

@@ -1235,8 +1235,8 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
                 fn ctor_new(args: ()) -> Self::CtorType {
                     let () = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void);
+                        ::ctor::FnCtor::new(move |dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(dest as *mut ::core::ffi::c_void);
                         })
                     }
                 }
@@ -1268,8 +1268,8 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
                 fn ctor_new(args: ::core::ffi::c_uchar) -> Self::CtorType {
                     let input = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, input);
+                        ::ctor::FnCtor::new(move |dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(dest as *mut ::core::ffi::c_void, input);
                         })
                     }
                 }
@@ -1301,8 +1301,8 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
                 fn ctor_new(args: (::core::ffi::c_uchar, ::core::ffi::c_schar)) -> Self::CtorType {
                     let (input1, input2) = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, input1, input2);
+                        ::ctor::FnCtor::new(move |dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(dest as *mut ::core::ffi::c_void, input1, input2);
                         })
                     }
                 }
@@ -1352,8 +1352,8 @@ fn test_nonunpin_by_value_params() -> Result<()> {
                 ) -> Self::CtorType {
                     let (x, y, b) = args;
                     unsafe {
-                        ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, x, y, b);
+                        ::ctor::FnCtor::new(move |dest: *mut Self| {
+                            crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(dest as *mut ::core::ffi::c_void, x, y, b);
                         })
                     }
                 }
@@ -1380,8 +1380,8 @@ fn test_nonunpin_return() -> Result<()> {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
             -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, x, y);
+                    ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
+                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(dest as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -1418,8 +1418,8 @@ fn test_nonunpin_const_return() -> Result<()> {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
             -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
                 unsafe {
-                    ::ctor::FnCtor::new(move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<crate::Nontrivial>>| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void, x, y);
+                    ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
+                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(dest as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -1607,9 +1607,9 @@ fn test_nonunpin_return_assign() -> Result<()> {
                 fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, other: &'b Self) {
                     unsafe {
                         let _ = ::ctor::emplace!(::ctor::FnCtor::new(
-                            move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
+                            move |dest: *mut Self| {
                                 crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(
-                                    ::core::pin::Pin::into_inner_unchecked(dest) as *mut _ as *mut ::core::ffi::c_void,
+                                    dest as *mut ::core::ffi::c_void,
                                     self,
                                     other
                                 );

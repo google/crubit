@@ -833,14 +833,11 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
         }
     }
 }
@@ -851,15 +848,12 @@ impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<&mut ::core::mem::MaybeUninit<Self>>| {
-                    crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -888,18 +882,13 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMemberNonunpin>
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableConstMemberNonunpin) -> Self::Output {
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::core::pin::Pin<
-                    &mut ::core::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
-                >| {
-                    crate::detail::__rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
-                        ::core::pin::Pin::into_inner_unchecked(dest) as *mut _
-                            as *mut ::core::ffi::c_void,
-                        self,
-                        rhs,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: *mut crate::AddableConstMemberNonunpin| {
+                crate::detail::__rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
+                    dest as *mut ::core::ffi::c_void,
+                    self,
+                    rhs,
+                );
+            })
         }
     }
 }
