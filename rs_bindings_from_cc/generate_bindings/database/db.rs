@@ -152,11 +152,18 @@ pub fn type_visibility(
     rs_type_kind: RsTypeKind,
 ) -> Result<Visibility> {
     match db.type_target_restriction(rs_type_kind.clone())? {
-        None => Ok(Visibility::Public),
         Some(label) if &label != library => {
             let rs_type_kind = rs_type_kind.display(db);
             Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
         }
         Some(_) => Ok(Visibility::PubCrate),
+        None => {
+            for subtype in rs_type_kind.dfs_iter() {
+                if let RsTypeKind::Error { .. } = subtype {
+                    return Ok(Visibility::PubCrate);
+                }
+            }
+            Ok(Visibility::Public)
+        }
     }
 }

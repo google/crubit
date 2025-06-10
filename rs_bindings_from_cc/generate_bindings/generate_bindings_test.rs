@@ -1169,19 +1169,16 @@ fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
 
 #[gtest]
 fn test_default_crubit_features_disabled_dependency_supported_function_parameter() -> Result<()> {
-    for dependency in ["struct NotPresent {};"] {
-        let mut ir = ir_from_cc_dependency("void Func(NotPresent);", dependency)?;
-        ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
-        assert_rs_not_matches!(rs_api, quote! {Func});
-        assert_cc_not_matches!(rs_api_impl, quote! {Func});
-        let expected = "\
-            Generated from: ir_from_cc_virtual_header.h;l=3\n\
-            Error while generating bindings for item 'Func':\n\
-            Failed to format type of parameter 0: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-            //test:dependency needs [//features:supported] for NotPresent";
-        assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
-    }
+    let mut ir = ir_from_cc_dependency(
+        "void Func(NotPresent);",
+        /*dependency=*/ "struct NotPresent {};",
+    )?;
+    ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Supported.into();
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! {Func});
+    assert_cc_not_matches!(rs_api_impl, quote! {Func});
     Ok(())
 }
 
@@ -1192,15 +1189,11 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_parameter()
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;",
     )?;
     ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Supported.into();
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {Func});
     assert_cc_not_matches!(rs_api_impl, quote! {Func});
-    let expected = "\
-        Generated from: ir_from_cc_virtual_header.h;l=3\n\
-        Error while generating bindings for item 'Func':\n\
-        Failed to format type of parameter 0: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
-        //test:dependency needs [//features:wrapper] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
-    assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
@@ -1208,15 +1201,11 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_parameter()
 fn test_default_crubit_features_disabled_dependency_supported_function_return_type() -> Result<()> {
     let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
     ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Supported.into();
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {Func});
     assert_cc_not_matches!(rs_api_impl, quote! {Func});
-    let expected = "\
-        Generated from: ir_from_cc_virtual_header.h;l=3\n\
-        Error while generating bindings for item 'Func':\n\
-        Failed to format return type: Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
-        //test:dependency needs [//features:supported] for NotPresent";
-    assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
@@ -1226,15 +1215,11 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_return_type
         "NotPresent Func();",
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;")?;
     ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Supported.into();
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {Func});
     assert_cc_not_matches!(rs_api_impl, quote! {Func});
-    let expected = "\
-        Generated from: ir_from_cc_virtual_header.h;l=3\n\
-        Error while generating bindings for item 'Func':\n\
-        Failed to format return type: Can't generate bindings for NotPresentTemplate<int>, because of missing required features (<internal link>):\n\
-        //test:dependency needs [//features:wrapper] for NotPresentTemplate<int> (crate::__CcTemplateInst18NotPresentTemplateIiE is a template instantiation)";
-    assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
@@ -1243,6 +1228,8 @@ fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
     for dependency in ["struct NotPresent {signed char x;};", "using NotPresent = signed char;"] {
         let mut ir = ir_from_cc_dependency("struct Present {NotPresent field;};", dependency)?;
         ir.target_crubit_features_mut(&ir::BazelLabel("//test:dependency".into())).clear();
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, rs_api_impl: _ } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_matches!(
             rs_api,

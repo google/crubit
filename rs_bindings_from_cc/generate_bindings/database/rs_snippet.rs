@@ -270,6 +270,14 @@ pub struct GenericMonomorphization {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
+    /// An error occurred while generating the type.
+    ///
+    /// Error types are only exposed in `:wrapper` mode, where they become
+    /// opaque types.
+    Error {
+        symbol: Rc<str>,
+        error: arc_anyhow::Error,
+    },
     Pointer {
         pointee: Rc<RsTypeKind>,
         mutability: Mutability,
@@ -552,7 +560,7 @@ impl RsTypeKind {
     /// Returns true if the type is known to be `Unpin`, false otherwise.
     pub fn is_unpin(&self) -> bool {
         match self.unalias() {
-            RsTypeKind::IncompleteRecord { .. } => false,
+            RsTypeKind::Error { .. } | RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, known_generic_monomorphization, .. } => {
                 known_generic_monomorphization.is_some() || record.is_unpin()
             }
@@ -628,6 +636,10 @@ impl RsTypeKind {
 
         for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
+                RsTypeKind::Error { error, .. } => require_feature(
+                    CrubitFeature::Wrapper,
+                    Some(&|| std::borrow::Cow::from(format!("error: {error}"))),
+                ),
                 RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     require_feature(
@@ -761,6 +773,7 @@ impl RsTypeKind {
     /// it can't.
     pub fn check_by_value(&self) -> Result<()> {
         match self.unalias() {
+            RsTypeKind::Error { error, .. } => bail!("Cannot use an error type by value: {error}"),
             RsTypeKind::Record { record, .. } => check_by_value(record),
             _ => Ok(()),
         }
@@ -832,6 +845,7 @@ impl RsTypeKind {
     /// trait.
     pub fn implements_copy(&self) -> bool {
         match self {
+            RsTypeKind::Error { .. } => false,
             RsTypeKind::Primitive { .. } => true,
             RsTypeKind::Pointer { .. } => true,
             RsTypeKind::FuncPtr { .. } => true,
@@ -1084,6 +1098,12 @@ pub fn map_to_supported_generic(
 impl RsTypeKind {
     pub fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
         match self {
+            // errors become opaque blobs
+            RsTypeKind::Error { symbol, .. } => {
+                // We use `()` as the crate identifier for convenience, and because
+                // the only types using `()` like this are all pub(crate) (generated here.)
+                quote! { ::forward_declare::Incomplete<::forward_declare::symbol!(#symbol), ()> }
+            }
             RsTypeKind::Pointer { pointee, mutability } => {
                 let mutability = mutability.format_for_pointer();
                 let pointee_tokens = pointee.to_token_stream(db);
@@ -1295,7 +1315,8 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
             None => None,
             Some(curr) => {
                 match curr {
-                    RsTypeKind::Primitive { .. }
+                    RsTypeKind::Error { .. }
+                    | RsTypeKind::Primitive { .. }
                     | RsTypeKind::IncompleteRecord { .. }
                     | RsTypeKind::Record { .. }
                     | RsTypeKind::Enum { .. } => {}

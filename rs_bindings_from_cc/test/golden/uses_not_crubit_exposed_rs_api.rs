@@ -6,7 +6,13 @@
 // //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
+#![feature(
+    allocator_api,
+    cfg_sanitize,
+    custom_inner_attributes,
+    impl_trait_in_assoc_type,
+    negative_impls
+)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -14,9 +20,24 @@
 #![allow(dead_code)]
 #![deny(warnings)]
 
-// Error while generating bindings for item 'UseNotCrubitExposed':
-// Failed to format type of parameter 0: Can't generate bindings for NotCrubitExposed, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:not_crubit_exposed needs [//features:supported] for NotCrubitExposed
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nCannot use an error type by value: Can't generate bindings for NotCrubitExposed, because of missing required features (<internal link>):\n//rs_bindings_from_cc/test/golden:not_crubit_exposed needs [//features:supported] for NotCrubitExposed"
+)]
+pub trait BindingFailedFor_Z19UseNotCrubitExposed16NotCrubitExposed {}
+#[inline(always)]
+pub(crate) unsafe fn UseNotCrubitExposed<'error>(
+    not_crubit_exposed: impl ::ctor::Ctor<
+        Output = ::forward_declare::Incomplete<::forward_declare::symbol!("NotCrubitExposed"), ()>,
+    >,
+) where
+    &'error (): BindingFailedFor_Z19UseNotCrubitExposed16NotCrubitExposed,
+{
+    #![allow(unused_variables)]
+    unreachable!(
+        "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+    )
+}
 
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
@@ -49,8 +70,6 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for item 'CannotUpcastInCrubit::operator=':
 // Parameter #0 is not supported: Unsupported type 'CannotUpcastInCrubit &&': Unsupported type: && without lifetime
-
-// 'CannotUpcastInCrubit' cannot be upcasted to 'NotCrubitExposed' because the base type doesn't have Crubit bindings.
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::CannotUpcastInCrubit>() == 4);

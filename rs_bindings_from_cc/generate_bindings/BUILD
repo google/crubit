@@ -373,6 +373,7 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
+        ":cpp_type_name",
         ":has_bindings",
         "//common:arc_anyhow",
         "//rs_bindings_from_cc:ir",

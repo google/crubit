@@ -88,6 +88,19 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
     }
 }
 
+/// Returns the fully-qualified name for an item, not including the type tag.
+pub fn tagless_cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
+    if let ir::Item::Record(record) = item {
+        cpp_tagless_type_name_for_record(record, ir)
+    } else {
+        cpp_type_name_for_item(item, ir)
+    }
+}
+
+/// Returns the fully qualified name for an item.
+///
+/// For example, for `namespace x { struct Y { using X = int; }; }`, the name
+/// for `X` is `x::Y::X`.
 fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     /// Returns the namespace / class qualifiers necessary to access the item.
     ///

@@ -83,9 +83,10 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
 /// Note that `get_field_rs_type_kind_for_layout` may return Err even if
 /// `rs_type_kind` returns Ok.
 ///
-/// In particular, this happens if the field has an attribute which is not
-/// supported (with the current Crubit features). For example,
-/// `[[no_unique_address]]`, or an unrecognized attribute.
+/// In particular, this happens if the field has an unknown size. For example,
+/// if it is an error type, or uses an attribute which is not
+/// supported (with the current Crubit features), such as
+/// `[[no_unique_address]]`.
 ///
 /// Such unsupported fields should be replaced with a typeless, unaligned block
 /// of memory, of a size that can fill up space to the next field.
@@ -115,6 +116,10 @@ fn get_field_rs_type_kind_for_layout(
         Ok(t) => db.rs_type_kind(t.clone())?,
         Err(e) => bail!("{e}"),
     };
+
+    if let RsTypeKind::Error { error, .. } = type_kind {
+        return Err(error.clone());
+    }
 
     if type_kind.is_bridge_type() {
         bail!("Bridge-by-value types are not supported in struct fields.")
@@ -805,6 +810,9 @@ fn cc_struct_upcast_impl(
             ]);
             continue;
         };
+        if let RsTypeKind::Error { .. } = base_type {
+            continue;
+        }
         if base_type.is_bridge_type() {
             // The base class isn't directly represented in Rust, so we can't upcast to it.
             continue;

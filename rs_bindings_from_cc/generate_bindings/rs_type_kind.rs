@@ -81,30 +81,29 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
         CcTypeVariant::Record(id) => {
             let ir = db.ir();
             let item = ir.find_untyped_decl(*id);
-            let fallback_type = match item {
-                // Type aliases are unique among items, in that if the item defining the alias fails
-                // to receive bindings, we can still use the aliased type.
-                ir::Item::TypeAlias(alias) => Some(&alias.underlying_type),
-                _ => None,
-            };
-            match (db.has_bindings(item.clone()), fallback_type) {
-                (Ok(_), _) => {}
-                // Additionally, we should not "see through" type aliases that are specifically not
-                // on targets that intend to support Rust users of those type aliases.
-                // (If we did, then a C++ library owner could break Rust callers, which is a
-                // maintenance responsibility that they did not sign up for!)
-                (has_bindings, Some(fallback_type))
-                    if !matches!(
-                        has_bindings,
-                        Err(NoBindingsReason::MissingRequiredFeatures { .. })
-                    ) =>
-                {
-                    return db.rs_type_kind(fallback_type.clone());
+
+            if let Err(error) = db.has_bindings(item.clone()) {
+                // Alias fallbacks: type aliases are unique among items, in that if the item
+                // defining the alias fails to receive bindings, we can still use the aliased type.
+                if let ir::Item::TypeAlias(alias) = item {
+                    // Additionally, we should not "see through" type aliases that are specifically
+                    // not on targets that intend to support Rust users of those type aliases.
+                    // (If we did, then a C++ library owner could break Rust callers, which is a
+                    // maintenance responsibility that they did not sign up for!)
+                    if !matches!(error, NoBindingsReason::MissingRequiredFeatures { .. }) {
+                        return db.rs_type_kind(alias.underlying_type.clone());
+                    }
                 }
-                (Err(reason), _) => {
-                    return Err(reason.into());
+                // Comprehensive fallbacks: if we can delay reifying the error, delay it.
+                if let Ok(symbol) = cpp_type_name::tagless_cpp_type_name_for_item(item, db.ir()) {
+                    return Ok(RsTypeKind::Error {
+                        symbol: symbol.to_string().into(),
+                        error: error.into(),
+                    });
                 }
+                return Err(error.into());
             }
+
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
             // course we can't call `rs_type_kind` here, and instead reuse the raw construction
             // logic.

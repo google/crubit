@@ -1845,7 +1845,7 @@ fn test_supported_no_unique_address_field() -> Result<()> {
 #[gtest]
 fn test_nested_type_definitions() -> Result<()> {
     for nested_type in ["enum NotPresent {};", "struct NotPresent {};", "struct NotPresent;"] {
-        let ir = ir_from_cc(&format!(
+        let mut ir = ir_from_cc(&format!(
             r#"
                 struct SomeStruct final {{
                     {nested_type}
@@ -1853,6 +1853,8 @@ fn test_nested_type_definitions() -> Result<()> {
                 SomeStruct::NotPresent* AlsoNotPresent();
             "#
         ))?;
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+            crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! { NotPresent });
         assert_rs_not_matches!(rs_api, quote! { AlsoNotPresent });

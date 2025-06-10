@@ -407,6 +407,7 @@ pub fn generate_bindings_tokens(
 /// Implementation of `BindingsGenerator::is_rs_type_kind_unsafe`.
 fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> bool {
     match rs_type_kind {
+        RsTypeKind::Error { .. } => true,
         RsTypeKind::Pointer { .. } => true,
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
@@ -559,6 +560,9 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
+        RsTypeKind::Error { error, .. } => {
+            bail!("Type has an error and cannot be bridged: {error}")
+        }
         RsTypeKind::TypeAlias { underlying_type, .. } => {
             // We don't actually _have_ to expand the type alias here
             db.crubit_abi_type(underlying_type.as_ref().clone())
