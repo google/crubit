@@ -38,6 +38,12 @@ inline void OtherPubCrateTypes(ForwardDeclared2*) {}
 template <typename T>
 struct Template {
   T value;
+
+  void IndirectCannotBeInstantiated(T t) {
+    // trigger b/248542210,
+    CannotBeInstantiated();
+  }
+  void CannotBeInstantiated() { static_assert(false); }
 };
 
 inline Template<int> GetTemplateInt() { return Template<int>{42}; }

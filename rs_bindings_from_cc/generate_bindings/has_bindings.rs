@@ -123,6 +123,21 @@ fn func_has_bindings(
     let mut missing_features = vec![];
     let mut has_nonunpin = false;
 
+    if func.is_member_or_descendant_of_class_template
+        && func.rs_name != ir::UnqualifiedIdentifier::Destructor
+        && !enabled_features.contains(crubit_feature::CrubitFeature::Experimental)
+    {
+        missing_features.push(RequiredCrubitFeature {
+            target: target.clone(),
+            item: func.debug_name(ir),
+            missing_features: crubit_feature::CrubitFeature::Experimental.into(),
+            capability_description: format!(
+                "b/248542210: template instantiation of member function cannot reliably get bindings"
+            )
+            .into(),
+        });
+    }
+
     let mut require_nonunpin =
         |missing_features: &mut Vec<RequiredCrubitFeature>,
          rs_type_kind: RsTypeKind,

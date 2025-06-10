@@ -88,7 +88,7 @@ pub unsafe fn ConsumeCompoundDataType(
 // Error while generating bindings for item 'Template':
 // Class templates are not supported yet
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=43
+/// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=49
 #[inline(always)]
 pub(crate) fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
     unsafe {
@@ -136,6 +136,17 @@ impl !Sync for __CcTemplateInst8TemplateIiE {}
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=39
 // Error while generating bindings for item 'Template<int>::operator=':
 // Parameter #0 is not supported: Unsupported type 'Template<int> &&': Unsupported type: && without lifetime
+
+// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=42
+// Error while generating bindings for item 'Template<int>::IndirectCannotBeInstantiated':
+// Can't generate bindings for Template<int>::IndirectCannotBeInstantiated, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::IndirectCannotBeInstantiated (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=46
+// Error while generating bindings for item 'Template<int>::CannotBeInstantiated':
+// Failed to instantiate the function/method template: Diagnostics emitted:
+// rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=44:5: note: in instantiation of member function 'Template<int>::CannotBeInstantiated' requested here
+// rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=46:47: error: static assertion failed
 
 #[path = "rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types_extra.rs"]
 mod __crubit_mod_0;
