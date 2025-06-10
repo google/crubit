@@ -138,7 +138,7 @@ macro_rules! must_use_ctor_assign {
 // TODO(jeanpierreda): make Ctor an unsafe trait, as it has safety postconditions.
 #[must_use = must_use_ctor!()]
 pub trait Ctor {
-    type Output;
+    type Output: ?Sized;
     /// Constructs a value in place.
     ///
     /// Before this call, `dest` is uninitialized. After this call, `dest` is
@@ -210,9 +210,9 @@ impl<Output, F> !Unpin for FnCtor<Output, F> {}
 ///
 /// Note: this does not actually copy `P` until it is used.
 #[must_use = must_use_ctor_assign!("Copy")]
-pub struct Copy<P: Deref>(P);
+pub struct Copy<P: ?Sized + Deref>(P);
 
-impl<Output: for<'a> CtorNew<&'a Output>, P: Deref<Target = Output>> Ctor for Copy<P> {
+impl<Output: ?Sized + for<'a> CtorNew<&'a Output>, P: Deref<Target = Output>> Ctor for Copy<P> {
     type Output = Output;
 
     unsafe fn ctor(self, dest: *mut Output) {
@@ -221,13 +221,13 @@ impl<Output: for<'a> CtorNew<&'a Output>, P: Deref<Target = Output>> Ctor for Co
 }
 
 /// !Unpin to override the blanket Ctor impl.
-impl<P> !Unpin for Copy<P> {}
+impl<P: ?Sized> !Unpin for Copy<P> {}
 
 /// Returns a `Copy` which can be used as a `CtorNew` or `Assign` source, or as
 /// a `Ctor` directly.
 ///
 /// Note: this does not actually copy the parameter until it is used.
-pub fn copy<T: for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) -> Copy<P> {
+pub fn copy<T: ?Sized + for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) -> Copy<P> {
     Copy(src)
 }
 
@@ -244,9 +244,9 @@ pub fn copy<T: for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) -> Copy<P> 
 /// Note: this does not actually move until it is used.
 #[must_use = must_use_ctor_assign!("RvalueReference")]
 #[repr(transparent)]
-pub struct RvalueReference<'a, T>(pub Pin<&'a mut T>);
+pub struct RvalueReference<'a, T: ?Sized>(pub Pin<&'a mut T>);
 
-impl<T> RvalueReference<'_, T> {
+impl<T: ?Sized> RvalueReference<'_, T> {
     pub fn as_const(&self) -> ConstRvalueReference<'_, T> {
         ConstRvalueReference(&*self.0)
     }
@@ -271,14 +271,14 @@ impl<T> RvalueReference<'_, T> {
     }
 }
 
-impl<T> Deref for RvalueReference<'_, T> {
+impl<T: ?Sized> Deref for RvalueReference<'_, T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
         self.get_ref()
     }
 }
 
-impl<'a, T> Ctor for RvalueReference<'a, T>
+impl<'a, T: ?Sized> Ctor for RvalueReference<'a, T>
 where
     T: CtorNew<Self>,
 {
@@ -313,7 +313,6 @@ where
 impl<T> DerefRvalueReference for &mut T
 where
     T: Unpin,
-    Self::Target: Sized,
 {
     fn deref_rvalue_reference(&mut self) -> RvalueReference<'_, Self::Target> {
         RvalueReference(Pin::new(self))
@@ -321,7 +320,7 @@ where
 }
 
 /// !Unpin to override the blanket `Ctor` impl.
-impl<'a, T> !Unpin for RvalueReference<'a, T> {}
+impl<'a, T: ?Sized> !Unpin for RvalueReference<'a, T> {}
 
 /// Const rvalue reference (move-reference) type. Usually not very helpful.
 ///
@@ -330,22 +329,22 @@ impl<'a, T> !Unpin for RvalueReference<'a, T> {}
 /// const-move-assignment (assignment from `ConstRvalueReference(&x)`).
 #[must_use = must_use_ctor_assign!("ConstRvalueReference")]
 #[repr(transparent)]
-pub struct ConstRvalueReference<'a, T>(pub &'a T);
+pub struct ConstRvalueReference<'a, T: ?Sized>(pub &'a T);
 
-impl<'a, T> ConstRvalueReference<'a, T> {
+impl<'a, T: ?Sized> ConstRvalueReference<'a, T> {
     pub fn get_ref(&mut self) -> &'a T {
         self.0
     }
 }
 
-impl<T> Deref for ConstRvalueReference<'_, T> {
+impl<T: ?Sized> Deref for ConstRvalueReference<'_, T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
         self.0
     }
 }
 
-impl<'a, T> Ctor for ConstRvalueReference<'a, T>
+impl<'a, T: ?Sized> Ctor for ConstRvalueReference<'a, T>
 where
     T: CtorNew<Self>,
 {
@@ -357,7 +356,7 @@ where
 }
 
 /// !Unpin to override the blanket `Ctor` impl.
-impl<'a, T> !Unpin for ConstRvalueReference<'a, T> {}
+impl<'a, T: ?Sized> !Unpin for ConstRvalueReference<'a, T> {}
 
 /// Creates a "to-be-moved" pointer for `src`.
 ///
@@ -449,14 +448,14 @@ impl<T> Ctor for RustMoveCtor<T> {
 /// obligations.
 #[must_use = must_use_ctor!()]
 #[derive(Copy, Clone)]
-pub struct UnreachableCtor<T>(PhantomData<T>);
-impl<T> UnreachableCtor<T> {
+pub struct UnreachableCtor<T: ?Sized>(PhantomData<fn() -> T>);
+impl<T: ?Sized> UnreachableCtor<T> {
     pub fn new() -> Self {
         UnreachableCtor(PhantomData::default())
     }
 }
-impl<T> !Unpin for UnreachableCtor<T> {}
-impl<T> Ctor for UnreachableCtor<T> {
+impl<T: ?Sized> !Unpin for UnreachableCtor<T> {}
+impl<T: ?Sized> Ctor for UnreachableCtor<T> {
     type Output = T;
     unsafe fn ctor(self, _: *mut T) {
         unreachable!();
@@ -464,7 +463,7 @@ impl<T> Ctor for UnreachableCtor<T> {
 }
 
 /// All Rust types are C++-default-constructible if safe (i.e. Unpin + Default).
-impl<T: Unpin + Default + Sized> CtorNew<()> for T {
+impl<T: Unpin + Default> CtorNew<()> for T {
     type CtorType = RustMoveCtor<Self>;
     fn ctor_new(_: ()) -> Self::CtorType {
         RustMoveCtor(Default::default())
@@ -1778,5 +1777,15 @@ mod test {
             let sum = adder(&40, &2);
         }
         assert_eq!(*sum, 42);
+    }
+
+    /// You should be able to at least _spell_ a `Ctor` for a !Sized type.
+    #[gtest]
+    fn test_ctor_dst() {
+        pub fn _foo() -> impl Ctor<Output = [i32]> {
+            panic!("can't actually implement this for slices");
+            #[allow(unreachable_code)]
+            UnreachableCtor::new()
+        }
     }
 }
