@@ -135,8 +135,8 @@ TEST_F(InferTUTest, Samples) {
 
 TEST_F(InferTUTest, Annotations) {
   build(R"cc(
-    Nonnull<int *> target(int *A, int *B);
-    Nonnull<int *> target(int *A, Nullable<int *> P) { *P; }
+    int *_Nonnull target(int *A, int *B);
+    int *_Nonnull target(int *A, int *_Nullable P) { *P; }
   )cc");
 
   EXPECT_THAT(infer(),
@@ -149,8 +149,8 @@ TEST_F(InferTUTest, Annotations) {
 
 TEST_F(InferTUTest, AnnotationsConflict) {
   build(R"cc(
-    Nonnull<int *> target();
-    Nullable<int *> target();
+    int *_Nonnull target();
+    int *_Nullable target();
   )cc");
 
   EXPECT_THAT(infer(),
@@ -160,8 +160,8 @@ TEST_F(InferTUTest, AnnotationsConflict) {
 
 TEST_F(InferTUTest, ParamsFromCallSite) {
   build(R"cc(
-    void callee(int* P, int* Q, int* R);
-    void target(int* A, Nonnull<int*> B, Nullable<int*> C) { callee(A, B, C); }
+    void callee(int *P, int *Q, int *R);
+    void target(int *A, int *_Nonnull B, int *_Nullable C) { callee(A, B, C); }
   )cc");
 
   ASSERT_THAT(infer(),
@@ -184,8 +184,8 @@ TEST_F(InferTUTest, ReturnTypeNullable) {
 
 TEST_F(InferTUTest, ReturnTypeNonnull) {
   build(R"cc(
-    Nonnull<int*> providesNonnull();
-    int* target() { return providesNonnull(); }
+    int *_Nonnull providesNonnull();
+    int *target() { return providesNonnull(); }
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
@@ -194,8 +194,8 @@ TEST_F(InferTUTest, ReturnTypeNonnull) {
 
 TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
   build(R"cc(
-    Nonnull<int*> providesNonnull();
-    int* target(bool B, int* Q) {
+    int *_Nonnull providesNonnull();
+    int *target(bool B, int *Q) {
       if (B) return Q;
       return providesNonnull();
     }
@@ -207,8 +207,8 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
 
 TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
   build(R"cc(
-    Nonnull<int*> providesNonnull();
-    int* target(bool B) {
+    int *_Nonnull providesNonnull();
+    int *target(bool B) {
       if (B) return nullptr;
       return providesNonnull();
     }
@@ -234,8 +234,8 @@ TEST_F(InferTUTest, ReturnTypeDereferenced) {
 
 TEST_F(InferTUTest, PassedToNonnull) {
   build(R"cc(
-    void takesNonnull(Nonnull<int*>);
-    void target(int* P) { takesNonnull(P); }
+    void takesNonnull(int *_Nonnull);
+    void target(int *P) { takesNonnull(P); }
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
@@ -244,8 +244,8 @@ TEST_F(InferTUTest, PassedToNonnull) {
 
 TEST_F(InferTUTest, PassedToMutableNullableRef) {
   build(R"cc(
-    void takesMutableNullableRef(Nullable<int*>&);
-    void target(int* P) { takesMutableNullableRef(P); }
+    void takesMutableNullableRef(int *_Nullable &);
+    void target(int *P) { takesMutableNullableRef(P); }
   )cc");
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
@@ -355,7 +355,7 @@ TEST_F(InferTUTest, Fields) {
 
 TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorNeverUsed) {
   build(R"cc(
-    Nullable<bool *> getNullable();
+    bool *_Nullable getNullable();
     struct S {
       int *I = nullptr;
       bool *B = getNullable();
@@ -375,7 +375,7 @@ TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorNeverUsed) {
 
 TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorUsed) {
   build(R"cc(
-    Nullable<bool *> getNullable();
+    bool *_Nullable getNullable();
     struct S {
       int *I = nullptr;
       bool *B = getNullable();
@@ -398,9 +398,9 @@ TEST_F(InferTUTest, ConstructorCallThroughMakeUnique) {
   build(R"cc(
 #include <memory>
     struct S {
-      S(Nonnull<int*> A, int* B);
+      S(int *_Nonnull A, int *B);
     };
-    void target(int* P, Nullable<int*> Q) { std::make_unique<S>(P, Q); }
+    void target(int *P, int *_Nullable Q) { std::make_unique<S>(P, Q); }
   )cc");
   EXPECT_THAT(infer(),
               IsSupersetOf({
@@ -418,14 +418,14 @@ TEST_F(InferTUTest, ConstructorCallWithConversionOperator) {
   build(R"cc(
 #include <memory>
     struct S {
-      S(Nonnull<int*> A);
+      S(int *_Nonnull A);
     };
     struct ConvertibleToIntPtr {
-      ConvertibleToIntPtr(int* P) : P_(P) {}
-      operator int*() { return P_; }
-      int* P_;
+      ConvertibleToIntPtr(int *P) : P_(P) {}
+      operator int *() { return P_; }
+      int *P_;
     };
-    void target(int* X) { S AnS(ConvertibleToIntPtr{X}); }
+    void target(int *X) { S AnS(ConvertibleToIntPtr{X}); }
   )cc");
   EXPECT_THAT(infer(),
               IsSupersetOf({
@@ -441,14 +441,14 @@ TEST_F(InferTUTest, ConstructorCallThroughMakeUniqueWithConversionOperator) {
   build(R"cc(
 #include <memory>
     struct S {
-      S(Nonnull<int*> A);
+      S(int *_Nonnull A);
     };
     struct ConvertibleToIntPtr {
-      ConvertibleToIntPtr(int* P) : P_(P) {}
-      operator int*() { return P_; }
-      int* P_;
+      ConvertibleToIntPtr(int *P) : P_(P) {}
+      operator int *() { return P_; }
+      int *P_;
     };
-    void target(int* P) { std::make_unique<S>(ConvertibleToIntPtr{P}); }
+    void target(int *P) { std::make_unique<S>(ConvertibleToIntPtr{P}); }
   )cc");
   EXPECT_THAT(infer(),
               IsSupersetOf({
@@ -719,10 +719,10 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
 TEST_F(InferTUTest, Pragma) {
   build(R"cc(
 #pragma nullability file_default nonnull
-    void target(int* DefaultNonnull, NullabilityUnknown<int*> InferredNonnull,
-                Nullable<int*> Nullable,
-                NullabilityUnknown<int*> InferredNullable,
-                NullabilityUnknown<int*> Unknown) {
+    void target(int *DefaultNonnull, int *_Null_unspecified InferredNonnull,
+                int *_Nullable Nullable,
+                int *_Null_unspecified InferredNullable,
+                int *_Null_unspecified Unknown) {
       DefaultNonnull = InferredNonnull;
       DefaultNonnull = nullptr;
       InferredNullable = Nullable;
@@ -751,7 +751,7 @@ TEST_F(InferTUTest, Pragma) {
 TEST_F(InferTUTest, FunctionTemplate) {
   build(R"cc(
     template <typename T>
-    T functionTemplate(int* P, Nullable<int*> Q, T* R, Nullable<T*> S, T U) {
+    T functionTemplate(int *P, int *_Nullable Q, T *R, T *_Nullable S, T U) {
       *P;
       *R;
       return U;
@@ -759,15 +759,15 @@ TEST_F(InferTUTest, FunctionTemplate) {
 
     void usage() {
       int I = 0;
-      int* A = &I;
-      int* B = &I;
-      int* C = &I;
-      int* D = &I;
-      int* E = &I;
+      int *A = &I;
+      int *B = &I;
+      int *C = &I;
+      int *D = &I;
+      int *E = &I;
       // In the first iteration, infer (for the instantiation) P and R as
       // Nonnull, Q and S as Nullable, U as Nonnull, and Unknown for the int*
       // return type (which hasn't yet seen the inference of U as Nonnull).
-      int* TargetIntStarResult = functionTemplate(A, B, &C, &D, E);
+      int *TargetIntStarResult = functionTemplate(A, B, &C, &D, E);
       // Infer (for the instantiation) P and R as Nonnull, Q and S as Nullable,
       // and nothing for the int U and int return type.
       int TargetIntResult = functionTemplate(A, B, C, D, I);
@@ -814,10 +814,10 @@ using InferTUSmartPointerTest = InferTUTest;
 TEST_F(InferTUSmartPointerTest, Annotations) {
   build(R"cc(
 #include <memory>
-    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> A,
+    _Nonnull std::unique_ptr<int> target(std::unique_ptr<int> A,
                                          std::unique_ptr<int> B);
-    Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> A,
-                                         Nullable<std::unique_ptr<int>> P) {
+    _Nonnull std::unique_ptr<int> target(std::unique_ptr<int> A,
+                                         _Nullable std::unique_ptr<int> P) {
       *P;
     }
   )cc");
@@ -836,8 +836,8 @@ TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
 #include <utility>
     void callee(std::unique_ptr<int> P, std::unique_ptr<int> Q,
                 std::unique_ptr<int> R);
-    void target(std::unique_ptr<int> A, Nonnull<std::unique_ptr<int>> B,
-                Nullable<std::unique_ptr<int>> C) {
+    void target(std::unique_ptr<int> A, _Nonnull std::unique_ptr<int> B,
+                _Nullable std::unique_ptr<int> C) {
       callee(std::move(A), std::move(B), std::move(C));
     }
   )cc");
@@ -904,7 +904,7 @@ TEST_F(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
 TEST_F(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
   build(R"cc(
     struct Base {
-      virtual Nonnull<int*> foo(int* P) {
+      virtual int *_Nonnull foo(int *P) {
         static int I = 0;
         P = nullptr;
         return &I;
@@ -912,7 +912,7 @@ TEST_F(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
     };
 
     struct Derived : public Base {
-      int* foo(int* P) override;
+      int *foo(int *P) override;
     };
   )cc");
 

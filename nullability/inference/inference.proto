@@ -73,10 +73,10 @@ message Evidence {
     // A value with Unknown nullability was returned.
     UNKNOWN_RETURN = 9;
     // A value was assigned to a Nonnull declaration.
-    // e.g. evidence for `p` from `Nonnull<int*> q = p;`.
+    // e.g. evidence for `p` from `int* _Nonnull q = p;`.
     ASSIGNED_TO_NONNULL = 10;
     // A value was assigned to a declaration that is a reference to a mutable
-    // nullable pointer, e.g. evidence for `p` from `Nullable<int*>& q = p;`.
+    // nullable pointer, e.g. evidence for `p` from `int* _Nullable& q = p;`.
     ASSIGNED_TO_MUTABLE_NULLABLE = 11;
     // The program aborts if a value is null.
     ABORT_IF_NULL = 12;
@@ -123,7 +123,7 @@ message Evidence {
     // reference exists, the pointer must be declared Nonnull to prevent the
     // pointer from being directly, or through a different reference, assigned
     // to null and then accessed through the Nonnull reference unsafely.
-    // e.g. evidence for `p` from `Nonnull<int*> &q = p;`.
+    // e.g. evidence for `p` from `int* _Nonnull&q = p;`.
     ASSIGNED_TO_NONNULL_REFERENCE = 26;
     // A reference to a nonnull value was returned as a reference to a const
     // value. This is distinct from NONNULL_REFERENCE_RETURN because it does not
