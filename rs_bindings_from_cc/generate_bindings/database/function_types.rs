@@ -83,6 +83,28 @@ pub enum TraitName {
     Other { name: Rc<str>, params: Rc<[RsTypeKind]>, is_unsafe_fn: bool },
 }
 
+impl std::fmt::Display for TraitName {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            TraitName::CtorNew { .. } => {
+                write!(f, "CtorNew")
+            }
+            TraitName::UnpinConstructor { name, .. } => {
+                write!(f, "{name}")
+            }
+            TraitName::PartialEq { .. } => {
+                write!(f, "PartialEq")
+            }
+            TraitName::PartialOrd { .. } => {
+                write!(f, "PartialOrd")
+            }
+            TraitName::Other { name, .. } => {
+                write!(f, "{name}")
+            }
+        }
+    }
+}
+
 impl TraitName {
     /// Returns the generic parameters in this trait name.
     fn params(&self) -> &[RsTypeKind] {
@@ -148,6 +170,21 @@ pub enum ImplKind {
         /// For example, the traits for == and < only accept const reference
         /// parameters, but C++ allows values.
         force_const_reference_params: bool,
+
+        /// Whether this trait impl should be globally visible, even when the type is `pub(crate)`
+        /// in a `:wrapper` target.
+        ///
+        /// Set this to true when:
+        ///
+        /// * The implementation will not change in backwards-incompatible ways when features are
+        ///   added to Crubit.
+        /// * The implementation is well-known and not subject to being overwritten by the
+        ///   `:wrapper` library owner.
+        ///
+        /// For example, `Drop` and `PinnedDrop` are perfect instances of this: there is only one
+        /// logical implementation, which won't change over time, and it's not permitted for library
+        /// owners to change it to something else.
+        always_public: bool,
     },
 }
 impl ImplKind {
@@ -166,6 +203,7 @@ impl ImplKind {
             drop_return: false,
             associated_return_type: None,
             force_const_reference_params,
+            always_public: false,
         }
     }
     pub fn format_first_param_as_self(&self) -> bool {

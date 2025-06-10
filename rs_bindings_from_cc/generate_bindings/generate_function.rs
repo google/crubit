@@ -341,6 +341,12 @@ fn api_func_shape_for_operator_assign(
         drop_return: true,
         associated_return_type: None,
         force_const_reference_params: false,
+        // OK to always be public: the only type in the param list
+        // depends on self, so it's only usable within the current
+        // crate. Also, the trait is owned by Crubit, and callers
+        // have no reason to define their own impl given that it's
+        // not usable outside this crate.
+        always_public: true,
     };
     Ok((func_name, impl_kind))
 }
@@ -516,6 +522,7 @@ fn api_func_shape_for_operator(
                     drop_return: true,
                     associated_return_type: None,
                     force_const_reference_params: false,
+                    always_public: false,
                 };
                 Ok((func_name, impl_kind))
             } else {
@@ -535,6 +542,7 @@ fn api_func_shape_for_operator(
                     drop_return: false,
                     associated_return_type: Some(make_rs_ident("Output")),
                     force_const_reference_params: false,
+                    always_public: false,
                 };
                 Ok((func_name, impl_kind))
             }
@@ -581,27 +589,42 @@ fn api_func_shape_for_destructor(
     }
     if record.is_unpin() {
         let func_name = make_rs_ident("drop");
-        let impl_kind = ImplKind::new_trait(
-            TraitName::Other { name: Rc::from("Drop"), params: Rc::from([]), is_unsafe_fn: false },
-            record.clone(),
-            /* format_first_param_as_self= */ true,
-            /* force_const_reference_params= */
-            false,
-        );
+        let impl_kind = ImplKind::Trait {
+            record: record.clone(),
+            trait_name: TraitName::Other {
+                name: Rc::from("Drop"),
+                params: Rc::from([]),
+                is_unsafe_fn: false,
+            },
+            impl_for: ImplFor::T,
+            trait_generic_params: Rc::new([]),
+            format_first_param_as_self: true,
+            drop_return: false,
+            associated_return_type: None,
+            force_const_reference_params: false,
+            // OK to be always_public: canonical case.
+            always_public: true,
+        };
         Some((func_name, impl_kind))
     } else {
         materialize_ctor_in_caller(func, param_types);
         let func_name = make_rs_ident("pinned_drop");
-        let impl_kind = ImplKind::new_trait(
-            TraitName::Other {
+        let impl_kind = ImplKind::Trait {
+            record: record.clone(),
+            trait_name: TraitName::Other {
                 name: Rc::from("::ctor::PinnedDrop"),
                 params: Rc::from([]),
                 is_unsafe_fn: true,
             },
-            record.clone(),
-            /* format_first_param_as_self= */ true,
-            /* force_const_reference_params= */ false,
-        );
+            impl_for: ImplFor::T,
+            trait_generic_params: Rc::new([]),
+            format_first_param_as_self: true,
+            drop_return: false,
+            associated_return_type: None,
+            force_const_reference_params: false,
+            // OK to be always_public: canonical case.
+            always_public: true,
+        };
         Some((func_name, impl_kind))
     }
 }
@@ -642,6 +665,9 @@ fn api_func_shape_for_constructor(
             drop_return: false,
             associated_return_type: Some(make_rs_ident("CtorType")),
             force_const_reference_params: false,
+            // OK to be always public: the trait only has a static method,
+            // meaning it's only usable within the current target anyway.
+            always_public: true,
         };
         return Some((func_name, impl_kind));
     }
@@ -1218,12 +1244,14 @@ pub fn generate_function(
         // collecting errors for items that will not actually be generated.
         let visibility =
             db.has_bindings(ir::Item::Func(func.clone())).unwrap_or_default().visibility;
-        let pub_ = match (&impl_kind, visibility) {
-            (ImplKind::Trait { .. }, Visibility::Public) => quote! {},
-            (ImplKind::Trait { .. }, Visibility::PubCrate) => {
-                bail!("Trait implementations cannot be restricted to wrappers with pub(crate)")
+        let pub_ = match &impl_kind {
+            ImplKind::Trait { trait_name, always_public: false, .. }
+                if visibility == Visibility::PubCrate =>
+            {
+                bail!("Implementation of {trait_name} cannot be restricted to wrappers with pub(crate)")
             }
-            (_, visibility) => quote! {#visibility},
+            ImplKind::Trait { .. } => quote! {},
+            _ => quote! {#visibility},
         };
         let unsafe_ = if impl_kind.is_unsafe() {
             quote! { unsafe }

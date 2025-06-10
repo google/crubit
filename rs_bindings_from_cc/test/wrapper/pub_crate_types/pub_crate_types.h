@@ -44,6 +44,7 @@ struct Template {
     CannotBeInstantiated();
   }
   void CannotBeInstantiated() { static_assert(false); }
+  ~Template() { value = T(); }
 };
 
 inline Template<int> GetTemplateInt() { return Template<int>{42}; }

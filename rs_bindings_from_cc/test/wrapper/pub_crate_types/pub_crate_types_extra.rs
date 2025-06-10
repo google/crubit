@@ -9,5 +9,5 @@ pub fn create_and_consume_forward_declared() -> core::ffi::c_int {
 }
 
 pub fn get_int_from_template_int() -> i32 {
-    crate::GetTemplateInt().value
+    ctor::emplace!(crate::GetTemplateInt()).value
 }

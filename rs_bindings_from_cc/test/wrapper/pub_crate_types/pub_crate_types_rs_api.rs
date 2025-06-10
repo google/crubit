@@ -7,7 +7,13 @@
 // Features: supported, unsafe_types, wrapper
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
+#![feature(
+    allocator_api,
+    cfg_sanitize,
+    custom_inner_attributes,
+    impl_trait_in_assoc_type,
+    negative_impls
+)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -88,23 +94,20 @@ pub unsafe fn ConsumeCompoundDataType(
 // Error while generating bindings for item 'Template':
 // Class templates are not supported yet
 
-/// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=49
+/// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=50
 #[inline(always)]
-pub(crate) fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
+pub(crate) fn GetTemplateInt() -> impl ::ctor::Ctor<Output = crate::__CcTemplateInst8TemplateIiE> {
     unsafe {
-        let mut __return =
-            ::core::mem::MaybeUninit::<crate::__CcTemplateInst8TemplateIiE>::uninit();
-        crate::detail::__rust_thunk___Z14GetTemplateIntv(
-            &raw mut __return as *mut ::core::ffi::c_void,
-        );
-        __return.assume_init()
+        ::ctor::FnCtor::new(move |dest: *mut crate::__CcTemplateInst8TemplateIiE| {
+            crate::detail::__rust_thunk___Z14GetTemplateIntv(dest as *mut ::core::ffi::c_void);
+        })
     }
 }
 
 /// Other types are essentially the same, and just get an abbreviated test:
 ///
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=39
-#[derive(Clone, Copy)]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template < int >
 pub(crate) struct __CcTemplateInst8TemplateIiE {
@@ -126,16 +129,8 @@ impl !Sync for __CcTemplateInst8TemplateIiE {}
 // Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=39
-// Error while generating bindings for item 'Template<int>::Template':
-// Parameter #0 is not supported: Unsupported type 'Template<int> &&': Unsupported type: && without lifetime
-
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=39
 // Error while generating bindings for item 'Template<int>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=39
-// Error while generating bindings for item 'Template<int>::operator=':
-// Parameter #0 is not supported: Unsupported type 'Template<int> &&': Unsupported type: && without lifetime
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=42
 // Error while generating bindings for item 'Template<int>::IndirectCannotBeInstantiated':
@@ -147,6 +142,14 @@ impl !Sync for __CcTemplateInst8TemplateIiE {}
 // Failed to instantiate the function/method template: Diagnostics emitted:
 // rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=44:5: note: in instantiation of member function 'Template<int>::CannotBeInstantiated' requested here
 // rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=46:47: error: static assertion failed
+
+/// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=47
+impl ::ctor::PinnedDrop for __CcTemplateInst8TemplateIiE {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN8TemplateIiED1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fwrapper_2fpub_5fcrate_5ftypes_3apub_5fcrate_5ftypes(self)
+    }
+}
 
 #[path = "rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types_extra.rs"]
 mod __crubit_mod_0;
@@ -164,6 +167,11 @@ mod detail {
             container: &mut crate::CompoundDataType,
         ) -> ::core::ffi::c_int;
         pub(crate) unsafe fn __rust_thunk___Z14GetTemplateIntv(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8TemplateIiED1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fwrapper_2fpub_5fcrate_5ftypes_3apub_5fcrate_5ftypes<
+            'a,
+        >(
+            __this: ::core::pin::Pin<&'a mut crate::__CcTemplateInst8TemplateIiE>,
+        );
     }
 }
 
@@ -175,7 +183,8 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::CompoundDataType, forward_declared) == 0);
     assert!(::core::mem::size_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst8TemplateIiE>() == 4);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst8TemplateIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst8TemplateIiE: Drop);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst8TemplateIiE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst8TemplateIiE: Copy);
     assert!(::core::mem::offset_of!(crate::__CcTemplateInst8TemplateIiE, value) == 0);
+    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
 };
