@@ -222,12 +222,11 @@ FileID getGoverningFile(const Decl *absl_nullable D) {
 }
 
 namespace {
-// Recognize aliases e.g. Nonnull<T> as equivalent to T _Nonnull, etc.
-// These aliases should be annotated with [[clang::annotate("Nullable")]] etc.
+// Recognize aliases annotated with [[clang::annotate("Nullable")]] etc. as
+// equivalent to alias that apply _Nullable, etc.
 //
-// TODO: Ideally such aliases could apply the _Nonnull attribute themselves.
-// This requires resolving compatibility issues with clang, such as use with
-// user-defined pointer-like types.
+// Ideally such aliases would apply the _Nullable attribute themselves, but we
+// support this alternative as well.
 std::optional<NullabilityKind> getAliasNullability(const TemplateName &TN) {
   if (const auto *TD = TN.getAsTemplateDecl()) {
     if (!TD->getTemplatedDecl()) return std::nullopt;  // BuiltinTemplateDecl

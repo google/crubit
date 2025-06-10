@@ -15,6 +15,7 @@
 
 #include "absl/log/check.h"
 #include "nullability/pragma.h"
+#include "nullability/test/test_headers.h"
 #include "clang/include/clang/AST/ASTConsumer.h"
 #include "clang/include/clang/AST/Decl.h"
 #include "clang/include/clang/AST/DeclCXX.h"
@@ -414,19 +415,9 @@ class GetTypeNullabilityTest : public ::testing::Test {
   std::string Preamble;
 
   GetTypeNullabilityTest() : Header(Inputs.ExtraFiles["header.h"]) {
-    Inputs.ExtraArgs.push_back("-include");
-    Inputs.ExtraArgs.push_back("nullability.h");
+    Inputs.Language = TestLanguage::Lang_CXX20;
     Inputs.ExtraArgs.push_back("-include");
     Inputs.ExtraArgs.push_back("header.h");
-    Inputs.ExtraFiles["nullability.h"] = R"cpp(
-      template <class X>
-      using Nullable [[clang::annotate("Nullable")]] = X _Nullable;
-      template <class X>
-      using Nonnull [[clang::annotate("Nonnull")]] = X _Nonnull;
-      template <class X>
-      using Unknown [[clang::annotate("Nullability_Unspecified")]] =
-          X _Null_unspecified;
-    )cpp";
   }
 
   // Parses `Type` and returns getTypeNullability().
@@ -525,6 +516,9 @@ TEST_F(GetTypeNullabilityTest, LostSugarCausesWrongType) {
 
 TEST_F(GetTypeNullabilityTest, UnknownOptsOutOfPragma) {
   Preamble = R"cpp(
+    template <typename T>
+    using Unknown = T _Null_unspecified;
+
 #pragma nullability file_default nonnull
     using Ptr = int*;
     using UPtr = Unknown<int*>;
@@ -546,7 +540,20 @@ TEST_F(GetTypeNullabilityTest, UnknownOptsOutOfPragma) {
               ElementsAre(NullabilityKind::Unspecified));
 }
 
-TEST_F(GetTypeNullabilityTest, Overrides) {
+// Combining multiple clang nullability specifiers doesn't compile (if
+// inconsistent) or triggers a warning (if duplicate), so we don't have special
+// handling for interpreting the nullability and don't test them here. But
+// aliases that apply specifiers can be combined with each other and can
+// override an inner specifier.
+TEST_F(GetTypeNullabilityTest, OutermostNonUnknownTemplateAliasWins) {
+  Preamble = R"cpp(
+    template <typename T>
+    using Unknown = T _Null_unspecified;
+    template <typename T>
+    using Nullable = T _Nullable;
+    template <typename T>
+    using Nonnull = T _Nonnull;
+  )cpp";
   EXPECT_THAT(nullVec("Nullable<Unknown<int*>>"),
               ElementsAre(NullabilityKind::Nullable));
   EXPECT_THAT(nullVec("Unknown<Nullable<int*>>"),
@@ -557,13 +564,46 @@ TEST_F(GetTypeNullabilityTest, Overrides) {
               ElementsAre(NullabilityKind::Nullable));
   EXPECT_THAT(nullVec("Nonnull<Nullable<int*>>"),
               ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("Nullable<Nonnull<int*>>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Nonnull<int* _Nullable>"),
+              ElementsAre(NullabilityKind::NonNull));
+  EXPECT_THAT(nullVec("Nullable<int* _Nonnull>"),
+              ElementsAre(NullabilityKind::Nullable));
+  EXPECT_THAT(nullVec("Nullable<Unknown<int* _Nonnull>>"),
+              ElementsAre(NullabilityKind::Nullable));
+  // An outer specifier will fail to compile if it conflicts with a specifier
+  // set by an inner alias, e.g. Nonnull<int*> _Nullable", so no tests for that.
+}
 
+TEST_F(GetTypeNullabilityTest, OverrideAliasPragma) {
   Header = R"cpp(
 #pragma nullability file_default nullable
-    using IntPtr = int*;  // nullable
+    using PragmaNullable = int*;  // nullable
   )cpp";
-  EXPECT_THAT(nullVec("Unknown<IntPtr>"),
+  // Unknown does not override the alias' pragma, because it's not valid to put
+  // Unknown on a TypedefType.
+  EXPECT_THAT(nullVec("_Null_unspecified PragmaNullable"),
               ElementsAre(NullabilityKind::Nullable));
+  // Nonnull as a specifier does override the alias' pragma.
+  EXPECT_THAT(nullVec("_Nonnull PragmaNullable"),
+              ElementsAre(NullabilityKind::NonNull));
+
+  Preamble = R"cpp(
+    template <typename T>
+    using Unknown = T _Null_unspecified;
+    template <typename T>
+    using Nullable = T _Nullable;
+    template <typename T>
+    using Nonnull = T _Nonnull;
+  )cpp";
+  // Unknown does not override the alias' pragma, because it's not valid to put
+  // Unknown on a TypedefType.
+  EXPECT_THAT(nullVec("Unknown<PragmaNullable>"),
+              ElementsAre(NullabilityKind::Nullable));
+  // Nonnull as a template alias does override the alias' pragma.
+  EXPECT_THAT(nullVec("Nonnull<PragmaNullable>"),
+              ElementsAre(NullabilityKind::NonNull));
 }
 
 TEST_F(GetTypeNullabilityTest, PragmaSmartPointers) {
@@ -601,23 +641,23 @@ TEST_F(GetTypeNullabilityTest, PragmaSmartPointers) {
 
   EXPECT_THAT(nullVec("std::unique_ptr<int>"),
               ElementsAre(NullabilityKind::NonNull));
-  EXPECT_THAT(nullVec("Unknown<std::unique_ptr<int>>"),
+  EXPECT_THAT(nullVec("_Null_unspecified std::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Unspecified));
   EXPECT_THAT(nullVec("directive::unique_ptr<int>"),
               ElementsAre(NullabilityKind::NonNull));
-  EXPECT_THAT(nullVec("Unknown<directive::unique_ptr<int>>"),
+  EXPECT_THAT(nullVec("_Null_unspecified directive::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Unspecified));
   EXPECT_THAT(nullVec("declaration::unique_ptr<int>"),
               ElementsAre(NullabilityKind::NonNull));
-  EXPECT_THAT(nullVec("Unknown<declaration::unique_ptr<int>>"),
+  EXPECT_THAT(nullVec("_Null_unspecified declaration::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Unspecified));
   EXPECT_THAT(nullVec("transparent::unique_ptr<int>"),
               ElementsAre(NullabilityKind::NonNull));
-  EXPECT_THAT(nullVec("Unknown<transparent::unique_ptr<int>>"),
+  EXPECT_THAT(nullVec("_Null_unspecified transparent::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Unspecified));
   EXPECT_THAT(nullVec("opaque::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Nullable));
-  EXPECT_THAT(nullVec("Unknown<opaque::unique_ptr<int>>"),
+  EXPECT_THAT(nullVec("_Null_unspecified opaque::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Nullable));
 }
 
@@ -1311,13 +1351,13 @@ TEST_F(GetTypeNullabilityLocsTest, TemplateArgsBehindAlias) {
   EXPECT_THAT(getComparableNullabilityLocs(Snippet), matchesRanges());
 }
 
-TEST_F(GetTypeNullabilityLocsTest, AnnotateNullable) {
+TEST_F(GetTypeNullabilityLocsTest, ClangAnnotatedAliases) {
   std::string HeaderWithAttributes = R"cpp(
     namespace custom {
     template <class T>
-    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
+    using Nullable [[clang::annotate("Nullable")]] = T;
     template <class T>
-    using NonNull [[clang::annotate("Nonnull")]] = T _Nonnull;
+    using NonNull [[clang::annotate("Nonnull")]] = T;
     }  // namespace custom
 
     template <class T, class U>

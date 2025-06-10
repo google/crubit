@@ -213,6 +213,7 @@ cc_test(
     deps = [
         ":pragma",
         ":type_nullability",
+        "//nullability/test:test_headers",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
