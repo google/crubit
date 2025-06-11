@@ -5,6 +5,11 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
+exports_files(
+    srcs = glob(["*"]),
+    visibility = [":__subpackages__"],
+)
+
 rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
@@ -103,16 +108,18 @@ rust_test(
 rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    crate_features = ["unstable"],
     proc_macro_deps = [":forward_declare_proc_macros"],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts,unsized_const_params"],
     visibility = ["//:__subpackages__"],
 )
 
 rust_proc_macro(
     name = "forward_declare_proc_macros",
     srcs = ["forward_declare_proc_macros.rs"],
+    visibility = [":__subpackages__"],
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -126,6 +133,14 @@ rust_test(
     deps = [
         ":forward_declare",
         "@crate_index//:googletest",
+    ],
+)
+
+rust_test(
+    name = "forward_declare_unstable_test",
+    srcs = ["forward_declare_unstable_test.rs"],
+    deps = [
+        ":forward_declare",
     ],
 )
 

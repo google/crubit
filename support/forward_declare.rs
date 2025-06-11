@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(negative_impls, vec_into_raw_parts, extern_types)]
+#![cfg_attr(feature = "unstable", allow(incomplete_features), feature(unsized_const_params))]
+
 //! This crate provides facilities for safely casting across multiple Rust types
 //! that represent the same C++ type.  This is needed because:
 //!
@@ -207,7 +209,17 @@
 //! other_crate::function(x.cpp_cast());  // Works whether `function` takes incomplete or complete type.
 //! ```
 
-pub use forward_declare_proc_macros::*;
+pub use forward_declare_proc_macros::forward_declare;
+#[cfg(not(feature = "unstable"))]
+pub use forward_declare_proc_macros::symbol;
+
+#[cfg(feature = "unstable")]
+#[macro_export]
+macro_rules! symbol {
+    ($name:literal) => {
+        $crate::internal::Symbol::<$name>
+    };
+}
 
 /// Public to be exposed to macros, but otherwise for internal use only.
 pub mod internal {
@@ -216,12 +228,17 @@ pub mod internal {
     ///
     /// Every symbol is a tuple of `C`: for example, `symbol!("xy")` is
     /// `Symbol((C<'x'>, C<'y'>))`
+    #[cfg(not(feature = "unstable"))]
     #[repr(C)]
     pub struct Symbol<T>(std::marker::PhantomData<T>);
 
     /// A character in a symbol string.
+    #[cfg(not(feature = "unstable"))]
     #[repr(C)]
     pub struct C<const CHAR: char>;
+
+    #[cfg(feature = "unstable")]
+    pub struct Symbol<const SYMBOL: &'static str>;
 
     /// Types that implement the `CcType` trait with the same `Name` can be
     /// safely transmuted between each other, because they either provide

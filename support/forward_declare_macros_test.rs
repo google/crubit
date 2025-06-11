@@ -8,31 +8,6 @@ use googletest::prelude::*;
 mod std {}
 mod forward_declare {}
 
-mod test_is_same_0 {
-    type _Expected = ::forward_declare::internal::Symbol<()>;
-    fn _is_same(x: _Expected) -> ::forward_declare::symbol!("") {
-        x
-    }
-}
-
-mod test_is_same_1 {
-    type _Expected = ::forward_declare::internal::Symbol<(::forward_declare::internal::C<'x'>,)>;
-    fn _is_same(x: _Expected) -> ::forward_declare::symbol!("x") {
-        x
-    }
-}
-
-mod test_is_same_3 {
-    type _Expected = ::forward_declare::internal::Symbol<(
-        ::forward_declare::internal::C<'f'>,
-        ::forward_declare::internal::C<'o'>,
-        ::forward_declare::internal::C<'o'>,
-    )>;
-    fn _is_same(x: _Expected) -> ::forward_declare::symbol!("foo") {
-        x
-    }
-}
-
 #[gtest]
 fn test_conversions() {
     use ::forward_declare::CppCast as _; // test becomes too verbose otherwise.

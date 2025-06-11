@@ -115,6 +115,18 @@ For each feature we use, we document the following:
     successfully, so we can delete the usage (keeping the `cfg_accessible` usage
     that is currently used, and deleting the other one). Same for the rest.
 
+### `unsized_const_params`
+
+*   **Crubit feature:** `supported`
+*   **Use case:** Better error messages when you get a type error on forward
+    declarations. `Symbol<(C<'F'>, C<'o'>, C<'o'>)>` is so substantially worse
+    than `Symbol<"Foo">` that Rust will even hide the type entirely, forcing you
+    to read the name from a separate file (which may not be available to you if
+    you were doing a remote build).
+*   **Exit strategy:** The `Symbol<(...)>` approach works and is tested, and we
+    can switch back with a single flag flip. The only impact is a regression on
+    error messages.
+
 ## Unstable features **not** used by Crubit {#rejected}
 
 The following features are ones we'd hypothetically like to use, but do not.
