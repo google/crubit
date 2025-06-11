@@ -250,9 +250,15 @@ fn unique_late_bound_regions_in_fn_sig(sig: &ty::FnSig) -> Vec<syn::Lifetime> {
         .copied()
         .chain(std::iter::once(sig.output()))
         .flat_map(|ty| {
-            ty.walk().filter_map(|generic_arg| match generic_arg.unpack() {
-                ty::GenericArgKind::Const(_) | ty::GenericArgKind::Type(_) => None,
-                ty::GenericArgKind::Lifetime(region) => Some(region),
+            ty.walk().filter_map(|generic_arg| {
+                #[rustversion::before(2025-05-29)]
+                let kind = generic_arg.unpack();
+                #[rustversion::since(2025-05-29)]
+                let kind = generic_arg.kind();
+                match kind {
+                    ty::GenericArgKind::Const(_) | ty::GenericArgKind::Type(_) => None,
+                    ty::GenericArgKind::Lifetime(region) => Some(region),
+                }
             })
         })
         .filter(|region| match region.kind() {
