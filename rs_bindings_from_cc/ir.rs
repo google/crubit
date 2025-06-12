@@ -920,6 +920,11 @@ pub enum BridgeType {
         rust_to_cpp_converter: Rc<str>,
         cpp_to_rust_converter: Rc<str>,
     },
+    ProtoMessageBridge {
+        rust_name: Rc<str>,
+        abi_rust: Rc<str>,
+        abi_cpp: Rc<str>,
+    },
     Bridge {
         rust_name: Rc<str>,
         abi_rust: Rc<str>,

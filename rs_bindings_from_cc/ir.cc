@@ -478,6 +478,16 @@ llvm::json::Value BridgeType::ToJson() const {
           [&](const BridgeType::StdString& std_string) {
             return llvm::json::Object{{"StdString", nullptr}};
           },
+          [&](const BridgeType::ProtoMessageBridge& proto_message_bridge) {
+            return llvm::json::Object{{
+                "ProtoMessageBridge",
+                llvm::json::Object{
+                    {"rust_name", proto_message_bridge.rust_name},
+                    {"abi_rust", proto_message_bridge.abi_rust},
+                    {"abi_cpp", proto_message_bridge.abi_cpp},
+                },
+            }};
+          },
       },
       variant);
 }

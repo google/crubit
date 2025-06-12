@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, ensure, Result};
-use database::code_snippet::NoBindingsReason;
+use database::code_snippet::{NoBindingsReason, Visibility};
 use database::rs_snippet::{Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
 use ir::{CcCallingConv, CcType, CcTypeVariant, PointerTypeKind};
@@ -30,6 +30,11 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
 
             // TODO(b/351976044): Support bridge types by pointer/reference.
             if let RsTypeKind::BridgeType { original_type, .. } = pointee.unalias() {
+                let visibility_override = if pointee.is_proto_message_bridge_type() {
+                    Some(Visibility::Public)
+                } else {
+                    None
+                };
                 pointee = RsTypeKind::Error {
                     symbol: cpp_type_name::cpp_tagless_type_name_for_record(
                         original_type,
@@ -38,7 +43,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                     .to_string()
                     .into(),
                     error: anyhow!("Bridging types are not supported as pointee/referent types."),
-                    visibility_override: None,
+                    visibility_override,
                 };
             }
             let pointee = Rc::new(pointee);

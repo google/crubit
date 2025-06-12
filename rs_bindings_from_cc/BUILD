@@ -137,6 +137,8 @@ cc_library(
     hdrs = ["ast_util.h"],
     visibility = ["//:__subpackages__"],
     deps = [
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/functional:function_ref",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
@@ -357,7 +359,6 @@ cc_library(
         "@abseil-cpp//absl/strings:cord",
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:optional",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
     ],

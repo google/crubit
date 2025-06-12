@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/functional/function_ref.h"
 #include "clang/include/clang/AST/Attr.h"
 #include "clang/include/clang/AST/DeclBase.h"
@@ -36,6 +37,10 @@ std::optional<std::string> CollectUnknownAttrs(
 std::optional<std::string> CollectUnknownTypeAttrs(
     const clang::Type& t, absl::FunctionRef<bool(clang::attr::Kind)> is_known =
                               [](clang::attr::Kind attr) { return false; });
+
+// Returns true if `decl` is non-null and refers to a (code-generated) proto2
+// message.
+bool IsProto2Message(const clang::Decl& decl);
 
 }  // namespace crubit
 

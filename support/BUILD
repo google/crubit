@@ -113,7 +113,11 @@ rust_library(
     proc_macro_deps = [":forward_declare_proc_macros"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts,unsized_const_params"],
-    visibility = ["//:__subpackages__"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+        "@protobuf//rust:__subpackages__",
+    ],
 )
 
 rust_proc_macro(

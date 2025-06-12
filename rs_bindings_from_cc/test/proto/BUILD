@@ -1,7 +1,10 @@
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@protobuf//rust:defs.bzl", "rust_proto_library")
-load("@rules_rust//rust:defs.bzl", "rust_test")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -26,22 +29,20 @@ cc_library(
     aspect_hints = [
         "//features:supported",
     ],
-    deps = [":my_cc_proto"],
+    deps = [
+        ":my_cc_proto",
+    ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "my_test",
     srcs = ["my_test.rs"],
     cc_deps = [
         ":my_proto_api",
     ],
-    tags = [
-        "manual",
-        "nobuilder",
-        "notap",
-    ],
     deps = [
         ":my_rust_proto",
+        "//support:forward_declare",
         "@crate_index//:googletest",
     ],
 )

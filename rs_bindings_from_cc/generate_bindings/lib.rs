@@ -430,9 +430,9 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
         | RsTypeKind::TypeMapOverride { .. } => false,
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
-            BridgeRsTypeKind::BridgeVoidConverters { .. } | BridgeRsTypeKind::Bridge { .. } => {
-                is_record_unsafe(db, &original_type)
-            }
+            BridgeRsTypeKind::BridgeVoidConverters { .. }
+            | BridgeRsTypeKind::Bridge { .. }
+            | BridgeRsTypeKind::ProtoMessageBridge { .. } => is_record_unsafe(db, &original_type),
             BridgeRsTypeKind::SlicePointer { .. } => true,
             BridgeRsTypeKind::StdOptional(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
             BridgeRsTypeKind::StdPair(t1, t2) => {
@@ -626,6 +626,31 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             BridgeRsTypeKind::BridgeVoidConverters { .. } => {
                 bail!("Void pointer bridge types are not allowed within composable bridging")
+            }
+            BridgeRsTypeKind::ProtoMessageBridge { abi_rust, abi_cpp, .. } => {
+                let target =
+                    original_type.defining_target.as_ref().unwrap_or(&original_type.owning_target);
+                let rust_abi_path = make_rust_abi_path(&abi_rust, db.ir(), target);
+                let cpp_abi_path = make_cpp_abi_path(&abi_cpp)?;
+
+                let cpp_namespace_qualifier = db.ir().namespace_qualifier(original_type.as_ref());
+
+                // Rust message types are exported to crate root, but we need the full namespace for the C++ ABI.
+                let merged_cpp_abi_path = cpp_namespace_qualifier.0.join("::")
+                    + "::"
+                    + original_type.cc_name.identifier.as_ref();
+
+                let type_args = Rc::from([CrubitAbiType::Type {
+                    rust_abi_path: make_rust_abi_path(
+                        original_type.rs_name.identifier.as_ref(),
+                        db.ir(),
+                        target,
+                    ),
+                    cpp_abi_path: make_cpp_abi_path(&merged_cpp_abi_path)?,
+                    type_args: Rc::default(),
+                }]);
+
+                Ok(CrubitAbiType::Type { rust_abi_path, cpp_abi_path, type_args })
             }
             BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
                 let target =

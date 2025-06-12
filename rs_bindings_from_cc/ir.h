@@ -534,10 +534,16 @@ struct BridgeType {
     std::shared_ptr<CcType> second_type;
   };
 
+  struct ProtoMessageBridge {
+    std::string rust_name;
+    std::string abi_rust;
+    std::string abi_cpp;
+  };
+
   struct StdString {};
 
   std::variant<BridgeVoidConverters, Bridge, SlicePointer, StdOptional, StdPair,
-               StdString>
+               ProtoMessageBridge, StdString>
       variant;
 };
 

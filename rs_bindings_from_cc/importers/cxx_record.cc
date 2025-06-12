@@ -169,6 +169,13 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
          "CRUBIT_BRIDGE_SLICE_PTR are mutually exclusive, and cannot be used "
          "on the same type.";
 
+  if (crubit::IsProto2Message(record_decl)) {
+    return BridgeType{BridgeType::ProtoMessageBridge{
+        .rust_name = record_decl.getNameAsString(),
+        .abi_rust = "ProtoMessageRustBridge",
+        .abi_cpp = "::crubit::BoxedAbi"}};
+  }
+
   if (void_converter_values.has_value()) {
     auto [rust_name, rust_to_cpp_converter, cpp_to_rust_converter] =
         *void_converter_values;

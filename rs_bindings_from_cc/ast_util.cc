@@ -4,14 +4,17 @@
 
 #include "rs_bindings_from_cc/ast_util.h"
 
+#include <array>
 #include <optional>
 #include <string>
 
+#include "absl/algorithm/container.h"
 #include "absl/functional/function_ref.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "clang/include/clang/AST/Attr.h"
 #include "clang/include/clang/AST/DeclBase.h"
+#include "clang/include/clang/AST/DeclCXX.h"
 #include "clang/include/clang/AST/DeclTemplate.h"
 #include "clang/include/clang/AST/Type.h"
 #include "clang/include/clang/Basic/AttrKinds.h"
@@ -99,6 +102,25 @@ std::optional<std::string> CollectUnknownTypeAttrs(
     type = attributed_type->getEquivalentType().getTypePtr();
   }
   return unknown_attr;
+}
+
+bool IsProto2Message(const clang::Decl& decl) {
+  if (!clang::isa<clang::CXXRecordDecl>(decl)) {
+    return false;
+  }
+
+  const auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&decl);
+
+  return cxx_record_decl->isCompleteDefinition() &&
+         absl::c_any_of(
+             cxx_record_decl->bases(),
+             [&](const clang::CXXBaseSpecifier& base) {
+               constexpr auto kProtoClasses = std::to_array<absl::string_view>(
+                   {"::google::protobuf::Message", "::proto2::internal::ZeroFieldsBase",
+                    "google::protobuf::Message", "proto2::internal::ZeroFieldsBase"});
+               return absl::c_linear_search(kProtoClasses,
+                                            base.getType().getAsString());
+             });
 }
 
 }  // namespace crubit

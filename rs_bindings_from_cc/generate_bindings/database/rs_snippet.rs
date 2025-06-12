@@ -347,6 +347,11 @@ pub enum BridgeRsTypeKind {
         abi_cpp: Rc<str>,
         generic_types: Rc<[RsTypeKind]>,
     },
+    ProtoMessageBridge {
+        rust_name: Rc<str>,
+        abi_rust: Rc<str>,
+        abi_cpp: Rc<str>,
+    },
     /// Bridges to a `*mut [T]` or `*const [T]`.
     SlicePointer {
         mutability: Mutability,
@@ -379,6 +384,9 @@ impl BridgeRsTypeKind {
                 cpp_to_rust_converter,
                 rust_to_cpp_converter,
             },
+            BridgeType::ProtoMessageBridge { rust_name, abi_rust, abi_cpp } => {
+                BridgeRsTypeKind::ProtoMessageBridge { rust_name, abi_rust, abi_cpp }
+            }
             BridgeType::Bridge { rust_name, abi_rust, abi_cpp } => BridgeRsTypeKind::Bridge {
                 rust_name,
                 abi_rust,
@@ -595,6 +603,13 @@ impl RsTypeKind {
 
     pub fn is_crubit_abi_bridge_type(&self) -> bool {
         self.is_bridge_type() && !self.is_pointer_bridge_type()
+    }
+
+    pub fn is_proto_message_bridge_type(&self) -> bool {
+        matches!(
+            self.unalias(),
+            RsTypeKind::BridgeType { bridge_type: BridgeRsTypeKind::ProtoMessageBridge { .. }, .. }
+        )
     }
 
     pub fn is_primitive(&self) -> bool {
@@ -866,9 +881,9 @@ impl RsTypeKind {
             RsTypeKind::Slice(t) => t.implements_copy(),
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                 // We cannot get the information of the Rust type so we assume it is not Copy.
-                BridgeRsTypeKind::BridgeVoidConverters { .. } | BridgeRsTypeKind::Bridge { .. } => {
-                    false
-                }
+                BridgeRsTypeKind::BridgeVoidConverters { .. }
+                | BridgeRsTypeKind::Bridge { .. }
+                | BridgeRsTypeKind::ProtoMessageBridge { .. } => false,
                 BridgeRsTypeKind::SlicePointer { mutability, .. } => mutability.is_const(),
                 BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
@@ -1271,6 +1286,7 @@ impl RsTypeKind {
                             generic_types.iter().map(|t| t.to_token_stream(db));
                         quote! { #path < #(#generic_types_tokens),* > }
                     }
+                    BridgeRsTypeKind::ProtoMessageBridge { rust_name, .. } => make_path(rust_name),
                     BridgeRsTypeKind::SlicePointer { mutability, pointee, .. } => {
                         let mutability = mutability.format_for_pointer();
                         let pointee = db
@@ -1338,6 +1354,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                     RsTypeKind::Slice(t) => self.todo.push(t),
                     RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                         BridgeRsTypeKind::BridgeVoidConverters { .. }
+                        | BridgeRsTypeKind::ProtoMessageBridge { .. }
                         | BridgeRsTypeKind::Bridge { .. }
                         | BridgeRsTypeKind::SlicePointer { .. } => {}
                         BridgeRsTypeKind::StdOptional(t) => self.todo.push(t),
