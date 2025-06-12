@@ -37,8 +37,8 @@ class StatusOr {
 
 namespace call_expr_with_pointer_return_type_free_function {
 
-Nonnull<int *> makeNonnull();
-Nullable<int *> makeNullable();
+int *_Nonnull makeNonnull();
+int *_Nullable makeNullable();
 int *makeUnannotated();
 
 TEST void callExprWithPointerReturnTypeFreeFunction() {
@@ -52,8 +52,8 @@ TEST void callExprWithPointerReturnTypeFreeFunction() {
 namespace call_expr_with_pointer_return_type_member_function {
 
 struct Foo {
-  Nonnull<int *> makeNonnull();
-  Nullable<int *> makeNullable();
+  int *_Nonnull makeNonnull();
+  int *_Nullable makeNullable();
   int *makeUnannotated();
 };
 
@@ -66,7 +66,7 @@ TEST void callExprWithPointerReturnTypeMemberFunction(Foo foo) {
 }  // namespace call_expr_with_pointer_return_type_member_function
 
 TEST void callExprWithPointerReturnTypeFunctionPointer(
-    Nonnull<int *> (*makeNonnull)(), Nullable<int *> (*makeNullable)(),
+    int *_Nonnull (*makeNonnull)(), int *_Nullable (*makeNullable)(),
     int *(*makeUnannotated)()) {
   nonnull(makeNonnull());
   nullable(makeNullable());
@@ -74,7 +74,7 @@ TEST void callExprWithPointerReturnTypeFunctionPointer(
 }
 
 TEST void callExprWithPointerReturnTypePointerToFunctionPointer(
-    Nonnull<int *> (**makeNonnull)(), Nullable<int *> (**makeNullable)(),
+    int *_Nonnull (**makeNonnull)(), int *_Nullable (**makeNullable)(),
     int *(**makeUnannotated)()) {
   nonnull((*makeNonnull)());
   nullable((*makeNullable)());
@@ -114,9 +114,9 @@ TEST void callExprWithPointerReturnTypePointerRef() {
 
   // Check that we can take the address of the returned reference and still
   // see the correct nullability "behind" the resulting pointer.
-  type<Nonnull<Nonnull<int *> *>>(&makeNonnull());
-  type<Nonnull<Nullable<int *> *>>(&makeNullable());
-  type<Nonnull<NullabilityUnknown<int *> *>>(&makeUnannotated());
+  type<int *_Nonnull *_Nonnull>(&makeNonnull());
+  type<int *_Nullable *_Nonnull>(&makeNullable());
+  type<int *_Null_unspecified *_Nonnull>(&makeUnannotated());
 }
 
 }  // namespace call_expr_with_pointer_return_type_pointer_ref
@@ -125,7 +125,7 @@ namespace call_expr_with_pointer_return_type_in_loop {
 
 // Function called in loop.
 
-Nullable<int *> makeNullable();
+int *_Nullable makeNullable();
 bool makeBool();
 
 TEST void callExprWithPointerReturnTypeInLoop() {
@@ -426,7 +426,7 @@ int *_Nullable callee(int *_Nonnull);
 
 TEST void callExprDistinguishFunctionReturnTypeAndParams() {
   int i = 0;
-  type<Nullable<int *>>(callee(&i));
+  type<int *_Nullable>(callee(&i));
 }
 
 }  // namespace distinguish_function_return_type_and_params
@@ -439,7 +439,7 @@ struct S {
 
 TEST void distinguishMethodReturnTypeAndParams(S s) {
   int i = 0;
-  type<Nullable<int *>>(s.callee(&i));
+  type<int *_Nullable>(s.callee(&i));
 }
 
 }  // namespace distinguish_method_return_type_and_params
@@ -454,7 +454,7 @@ struct S {
 TEST void classTemplateDistinguishMethodReturnTypeAndParams(
     S<int *_Nullable, int *_Nonnull> s) {
   int i = 0;
-  type<Nullable<int *>>(s.callee(&i));
+  type<int *_Nullable>(s.callee(&i));
 }
 
 }  // namespace class_template_distinguish_method_return_type_and_params
@@ -712,7 +712,7 @@ TEST void constMethodReturningBool(S s) {
 namespace const_method_returning_smart_pointer {
 
 struct S {
-  Nullable<std::shared_ptr<int>> property() const;
+  _Nullable std::shared_ptr<int> property() const;
 };
 
 TEST void constMethodReturningSmartPointer() {
@@ -727,7 +727,7 @@ TEST void constMethodReturningSmartPointer() {
 namespace const_method_returning_smart_pointer_by_reference {
 
 struct S {
-  const Nullable<std::shared_ptr<int>> &property() const;
+  const _Nullable std::shared_ptr<int> &property() const;
 };
 
 TEST void constMethodReturningSmartPointerByReference() {
@@ -742,7 +742,7 @@ TEST void constMethodReturningSmartPointerByReference() {
 namespace const_operator_returning_pointer {
 
 struct S {
-  Nullable<int *> x;
+  int *_Nullable x;
 };
 struct SmartPtr {
   S *operator->() const;
@@ -763,7 +763,7 @@ TEST void constOperatorReturningPointer() {
 namespace non_const_method_clears_smart_pointer {
 
 struct S {
-  Nullable<std::shared_ptr<int>> property() const;
+  _Nullable std::shared_ptr<int> property() const;
   void writer();
 };
 
@@ -780,8 +780,8 @@ TEST void nonConstMethodClearsSmartPointer() {
 namespace non_const_method_clears_pointer_members {
 
 struct S {
-  Nullable<int *> nullable_p;
-  Nonnull<int *> nonnull_p;
+  int *_Nullable nullable_p;
+  int *_Nonnull nonnull_p;
   int *unannotated_p;
   pragma_none::IntPtr pragma_none_p;
   pragma_nonnull::IntPtr pragma_nonnull_p;
@@ -806,7 +806,7 @@ TEST void nonConstMethodClearsPointerMembers(S s) {
 namespace non_const_method_does_not_clear_const_pointer_members {
 
 struct S {
-  const Nullable<int *> cp;
+  int *_Nullable const cp;
   void writer();
 };
 

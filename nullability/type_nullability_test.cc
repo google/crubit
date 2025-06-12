@@ -275,9 +275,7 @@ TEST_F(UnderlyingRawPointerTest, NotInstantiated) {
     struct _Nullable UserDefinedSmartPointer;
     using UserDefined = UserDefinedSmartPointer<int>;
 
-    template <typename T>
-    using Nullable [[clang::annotate("Nullable")]] = T _Nullable;
-    using NullableUniquePointer = Nullable<std::unique_ptr<int>>;
+    using NullableUniquePointer = _Nullable std::unique_ptr<int>;
 
     template <int i>
     struct Recursive : public Recursive<i - 1> {};

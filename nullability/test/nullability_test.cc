@@ -236,11 +236,11 @@ TypeNullability getAssertedTypeNullability(QualType T, SymbolicMap &Symbolic,
   TypeNullabilityDefaults EmptyDefaults;
   return getTypeNullability(
       T, FileID(), EmptyDefaults,
-      // Given type< Nonnull<symbolic::X<Nullable<int*>*>*> >(...)
+      // Given type< symbolic::X<int* _Nullable*> *_Nonnull >(...)
       // usual vector: [Nonnull, Unspecified, Nullable]
       //      we want: [Nonnull, Symbolic, Nullable].
       // We know symbolic::X<T>'s definition is T. When we see the substitution
-      // of Nullable<int*>* into T, we find its vector [Unspecified, Nullable]
+      // of int* _Nullable* into T, we find its vector [Unspecified, Nullable]
       // and replace the outer nullability for the symbolic one.
       [&](const SubstTemplateTypeParmType *T)
           -> std::optional<TypeNullability> {

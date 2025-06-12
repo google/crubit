@@ -14,7 +14,7 @@
 //
 // Example:
 //  #include "nullability_test.h"
-//  TEST void controlFlow(Nullable<int*> x) {
+//  TEST void controlFlow(int* _Nullable x) {
 //    if (x) {
 //      nonnull(x);
 //    } else {
@@ -47,7 +47,7 @@ struct require_same<T, T> {
 // (These check the nullability vector of an expression's type).
 
 // Asserts the exact static type and nullability of an expression.
-// e.g. type<Nonnull<int*>(&i);
+// e.g. type<int* _Nonnull>(&i);
 //
 // Types written inside type<...> do not respect nullability pragmas!
 template <
@@ -82,7 +82,7 @@ inline void possible(bool b) {}
 //
 // Example:
 //   void target(symbolic::X<int *> p) {
-//     type<Nonnull<symbolic::X<int *> *>(&p);
+//     type<symbolic::X<int *> * _Nonnull>(&p);
 //   }
 //
 // When this appears:
@@ -101,7 +101,7 @@ using Y [[clang::annotate("symbolic_nullability:Y")]] = T;
 
 // Generic factory for generating values of arbitrary types and nullability.
 //
-// `make<Nullable<int*>>()` is a value whose type in the AST is `int*` (no
+// `make<int* _Nullable>()` is a value whose type in the AST is `int*` (no
 // nullability sugar) and whose static nullability is [Nullable].
 template <typename T>
 static T make()

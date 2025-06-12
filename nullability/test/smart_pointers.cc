@@ -17,16 +17,16 @@
 
 #include "nullability_test.h"
 
-Nonnull<std::unique_ptr<int>> makeNonnull();
-Nullable<std::unique_ptr<int>> makeNullable();
+_Nonnull std::unique_ptr<int> makeNonnull();
+_Nullable std::unique_ptr<int> makeNullable();
 std::unique_ptr<int> makeUnknown();
 
-Nonnull<int *> makeNonnullRaw();
-Nullable<int *> makeNullableRaw();
+int *_Nonnull makeNonnullRaw();
+int *_Nullable makeNullableRaw();
 int *makeUnknownRaw();
 
-const Nonnull<std::unique_ptr<int>> &returnNonnullRef();
-const Nullable<std::unique_ptr<int>> &returnNullableRef();
+const _Nonnull std::unique_ptr<int> &returnNonnullRef();
+const _Nullable std::unique_ptr<int> &returnNullableRef();
 const std::unique_ptr<int> &returnUnknownRef();
 
 // Add an extra wrinkle for the following functions by wrapping the return type
@@ -34,8 +34,8 @@ const std::unique_ptr<int> &returnUnknownRef();
 // leading to crashes.
 template <typename T>
 using Alias = T;
-Alias<const Nonnull<std::unique_ptr<int>> *> returnPtrToNonnull();
-Alias<const Nullable<std::unique_ptr<int>> *> returnPtrToNullable();
+Alias<const _Nonnull std::unique_ptr<int> *> returnPtrToNonnull();
+Alias<const _Nullable std::unique_ptr<int> *> returnPtrToNullable();
 Alias<const std::unique_ptr<int> *> returnPtrToUnknown();
 
 // Provided for various tests that require a base and derived class.
@@ -46,8 +46,8 @@ struct Derived : public Base {
   ~Derived() override;
 };
 
-TEST void parameterAnnotations(Nonnull<std::unique_ptr<int>> NonnullParam,
-                               Nullable<std::unique_ptr<int>> NullableParam,
+TEST void parameterAnnotations(_Nonnull std::unique_ptr<int> NonnullParam,
+                               _Nullable std::unique_ptr<int> NullableParam,
                                std::unique_ptr<int> UnknownParam) {
   nonnull(NonnullParam);
   nullable(NullableParam);
@@ -172,8 +172,8 @@ TEST void constructorTakingPointer_DerivedToBaseConversion() {
   nonnull(base.get());
 }
 
-TEST void moveConstructor(Nonnull<std::unique_ptr<int>> NonnullParam,
-                          Nullable<std::unique_ptr<int>> NullableParam,
+TEST void moveConstructor(_Nonnull std::unique_ptr<int> NonnullParam,
+                          _Nullable std::unique_ptr<int> NullableParam,
                           std::unique_ptr<int> UnknownParam) {
   nonnull(std::unique_ptr<int>(std::move(NonnullParam)));
   nullable(std::unique_ptr<int>(std::move(NullableParam)));
@@ -184,8 +184,8 @@ TEST void moveConstructor(Nonnull<std::unique_ptr<int>> NonnullParam,
   nullable(UnknownParam);
 }
 
-TEST void sharedPtrFromUniquePtr(Nonnull<std::unique_ptr<int>> NonnullParam,
-                                 Nullable<std::unique_ptr<int>> NullableParam,
+TEST void sharedPtrFromUniquePtr(_Nonnull std::unique_ptr<int> NonnullParam,
+                                 _Nullable std::unique_ptr<int> NullableParam,
                                  std::unique_ptr<int> UnknownParam) {
   nonnull(std::shared_ptr<int>(std::move(NonnullParam)));
   nullable(std::shared_ptr<int>(std::move(NullableParam)));
@@ -196,8 +196,8 @@ TEST void sharedPtrFromUniquePtr(Nonnull<std::unique_ptr<int>> NonnullParam,
   nullable(UnknownParam);
 }
 
-TEST void copyConstructor(Nonnull<std::shared_ptr<int>> NonnullParam,
-                          Nullable<std::shared_ptr<int>> NullableParam,
+TEST void copyConstructor(_Nonnull std::shared_ptr<int> NonnullParam,
+                          _Nullable std::shared_ptr<int> NullableParam,
                           std::shared_ptr<int> UnknownParam) {
   nonnull(std::shared_ptr<int>(NonnullParam));
   nullable(std::shared_ptr<int>(NullableParam));
@@ -208,7 +208,7 @@ TEST void copyConstructor(Nonnull<std::shared_ptr<int>> NonnullParam,
   unknown(UnknownParam);
 }
 
-TEST void aliasingConstructor(Nonnull<std::shared_ptr<int>> NonnullParam) {
+TEST void aliasingConstructor(_Nonnull std::shared_ptr<int> NonnullParam) {
   nullable(std::shared_ptr<int>(NonnullParam, nullptr));
   nonnull(NonnullParam);
 
@@ -227,8 +227,8 @@ TEST void nullptrAssignment() {
   nullable(P);
 }
 
-TEST void moveAssignment(Nonnull<std::unique_ptr<int>> NonnullParam,
-                         Nullable<std::unique_ptr<int>> NullableParam,
+TEST void moveAssignment(_Nonnull std::unique_ptr<int> NonnullParam,
+                         _Nullable std::unique_ptr<int> NullableParam,
                          std::unique_ptr<int> UnknownParam) {
   std::unique_ptr<int> NonnullLocal;
   nonnull(NonnullLocal = std::move(NonnullParam));
@@ -242,8 +242,8 @@ TEST void moveAssignment(Nonnull<std::unique_ptr<int>> NonnullParam,
   nullable(UnknownParam);
 }
 
-TEST void copyAssignment(Nonnull<std::shared_ptr<int>> NonnullParam,
-                         Nullable<std::shared_ptr<int>> NullableParam,
+TEST void copyAssignment(_Nonnull std::shared_ptr<int> NonnullParam,
+                         _Nullable std::shared_ptr<int> NullableParam,
                          std::shared_ptr<int> UnknownParam) {
   std::shared_ptr<int> NonnullLocal;
   nonnull(NonnullLocal = NonnullParam);
@@ -257,8 +257,8 @@ TEST void copyAssignment(Nonnull<std::shared_ptr<int>> NonnullParam,
   unknown(UnknownParam);
 }
 
-TEST void release(Nonnull<std::unique_ptr<int>> NonnullParam,
-                  Nullable<std::unique_ptr<int>> NullableParam,
+TEST void release(_Nonnull std::unique_ptr<int> NonnullParam,
+                  _Nullable std::unique_ptr<int> NullableParam,
                   std::unique_ptr<int> UnknownParam) {
   nonnull(NonnullParam.release());
   nullable(NullableParam.release());
@@ -425,8 +425,8 @@ TEST void allocateShared() {
       std::allocate_shared_for_overwrite<int[]>(std::allocator<int[]>(), 5));
 }
 
-TEST void staticPointerCast(Nonnull<std::shared_ptr<Base>> NonnullParam,
-                            Nullable<std::shared_ptr<Base>> NullableParam,
+TEST void staticPointerCast(_Nonnull std::shared_ptr<Base> NonnullParam,
+                            _Nullable std::shared_ptr<Base> NullableParam,
                             std::shared_ptr<Base> UnknownParam) {
   provable(std::static_pointer_cast<Derived>(std::shared_ptr<Base>()) ==
            nullptr);
@@ -450,8 +450,8 @@ TEST void staticPointerCast(Nonnull<std::shared_ptr<Base>> NonnullParam,
   provable(!UnknownParam);
 }
 
-TEST void dynamicPointerCast(Nonnull<std::shared_ptr<Base>> NonnullParam,
-                             Nullable<std::shared_ptr<Base>> NullableParam,
+TEST void dynamicPointerCast(_Nonnull std::shared_ptr<Base> NonnullParam,
+                             _Nullable std::shared_ptr<Base> NullableParam,
                              std::shared_ptr<Base> UnknownParam) {
   provable(std::dynamic_pointer_cast<Derived>(std::shared_ptr<Base>()) ==
            nullptr);
@@ -507,8 +507,8 @@ struct S {
   int I;
 };
 
-TEST void reinterpretPointerCast(Nonnull<std::shared_ptr<S>> NonnullParam,
-                                 Nullable<std::shared_ptr<S>> NullableParam,
+TEST void reinterpretPointerCast(_Nonnull std::shared_ptr<S> NonnullParam,
+                                 _Nullable std::shared_ptr<S> NullableParam,
                                  std::shared_ptr<S> UnknownParam) {
   // By the standard, the pointers we produce through `reinterpret_pointer_cast`
   // in this test should have the same address, but the dataflow framework does
@@ -578,12 +578,14 @@ struct _Nullable UserDefinedSmartPointer {
 };
 
 TEST void userDefinedSmartPointers(
-    Nonnull<UserDefinedSmartPointer<int>> NonnullParam,
-    Nullable<UserDefinedSmartPointer<int>> NullableParam,
+    _Nonnull UserDefinedSmartPointer<int> NonnullParam,
+    _Nullable UserDefinedSmartPointer<int> NullableParam,
     UserDefinedSmartPointer<int> UnknownParam) {
   // Just spot-check some basic behaviors, as the implementation treats
   // user-defined smart pointers like standard smart pointers, so the tests for
-  // standard smart pointers provide sufficient coverage.
+  // standard smart pointers provide sufficient coverage. This also tests that
+  // we can put nullability specifiers on a smart pointer class that has the
+  // `_Nullable` attribute.
 
   nonnull(NonnullParam);
   nullable(NullableParam);
@@ -595,19 +597,16 @@ TEST void userDefinedSmartPointers(
 }
 
 template <typename T>
-struct _Nullable UserDefinedSmartPointerWithAttribute {
-  using pointer = T *;
+using Nonnull = _Nonnull T;
+template <typename T>
+using Nullable = _Nullable T;
 
-  pointer get() const;
-};
-
-TEST void userDefinedSmartPointersWithAttribute(
-    UserDefinedSmartPointerWithAttribute<int> _Nonnull NonnullParam,
-    UserDefinedSmartPointerWithAttribute<int> _Nullable NullableParam,
-    UserDefinedSmartPointerWithAttribute<int> _Null_unspecified UnknownParam) {
-  // All that we really want to test here is that we can put nullability
-  // attributes on a smart pointer class that has the `_Nullable` attribute.
-  // But let's also spot-check that the nullability is set correctly.
+TEST void userDefinedSmartPointersWithAliasAnnotation(
+    Nonnull<UserDefinedSmartPointer<int>> NonnullParam,
+    Nullable<UserDefinedSmartPointer<int>> NullableParam,
+    UserDefinedSmartPointer<int> UnknownParam) {
+  // Spot-check that the nullability is set correctly when the specifier is
+  // applied to a user-defined smart pointer by a template alias.
 
   nonnull(NonnullParam);
   nullable(NullableParam);
@@ -642,7 +641,7 @@ struct _Nullable DerivedPtr : public std::unique_ptr<T> {
 
 // This is a crash repro. Make sure we can handle classes that are derived from
 // smart pointers.
-TEST void derivedFromUniquePtr(Nonnull<DerivedPtr<int>> Ptr) {
+TEST void derivedFromUniquePtr(_Nonnull DerivedPtr<int> Ptr) {
   nonnull(Ptr);
   nonnull(Ptr.get());
 }
@@ -667,7 +666,7 @@ struct PrivatelyDerivedPtr : private std::unique_ptr<T> {
 // derived from smart pointers. We don't consider such a class itself to be a
 // supported smart pointer type, but we need to model the pointer field because
 // copy and assignment operations may copy to it.
-TEST void privatelyDerivedFromUniquePtr(Nonnull<std::unique_ptr<int>> Ptr) {
+TEST void privatelyDerivedFromUniquePtr(_Nonnull std::unique_ptr<int> Ptr) {
   PrivatelyDerivedPtr<int> Dest;
   Dest = std::move(Ptr);
 }
@@ -765,7 +764,7 @@ struct A {
   int X;
 };
 
-static Nonnull<std::unique_ptr<A>> operator*(std::unique_ptr<A> L,
+static _Nonnull std::unique_ptr<A> operator*(std::unique_ptr<A> L,
                                              std::unique_ptr<A> R) {
   return std::make_unique<A>(L->X * R->X);
 }
@@ -792,7 +791,7 @@ static T &operator*(MySmartPtr<T> P) {
 
 TEST void nonMemberUnaryOperatorStar() {
   int X = 42;
-  Nonnull<int *> PtrToX = &X;
+  int *_Nonnull PtrToX = &X;
   MySmartPtr<int *> NonNull = {&PtrToX};
   provable(NonNull.get() == &*NonNull);
 }

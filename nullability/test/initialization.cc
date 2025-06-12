@@ -37,7 +37,7 @@ T &&forward(T &&X) {
 }
 }  // namespace std
 
-TEST void testClassCopyMove(Copyable<Nullable<int *>> B) {
+TEST void testClassCopyMove(Copyable<int *_Nullable> B) {
   // We want to test that type nullability is preserved when passing
   // args by value, when that passing introduces an implicit copy/move.
   // Passing directly into type<>() won't do this, as it uses universal
@@ -45,14 +45,14 @@ TEST void testClassCopyMove(Copyable<Nullable<int *>> B) {
   //
   // Since writing the template args explicitly is arguably a nullability cast,
   // we use CTAD as an approximation of the implicit copy/move.
-  type<Copyable<Nullable<int *>>>(Copyable(B));
+  type<Copyable<int *_Nullable>>(Copyable(B));
 
-  Movable<Nullable<int *>> makeMovable(/*suppress -Wvexing-parse*/ int);
-  type<Movable<Nullable<int *>>>(makeMovable(0));
+  Movable<int *_Nullable> makeMovable(/*suppress -Wvexing-parse*/ int);
+  type<Movable<int *_Nullable>>(makeMovable(0));
 }
 
-TEST void testMoveForward(Copyable<Nullable<int *>> A,
-                          Movable<Nullable<int *>> B) {
-  type<Copyable<Nullable<int *>>>(std::forward<Copyable<int *> &>(A));
-  type<Movable<Nullable<int *>>>(std::move(B));
+TEST void testMoveForward(Copyable<int *_Nullable> A,
+                          Movable<int *_Nullable> B) {
+  type<Copyable<int *_Nullable>>(std::forward<Copyable<int *> &>(A));
+  type<Movable<int *_Nullable>>(std::move(B));
 }

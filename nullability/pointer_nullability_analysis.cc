@@ -176,12 +176,12 @@ static const Decl *absl_nullable getAssociatedTemplateDecl(
 // query using getTypeNullability().
 //
 // When the template arguments are bound within the queried type, e.g.
-//   getTypeNullability( vector<Nonnull<int*>>::value_type )
+//   getTypeNullability( vector<int* _Nonnull>::value_type )
 // then getTypeNullability() will record the sugar and resolve the
 // SubstTemplateTypeParmType within `value_type` itself.
 //
 // However when the template arguments are bound elsewhere in the code, e.g.
-//   vector<Nonnull<int*>> a;
+//   vector<int* _Nonnull> a;
 //   getTypeNullability( a.front() )
 // then we must provide the nullability vector, via the callback passed
 // to getTypeNullability().
@@ -195,7 +195,7 @@ struct Resugarer {
   Resugarer(const TypeNullabilityDefaults &Defaults) : Defaults(Defaults) {}
 
   // The entity referenced is nested within a class template, e.g. `a.front()`
-  // where a is a vector<Nonnull<int*>>.
+  // where a is a vector<int* _Nonnull>.
   // We have a nullability vector [Nonnull] for the specialization vector<int*>.
   struct FromEnclosingClassNullability {
     ClassTemplateSpecializationDecl *Specialization;
@@ -230,7 +230,7 @@ struct Resugarer {
   llvm::SmallVector<FromEnclosingClassNullability> Enclosing;
 
   // The entity is referenced using template arguments, e.g.
-  // `make_unique<Nonnull<int*>>`. We have the template arguments.
+  // `make_unique<int* _Nonnull>`. We have the template arguments.
   struct FromTemplateArgs {
     TemplateDecl *Template;
     ArrayRef<TemplateArgumentLoc> Args;

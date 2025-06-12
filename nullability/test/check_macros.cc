@@ -9,8 +9,8 @@
 #include "check.h"
 #include "nullability_test.h"
 
-TEST void getReferenceableValueModeledForAbseil(Nullable<int *> NullablePtr,
-                                                Nonnull<int *> NonnullPtr) {
+TEST void getReferenceableValueModeledForAbseil(int *_Nullable NullablePtr,
+                                                int *_Nonnull NonnullPtr) {
   auto &Nullable2 = absl::something::GetReferenceableValue(NullablePtr);
   auto &Nonnull2 = absl::something::GetReferenceableValue(NonnullPtr);
   // Outputs should share the nullability of inputs.
@@ -18,8 +18,8 @@ TEST void getReferenceableValueModeledForAbseil(Nullable<int *> NullablePtr,
   nonnull(Nonnull2);
 }
 
-TEST void getReferenceableValueModeledForUtil(Nullable<int *> NullablePtr,
-                                              Nonnull<int *> NonnullPtr) {
+TEST void getReferenceableValueModeledForUtil(int *_Nullable NullablePtr,
+                                              int *_Nonnull NonnullPtr) {
   auto &Nullable2 = util::something::GetReferenceableValue(NullablePtr);
   auto &Nonnull2 = util::something::GetReferenceableValue(NonnullPtr);
   // Outputs should share the nullability of inputs.
@@ -45,12 +45,12 @@ TEST void abslCheckNEImPlModelUnequal(int *P) {
   }
 }
 
-TEST void checkNELeft(Nullable<int *> P) {
+TEST void checkNELeft(int *_Nullable P) {
   CHECK_NE(P, nullptr);
   nonnull(P);
 }
 
-TEST void checkNERight(Nullable<int *> P) {
+TEST void checkNERight(int *_Nullable P) {
   CHECK_NE(nullptr, P);
   nonnull(P);
 }
