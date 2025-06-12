@@ -295,7 +295,7 @@ pub fn required_crubit_features(
 /// Generally speaking, if an error occurs (e.g. a bindings doesn't exist), then
 /// the way to "keep going" to catch more errors is to pretend that the missing
 /// item is `Public`.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub enum Visibility {
     /// The item has `pub` visibility.
     #[default]

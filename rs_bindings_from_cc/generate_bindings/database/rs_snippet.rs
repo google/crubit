@@ -4,7 +4,7 @@
 #![allow(clippy::collapsible_else_if)]
 //! Vocabulary types and code generation functions for generating Rust code.
 
-use crate::code_snippet::Feature;
+use crate::code_snippet::{Feature, Visibility};
 use crate::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
@@ -273,10 +273,11 @@ pub enum RsTypeKind {
     /// An error occurred while generating the type.
     ///
     /// Error types are only exposed in `:wrapper` mode, where they become
-    /// opaque types.
+    /// opaque types, or where a visibility override is specified.
     Error {
         symbol: Rc<str>,
         error: arc_anyhow::Error,
+        visibility_override: Option<Visibility>,
     },
     Pointer {
         pointee: Rc<RsTypeKind>,
@@ -636,10 +637,16 @@ impl RsTypeKind {
 
         for rs_type_kind in self.dfs_iter() {
             match rs_type_kind {
-                RsTypeKind::Error { error, .. } => require_feature(
-                    CrubitFeature::Wrapper,
-                    Some(&|| std::borrow::Cow::from(format!("error: {error}"))),
-                ),
+                RsTypeKind::Error { error, visibility_override, .. } => {
+                    if visibility_override.is_some() {
+                        require_feature(CrubitFeature::Supported, None)
+                    } else {
+                        require_feature(
+                            CrubitFeature::Wrapper,
+                            Some(&|| std::borrow::Cow::from(format!("error: {error}"))),
+                        )
+                    }
+                }
                 RsTypeKind::Pointer { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     require_feature(

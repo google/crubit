@@ -38,6 +38,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                     .to_string()
                     .into(),
                     error: anyhow!("Bridging types are not supported as pointee/referent types."),
+                    visibility_override: None,
                 };
             }
             let pointee = Rc::new(pointee);
@@ -107,6 +108,7 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                     return Ok(RsTypeKind::Error {
                         symbol: symbol.to_string().into(),
                         error: error.into(),
+                        visibility_override: None,
                     });
                 }
                 return Err(error.into());

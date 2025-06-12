@@ -159,8 +159,8 @@ pub fn type_visibility(
         Some(_) => Ok(Visibility::PubCrate),
         None => {
             for subtype in rs_type_kind.dfs_iter() {
-                if let RsTypeKind::Error { .. } = subtype {
-                    return Ok(Visibility::PubCrate);
+                if let RsTypeKind::Error { visibility_override, .. } = subtype {
+                    return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
                 }
             }
             Ok(Visibility::Public)
