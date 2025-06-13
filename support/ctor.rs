@@ -135,14 +135,18 @@ macro_rules! must_use_ctor_assign {
 // ~Unchanged from moveit
 // ======================
 
-// TODO(jeanpierreda): make Ctor an unsafe trait, as it has safety postconditions.
+/// In-place initialization of a value.
+///
+/// # Safety
+///
+/// Implementations must satisfy the postconditions of the `ctor` method.
 #[must_use = must_use_ctor!()]
-pub trait Ctor {
+pub unsafe trait Ctor {
     type Output: ?Sized;
     /// Constructs a value in place.
     ///
-    /// Before this call, `dest` is uninitialized. After this call, `dest` is
-    /// initialized to the constructed value.
+    /// Before this call, `dest` is uninitialized. After this call,
+    /// if `ctor` does not panic, `dest` is initialized to the constructed value.
     ///
     /// # Safety
     ///
@@ -191,7 +195,8 @@ impl<Output, F: FnOnce(*mut Output)> FnCtor<Output, F> {
     }
 }
 
-impl<Output, F: FnOnce(*mut Output)> Ctor for FnCtor<Output, F> {
+// SAFETY: unconditionally initializes dest.
+unsafe impl<Output, F: FnOnce(*mut Output)> Ctor for FnCtor<Output, F> {
     type Output = Output;
 
     unsafe fn ctor(self, dest: *mut Output) {
@@ -212,7 +217,10 @@ impl<Output, F> !Unpin for FnCtor<Output, F> {}
 #[must_use = must_use_ctor_assign!("Copy")]
 pub struct Copy<P: ?Sized + Deref>(P);
 
-impl<Output: ?Sized + for<'a> CtorNew<&'a Output>, P: Deref<Target = Output>> Ctor for Copy<P> {
+// SAFETY: unconditionally initializes dest.
+unsafe impl<Output: ?Sized + for<'a> CtorNew<&'a Output>, P: Deref<Target = Output>> Ctor
+    for Copy<P>
+{
     type Output = Output;
 
     unsafe fn ctor(self, dest: *mut Output) {
@@ -278,7 +286,8 @@ impl<T: ?Sized> Deref for RvalueReference<'_, T> {
     }
 }
 
-impl<'a, T: ?Sized> Ctor for RvalueReference<'a, T>
+// SAFETY: unconditionally initializes dest.
+unsafe impl<'a, T: ?Sized> Ctor for RvalueReference<'a, T>
 where
     T: CtorNew<Self>,
 {
@@ -344,7 +353,8 @@ impl<T: ?Sized> Deref for ConstRvalueReference<'_, T> {
     }
 }
 
-impl<'a, T: ?Sized> Ctor for ConstRvalueReference<'a, T>
+// SAFETY: unconditionally initializes dest.
+unsafe impl<'a, T: ?Sized> Ctor for ConstRvalueReference<'a, T>
 where
     T: CtorNew<Self>,
 {
@@ -411,7 +421,8 @@ macro_rules! const_mov {
 /// A contrasting design might be to have a separate initialization syntax for
 /// direct vs `Ctor`-based initialization. However, that would still likely need
 /// to be restricted to `Unpin` types for safety.
-impl<T: Unpin> Ctor for T {
+// SAFETY: unconditionally initializes dest.
+unsafe impl<T: Unpin> Ctor for T {
     type Output = T;
     unsafe fn ctor(self, dest: *mut Self) {
         dest.write(self);
@@ -422,7 +433,8 @@ impl<T: Unpin> Ctor for T {
 #[must_use = must_use_ctor!()]
 pub struct RustMoveCtor<T>(T);
 impl<T> !Unpin for RustMoveCtor<T> {}
-impl<T> Ctor for RustMoveCtor<T> {
+// SAFETY: unconditionally initializes dest.
+unsafe impl<T> Ctor for RustMoveCtor<T> {
     type Output = T;
     unsafe fn ctor(self, dest: *mut T) {
         dest.write(self.0);
@@ -455,7 +467,8 @@ impl<T: ?Sized> UnreachableCtor<T> {
     }
 }
 impl<T: ?Sized> !Unpin for UnreachableCtor<T> {}
-impl<T: ?Sized> Ctor for UnreachableCtor<T> {
+// SAFETY: unconditionally initializes dest.
+unsafe impl<T: ?Sized> Ctor for UnreachableCtor<T> {
     type Output = T;
     unsafe fn ctor(self, _: *mut T) {
         unreachable!();
@@ -496,7 +509,8 @@ pub struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> {
     f: F,
 }
 
-impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> Ctor for CtorThen<C, F> {
+// SAFETY: unconditionally initializes dest.
+unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> Ctor for CtorThen<C, F> {
     type Output = C::Output;
     unsafe fn ctor(self, dest: *mut Self::Output) {
         self.ctor.ctor(dest);
@@ -1211,7 +1225,8 @@ pub trait CtorNew<ConstructorArgs> {
 /// So while it is perfectly feasible to implement self-construction for any
 /// type locally, we cannot give foreign impls.
 pub struct PhantomPinnedCtor;
-impl Ctor for PhantomPinnedCtor {
+// SAFETY: unconditionally initializes dest.
+unsafe impl Ctor for PhantomPinnedCtor {
     type Output = core::marker::PhantomPinned;
     unsafe fn ctor(self, dest: *mut Self::Output) {
         RustMoveCtor(core::marker::PhantomPinned).ctor(dest)
@@ -1236,7 +1251,8 @@ impl<T: Ctor> ManuallyDropCtor<T> {
     }
 }
 
-impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
+// SAFETY: unconditionally initializes dest.
+unsafe impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
     type Output = ManuallyDrop<T::Output>;
     unsafe fn ctor(self, dest: *mut Self::Output) {
         // Safety: ManuallyDrop<T> and T have the same layout.
@@ -1522,7 +1538,8 @@ mod test {
     #[must_use = must_use_ctor!()]
     struct PanicCtor<'a>(DropNotify<'a>);
 
-    impl<'a> Ctor for PanicCtor<'a> {
+    // SAFETY: unconditionally initializes dest.
+    unsafe impl<'a> Ctor for PanicCtor<'a> {
         type Output = DropNotify<'a>;
         unsafe fn ctor(self, dest: *mut Self::Output) {
             self.0.ctor(dest);
@@ -1637,7 +1654,8 @@ mod test {
         ctor_message: &'static str,
     }
 
-    impl<'a> Ctor for LoggingCtor<'a> {
+    // SAFETY: unconditionally initializes dest.
+    unsafe impl<'a> Ctor for LoggingCtor<'a> {
         type Output = DropCtorLogger<'a>;
         unsafe fn ctor(self, dest: *mut Self::Output) {
             self.log.borrow_mut().push(self.ctor_message);

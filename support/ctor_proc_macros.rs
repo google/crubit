@@ -68,7 +68,8 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
     let expanded = quote! {
         struct #struct_ctor_name();
 
-        impl ::ctor::Ctor for #struct_ctor_name {
+        // SAFETY: unconditionally initializes dest.
+        unsafe impl ::ctor::Ctor for #struct_ctor_name {
             type Output = #struct_name;
             unsafe fn ctor(self, dest: *mut Self::Output) {
                 ::ctor::ctor!(
