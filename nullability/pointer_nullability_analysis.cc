@@ -1885,6 +1885,10 @@ auto buildValueTransferer() {
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferValue_NullPointer)
       .CaseOfCFGStmt<CXXScalarValueInitExpr>(isRawPointerValueInit(),
                                              transferValue_NullPointer)
+      .CaseOfCFGStmt<ImplicitValueInitExpr>(isRawPointerImplicitValueInit(),
+                                            transferValue_NullPointer)
+      .CaseOfCFGStmt<CXXDefaultInitExpr>(isNullPointerDefaultInit(),
+                                         transferValue_NullPointer)
       .CaseOfCFGStmt<UnaryOperator>(isPointerIncOrDec(),
                                     transferValue_PointerIncOrDec)
       .CaseOfCFGStmt<BinaryOperator>(isPointerAddOrSubAssign(),

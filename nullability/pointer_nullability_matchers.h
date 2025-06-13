@@ -34,6 +34,12 @@ AST_MATCHER(Stmt, isRawPointerValueInit) {
          isSupportedRawPointerType(ValueInit->getType());
 }
 
+AST_MATCHER(Stmt, isRawPointerImplicitValueInit) {
+  const auto *ValueInit = dyn_cast<ImplicitValueInitExpr>(&Node);
+  return ValueInit != nullptr &&
+         isSupportedRawPointerType(ValueInit->getType());
+}
+
 AST_MATCHER(QualType, isNullPtrType) { return Node->isNullPtrType(); }
 
 ast_matchers::internal::Matcher<Stmt> isPointerExpr();
@@ -66,6 +72,13 @@ ast_matchers::internal::Matcher<Stmt> isSmartPointerComparisonOpCall();
 ast_matchers::internal::Matcher<Stmt> isSharedPtrCastCall();
 ast_matchers::internal::Matcher<Stmt> isWeakPtrLockCall();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
+
+AST_MATCHER(Stmt, isNullPointerDefaultInit) {
+  const auto *DefaultInit = dyn_cast<CXXDefaultInitExpr>(&Node);
+  return DefaultInit != nullptr &&
+         isNullPointerLiteral().matches(*DefaultInit->getExpr(), Finder,
+                                        Builder);
+}
 
 }  // namespace nullability
 }  // namespace tidy

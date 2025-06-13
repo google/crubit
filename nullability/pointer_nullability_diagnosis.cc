@@ -649,10 +649,18 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseInitListExpr(
   RecordInitListHelper InitListHelper(ILE);
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   for (auto [Field, Init] : InitListHelper.field_inits()) {
+    auto Range = Init->getSourceRange();
+    // ImplicitValueInitExprs do not have a source range, so we use the end
+    // of the initializer list.
+    if (isa<ImplicitValueInitExpr>(Init)) {
+      assert(Init->getSourceRange().isInvalid());
+      Range = ILE->getRBraceLoc();
+    }
     Diagnostics.append(diagnoseAssignmentLike(
         Field->getType(), getTypeNullability(*Field, State.Lattice.defaults()),
         Init, State.Env, *Result.Context,
-        PointerNullabilityDiagnostic::Context::Initializer));
+        PointerNullabilityDiagnostic::Context::Initializer, nullptr, nullptr,
+        CharSourceRange::getTokenRange(Range)));
   }
 
   return Diagnostics;

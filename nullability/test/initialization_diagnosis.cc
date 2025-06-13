@@ -54,5 +54,70 @@ TEST(PointerNullabilityTest, InitializerList) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, InitializerListFewerInitsThanMembersValueInit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int* _Nullable NullableMember;
+      int* _Nonnull NonnullMember;
+    };
+
+    void target() {
+      S s1{nullptr, new int};
+      S s2{nullptr};  // [[unsafe]]
+      S s3{};         // [[unsafe]]
+
+      S s4{.NonnullMember = new int, .NullableMember = nullptr};
+      S s5{.NullableMember = nullptr};  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, InitListWithDefaultInit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int X = 1;
+      int* _Nonnull NonnullMemberWithNull = nullptr;
+      int* _Nonnull NonnullMemberWithNonnull = &X;
+    };
+
+    void target() {
+      S{2, new int, new int};
+      // test when we have fewer initializers than members
+      S{2, new int};
+      S{2};  // [[unsafe]]
+      S{};   // [[unsafe]]
+
+      // test when we override the default
+      S{2, new int, nullptr};  // [[unsafe]]
+      S{.NonnullMemberWithNull = new int};
+      S{.NonnullMemberWithNull = new int,
+        .NonnullMemberWithNonnull = nullptr};  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, SmartPointerInitializerList) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct S {
+      _Nonnull std::unique_ptr<int> NonnullMember;
+      _Nullable std::unique_ptr<int> NullableMember;
+      std::unique_ptr<int> UnannotatedMember;
+    };
+
+    void target() {
+      S{nullptr,  // [[unsafe]]
+        nullptr, nullptr};
+      S{.NonnullMember = nullptr,  // [[unsafe]]
+        .NullableMember = nullptr,
+        .UnannotatedMember = nullptr};
+
+      // test when we have fewer initializers than members
+      S{new int};
+      S{};  // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
