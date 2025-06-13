@@ -551,7 +551,7 @@ fn generate_using_statement(
         DefKind::TyAlias => {
             let hir_ty = if def_id.is_local() {
                 let local_def_id = def_id.as_local().unwrap();
-                let Item { kind: ItemKind::TyAlias(_, hir_ty, ..), .. } =
+                let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } =
                     tcx.hir_expect_item(local_def_id)
                 else {
                     panic!("{:#?} is not a type alias", def_id);
@@ -649,7 +649,7 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> R
     let hir_node = tcx.hir_node_by_def_id(local_def_id);
 
     let hir_ty = match hir_node {
-        Node::Item(item) => item.expect_const().1,
+        Node::Item(item) => item.expect_const().2,
         Node::ImplItem(item) => item.expect_const().0,
         _ => panic!("{}", unsupported_node_item_msg),
     };
@@ -717,7 +717,7 @@ fn generate_type_alias(
 ) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     let def_id: DefId = local_def_id.to_def_id();
-    let Item { kind: ItemKind::TyAlias(_, hir_ty, ..), .. } = tcx.hir_expect_item(local_def_id)
+    let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } = tcx.hir_expect_item(local_def_id)
     else {
         panic!("called generate_type_alias on a non-type-alias");
     };
@@ -1103,9 +1103,9 @@ fn generate_item_impl(
     }
 
     let item = match tcx.hir_expect_item(def_id) {
-        Item { kind: ItemKind::Struct(_, _, generics) |
-                     ItemKind::Enum(_, _, generics) |
-                     ItemKind::Union(_, _, generics),
+        Item { kind: ItemKind::Struct(_, generics, _) |
+                     ItemKind::Enum(_, generics, _) |
+                     ItemKind::Union(_, generics, _),
                .. } if !generics.params.is_empty() => {
             bail!("Generic types are not supported yet (b/259749095)");
         },

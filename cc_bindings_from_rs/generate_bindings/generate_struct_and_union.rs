@@ -64,7 +64,7 @@ fn cpp_enum_cpp_underlying_type(db: &dyn BindingsGenerator, def_id: DefId) -> Re
 
     let field_hir_ty = match tcx.hir_node_by_def_id(def_id.expect_local()) {
         rustc_hir::Node::Item(hir_item) => match hir_item.kind {
-            ItemKind::Struct(_, variant_data, _generics) => {
+            ItemKind::Struct(_, _, variant_data) => {
                 if variant_data.fields().len() != 1 {
                     return Err(anyhow!(
                         "Expected one field in cpp_enum hir item, got {:?}",
@@ -676,9 +676,9 @@ fn generate_fields<'tcx>(
                 panic!("internal error: def_id referring to an ADT was not a HIR Item.");
             };
             let variants = match item.kind {
-                rustc_hir::ItemKind::Struct(_, variant, _) => vec![variant],
-                rustc_hir::ItemKind::Union(_, variant, _) => vec![variant],
-                rustc_hir::ItemKind::Enum(_, enum_info, _) => {
+                rustc_hir::ItemKind::Struct(_, _, variant) => vec![variant],
+                rustc_hir::ItemKind::Union(_, _, variant) => vec![variant],
+                rustc_hir::ItemKind::Enum(_, _, enum_info) => {
                     enum_info.variants.iter().map(|variant| variant.data).collect()
                 }
                 _ => panic!(
