@@ -6,6 +6,15 @@
 
 //! Query the rust compiler.
 
+extern crate rustc_abi;
+extern crate rustc_ast;
+extern crate rustc_attr_data_structures;
+extern crate rustc_hir;
+extern crate rustc_infer;
+extern crate rustc_middle;
+extern crate rustc_span;
+extern crate rustc_trait_selection;
+
 use arc_anyhow::Result;
 use error_report::anyhow;
 use rustc_abi::IntegerType;

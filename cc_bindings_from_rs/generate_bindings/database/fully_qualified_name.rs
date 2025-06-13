@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate rustc_span;
+
 use crate::db::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::{make_rs_ident, NamespaceQualifier};

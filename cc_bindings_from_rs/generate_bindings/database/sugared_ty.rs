@@ -2,6 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate rustc_hir;
+extern crate rustc_middle;
+
 use crate::db::BindingsGenerator;
 use rustc_hir::HirId;
 use rustc_middle::ty::{self, Ty};

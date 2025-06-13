@@ -2,7 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Create the right string reprensentation of a type or an identifier.
+//! Create the right string reprensentation of a type or an identifier.
+
+extern crate rustc_abi;
+extern crate rustc_hir;
+extern crate rustc_middle;
+extern crate rustc_span;
 
 use crate::generate_function::check_fn_sig;
 use crate::generate_function_thunk::is_thunk_required;

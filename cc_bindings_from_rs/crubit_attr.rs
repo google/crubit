@@ -10,6 +10,9 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_middle;
+extern crate rustc_span;
+
 use anyhow::{bail, ensure, Result};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;

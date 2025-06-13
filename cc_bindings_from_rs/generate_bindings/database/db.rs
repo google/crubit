@@ -2,6 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate rustc_attr_data_structures;
+extern crate rustc_middle;
+extern crate rustc_span;
+
 use crate::adt_core_bindings::AdtCoreBindings;
 use crate::code_snippet::{ApiSnippets, CcSnippet};
 use crate::fully_qualified_name::FullyQualifiedName;

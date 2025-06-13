@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate rustc_span;
+
 use crate::{AdtCoreBindings, SugaredTy};
 use rustc_span::Symbol;
 use std::fmt::Debug;
