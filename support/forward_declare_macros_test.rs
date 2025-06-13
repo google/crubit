@@ -189,7 +189,7 @@ fn test_formerly_incomplete() {
 #[gtest]
 fn test_vector_alike() {
     use ::forward_declare::{
-        forward_declare, internal::CcType, symbol, unsafe_define, Complete, CppCast,
+        forward_declare, internal::CppType, symbol, unsafe_define, Complete, CppCast,
     };
     struct MyComplete;
     unsafe_define!(symbol!("T"), MyComplete);
@@ -198,9 +198,9 @@ fn test_vector_alike() {
     /// An equivalent to Vector from the function comment, which is a compound
     /// type that supports conversion.
     struct Vector<T: ?Sized>(*mut T, usize);
-    unsafe impl<T: ?Sized> CcType for Vector<T>
+    unsafe impl<T: ?Sized> CppType for Vector<T>
     where
-        T: CcType,
+        T: CppType,
     {
         type Name = (Vector<()>, T::Name);
     }

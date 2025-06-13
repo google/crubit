@@ -240,7 +240,7 @@ pub mod internal {
     #[cfg(feature = "unstable")]
     pub struct Symbol<const SYMBOL: &'static str>;
 
-    /// Types that implement the `CcType` trait with the same `Name` can be
+    /// Types that implement the `CppType` trait with the same `Name` can be
     /// safely transmuted between each other, because they either provide
     /// bindings for the same C++ type, or point/refer to the same C++ type,
     /// or contain the same C++ type.
@@ -254,9 +254,9 @@ pub mod internal {
     ///
     /// # Safety
     ///
-    /// Two types implement `CcType` with the same name if and only if they can
+    /// Two types implement `CppType` with the same name if and only if they can
     /// be transmuted to one another.
-    pub unsafe trait CcType {
+    pub unsafe trait CppType {
         /// `Name` helps Rust type system to identify the given transmutability
         /// equivalence class.
         ///
@@ -336,7 +336,7 @@ impl<T: Unpin> Complete for T {}
 ///   vec[1]), in this case, we are using    `feature(extern_types)`, which is a
 ///   DST which must grant access to the following memory or    else it would be
 ///   useless. (This type of access is the reason the feature exists).
-unsafe impl<Name, Declarer> CcType for Incomplete<Name, Declarer> {
+unsafe impl<Name, Declarer> CppType for Incomplete<Name, Declarer> {
     type Name = Name;
 }
 
@@ -351,7 +351,7 @@ unsafe impl<Name, Declarer> CcType for Incomplete<Name, Declarer> {
 macro_rules! unsafe_define {
     // TODO(jeanpierreda): support generic complete type (e.g. `symbol!("xyz") <-> Foo<T> where T : Bar`)
     ($Name:ty, $Complete:ty) => {
-        unsafe impl $crate::internal::CcType for $Complete {
+        unsafe impl $crate::internal::CppType for $Complete {
             type Name = $Name;
         }
     };
@@ -360,9 +360,9 @@ macro_rules! unsafe_define {
 /// If `T` can be transmuted into `U`, then one can also transmute between
 /// `*const T`, and `* const U`.  (This are always "thin" pointers - with the
 /// same size as `usize`.)
-unsafe impl<T: ?Sized> CcType for *const T
+unsafe impl<T: ?Sized> CppType for *const T
 where
-    T: CcType,
+    T: CppType,
 {
     type Name = (*const (), T::Name);
 }
@@ -370,9 +370,9 @@ where
 /// If `T` can be transmuted into `U`, then one can also transmute between `*mut
 /// T`, and `*mut U`. These are always "thin" pointers - with the same size as
 /// `usize`.
-unsafe impl<T: ?Sized> CcType for *mut T
+unsafe impl<T: ?Sized> CppType for *mut T
 where
-    T: CcType,
+    T: CppType,
 {
     type Name = (*mut (), T::Name);
 }
@@ -394,9 +394,9 @@ where
 ///
 /// [1]
 /// https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html#layout-of-rust-array-types
-unsafe impl<T, const N: usize> CcType for [T; N]
+unsafe impl<T, const N: usize> CppType for [T; N]
 where
-    T: CcType,
+    T: CppType,
 {
     type Name = ([(); N], T::Name);
 }
@@ -435,9 +435,9 @@ where
 /// ```
 ///
 /// [2] https://rust-lang.github.io/unsafe-code-guidelines/layout/pointers.html#notes
-unsafe impl<T> CcType for [T]
+unsafe impl<T> CppType for [T]
 where
-    T: CcType,
+    T: CppType,
 {
     // Using somewhat icky `usize::MAX` to work around the fact that [()] is
     // unsized.
@@ -445,7 +445,7 @@ where
 }
 
 /// If `T` can be transmuted into `U`, then one can also transmute between `&'a
-/// T`, `&'a U`, `Pin<&'a T>`, and `Pin<&'a U>`.  The corresponding CcType uses
+/// T`, `&'a U`, `Pin<&'a T>`, and `Pin<&'a U>`.  The corresponding CppType uses
 /// `RefName` as the `Name` of the transmutability equivalence class.
 ///
 /// # Safety
@@ -491,23 +491,23 @@ where
 /// to keep the list of unpinnable types in sync with the list of "pointers to
 /// transmutable things" above.
 mod ref_transmutability {
-    use super::CcType;
+    use super::CppType;
     use std::pin::Pin;
 
     type RefName<'a, Name> = (&'a (), Name);
 
     /// Safety: See the doc comment for the `ref_transmutability` module.
-    unsafe impl<'a, T: ?Sized> CcType for &'a T
+    unsafe impl<'a, T: ?Sized> CppType for &'a T
     where
-        T: CcType,
+        T: CppType,
     {
         type Name = RefName<'a, T::Name>;
     }
 
     /// Safety: See the doc comment for the `ref_transmutability` module.
-    unsafe impl<'a, T: ?Sized> CcType for Pin<&'a T>
+    unsafe impl<'a, T: ?Sized> CppType for Pin<&'a T>
     where
-        T: CcType,
+        T: CppType,
     {
         type Name = RefName<'a, T::Name>;
     }
@@ -521,7 +521,7 @@ mod ref_transmutability {
 /// Additionally, if `T` and `U` are `Unpin`, then one can also transmute
 /// 4) from `Pin<&'a mut T>` into `&'a mut T` or into `&'a mut U`
 ///
-/// The corresponding CcType uses `MutRefName` as the `Name` of the
+/// The corresponding CppType uses `MutRefName` as the `Name` of the
 /// transmutability equivalence class.
 ///
 /// # Safety
@@ -550,24 +550,24 @@ mod ref_transmutability {
 /// Transmuting to the unpinned variant is described in more details in the doc
 /// comment of `RefName`.
 mod mut_ref_transmutability {
-    use super::CcType;
+    use super::CppType;
     use std::pin::Pin;
 
     type MutRefName<'a, Name> = (&'a mut (), Name);
 
     /// Safety: See the doc comment for the `mut_ref_transmutability` module.
-    unsafe impl<'a, T: ?Sized> CcType for &'a mut T
+    unsafe impl<'a, T: ?Sized> CppType for &'a mut T
     where
-        T: CcType,
+        T: CppType,
         T: Unpin, // See safety notes for MutRefName, item 3
     {
         type Name = MutRefName<'a, T::Name>;
     }
 
     /// Safety: See the doc comment for the `mut_ref_transmutability` module.
-    unsafe impl<'a, T: ?Sized> CcType for Pin<&'a mut T>
+    unsafe impl<'a, T: ?Sized> CppType for Pin<&'a mut T>
     where
-        T: CcType,
+        T: CppType,
     {
         type Name = MutRefName<'a, T::Name>;
     }
@@ -580,8 +580,8 @@ pub trait CppCast<T> {
 
 impl<T, U> CppCast<U> for T
 where
-    T: CcType,
-    U: CcType<Name = T::Name>,
+    T: CppType,
+    U: CppType<Name = T::Name>,
 {
     fn cpp_cast(self) -> U {
         assert_eq!(std::mem::size_of::<T>(), std::mem::size_of::<U>());
@@ -592,8 +592,8 @@ where
 
 impl<'a, T: ?Sized, U: ?Sized> CppCast<Vec<&'a U>> for Vec<&'a T>
 where
-    T: CcType,
-    U: CcType<Name = T::Name>,
+    T: CppType,
+    U: CppType<Name = T::Name>,
 {
     fn cpp_cast(self) -> Vec<&'a U> {
         let (p, len, capacity) = self.into_raw_parts();
