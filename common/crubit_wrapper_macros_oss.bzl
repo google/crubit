@@ -8,7 +8,13 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest")
 
 crubit_rust_test = rust_test
-crubit_rust_binary = rust_binary
+
+def crubit_rust_binary(**kwargs):
+    # Ignore the `crubit_dep` argument, as the OSS version of
+    # `crubit_rust_binary` never inherits a dep on Crubit.
+    kwargs.pop("crubit_dep", default = False)
+    rust_binary(**kwargs)
+
 crubit_cc_test = native.cc_test
 crubit_sh_test = native.sh_test
 crubit_cc_binary = native.cc_binary
