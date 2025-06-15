@@ -141,7 +141,7 @@ macro_rules! must_use_ctor_assign {
 ///
 /// Implementations must satisfy the postconditions of the `ctor` method.
 #[must_use = must_use_ctor!()]
-pub unsafe trait Ctor {
+pub unsafe trait Ctor: Sized {
     type Output: ?Sized;
     /// Constructs a value in place.
     ///
@@ -165,10 +165,7 @@ pub unsafe trait Ctor {
     /// ```
     /// emplace! { let x = y.ctor_then(|mut inited| inited.mutating_method()); }
     /// ```
-    fn ctor_then<F: FnOnce(Pin<&mut Self::Output>)>(self, f: F) -> CtorThen<Self, F>
-    where
-        Self: Sized,
-    {
+    fn ctor_then<F: FnOnce(Pin<&mut Self::Output>)>(self, f: F) -> CtorThen<Self, F> {
         CtorThen { ctor: self, f }
     }
 }
