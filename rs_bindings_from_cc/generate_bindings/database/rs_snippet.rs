@@ -140,7 +140,7 @@ impl CratePath {
         FullyQualifiedPath {
             start_with_colon2: self.crate_ident.is_some(),
             parts: std::iter::once(crate_ident)
-                .chain(self.namespace_qualifier.0.iter().map(|ns| make_rs_ident(ns)))
+                .chain(self.namespace_qualifier.parts().map(|ns| make_rs_ident(ns)))
                 .chain(std::iter::once(item))
                 .collect(),
         }

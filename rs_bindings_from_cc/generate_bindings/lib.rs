@@ -636,7 +636,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 let cpp_namespace_qualifier = db.ir().namespace_qualifier(original_type.as_ref());
 
                 // Rust message types are exported to crate root, but we need the full namespace for the C++ ABI.
-                let merged_cpp_abi_path = cpp_namespace_qualifier.0.join("::")
+                let merged_cpp_abi_path = cpp_namespace_qualifier.parts().join("::")
                     + "::"
                     + original_type.cc_name.identifier.as_ref();
 

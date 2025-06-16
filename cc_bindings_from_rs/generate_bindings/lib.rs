@@ -245,11 +245,11 @@ fn format_with_cc_body(
     body: TokenStream,
     attributes: Vec<TokenStream>,
 ) -> Result<TokenStream> {
-    if ns.0.is_empty() {
+    if ns.is_empty() {
         Ok(body)
     } else {
         let namespace_cc_idents =
-            ns.0.iter().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
+            ns.parts().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
         Ok(quote! {
             __NEWLINE__ namespace #(#attributes)* #(#namespace_cc_idents)::* { __NEWLINE__
                 #body
@@ -330,7 +330,7 @@ fn reexported_symbol_canonical_name_mapping(
         // If the parent is being aliased, we use its canonical name and we always
         // process parents before their children.
         let full_path_strs: Vec<Rc<str>> = if let Some(con_name) = name_map.get(&parent_def_id) {
-            con_name.rs_mod_path.0.clone()
+            con_name.rs_mod_path.parts().cloned().collect()
         } else {
             let mut full_path = tcx.def_path(def_id).data; // mod_path + name
             full_path.pop().expect("At least the use exists");
@@ -1219,7 +1219,7 @@ pub fn format_namespace_bound_cc_tokens(
                 }
             }
             format_with_cc_body(db, &ns, tokens, ns_attributes).unwrap_or_else(|err| {
-                let name = ns.0.iter().join("::");
+                let name = ns.parts().join("::");
                 let err = format!("Failed to format namespace name `{name}`: {err}");
                 quote! { __COMMENT__ #err }
             })

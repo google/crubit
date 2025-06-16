@@ -289,7 +289,12 @@ pub fn escape_non_identifier_chars(symbol: &str) -> String {
 /// Representation of `foo::bar::baz` where each component is either the name
 /// of a C++ namespace, or the name of a Rust module.
 #[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
-pub struct NamespaceQualifier(pub Vec<Rc<str>>);
+pub struct NamespaceQualifier {
+    // Outer to innermost
+    pub namespaces: Vec<Rc<str>>,
+    // Outer to innermost
+    pub nested_records: Vec<Rc<str>>,
+}
 
 impl NamespaceQualifier {
     /// Constructs a new `NamespaceQualifier` from a sequence of names.
@@ -300,13 +305,21 @@ impl NamespaceQualifier {
         // - Report an error early if any strings are C++ reserved keywords
         // This may make `format_for_cc`, `format_with_cc_body`, and
         // `format_namespace_bound_cc_tokens` infallible.
-        Self(iter.into_iter().map(Into::into).collect())
+        Self { namespaces: iter.into_iter().map(Into::into).collect(), nested_records: vec![] }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.namespaces.is_empty() && self.nested_records.is_empty()
+    }
+
+    pub fn parts(&self) -> impl Iterator<Item = &Rc<str>> + use<'_> {
+        self.namespaces.iter().chain(self.nested_records.iter())
     }
 
     /// Returns `foo::bar::baz::` (escaping Rust keywords as needed).
     pub fn format_for_rs(&self) -> TokenStream {
-        let namespace_rs_idents = self.0.iter().map(|ns| make_rs_ident(ns));
-        quote! { #(#namespace_rs_idents::)* }
+        let rust_parts = self.parts().map(|module| make_rs_ident(module));
+        quote! { #(#rust_parts::)* }
     }
 
     /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
@@ -320,7 +333,7 @@ impl NamespaceQualifier {
         body: TokenStream,
         attributes: Vec<TokenStream>,
     ) -> Result<TokenStream> {
-        if self.0.is_empty() {
+        if self.is_empty() {
             Ok(body)
         } else {
             let namespace_cc_idents = self.cc_idents()?;
@@ -333,7 +346,7 @@ impl NamespaceQualifier {
     }
 
     pub fn cc_idents(&self) -> Result<Vec<TokenStream>> {
-        self.0.iter().map(|ns| format_cc_ident(ns)).collect()
+        self.parts().map(|ns| format_cc_ident(ns)).collect()
     }
 }
 

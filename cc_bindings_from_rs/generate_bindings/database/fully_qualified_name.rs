@@ -62,7 +62,7 @@ fn format_ns_path_for_cc(
     ns: &NamespaceQualifier,
 ) -> Result<TokenStream> {
     let idents =
-        ns.0.iter().map(|s| db.format_cc_ident(Symbol::intern(s))).collect::<Result<Vec<_>>>()?;
+        ns.parts().map(|s| db.format_cc_ident(Symbol::intern(s))).collect::<Result<Vec<_>>>()?;
     Ok(quote! { #(#idents::)* })
 }
 
