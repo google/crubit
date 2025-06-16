@@ -19,8 +19,8 @@ namespace {
 
 TEST(PointerNullabilityTest, PointerLoop_Nullable_Nullable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nullable<int*> GetFirst();
-    Nullable<int*> GetNext();
+    int* _Nullable GetFirst();
+    int* _Nullable GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
         *p;  // [[unsafe]]
@@ -31,8 +31,8 @@ TEST(PointerNullabilityTest, PointerLoop_Nullable_Nullable) {
 
 TEST(PointerNullabilityTest, PointerLoop_Nonnull_Nullable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nonnull<int*> GetFirst();
-    Nullable<int*> GetNext();
+    int* _Nonnull GetFirst();
+    int* _Nullable GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
         *p;  // [[unsafe]]
@@ -43,8 +43,8 @@ TEST(PointerNullabilityTest, PointerLoop_Nonnull_Nullable) {
 
 TEST(PointerNullabilityTest, PointerLoop_Nullable_Nonnull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nullable<int*> GetFirst();
-    Nonnull<int*> GetNext();
+    int* _Nullable GetFirst();
+    int* _Nonnull GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
         *p;  // [[unsafe]]
@@ -55,8 +55,8 @@ TEST(PointerNullabilityTest, PointerLoop_Nullable_Nonnull) {
 
 TEST(PointerNullabilityTest, PointerLoop_Nonnull_Nonnull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nonnull<int*> GetFirst();
-    Nonnull<int*> GetNext();
+    int* _Nonnull GetFirst();
+    int* _Nonnull GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
         *p;
@@ -68,7 +68,7 @@ TEST(PointerNullabilityTest, PointerLoop_Nonnull_Nonnull) {
 TEST(PointerNullabilityTest, PointerLoop_Unknown_Nullable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int* GetFirst();
-    Nullable<int*> GetNext();
+    int* _Nullable GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
         *p;  // [[unsafe]]
@@ -80,7 +80,7 @@ TEST(PointerNullabilityTest, PointerLoop_Unknown_Nullable) {
 TEST(PointerNullabilityTest, PointerLoop_Unknown_Nonnull) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int* GetFirst();
-    Nonnull<int*> GetNext();
+    int* _Nonnull GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
         *p;
@@ -91,7 +91,7 @@ TEST(PointerNullabilityTest, PointerLoop_Unknown_Nonnull) {
 
 TEST(PointerNullabilityTest, PointerLoop_Nullable_Unknown) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nullable<int*> GetFirst();
+    int* _Nullable GetFirst();
     int* GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
@@ -103,7 +103,7 @@ TEST(PointerNullabilityTest, PointerLoop_Nullable_Unknown) {
 
 TEST(PointerNullabilityTest, PointerLoop_Nonnull_Unknown) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nonnull<int*> GetFirst();
+    int* _Nonnull GetFirst();
     int* GetNext();
     void target() {
       for (int* p = GetFirst();; p = GetNext()) {
@@ -128,8 +128,8 @@ TEST(PointerNullabilityTest, PointerLoop_Unknown_Unknown) {
 // If we check that the pointer is non-null, don't warn.
 TEST(PointerNullabilityTest, PointerLoop_Checked) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nullable<int*> GetFirst();
-    Nullable<int*> GetNext();
+    int* _Nullable GetFirst();
+    int* _Nullable GetNext();
     void target() {
       for (int* p = GetFirst(); p != nullptr; p = GetNext()) {
         *p;
@@ -143,8 +143,8 @@ TEST(PointerNullabilityTest, PointerLoop_Checked) {
 // than just the first iteration.
 TEST(PointerNullabilityTest, PointerLoop_UnrelatedCondition) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nonnull<int*> GetFirst();
-    Nullable<int*> GetNext();
+    int* _Nonnull GetFirst();
+    int* _Nullable GetNext();
     bool cond();
     void target() {
       for (int* p = GetFirst(); cond(); p = GetNext()) {
@@ -157,8 +157,8 @@ TEST(PointerNullabilityTest, PointerLoop_UnrelatedCondition) {
 // Similar to `PointerLoop_UnrelatedCondition`, but we use a counted loop.
 TEST(PointerNullabilityTest, PointerLoop_Counted) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nonnull<int*> GetFirst();
-    Nullable<int*> GetNext();
+    int* _Nonnull GetFirst();
+    int* _Nullable GetNext();
     void target() {
       int* p = GetFirst();
       for (int i = 0; i < 10; ++i, p = GetNext()) {
@@ -246,7 +246,7 @@ TEST(PointerNullabilityTest, RangeFor_CustomIterator) {
 // by a framework bug: https://github.com/llvm/llvm-project/issues/67834.
 TEST(PointerNullabilityTest, WhileAssignment) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nullable<int*> GetNext();
+    int* _Nullable GetNext();
     void target() {
       int* p;
       while ((p = GetNext())) {
@@ -259,9 +259,9 @@ TEST(PointerNullabilityTest, WhileAssignment) {
 TEST(PointerNullabilityTest, WhileAssignment2) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int* GetFirst();
-    Nullable<int*> GetNext();
+    int* _Nullable GetNext();
     void target() {
-      Nullable<int*> p = GetFirst();
+      int* _Nullable p = GetFirst();
       while ((p = GetNext()) != nullptr) {
         *p;
       }
@@ -273,13 +273,12 @@ TEST(PointerNullabilityTest, WhileAssignment2) {
 // representation of state in a loop: b/300979650.
 TEST(PointerNullabilityTest, InconsistentLoopStateRepro) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nullable<int*> GetNullable();
+    int* _Nullable GetNullable();
     bool cond();
 
     void target(int* b, int* e) {
       // This loop is necessary for the false positive to occur.
-      for (; b != e; ++b)
-        ;
+      for (; b != e; ++b);
 
       int* ptr = GetNullable();
       if (ptr != nullptr) {
@@ -384,7 +383,7 @@ TEST(PointerNullabilityTest, FieldWithLoopInBetweenDefinitionAndUse) {
   // returning the item) (a plain array with [] doesn't repro).
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
-      Nullable<int*> ptr;
+      int* _Nullable ptr;
     };
     S& at(int i);
 

@@ -6,6 +6,6 @@
 
 TEST void symbolicNullability(symbolic::X<int *> P, symbolic::Y<int *> Q) {
   type<symbolic::X<int *>>(P);
-  type<Nonnull<symbolic::X<int *> *>>(&P);
+  type<symbolic::X<int *> *_Nonnull>(&P);
   type<symbolic::Y<int *>>(Q);
 }

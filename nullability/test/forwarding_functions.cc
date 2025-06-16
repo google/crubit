@@ -9,15 +9,15 @@
 #include "nullability_test.h"
 
 struct CtorWithPointers {
-  CtorWithPointers(Nonnull<int *> X) : X(X) {}
-  Nonnull<int *> X;
+  CtorWithPointers(int *_Nonnull X) : X(X) {}
+  int *_Nonnull X;
 };
 
 void outParam(int *&X);
 
 // Test that pointer variables passed to the real `std::make_unique` (not mock)
 // are not clobbered by the call.
-TEST void makeUniqueDoesNotClobberLvalueArguments(Nonnull<int *> NonnullP) {
+TEST void makeUniqueDoesNotClobberLvalueArguments(int *_Nonnull NonnullP) {
   nonnull(NonnullP);
   nonnull(std::make_unique<CtorWithPointers>(NonnullP));
   // Still nonnull because the param is not clobbered.

@@ -132,7 +132,7 @@ TEST(PointerNullabilityTest, CreatesConsistentPointerValueForField) {
   // `p_->target()` call.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
-      Nullable<S*> const p_;
+      S* _Nullable const p_;
       void target() {
         some_func();
 

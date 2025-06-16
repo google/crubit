@@ -19,22 +19,22 @@ struct Wrapper {
 };
 
 TEST void testDeclRefExpr() {
-  nonnull(Instance<Nonnull<int *>>);
-  nonnull(StaticWrapper<Nonnull<int *>>::Value);
+  nonnull(Instance<int *_Nonnull>);
+  nonnull(StaticWrapper<int *_Nonnull>::Value);
 }
 
-TEST void testMemberExpr(Wrapper<Nonnull<int *>> &W) {
+TEST void testMemberExpr(Wrapper<int *_Nonnull> &W) {
   nonnull(W.Value);
   nonnull(W.get());
 
   struct Derived : Wrapper<char>, Wrapper<int *> {
   } D;
-  unknown(D.Wrapper<Nonnull<int *>>::Value);  // TODO(b/332558689): nonnull
+  unknown(D.Wrapper<int *_Nonnull>::Value);  // TODO(b/332558689): nonnull
 }
 
 TEST void testCXXTemporaryExpr() {
-  type<Wrapper<NullabilityUnknown<int *>>>(  // TODO(b/332562229): nonnull
-      Wrapper<Nonnull<int *>>{});
+  type<Wrapper<int *_Null_unspecified>>(  // TODO(b/332562229): nonnull
+      Wrapper<int *_Nonnull>{});
 }
 
 struct TemplateWrapper {
@@ -51,19 +51,19 @@ namespace template_already_has_nullability {
 
 template <typename T>
 struct StaticWrapperAnnotated {
-  constexpr static Nonnull<T> Value = {};
+  constexpr static _Nonnull T Value = {};
 };
 
 struct Annotated {
   template <typename T>
-  Nonnull<T> get_nonnull();
+  _Nonnull T get_nonnull();
   template <typename T>
-  Nullable<T> get_nullable();
+  _Nullable T get_nullable();
 };
 
 TEST void testDeclRefExprAlreadyAnnotated() {
   nonnull(StaticWrapperAnnotated<int *>::Value);
-  nonnull(StaticWrapperAnnotated<Nonnull<int *>>::Value);
+  nonnull(StaticWrapperAnnotated<int *_Nonnull>::Value);
 }
 
 TEST void testMemberExprAlreadyAnnotated(Annotated &s) {
@@ -88,7 +88,7 @@ namespace variable_template {
 template <class T>
 T VarTempl = {};
 TEST void testVariableTemplate() {
-  type<Nullable<int *>>(VarTempl<Nullable<int *>>);
+  type<int *_Nullable>(VarTempl<int *_Nullable>);
 }
 
 }  // namespace variable_template
@@ -102,7 +102,7 @@ int *VarTempl<int *> = nullptr;
 TEST void testVariableTemplateExplicitSpecialization() {
   // The type of the specialized variable is unrelated to the template argument
   // type, so the type of the expression has unknown nullability.
-  type<NullabilityUnknown<int *>>(VarTempl<Nullable<int *>>);
+  type<int *_Null_unspecified>(VarTempl<int *_Nullable>);
 }
 
 }  // namespace variable_template_explicit_specialization

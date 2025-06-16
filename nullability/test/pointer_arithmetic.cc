@@ -17,15 +17,15 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 
-TEST void preIncrementType(Nonnull<int *> NonnullParam,
-                           Nullable<int *> NullableParam, int *UnknownParam) {
-  type<Nonnull<int *>>(++NonnullParam);
-  type<Nonnull<int *>>(++NullableParam);
-  type<Nonnull<int *>>(++UnknownParam);
+TEST void preIncrementType(int *_Nonnull NonnullParam,
+                           int *_Nullable NullableParam, int *UnknownParam) {
+  type<int *_Nonnull>(++NonnullParam);
+  type<int *_Nonnull>(++NullableParam);
+  type<int *_Nonnull>(++UnknownParam);
 }
 
-TEST void preIncrementValue(Nonnull<int *> NonnullParam,
-                            Nullable<int *> NullableParam, int *UnknownParam) {
+TEST void preIncrementValue(int *_Nonnull NonnullParam,
+                            int *_Nullable NullableParam, int *UnknownParam) {
   int *NewVal = ++NonnullParam;
   provable(NonnullParam == NewVal);
   nonnull(NonnullParam);
@@ -39,15 +39,15 @@ TEST void preIncrementValue(Nonnull<int *> NonnullParam,
   nonnull(UnknownParam);
 }
 
-TEST void postIncrementType(Nonnull<int *> NonnullParam,
-                            Nullable<int *> NullableParam, int *UnknownParam) {
-  type<Nonnull<int *>>(NonnullParam++);
-  type<Nullable<int *>>(NullableParam++);
+TEST void postIncrementType(int *_Nonnull NonnullParam,
+                            int *_Nullable NullableParam, int *UnknownParam) {
+  type<int *_Nonnull>(NonnullParam++);
+  type<int *_Nullable>(NullableParam++);
   type<int *>(UnknownParam++);
 }
 
-TEST void postIncrementValue(Nonnull<int *> NonnullParam,
-                             Nullable<int *> NullableParam, int *UnknownParam) {
+TEST void postIncrementValue(int *_Nonnull NonnullParam,
+                             int *_Nullable NullableParam, int *UnknownParam) {
   int *OldVal = NonnullParam;
   provable(NonnullParam++ == OldVal);
   nonnull(NonnullParam);
@@ -61,24 +61,24 @@ TEST void postIncrementValue(Nonnull<int *> NonnullParam,
   nonnull(UnknownParam);
 }
 
-TEST void add(Nonnull<int *> NonnullParam, Nullable<int *> NullableParam,
+TEST void add(int *_Nonnull NonnullParam, int *_Nullable NullableParam,
               int *UnknownParam, int I) {
-  type<Nonnull<int *>>(NonnullParam + I);
-  type<Nonnull<int *>>(I + NonnullParam);
+  type<int *_Nonnull>(NonnullParam + I);
+  type<int *_Nonnull>(I + NonnullParam);
 
-  type<Nonnull<int *>>(NullableParam + I);
-  type<Nonnull<int *>>(I + NullableParam);
+  type<int *_Nonnull>(NullableParam + I);
+  type<int *_Nonnull>(I + NullableParam);
 
-  type<Nonnull<int *>>(UnknownParam + I);
-  type<Nonnull<int *>>(I + UnknownParam);
+  type<int *_Nonnull>(UnknownParam + I);
+  type<int *_Nonnull>(I + UnknownParam);
 }
 
-TEST void subtract(Nonnull<int *> NonnullParam, Nullable<int *> NullableParam,
+TEST void subtract(int *_Nonnull NonnullParam, int *_Nullable NullableParam,
                    int *UnknownParam, int I) {
   // Pointer minus integer.
-  type<Nonnull<int *>>(NonnullParam - I);
-  type<Nonnull<int *>>(NullableParam - I);
-  type<Nonnull<int *>>(UnknownParam - I);
+  type<int *_Nonnull>(NonnullParam - I);
+  type<int *_Nonnull>(NullableParam - I);
+  type<int *_Nonnull>(UnknownParam - I);
 
   // Pointer minus pointer.
   // Spot-checking just a few of the possible combinations.
@@ -88,16 +88,16 @@ TEST void subtract(Nonnull<int *> NonnullParam, Nullable<int *> NullableParam,
   type<Ptrdiff>(NullableParam - UnknownParam);
 }
 
-TEST void addAssignType(Nonnull<int *> NonnullParam,
-                        Nullable<int *> NullableParam, int *UnknownParam,
+TEST void addAssignType(int *_Nonnull NonnullParam,
+                        int *_Nullable NullableParam, int *UnknownParam,
                         int I) {
-  type<Nonnull<int *>>(NonnullParam += I);
-  type<Nonnull<int *>>(NullableParam += I);
-  type<Nonnull<int *>>(UnknownParam += I);
+  type<int *_Nonnull>(NonnullParam += I);
+  type<int *_Nonnull>(NullableParam += I);
+  type<int *_Nonnull>(UnknownParam += I);
 }
 
-TEST void addAssignValue(Nonnull<int *> NonnullParam,
-                         Nullable<int *> NullableParam, int *UnknownParam,
+TEST void addAssignValue(int *_Nonnull NonnullParam,
+                         int *_Nullable NullableParam, int *UnknownParam,
                          int I) {
   int *NewVal = (NonnullParam += I);
   provable(NonnullParam == NewVal);
@@ -112,16 +112,16 @@ TEST void addAssignValue(Nonnull<int *> NonnullParam,
   nonnull(UnknownParam);
 }
 
-TEST void subtractAssignType(Nonnull<int *> NonnullParam,
-                             Nullable<int *> NullableParam, int *UnknownParam,
+TEST void subtractAssignType(int *_Nonnull NonnullParam,
+                             int *_Nullable NullableParam, int *UnknownParam,
                              int I) {
-  type<Nonnull<int *>>(NonnullParam -= I);
-  type<Nonnull<int *>>(NullableParam -= I);
-  type<Nonnull<int *>>(UnknownParam -= I);
+  type<int *_Nonnull>(NonnullParam -= I);
+  type<int *_Nonnull>(NullableParam -= I);
+  type<int *_Nonnull>(UnknownParam -= I);
 }
 
-TEST void subtractAssignValue(Nonnull<int *> NonnullParam,
-                              Nullable<int *> NullableParam, int *UnknownParam,
+TEST void subtractAssignValue(int *_Nonnull NonnullParam,
+                              int *_Nullable NullableParam, int *UnknownParam,
                               int I) {
   int *NewVal = (NonnullParam -= I);
   provable(NonnullParam == NewVal);

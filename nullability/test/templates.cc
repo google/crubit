@@ -1346,7 +1346,7 @@ TEST(PointerNullabilityTest, CallInstantiatedMember) {
     struct Sink {
       void eat(T);
     };
-    void target(Sink<Nonnull<int *>> &S) {
+    void target(Sink<int *_Nonnull> &S) {
       S.eat(nullptr);  // [[unsafe]]
     }
   )cc"));

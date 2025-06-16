@@ -6,8 +6,8 @@
 
 #include "nullability_test.h"
 
-Nonnull<int *> makeNonnull();
-Nullable<int *> makeNullable();
+int *_Nonnull makeNonnull();
+int *_Nullable makeNullable();
 int *makeUnknown();
 
 bool cond();

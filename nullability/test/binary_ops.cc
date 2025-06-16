@@ -6,13 +6,13 @@
 
 #include "nullability_test.h"
 
-TEST void testAnd(Nullable<int *> X, Nullable<int *> Y) {
+TEST void testAnd(int *_Nullable X, int *_Nullable Y) {
   if (X && Y) {
     nonnull(X);
     nonnull(Y);
     // Type hasn't changed, even though we know X and Y are nonnull.
-    type<Nullable<int *>>(X);
-    type<Nullable<int *>>(Y);
+    type<int *_Nullable>(X);
+    type<int *_Nullable>(Y);
   } else {
     nullable(X);
     nullable(Y);
@@ -21,7 +21,7 @@ TEST void testAnd(Nullable<int *> X, Nullable<int *> Y) {
   nullable(Y);
 }
 
-TEST void testOr(Nullable<int *> X, Nullable<int *> Y) {
+TEST void testOr(int *_Nullable X, int *_Nullable Y) {
   if (X || Y) {
     nullable(X);
     nullable(Y);
@@ -33,7 +33,7 @@ TEST void testOr(Nullable<int *> X, Nullable<int *> Y) {
   nullable(Y);
 }
 
-TEST void testNeither(Nullable<int *> X, Nullable<int *> Y) {
+TEST void testNeither(int *_Nullable X, int *_Nullable Y) {
   if (!X && !Y) {
     nullable(X);
     nullable(Y);
@@ -45,7 +45,7 @@ TEST void testNeither(Nullable<int *> X, Nullable<int *> Y) {
   nullable(Y);
 }
 
-TEST void testNotBoth(Nullable<int *> X, Nullable<int *> Y) {
+TEST void testNotBoth(int *_Nullable X, int *_Nullable Y) {
   if (!X || !Y) {
     nullable(X);
     nullable(Y);
@@ -57,9 +57,9 @@ TEST void testNotBoth(Nullable<int *> X, Nullable<int *> Y) {
   nullable(Y);
 }
 
-TEST void testComma(Nonnull<int *> X, Nullable<int *> Y) {
+TEST void testComma(int *_Nonnull X, int *_Nullable Y) {
   int *Z = (X, Y);
   nullable(Z);
 
-  type<Nullable<int *>>((X, Y));
+  type<int *_Nullable>((X, Y));
 }

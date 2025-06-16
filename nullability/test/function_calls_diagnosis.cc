@@ -162,7 +162,12 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
 // annotations.
 TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateAnnotations) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-#include "nullability_annotations.h"
+    template <typename T>
+    using Nonnull = T _Nonnull;
+    template <typename T>
+    using Nullable = T _Nullable;
+    template <typename T>
+    using NullabilityUnknown = T;
 
     void takeNonnull(Nonnull<int *>);
     void takeNullable(Nullable<int *>);
@@ -192,7 +197,12 @@ TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateAnnotations) {
 // built-in Clang annotations.
 TEST(PointerNullabilityTest, CallExprParamAssignmentTemplateBuiltinMixed) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-#include "nullability_annotations.h"
+    template <typename T>
+    using Nonnull = T _Nonnull;
+    template <typename T>
+    using Nullable = T _Nullable;
+    template <typename T>
+    using NullabilityUnknown = T;
 
     void takeNonnull(int *_Nonnull);
     void takeNullable(int *_Nullable);
@@ -389,7 +399,7 @@ TEST(SmartPointerTest, JoinCausesLossOfNullabilityPropertiesAtExit) {
       void non_const_member_fn();
 
      private:
-      Nonnull<int*> p_;
+      int* _Nonnull p_;
     };
   )cc"));
 }

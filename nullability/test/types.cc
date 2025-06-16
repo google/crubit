@@ -8,6 +8,9 @@
 
 bool cond();
 
+template <typename T>
+using Nullable = T _Nullable;
+
 // Define a version of the `Nullable` annotation that does not add the
 // `_Nullable` attribute to `T`.
 template <typename T>

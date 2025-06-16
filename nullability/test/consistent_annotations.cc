@@ -12,54 +12,77 @@ namespace {
 
 TEST(ConsistentAnnotations, ConsistentParameter) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(Nonnull<int *> p);
-    void target(Nonnull<int *> p) { *p; }
+    void target(int *_Nonnull p);
+    void target(int *_Nonnull p) { *p; }
   )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentParameter) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(Nullable<int *> p);
-    void target(Nonnull<int *> p) {  // [[unsafe]]
+    void target(int *_Nullable p);
+    void target(int *_Nonnull p) {  // [[unsafe]]
       *p;
     }
   )cc"));
 }
 
+TEST(ConsistentAnnotations, ConsistentParameterAcrossFormats) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#define nonnull_macro _Nonnull
+    template <typename T>
+    using NonnullAlias = _Nonnull T;
+    void target(int *nonnull_macro p);
+    void target(NonnullAlias<int *> p);
+    void target(int *_Nonnull p) { *p; }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentParameterAcrossFormats) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#define nonnull_macro _Nonnull
+    template <typename T>
+    using NullableAlias = _Nullable T;
+    void target(int *nonnull_macro p);
+    // Note: diagnostic marker must be within `target`s source range.
+    void target(NullableAlias<int *> p /* [[unsafe]] */);
+    void target(int *_Nonnull p) { *p; }
+  )cc"));
+}
+
 TEST(ConsistentAnnotations, ConsistentDoublePointer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(Nullable<Nonnull<int *> *> p);
-    void target(Nullable<Nonnull<int *> *> p) {}
+    void target(int *_Nonnull *_Nullable p);
+    void target(int *_Nonnull *_Nullable p) {}
   )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentOuterPointer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(Nullable<Nonnull<int *> *> p);
-    void target(Nonnull<Nonnull<int *> *> p) {  // [[unsafe]]
+    void target(int *_Nonnull *_Nullable p);
+    void target(int *_Nonnull *_Nonnull p) {  // [[unsafe]]
     }
   )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentInnerPointer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(Nullable<Nonnull<int *> *> p);
-    void target(Nullable<Nullable<int *> *> p) {  // [[unsafe]]
+    void target(int *_Nonnull *_Nullable p);
+    void target(int *_Nullable *_Nullable p) {  // [[unsafe]]
     }
   )cc"));
 }
 
 TEST(ConsistentAnnotations, ConsistentReturnType) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nullable<int *> target();
-    Nullable<int *> target() { return nullptr; }
+    int *_Nullable target();
+    int *_Nullable target() { return nullptr; }
   )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentReturnType) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    Nonnull<int *> target();
-    Nullable<int *> target() {  // [[unsafe]]
+    int *_Nonnull target();
+    int *_Nullable target() {  // [[unsafe]]
       return nullptr;
     }
   )cc"));
@@ -68,16 +91,16 @@ TEST(ConsistentAnnotations, InconsistentReturnType) {
 TEST(ConsistentAnnotations, ConsistentSmartPointer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
-    void target(Nonnull<std::unique_ptr<int>> p);
-    void target(Nonnull<std::unique_ptr<int>> p) { *p; }
+    void target(_Nonnull std::unique_ptr<int> p);
+    void target(_Nonnull std::unique_ptr<int> p) { *p; }
   )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentSmartPointer) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
-    void target(Nullable<std::unique_ptr<int>> p);
-    void target(Nonnull<std::unique_ptr<int>> p) {  // [[unsafe]]
+    void target(_Nullable std::unique_ptr<int> p);
+    void target(_Nonnull std::unique_ptr<int> p) {  // [[unsafe]]
       *p;
     }
   )cc"));
@@ -87,7 +110,7 @@ TEST(ConsistentAnnotations, InconsistentWithPragma) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nullable
     void target(int *p);
-    void target(Nonnull<int *> p) {  // [[unsafe]]
+    void target(int *_Nonnull p) {  // [[unsafe]]
       *p;
     }
   )cc"));
@@ -95,35 +118,35 @@ TEST(ConsistentAnnotations, InconsistentWithPragma) {
 
 TEST(ConsistentAnnotations, ConsistentGlobal) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    extern Nonnull<int *> target;
-    Nonnull<int *> target = new int;
+    extern int *_Nonnull target;
+    int *_Nonnull target = new int;
   )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentGlobal) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    extern Nonnull<int *> target;
+    extern int *_Nonnull target;
     // Annotation has to go within the declaration to be picked up.
-    Nullable<int *> target /* [[unsafe]] */ = nullptr;
+    int *_Nullable target /* [[unsafe]] */ = nullptr;
   )cc"));
 }
 
 TEST(ConsistentAnnotations, ConsistentStaticMemberVariable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
-      static Nonnull<int *> target;
+      static int *_Nonnull target;
     };
-    Nonnull<int *> S::target = new int;
+    int *_Nonnull S::target = new int;
   )cc"));
 }
 
 TEST(ConsistentAnnotations, InconsistentStaticMemberVariable) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
-      static Nonnull<int *> target;
+      static int *_Nonnull target;
     };
     // Annotation has to go within the declaration to be picked up.
-    Nullable<int *> S::target /* [[unsafe]] */ = nullptr;
+    int *_Nullable S::target /* [[unsafe]] */ = nullptr;
   )cc"));
 }
 
