@@ -583,23 +583,22 @@ fn collect_alias_from_use(
     let tcx = db.tcx();
     // TODO(b/350772554): Support multiple items with the same name in `use`
     // statements.`
-    if use_path.res.len() != 1 {
+    if use_path.res.present_items().count() != 1 {
         bail!(
             "use statements which resolve to multiple items with the same name are not supported yet"
         );
     }
 
-    let (def_kind, def_id) = match use_path.res[0] {
+    let res = use_path.res.present_items().next().unwrap();
+
+    let (def_kind, def_id) = match res {
         // TODO(b/350772554): Support PrimTy.
         // TODO(b/350772554): Support `use some_module`.
         Res::Def(def_kind, def_id) if def_kind != DefKind::Mod || use_kind == &UseKind::Glob => {
             (def_kind, def_id)
         }
         _ => {
-            bail!(
-                "Unsupported use statement that refers to this type of the entity: {:#?}",
-                use_path.res[0]
-            );
+            bail!("Unsupported use statement that refers to this type of the entity: {:#?}", res);
         }
     };
 
