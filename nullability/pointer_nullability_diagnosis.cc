@@ -201,14 +201,7 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
   return diagnoseNonnullExpected(
       MemberExpr->getBase(), State.Env, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference,
-      /*Callee=*/nullptr, /*ParamName=*/nullptr,
-      // Attach the diagnostic to the source range of the `->` operator, rather
-      // than the source range of `MemberExpr->getBase()`.
-      // In a chain of dereferences, such as `p1->p2->field`, this ensures that
-      // the specific dereference that the diagnostic refers to is unambiguously
-      // clear, even if some system consuming the range only preserves the start
-      // of the range.
-      CharSourceRange::getTokenRange(MemberExpr->getOperatorLoc()));
+      /*Callee=*/nullptr, /*ParamName=*/nullptr);
 }
 
 SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
