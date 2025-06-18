@@ -15,20 +15,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "annotation_reader_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
-
-[[package]]
-name = "annotations_consumer_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "cc_ir_sys",
- "crubit_build",
-]
+name = "allocator-api2"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "anstream"
@@ -66,7 +56,7 @@ version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d36fc52c7f6c869915e99412912f22093507da8d9e942ceaf66fe4b7c14422a"
 dependencies = [
- "windows-sys",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -76,7 +66,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bf74e1b6e971609db8ca7a9ce79fd5768ab6ae46441c572e46cf596f59e57f8"
 dependencies = [
  "anstyle",
- "windows-sys",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -86,130 +76,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37bf3594c4c988a53154954629820791dde498571819ae4ca50ca811e060cc95"
 
 [[package]]
-name = "arc_anyhow"
-version = "0.0.0"
-dependencies = [
- "anyhow",
-]
-
-[[package]]
-name = "ast_consumer_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "importer_sys",
-]
-
-[[package]]
-name = "ast_convert_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "ast_util_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
-
-[[package]]
-name = "cc"
-version = "1.1.30"
+name = "autocfg"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b16803a61b81d9eabb7eae2588776c4c1e584b738ede45fdbb4c972cec1e9945"
-dependencies = [
- "jobserver",
- "libc",
- "shlex",
-]
+checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
-name = "cc_bindings_from_rs"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "cc_bindings_from_rs_generate_bindings",
- "clap",
- "cmdline",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "flagset",
- "itertools",
- "run_compiler",
- "token_stream_printer",
-]
+name = "bitflags"
+version = "1.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
-name = "cc_bindings_from_rs_database"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_attr",
- "crubit_feature",
- "error_report",
- "flagset",
- "itertools",
- "memoized",
- "proc-macro2",
- "quote",
-]
+name = "bitflags"
+version = "2.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
 
 [[package]]
-name = "cc_bindings_from_rs_generate_bindings"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "cc_bindings_from_rs_database",
- "cc_bindings_from_rs_query_compiler",
- "code_gen_utils",
- "crubit_attr",
- "crubit_feature",
- "error_report",
- "flagset",
- "itertools",
- "proc-macro2",
- "quote",
- "run_compiler",
- "syn",
- "toposort",
-]
+name = "boxcar"
+version = "0.2.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26c4925bc979b677330a8c7fe7a8c94af2dbb4a2d37b4a20a80d884400f46baa"
 
 [[package]]
-name = "cc_bindings_from_rs_query_compiler"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "error_report",
-]
-
-[[package]]
-name = "cc_collect_instantiations_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "collect_instantiations",
- "crubit_build",
-]
-
-[[package]]
-name = "cc_ffi_types_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "ffi_types",
-]
-
-[[package]]
-name = "cc_ir_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
+name = "cfg-if"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9555578bc9e57714c812a1f84e4fc5b4d21fcb063490c624de019f7464c91268"
 
 [[package]]
 name = "clap"
@@ -252,88 +146,82 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
-name = "cmdline"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "clap",
- "crubit_feature",
- "flagset",
-]
-
-[[package]]
-name = "cmdline_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "code_gen_utils"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "proc-macro2",
- "quote",
- "syn",
- "unicode-ident",
-]
-
-[[package]]
-name = "collect_instantiations"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "ffi_types",
- "proc-macro2",
- "serde_json",
- "syn",
-]
-
-[[package]]
-name = "collect_namespaces_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
 name = "colorchoice"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 
 [[package]]
-name = "crubit_abi_type"
-version = "0.0.0"
+name = "crossbeam-deque"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51"
 dependencies = [
- "proc-macro2",
- "quote",
+ "crossbeam-epoch",
+ "crossbeam-utils",
 ]
 
 [[package]]
-name = "crubit_attr"
-version = "0.0.0"
+name = "crossbeam-epoch"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-queue"
+version = "0.3.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f58bbc28f91df819d0aa2a2c00cd19754769c2fad90579b3592b1c9ba7a3115"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
+
+[[package]]
+name = "dashmap"
+version = "6.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5041cc499144891f3790297212f32a74fb938e5136a14943f338ef9e0ae276cf"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
+ "hashbrown 0.14.5",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
+]
+
+[[package]]
+name = "direct-cargo-bazel-deps"
+version = "0.0.1"
 dependencies = [
  "anyhow",
-]
-
-[[package]]
-name = "crubit_build"
-version = "0.0.0"
-dependencies = [
- "cc",
-]
-
-[[package]]
-name = "crubit_feature"
-version = "0.0.0"
-dependencies = [
+ "clap",
+ "either",
  "flagset",
+ "googletest",
+ "itertools",
+ "maplit",
+ "pin-project",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "rustversion",
+ "salsa",
  "serde",
+ "serde_json",
+ "static_assertions",
+ "syn",
+ "tempfile",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -343,69 +231,89 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
-name = "error_report"
-version = "0.0.0"
+name = "equivalent"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
+name = "errno"
+version = "0.3.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cea14ef9355e3beab063703aa9dab15afd25f0667c341310c1e5274bb1d0da18"
 dependencies = [
- "anyhow",
- "arc_anyhow",
- "regex",
- "serde",
- "serde_json",
+ "libc",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
-name = "errors"
-version = "0.0.0"
+name = "fastrand"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e51093e27b0797c359783294ca4f0a911c270184cb10f85783b118614a1501be"
 dependencies = [
- "anyhow",
- "arc_anyhow",
- "error_report",
-]
-
-[[package]]
-name = "ffi_11"
-version = "0.1.0"
-dependencies = [
- "static_assertions",
-]
-
-[[package]]
-name = "ffi_types"
-version = "0.0.0"
-
-[[package]]
-name = "file_io_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
+ "instant",
 ]
 
 [[package]]
 name = "flagset"
-version = "0.4.6"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3ea1ec5f8307826a5b71094dd91fc04d4ae75d5709b20ad351c7fb4815c86ec"
+checksum = "b7ac824320a75a52197e8f2d787f6a38b6718bb6897a35142d749af3c0e8f4fe"
 
 [[package]]
-name = "frontend_action_sys"
-version = "0.0.0"
+name = "foldhash"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
+
+[[package]]
+name = "googletest"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc79a6e277a8bc0810e4eb1ce11b0d5a7cbfbdc723d866106f7f5916ab2b7e33"
 dependencies = [
- "ast_consumer_sys",
- "crubit_build",
- "lifetime_annotations_sys",
+ "googletest_macro",
+ "num-traits",
+ "regex",
+ "rustversion",
 ]
 
 [[package]]
-name = "generate_bindings_and_metadata_sys"
-version = "0.0.0"
+name = "googletest_macro"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cda3c5a3ab907fa99610e02840457447461e41d819bcb56d525385ea4227c6a8"
 dependencies = [
- "cc_collect_instantiations_sys",
- "cc_ir_sys",
- "cmdline_sys",
- "collect_namespaces_sys",
- "crubit_build",
- "ir_from_cc_sys",
- "src_code_gen_sys",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.14.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
+
+[[package]]
+name = "hashbrown"
+version = "0.15.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5971ac85611da7067dbfcabef3c70ebb5606018acd9e2a3903a0da507521e0d5"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash",
+]
+
+[[package]]
+name = "hashlink"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7382cf6263419f2d8df38c55d7da83da5c18aef87fc7a7fc1fb1e344edfe14c1"
+dependencies = [
+ "hashbrown 0.15.4",
 ]
 
 [[package]]
@@ -415,52 +323,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
-name = "importer_sys"
-version = "0.0.0"
+name = "hermit-abi"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
+
+[[package]]
+name = "indexmap"
+version = "2.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
 dependencies = [
- "annotation_reader_sys",
- "annotations_consumer_sys",
- "ast_util_sys",
- "cc_ir_sys",
- "crubit_build",
- "recording_diagnostic_consumer_sys",
- "rs_bindings_from_cc_class_template_sys",
- "rs_bindings_from_cc_cxx_record_sys",
- "rs_bindings_from_cc_enum_sys",
- "rs_bindings_from_cc_friend_sys",
- "rs_bindings_from_cc_function_sys",
- "rs_bindings_from_cc_function_template_sys",
- "rs_bindings_from_cc_namespace_sys",
- "rs_bindings_from_cc_type_alias_sys",
- "rs_bindings_from_cc_type_map_override_sys",
- "rs_bindings_from_cc_var_sys",
- "type_lifetimes_sys",
- "type_map_sys",
+ "equivalent",
+ "hashbrown 0.15.4",
 ]
 
 [[package]]
-name = "ir"
-version = "0.0.0"
+name = "instant"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0242819d153cba4b4b05a5a8f2a7e9bbf97b6055b2a002b395c96b5ff3c0222"
 dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "flagset",
- "itertools",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
+ "cfg-if",
 ]
 
 [[package]]
-name = "ir_from_cc_sys"
-version = "0.0.0"
+name = "io-lifetimes"
+version = "1.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eae7b9aee968036d54dce06cebaefd919e4472e753296daccd6d344e3e2df0c2"
 dependencies = [
- "cc_ir_sys",
- "crubit_build",
- "frontend_action_sys",
+ "hermit-abi",
+ "libc",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -485,53 +380,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
-name = "jobserver"
-version = "0.1.32"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48d1dbcbbeb6a7fec7e059840aa538bd62aaccf972c7346c4d9d2059312853d0"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.161"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e9489c2807c139ffd9c1794f4af0ebe86a828db53ecdc7fea2111d0fed085d1"
 
 [[package]]
-name = "lifetime_annotations_sys"
-version = "0.0.0"
+name = "linux-raw-sys"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
+
+[[package]]
+name = "lock_api"
+version = "0.4.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96936507f153605bddfcda068dd804796c84324ed2510809e5b2a624c81da765"
 dependencies = [
- "crubit_build",
- "lifetime_symbol_table_sys",
- "lifetime_sys",
- "pointee_type_sys",
- "type_lifetimes_sys",
+ "autocfg",
+ "scopeguard",
 ]
 
 [[package]]
-name = "lifetime_substitutions_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "lifetime_sys",
-]
-
-[[package]]
-name = "lifetime_symbol_table_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "lifetime_sys",
-]
-
-[[package]]
-name = "lifetime_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
+name = "maplit"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
 
 [[package]]
 name = "memchr"
@@ -540,46 +414,136 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
-name = "memoized"
-version = "0.0.0"
-
-[[package]]
-name = "pointee_type_sys"
-version = "0.0.0"
+name = "num-traits"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
- "crubit_build",
+ "autocfg",
 ]
 
 [[package]]
-name = "proc-macro2"
-version = "1.0.88"
+name = "once_cell"
+version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c3a7fc5db1e57d5a779a352c8cdb57b29aa4c40cc69c3a68a7fedc815fbf2f9"
+checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
+
+[[package]]
+name = "parking_lot"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70d58bf43669b5795d1576d0641cfb6fbb2057bf629506267a92807158584a13"
+dependencies = [
+ "lock_api",
+ "parking_lot_core",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.9.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc838d2a56b5b1a6c25f55575dfc605fabb63bb2365f6c2353ef9159aa69e4a5"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "redox_syscall 0.5.13",
+ "smallvec",
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "pin-project"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "677f1add503faace112b9f1373e43e9e054bfdd22ff1a63c1bc485eaec6a6a8a"
+dependencies = [
+ "pin-project-internal",
+]
+
+[[package]]
+name = "pin-project-internal"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e918e4ff8c4549eb882f14b3a4bc8c8bc93de829416eacf579f1207a8fbf861"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pin-project-lite"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b3cff922bd51709b605d9ead9aa71031d81447142d828eb4a6eba76fe619f9b"
+
+[[package]]
+name = "portable-atomic"
+version = "1.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f84267b20a16ea918e43c6a88433c2d54fa145c92a811b5b047ccbe153674483"
+
+[[package]]
+name = "proc-macro2"
+version = "1.0.95"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02b3e5e68a3a1a02aad3ec490a98007cbc13c37cbe84a3cd7b8e406d76e7f778"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.37"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
+checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
 ]
 
 [[package]]
-name = "recording_diagnostic_consumer_sys"
-version = "0.0.0"
+name = "rayon"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b418a60154510ca1a002a752ca9714984e21e4241e804d32555251faf8b78ffa"
 dependencies = [
- "crubit_build",
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1465873a3dfdaa8ae7cb14b4383657caab0b3e8a0aa9ae8e04b044854c8dfce2"
+dependencies = [
+ "crossbeam-deque",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
+dependencies = [
+ "bitflags 1.3.2",
+]
+
+[[package]]
+name = "redox_syscall"
+version = "0.5.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d04b7d0ee6b4a0207a0a7adb104d23ecb0b47d6beae7152d0fa34b692b29fd6"
+dependencies = [
+ "bitflags 2.9.1",
 ]
 
 [[package]]
 name = "regex"
-version = "1.11.0"
+version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38200e5ee88914975b69f657f0801b6f6dccafd44fd9326302a4aaeecfacb1d8"
+checksum = "b544ef1b4eac5dc2db33ea63606ae9ffcfac26c1416a2806ae0bf5f56b201191"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -605,315 +569,84 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
-name = "rs_bindings_from_cc"
-version = "0.0.0"
+name = "rustc-hash"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "357703d41365b4b27c590e3ed91eabb1b663f07c4c084095e60cbed4362dff0d"
+
+[[package]]
+name = "rustix"
+version = "0.36.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "305efbd14fde4139eb501df5f136994bb520b033fa9fbdce287507dc23b8c7ed"
 dependencies = [
- "rs_bindings_from_cc_impl_sys",
+ "bitflags 1.3.2",
+ "errno",
+ "io-lifetimes",
+ "libc",
+ "linux-raw-sys",
+ "windows-sys 0.45.0",
 ]
 
 [[package]]
-name = "rs_bindings_from_cc_cc_api"
-version = "0.0.0"
-dependencies = [
- "error_report",
- "ffi_types",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_class_template_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cpp_type_name"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "error_report",
- "ir",
- "proc-macro2",
- "quote",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cxx_record_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "ast_convert_sys",
- "ast_util_sys",
- "cc_ir_sys",
- "crubit_build",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_database"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "error_report",
- "errors",
- "ffi_types",
- "flagset",
- "ir",
- "itertools",
- "memoized",
- "proc-macro2",
- "quote",
- "serde_json",
- "syn",
- "token_stream_printer",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_enum_sys"
-version = "0.0.0"
-dependencies = [
- "ast_util_sys",
- "cc_ir_sys",
- "crubit_build",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_friend_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_function_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "ast_util_sys",
- "cc_ir_sys",
- "crubit_build",
- "lifetime_annotations_sys",
- "lifetime_symbol_table_sys",
- "lifetime_sys",
- "recording_diagnostic_consumer_sys",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_function_template_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_bindings"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "error_report",
- "errors",
- "ffi_types",
- "flagset",
- "ir",
- "itertools",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_cpp_type_name",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_comment",
- "rs_bindings_from_cc_generate_enum",
- "rs_bindings_from_cc_generate_function",
- "rs_bindings_from_cc_generate_function_thunk",
- "rs_bindings_from_cc_generate_struct_and_union",
- "rs_bindings_from_cc_has_bindings",
- "rs_bindings_from_cc_rs_type_kind",
- "syn",
- "token_stream_printer",
- "unicode-ident",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_comment"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "ffi_types",
- "ir",
- "itertools",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_database",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_enum"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "error_report",
- "ir",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_comment",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_function"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "error_report",
- "errors",
- "ir",
- "itertools",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_comment",
- "rs_bindings_from_cc_generate_function_thunk",
- "rs_bindings_from_cc_has_bindings",
- "syn",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_function_thunk"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "error_report",
- "ir",
- "itertools",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_cpp_type_name",
- "rs_bindings_from_cc_database",
- "syn",
- "unicode-ident",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_struct_and_union"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "ir",
- "itertools",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_cpp_type_name",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_comment",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_has_bindings"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "crubit_feature",
- "ir",
- "rs_bindings_from_cc_database",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_impl_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ir_sys",
- "cmdline_sys",
- "collect_namespaces_sys",
- "crubit_build",
- "file_io_sys",
- "generate_bindings_and_metadata_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_namespace_sys"
-version = "0.0.0"
-dependencies = [
- "ast_util_sys",
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_rs_type_kind"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "ir",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_has_bindings",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_type_alias_sys"
-version = "0.0.0"
-dependencies = [
- "ast_util_sys",
- "cc_ir_sys",
- "crubit_build",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_type_map_override_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_var_sys"
-version = "0.0.0"
-dependencies = [
- "ast_util_sys",
- "cc_ir_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "run_compiler"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "either",
-]
+name = "rustversion"
+version = "1.0.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a0d197bd2c9dc6e53b84da9556a69ba4cdfab8619eb41a8bd1cc2027a0f6b1d"
 
 [[package]]
 name = "ryu"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
+
+[[package]]
+name = "salsa"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8fff508e3d6ef42a32607f7538e17171a877a12015e32036f46e99d00c95781"
+dependencies = [
+ "boxcar",
+ "crossbeam-queue",
+ "dashmap",
+ "hashbrown 0.15.4",
+ "hashlink",
+ "indexmap",
+ "parking_lot",
+ "portable-atomic",
+ "rayon",
+ "rustc-hash",
+ "salsa-macro-rules",
+ "salsa-macros",
+ "smallvec",
+ "thin-vec",
+ "tracing",
+]
+
+[[package]]
+name = "salsa-macro-rules"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ea72b3c06f2ce6350fe3a0eeb7aaaf842d1d8352b706973c19c4f02e298a87c"
+
+[[package]]
+name = "salsa-macros"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ce92025bc160b27814a207cb78d680973af17f863c7f4fc56cf3a535e22f378"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "synstructure",
+]
+
+[[package]]
+name = "scopeguard"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "serde"
@@ -948,20 +681,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "shlex"
-version = "1.3.0"
+name = "smallvec"
+version = "1.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
-
-[[package]]
-name = "src_code_gen_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "cc_ir_sys",
- "crubit_build",
- "rs_bindings_from_cc_cc_api",
-]
+checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
 name = "static_assertions"
@@ -977,9 +700,9 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "syn"
-version = "2.0.79"
+version = "2.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89132cd0bf050864e1d38dc3bbc07a0eb8e7530af26344d3d2bbbef83499f590"
+checksum = "e4307e30089d6fd6aff212f2da3a1f9e32f3223b1f010fb09b7c95f90f3ca1e8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -987,35 +710,52 @@ dependencies = [
 ]
 
 [[package]]
-name = "token_stream_printer"
-version = "0.0.0"
+name = "synstructure"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "728a70f3dbaf5bab7f0c4b1ac8d7ae5ea60a4b5549c8a5914361c99147a709d2"
 dependencies = [
- "anyhow",
- "ffi_types",
  "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
-name = "toposort"
-version = "0.0.0"
-
-[[package]]
-name = "type_lifetimes_sys"
-version = "0.0.0"
+name = "tempfile"
+version = "3.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af18f7ae1acd354b992402e9ec5864359d693cd8a79dcbef59f76891701c1e95"
 dependencies = [
- "crubit_build",
- "lifetime_substitutions_sys",
- "lifetime_symbol_table_sys",
- "lifetime_sys",
- "pointee_type_sys",
+ "cfg-if",
+ "fastrand",
+ "redox_syscall 0.2.16",
+ "rustix",
+ "windows-sys 0.42.0",
 ]
 
 [[package]]
-name = "type_map_sys"
-version = "0.0.0"
+name = "thin-vec"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "144f754d318415ac792f9d69fc87abbbfc043ce2ef041c60f16ad828f638717d"
+
+[[package]]
+name = "tracing"
+version = "0.1.41"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "784e0ac535deb450455cbfa28a6f0df145ea1bb7ae51b821cf5e7927fdcfbdd0"
 dependencies = [
- "cc_ir_sys",
- "crubit_build",
+ "pin-project-lite",
+ "tracing-core",
+]
+
+[[package]]
+name = "tracing-core"
+version = "0.1.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9d12581f227e93f094d3af2ae690a574abb8a2b9b7a96e7cfe9647b2b617678"
+dependencies = [
+ "once_cell",
 ]
 
 [[package]]
@@ -1032,11 +772,74 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "windows-sys"
+version = "0.42.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a3e1820f08b8513f676f7ab6c1f99ff312fb97b553d30ff4dd86f9f15728aa7"
+dependencies = [
+ "windows_aarch64_gnullvm 0.42.2",
+ "windows_aarch64_msvc 0.42.2",
+ "windows_i686_gnu 0.42.2",
+ "windows_i686_msvc 0.42.2",
+ "windows_x86_64_gnu 0.42.2",
+ "windows_x86_64_gnullvm 0.42.2",
+ "windows_x86_64_msvc 0.42.2",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75283be5efb2831d37ea142365f009c02ec203cd29a3ebecbc093d52315b66d0"
+dependencies = [
+ "windows-targets 0.42.2",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.48.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
+dependencies = [
+ "windows-targets 0.48.5",
+]
+
+[[package]]
+name = "windows-sys"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
 dependencies = [
- "windows-targets",
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-targets"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e5180c00cd44c9b1c88adb3693291f1cd93605ded80c250a75d472756b4d071"
+dependencies = [
+ "windows_aarch64_gnullvm 0.42.2",
+ "windows_aarch64_msvc 0.42.2",
+ "windows_i686_gnu 0.42.2",
+ "windows_i686_msvc 0.42.2",
+ "windows_x86_64_gnu 0.42.2",
+ "windows_x86_64_gnullvm 0.42.2",
+ "windows_x86_64_msvc 0.42.2",
+]
+
+[[package]]
+name = "windows-targets"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a2fa6e2155d7247be68c096456083145c183cbbbc2764150dda45a87197940c"
+dependencies = [
+ "windows_aarch64_gnullvm 0.48.5",
+ "windows_aarch64_msvc 0.48.5",
+ "windows_i686_gnu 0.48.5",
+ "windows_i686_msvc 0.48.5",
+ "windows_x86_64_gnu 0.48.5",
+ "windows_x86_64_gnullvm 0.48.5",
+ "windows_x86_64_msvc 0.48.5",
 ]
 
 [[package]]
@@ -1045,15 +848,27 @@ version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973"
 dependencies = [
- "windows_aarch64_gnullvm",
- "windows_aarch64_msvc",
- "windows_i686_gnu",
+ "windows_aarch64_gnullvm 0.52.6",
+ "windows_aarch64_msvc 0.52.6",
+ "windows_i686_gnu 0.52.6",
  "windows_i686_gnullvm",
- "windows_i686_msvc",
- "windows_x86_64_gnu",
- "windows_x86_64_gnullvm",
- "windows_x86_64_msvc",
+ "windows_i686_msvc 0.52.6",
+ "windows_x86_64_gnu 0.52.6",
+ "windows_x86_64_gnullvm 0.52.6",
+ "windows_x86_64_msvc 0.52.6",
 ]
+
+[[package]]
+name = "windows_aarch64_gnullvm"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "597a5118570b68bc08d8d59125332c54f1ba9d9adeedeef5b99b02ba2b0698f8"
+
+[[package]]
+name = "windows_aarch64_gnullvm"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b38e32f0abccf9987a4e3079dfb67dcd799fb61361e53e2882c3cbaf0d905d8"
 
 [[package]]
 name = "windows_aarch64_gnullvm"
@@ -1063,9 +878,33 @@ checksum = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
 
 [[package]]
 name = "windows_aarch64_msvc"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e08e8864a60f06ef0d0ff4ba04124db8b0fb3be5776a5cd47641e942e58c4d43"
+
+[[package]]
+name = "windows_aarch64_msvc"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc35310971f3b2dbbf3f0690a219f40e2d9afcf64f9ab7cc1be722937c26b4bc"
+
+[[package]]
+name = "windows_aarch64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
+
+[[package]]
+name = "windows_i686_gnu"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c61d927d8da41da96a81f029489353e68739737d3beca43145c8afec9a31a84f"
+
+[[package]]
+name = "windows_i686_gnu"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a75915e7def60c94dcef72200b9a8e58e5091744960da64ec734a6c6e9b3743e"
 
 [[package]]
 name = "windows_i686_gnu"
@@ -1081,9 +920,33 @@ checksum = "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
 
 [[package]]
 name = "windows_i686_msvc"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44d840b6ec649f480a41c8d80f9c65108b92d89345dd94027bfe06ac444d1060"
+
+[[package]]
+name = "windows_i686_msvc"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f55c233f70c4b27f66c523580f78f1004e8b5a8b659e05a4eb49d4166cca406"
+
+[[package]]
+name = "windows_i686_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
+
+[[package]]
+name = "windows_x86_64_gnu"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8de912b8b8feb55c064867cf047dda097f92d51efad5b491dfb98f6bbb70cb36"
+
+[[package]]
+name = "windows_x86_64_gnu"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53d40abd2583d23e4718fddf1ebec84dbff8381c07cae67ff7768bbf19c6718e"
 
 [[package]]
 name = "windows_x86_64_gnu"
@@ -1093,9 +956,33 @@ checksum = "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
 
 [[package]]
 name = "windows_x86_64_gnullvm"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26d41b46a36d453748aedef1486d5c7a85db22e56aff34643984ea85514e94a3"
+
+[[package]]
+name = "windows_x86_64_gnullvm"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b7b52767868a23d5bab768e390dc5f5c55825b6d30b86c844ff2dc7414044cc"
+
+[[package]]
+name = "windows_x86_64_gnullvm"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
+
+[[package]]
+name = "windows_x86_64_msvc"
+version = "0.42.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9aec5da331524158c6d1a4ac0ab1541149c0b9505fde06423b02f5ef0106b9f0"
+
+[[package]]
+name = "windows_x86_64_msvc"
+version = "0.48.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed94fce61571a4006852b7389a063ab983c02eb1bb37b47f8272ce92d06d9538"
 
 [[package]]
 name = "windows_x86_64_msvc"

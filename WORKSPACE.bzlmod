@@ -21,7 +21,7 @@ load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_regi
 
 rules_rust_dependencies()
 
-RUST_TOOLCHAIN_VERSION = "nightly/2025-03-20"
+RUST_TOOLCHAIN_VERSION = "nightly/2025-06-02"
 
 rust_register_toolchains(
     allocator_library = "@//common:rust_allocator_shims",
@@ -63,7 +63,7 @@ crates_repository(
             version = ">1.0.0",
         ),
         "flagset": crate.spec(
-            version = ">0.0.0",
+            version = ">=0.4.7",
         ),
         "googletest": crate.spec(
             version = ">0.0.0",
@@ -85,6 +85,9 @@ crates_repository(
         ),
         "regex": crate.spec(
             version = ">=1.6.0",
+        ),
+        "rustversion": crate.spec(
+            version = ">1.0.20",
         ),
         "salsa": crate.spec(
             version = ">0.0.0",
