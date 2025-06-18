@@ -28,6 +28,9 @@ filegroup(
             "string_view.rs",
         ],
     ),
+    compatible_with = [
+        "//buildenv/target:non_prod",
+    ],
 )
 
 LIBCXX_HEADERS = [
@@ -103,6 +106,9 @@ filegroup(
         "conversion_function_helpers.h",
         "std_allocator.h",
     ],
+    compatible_with = [
+        "//buildenv/target:non_prod",
+    ],
     visibility = [
         "//visibility:public",
     ],
@@ -112,6 +118,9 @@ additional_rust_srcs_for_crubit_bindings(
     name = "cpp_std_allocator",
     srcs = [
         "cpp_std_allocator.rs",
+    ],
+    compatible_with = [
+        "//buildenv/target:non_prod",
     ],
     namespace_path = "crubit_cc_std_internal::std_allocator",
 )
@@ -125,11 +134,17 @@ additional_rust_srcs_for_crubit_bindings(
         "vector.rs",
         "vector_partial_eq.rs",
     ],
+    compatible_with = [
+        "//buildenv/target:non_prod",
+    ],
     namespace_path = "std",
 )
 
 bindings_for_toolchain_headers(
     name = "cc_std",
+    compatible_with = [
+        "//buildenv/target:non_prod",
+    ],
     extra_hdrs = [":crubit_internal_helper_headers"],
     extra_rs_srcs = [
         ":extra_rs_srcs_for_cc_std",
