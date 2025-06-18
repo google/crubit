@@ -437,7 +437,7 @@ fn test_trivial_nonpublic_destructor() -> Result<()> {
     assert_rs_matches!(rs_api, quote! {impl<'error> Default});
     assert_rs_matches!(rs_api, quote! {impl<'error> From});
     assert_rs_matches!(rs_api, quote! {impl<'error> Clone});
-    assert_rs_matches!(rs_api, quote! {ReturnsValue<'error>});
+    assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
     assert_rs_matches!(rs_api, quote! {TakesValue<'error>});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Indestructible});
@@ -467,7 +467,7 @@ fn test_nontrivial_nonpublic_destructor() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     // It isn't available by value:
     assert_rs_not_matches!(rs_api, quote! {CtorNew});
-    assert_rs_matches!(rs_api, quote! {ReturnsValue<'error>});
+    assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
     assert_rs_matches!(rs_api, quote! {TakesValue<'error>});
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Indestructible});

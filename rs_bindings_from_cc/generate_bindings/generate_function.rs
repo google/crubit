@@ -1143,7 +1143,10 @@ pub fn generate_function(
         db.rs_type_kind(func.return_type.clone()).with_context(|| "Failed to format return type"),
     )?;
     if let Err(err) = return_type.check_by_value() {
+        // If the return type is not valid, we can't generate even a fake thunk, so we must return
+        // immediately.
         errors.add(err);
+        errors.consolidate()?;
     }
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();

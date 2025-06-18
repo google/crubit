@@ -194,7 +194,7 @@ pub fn generate_function_thunk(
 // The escaping scheme is not collision-free, i.e. two different inputs may map to the same output.
 // In practice, though, collisions are extremely unlikely, and other aspects of the way we create
 // thunk names may also cause (very unlikely) collisions.
-fn ident_fragment_from_mangled_name(mangled_name: &str) -> Cow<str> {
+fn ident_fragment_from_mangled_name(mangled_name: &str) -> Cow<'_, str> {
     // LLVM identifiers use the `\01` prefix to suppress mangling:
     // https://llvm.org/docs/LangRef.html#identifiers
     // We won't be passing the name to LLVM anyway, so we simply strip the prefix if present.

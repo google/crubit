@@ -797,6 +797,12 @@ impl RsTypeKind {
         match self.unalias() {
             RsTypeKind::Error { error, .. } => bail!("Cannot use an error type by value: {error}"),
             RsTypeKind::Record { record, .. } => check_by_value(record),
+            RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
+                bail!(
+                    "Attempted to pass incomplete record type `{}` by-value",
+                    incomplete_record.cc_name
+                )
+            }
             _ => Ok(()),
         }
     }

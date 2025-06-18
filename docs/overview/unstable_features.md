@@ -48,6 +48,14 @@ For each feature we use, we document the following:
     where it relies on forward declarations for build performance or
     cycle-breaking reasons.
 
+### `sized_hierarchy`
+
+*   **Crubit feature:** `experimental`
+
+*   **Use case:** Used for forward declarations, which have an unknown size.
+
+*   **Exit strategy:** Same as `extern_types`.
+
 ### `arbitrary_self_types`
 
 *   **Crubit feature:** `experimental`

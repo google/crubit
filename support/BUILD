@@ -107,11 +107,11 @@ rust_test(
 rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     crate_features = ["unstable"],
     proc_macro_deps = [":forward_declare_proc_macros"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts,unsized_const_params"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//:__subpackages__",
         "//google_internal/release:crubit_support_lib_visibility",

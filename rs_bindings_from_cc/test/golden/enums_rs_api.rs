@@ -6,13 +6,7 @@
 // //rs_bindings_from_cc/test/golden:enums_cc
 
 #![rustfmt::skip]
-#![feature(
-    allocator_api,
-    cfg_sanitize,
-    custom_inner_attributes,
-    impl_trait_in_assoc_type,
-    register_tool
-)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -320,22 +314,5 @@ impl From<NonEmptyCharClass> for ::core::ffi::c_char {
 // Error while generating bindings for item 'ForwardDeclared':
 // Can't generate bindings for ForwardDeclared, because it is unsupported: b/322391132: Forward-declared (opaque) enums are not implemented yet
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nCannot use an error type by value: Can't generate bindings for ForwardDeclared, because it is unsupported"
-)]
-pub trait BindingFailedFor_Z31do_not_generate_bindings_for_mev {}
-#[inline(always)]
-pub(crate) fn do_not_generate_bindings_for_me<'error>() -> impl ::ctor::Ctor<
-    Output = ::forward_declare::Incomplete<::forward_declare::symbol!("ForwardDeclared"), ()>,
->
-where
-    &'error (): BindingFailedFor_Z31do_not_generate_bindings_for_mev,
-{
-    #![allow(unused_variables)]
-    unreachable!(
-        "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-    );
-    #[allow(unreachable_code)]
-    ::ctor::UnreachableCtor::new()
-}
+// Error while generating bindings for item 'do_not_generate_bindings_for_me':
+// Cannot use an error type by value: Can't generate bindings for ForwardDeclared, because it is unsupported

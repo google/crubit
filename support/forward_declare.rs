@@ -274,11 +274,15 @@ pub mod internal {
 
 use internal::*;
 
-extern "C" {
-    /// Adding an `Unsized` field to your type makes it completely unsized
-    /// (not just dynamically-sized).
-    type Unsized;
-}
+// TODO: cramertj - Move this to `extern "C"` type when extern types and the Sized heirarchy have
+// stabilized.
+//
+// extern "C" {
+//     /// Adding an `Unsized` field to your type makes it completely unsized
+//     /// (not just dynamically-sized).
+//     type Unsized;
+// }
+type Unsized = ();
 
 /// A struct representing an "Incomplete Type" for `Name`
 ///
