@@ -13,7 +13,6 @@ cc_library(
         "sizeof.h",
         "slot.h",
     ],
-    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],

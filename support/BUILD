@@ -33,7 +33,6 @@ rust_proc_macro(
 cc_library(
     name = "annotations",
     hdrs = ["annotations.h"],
-    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
     ],
@@ -189,7 +188,6 @@ rust_test(
 cc_library(
     name = "bridge_cpp",
     hdrs = ["bridge.h"],
-    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
         "//google_internal/release:crubit_support_lib_visibility",
@@ -209,7 +207,6 @@ cc_library(
     name = "status_bridge_cpp",
     srcs = ["status_bridge.cc"],
     hdrs = ["status_bridge.h"],
-    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
     ],
