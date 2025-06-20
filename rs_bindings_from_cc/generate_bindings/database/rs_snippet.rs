@@ -483,7 +483,8 @@ impl RsTypeKind {
         let ir = db.ir();
         let underlying_type = db.rs_type_kind(type_alias.underlying_type.clone())?;
         // Bridge types cannot be aliased
-        if underlying_type.unalias().is_bridge_type() {
+        // Note: we don't need to call `.unalias()`, because we already checked this, recursively.
+        if underlying_type.is_bridge_type() {
             return Ok(underlying_type);
         }
         let crate_path = Rc::new(CratePath::new(
