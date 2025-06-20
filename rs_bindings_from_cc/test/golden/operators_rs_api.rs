@@ -17,7 +17,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy)]
@@ -846,7 +846,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
@@ -1113,9 +1113,14 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
     }
 }
 
-// Error while generating bindings for item 'operator+=':
-// Compound assignment operators are not yet supported for pointers with unknown lifetime (b/219826128), found *mut crate::AddAssignFreeByConstRef
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
+    #[inline(always)]
+    fn add_assign(&mut self, rhs: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZpLR23AddAssignFreeByConstRefRKS_(self, rhs);
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -1252,6 +1257,15 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefaSEOS_(self, __param_0);
+        }
+    }
+}
+
+impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
+    #[inline(always)]
+    fn add_assign(&mut self, rhs: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZpLR25AddAssignFriendByConstRefRKS_(self, rhs);
         }
     }
 }
@@ -2132,6 +2146,11 @@ mod detail {
             __this: &'a mut crate::AddAssignFreeByConstRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
         ) -> &'a mut crate::AddAssignFreeByConstRef;
+        #[link_name = "_ZpLR23AddAssignFreeByConstRefRKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZpLR23AddAssignFreeByConstRefRKS_<'__return_lifetime>(
+            lhs: &mut crate::AddAssignFreeByConstRef,
+            rhs: &crate::AddAssignFreeByConstRef,
+        ) -> &'__return_lifetime mut crate::AddAssignFreeByConstRef;
         pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -2166,6 +2185,13 @@ mod detail {
             __this: &'a mut crate::AddAssignFriendByConstRef,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
         ) -> &'a mut crate::AddAssignFriendByConstRef;
+        #[link_name = "_ZpLR25AddAssignFriendByConstRefRKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZpLR25AddAssignFriendByConstRefRKS_<
+            '__return_lifetime,
+        >(
+            lhs: &mut crate::AddAssignFriendByConstRef,
+            rhs: &crate::AddAssignFriendByConstRef,
+        ) -> &'__return_lifetime mut crate::AddAssignFriendByConstRef;
         pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
             __this: *mut ::core::ffi::c_void,
         );

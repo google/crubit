@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 // Error while generating bindings for item 'Ptr':
@@ -27,24 +27,75 @@ impl !Send for Outer {}
 impl !Sync for Outer {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer);
 
-// Error while generating bindings for item 'Outer::Outer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Outer
-// Missing lifetime for `__this` parameter type: *mut crate::Outer
+impl Default for Outer {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN5OuterC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'Outer::Outer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Outer
-// Missing lifetime for `__this` parameter type: *mut crate::Outer
+impl From<::ctor::RvalueReference<'_, Self>> for Outer {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN5OuterC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Outer {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'Outer::Outer':
-// Parameter #0 is not supported: Unsupported type 'Outer &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for Outer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5OuteraSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'Outer::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Outer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5OuteraSEOS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'Outer::operator=':
-// Parameter #0 is not supported: Unsupported type 'Outer &&': Unsupported type: && without lifetime
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN5OuterC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5OuterC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::Outer>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN5OuteraSERKS_<'__return_lifetime>(
+            __this: &mut crate::Outer,
+            __param_0: &crate::Outer,
+        ) -> &'__return_lifetime mut crate::Outer;
+        pub(crate) unsafe fn __rust_thunk___ZN5OuteraSEOS_<'__return_lifetime>(
+            __this: &mut crate::Outer,
+            __param_0: ::ctor::RvalueReference<'_, crate::Outer>,
+        ) -> &'__return_lifetime mut crate::Outer;
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::Outer>() == 1);

@@ -22,4 +22,23 @@ static_assert(CRUBIT_SIZEOF(struct Foo) == 4);
 static_assert(alignof(struct Foo) == 4);
 static_assert(CRUBIT_OFFSET_OF(foo, struct Foo) == 0);
 
+extern "C" void __rust_thunk___ZN3FooC1Ev(struct Foo* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN3FooC1EOS_(struct Foo* __this,
+                                            struct Foo* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct Foo* __rust_thunk___ZN3FooaSERKS_(
+    struct Foo* __this, const struct Foo* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct Foo* __rust_thunk___ZN3FooaSEOS_(struct Foo* __this,
+                                                   struct Foo* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 #pragma clang diagnostic pop

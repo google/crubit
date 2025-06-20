@@ -120,10 +120,8 @@ mod tests {
     }
 
     #[gtest]
-    fn test_no_elided_lifetimes() {
-        // b/214244223: No bindings should be generated for any of the
-        // constructors if no lifetimes are present on `this` parameter in C++.
-        assert_not_impl_any!(StructWithConstructorsWithoutLifetimes: Clone, Default, From<i32>);
+    fn test_elided_lifetimes() {
+        assert_impl_all!(StructWithConstructorsWithoutLifetimes: Clone, Default, From<i32>);
 
         // Trivial-ABI structs should not implement the Copy trait, if they have a
         // user-defined copy constructor (aka a non-trivial copy constructor).

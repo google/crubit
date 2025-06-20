@@ -63,7 +63,8 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
         fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets>;
 
-        /// Returns the Rust type kind of the given C++ type.
+        /// Returns the Rust type kind of the given C++ type, optionally filling in missing
+        /// reference lifetimes with the elided lifetime (`'_`).
         ///
         /// An `Ok()` return value does not necessarily imply that the resulting `RsTypeKind` is
         /// usable in APIs: callers must also check the result of `db::type_visibility()` for
@@ -71,10 +72,10 @@ memoized::query_group! {
         /// have a successful non-error return value, even if the type is not generally usable.
         /// Instead, restrictions will always be done via `type_visibility`.
         ///
-        /// TODO(b/409128537): never return `Err` here, instead check `type_visibility`.
+        /// TODO(b/409128537): never return `Err` here, instead check `type_visibility`
         ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind
-        fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind>;
+        /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind_with_lifetime_elision
+        fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, elide_missing_lifetimes: bool) -> Result<RsTypeKind>;
 
         /// Returns the generated bindings for the given function.
         ///
@@ -136,6 +137,15 @@ memoized::query_group! {
 
         // You should probably use db::type_visibility instead of this function.
         fn type_target_restriction(&self, rs_type_kind: RsTypeKind) -> Result<Option<BazelLabel>>;
+
+        #[provided]
+        /// Returns the Rust type kind of the given C++ type.
+        ///
+        /// This differs from `rs_type_kind_with_lifetime_elision` in that it replaces references
+        /// with missing lifetimes with pointer types.
+        fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
+            self.rs_type_kind_with_lifetime_elision(cc_type, /*elide_missing_lifetimes=*/false)
+        }
     }
     pub struct Database;
 }

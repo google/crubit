@@ -21,7 +21,7 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::Ident;
 use quote::{quote, ToTokens};
-use rs_type_kind::rs_type_kind;
+use rs_type_kind::rs_type_kind_with_lifetime_elision;
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::path::Path;
@@ -294,7 +294,7 @@ pub fn new_database<'db>(
         generate_enum::generate_enum,
         generate_item,
         generate_struct_and_union::generate_record,
-        rs_type_kind,
+        rs_type_kind_with_lifetime_elision,
         generate_function::generate_function,
         generate_function::overloaded_funcs,
         generate_function::is_record_clonable,
@@ -390,9 +390,9 @@ pub fn generate_bindings_tokens(
 
             // Parts of our generated code are sometimes considered dead
             // (b/349776381).
-            #![allow(dead_code)] __NEWLINE__
-
+            #![allow(dead_code, unused_mut)] __NEWLINE__
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
+
 
             #( #items __NEWLINE__ __NEWLINE__ )*
 

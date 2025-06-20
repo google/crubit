@@ -17,7 +17,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy)]
@@ -115,7 +115,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
@@ -230,7 +230,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for TriviallyCopyableButNontriviallyDestructi
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(dest as*mut::core::ffi::c_void,__param_0);

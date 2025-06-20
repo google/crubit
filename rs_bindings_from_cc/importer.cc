@@ -1051,17 +1051,16 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
 
     CRUBIT_ASSIGN_OR_RETURN(CcType cpp_pointee_type,
                             ConvertQualType(pointee_type, pointee_lifetimes));
+    // Note: we don't check for a lifetime here and prefer to defer to the
+    // IR consumer to error if a lifetime is required. This allows the IR
+    // consumer to infer a lifetime where-appropriate (e.g. constructors).
     if (type->isPointerType()) {
       return CcType::PointerTo(std::move(cpp_pointee_type), lifetime, nullable);
     } else if (type->isLValueReferenceType()) {
       return CcType::LValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     } else {
       CHECK(type->isRValueReferenceType());
-      if (!lifetime.has_value()) {
-        return absl::UnimplementedError(
-            "Unsupported type: && without lifetime");
-      }
-      return CcType::RValueReferenceTo(std::move(cpp_pointee_type), *lifetime);
+      return CcType::RValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     }
   } else if (const auto* builtin_type =
                  // Use getAsAdjusted instead of getAs so we don't desugar

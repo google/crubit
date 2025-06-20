@@ -117,7 +117,7 @@ impl TraitName {
     }
 
     /// Returns the lifetimes used in this trait name.
-    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + '_ {
+    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'_> {
         self.params().iter().flat_map(|p| p.lifetimes())
     }
 }

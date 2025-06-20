@@ -21,6 +21,23 @@
 static_assert(sizeof(class SomeClass) == 1);
 static_assert(alignof(class SomeClass) == 1);
 
-extern "C" void __rust_thunk___Z8Overloadv() { Overload(); }
+extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN9SomeClassC1EOS_(class SomeClass* __this,
+                                                  class SomeClass* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" class SomeClass* __rust_thunk___ZN9SomeClassaSERKS_(
+    class SomeClass* __this, const class SomeClass* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" class SomeClass* __rust_thunk___ZN9SomeClassaSEOS_(
+    class SomeClass* __this, class SomeClass* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 
 #pragma clang diagnostic pop

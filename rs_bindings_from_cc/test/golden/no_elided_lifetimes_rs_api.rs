@@ -6,12 +6,18 @@
 // //rs_bindings_from_cc/test/golden:no_elided_lifetimes_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
+#![feature(
+    allocator_api,
+    cfg_sanitize,
+    custom_inner_attributes,
+    impl_trait_in_assoc_type,
+    negative_impls
+)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[inline(always)]
@@ -29,24 +35,55 @@ impl !Send for S {}
 impl !Sync for S {}
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
-// Error while generating bindings for item 'S::S':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::S
-// Missing lifetime for `__this` parameter type: *mut crate::S
+impl Default for S {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'S::S':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::S
-// Missing lifetime for `__this` parameter type: *mut crate::S
+impl From<::ctor::RvalueReference<'_, Self>> for S {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1SC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for S {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'S::S':
-// Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for S {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN1SaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'S::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'S::operator=':
-// Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for S {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN1SaSEOS_(self, __param_0);
+        }
+    }
+}
 
 impl S {
     #[inline(always)]
@@ -83,13 +120,41 @@ forward_declare::unsafe_define!(
     crate::TriviallyCopyableButNontriviallyDestructible
 );
 
-// Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::ctor::Assign<&Self> for TriviallyCopyableButNontriviallyDestructible {
+    #[inline(always)]
+    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
-// Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::TriviallyCopyableButNontriviallyDestructible
-// Missing lifetime for `__this` parameter type: *mut crate::TriviallyCopyableButNontriviallyDestructible
+impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
+    for TriviallyCopyableButNontriviallyDestructible
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'__unelided>;
+    #[inline(always)]
+    fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(dest as*mut::core::ffi::c_void,__param_0);
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(&'__unelided Self,)>
+    for TriviallyCopyableButNontriviallyDestructible
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'__unelided>;
+    #[inline(always)]
+    fn ctor_new(args: (&'__unelided Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__unelided Self>>::ctor_new(arg)
+    }
+}
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -116,27 +181,81 @@ impl !Send for WrappedValue {}
 impl !Sync for WrappedValue {}
 forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
 
-// Error while generating bindings for item 'WrappedValue::WrappedValue':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::WrappedValue
-// Missing lifetime for `__this` parameter type: *mut crate::WrappedValue
+impl From<::ctor::RvalueReference<'_, Self>> for WrappedValue {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12WrappedValueC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for WrappedValue {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'WrappedValue::WrappedValue':
-// Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for WrappedValue {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12WrappedValueaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'WrappedValue::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for WrappedValue {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12WrappedValueaSEOS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'WrappedValue::operator=':
-// Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
+impl From<::core::ffi::c_int> for WrappedValue {
+    #[inline(always)]
+    fn from(value: ::core::ffi::c_int) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12WrappedValueC1Ei(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                value,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::core::ffi::c_int> for WrappedValue {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
+        <Self as From<::core::ffi::c_int>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'WrappedValue::WrappedValue':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::WrappedValue
-// Missing lifetime for `__this` parameter type: *mut crate::WrappedValue
-
-// Error while generating bindings for item 'WrappedValue::operator+':
-// Non-record-nor-reference operator parameters are not yet supported, found *const crate::WrappedValue
+impl ::core::ops::Add<&crate::WrappedValue> for &crate::WrappedValue {
+    type Output = crate::WrappedValue;
+    #[inline(always)]
+    fn add(self, rhs: &crate::WrappedValue) -> Self::Output {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<crate::WrappedValue>::uninit();
+            crate::detail::__rust_thunk___ZNK12WrappedValueplERKS_(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                self,
+                rhs,
+            );
+            __return.assume_init()
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -146,6 +265,19 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z13free_functionRi(
             p1: *mut ::core::ffi::c_int,
         ) -> *mut ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN1SC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::S>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN1SaSERKS_<'__return_lifetime>(
+            __this: &mut crate::S,
+            __param_0: &crate::S,
+        ) -> &'__return_lifetime mut crate::S;
+        pub(crate) unsafe fn __rust_thunk___ZN1SaSEOS_<'__return_lifetime>(
+            __this: &mut crate::S,
+            __param_0: ::ctor::RvalueReference<'_, crate::S>,
+        ) -> &'__return_lifetime mut crate::S;
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) unsafe fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const crate::S,
@@ -158,6 +290,20 @@ mod detail {
             p1: *mut ::core::ffi::c_int,
             p2: *mut ::core::ffi::c_int,
         ) -> *mut ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
+            '__return_lifetime,
+        >(
+            __this: ::core::pin::Pin<&mut crate::TriviallyCopyableButNontriviallyDestructible>,
+            __param_0: &crate::TriviallyCopyableButNontriviallyDestructible,
+        ) -> ::core::pin::Pin<
+            &'__return_lifetime mut crate::TriviallyCopyableButNontriviallyDestructible,
+        >;
+        pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_<
+            '__unelided,
+        >(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__unelided crate::TriviallyCopyableButNontriviallyDestructible,
+        );
         #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<
             'a,
@@ -166,6 +312,27 @@ mod detail {
         );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(p: *mut ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::WrappedValue>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueaSERKS_<'__return_lifetime>(
+            __this: &mut crate::WrappedValue,
+            __param_0: &crate::WrappedValue,
+        ) -> &'__return_lifetime mut crate::WrappedValue;
+        pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueaSEOS_<'__return_lifetime>(
+            __this: &mut crate::WrappedValue,
+            __param_0: ::ctor::RvalueReference<'_, crate::WrappedValue>,
+        ) -> &'__return_lifetime mut crate::WrappedValue;
+        pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueC1Ei(
+            __this: *mut ::core::ffi::c_void,
+            value: ::core::ffi::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZNK12WrappedValueplERKS_(
+            __return: *mut ::core::ffi::c_void,
+            __this: &crate::WrappedValue,
+            rhs: &crate::WrappedValue,
+        );
     }
 }
 

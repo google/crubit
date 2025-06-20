@@ -57,6 +57,7 @@ rust_bindings_from_cc_cli_flag(
     hdrs = [name + ".h"],
     aspect_hints = [
         "//features:experimental",
+        "//features:infer_operator_lifetimes",
         ":disable_source_location_in_doc_comment",
     ],
     deps = [

@@ -10,7 +10,11 @@ use ir::{CcCallingConv, CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::rs_type_kind`.
-pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind> {
+pub fn rs_type_kind_with_lifetime_elision(
+    db: &dyn BindingsGenerator,
+    ty: CcType,
+    elide_missing_lifetimes: bool,
+) -> Result<RsTypeKind> {
     ensure!(ty.unknown_attr.is_empty(), "unknown attribute(s): {}", ty.unknown_attr);
     match &ty.variant {
         CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive(*primitive)),
@@ -48,16 +52,15 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
             }
             let pointee = Rc::new(pointee);
 
-            let Some(lifetime_id) = pointer.lifetime else {
-                return Ok(RsTypeKind::Pointer { pointee, mutability });
+            let lifetime = match pointer.lifetime {
+                Some(lifetime_id) => db
+                    .ir()
+                    .get_lifetime(lifetime_id)
+                    .map(Lifetime::from)
+                    .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
+                None if elide_missing_lifetimes => Lifetime::elided(),
+                None => return Ok(RsTypeKind::Pointer { pointee, mutability }),
             };
-
-            let lifetime = db
-                .ir()
-                .get_lifetime(lifetime_id)
-                .map(Lifetime::from)
-                .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?;
-
             if let PointerTypeKind::RValueRef = pointer.kind {
                 Ok(RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime })
             } else {
@@ -73,10 +76,18 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
             let (return_type, param_types) = param_and_return_types
                 .split_last()
                 .expect("In well-formed IR function pointers include at least the return type");
-            let return_type = Rc::new(db.rs_type_kind(return_type.clone())?);
+            let return_type = Rc::new(db.rs_type_kind_with_lifetime_elision(
+                return_type.clone(),
+                elide_missing_lifetimes,
+            )?);
             let param_types = param_types
                 .iter()
-                .map(|param_type| db.rs_type_kind(param_type.clone()))
+                .map(|param_type| {
+                    db.rs_type_kind_with_lifetime_elision(
+                        param_type.clone(),
+                        elide_missing_lifetimes,
+                    )
+                })
                 .collect::<Result<Rc<[_]>>>()?;
             ensure!(
                 param_types
@@ -105,7 +116,10 @@ pub fn rs_type_kind(db: &dyn BindingsGenerator, ty: CcType) -> Result<RsTypeKind
                     // (If we did, then a C++ library owner could break Rust callers, which is a
                     // maintenance responsibility that they did not sign up for!)
                     if !matches!(error, NoBindingsReason::MissingRequiredFeatures { .. }) {
-                        return db.rs_type_kind(alias.underlying_type.clone());
+                        return db.rs_type_kind_with_lifetime_elision(
+                            alias.underlying_type.clone(),
+                            elide_missing_lifetimes,
+                        );
                     }
                 }
                 // Comprehensive fallbacks: if we can delay reifying the error, delay it.

@@ -18,7 +18,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// Nontrivial due to (declared, but not yet defined) user-specified constructor
@@ -54,7 +54,7 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
-        let field = args;
+        let mut field = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
@@ -78,7 +78,7 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
-        let (field, unused) = args;
+        let (mut field, mut unused) = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
@@ -95,7 +95,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1ERKS_(
@@ -119,7 +119,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
@@ -319,7 +319,7 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
-        let field = args;
+        let mut field = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
@@ -343,7 +343,7 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for NontrivialInl
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
-        let (field, unused) = args;
+        let (mut field, mut unused) = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
@@ -360,7 +360,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1ERKS_(
@@ -384,7 +384,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialInline
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
@@ -485,7 +485,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1ERKS_(
@@ -509,7 +509,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialMember
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(

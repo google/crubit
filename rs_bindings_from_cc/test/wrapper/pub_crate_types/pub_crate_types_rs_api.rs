@@ -18,7 +18,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 forward_declare::forward_declare!(pub(crate)ForwardDeclared = forward_declare::symbol!("ForwardDeclared"));
@@ -40,17 +40,19 @@ impl !Sync for CompoundDataType {}
 // Error while generating bindings for item 'CompoundDataType::CompoundDataType':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
-// Missing lifetime for `__this` parameter type: *mut crate::CompoundDataType
+// Expected first parameter to be a `__this` reference, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16
 // Error while generating bindings for item 'CompoundDataType::CompoundDataType':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
-// Missing lifetime for `__this` parameter type: *mut crate::CompoundDataType
+// Expected first parameter to be a `__this` reference, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16
 // Error while generating bindings for item 'CompoundDataType::CompoundDataType':
-// Parameter #0 is not supported: Unsupported type 'CompoundDataType &&': Unsupported type: && without lifetime
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
+// Expected first parameter to be a `__this` reference, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16
 // Error while generating bindings for item 'CompoundDataType::operator=':
@@ -58,7 +60,7 @@ impl !Sync for CompoundDataType {}
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16
 // Error while generating bindings for item 'CompoundDataType::operator=':
-// Parameter #0 is not supported: Unsupported type 'CompoundDataType &&': Unsupported type: && without lifetime
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=20
 #[inline(always)]
@@ -120,13 +122,13 @@ impl !Sync for __CcTemplateInst8TemplateIiE {}
 // Error while generating bindings for item 'Template<int>::Template<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst8TemplateIiE
+// Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=39
 // Error while generating bindings for item 'Template<int>::Template<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst8TemplateIiE
+// Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=39
 // Error while generating bindings for item 'Template<int>::operator=':

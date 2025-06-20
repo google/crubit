@@ -12,7 +12,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=10

@@ -4,7 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // uses_rust_golden
-// Features: experimental, supported, unsafe_types, wrapper
+// Features: experimental, infer_operator_lifetimes, supported, unsafe_types,
+// wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN

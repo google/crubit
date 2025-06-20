@@ -21,4 +21,29 @@
 static_assert(CRUBIT_SIZEOF(struct CannotUpcastInCrubit) == 4);
 static_assert(alignof(struct CannotUpcastInCrubit) == 4);
 
+extern "C" void __rust_thunk___ZN20CannotUpcastInCrubitC1Ev(
+    struct CannotUpcastInCrubit* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN20CannotUpcastInCrubitC1EOS_(
+    struct CannotUpcastInCrubit* __this,
+    struct CannotUpcastInCrubit* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct CannotUpcastInCrubit*
+__rust_thunk___ZN20CannotUpcastInCrubitaSERKS_(
+    struct CannotUpcastInCrubit* __this,
+    const struct CannotUpcastInCrubit* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct CannotUpcastInCrubit*
+__rust_thunk___ZN20CannotUpcastInCrubitaSEOS_(
+    struct CannotUpcastInCrubit* __this,
+    struct CannotUpcastInCrubit* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 #pragma clang diagnostic pop

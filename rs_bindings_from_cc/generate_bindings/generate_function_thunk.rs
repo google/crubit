@@ -8,7 +8,7 @@ use crubit_abi_type::CrubitAbiTypeToCppTokens;
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
-    format_generic_params, unique_lifetimes, BridgeRsTypeKind, Mutability, RsTypeKind,
+    format_generic_params, unique_lifetimes, BridgeRsTypeKind, Lifetime, Mutability, RsTypeKind,
 };
 use error_report::{anyhow, bail};
 use ir::*;
@@ -130,6 +130,23 @@ pub fn generate_function_thunk(
     let mut param_idents = param_idents.iter();
     let mut out_param = None;
     let mut out_param_ident = None;
+
+    // Elided lifetimes in return position are replaced with a named lifetime in order to avoid
+    // errors in the case of multiple elided input lifetimes.
+    //
+    // Note: this transformation is not nested since thunk return types will only have lifetimes
+    // in the case of references, as more complex lifetime types will be transformed to out-params.
+    // This is somewhat fragile and could be corrected with a more complex `map` transformation
+    // over `RsTypeKind`.
+    let mut return_type = return_type.clone();
+    let extra_return_lifetime = match &mut return_type {
+        RsTypeKind::Reference { lifetime, .. } if lifetime.is_elided() => {
+            *lifetime = Lifetime::new("__return_lifetime");
+            Some(lifetime.clone())
+        }
+        _ => None,
+    };
+
     let mut return_type_fragment = return_type.format_as_return_type_fragment(db, None);
     if func.rs_name == UnqualifiedIdentifier::Constructor {
         // For constructors, inject MaybeUninit into the type of `__this_` parameter.
@@ -156,7 +173,8 @@ pub fn generate_function_thunk(
     }
 
     // Of the remaining lifetimes, collect them.
-    let lifetimes: Vec<_> = unique_lifetimes(param_types.clone()).collect();
+    let lifetimes: Vec<_> =
+        unique_lifetimes(param_types.clone()).chain(extra_return_lifetime).collect();
 
     let thunk_ident = thunk_ident(func);
 

@@ -169,6 +169,8 @@ static OPERATOR_METADATA: LazyLock<OperatorMetadata> = LazyLock::new(|| {
         OperatorMetadataEntry::assign("^=", "BitXorAssign", "bitxor_assign"),
         OperatorMetadataEntry::assign("<<=", "ShlAssign", "shl_assign"),
         OperatorMetadataEntry::assign(">>=", "ShrAssign", "shr_assign"),
+        // NOTE: if adding an entry here, consider whether `should_infer_lifetimes_for_func`
+        // is appropriate. If not, amend this structure to include an `infer_lifetimes` field.
     ];
     OperatorMetadata {
         by_cc_name_and_params: ENTRIES.iter().map(|e| ((e.cc_name, e.cc_params), *e)).collect(),
@@ -656,6 +658,17 @@ fn api_func_shape_for_constructor(
         let [_this, params @ ..] = param_types else {
             panic!("Missing `__this` parameter in a constructor: {:?}", func)
         };
+        // Elided lifetimes won't "just work" when split across the `Ctor` trait impl, so we replace
+        // them with a single named lifetime.
+        for param in &mut params[..] {
+            if let RsTypeKind::Reference { lifetime, .. }
+            | RsTypeKind::RvalueReference { lifetime, .. } = param
+            {
+                if lifetime.is_elided() {
+                    *lifetime = Lifetime::new("__unelided");
+                }
+            }
+        }
         let impl_kind = ImplKind::Trait {
             record: record.clone(),
             trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
@@ -808,12 +821,9 @@ pub fn get_binding(
             generate_function(db, (*function).clone(), None).ok().flatten().is_some()
         })
         .find_map(|function| {
-            let mut function_param_types = function
-                .params
-                .iter()
-                .map(|param| db.rs_type_kind(param.type_.clone()))
-                .collect::<Result<Vec<_>>>()
-                .ok()?;
+            let Ok((mut function_param_types, _)) = rs_type_kinds_for_func(db, function) else {
+                return None;
+            };
             if !function_param_types.iter().eq(expected_param_types.iter()) {
                 return None;
             }
@@ -835,12 +845,9 @@ pub fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> boo
                 function.params.len() == 2
             })
             .any(|function| {
-                let mut function_param_types = function
-                    .params
-                    .iter()
-                    .map(|param| db.rs_type_kind(param.type_.clone()))
-                    .collect::<Result<Vec<_>>>()
-                    .unwrap_or_default();
+                let Ok((mut function_param_types, _)) = rs_type_kinds_for_func(db, function) else {
+                    return false;
+                };
                 if function.params.len() != 2 || !function_param_types[1].is_shared_ref_to(&record)
                 {
                     return false;
@@ -961,6 +968,7 @@ fn generate_func_body(
         // reference fields). TODO(b/213243309): Double-check if
         // zero-initialization is desirable here.
         Ok(quote! {
+            #thunk_prepare
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut ::core::ffi::c_void #( , #thunk_args )* );
@@ -1105,6 +1113,92 @@ fn errors_as_unsatisfied_trait_bound(
     }
 }
 
+/// Returns whether or not the given function should treat parameters with unannotated lifetimes
+/// as having default/elision-provided lifetimes.
+///
+/// This is enabled for:
+/// - Default constructors
+/// - Copy constructors
+/// - Move constructors
+/// - Operators with default / basic lifetime behavior.
+fn should_infer_lifetimes_for_func(func: &Func) -> bool {
+    use ir::UnqualifiedIdentifier::*;
+    match &func.rs_name {
+        Destructor | Identifier(_) => return false,
+        Constructor => {}
+        Operator(op_name) => {
+            match &*op_name.name {
+                "==" | "<=>" | "<" | "=" => {}
+                // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
+                // creates conflicting libc++ impls for `long` and `long long`.
+                "<<" | ">>" => return false,
+                name => {
+                    // Today, all entries in `OPERATOR_METADATA` are "simple" operators (i.e.
+                    // they don't have any special lifetime behavior).
+                    //
+                    // Consider making this check more comprehensive if we ever need to support
+                    // non-trivial lifetime behavior for some operator.
+                    if !OPERATOR_METADATA
+                        .by_cc_name_and_params
+                        .keys()
+                        .any(|(meta_name, _num_params)| *meta_name == name)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    fn cc_type_has_lifetimes(cc_type: &CcType) -> bool {
+        use CcTypeVariant::*;
+        match &cc_type.variant {
+            Pointer(pointer) => {
+                if pointer.lifetime.is_some() {
+                    return true;
+                }
+                cc_type_has_lifetimes(&pointer.pointee_type)
+            }
+            // This is a simplification, as function pointers can have their own lifetimes, but
+            // this isn't important in this context.
+            FuncPointer { .. } | Record(_) | Primitive(_) => false,
+        }
+    }
+
+    // Inference is disabled if the function signature already contains any C++-provided lifetimes.
+    let func_has_lifetimes = func.params.iter().any(|p| cc_type_has_lifetimes(&p.type_))
+        || cc_type_has_lifetimes(&func.return_type);
+    !func_has_lifetimes
+}
+
+fn rs_type_kinds_for_func(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+) -> Result<(Vec<RsTypeKind>, RsTypeKind)> {
+    let errors = Errors::new();
+    let elide_missing_lifetimes = db
+        .ir()
+        .target_crubit_features(&func.owning_target)
+        .contains(crubit_feature::CrubitFeature::InferOperatorLifetimes)
+        && should_infer_lifetimes_for_func(func);
+    let param_types: Vec<RsTypeKind> = func
+        .params
+        .iter()
+        .enumerate()
+        .filter_map(|(i, p)| {
+            db.rs_type_kind_with_lifetime_elision(p.type_.clone(), elide_missing_lifetimes)
+                .map_err(|err| errors.add(anyhow!("Failed to format type of parameter {i}: {err}")))
+                .ok()
+        })
+        .collect();
+    let return_type = db
+        .rs_type_kind_with_lifetime_elision(func.return_type.clone(), elide_missing_lifetimes)
+        .map_err(|err| errors.add(anyhow!("Failed to format return type: {err}")))
+        .ok();
+    errors.consolidate()?;
+    Ok((param_types, return_type.unwrap()))
+}
+
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function(
     db: &dyn BindingsGenerator,
@@ -1114,20 +1208,7 @@ pub fn generate_function(
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
     let mut features = FlagSet::empty();
-    let param_errors = Errors::new();
-    let mut param_types: Vec<RsTypeKind> = func
-        .params
-        .iter()
-        .enumerate()
-        .filter_map(|(i, p)| {
-            db.rs_type_kind(p.type_.clone())
-                .map_err(|err| {
-                    param_errors.add(anyhow!("Failed to format type of parameter {i}: {err}"))
-                })
-                .ok()
-        })
-        .collect();
-    param_errors.consolidate()?;
+    let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, &func)?;
 
     let errors = Errors::new();
     let (func_name, mut impl_kind) =
@@ -1139,9 +1220,6 @@ pub fn generate_function(
         };
     let namespace_qualifier = ir.namespace_qualifier(&func).format_for_rs();
 
-    let mut return_type = errors.consolidate_on_err(
-        db.rs_type_kind(func.return_type.clone()).with_context(|| "Failed to format return type"),
-    )?;
     if let Err(err) = return_type.check_by_value() {
         // If the return type is not valid, we can't generate even a fake thunk, so we must return
         // immediately.
@@ -1536,7 +1614,9 @@ struct BindingsSignature {
     /// Any preparation code to define the arguments in `thunk_args`.
     thunk_prepare: TokenStream,
 
-    /// The arguments passed to the thunk, expressed in terms of `params`.
+    /// A list of expressions that refer to arguments passed to the thunk.
+    /// For example, if `params` is `vec![quote!{mut self}]`, this might be
+    /// `vec![quote!{&mut self}]` since the thunk takes non-C-ABI values by reference.
     thunk_args: Vec<TokenStream>,
 }
 
@@ -1686,7 +1766,7 @@ fn function_signature(
             // Grab the `__this` lifetime to remove it from the lifetime parameters.
             let this_lifetime = param_types[0].lifetime().ok_or_else(|| {
                 anyhow!(
-                    "Missing lifetime for `__this` parameter type: {}",
+                    "Expected first parameter to be a `__this` reference, found {}",
                     param_types[0].display(db)
                 )
             })?;
@@ -1698,8 +1778,9 @@ fn function_signature(
 
             // Remove the lifetime associated with `__this`.
             lifetimes.retain(|l| l != &this_lifetime);
-            if let Some(type_still_dependent_on_removed_lifetime) =
-                param_types.iter().find(|t| t.lifetimes().any(|lt| lt == this_lifetime))
+            if let Some(type_still_dependent_on_removed_lifetime) = param_types
+                .iter()
+                .find(|t| t.lifetimes().filter(|lt| !lt.is_elided()).any(|lt| lt == this_lifetime))
             {
                 bail!(
                     "The lifetime of `__this` is unexpectedly also used by another \
@@ -1722,8 +1803,18 @@ fn function_signature(
                     )
                 };
                 api_params = vec![quote! {args: #args_type}];
-                let thunk_vars = format_tuple_except_singleton(thunk_args.iter().cloned());
-                thunk_prepare.extend(quote! {let #thunk_vars = args;});
+                let param_idents_without_this = param_idents.iter().skip(1);
+                let thunk_vars = format_tuple_except_singleton(
+                    param_idents_without_this.map(|ts| quote! { mut #ts }),
+                );
+                // We must unpack the input args from a tuple before doing other preparation.
+                thunk_prepare = {
+                    let mut thunk_prepare_new = quote! {
+                        let #thunk_vars = args;
+                    };
+                    thunk_prepare_new.extend(thunk_prepare);
+                    thunk_prepare_new
+                };
             }
         }
         Some(TraitName::Other { .. }) | None => {}
@@ -1772,13 +1863,13 @@ fn function_signature(
                 // thunk via the expression `self`.
                 if first_api_param.is_c_abi_compatible_by_value() {
                     let rs_snippet = first_api_param.format_as_self_param()?;
+                    thunk_args[0] = if derived_record.is_some() {
+                        quote! { oops::Upcast::<_>::upcast(self) }
+                    } else {
+                        quote! { self }
+                    };
                     api_params[0] = rs_snippet.tokens;
                     *features |= rs_snippet.features;
-                    if derived_record.is_some() {
-                        thunk_args[0] = quote! { oops::Upcast::<_>::upcast(self) };
-                    } else {
-                        thunk_args[0] = quote! { self };
-                    }
                 } else {
                     api_params[0] = quote! { mut self };
                     if derived_record.is_some() {

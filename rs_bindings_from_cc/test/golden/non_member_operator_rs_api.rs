@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 pub mod ns {
@@ -25,24 +25,55 @@ pub mod ns {
     impl !Sync for X {}
     forward_declare::unsafe_define!(forward_declare::symbol!("ns :: X"), crate::ns::X);
 
-    // Error while generating bindings for item 'X::X':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::ns::X
-    // Missing lifetime for `__this` parameter type: *mut crate::ns::X
+    impl Default for X {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns1XC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+                tmp.assume_init()
+            }
+        }
+    }
 
-    // Error while generating bindings for item 'X::X':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::ns::X
-    // Missing lifetime for `__this` parameter type: *mut crate::ns::X
+    impl From<::ctor::RvalueReference<'_, Self>> for X {
+        #[inline(always)]
+        fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns1XC1EOS0_(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for X {
+        type CtorType = Self;
+        #[inline(always)]
+        fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+            <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+        }
+    }
 
-    // Error while generating bindings for item 'ns::X::X':
-    // Parameter #0 is not supported: Unsupported type 'X &&': Unsupported type: && without lifetime
+    impl ::ctor::UnpinAssign<&Self> for X {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __param_0: &Self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns1XaSERKS0_(self, __param_0);
+            }
+        }
+    }
 
-    // Error while generating bindings for item 'X::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-    // Error while generating bindings for item 'ns::X::operator=':
-    // Parameter #0 is not supported: Unsupported type 'X &&': Unsupported type: && without lifetime
+    impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for X {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns1XaSEOS0_(self, __param_0);
+            }
+        }
+    }
 }
 
 // namespace ns
@@ -58,6 +89,19 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN2ns1XC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN2ns1XC1EOS0_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::ns::X>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN2ns1XaSERKS0_<'__return_lifetime>(
+            __this: &mut crate::ns::X,
+            __param_0: &crate::ns::X,
+        ) -> &'__return_lifetime mut crate::ns::X;
+        pub(crate) unsafe fn __rust_thunk___ZN2ns1XaSEOS0_<'__return_lifetime>(
+            __this: &mut crate::ns::X,
+            __param_0: ::ctor::RvalueReference<'_, crate::ns::X>,
+        ) -> &'__return_lifetime mut crate::ns::X;
         pub(crate) unsafe fn __rust_thunk___ZeqN2ns1XES0_(
             a: &mut crate::ns::X,
             b: &mut crate::ns::X,

@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// Tests that no bindings are generated when an overload set includes
@@ -28,38 +28,81 @@ impl !Send for SomeClass {}
 impl !Sync for SomeClass {}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 
-// Error while generating bindings for item 'SomeClass::SomeClass':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeClass
-// Missing lifetime for `__this` parameter type: *mut crate::SomeClass
+impl Default for SomeClass {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'SomeClass::SomeClass':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeClass
-// Missing lifetime for `__this` parameter type: *mut crate::SomeClass
+impl From<::ctor::RvalueReference<'_, Self>> for SomeClass {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for SomeClass {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'SomeClass::SomeClass':
-// Parameter #0 is not supported: Unsupported type 'SomeClass &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for SomeClass {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'SomeClass::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'SomeClass::operator=':
-// Parameter #0 is not supported: Unsupported type 'SomeClass &&': Unsupported type: && without lifetime
-
-#[inline(always)]
-pub fn Overload() {
-    unsafe { crate::detail::__rust_thunk___Z8Overloadv() }
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for SomeClass {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassaSEOS_(self, __param_0);
+        }
+    }
 }
 
 // Error while generating bindings for item 'Overload':
-// Parameter #0 is not supported: Unsupported type 'SomeClass &&': Unsupported type: && without lifetime
+// Cannot generate bindings for overloaded function
+
+// Error while generating bindings for item 'Overload':
+// Cannot generate bindings for overloaded function
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___Z8Overloadv();
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::SomeClass>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSERKS_<'__return_lifetime>(
+            __this: &mut crate::SomeClass,
+            __param_0: &crate::SomeClass,
+        ) -> &'__return_lifetime mut crate::SomeClass;
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSEOS_<'__return_lifetime>(
+            __this: &mut crate::SomeClass,
+            __param_0: ::ctor::RvalueReference<'_, crate::SomeClass>,
+        ) -> &'__return_lifetime mut crate::SomeClass;
     }
 }
 

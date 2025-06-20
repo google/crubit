@@ -22,6 +22,25 @@ static_assert(CRUBIT_SIZEOF(struct X) == 4);
 static_assert(alignof(struct X) == 4);
 static_assert(CRUBIT_OFFSET_OF(a, struct X) == 0);
 
+extern "C" void __rust_thunk___ZN1XC1Ev(struct X* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN1XC1EOS_(struct X* __this,
+                                          struct X* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct X* __rust_thunk___ZN1XaSERKS_(struct X* __this,
+                                                const struct X* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct X* __rust_thunk___ZN1XaSEOS_(struct X* __this,
+                                               struct X* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 extern "C" struct MyI8 __rust_thunk___Z3ffi4MyI81X(struct MyI8 a, struct X* b) {
   return ffi(std::move(a), std::move(*b));
 }

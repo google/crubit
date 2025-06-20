@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 // Error while generating bindings for item 'MyTemplate':
@@ -27,24 +27,55 @@ impl !Send for TopLevel {}
 impl !Sync for TopLevel {}
 forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::TopLevel);
 
-// Error while generating bindings for item 'TopLevel::TopLevel':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::TopLevel
-// Missing lifetime for `__this` parameter type: *mut crate::TopLevel
+impl Default for TopLevel {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN8TopLevelC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'TopLevel::TopLevel':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::TopLevel
-// Missing lifetime for `__this` parameter type: *mut crate::TopLevel
+impl From<::ctor::RvalueReference<'_, Self>> for TopLevel {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN8TopLevelC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for TopLevel {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'TopLevel::TopLevel':
-// Parameter #0 is not supported: Unsupported type 'TopLevel &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for TopLevel {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN8TopLevelaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'TopLevel::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'TopLevel::operator=':
-// Parameter #0 is not supported: Unsupported type 'TopLevel &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for TopLevel {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN8TopLevelaSEOS_(self, __param_0);
+        }
+    }
+}
 
 pub type Alias1 = crate::__CcTemplateInst10MyTemplateIiE;
 
@@ -72,24 +103,61 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::Inner
     );
 
-    // Error while generating bindings for item 'Inner::Inner':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::test_namespace_bindings::Inner
-    // Missing lifetime for `__this` parameter type: *mut crate::test_namespace_bindings::Inner
+    impl Default for Inner {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings5InnerC1Ev(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
 
-    // Error while generating bindings for item 'Inner::Inner':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::test_namespace_bindings::Inner
-    // Missing lifetime for `__this` parameter type: *mut crate::test_namespace_bindings::Inner
+    impl From<::ctor::RvalueReference<'_, Self>> for Inner {
+        #[inline(always)]
+        fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings5InnerC1EOS0_(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Inner {
+        type CtorType = Self;
+        #[inline(always)]
+        fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+            <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+        }
+    }
 
-    // Error while generating bindings for item 'test_namespace_bindings::Inner::Inner':
-    // Parameter #0 is not supported: Unsupported type 'Inner &&': Unsupported type: && without lifetime
+    impl ::ctor::UnpinAssign<&Self> for Inner {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __param_0: &Self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings5InneraSERKS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
-    // Error while generating bindings for item 'Inner::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-    // Error while generating bindings for item 'test_namespace_bindings::Inner::operator=':
-    // Parameter #0 is not supported: Unsupported type 'Inner &&': Unsupported type: && without lifetime
+    impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Inner {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings5InneraSEOS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
     pub type Alias7 = crate::__CcTemplateInst10MyTemplateIcE;
 
@@ -116,24 +184,56 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateI8TopLevelE
 );
 
-// Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate<TopLevel>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
+impl Default for __CcTemplateInst10MyTemplateI8TopLevelE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate<TopLevel>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE
+impl From<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateI8TopLevelE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateI8TopLevelE
+{
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<TopLevel> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for __CcTemplateInst10MyTemplateI8TopLevelE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<TopLevel> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateI8TopLevelE
+{
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateI8TopLevelE {
     #[inline(always)]
@@ -158,24 +258,60 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
 );
 
-// Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate<test_namespace_bindings::Inner>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+impl Default for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate<test_namespace_bindings::Inner>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+impl From<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+{
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<test_namespace_bindings::Inner> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self>
+    for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+{
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<test_namespace_bindings::Inner> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+{
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     #[inline(always)]
@@ -200,24 +336,56 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
 );
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate<MyTemplate<TopLevel>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
+impl Default for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate<MyTemplate<TopLevel>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
+impl From<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIS_I8TopLevelEE
+{
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<TopLevel> > &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<TopLevel> > &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIS_I8TopLevelEE
+{
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     #[inline(always)]
@@ -245,24 +413,60 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
 );
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+impl Default for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+impl From<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEC1EOS3___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+{
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<test_namespace_bindings::Inner> > &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self>
+    for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+{
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEaSERKS3___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<test_namespace_bindings::Inner> > &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>>
+    for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+{
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEaSEOS3___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     #[inline(always)]
@@ -290,24 +494,52 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIbE
 );
 
-// Error while generating bindings for item 'MyTemplate<bool>::MyTemplate<bool>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIbE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIbE
+impl Default for __CcTemplateInst10MyTemplateIbE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIbEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<bool>::MyTemplate<bool>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIbE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIbE
+impl From<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIbE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIbEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIbE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<bool>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<_Bool> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for __CcTemplateInst10MyTemplateIbE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIbEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<bool>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<bool>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<_Bool> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIbE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIbEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIbE {
     #[inline(always)]
@@ -332,24 +564,52 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIcE
 );
 
-// Error while generating bindings for item 'MyTemplate<char>::MyTemplate<char>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIcE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIcE
+impl Default for __CcTemplateInst10MyTemplateIcE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<char>::MyTemplate<char>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIcE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIcE
+impl From<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIcE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIcEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIcE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<char>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<char> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for __CcTemplateInst10MyTemplateIcE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIcEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<char>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<char>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<char> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIcE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIcEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIcE {
     #[inline(always)]
@@ -374,24 +634,52 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIdE
 );
 
-// Error while generating bindings for item 'MyTemplate<double>::MyTemplate<double>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIdE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIdE
+impl Default for __CcTemplateInst10MyTemplateIdE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIdEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<double>::MyTemplate<double>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIdE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIdE
+impl From<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIdE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIdEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIdE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<double>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<double> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for __CcTemplateInst10MyTemplateIdE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIdEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<double>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<double>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<double> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIdE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIdEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIdE {
     #[inline(always)]
@@ -416,24 +704,52 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIfE
 );
 
-// Error while generating bindings for item 'MyTemplate<float>::MyTemplate<float>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIfE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIfE
+impl Default for __CcTemplateInst10MyTemplateIfE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<float>::MyTemplate<float>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIfE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIfE
+impl From<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIfE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIfE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<float>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<float> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for __CcTemplateInst10MyTemplateIfE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<float>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<float>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<float> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIfE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
@@ -458,24 +774,52 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIiE
 );
 
-// Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIiE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIiE
+impl Default for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst10MyTemplateIiE
-// Missing lifetime for `__this` parameter type: *mut crate::__CcTemplateInst10MyTemplateIiE
+impl From<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIiE {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<int>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<int> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'MyTemplate<int>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'MyTemplate<int>::operator=':
-// Parameter #0 is not supported: Unsupported type 'MyTemplate<int> &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
@@ -488,38 +832,233 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN8TopLevelC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8TopLevelC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::TopLevel>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN8TopLevelaSERKS_<'__return_lifetime>(
+            __this: &mut crate::TopLevel,
+            __param_0: &crate::TopLevel,
+        ) -> &'__return_lifetime mut crate::TopLevel;
+        pub(crate) unsafe fn __rust_thunk___ZN8TopLevelaSEOS_<'__return_lifetime>(
+            __this: &mut crate::TopLevel,
+            __param_0: ::ctor::RvalueReference<'_, crate::TopLevel>,
+        ) -> &'__return_lifetime mut crate::TopLevel;
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5InnerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5InnerC1EOS0_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::test_namespace_bindings::Inner>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5InneraSERKS0_<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::test_namespace_bindings::Inner,
+            __param_0: &crate::test_namespace_bindings::Inner,
+        ) -> &'__return_lifetime mut crate::test_namespace_bindings::Inner;
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5InneraSEOS0_<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::test_namespace_bindings::Inner,
+            __param_0: ::ctor::RvalueReference<'_, crate::test_namespace_bindings::Inner>,
+        ) -> &'__return_lifetime mut crate::test_namespace_bindings::Inner;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateI8TopLevelEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateI8TopLevelEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateI8TopLevelE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateI8TopLevelEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateI8TopLevelE,
+            __param_0: &crate::__CcTemplateInst10MyTemplateI8TopLevelE,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateI8TopLevelE;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateI8TopLevelEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateI8TopLevelE,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateI8TopLevelE>,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateI8TopLevelE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE,
             t: &mut crate::TopLevel,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<
+                '_,
+                crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
+            >,
+        );
+        pub(crate)unsafe fn __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<'__return_lifetime>(__this: &mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,__param_0: &crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE)->&'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE;
+        pub(crate)unsafe fn __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<'__return_lifetime>(__this: &mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,__param_0: ::ctor::RvalueReference<'_,crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE>)->&'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
             t: &mut crate::test_namespace_bindings::Inner,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_I8TopLevelEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_I8TopLevelEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<
+                '_,
+                crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
+            >,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_I8TopLevelEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
+            __param_0: &crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_I8TopLevelEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
+            __param_0: ::ctor::RvalueReference<
+                '_,
+                crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
+            >,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_I8TopLevelEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
             t: &mut crate::__CcTemplateInst10MyTemplateI8TopLevelE,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEC1EOS3___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<
+                '_,
+                crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
+            >,
+        );
+        pub(crate)unsafe fn __rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEaSERKS3___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<'__return_lifetime>(__this: &mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,__param_0: &crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE)->&'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE;
+        pub(crate)unsafe fn __rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEaSEOS3___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<'__return_lifetime>(__this: &mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,__param_0: ::ctor::RvalueReference<'_,crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE>)->&'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEE8processTES2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
             t: &mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIbEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIbEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIbE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIbEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIbE,
+            __param_0: &crate::__CcTemplateInst10MyTemplateIbE,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIbE;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIbEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIbE,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIbE>,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIbE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIbE8processTEb__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIbE,
             t: bool,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIcEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIcE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIcEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIcE,
+            __param_0: &crate::__CcTemplateInst10MyTemplateIcE,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIcE;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIcEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIcE,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIcE>,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIcE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIcE8processTEc__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIcE,
             t: ::core::ffi::c_char,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIdEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIdEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIdE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIdEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIdE,
+            __param_0: &crate::__CcTemplateInst10MyTemplateIdE,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIdE;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIdEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIdE,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIdE>,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIdE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIdE8processTEd__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIdE,
             t: f64,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIfE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIfE,
+            __param_0: &crate::__CcTemplateInst10MyTemplateIfE,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIfE;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIfE,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIfE>,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIfE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIfE8processTEf__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIfE,
             t: f32,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIiE>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIiE,
+            __param_0: &crate::__CcTemplateInst10MyTemplateIiE,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIiE;
+        pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc<
+            '__return_lifetime,
+        >(
+            __this: &mut crate::__CcTemplateInst10MyTemplateIiE,
+            __param_0: ::ctor::RvalueReference<'_, crate::__CcTemplateInst10MyTemplateIiE>,
+        ) -> &'__return_lifetime mut crate::__CcTemplateInst10MyTemplateIiE;
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiE8processTEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
             __this: *mut crate::__CcTemplateInst10MyTemplateIiE,
             t: ::core::ffi::c_int,

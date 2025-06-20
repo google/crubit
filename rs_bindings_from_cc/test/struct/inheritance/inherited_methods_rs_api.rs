@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/inheritance:inherited_methods
-// Features: experimental, supported, unsafe_types, wrapper
+// Features: experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
 
 #![rustfmt::skip]
 #![feature(
@@ -18,7 +18,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=10

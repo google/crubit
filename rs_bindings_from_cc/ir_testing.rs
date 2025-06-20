@@ -37,6 +37,7 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
     LazyLock::new(|| {
         crubit_feature::CrubitFeature::Experimental
             | crubit_feature::CrubitFeature::Wrapper
+            | crubit_feature::CrubitFeature::InferOperatorLifetimes
             | crubit_feature::CrubitFeature::Supported
     });
 
@@ -164,7 +165,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|Experimental))
+                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|InferOperatorLifetimes|Experimental))
                     ...
                 }
             }
@@ -178,7 +179,7 @@ mod tests {
             quote! {
                 crubit_features: hash_map!{
                     ...
-                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|Experimental))
+                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|InferOperatorLifetimes|Experimental))
                     ...
                 }
             }

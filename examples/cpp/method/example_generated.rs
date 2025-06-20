@@ -12,7 +12,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 pub mod foo {
@@ -30,25 +30,27 @@ pub mod foo {
     // Error while generating bindings for item 'Bar::Bar':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Missing lifetime for `__this` parameter type: *mut crate::foo::Bar
+    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
 
     // Generated from: examples/cpp/method/example.h;l=12
     // Error while generating bindings for item 'Bar::Bar':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Missing lifetime for `__this` parameter type: *mut crate::foo::Bar
+    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
 
     // Generated from: examples/cpp/method/example.h;l=12
-    // Error while generating bindings for item 'foo::Bar::Bar':
-    // Parameter #0 is not supported: Unsupported type 'Bar &&': Unsupported type: && without lifetime
+    // Error while generating bindings for item 'Bar::Bar':
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
+    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
 
     // Generated from: examples/cpp/method/example.h;l=12
     // Error while generating bindings for item 'Bar::operator=':
     // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
     // Generated from: examples/cpp/method/example.h;l=12
-    // Error while generating bindings for item 'foo::Bar::operator=':
-    // Parameter #0 is not supported: Unsupported type 'Bar &&': Unsupported type: && without lifetime
+    // Error while generating bindings for item 'Bar::operator=':
+    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
     impl Bar {
         /// Generated from: examples/cpp/method/example.h;l=14

@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // foo_lib_golden
-// Features: experimental, supported, unsafe_types, wrapper
+// Features: experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
 
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]

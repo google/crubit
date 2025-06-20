@@ -22,6 +22,25 @@ static_assert(CRUBIT_SIZEOF(struct ns::X) == 4);
 static_assert(alignof(struct ns::X) == 4);
 static_assert(CRUBIT_OFFSET_OF(f, struct ns::X) == 0);
 
+extern "C" void __rust_thunk___ZN2ns1XC1Ev(struct ns::X* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN2ns1XC1EOS0_(struct ns::X* __this,
+                                              struct ns::X* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct ns::X* __rust_thunk___ZN2ns1XaSERKS0_(
+    struct ns::X* __this, const struct ns::X* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct ns::X* __rust_thunk___ZN2ns1XaSEOS0_(
+    struct ns::X* __this, struct ns::X* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 extern "C" bool __rust_thunk___ZeqN2ns1XES0_(struct ns::X* a, struct ns::X* b) {
   return operator==(std::move(*a), std::move(*b));
 }

@@ -17,7 +17,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy)]
@@ -109,7 +109,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustom
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(

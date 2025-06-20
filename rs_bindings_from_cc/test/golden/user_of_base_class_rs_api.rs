@@ -17,7 +17,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// The same as Derived from inheritance.h, but in a different build target.
@@ -53,7 +53,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN8Derived2C1ERKS_(
@@ -77,7 +77,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN8Derived2C1EOS_(
@@ -168,7 +168,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN15VirtualDerived2C1ERKS_(
@@ -192,7 +192,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN15VirtualDerived2C1EOS_(

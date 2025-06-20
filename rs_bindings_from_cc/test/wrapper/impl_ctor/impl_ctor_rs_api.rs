@@ -18,7 +18,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=8
@@ -36,15 +36,17 @@ impl !Sync for Nontrivial {}
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Nontrivial
-// Missing lifetime for `__this` parameter type: *mut crate::Nontrivial
+// Expected first parameter to be a `__this` reference, found *mut crate::Nontrivial
 
 // Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=11
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
-// Parameter #0 is not supported: Unsupported type 'Nontrivial &&': Unsupported type: && without lifetime
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Expected first constructor parameter to be a mutable reference, got: *mut crate::Nontrivial
+// Expected first parameter to be a `__this` reference, found *mut crate::Nontrivial
 
 // Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=12
 // Error while generating bindings for item 'Nontrivial::operator=':
-// Parameter #0 is not supported: Unsupported type 'Nontrivial &&': Unsupported type: && without lifetime
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=13
 impl ::ctor::PinnedDrop for Nontrivial {

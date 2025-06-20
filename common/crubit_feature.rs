@@ -20,6 +20,10 @@ flagset::flags! {
 
         UnsafeTypes,
 
+        /// Enables inferring the lifetimes of arguments to special member functions and common
+        /// operators.
+        InferOperatorLifetimes,
+
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -36,6 +40,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
+            Self::InferOperatorLifetimes => "infer_operator_lifetimes",
             Self::UnsafeTypes => "unsafe_types",
             Self::Experimental => "experimental",
         }
@@ -48,6 +53,9 @@ impl CrubitFeature {
         match self {
             Self::Supported => "//features:supported",
             Self::Wrapper => "//features:wrapper",
+            Self::InferOperatorLifetimes => {
+                "//features:infer_operator_lifetimes"
+            }
             Self::UnsafeTypes => "//features:unsafe_types",
             Self::Experimental => "//features:experimental",
         }
@@ -60,6 +68,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"all" => flagset::FlagSet::<CrubitFeature>::full(),
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
+        b"infer_operator_lifetimes" => CrubitFeature::InferOperatorLifetimes.into(),
         b"unsafe_types" => CrubitFeature::UnsafeTypes.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         _ => return None,
@@ -164,6 +173,7 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
+                | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::UnsafeTypes
                 | CrubitFeature::Experimental
         );
@@ -189,6 +199,7 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
+                | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::UnsafeTypes
                 | CrubitFeature::Experimental
         );
@@ -202,6 +213,7 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
+                | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::UnsafeTypes
                 | CrubitFeature::Experimental
         );

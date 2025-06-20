@@ -88,6 +88,15 @@ impl Lifetime {
     pub fn new(name: &str) -> Self {
         Lifetime(Rc::from(name))
     }
+
+    pub fn elided() -> Self {
+        Lifetime(Rc::from("_"))
+    }
+
+    pub fn is_elided(&self) -> bool {
+        &*self.0 == "_"
+    }
+
     /// Formats a lifetime for use as a reference lifetime parameter.
     ///
     /// In this case, elided lifetimes are empty.
@@ -166,6 +175,7 @@ pub fn unique_lifetimes<'a>(
     types
         .into_iter()
         .flat_map(|ty| ty.lifetimes())
+        .filter(|lifetime| !lifetime.is_elided())
         .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
 }
 
@@ -939,7 +949,7 @@ impl RsTypeKind {
     /// Iterates over all `LifetimeId`s in `self` and in all the nested types.
     /// Note that the results might contain duplicate LifetimeId values (e.g.
     /// if the same LifetimeId is used in two `type_args`).
-    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + '_ {
+    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'_> {
         self.dfs_iter().filter_map(Self::lifetime)
     }
 
@@ -962,6 +972,7 @@ impl RsTypeKind {
             _ => None,
         }
     }
+
     /// Similar to to_token_stream, but replacing RsTypeKind:Record with Self
     /// when the underlying Record matches the given one.
     pub fn to_token_stream_replacing_by_self(

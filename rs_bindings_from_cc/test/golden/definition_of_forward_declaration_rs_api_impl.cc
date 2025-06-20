@@ -21,4 +21,29 @@
 static_assert(sizeof(struct ForwardDeclaredStruct) == 1);
 static_assert(alignof(struct ForwardDeclaredStruct) == 1);
 
+extern "C" void __rust_thunk___ZN21ForwardDeclaredStructC1Ev(
+    struct ForwardDeclaredStruct* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN21ForwardDeclaredStructC1EOS_(
+    struct ForwardDeclaredStruct* __this,
+    struct ForwardDeclaredStruct* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct ForwardDeclaredStruct*
+__rust_thunk___ZN21ForwardDeclaredStructaSERKS_(
+    struct ForwardDeclaredStruct* __this,
+    const struct ForwardDeclaredStruct* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct ForwardDeclaredStruct*
+__rust_thunk___ZN21ForwardDeclaredStructaSEOS_(
+    struct ForwardDeclaredStruct* __this,
+    struct ForwardDeclaredStruct* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 #pragma clang diagnostic pop

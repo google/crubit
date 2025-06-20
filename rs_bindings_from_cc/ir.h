@@ -148,7 +148,14 @@ struct CcType {
 
   struct PointerType {
     PointerTypeKind kind;
+
+    // `LifetimeId` is present if the C++ code contained an explicit
+    // lifetime annotation or if C++ lifetime annotation elision was enabled.
+    //
+    // Today, this is rare: the Clang lifetime annotation pass isn't stable or
+    // functional.
     std::optional<LifetimeId> lifetime;
+
     std::shared_ptr<CcType> pointee_type;
   };
 
@@ -173,13 +180,8 @@ struct CcType {
   static CcType LValueReferenceTo(CcType pointee_type,
                                   std::optional<LifetimeId> lifetime);
 
-  // Creates an Rvalue Reference mapped type.
-  //
-  // Note: we don't currently support rvalue references that do not have a
-  // lifetime. (Such a thing would require an "Rvalue Pointer" type -- probably
-  // spelled `Move<*mut T>` in Rust, although that doesn't work today due to
-  // the `P: DerefMut` bound in `Move<P>`.)
-  static CcType RValueReferenceTo(CcType pointee_type, LifetimeId lifetime);
+  static CcType RValueReferenceTo(CcType pointee_type,
+                                  std::optional<LifetimeId> lifetime);
 
   bool IsVoid() const {
     const auto* primitive = std::get_if<CcType::Primitive>(&variant);

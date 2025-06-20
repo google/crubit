@@ -35,6 +35,13 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
+# A feature set which specifically enables inferred operator lifetimes.
+crubit_feature_hint(
+    name = "infer_operator_lifetimes",
+    crubit_features = SUPPORTED_FEATURES + ["infer_operator_lifetimes"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 crubit_feature_hint(

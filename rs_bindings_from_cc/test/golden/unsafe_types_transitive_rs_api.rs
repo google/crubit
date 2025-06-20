@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy)]
@@ -24,24 +24,62 @@ impl !Send for PublicPointer {}
 impl !Sync for PublicPointer {}
 forward_declare::unsafe_define!(forward_declare::symbol!("PublicPointer"), crate::PublicPointer);
 
-// Error while generating bindings for item 'PublicPointer::PublicPointer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::PublicPointer
-// Missing lifetime for `__this` parameter type: *mut crate::PublicPointer
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN13PublicPointerC1Ev {}
+impl<'error> Default for PublicPointer
+where
+    &'error (): BindingFailedFor_ZN13PublicPointerC1Ev,
+{
+    #[inline(always)]
+    fn default() -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 // Error while generating bindings for item 'PublicPointer::PublicPointer':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::PublicPointer
-// Missing lifetime for `__this` parameter type: *mut crate::PublicPointer
 
-// Error while generating bindings for item 'PublicPointer::PublicPointer':
-// Parameter #0 is not supported: Unsupported type 'PublicPointer &&': Unsupported type: && without lifetime
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN13PublicPointerC1EOS_ {}
+impl<'error> From<::ctor::RvalueReference<'_, Self>> for PublicPointer
+where
+    &'error (): BindingFailedFor_ZN13PublicPointerC1EOS_,
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
-// Error while generating bindings for item 'PublicPointer::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::ctor::UnpinAssign<&Self> for PublicPointer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13PublicPointeraSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'PublicPointer::operator=':
-// Parameter #0 is not supported: Unsupported type 'PublicPointer &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for PublicPointer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13PublicPointeraSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
@@ -56,24 +94,57 @@ impl !Send for PrivatePointer {}
 impl !Sync for PrivatePointer {}
 forward_declare::unsafe_define!(forward_declare::symbol!("PrivatePointer"), crate::PrivatePointer);
 
-// Error while generating bindings for item 'PrivatePointer::PrivatePointer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::PrivatePointer
-// Missing lifetime for `__this` parameter type: *mut crate::PrivatePointer
+impl Default for PrivatePointer {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN14PrivatePointerC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'PrivatePointer::PrivatePointer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::PrivatePointer
-// Missing lifetime for `__this` parameter type: *mut crate::PrivatePointer
+impl From<::ctor::RvalueReference<'_, Self>> for PrivatePointer {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN14PrivatePointerC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for PrivatePointer {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'PrivatePointer::PrivatePointer':
-// Parameter #0 is not supported: Unsupported type 'PrivatePointer &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for PrivatePointer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14PrivatePointeraSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'PrivatePointer::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'PrivatePointer::operator=':
-// Parameter #0 is not supported: Unsupported type 'PrivatePointer &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for PrivatePointer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14PrivatePointeraSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[inline(always)]
 pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::core::ffi::c_int {
@@ -94,24 +165,62 @@ forward_declare::unsafe_define!(
     crate::TransitivePublicPointer
 );
 
-// Error while generating bindings for item 'TransitivePublicPointer::TransitivePublicPointer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::TransitivePublicPointer
-// Missing lifetime for `__this` parameter type: *mut crate::TransitivePublicPointer
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN23TransitivePublicPointerC1Ev {}
+impl<'error> Default for TransitivePublicPointer
+where
+    &'error (): BindingFailedFor_ZN23TransitivePublicPointerC1Ev,
+{
+    #[inline(always)]
+    fn default() -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 // Error while generating bindings for item 'TransitivePublicPointer::TransitivePublicPointer':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::TransitivePublicPointer
-// Missing lifetime for `__this` parameter type: *mut crate::TransitivePublicPointer
 
-// Error while generating bindings for item 'TransitivePublicPointer::TransitivePublicPointer':
-// Parameter #0 is not supported: Unsupported type 'TransitivePublicPointer &&': Unsupported type: && without lifetime
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN23TransitivePublicPointerC1EOS_ {}
+impl<'error> From<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer
+where
+    &'error (): BindingFailedFor_ZN23TransitivePublicPointerC1EOS_,
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
-// Error while generating bindings for item 'TransitivePublicPointer::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::ctor::UnpinAssign<&Self> for TransitivePublicPointer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23TransitivePublicPointeraSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'TransitivePublicPointer::operator=':
-// Parameter #0 is not supported: Unsupported type 'TransitivePublicPointer &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23TransitivePublicPointeraSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -124,24 +233,62 @@ impl !Send for Union {}
 impl !Sync for Union {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Union"), crate::Union);
 
-// Error while generating bindings for item 'Union::Union':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Union
-// Missing lifetime for `__this` parameter type: *mut crate::Union
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN5UnionC1Ev {}
+impl<'error> Default for Union
+where
+    &'error (): BindingFailedFor_ZN5UnionC1Ev,
+{
+    #[inline(always)]
+    fn default() -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 // Error while generating bindings for item 'Union::Union':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Union
-// Missing lifetime for `__this` parameter type: *mut crate::Union
 
-// Error while generating bindings for item 'Union::Union':
-// Parameter #0 is not supported: Unsupported type 'Union &&': Unsupported type: && without lifetime
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+)]
+pub trait BindingFailedFor_ZN5UnionC1EOS_ {}
+impl<'error> From<::ctor::RvalueReference<'_, Self>> for Union
+where
+    &'error (): BindingFailedFor_ZN5UnionC1EOS_,
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
-// Error while generating bindings for item 'Union::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::ctor::UnpinAssign<&Self> for Union {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5UnionaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'Union::operator=':
-// Parameter #0 is not supported: Unsupported type 'Union &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Union {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5UnionaSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[inline(always)]
 pub unsafe fn DerefPointer(p: *mut ::core::ffi::c_int) -> ::core::ffi::c_int {
@@ -169,9 +316,48 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointeraSERKS_<'__return_lifetime>(
+            __this: &mut crate::PublicPointer,
+            __param_0: &crate::PublicPointer,
+        ) -> &'__return_lifetime mut crate::PublicPointer;
+        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointeraSEOS_<'__return_lifetime>(
+            __this: &mut crate::PublicPointer,
+            __param_0: ::ctor::RvalueReference<'_, crate::PublicPointer>,
+        ) -> &'__return_lifetime mut crate::PublicPointer;
+        pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointerC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::PrivatePointer>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointeraSERKS_<'__return_lifetime>(
+            __this: &mut crate::PrivatePointer,
+            __param_0: &crate::PrivatePointer,
+        ) -> &'__return_lifetime mut crate::PrivatePointer;
+        pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointeraSEOS_<'__return_lifetime>(
+            __this: &mut crate::PrivatePointer,
+            __param_0: ::ctor::RvalueReference<'_, crate::PrivatePointer>,
+        ) -> &'__return_lifetime mut crate::PrivatePointer;
         pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
             p: &mut crate::PrivatePointer,
         ) -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointeraSERKS_<'__return_lifetime>(
+            __this: &mut crate::TransitivePublicPointer,
+            __param_0: &crate::TransitivePublicPointer,
+        ) -> &'__return_lifetime mut crate::TransitivePublicPointer;
+        pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointeraSEOS_<'__return_lifetime>(
+            __this: &mut crate::TransitivePublicPointer,
+            __param_0: ::ctor::RvalueReference<'_, crate::TransitivePublicPointer>,
+        ) -> &'__return_lifetime mut crate::TransitivePublicPointer;
+        pub(crate) unsafe fn __rust_thunk___ZN5UnionaSERKS_<'__return_lifetime>(
+            __this: &mut crate::Union,
+            __param_0: &crate::Union,
+        ) -> &'__return_lifetime mut crate::Union;
+        pub(crate) unsafe fn __rust_thunk___ZN5UnionaSEOS_<'__return_lifetime>(
+            __this: &mut crate::Union,
+            __param_0: ::ctor::RvalueReference<'_, crate::Union>,
+        ) -> &'__return_lifetime mut crate::Union;
         #[link_name = "_Z12DerefPointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12DerefPointerPi(
             p: *mut ::core::ffi::c_int,

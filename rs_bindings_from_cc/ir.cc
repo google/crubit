@@ -166,7 +166,8 @@ CcType CcType::LValueReferenceTo(CcType pointee_type,
                               PointerTypeKind::kLValueRef, lifetime);
 }
 
-CcType CcType::RValueReferenceTo(CcType pointee_type, LifetimeId lifetime) {
+CcType CcType::RValueReferenceTo(CcType pointee_type,
+                                 std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
                               PointerTypeKind::kRValueRef, lifetime);
 }

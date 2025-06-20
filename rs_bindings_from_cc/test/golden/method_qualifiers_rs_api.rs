@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy)]
@@ -24,24 +24,57 @@ impl !Send for Noninline {}
 impl !Sync for Noninline {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 
-// Error while generating bindings for item 'Noninline::Noninline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Noninline
-// Missing lifetime for `__this` parameter type: *mut crate::Noninline
+impl Default for Noninline {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoninlineC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'Noninline::Noninline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Noninline
-// Missing lifetime for `__this` parameter type: *mut crate::Noninline
+impl From<::ctor::RvalueReference<'_, Self>> for Noninline {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoninlineC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Noninline {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'Noninline::Noninline':
-// Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for Noninline {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoninlineaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'Noninline::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'Noninline::operator=':
-// Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Noninline {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoninlineaSEOS_(self, __param_0);
+        }
+    }
+}
 
 impl Noninline {
     #[inline(always)]
@@ -88,24 +121,55 @@ impl !Send for Inline {}
 impl !Sync for Inline {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 
-// Error while generating bindings for item 'Inline::Inline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Inline
-// Missing lifetime for `__this` parameter type: *mut crate::Inline
+impl Default for Inline {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN6InlineC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'Inline::Inline':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Inline
-// Missing lifetime for `__this` parameter type: *mut crate::Inline
+impl From<::ctor::RvalueReference<'_, Self>> for Inline {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN6InlineC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Inline {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'Inline::Inline':
-// Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for Inline {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN6InlineaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'Inline::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'Inline::operator=':
-// Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Inline {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN6InlineaSEOS_(self, __param_0);
+        }
+    }
+}
 
 impl Inline {
     #[inline(always)]
@@ -146,6 +210,19 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN9NoninlineC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9NoninlineC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::Noninline>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN9NoninlineaSERKS_<'__return_lifetime>(
+            __this: &mut crate::Noninline,
+            __param_0: &crate::Noninline,
+        ) -> &'__return_lifetime mut crate::Noninline;
+        pub(crate) unsafe fn __rust_thunk___ZN9NoninlineaSEOS_<'__return_lifetime>(
+            __this: &mut crate::Noninline,
+            __param_0: ::ctor::RvalueReference<'_, crate::Noninline>,
+        ) -> &'__return_lifetime mut crate::Noninline;
         #[link_name = "_ZN9Noninline17UnqualifiedMethodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN9Noninline17UnqualifiedMethodEv(
             __this: *mut crate::Noninline,
@@ -166,6 +243,19 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(
             __this: *const crate::Noninline,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN6InlineC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN6InlineC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::Inline>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6InlineaSERKS_<'__return_lifetime>(
+            __this: &mut crate::Inline,
+            __param_0: &crate::Inline,
+        ) -> &'__return_lifetime mut crate::Inline;
+        pub(crate) unsafe fn __rust_thunk___ZN6InlineaSEOS_<'__return_lifetime>(
+            __this: &mut crate::Inline,
+            __param_0: ::ctor::RvalueReference<'_, crate::Inline>,
+        ) -> &'__return_lifetime mut crate::Inline;
         pub(crate) unsafe fn __rust_thunk___ZN6Inline17UnqualifiedMethodEv(
             __this: *mut crate::Inline,
         );

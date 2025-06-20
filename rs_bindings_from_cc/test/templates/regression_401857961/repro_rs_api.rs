@@ -12,7 +12,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 pub mod repro {
@@ -36,25 +36,27 @@ pub mod repro {
     // Error while generating bindings for item 'Interval::Interval':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Missing lifetime for `__this` parameter type: *mut crate::repro::Interval
+    // Expected first parameter to be a `__this` reference, found *mut crate::repro::Interval
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     // Error while generating bindings for item 'Interval::Interval':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Missing lifetime for `__this` parameter type: *mut crate::repro::Interval
+    // Expected first parameter to be a `__this` reference, found *mut crate::repro::Interval
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for item 'repro::Interval::Interval':
-    // Parameter #0 is not supported: Unsupported type 'Interval &&': Unsupported type: && without lifetime
+    // Error while generating bindings for item 'Interval::Interval':
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
+    // Expected first parameter to be a `__this` reference, found *mut crate::repro::Interval
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     // Error while generating bindings for item 'Interval::operator=':
     // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for item 'repro::Interval::operator=':
-    // Parameter #0 is not supported: Unsupported type 'Interval &&': Unsupported type: && without lifetime
+    // Error while generating bindings for item 'Interval::operator=':
+    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=19
     // Error while generating bindings for item 'repro::Nullable':

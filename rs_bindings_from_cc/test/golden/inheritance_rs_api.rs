@@ -17,7 +17,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// Using classes to force these to be non-POD.
@@ -320,7 +320,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN12VirtualBase1C1ERKS_(
@@ -344,7 +344,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN12VirtualBase1C1EOS_(
@@ -420,7 +420,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN12VirtualBase2C1ERKS_(
@@ -444,7 +444,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN12VirtualBase2C1EOS_(
@@ -520,7 +520,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN14VirtualDerivedC1ERKS_(
@@ -544,7 +544,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN14VirtualDerivedC1EOS_(

@@ -21,4 +21,23 @@
 static_assert(sizeof(class Outer) == 1);
 static_assert(alignof(class Outer) == 1);
 
+extern "C" void __rust_thunk___ZN5OuterC1Ev(class Outer* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN5OuterC1EOS_(class Outer* __this,
+                                              class Outer* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" class Outer* __rust_thunk___ZN5OuteraSERKS_(
+    class Outer* __this, const class Outer* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" class Outer* __rust_thunk___ZN5OuteraSEOS_(class Outer* __this,
+                                                      class Outer* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 #pragma clang diagnostic pop

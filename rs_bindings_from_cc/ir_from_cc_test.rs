@@ -345,6 +345,18 @@ fn test_function_template_not_supported_yet() {
 }
 
 #[gtest]
+fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_no_lifetime(
+) -> googletest::Result<()> {
+    let ir = ir_from_cc("void f(int&& a) {};").unwrap();
+    let function = ir.functions().find(|func| func.cc_name == "f").or_fail()?;
+    let [param] = &function.params[..] else { return fail!("expected exactly one parameter") };
+    let &PointerType { kind, lifetime, .. } = param.type_.variant.as_pointer().or_fail()?;
+    expect_eq!(kind, PointerTypeKind::RValueRef);
+    expect_eq!(lifetime, None);
+    Ok(())
+}
+
+#[gtest]
 fn test_record_member_variable_access_specifiers() {
     let ir = ir_from_cc(
         "
@@ -3333,8 +3345,7 @@ fn test_record_items() {
               Func { ... rs_name: Constructor ... }
             },
             quote! {
-              // Unsupported parameter
-              UnsupportedItem { ... name: "TopLevelStruct::TopLevelStruct", ... }
+              Func { ... rs_name: Constructor, ... }
             },
             quote! {
               Func { ... rs_name: Destructor ... }
@@ -3343,8 +3354,7 @@ fn test_record_items() {
               Func { ... rs_name: "operator=" ... }
             },
             quote! {
-              // Unsupported parameter
-              UnsupportedItem { ... name: "TopLevelStruct::operator=" ... }
+              Func { ... rs_name: "operator=" ... }
             },
             quote! {
               ...Comment {
@@ -3780,10 +3790,10 @@ fn test_function_redeclared_as_friend() {
                 }),
                 Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
                 Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
-                UnsupportedItem(UnsupportedItem { name: "SomeClass::SomeClass" ...  }),
+                Func(Func { cc_name: Constructor, rs_name: Constructor ...  }),
                 Func(Func { cc_name: Destructor, rs_name: Destructor ...  }),
                 Func(Func { cc_name: "operator=", rs_name: "operator=" ...  }),
-                UnsupportedItem(UnsupportedItem { name: "SomeClass::operator=" ...  }),
+                Func(Func { cc_name: "operator=", rs_name: "operator=" ...  }),
                 Func(Func {
                     cc_name: "bar",
                     rs_name: "bar" ...

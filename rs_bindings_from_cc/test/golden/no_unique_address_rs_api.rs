@@ -17,7 +17,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 /// The no_unique_address.h header is present both in
@@ -262,7 +262,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding_InnerStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
@@ -340,7 +340,7 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
@@ -364,7 +364,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddi
     type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let __param_0 = args;
+        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1EOS_(
@@ -420,7 +420,7 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_ch
     fn ctor_new(
         args: (::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char),
     ) -> Self::CtorType {
-        let (inner_int, inner_char, outer_char) = args;
+        let (mut inner_int, mut inner_char, mut outer_char) = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
                 crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(

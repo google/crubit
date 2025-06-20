@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy)]
@@ -25,24 +25,57 @@ impl !Send for NoDiscard {}
 impl !Sync for NoDiscard {}
 forward_declare::unsafe_define!(forward_declare::symbol!("NoDiscard"), crate::NoDiscard);
 
-// Error while generating bindings for item 'NoDiscard::NoDiscard':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::NoDiscard
-// Missing lifetime for `__this` parameter type: *mut crate::NoDiscard
+impl Default for NoDiscard {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoDiscardC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'NoDiscard::NoDiscard':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::NoDiscard
-// Missing lifetime for `__this` parameter type: *mut crate::NoDiscard
+impl From<::ctor::RvalueReference<'_, Self>> for NoDiscard {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoDiscardC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for NoDiscard {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'NoDiscard::NoDiscard':
-// Parameter #0 is not supported: Unsupported type 'NoDiscard &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for NoDiscard {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoDiscardaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'NoDiscard::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'NoDiscard::operator=':
-// Parameter #0 is not supported: Unsupported type 'NoDiscard &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NoDiscard {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9NoDiscardaSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 #[must_use = "You really should use this"]
@@ -58,24 +91,92 @@ forward_declare::unsafe_define!(
     crate::NoDiscardWithMessage
 );
 
-// Error while generating bindings for item 'NoDiscardWithMessage::NoDiscardWithMessage':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::NoDiscardWithMessage
-// Missing lifetime for `__this` parameter type: *mut crate::NoDiscardWithMessage
+impl Default for NoDiscardWithMessage {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20NoDiscardWithMessageC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'NoDiscardWithMessage::NoDiscardWithMessage':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::NoDiscardWithMessage
-// Missing lifetime for `__this` parameter type: *mut crate::NoDiscardWithMessage
+impl From<::ctor::RvalueReference<'_, Self>> for NoDiscardWithMessage {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20NoDiscardWithMessageC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for NoDiscardWithMessage {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'NoDiscardWithMessage::NoDiscardWithMessage':
-// Parameter #0 is not supported: Unsupported type 'NoDiscardWithMessage &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for NoDiscardWithMessage {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20NoDiscardWithMessageaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'NoDiscardWithMessage::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NoDiscardWithMessage {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20NoDiscardWithMessageaSEOS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'NoDiscardWithMessage::operator=':
-// Parameter #0 is not supported: Unsupported type 'NoDiscardWithMessage &&': Unsupported type: && without lifetime
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN9NoDiscardC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9NoDiscardC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::NoDiscard>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN9NoDiscardaSERKS_<'__return_lifetime>(
+            __this: &mut crate::NoDiscard,
+            __param_0: &crate::NoDiscard,
+        ) -> &'__return_lifetime mut crate::NoDiscard;
+        pub(crate) unsafe fn __rust_thunk___ZN9NoDiscardaSEOS_<'__return_lifetime>(
+            __this: &mut crate::NoDiscard,
+            __param_0: ::ctor::RvalueReference<'_, crate::NoDiscard>,
+        ) -> &'__return_lifetime mut crate::NoDiscard;
+        pub(crate) unsafe fn __rust_thunk___ZN20NoDiscardWithMessageC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN20NoDiscardWithMessageC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::NoDiscardWithMessage>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN20NoDiscardWithMessageaSERKS_<'__return_lifetime>(
+            __this: &mut crate::NoDiscardWithMessage,
+            __param_0: &crate::NoDiscardWithMessage,
+        ) -> &'__return_lifetime mut crate::NoDiscardWithMessage;
+        pub(crate) unsafe fn __rust_thunk___ZN20NoDiscardWithMessageaSEOS_<'__return_lifetime>(
+            __this: &mut crate::NoDiscardWithMessage,
+            __param_0: ::ctor::RvalueReference<'_, crate::NoDiscardWithMessage>,
+        ) -> &'__return_lifetime mut crate::NoDiscardWithMessage;
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::NoDiscard>() == 1);

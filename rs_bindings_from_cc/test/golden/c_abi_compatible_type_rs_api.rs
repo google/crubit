@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 // Type bindings for struct MyI8 suppressed due to being mapped to an existing Rust type (i8)
@@ -26,24 +26,55 @@ impl !Send for X {}
 impl !Sync for X {}
 forward_declare::unsafe_define!(forward_declare::symbol!("X"), crate::X);
 
-// Error while generating bindings for item 'X::X':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::X
-// Missing lifetime for `__this` parameter type: *mut crate::X
+impl Default for X {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1XC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'X::X':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::X
-// Missing lifetime for `__this` parameter type: *mut crate::X
+impl From<::ctor::RvalueReference<'_, Self>> for X {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1XC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for X {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'X::X':
-// Parameter #0 is not supported: Unsupported type 'X &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for X {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN1XaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'X::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'X::operator=':
-// Parameter #0 is not supported: Unsupported type 'X &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for X {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN1XaSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[inline(always)]
 pub fn ffi(a: i8, mut b: crate::X) -> i8 {
@@ -61,6 +92,19 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN1XC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN1XC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::X>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN1XaSERKS_<'__return_lifetime>(
+            __this: &mut crate::X,
+            __param_0: &crate::X,
+        ) -> &'__return_lifetime mut crate::X;
+        pub(crate) unsafe fn __rust_thunk___ZN1XaSEOS_<'__return_lifetime>(
+            __this: &mut crate::X,
+            __param_0: ::ctor::RvalueReference<'_, crate::X>,
+        ) -> &'__return_lifetime mut crate::X;
         pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
         pub(crate) unsafe fn __rust_thunk___Z1fiPvi(
             a: crate::MyTypedefDecl,

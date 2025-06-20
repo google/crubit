@@ -11,7 +11,7 @@
 #![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
-#![allow(dead_code)]
+#![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
 #[derive(Clone, Copy)]
@@ -24,27 +24,78 @@ impl !Send for Foo {}
 impl !Sync for Foo {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
-// Error while generating bindings for item 'Foo::Foo':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Foo
-// Missing lifetime for `__this` parameter type: *mut crate::Foo
+impl Default for Foo {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Error while generating bindings for item 'Foo::Foo':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Foo
-// Missing lifetime for `__this` parameter type: *mut crate::Foo
+impl From<::ctor::RvalueReference<'_, Self>> for Foo {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Foo {
+    type CtorType = Self;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+    }
+}
 
-// Error while generating bindings for item 'Foo::Foo':
-// Parameter #0 is not supported: Unsupported type 'Foo &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<&Self> for Foo {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: &Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Error while generating bindings for item 'Foo::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Error while generating bindings for item 'Foo::operator=':
-// Parameter #0 is not supported: Unsupported type 'Foo &&': Unsupported type: && without lifetime
+impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Foo {
+    #[inline(always)]
+    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Error while generating bindings for item 'Foo::Bar':
 // Nested classes are not supported yet
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN3FooC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::Foo>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN3FooaSERKS_<'__return_lifetime>(
+            __this: &mut crate::Foo,
+            __param_0: &crate::Foo,
+        ) -> &'__return_lifetime mut crate::Foo;
+        pub(crate) unsafe fn __rust_thunk___ZN3FooaSEOS_<'__return_lifetime>(
+            __this: &mut crate::Foo,
+            __param_0: ::ctor::RvalueReference<'_, crate::Foo>,
+        ) -> &'__return_lifetime mut crate::Foo;
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::Foo>() == 4);
