@@ -278,14 +278,7 @@ pub fn required_crubit_features(
                 &|| "incomplete type".into(),
             );
         }
-        Item::Comment { .. } | Item::UseMod { .. } => {}
-        Item::TypeMapOverride { .. } => {
-            require_any_feature(
-                &mut missing_features,
-                crubit_feature::CrubitFeature::Experimental.into(),
-                &|| "type map override".into(),
-            );
-        }
+        Item::Comment { .. } | Item::TypeMapOverride { .. } | Item::UseMod { .. } => {}
     }
     Ok(missing_features)
 }
