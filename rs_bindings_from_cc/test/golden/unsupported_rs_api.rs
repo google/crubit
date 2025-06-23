@@ -61,6 +61,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -106,7 +107,8 @@ forward_declare::unsafe_define!(
 );
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustomType {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -121,7 +123,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustom
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCustomType {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;

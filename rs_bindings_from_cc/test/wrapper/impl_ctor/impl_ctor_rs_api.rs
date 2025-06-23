@@ -58,7 +58,8 @@ impl ::ctor::PinnedDrop for Nontrivial {
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=16
 #[inline(always)]
-pub(crate) fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial> {
+pub(crate) fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>
+{
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
             crate::detail::__rust_thunk___Z6Createv(dest as *mut ::core::ffi::c_void);
@@ -69,7 +70,7 @@ pub(crate) fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial> {
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=18
 #[inline(always)]
 pub(crate) fn Read(
-    nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial>,
+    nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
 ) -> ::core::ffi::c_int {
     unsafe {
         crate::detail::__rust_thunk___Z4Read10Nontrivial(::core::pin::Pin::into_inner_unchecked(

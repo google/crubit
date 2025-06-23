@@ -99,7 +99,8 @@ impl !Sync for Nontrivial {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<()> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -112,7 +113,8 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -127,7 +129,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -227,7 +230,8 @@ impl<'b> ::ctor::Assign<&'b Self> for TriviallyCopyableButNontriviallyDestructib
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for TriviallyCopyableButNontriviallyDestructible {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -239,7 +243,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for TriviallyCopyableButNontriviallyDestructi
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for TriviallyCopyableButNontriviallyDestructible {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -513,6 +518,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)

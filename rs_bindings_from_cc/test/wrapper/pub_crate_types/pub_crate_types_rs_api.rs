@@ -113,7 +113,8 @@ pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=55
 #[inline(always)]
-pub(crate) fn GetTemplateInt() -> impl ::ctor::Ctor<Output = crate::__CcTemplateInst8TemplateIiE> {
+pub(crate) fn GetTemplateInt(
+) -> impl ::ctor::Ctor<Output = crate::__CcTemplateInst8TemplateIiE, Error = ::ctor::Infallible> {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::__CcTemplateInst8TemplateIiE| {
             crate::detail::__rust_thunk___Z14GetTemplateIntv(dest as *mut ::core::ffi::c_void);

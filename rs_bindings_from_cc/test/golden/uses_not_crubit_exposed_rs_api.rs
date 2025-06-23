@@ -28,6 +28,7 @@ pub trait BindingFailedFor_Z19UseNotCrubitExposed16NotCrubitExposed {}
 pub(crate) unsafe fn UseNotCrubitExposed<'error>(
     not_crubit_exposed: impl ::ctor::Ctor<
         Output = ::forward_declare::Incomplete<::forward_declare::symbol!("NotCrubitExposed"), ()>,
+        Error = ::ctor::Infallible,
     >,
 ) where
     &'error (): BindingFailedFor_Z19UseNotCrubitExposed16NotCrubitExposed,
@@ -80,6 +81,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for CannotUpcastInCrubit {
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for CannotUpcastInCrubit {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)

@@ -61,6 +61,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for S {
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for S {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
@@ -134,7 +135,8 @@ impl ::ctor::Assign<&Self> for TriviallyCopyableButNontriviallyDestructible {
 impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'__unelided>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -148,7 +150,8 @@ impl<'__unelided> ::ctor::CtorNew<&'__unelided Self>
 impl<'__unelided> ::ctor::CtorNew<(&'__unelided Self,)>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'__unelided>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'__unelided Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -196,6 +199,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for WrappedValue {
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for WrappedValue {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
@@ -235,6 +239,7 @@ impl From<::core::ffi::c_int> for WrappedValue {
 }
 impl ::ctor::CtorNew<::core::ffi::c_int> for WrappedValue {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         <Self as From<::core::ffi::c_int>>::from(args)

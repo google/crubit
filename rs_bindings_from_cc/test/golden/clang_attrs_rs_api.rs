@@ -55,6 +55,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -120,6 +121,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -187,6 +189,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for InheritsFromBaseWithCustomAlignment
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -266,6 +269,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAt
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAttr {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -348,6 +352,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)

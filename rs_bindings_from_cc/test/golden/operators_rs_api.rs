@@ -64,6 +64,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -148,6 +149,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -231,6 +233,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFriend {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFriend {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -312,6 +315,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByConstRef {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByConstRef {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -377,6 +381,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByMutRef {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByMutRef {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -442,6 +447,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByValue {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByValue {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -507,6 +513,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByRValueRef {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByRValueRef {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -624,6 +631,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Overloaded {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Overloaded {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -705,6 +713,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -779,6 +788,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -828,7 +838,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -843,7 +854,8 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -858,7 +870,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -878,7 +891,8 @@ impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
 impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMemberNonunpin>
     for &'a crate::AddableConstMemberNonunpin
 {
-    type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin> + use<'a, 'b>;
+    type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin, Error = ::ctor::Infallible>
+        + use<'a, 'b>;
     #[inline(always)]
     fn add(self, rhs: &'b crate::AddableConstMemberNonunpin) -> Self::Output {
         unsafe {
@@ -941,6 +955,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1015,6 +1030,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1089,6 +1105,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1163,6 +1180,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1237,6 +1255,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1311,6 +1330,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1385,6 +1405,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMem
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1470,6 +1491,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendCo
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendConstLhs {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -1556,6 +1578,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for ManyOperators {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for ManyOperators {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)

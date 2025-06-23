@@ -5,7 +5,9 @@
 
 #[cfg(test)]
 mod tests {
-    use ctor::{ctor, emplace, mov, ConstRvalueReference, Ctor, Emplace, RvalueReference};
+    use ctor::{
+        ctor, emplace, mov, ConstRvalueReference, Ctor, Emplace, Infallible, RvalueReference,
+    };
     use ctor::{Assign as _, CtorNew as _, ReconstructUnchecked as _};
     use googletest::prelude::*;
     use nonunpin::{Nonmovable, Nonunpin, NonunpinStruct, ReturnsNonmovable};
@@ -201,7 +203,7 @@ mod tests {
         }
 
         impl MyStruct {
-            fn new() -> impl Ctor<Output = Self> {
+            fn new() -> impl Ctor<Output = Self, Error = Infallible> {
                 ctor!(MyStruct { field_1: 4, field_2: Nonunpin::ctor_new(2) })
             }
         }

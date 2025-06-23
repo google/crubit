@@ -34,7 +34,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -49,7 +50,8 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -64,7 +66,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -102,7 +105,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -117,7 +121,8 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -132,7 +137,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -177,7 +183,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -192,7 +199,8 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -207,7 +215,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -216,7 +225,8 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicDerived {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -231,7 +241,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDeriv
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;

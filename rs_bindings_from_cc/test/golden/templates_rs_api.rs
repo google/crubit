@@ -52,6 +52,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DifferentScope {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for DifferentScope {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -126,6 +127,7 @@ pub mod test_namespace_bindings {
     }
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TemplateParam {
         type CtorType = Self;
+        type Error = ::ctor::Infallible;
         #[inline(always)]
         fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
             <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -260,6 +262,7 @@ pub mod private_classes {
     }
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
         type CtorType = Self;
+        type Error = ::ctor::Infallible;
         #[inline(always)]
         fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
             <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -334,6 +337,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -429,6 +433,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -522,6 +527,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -610,6 +616,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -679,6 +686,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -748,6 +756,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -818,6 +827,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -884,6 +894,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -956,6 +967,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)

@@ -53,6 +53,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for NoDiscard {
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for NoDiscard {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
@@ -119,6 +120,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for NoDiscardWithMessage {
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for NoDiscardWithMessage {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)

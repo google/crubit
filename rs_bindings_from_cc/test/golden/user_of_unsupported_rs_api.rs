@@ -16,7 +16,10 @@
 
 #[inline(always)]
 pub fn UseNontrivialCustomType(
-    non_trivial_custom_type: impl ::ctor::Ctor<Output = unsupported_cc::NontrivialCustomType>,
+    non_trivial_custom_type: impl ::ctor::Ctor<
+        Output = unsupported_cc::NontrivialCustomType,
+        Error = ::ctor::Infallible,
+    >,
 ) {
     unsafe {
         crate::detail::__rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(

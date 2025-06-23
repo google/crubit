@@ -52,6 +52,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for Noninline {
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Noninline {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
@@ -147,6 +148,7 @@ impl From<::ctor::RvalueReference<'_, Self>> for Inline {
 }
 impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Inline {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)

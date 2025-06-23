@@ -37,7 +37,8 @@ impl !Sync for Derived2 {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), crate::Derived2);
 
 impl ::ctor::CtorNew<()> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -50,7 +51,8 @@ impl ::ctor::CtorNew<()> for Derived2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -65,7 +67,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -74,7 +77,8 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for Derived2 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -89,7 +93,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -150,7 +155,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -165,7 +171,8 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -180,7 +187,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -189,7 +197,8 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived2 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -204,7 +213,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;

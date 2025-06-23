@@ -1447,7 +1447,7 @@ pub fn generate_function(
             associated_return_type,
             ..
         } => {
-            let extra_body = if let Some(name) = associated_return_type {
+            let mut extra_body = if let Some(name) = associated_return_type {
                 let quoted_return_type = if quoted_return_type.is_empty() {
                     quote! {()}
                 } else {
@@ -1479,6 +1479,11 @@ pub fn generate_function(
             } else {
                 quote! {}
             };
+            if matches!(trait_name, TraitName::CtorNew(_)) {
+                extra_body.extend(quote! {
+                    type Error = ::ctor::Infallible;
+                });
+            }
 
             let record_name = make_rs_ident(trait_record.rs_name.identifier.as_ref());
             let trait_lifetime_params = error_lifetime_param.as_slice();
@@ -1513,8 +1518,9 @@ pub fn generate_function(
                         Some(&trait_record),
                     );
                     quote! {
-                            impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #record_name #unsatisfied_where_clause {
                             type CtorType = Self;
+                            type Error = ::ctor::Infallible;
 
                             #[inline (always)]
                             fn ctor_new(args: #single_param_) -> Self::CtorType {
@@ -1693,7 +1699,7 @@ fn function_signature(
                 type_.to_token_stream(db)
             };
             *features |= Feature::impl_trait_in_assoc_type;
-            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self>});
+            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self, Error=::ctor::Infallible>});
             thunk_args
                 .push(quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
         } else {
@@ -1841,7 +1847,7 @@ fn function_signature(
                     quote! {+ use<#(#lifetimes),*> }
                 };
                 *features |= Feature::impl_trait_in_assoc_type;
-                quote! {impl ::ctor::Ctor<Output=#ty> #extra_lifetimes }
+                quote! {impl ::ctor::Ctor<Output=#ty, Error=::ctor::Infallible> #extra_lifetimes }
             }
         };
 

@@ -71,7 +71,10 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
         // SAFETY: unconditionally initializes dest.
         unsafe impl ::ctor::Ctor for #struct_ctor_name {
             type Output = #struct_name;
-            unsafe fn ctor(self, dest: *mut Self::Output) {
+            // TODO(jeanpierreda): This only handles the Infallible case,
+            // but a derive should also handle non-infallible cases.
+            type Error = ::ctor::Infallible;
+            unsafe fn ctor(self, dest: *mut Self::Output) -> ::core::result::Result<(), Self::Error> {
                 ::ctor::ctor!(
                     #struct_name #fields
                 ).ctor(dest)
@@ -82,6 +85,7 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 
         impl ::ctor::CtorNew<()> for #struct_name {
             type CtorType = #struct_ctor_name;
+            type Error = ::ctor::Infallible;
 
             fn ctor_new(_args: ()) -> #struct_ctor_name { #struct_ctor_name() }
         }

@@ -52,6 +52,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -119,6 +120,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)

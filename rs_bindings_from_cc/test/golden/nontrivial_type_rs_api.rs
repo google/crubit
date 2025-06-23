@@ -38,7 +38,8 @@ impl !Sync for Nontrivial {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<()> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -51,7 +52,8 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 }
 
 impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         let mut field = args;
@@ -66,7 +68,8 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
     }
 }
 impl ::ctor::CtorNew<(::core::ffi::c_int,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
         let (arg,) = args;
@@ -75,7 +78,8 @@ impl ::ctor::CtorNew<(::core::ffi::c_int,)> for Nontrivial {
 }
 
 impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
@@ -92,7 +96,8 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -107,7 +112,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for Nontrivial {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -116,7 +122,8 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for Nontrivial {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -131,7 +138,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -264,7 +272,8 @@ impl PartialOrd for Nontrivial {
 }
 
 impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
-    type Output = impl ::ctor::Ctor<Output = crate::Nontrivial> + use<'a, 'b>;
+    type Output =
+        impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> + use<'a, 'b>;
     #[inline(always)]
     fn add(self, rhs: &'b crate::Nontrivial) -> Self::Output {
         unsafe {
@@ -301,7 +310,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -316,7 +326,8 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
 }
 
 impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         let mut field = args;
@@ -331,7 +342,8 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialInline {
     }
 }
 impl ::ctor::CtorNew<(::core::ffi::c_int,)> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
         let (arg,) = args;
@@ -340,7 +352,8 @@ impl ::ctor::CtorNew<(::core::ffi::c_int,)> for NontrivialInline {
 }
 
 impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
@@ -357,7 +370,8 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for NontrivialInl
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -372,7 +386,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialInline {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -381,7 +396,8 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialInline {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -396,7 +412,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialInline
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -467,7 +484,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -482,7 +500,8 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -497,7 +516,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialMembers {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -506,7 +526,8 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialMembers {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -521,7 +542,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialMember
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -599,6 +621,7 @@ impl From<::core::ffi::c_int> for NontrivialUnpin {
 }
 impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialUnpin {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         <Self as From<::core::ffi::c_int>>::from(args)
@@ -637,6 +660,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -658,6 +682,7 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpi
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpin {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, crate::Nontrivial>>>::from(args)
@@ -707,8 +732,8 @@ impl NontrivialUnpin {
 
 #[inline(always)]
 pub fn TakesByValue(
-    nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial>,
-) -> impl ::ctor::Ctor<Output = crate::Nontrivial> {
+    nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
+) -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
             crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
@@ -721,8 +746,8 @@ pub fn TakesByValue(
 
 #[inline(always)]
 pub fn TakesByValueInline(
-    nontrivial: impl ::ctor::Ctor<Output = crate::NontrivialInline>,
-) -> impl ::ctor::Ctor<Output = crate::NontrivialInline> {
+    nontrivial: impl ::ctor::Ctor<Output = crate::NontrivialInline, Error = ::ctor::Infallible>,
+) -> impl ::ctor::Ctor<Output = crate::NontrivialInline, Error = ::ctor::Infallible> {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::NontrivialInline| {
             crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
@@ -838,6 +863,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -908,7 +934,8 @@ impl !Sync for Nonmovable {}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
 
 impl ::ctor::CtorNew<()> for Nonmovable {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -939,8 +966,9 @@ impl Nonmovable {
 )]
 pub trait BindingFailedFor_Z22TakesNonmovableByValue10Nonmovable {}
 #[inline(always)]
-pub fn TakesNonmovableByValue<'error>(nonmovable: impl ::ctor::Ctor<Output = crate::Nonmovable>)
-where
+pub fn TakesNonmovableByValue<'error>(
+    nonmovable: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
+) where
     &'error (): BindingFailedFor_Z22TakesNonmovableByValue10Nonmovable,
 {
     #![allow(unused_variables)]
@@ -951,7 +979,8 @@ where
 }
 
 #[inline(always)]
-pub fn ReturnsNonmovableByValue() -> impl ::ctor::Ctor<Output = crate::Nonmovable> {
+pub fn ReturnsNonmovableByValue(
+) -> impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible> {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nonmovable| {
             crate::detail::__rust_thunk___Z24ReturnsNonmovableByValuev(

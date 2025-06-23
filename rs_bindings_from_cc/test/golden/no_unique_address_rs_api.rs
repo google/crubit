@@ -83,6 +83,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Struct {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Struct {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -183,6 +184,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -244,7 +246,8 @@ forward_declare::unsafe_define!(
 );
 
 impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -259,7 +262,8 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding_InnerStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -274,7 +278,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding_InnerStruct {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for FieldInTailPadding_InnerStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -337,7 +342,8 @@ impl FieldInTailPadding {
 }
 
 impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'b Self) -> Self::CtorType {
         let mut __param_0 = args;
@@ -352,7 +358,8 @@ impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b Self,)> for FieldInTailPadding {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
@@ -361,7 +368,8 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for FieldInTailPadding {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldInTailPadding {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let mut __param_0 = args;
@@ -376,7 +384,8 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddi
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for FieldInTailPadding {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -415,7 +424,8 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddin
 impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char)>
     for FieldInTailPadding
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
         args: (::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char),

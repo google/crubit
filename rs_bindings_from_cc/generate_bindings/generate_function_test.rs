@@ -1223,7 +1223,8 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
         rs_api,
         quote! {
             impl ::ctor::CtorNew<()> for HasConstructor {
-                type CtorType = impl ::ctor::Ctor<Output = Self>;
+                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+                type Error = ::ctor::Infallible;
 
                 #[inline(always)]
                 fn ctor_new(args: ()) -> Self::CtorType {
@@ -1256,7 +1257,8 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
         rs_api,
         quote! {
             impl ::ctor::CtorNew<::core::ffi::c_uchar> for HasConstructor {
-                type CtorType = impl ::ctor::Ctor<Output = Self>;
+                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+                type Error = ::ctor::Infallible;
 
                 #[inline (always)]
                 fn ctor_new(args: ::core::ffi::c_uchar) -> Self::CtorType {
@@ -1289,7 +1291,8 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
         rs_api,
         quote! {
             impl ::ctor::CtorNew<(::core::ffi::c_uchar, ::core::ffi::c_schar)> for HasConstructor {
-                type CtorType = impl ::ctor::Ctor<Output = Self>;
+                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+                type Error = ::ctor::Infallible;
 
                 #[inline (always)]
                 fn ctor_new(args: (::core::ffi::c_uchar, ::core::ffi::c_schar)) -> Self::CtorType {
@@ -1336,7 +1339,8 @@ fn test_nonunpin_by_value_params() -> Result<()> {
             > for HasConstructor {
                 // The captures are why we need explicit lifetimes for the two rvalue reference
                 // parameters.
-                type CtorType = impl ::ctor::Ctor<Output = Self> + use<'b, 'y, 'b_2>;
+                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b, 'y, 'b_2>;
+                type Error = ::ctor::Infallible;
 
                 #[inline (always)]
                 fn ctor_new(args: (
@@ -1372,7 +1376,7 @@ fn test_nonunpin_return() -> Result<()> {
         rs_api,
         quote! {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
-            -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
+            -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
                         crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(dest as *mut ::core::ffi::c_void, x, y);
@@ -1410,7 +1414,7 @@ fn test_nonunpin_const_return() -> Result<()> {
         rs_api,
         quote! {
             pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
-            -> impl ::ctor::Ctor<Output=crate::Nontrivial> + use<'a, 'b> {
+            -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
                         crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(dest as *mut ::core::ffi::c_void, x, y);
@@ -1646,7 +1650,7 @@ fn test_nonunpin_param() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn TakesByValue(x: impl ::ctor::Ctor<Output=crate::Nontrivial>) {
+            pub fn TakesByValue(x: impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible>) {
                 unsafe {
                     crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(x)))
                 }

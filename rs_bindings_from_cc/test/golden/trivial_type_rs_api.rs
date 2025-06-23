@@ -61,6 +61,7 @@ pub mod ns {
     }
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Trivial {
         type CtorType = Self;
+        type Error = ::ctor::Infallible;
         #[inline(always)]
         fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
             <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)

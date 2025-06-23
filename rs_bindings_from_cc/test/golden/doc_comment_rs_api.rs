@@ -47,6 +47,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -103,6 +104,7 @@ impl From<::core::ffi::c_int> for DocCommentSlashes {
 }
 impl ::ctor::CtorNew<::core::ffi::c_int> for DocCommentSlashes {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         <Self as From<::core::ffi::c_int>>::from(args)
@@ -177,6 +179,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -246,6 +249,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -312,6 +316,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for LineComment {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for LineComment {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -381,6 +386,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -473,6 +479,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIiE {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -549,6 +556,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIfE {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -622,6 +630,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst13OuterTemp
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst13OuterTemplateIiE {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)

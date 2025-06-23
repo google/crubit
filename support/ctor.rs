@@ -3,10 +3,35 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![cfg_attr(not(test), no_std)]
 #![feature(negative_impls)]
-//! Traits for memory management operations on wrapped C++ objects, based on
-//! moveit.
+//! Traits for memory management operations on wrapped C++ objects, inspired by
+//! moveit, pin-init, and the current in-place initialization proposal at
+//! https://hackmd.io/@aliceryhl/BJutRcPblx.
+//!
+//! # Comparison with pin-init
+//!
+//! TODO: fill this out. It's an open question whether all of the differences can be removed.
+//!
+//! Quick overview:
+//!
+//! * pin-init uses a type parameter for the output, `ctor.rs` uses an associated type.
+//!   * Associated type impls can't overlap, meaning someday we could do trait impls like
+//!     `impl<T: Ctor<Output=A>> X for Y {}` plus `impl<T: Ctor<Output=B>> X for Y {}`.
+//! * pin-init uses a type parameter for the error, `ctor.rs` uses an associated type.
+//!   * This results in fewer type inference issues, and is what the upstream proposal
+//!     for pin-init currently does.
+//! * (trivial) syntax and naming differences
+//! * pin-init allows direct-initialization, but `ctor.rs` only allows pinned initialization.
+//!   * The upstream proposal for pin-init may do something similar, only having in-place
+//!     initialization: https://hackmd.io/@aliceryhl/BJutRcPblx
+//! * pin-init uses `#[pin]` to decide if a field is pinned. This is common among other libraries
+//!   as well.
 //!
 //! # Comparison with moveit
+//!
+//! `ctor.rs` was initially based on `moveit`, taking the `Ctor` trait from there,
+//! but has since diverged. In places this is for reasons of C++ interop, and
+//! in other places it is to bring it closer to `pin-init` and the upstream
+//! proposal for in-place initialization.
 //!
 //! ## Non-destructive move
 //!
@@ -55,17 +80,20 @@
 //! So that Rust types can be used against C++ functions (even templated ones),
 //! the copy and move traits have blanket impls for all suitable Unpin types.
 //!
-//! More significantly, we take the position that all Unpin types are their own
+//! More significantly, we take the position that all `Unpin` types are their own
 //! `Ctor`. This makes `Ctor`-based initialization nearly a perfect superset of
-//! normal initialization rules: for a non-self-referential Rust type (an Unpin
-//! type), it looks the same as normal, but for C++-like !Unpin types we use
+//! normal initialization rules: for a non-self-referential Rust type (an `Unpin`
+//! type), it looks the same as normal, but for C++-like `!Unpin` types we use
 //! custom `Ctor` values to initialize in-place.
 //!
 //! Blanket implementing based on `Unpin` means that we're treating `T : Unpin`
-//! as effectively meaning "T is safe to deal with by value", which is close to,
-//! but not quite, what it means. (There are some types which are !Unpin but
+//! as effectively meaning "`T` is safe to deal with by value", which is close to,
+//! but not quite, what it means. (There are some types which are `!Unpin` but
 //! would be safe to treat as normal rust types. Unfortunately, there is no way
 //! to detect them.)
+//!
+//! A more general solution would be to use a custom auto trait, e.g.
+//! `pub auto trait SelfInit {}`.
 //!
 //! ## Overload trait
 //!
@@ -91,7 +119,17 @@
 //! `ctor` adds a `ctor!` macro to make it easy to initialize a struct
 //! that contains non-trivially-relocatable fields.
 //!
-//! ## Features
+//! ## Errors
+//!
+//! To support initialization which can fail, without requiring the use
+//! of panic `Ctor` also has an associated `Error` type, representing
+//! failure. Most of the macros/methods should, over time, gain `try_`
+//! variants which can support non-`Infallible` errors.
+//!
+//! (This particular change was taken from the upstream proposal for
+//! in-place initialization.)
+//!
+//! # Features
 //!
 //! This library requires the following unstable features enabled in users:
 //!
@@ -112,6 +150,13 @@ use core::pin::Pin;
 
 pub use ctor_proc_macros::*;
 
+/// The error type for an infallible `Ctor`.
+///
+/// This error type is special-cased for unfallible operations,
+/// such as `emplace()`. If you need to handle an error, use
+/// the `try_` variants, instead.
+pub type Infallible = core::convert::Infallible;
+
 /// The string constant for #[must_use] to describe why you must use a `Ctor`.
 macro_rules! must_use_ctor {
     () => {
@@ -131,9 +176,9 @@ macro_rules! must_use_ctor_assign {
     };
 }
 
-// ======================
-// ~Unchanged from moveit
-// ======================
+// ============================
+// Core construction operations
+// ============================
 
 /// In-place initialization of a value.
 ///
@@ -142,16 +187,23 @@ macro_rules! must_use_ctor_assign {
 /// Implementations must satisfy the postconditions of the `ctor` method.
 #[must_use = must_use_ctor!()]
 pub unsafe trait Ctor: Sized {
+    /// The constructed output type.
     type Output: ?Sized;
+    /// The error type if initialization fails. This should typically
+    /// be `Infallible`, as there's only limited support for real
+    /// errors currently.
+    type Error;
+
     /// Constructs a value in place.
     ///
     /// Before this call, `dest` is uninitialized. After this call,
-    /// if `ctor` does not panic, `dest` is initialized to the constructed value.
+    /// if `ctor` does not panic, and returns `Ok`, then `dest` is
+    /// initialized to the constructed value.
     ///
     /// # Safety
     ///
     /// `dest` is valid for writes, pinned, and uninitialized.
-    unsafe fn ctor(self, dest: *mut Self::Output);
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error>;
 
     /// Returns a chained Ctor, which will invoke `f` after construction.
     ///
@@ -163,23 +215,36 @@ pub unsafe trait Ctor: Sized {
     /// ```
     ///
     /// ```
-    /// emplace! { let x = y.ctor_then(|mut inited| inited.mutating_method()); }
+    /// emplace! { let x = y.ctor_then(|mut inited| inited.mutating_method()); Ok(()) }
     /// ```
-    fn ctor_then<F: FnOnce(Pin<&mut Self::Output>)>(self, f: F) -> CtorThen<Self, F> {
+    fn ctor_then<F>(self, f: F) -> CtorThen<Self, F>
+    where
+        F: FnOnce(Pin<&mut Self::Output>) -> Result<(), Self::Error>,
+    {
         CtorThen { ctor: self, f }
     }
 }
 
+/// Trait for smart pointer types which support initialization via `Ctor`.
+///
+/// A typical example would be `Box<T>`, allows emplacing a `Ctor` into
+/// a `Pin<Box<T>>` by calling `Box::emplace`.
 pub trait Emplace<T>: Sized {
-    fn emplace<C: Ctor<Output = T>>(c: C) -> Pin<Self>;
+    /// Materialize an unfailable `Ctor`.
+    fn emplace<C: Ctor<Output = T, Error = Infallible>>(c: C) -> Pin<Self> {
+        Self::try_emplace(c).unwrap()
+    }
+
+    /// Materialize a `Ctor`, returning an error if initialization fails.
+    fn try_emplace<C: Ctor<Output = T>>(c: C) -> Result<Pin<Self>, C::Error>;
 }
 
 impl<T> Emplace<T> for Box<T> {
-    fn emplace<C: Ctor<Output = T>>(ctor: C) -> Pin<Box<T>> {
+    fn try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Box<T>>, C::Error> {
         let mut uninit = Box::new(MaybeUninit::<T>::uninit());
         unsafe {
-            ctor.ctor(uninit.as_mut_ptr());
-            Pin::new_unchecked(Box::from_raw(Box::into_raw(uninit).cast::<T>()))
+            ctor.ctor(uninit.as_mut_ptr())?;
+            Ok(Pin::new_unchecked(Box::from_raw(Box::into_raw(uninit).cast::<T>())))
         }
     }
 }
@@ -195,9 +260,11 @@ impl<Output, F: FnOnce(*mut Output)> FnCtor<Output, F> {
 // SAFETY: unconditionally initializes dest.
 unsafe impl<Output, F: FnOnce(*mut Output)> Ctor for FnCtor<Output, F> {
     type Output = Output;
+    type Error = Infallible;
 
-    unsafe fn ctor(self, dest: *mut Output) {
+    unsafe fn ctor(self, dest: *mut Output) -> Result<(), Infallible> {
         self.0(dest);
+        Ok(())
     }
 }
 
@@ -215,13 +282,15 @@ impl<Output, F> !Unpin for FnCtor<Output, F> {}
 pub struct Copy<P: ?Sized + Deref>(P);
 
 // SAFETY: unconditionally initializes dest.
-unsafe impl<Output: ?Sized + for<'a> CtorNew<&'a Output>, P: Deref<Target = Output>> Ctor
-    for Copy<P>
+unsafe impl<Output: ?Sized, Error, P: Deref<Target = Output>> Ctor for Copy<P>
+where
+    Output: for<'a> CtorNew<&'a Output, Error = Error>,
 {
     type Output = Output;
+    type Error = Error;
 
-    unsafe fn ctor(self, dest: *mut Output) {
-        Output::ctor_new(&*self.0).ctor(dest);
+    unsafe fn ctor(self, dest: *mut Output) -> Result<(), Self::Error> {
+        Output::ctor_new(&*self.0).ctor(dest)
     }
 }
 
@@ -289,9 +358,10 @@ where
     T: CtorNew<Self>,
 {
     type Output = T;
+    type Error = <T as CtorNew<Self>>::Error;
 
-    unsafe fn ctor(self, dest: *mut T) {
-        T::ctor_new(self).ctor(dest);
+    unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
+        T::ctor_new(self).ctor(dest)
     }
 }
 
@@ -356,9 +426,10 @@ where
     T: CtorNew<Self>,
 {
     type Output = T;
+    type Error = <T as CtorNew<Self>>::Error;
 
-    unsafe fn ctor(self, dest: *mut T) {
-        T::ctor_new(self).ctor(dest);
+    unsafe fn ctor(self, dest: *mut T) -> Result<(), Self::Error> {
+        T::ctor_new(self).ctor(dest)
     }
 }
 
@@ -421,20 +492,31 @@ macro_rules! const_mov {
 // SAFETY: unconditionally initializes dest.
 unsafe impl<T: Unpin> Ctor for T {
     type Output = T;
-    unsafe fn ctor(self, dest: *mut Self) {
+    type Error = Infallible;
+    unsafe fn ctor(self, dest: *mut Self) -> Result<(), Infallible> {
         dest.write(self);
+        Ok(())
     }
 }
 
 /// Constructs via a Rust move.
 #[must_use = must_use_ctor!()]
-pub struct RustMoveCtor<T>(T);
-impl<T> !Unpin for RustMoveCtor<T> {}
+pub struct RustMoveCtor<T, E = Infallible>(T, PhantomData<fn() -> E>);
+impl<T, E> !Unpin for RustMoveCtor<T, E> {}
+
+impl<T, E> RustMoveCtor<T, E> {
+    pub fn new(x: T) -> Self {
+        RustMoveCtor(x, PhantomData::default())
+    }
+}
+
 // SAFETY: unconditionally initializes dest.
-unsafe impl<T> Ctor for RustMoveCtor<T> {
+unsafe impl<T, E> Ctor for RustMoveCtor<T, E> {
     type Output = T;
-    unsafe fn ctor(self, dest: *mut T) {
+    type Error = E;
+    unsafe fn ctor(self, dest: *mut T) -> Result<(), E> {
         dest.write(self.0);
+        Ok(())
     }
 }
 
@@ -443,7 +525,7 @@ unsafe impl<T> Ctor for RustMoveCtor<T> {
 /// This can be used instead of `!`, when an `impl Ctor` is needed:
 ///
 /// ```
-/// pub fn foo() -> impl Ctor<Output=Bar> {
+/// pub fn foo() -> impl Ctor<Output=Bar, Error=Infallible> {
 ///     todo!("TODO: implement foo");
 ///     #[allow(unreachable_code)]
 ///     UnreachableCtor::new()
@@ -457,17 +539,21 @@ unsafe impl<T> Ctor for RustMoveCtor<T> {
 /// obligations.
 #[must_use = must_use_ctor!()]
 #[derive(Copy, Clone)]
-pub struct UnreachableCtor<T: ?Sized>(PhantomData<fn() -> T>);
-impl<T: ?Sized> UnreachableCtor<T> {
+pub struct UnreachableCtor<T: ?Sized, E = Infallible>(PhantomData<(fn() -> T, fn() -> E)>);
+impl<T: ?Sized, E> UnreachableCtor<T, E> {
     pub fn new() -> Self {
         UnreachableCtor(PhantomData::default())
     }
 }
-impl<T: ?Sized> !Unpin for UnreachableCtor<T> {}
-// SAFETY: unconditionally initializes dest.
-unsafe impl<T: ?Sized> Ctor for UnreachableCtor<T> {
+impl<T: ?Sized, E> !Unpin for UnreachableCtor<T, E> {}
+
+// TODO(jeanpierreda): Might be more interesting to make this return `Result<!, ()>`,
+// but that requires unstable features, and also means it can't be used in `emplace!`.
+// SAFETY: always panics, so trivially satisfies postconditions.
+unsafe impl<T: ?Sized, E> Ctor for UnreachableCtor<T, E> {
     type Output = T;
-    unsafe fn ctor(self, _: *mut T) {
+    type Error = E;
+    unsafe fn ctor(self, _: *mut T) -> Result<(), E> {
         unreachable!();
     }
 }
@@ -475,8 +561,9 @@ unsafe impl<T: ?Sized> Ctor for UnreachableCtor<T> {
 /// All Rust types are C++-default-constructible if safe (i.e. Unpin + Default).
 impl<T: Unpin + Default> CtorNew<()> for T {
     type CtorType = RustMoveCtor<Self>;
+    type Error = Infallible;
     fn ctor_new(_: ()) -> Self::CtorType {
-        RustMoveCtor(Default::default())
+        RustMoveCtor::new(Default::default())
     }
 }
 
@@ -486,8 +573,9 @@ impl<T: Unpin + Default> CtorNew<()> for T {
 /// guarantee.)
 impl<T: Unpin + Clone> CtorNew<&T> for T {
     type CtorType = RustMoveCtor<Self>;
+    type Error = Infallible;
     fn ctor_new(src: &Self) -> Self::CtorType {
-        RustMoveCtor(src.clone())
+        RustMoveCtor::new(src.clone())
     }
 }
 
@@ -501,22 +589,25 @@ impl<T: Unpin + Clone> CtorNew<&T> for T {
 /// This struct is created by the `ctor_then` method on `Ctor`. See its
 /// documentation for more.
 #[must_use = must_use_ctor!()]
-pub struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> {
+pub struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> {
     ctor: C,
     f: F,
 }
 
 // SAFETY: unconditionally initializes dest.
-unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> Ctor for CtorThen<C, F> {
+unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Ctor
+    for CtorThen<C, F>
+{
     type Output = C::Output;
-    unsafe fn ctor(self, dest: *mut Self::Output) {
-        self.ctor.ctor(dest);
+    type Error = C::Error;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        self.ctor.ctor(dest)?;
         let dest = Pin::new_unchecked(&mut *dest);
         (self.f)(dest)
     }
 }
 
-impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> !Unpin for CtorThen<C, F> {}
+impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> !Unpin for CtorThen<C, F> {}
 
 // ========
 // emplace!
@@ -526,8 +617,12 @@ impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>)> !Unpin for CtorThen<C, F> {}
 // in the public interface: it can use &mut.
 
 /// Emplace a constructor into a local or temporary.
+///
 /// Syntax: `emplace! { let mut varname = expr() }`, where `expr()` evaluates to
 /// a `Ctor<Output=T>`. `varname` will be a `Pin<&mut T>`.
+///
+/// `emplace!` only works with non-failable `Ctor`s. See `try_emplace` for
+/// failable `Ctor`s.
 ///
 /// If the emplaced value will just be used for the duration of one statement,
 /// the `emplace!(ctor)` syntax can be used instead, to emplace the ctor into a
@@ -623,13 +718,14 @@ impl<T> Drop for Slot<T> {
 impl<T> !Unpin for Slot<T> {}
 
 impl<T> Slot<T> {
-    pub fn uninit() -> impl Ctor<Output = Self> {
-        RustMoveCtor(Self::unsafe_new())
+    pub fn uninit() -> impl Ctor<Output = Self, Error = Infallible> {
+        RustMoveCtor::new(Self::unsafe_new())
     }
 
-    pub fn new(value: impl Ctor<Output = T>) -> impl Ctor<Output = Self> {
-        RustMoveCtor(Self::unsafe_new()).ctor_then(|slot| {
-            slot.replace(value);
+    pub fn new<C: Ctor<Output = T>>(value: C) -> impl Ctor<Output = Self, Error = C::Error> {
+        RustMoveCtor::new(Self::unsafe_new()).ctor_then(|slot| {
+            slot.try_replace(value)?;
+            Ok(())
         })
     }
 
@@ -643,7 +739,23 @@ impl<T> Slot<T> {
         }
     }
 
-    pub fn replace(mut self: Pin<&mut Self>, value: impl Ctor<Output = T>) -> Pin<&mut T> {
+    /// Replace the value in the slot, and return a pinned reference to the
+    /// result.
+    ///
+    /// Requires that the `Ctor` is infallible.
+    pub fn replace<C: Ctor<Output = T, Error = Infallible>>(
+        self: Pin<&mut Self>,
+        value: C,
+    ) -> Pin<&mut T> {
+        self.try_replace(value).unwrap()
+    }
+
+    /// Replace the value in the slot, and return a pinned reference to the
+    /// result. Returns an error if the `Ctor` returns an error.
+    pub fn try_replace<C: Ctor<Output = T>>(
+        mut self: Pin<&mut Self>,
+        value: C,
+    ) -> Result<Pin<&mut T>, C::Error> {
         self.as_mut().clear();
         {
             let Self { is_initialized, maybe_uninit } =
@@ -651,11 +763,11 @@ impl<T> Slot<T> {
             // SAFETY: the memory is struturally pinned and valid for writes,
             // and it's uninitialized because of the .clear() call above.
             unsafe {
-                value.ctor(maybe_uninit.as_mut_ptr());
+                value.ctor(maybe_uninit.as_mut_ptr())?;
             }
             *is_initialized = true;
         }
-        self.as_opt_mut().unwrap()
+        Ok(self.as_opt_mut().unwrap())
     }
 
     pub fn as_opt_mut(self: Pin<&mut Self>) -> Option<Pin<&mut T>> {
@@ -702,8 +814,11 @@ impl<T> Slot<T> {
 
     /// Safety: must not have already been constructed, as that would violate
     /// the pin guarantee.
-    pub fn unsafe_construct(&mut self, ctor: impl Ctor<Output = T>) -> &mut Self {
-        unsafe { ctor.ctor(self.maybe_uninit.as_mut_ptr()) };
+    pub fn unsafe_construct(
+        &mut self,
+        ctor: impl Ctor<Output = T, Error = Infallible>,
+    ) -> &mut Self {
+        unsafe { ctor.ctor(self.maybe_uninit.as_mut_ptr()).unwrap() };
         self.is_initialized = true;
         self
     }
@@ -758,10 +873,13 @@ pub mod macro_internal {
     /// with `std::mem::forget()`. See the `ctor!` macro, where this is used.
     ///
     /// Safety: the field must satisfy the Pin guarantee.
-    pub unsafe fn init_field<T>(field: *mut T, ctor: impl Ctor<Output = T>) -> impl Drop {
+    pub unsafe fn init_field<T>(
+        field: *mut T,
+        ctor: impl Ctor<Output = T, Error = Infallible>,
+    ) -> impl Drop {
         // safety: the field is not yet initialized, the caller guarantees it's
         // pinned.
-        Ctor::ctor(ctor, field);
+        Ctor::ctor(ctor, field).unwrap();
         UnsafeDropGuard(field)
     }
 
@@ -862,7 +980,8 @@ pub trait PinnedDrop {
 /// The `ctor!` macro evaluates to a `Ctor` for a Rust struct, with
 /// user-specified fields.
 ///
-/// (This was inspired by, but takes no code from, https://crates.io/crates/project-uninit.)
+/// (This was inspired by, but takes no code from, https://crates.io/crates/project-uninit.
+/// It is also substantially identical to `pin_init!`.)
 ///
 /// Example use:
 ///
@@ -995,11 +1114,14 @@ macro_rules! ctor {
 pub trait ReconstructUnchecked: Sized {
     /// # Safety
     /// See trait documentation.
-    unsafe fn reconstruct_unchecked(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self>) {
+    unsafe fn reconstruct_unchecked(
+        self: Pin<&mut Self>,
+        ctor: impl Ctor<Output = Self, Error = Infallible>,
+    ) {
         let self_ptr = Pin::into_inner_unchecked(self) as *mut _;
         core::ptr::drop_in_place(self_ptr);
         abort_on_unwind(move || {
-            ctor.ctor(self_ptr);
+            ctor.ctor(self_ptr).unwrap();
         });
     }
 }
@@ -1032,7 +1154,7 @@ impl<T> ReconstructUnchecked for T {}
 /// variables, but the interface is marked safe, because those can only be
 /// produced via unsafe means.
 pub unsafe trait Reconstruct: ReconstructUnchecked {
-    fn reconstruct(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self>) {
+    fn reconstruct(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self, Error = Infallible>) {
         unsafe { self.reconstruct_unchecked(ctor) };
     }
 }
@@ -1112,12 +1234,15 @@ impl<T: for<'a> Assign<&'a T>, P: Deref<Target = T>> Assign<Copy<P>> for T {
 
 // TODO(jeanpierreda): Make these less repetitive.
 
-impl<'a, T: Unpin + CtorNew<&'a T>> Assign<&'a T> for T {
+impl<'a, T> Assign<&'a T> for T
+where
+    T: Unpin + CtorNew<&'a T, Error = Infallible>,
+{
     fn assign(mut self: Pin<&mut Self>, src: &'a Self) {
         if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
-                T::ctor_new(src).ctor(constructed.as_mut_ptr());
+                T::ctor_new(src).ctor(constructed.as_mut_ptr()).unwrap();
                 *self = constructed.assume_init();
             }
         } else {
@@ -1126,12 +1251,15 @@ impl<'a, T: Unpin + CtorNew<&'a T>> Assign<&'a T> for T {
     }
 }
 
-impl<'a, T: Unpin + CtorNew<RvalueReference<'a, T>>> Assign<RvalueReference<'a, T>> for T {
+impl<'a, T> Assign<RvalueReference<'a, T>> for T
+where
+    T: Unpin + CtorNew<RvalueReference<'a, T>, Error = Infallible>,
+{
     fn assign(mut self: Pin<&mut Self>, src: RvalueReference<'a, Self>) {
         if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
-                T::ctor_new(src).ctor(constructed.as_mut_ptr());
+                T::ctor_new(src).ctor(constructed.as_mut_ptr()).unwrap();
                 *self = constructed.assume_init();
             }
         } else {
@@ -1140,14 +1268,15 @@ impl<'a, T: Unpin + CtorNew<RvalueReference<'a, T>>> Assign<RvalueReference<'a, 
     }
 }
 
-impl<'a, T: Unpin + CtorNew<ConstRvalueReference<'a, T>>> Assign<ConstRvalueReference<'a, T>>
-    for T
+impl<'a, T> Assign<ConstRvalueReference<'a, T>> for T
+where
+    T: Unpin + CtorNew<ConstRvalueReference<'a, T>, Error = Infallible>,
 {
     fn assign(mut self: Pin<&mut Self>, src: ConstRvalueReference<'a, Self>) {
         if core::mem::needs_drop::<Self>() {
             let mut constructed = MaybeUninit::uninit();
             unsafe {
-                T::ctor_new(src).ctor(constructed.as_mut_ptr());
+                T::ctor_new(src).ctor(constructed.as_mut_ptr()).unwrap();
                 *self = constructed.assume_init();
             }
         } else {
@@ -1180,7 +1309,8 @@ pub trait UnpinAssign<From> {
 /// constructor taking arguments of type A, B, and C". As an obvious special
 /// case, for singleton tuples, you may use `CtorNew<A>`.
 pub trait CtorNew<ConstructorArgs> {
-    type CtorType: Ctor<Output = Self>;
+    type CtorType: Ctor<Output = Self, Error = Self::Error>;
+    type Error;
 
     fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
 }
@@ -1225,8 +1355,9 @@ pub struct PhantomPinnedCtor;
 // SAFETY: unconditionally initializes dest.
 unsafe impl Ctor for PhantomPinnedCtor {
     type Output = core::marker::PhantomPinned;
-    unsafe fn ctor(self, dest: *mut Self::Output) {
-        RustMoveCtor(core::marker::PhantomPinned).ctor(dest)
+    type Error = Infallible;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Infallible> {
+        RustMoveCtor::new(core::marker::PhantomPinned).ctor(dest)
     }
 }
 impl !Unpin for PhantomPinnedCtor {}
@@ -1251,10 +1382,11 @@ impl<T: Ctor> ManuallyDropCtor<T> {
 // SAFETY: unconditionally initializes dest.
 unsafe impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
     type Output = ManuallyDrop<T::Output>;
-    unsafe fn ctor(self, dest: *mut Self::Output) {
+    type Error = T::Error;
+    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
         // Safety: ManuallyDrop<T> and T have the same layout.
         // All other preconditions are satisfied by the caller.
-        self.0.ctor(dest as *mut _);
+        self.0.ctor(dest as *mut _)
     }
 }
 
@@ -1267,6 +1399,9 @@ mod test {
     use std::cell::RefCell;
     use std::pin::Pin;
     use std::sync::Mutex;
+
+    // googletest prelude overwrites `Result` :(
+    pub use core::result::Result;
 
     #[gtest]
     fn test_default_rust_type() {
@@ -1538,8 +1673,9 @@ mod test {
     // SAFETY: unconditionally initializes dest.
     unsafe impl<'a> Ctor for PanicCtor<'a> {
         type Output = DropNotify<'a>;
-        unsafe fn ctor(self, dest: *mut Self::Output) {
-            self.0.ctor(dest);
+        type Error = Infallible;
+        unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Infallible> {
+            self.0.ctor(dest)?;
             panic!();
         }
     }
@@ -1654,15 +1790,18 @@ mod test {
     // SAFETY: unconditionally initializes dest.
     unsafe impl<'a> Ctor for LoggingCtor<'a> {
         type Output = DropCtorLogger<'a>;
-        unsafe fn ctor(self, dest: *mut Self::Output) {
+        type Error = Infallible;
+        unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Infallible> {
             self.log.borrow_mut().push(self.ctor_message);
             dest.write(DropCtorLogger { log: self.log });
+            Ok(())
         }
     }
     impl !Unpin for LoggingCtor<'_> {}
 
     impl<'a> CtorNew<&DropCtorLogger<'a>> for DropCtorLogger<'a> {
         type CtorType = LoggingCtor<'a>;
+        type Error = Infallible;
         fn ctor_new(src: &DropCtorLogger<'a>) -> Self::CtorType {
             LoggingCtor { log: &src.log, ctor_message: "copy ctor" }
         }
@@ -1670,6 +1809,7 @@ mod test {
 
     impl<'a> CtorNew<RvalueReference<'_, DropCtorLogger<'a>>> for DropCtorLogger<'a> {
         type CtorType = LoggingCtor<'a>;
+        type Error = Infallible;
         fn ctor_new(src: RvalueReference<'_, DropCtorLogger<'a>>) -> Self::CtorType {
             LoggingCtor { log: &src.0.log, ctor_message: "move ctor" }
         }
@@ -1732,7 +1872,7 @@ mod test {
     #[gtest]
     fn test_ctor_then() {
         emplace! {
-            let x = 40.ctor_then(|mut y| { *y += 2 });
+            let x = 40.ctor_then(|mut y| { *y += 2; Ok(()) });
         }
         assert_eq!(*x, 42);
     }
@@ -1779,7 +1919,10 @@ mod test {
 
     #[gtest]
     fn test_ctor_trait_captures() {
-        fn adder<'a, 'b>(x: &'a i32, y: &'b i32) -> impl Ctor<Output = i32> + use<'a, 'b> {
+        fn adder<'a, 'b>(
+            x: &'a i32,
+            y: &'b i32,
+        ) -> impl Ctor<Output = i32, Error = Infallible> + use<'a, 'b> {
             FnCtor::new(|dest: *mut i32| {
                 // SAFETY: dest is valid and uninitialized.
                 unsafe {
@@ -1797,7 +1940,7 @@ mod test {
     /// You should be able to at least _spell_ a `Ctor` for a !Sized type.
     #[gtest]
     fn test_ctor_dst() {
-        pub fn _foo() -> impl Ctor<Output = [i32]> {
+        pub fn _foo() -> impl Ctor<Output = [i32], Error = Infallible> {
             panic!("can't actually implement this for slices");
             #[allow(unreachable_code)]
             UnreachableCtor::new()

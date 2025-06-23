@@ -34,7 +34,8 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::N
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=11
 impl ::ctor::CtorNew<()> for Nonmovable {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
@@ -85,6 +86,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Base {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -129,7 +131,10 @@ where
 {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
-    pub fn no_bindings<'a>(&'a self, __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable>) {
+    pub fn no_bindings<'a>(
+        &'a self,
+        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
+    ) {
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
@@ -177,6 +182,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Derived {
 }
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived {
     type CtorType = Self;
+    type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
@@ -223,7 +229,10 @@ where
 {
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
-    pub fn no_bindings<'a>(&'a self, __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable>) {
+    pub fn no_bindings<'a>(
+        &'a self,
+        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
+    ) {
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
