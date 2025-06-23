@@ -11,3 +11,7 @@ pub fn create_and_consume_forward_declared() -> core::ffi::c_int {
 pub fn get_int_from_template_int() -> i32 {
     ctor::emplace!(crate::GetTemplateInt()).value
 }
+
+pub fn get_int_from_template2_int() -> i32 {
+    ctor::emplace!(crate::GetOtherPubCrateTemplate2Int()).value
+}

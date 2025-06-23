@@ -33,3 +33,8 @@ fn test_templated_type() {
 
     expect_that!(pub_crate_types::get_int_from_template_int(), eq(42));
 }
+
+#[gtest]
+fn test_other_templated_type() {
+    expect_that!(pub_crate_types::get_int_from_template2_int(), eq(42));
+}

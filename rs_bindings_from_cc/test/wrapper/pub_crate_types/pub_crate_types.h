@@ -23,8 +23,13 @@ extern ForwardDeclared* ForwardDeclaredConstant;
 
 int ConsumeCompoundDataType(CompoundDataType container);
 
-// Using pub(crate) types from other libraries doesn't work well.
+// Using pub(crate) types from other libraries, in general, doesn't work well.
 inline void OtherPubCrateTypes(ForwardDeclared2*) {}
+
+// ... but templates do.
+inline Template2<int> GetOtherPubCrateTemplate2Int() {
+  return Template2<int>{42};
+}
 
 // Don't uncomment this: a `pair` include starts polluting the golden test with
 // a lot of implementation details.
