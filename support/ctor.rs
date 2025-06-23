@@ -1176,17 +1176,9 @@ fn abort_on_unwind<T, F: FnOnce() -> T>(f: F) -> T {
     //     std::process::abort();
     // }
 
-    // It turns out this is a bad idea, because FFI unwinding, if/when added to
-    // Rust, will sidestep catch_unwind, but NOT sidestep drop. So a C++
-    // exception thrown in a Ctor might not get converted to a panic, but
-    // instead to raw foreign unwinding, and drop impls in parent scopes
-    // would be run. Since abort_on_unwind is intended to prevent *any* code from
-    // executing and seeing temporarily-invalid state, this is incorrect.
-    //
-    // See e.g.: https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html
-    //
-    // Instead, the only correct way to protect code from unwinding, even from
-    // foreign unwinding, is via drop, as so:
+    // This would work, even for `extern "C-unwind"`, but that wasn't
+    // always the case. See https://doc.rust-lang.org/std/panic/fn.catch_unwind.html#notes
+    // and compare with https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html
 
     /// A safety guard which panics if dropped, converting unwinds into aborts.
     ///
