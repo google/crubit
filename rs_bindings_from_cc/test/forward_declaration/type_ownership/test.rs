@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use googletest::prelude::*;
+
 #[gtest]
 fn test_build() {
     // TODO(b/318690257): Currently, the build fails with:

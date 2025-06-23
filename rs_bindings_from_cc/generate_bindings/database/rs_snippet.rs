@@ -492,10 +492,24 @@ impl RsTypeKind {
     fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
         let ir = db.ir();
         let underlying_type = db.rs_type_kind(type_alias.underlying_type.clone())?;
+        // Note: we don't need to call `.unalias()` for these checks, because we already checked
+        // this, recursively.
+
         // Bridge types cannot be aliased
-        // Note: we don't need to call `.unalias()`, because we already checked this, recursively.
         if underlying_type.is_bridge_type() {
             return Ok(underlying_type);
+        }
+        // Records cannot be aliased unless they are part of the same translation unit as the alias.
+        // This is not for an especially principled reason: unless it's in the same translation
+        // unit, we don't know if the record is incomplete from the point of view of the alias.
+        // For example, perhaps the alias is to a forward declaration, and then later, we completed
+        // the forward declaration.
+        if let RsTypeKind::Record { record, .. } = &underlying_type {
+            if record.owning_target != type_alias.owning_target
+                && record.defining_target.as_ref() != Some(&type_alias.owning_target)
+            {
+                return Ok(underlying_type);
+            }
         }
         let crate_path = Rc::new(CratePath::new(
             &ir,

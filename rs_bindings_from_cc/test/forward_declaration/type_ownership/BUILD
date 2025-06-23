@@ -37,11 +37,8 @@ crubit_rust_test(
         ":definition",
         ":forward_declaration",
     ],
-    tags = [
-        # TODO(b/318690257): Enable when fixed.
-        "manual",
-        "nobuilder",
-        "notap",
+    deps = [
+        "@crate_index//:googletest",
     ],
 )
 
