@@ -256,7 +256,7 @@ pub fn generate_function_thunk_impl(
     }
     let ir = db.ir();
     let thunk_ident = thunk_ident(func);
-    let implementation_function = match &func.rs_name {
+    let implementation_function = match &func.cc_name {
         UnqualifiedIdentifier::Operator(op) => {
             let name = syn::parse_str::<TokenStream>(&op.name)?;
             quote! { operator #name }

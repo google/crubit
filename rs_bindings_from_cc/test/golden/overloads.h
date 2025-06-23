@@ -38,4 +38,14 @@ inline void AlsoTemplateOverload() {}
 template <typename T>
 void AlsoTemplateOverload(T x) {}
 
+class Foo {
+ public:
+  [[clang::annotate("crubit_rust_name", "BarBridgedInt")]]
+  void Bar(Sizeof<int>);
+  [[clang::annotate("crubit_rust_name", "BarBridgedFloat")]]
+  void Bar(Sizeof<float>);
+
+  void Bar(int);
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OVERLOADS_H_
