@@ -326,6 +326,9 @@ pub enum NoBindingsReason {
         context: Rc<str>,
         error: Error,
     },
+    LeadingDunder {
+        name: Rc<str>,
+    },
     /// This is directly unsupported.
     Unsupported {
         context: Rc<str>,
@@ -362,6 +365,9 @@ impl From<NoBindingsReason> for Error {
             NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
                 "Can't generate bindings for {context} due to missing bindings for its dependency"
             )),
+            NoBindingsReason::LeadingDunder { name } => {
+                anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")
+            }
             NoBindingsReason::Unsupported { context, error } => error.context(format!(
                 "Can't generate bindings for {context}, because it is unsupported"
             )),

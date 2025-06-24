@@ -1682,6 +1682,30 @@ impl Item {
             Item::TypeMapOverride(_) => false,
         }
     }
+
+    /// Returns the C++ identifier for this item, if it has one.
+    pub fn cc_name_as_str(&self) -> Option<Rc<str>> {
+        match self {
+            Item::Func(func) => match &func.cc_name {
+                UnqualifiedIdentifier::Identifier(identifier) => {
+                    Some(identifier.identifier.clone())
+                }
+                _ => None,
+            },
+            Item::IncompleteRecord(incomplete_record) => {
+                Some(incomplete_record.cc_name.identifier.clone())
+            }
+            Item::Record(record) => Some(record.cc_name.identifier.clone()),
+            Item::Enum(enum_) => Some(enum_.cc_name.identifier.clone()),
+            Item::GlobalVar(global_var) => Some(global_var.cc_name.identifier.clone()),
+            Item::TypeAlias(type_alias) => Some(type_alias.cc_name.identifier.clone()),
+            Item::Namespace(namespace) => Some(namespace.cc_name.identifier.clone()),
+            Item::UnsupportedItem(_) => None,
+            Item::Comment(_) => None,
+            Item::UseMod(_) => None,
+            Item::TypeMapOverride(type_map_override) => Some(type_map_override.cc_name.clone()),
+        }
+    }
 }
 
 impl From<Func> for Item {

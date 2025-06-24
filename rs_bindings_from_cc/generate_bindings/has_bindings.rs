@@ -19,6 +19,13 @@ pub fn has_bindings(
 ) -> Result<BindingsInfo, NoBindingsReason> {
     let ir = db.ir();
 
+    if let Some(name) = item.cc_name_as_str() {
+        // Dunder namespaces are allowed for now.
+        if name.starts_with("__") && !matches!(item, Item::Namespace(_)) {
+            return Err(NoBindingsReason::LeadingDunder { name });
+        }
+    }
+
     match required_crubit_features(db, &item) {
         Ok(missing_features) if missing_features.is_empty() => {}
         Ok(missing_features) => {
