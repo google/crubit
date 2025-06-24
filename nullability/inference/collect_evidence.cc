@@ -1472,7 +1472,9 @@ static bool hasAnyInferenceTargets(const ContainerT &Decls) {
 static bool hasAnyInferenceTargets(dataflow::ReferencedDecls &RD) {
   return hasAnyInferenceTargets(RD.Fields) ||
          hasAnyInferenceTargets(RD.Globals) ||
-         hasAnyInferenceTargets(RD.Functions);
+         hasAnyInferenceTargets(RD.Functions) ||
+         hasAnyInferenceTargets(RD.Locals) ||
+         hasAnyInferenceTargets(RD.LambdaCapturedParams);
 }
 
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
@@ -1737,9 +1739,10 @@ llvm::Error collectEvidenceFromDefinition(
                             : dataflow::getReferencedDecls(TargetStmt);
   collectReferencesFromForwardingFunctions(TargetStmt, ReferencedDecls);
 
-  // TODO: b/416755801, b/416755108 -- We should be able to check functions as
-  // well (and therefore drop the `!TargetFunc` filter), but those 2 bugs make
-  // the `hasAnyInferenceTargets` call fail for certain functions.
+  // TODO: b/416755108 -- We should be able to check functions as
+  // well (and therefore drop the `!TargetFunc` filter), but we're missing some
+  // Referenced constructors, so `hasAnyInferenceTargets` will fail for certain
+  // functions.
   if (!TargetFunc && !isInferenceTarget(Definition) &&
       !hasAnyInferenceTargets(ReferencedDecls))
     return llvm::Error::success();
