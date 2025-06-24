@@ -422,7 +422,7 @@ fn test_format_ty_for_cc_failures() {
         ),
         (
             "extern \"C\" fn (&i32)", // TyKind::Ref (nested reference - underneath fn ptr)
-            "Generic functions are not supported yet (b/259749023)",
+            "Generic function pointers are not supported yet (b/259749023)",
         ),
         (
             "[i32; 42]", // TyKind::Array
@@ -465,7 +465,6 @@ fn test_format_ty_for_cc_failures() {
             "TypeGenericStruct",
             "Generic types are not supported yet (b/259749095)",
         ),
-        ("LifetimeGenericStruct<'static>", "Generic types are not supported yet (b/259749095)"),
         (
             "std::cmp::Ordering",
             "Type `std::cmp::Ordering` comes from the `core` crate, \
@@ -501,10 +500,6 @@ fn test_format_ty_for_cc_failures() {
 
         pub struct TypeGenericStruct<T = u8> {
             pub t: T,
-        }
-
-        pub struct LifetimeGenericStruct<'a> {
-            pub reference: &'a u8,
         }
     };
     test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_msg| {
@@ -568,6 +563,7 @@ fn test_format_ty_for_rs_successes() {
         ),
         ("*const std::mem::MaybeUninit<i32>", "*const std::mem::MaybeUninit<i32>"),
         ("*mut std::mem::MaybeUninit<i32>", "*mut std::mem::MaybeUninit<i32>"),
+        ("LifetimeGenericStruct<'static>", "::rust_out::LifetimeGenericStruct"),
     ];
     let preamble = quote! {
         #![feature(never_type)]
@@ -583,6 +579,9 @@ fn test_format_ty_for_rs_successes() {
         pub union SomeUnion {
             pub x: i32,
             pub y: i32,
+        }
+        pub struct LifetimeGenericStruct<'a> {
+            pub reference: &'a u8,
         }
     };
     test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_tokens| {

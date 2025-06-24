@@ -488,7 +488,10 @@ pub fn generate_adt_core<'tcx>(
     def_id: DefId,
 ) -> Result<Rc<AdtCoreBindings<'tcx>>> {
     let tcx = db.tcx();
-    let self_ty = tcx.type_of(def_id).instantiate_identity();
+    // Note: we erase regions in order to get bindings regardless of what lifetime parameters are
+    // present. We want to generate bindings for functions regardless of their lifetime bounds, as
+    // C++ cannot special-case the availability of a function based on lifetimes.
+    let self_ty = tcx.erase_regions(tcx.type_of(def_id).instantiate_identity());
     assert!(self_ty.is_adt());
     assert!(is_public_or_supported_export(db, def_id), "Caller should verify");
 
@@ -568,9 +571,9 @@ fn generate_fields<'tcx>(
     member_function_names: &HashSet<String>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
-
-    // TODO(b/259749095): Support non-empty set of generic parameters.
-    let substs_ref = ty::List::empty();
+    let ty::TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
+        panic!("Attempted to generate fields for a non-ADT type: {:?}", core.self_ty)
+    };
 
     let repr_attrs = db.repr_attrs(core.def_id);
 
@@ -600,7 +603,6 @@ fn generate_fields<'tcx>(
 
     let layout = get_layout(tcx, core.self_ty)
         .expect("Layout should be already verified by `generate_adt_core`");
-    let adt_def = core.self_ty.ty_adt_def().expect("`core.def_id` needs to identify an ADT");
     let err_fields = |err| {
         vec![Field {
             type_info: Err(err),
@@ -717,8 +719,10 @@ fn generate_fields<'tcx>(
                                     "HIR ADT had fewer fields than rustc_middle for this variant",
                                 );
                             assert!(field_def.did == hir_field.def_id.to_def_id());
-                            let ty =
-                                SugaredTy::new(field_def.ty(tcx, substs_ref), Some(hir_field.ty));
+                            let ty = SugaredTy::new(
+                                field_def.ty(tcx, adt_generic_args),
+                                Some(hir_field.ty),
+                            );
                             let size =
                                 get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {

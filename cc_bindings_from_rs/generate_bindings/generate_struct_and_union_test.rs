@@ -156,8 +156,25 @@ fn test_format_item_unsupported_lifetime_generic_struct() {
             }
         "#;
     test_format_item(test_src, "Point", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(err, "Generic types are not supported yet (b/259749095)");
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert!(!main_api.prereqs.is_empty());
+
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Point") alignas(8)
+                [[clang::trivial_abi]] Point final
+                {
+                 public:
+                  ...
+                  static ::rust_out::Point new_(
+                    std::int32_t const& [[clang::annotate_type("lifetime", "b")]] _x,
+                    std::int32_t const& [[clang::annotate_type("lifetime", "c")]] _y);
+                  ...
+                };
+            }
+        );
     });
 }
 

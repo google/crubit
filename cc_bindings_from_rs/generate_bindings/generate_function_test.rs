@@ -463,7 +463,7 @@ fn test_format_item_fn_reused_reference_lifetime_struct() {
         |result| {
             assert_eq!(
                 result.unwrap_err(),
-                "Error handling parameter #0 of type `&'a Foo<'a>`: Failed to format the referent of the reference type `&'a Foo<'a>`: Generic types are not supported yet (b/259749095)"
+                "support for multiple uses of a lifetime parameter requires //features:experimental"
             )
         },
     );
@@ -851,7 +851,7 @@ fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1>(arg: &'__anon1 i32) -> &'__anon1 i32 {
+                unsafe extern "C" fn ...(arg: &'static i32) -> &'static i32 {
                     unsafe { ::rust_out::foo(arg) }
                 }
             }
@@ -933,14 +933,14 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1, '__anon2, 'a, 'foo>(
-                    arg1: &'a i32,
-                    arg2: &'foo i32,
-                    arg3: &'foo i32,
+                unsafe extern "C" fn ...(
+                    arg1: &'static i32,
+                    arg2: &'static i32,
+                    arg3: &'static i32,
                     arg4: &'static i32,
-                    arg5: &'__anon1 i32,
-                    arg6: &'__anon2 i32
-                ) -> &'foo i32 {
+                    arg5: &'static i32,
+                    arg6: &'static i32
+                ) -> &'static i32 {
                     unsafe { ::rust_out::foo(arg1, arg2, arg3, arg4, arg5, arg6) }
                 }
             }
@@ -963,8 +963,9 @@ fn test_format_item_lifetime_generic_fn_with_where_clause() {
             }
         "#;
     test_format_item(test_src, "foo", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(err, "Generic functions are not supported yet (b/259749023)");
+        // TODO: b/396735681 - This should fail to compile. Instead, such input
+        // references should be converted to pointers.
+        result.unwrap();
     });
 }
 
@@ -1112,7 +1113,7 @@ fn test_format_item_fn_rust_abi_with_param_taking_struct_by_value() {
             quote! {
                 #[unsafe(no_mangle)]
                 unsafe extern "C"
-                fn ...(s: &mut ::core::mem::MaybeUninit<::rust_out::S>) -> i32 {
+                fn ...(s: &'static mut ::core::mem::MaybeUninit<::rust_out::S>) -> i32 {
                     unsafe {
                         let s = s.assume_init_read();
                         ::rust_out::into_i32(s)
@@ -1368,7 +1369,7 @@ fn test_format_item_fn_with_destructuring_parameter_name() {
             quote! {
                 #[unsafe(no_mangle)]
                 unsafe extern "C" fn ...(
-                    __param_0: &mut ::core::mem::MaybeUninit<::rust_out::S>
+                    __param_0: &'static mut ::core::mem::MaybeUninit<::rust_out::S>
                 ) -> i32 {
                     unsafe {
                         let __param_0 = __param_0.assume_init_read();

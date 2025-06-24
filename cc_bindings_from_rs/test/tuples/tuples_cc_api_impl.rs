@@ -55,10 +55,13 @@ unsafe extern "C" fn __crubit_thunk_param_uadt_uin_utuple(
 ) -> () {
     unsafe {
         let adt = ({
-            let adt_0: &mut ::core::mem::MaybeUninit<::tuples_golden::AdtHoldingFiveAndSix> =
-                ((*adt)[0usize]
-                    as *const &mut ::core::mem::MaybeUninit<::tuples_golden::AdtHoldingFiveAndSix>)
-                    .read();
+            let adt_0: &'static mut ::core::mem::MaybeUninit<
+                ::tuples_golden::AdtHoldingFiveAndSix,
+            > = ((*adt)[0usize]
+                as *const &'static mut ::core::mem::MaybeUninit<
+                    ::tuples_golden::AdtHoldingFiveAndSix,
+                >)
+                .read();
             let adt_0 = adt_0.assume_init_read();
             adt_0
         },);
@@ -77,7 +80,7 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_drop(
-    __self: &mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>,
+    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>,
 ) {
     unsafe { __self.assume_init_drop() };
 }
@@ -98,10 +101,11 @@ unsafe extern "C" fn __crubit_thunk_param_unontrivial_udrop_uin_utuple(
 ) -> () {
     unsafe {
         let nontrivial_drop = ({
-            let nontrivial_drop_0: &mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop> =
-                ((*nontrivial_drop)[0usize]
-                    as *const &mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>)
-                    .read();
+            let nontrivial_drop_0: &'static mut ::core::mem::MaybeUninit<
+                ::tuples_golden::NontrivialDrop,
+            > = ((*nontrivial_drop)[0usize]
+                as *const &'static mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>)
+                .read();
             let nontrivial_drop_0 = nontrivial_drop_0.assume_init_read();
             nontrivial_drop_0
         },);
@@ -116,7 +120,7 @@ const _: () = assert!(::std::mem::size_of::<::tuples_golden::NonCppMovable>() ==
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::NonCppMovable>() == 1);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_drop(
-    __self: &mut ::core::mem::MaybeUninit<::tuples_golden::NonCppMovable>,
+    __self: &'static mut ::core::mem::MaybeUninit<::tuples_golden::NonCppMovable>,
 ) {
     unsafe { __self.assume_init_drop() };
 }

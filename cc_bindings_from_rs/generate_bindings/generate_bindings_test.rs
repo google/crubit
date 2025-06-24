@@ -1499,7 +1499,7 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'a>(x: &'a i32) -> i32 {
+                unsafe extern "C" fn ...(x: &'static i32) -> i32 {
                     unsafe { ::rust_out::SomeStruct::fn_taking_reference(x) }
                 }
             },
@@ -1523,26 +1523,21 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_impl_level
     test_format_item(test_src, "SomeStruct", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
-                               defined at <crubit_unittests.rs>;l=9: \
-                               Generic functions are not supported yet (b/259749023)";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
                 ...
                 struct ... SomeStruct final {
                     ...
-                    __COMMENT__ #unsupported_msg
+                    static std::int32_t fn_taking_reference(
+                        std::int32_t const& [[clang::annotate_type("lifetime", "a")]] x);
                     ...
                 };
                 ...
             }
         );
-        assert_cc_not_matches!(
-            result.cc_details.tokens,
-            quote! { SomeStruct::fn_taking_reference },
-        );
-        assert_rs_not_matches!(result.rs_details.tokens, quote! { fn_taking_reference },);
+        assert_cc_matches!(result.cc_details.tokens, quote! { SomeStruct::fn_taking_reference },);
+        assert_rs_matches!(result.rs_details.tokens, quote! { fn_taking_reference },);
     });
 }
 
@@ -1579,7 +1574,7 @@ fn test_format_item_method_taking_self_by_value(test_src: &str) {
             quote! {
                 ...
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
+                unsafe extern "C" fn ...(__self: &'static mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
                     unsafe {
                         let __self = __self.assume_init_read();
                         ::rust_out::SomeStruct::into_f32(__self)
@@ -1658,7 +1653,7 @@ fn test_format_item_method_taking_self_by_const_ref(test_src: &str) {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1>(__self: &'__anon1 ::rust_out::SomeStruct) -> f32 {
+                unsafe extern "C" fn ...(__self: &'static ::rust_out::SomeStruct) -> f32 {
                     unsafe { ::rust_out::SomeStruct::get_f32(__self) }
                 }
                 ...
@@ -1731,8 +1726,8 @@ fn test_format_item_method_taking_self_by_mutable_ref(test_src: &str) {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1>(
-                    __self: &'__anon1 mut ::rust_out::SomeStruct,
+                unsafe extern "C" fn ...(
+                    __self: &'static mut ::rust_out::SomeStruct,
                     new_value: f32
                 ) -> () {
                     unsafe { ::rust_out::SomeStruct::set_f32(__self, new_value) }
@@ -2013,8 +2008,8 @@ fn test_format_item_struct_with_clone_trait() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1>(
-                    __self: &'__anon1 ::rust_out::Point,
+                unsafe extern "C" fn ...(
+                    __self: &'static ::rust_out::Point,
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
@@ -2024,9 +2019,9 @@ fn test_format_item_struct_with_clone_trait() {
                     }
                 }
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1, '__anon2>(
-                    __self: &'__anon1 mut ::rust_out::Point,
-                    source: &'__anon2 ::rust_out::Point
+                unsafe extern "C" fn ...(
+                    __self: &'static mut ::rust_out::Point,
+                    source: &'static ::rust_out::Point
                 ) -> () {
                     unsafe { <::rust_out::Point as ::core::clone::Clone>::clone_from(__self, source) }
                 }
@@ -2089,7 +2084,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
                 ...
                 #[unsafe(no_mangle)]
                 extern "C" fn ...(
-                    __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    __self: &'static mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                 ) {
                     unsafe { __self.assume_init_drop() };
                 }
@@ -2215,7 +2210,7 @@ fn test_format_item_struct_with_custom_drop_and_with_default_impl(test_src: &str
                 ...
                 #[unsafe(no_mangle)]
                 unsafe extern "C" fn ...(
-                    __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    __self: &'static mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                 ) {
                     unsafe { __self.assume_init_drop() };
                 }
@@ -2337,7 +2332,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
                 ...
                 #[unsafe(no_mangle)]
                 extern "C" fn ...(
-                    __self: &mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
+                    __self: &'static mut ::core::mem::MaybeUninit<::rust_out::TypeUnderTest>
                 ) {
                     unsafe { __self.assume_init_drop() };
                 }
@@ -2493,7 +2488,7 @@ fn test_format_item_unsupported_struct_with_custom_drop_and_default_and_nonunpin
                 }
                 #[unsafe(no_mangle)]
                 extern "C" fn ...(
-                    __self: &mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
+                    __self: &'static mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>
                 ) {
                     unsafe { __self.assume_init_drop() };
                 }
@@ -2942,8 +2937,8 @@ fn test_repr_c_union_fields_impl_clone() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1>(
-                    __self: &'__anon1 ::rust_out::SomeUnion,
+                unsafe extern "C" fn ...(
+                    __self: &'static ::rust_out::SomeUnion,
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
@@ -2952,9 +2947,9 @@ fn test_repr_c_union_fields_impl_clone() {
                     }
                 }
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...<'__anon1, '__anon2>(
-                    __self: &'__anon1 mut ::rust_out::SomeUnion,
-                    source: &'__anon2 ::rust_out::SomeUnion
+                unsafe extern "C" fn ...(
+                    __self: &'static mut ::rust_out::SomeUnion,
+                    source: &'static ::rust_out::SomeUnion
                 ) -> () {
                     unsafe { <::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source) }
                 }
@@ -3015,7 +3010,7 @@ fn test_repr_c_union_fields_impl_drop() {
             result.rs_details.tokens,
             quote! {
                 ...
-                extern "C" fn ... (__self: &mut ::core::mem::MaybeUninit<::rust_out::SomeUnion>...) { unsafe { __self.assume_init_drop() }; }
+                extern "C" fn ... (__self: &'static mut ::core::mem::MaybeUninit<::rust_out::SomeUnion>...) { unsafe { __self.assume_init_drop() }; }
                 ...
             }
         );

@@ -320,7 +320,7 @@ pub fn generate_function(
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     ensure!(
-        tcx.generics_of(def_id).count() == 0,
+        !query_compiler::has_non_lifetime_generics(tcx, def_id),
         "Generic functions are not supported yet (b/259749023)"
     );
 
@@ -432,10 +432,14 @@ pub fn generate_function(
         },
     };
 
+    fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
+        substs.iter().any(|subst| subst.as_region().is_none())
+    }
+
     let struct_name = match self_ty {
         Some(ty) => match ty.kind() {
             ty::TyKind::Adt(adt, substs) => {
-                assert_eq!(0, substs.len(), "Callers should filter out generics");
+                assert!(!has_non_lifetime_substs(substs), "Callers should filter out generics");
                 Some(FullyQualifiedName::new(db, adt.did()))
             }
             _ => panic!("Non-ADT `impl`s should be filtered by caller"),

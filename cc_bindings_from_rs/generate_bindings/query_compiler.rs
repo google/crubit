@@ -135,6 +135,13 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     tcx.instantiate_bound_regions_uncached(sig, region_f)
 }
 
+pub fn has_non_lifetime_generics<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
+    tcx.generics_of(def_id)
+        .own_params
+        .iter()
+        .any(|param| !matches!(param.kind, ty::GenericParamDefKind::Lifetime))
+}
+
 pub fn public_free_items_in_mod(tcx: TyCtxt, def_id: DefId) -> Vec<(DefId, DefKind)> {
     let mut items = vec![];
     if def_id.as_local().is_none() {

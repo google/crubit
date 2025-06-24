@@ -20,10 +20,10 @@ use proc_macro2::{Ident, TokenStream};
 use query_compiler::post_analysis_typing_env;
 use quote::format_ident;
 use quote::quote;
-use rustc_middle::ty::{self, Ty};
+use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::{kw, sym, Symbol};
-use rustc_type_ir::RegionKind;
+use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
 use std::ops::AddAssign;
 
@@ -236,46 +236,10 @@ fn c_abi_for_param_type<'tcx>(
         Ok(quote! { #tuple_abi })
     } else {
         let rs_type = format_ty_for_rs(db, ty)?;
-        Ok(quote! { &mut ::core::mem::MaybeUninit<#rs_type> })
+        // `'static` is used to erase all lifetime parameters since C++ doesn't understand
+        // lifetime constraints.
+        Ok(quote! { &'static mut ::core::mem::MaybeUninit<#rs_type> })
     }
-}
-
-/// Returns a list of the non-'static lifetimes referenced in the function signature.
-///
-/// This list is used to create the lifetime generic parameters of the generated function thunk.
-fn unique_late_bound_regions_in_fn_sig(sig: &ty::FnSig) -> Vec<syn::Lifetime> {
-    let mut regions = sig
-        .inputs()
-        .iter()
-        .copied()
-        .chain(std::iter::once(sig.output()))
-        .flat_map(|ty| {
-            ty.walk().filter_map(|generic_arg| {
-                #[rustversion::before(2025-05-29)]
-                let kind = generic_arg.unpack();
-                #[rustversion::since(2025-05-29)]
-                let kind = generic_arg.kind();
-                match kind {
-                    ty::GenericArgKind::Const(_) | ty::GenericArgKind::Type(_) => None,
-                    ty::GenericArgKind::Lifetime(region) => Some(region),
-                }
-            })
-        })
-        .filter(|region| match region.kind() {
-            RegionKind::ReStatic => false,
-            RegionKind::ReLateParam(_) => true,
-            _ => panic!("Unexpected region kind: {region}"),
-        })
-        .map(|region| {
-            let name = region
-                .get_name()
-                .expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
-            syn::Lifetime::new(name.as_str(), proc_macro2::Span::call_site())
-        })
-        .collect_vec();
-    regions.sort_unstable();
-    regions.dedup();
-    regions
 }
 
 #[rustversion::before(2025-03-19)]
@@ -407,6 +371,27 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     })
 }
 
+fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+{
+    struct Staticifier<'tcx> {
+        tcx: TyCtxt<'tcx>,
+        static_region: ty::Region<'tcx>,
+    }
+
+    impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for Staticifier<'tcx> {
+        fn cx(&self) -> TyCtxt<'tcx> {
+            self.tcx
+        }
+        fn fold_region(&mut self, _: ty::Region<'tcx>) -> ty::Region<'tcx> {
+            self.static_region
+        }
+    }
+
+    value.fold_with(&mut Staticifier { tcx, static_region: ty::Region::new_static(tcx) })
+}
+
 /// Formats a thunk implementation in Rust that provides an `extern "C"` ABI for
 /// calling a Rust function identified by `fn_def_id`.  `generate_thunk_impl`
 /// may panic if `fn_def_id` doesn't identify a function.
@@ -425,6 +410,13 @@ pub fn generate_thunk_impl<'tcx>(
     fully_qualified_fn_name: TokenStream,
 ) -> Result<RsSnippet> {
     let tcx = db.tcx();
+
+    // We replace all regions with `'static`. C++ doesn't understand region constraints, so our FFI
+    // thunk cannot be dependent upon a particular choice of lifetime parameters. Using `'static`
+    // everywhere is the easiest way to allow the thunk to compile regardless of the specific
+    // relationship between the lifetime parameters.
+    let sig = replace_all_regions_with_static(tcx, *sig);
+
     let param_names_and_types: Vec<(Ident, Ty)> = {
         let param_names = thunk_param_names(tcx, fn_def_id);
         let param_types = sig.inputs().iter().copied();
@@ -483,20 +475,11 @@ pub fn generate_thunk_impl<'tcx>(
         };
     }
 
-    let lifetime_generics = {
-        let regions = unique_late_bound_regions_in_fn_sig(sig);
-        if regions.is_empty() {
-            quote! {}
-        } else {
-            quote! { < #( #regions ),* > }
-        }
-    };
-
     let thunk_name = make_rs_ident(thunk_name);
     Ok(RsSnippet {
         tokens: quote! {
             #[unsafe(no_mangle)]
-            unsafe extern "C" fn #thunk_name #lifetime_generics (
+            unsafe extern "C" fn #thunk_name (
                 #( #thunk_params ),*
             ) -> #thunk_return_type { unsafe {
                 #(#fn_args_conversions)*
@@ -639,7 +622,7 @@ pub fn generate_trait_thunks<'tcx>(
                 RsSnippet::new(quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn #thunk_name(
-                        __self: &mut ::core::mem::MaybeUninit<#struct_name>
+                        __self: &'static mut ::core::mem::MaybeUninit<#struct_name>
                     ) {
                         unsafe { __self.assume_init_drop() };
                     }

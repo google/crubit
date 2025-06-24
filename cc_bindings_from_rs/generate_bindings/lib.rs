@@ -52,7 +52,6 @@ use query_compiler::{
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
-
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{Item, ItemKind, Node, UseKind, UsePath};
 use rustc_middle::dep_graph::DepContext;
@@ -1104,10 +1103,10 @@ fn generate_item_impl(
     }
 
     let item = match tcx.hir_expect_item(def_id) {
-        Item { kind: ItemKind::Struct(_, generics, _) |
-                     ItemKind::Enum(_, generics, _) |
-                     ItemKind::Union(_, generics, _),
-               .. } if !generics.params.is_empty() => {
+        Item { kind: ItemKind::Struct(..) |
+                     ItemKind::Enum(..) |
+                     ItemKind::Union(..),
+               .. } if query_compiler::has_non_lifetime_generics(tcx, def_id.to_def_id()) => {
             bail!("Generic types are not supported yet (b/259749095)");
         },
         Item { kind: ItemKind::Fn{..}, .. } => db.generate_function(def_id).map(Some),

@@ -18,14 +18,14 @@ const _: () = assert!(
         == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_a<'__anon1>(
-    __self: &'__anon1 ::struct_with_conflicting_fields_and_member_functions_rust_golden::X,
+unsafe extern "C" fn __crubit_thunk_a(
+    __self: &'static ::struct_with_conflicting_fields_and_member_functions_rust_golden::X,
 ) -> i32 {
     unsafe { ::struct_with_conflicting_fields_and_member_functions_rust_golden::X::a(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_b<'__anon1>(
-    __self: &'__anon1 ::struct_with_conflicting_fields_and_member_functions_rust_golden::X,
+unsafe extern "C" fn __crubit_thunk_b(
+    __self: &'static ::struct_with_conflicting_fields_and_member_functions_rust_golden::X,
 ) -> i32 {
     unsafe { ::struct_with_conflicting_fields_and_member_functions_rust_golden::X::b(__self) }
 }

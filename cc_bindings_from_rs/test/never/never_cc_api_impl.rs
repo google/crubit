@@ -28,8 +28,8 @@ unsafe extern "C" fn __crubit_thunk_associated_ufn_unever_ureturn() -> ! {
     unsafe { ::never_golden::NeverStruct::associated_fn_never_return() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_method_unever_ureturn<'__anon1>(
-    __self: &'__anon1 ::never_golden::NeverStruct,
+unsafe extern "C" fn __crubit_thunk_method_unever_ureturn(
+    __self: &'static ::never_golden::NeverStruct,
 ) -> ! {
     unsafe { ::never_golden::NeverStruct::method_never_return(__self) }
 }

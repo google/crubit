@@ -334,7 +334,7 @@ pub fn format_ty_for_cc<'tcx>(
             } else {
                 let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
                 ensure!(
-                    has_cpp_type || substs.is_empty(),
+                    has_cpp_type || !has_non_lifetime_substs(substs),
                     "Generic types are not supported yet (b/259749095)"
                 );
                 ensure!(
@@ -475,7 +475,7 @@ pub fn format_ty_for_cc<'tcx>(
         ty::TyKind::FnPtr(sig_tys, fn_header) => {
             let sig = {
                 let sig_tys = match sig_tys.no_bound_vars() {
-                    None => bail!("Generic functions are not supported yet (b/259749023)"),
+                    None => bail!("Generic function pointers are not supported yet (b/259749023)"),
                     Some(sig_tys) => sig_tys,
                 };
                 rustc_middle::ty::FnSig {
@@ -679,6 +679,10 @@ pub fn format_transparent_pointee<'tcx>(
     bail!("unable to generate bindings for anything other than `MaybeUninit<T>`")
 }
 
+fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
+    substs.iter().any(|subst| subst.as_region().is_none())
+}
+
 /// Formats `ty` for Rust - to be used in `..._cc_api_impl.rs` (e.g. as a type
 /// of a parameter in a Rust thunk).  Because `..._cc_api_impl.rs` is a
 /// distinct, separate crate, the returned `TokenStream` uses crate-qualified
@@ -711,7 +715,7 @@ pub fn format_ty_for_rs<'tcx>(
         ty::TyKind::Adt(adt, substs) => {
             let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
             ensure!(
-                has_cpp_type || substs.is_empty(),
+                has_cpp_type || !has_non_lifetime_substs(substs),
                 "Generic types are not supported yet (b/259749095)"
             );
             FullyQualifiedName::new(db, adt.did()).format_for_rs()

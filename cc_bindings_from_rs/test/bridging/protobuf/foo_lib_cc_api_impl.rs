@@ -22,13 +22,13 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_drop(
-    __self: &mut ::core::mem::MaybeUninit<::foo_lib_golden::FooService>,
+    __self: &'static mut ::core::mem::MaybeUninit<::foo_lib_golden::FooService>,
 ) {
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_handle_urequest<'__anon1, '__anon2, '__anon3>(
-    __self: &'__anon1 mut ::foo_lib_golden::FooService,
+unsafe extern "C" fn __crubit_thunk_handle_urequest(
+    __self: &'static mut ::foo_lib_golden::FooService,
     req: *const core::ffi::c_void,
     rsp: *const core::ffi::c_void,
 ) -> bool {
@@ -47,8 +47,8 @@ unsafe extern "C" fn __crubit_thunk_handle_urequest<'__anon1, '__anon2, '__anon3
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_request_ustats<'__anon1>(
-    __self: &'__anon1 ::foo_lib_golden::FooService,
+unsafe extern "C" fn __crubit_thunk_request_ustats(
+    __self: &'static ::foo_lib_golden::FooService,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
@@ -57,8 +57,8 @@ unsafe extern "C" fn __crubit_thunk_request_ustats<'__anon1>(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_urequest_ustats<'__anon1>(
-    __self: &'__anon1 ::foo_lib_golden::FooService,
+unsafe extern "C" fn __crubit_thunk_clone_urequest_ustats(
+    __self: &'static ::foo_lib_golden::FooService,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
@@ -70,8 +70,8 @@ unsafe extern "C" fn __crubit_thunk_clone_urequest_ustats<'__anon1>(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_update_urequest_ustats<'__anon1>(
-    __self: &'__anon1 mut ::foo_lib_golden::FooService,
+unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
+    __self: &'static mut ::foo_lib_golden::FooService,
     updated_stats: *const core::ffi::c_void,
 ) -> () {
     unsafe {

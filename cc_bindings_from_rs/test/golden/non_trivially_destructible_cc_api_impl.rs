@@ -27,15 +27,15 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_drop(
-    __self: &mut ::core::mem::MaybeUninit<
+    __self: &'static mut ::core::mem::MaybeUninit<
         ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
     >,
 ) {
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone<'__anon1>(
-    __self: &'__anon1 ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
+unsafe extern "C" fn __crubit_thunk_clone(
+    __self: &'static ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
@@ -45,9 +45,9 @@ unsafe extern "C" fn __crubit_thunk_clone<'__anon1>(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_clone_ufrom<'__anon1, '__anon2>(
-    __self: &'__anon1 mut ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
-    source: &'__anon2 ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
+unsafe extern "C" fn __crubit_thunk_clone_ufrom(
+    __self: &'static mut ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
+    source: &'static ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
 ) -> () {
     unsafe {
         <::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::clone::Clone>::clone_from(__self,source)
@@ -61,7 +61,7 @@ const _: () = assert!(
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uby_uvalue(
-    _x: &mut ::core::mem::MaybeUninit<
+    _x: &'static mut ::core::mem::MaybeUninit<
         ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
     >,
 ) -> () {

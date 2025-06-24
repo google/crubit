@@ -29,24 +29,24 @@ unsafe extern "C" fn __crubit_thunk_create(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_get_ustr_ulen<'__anon1>(
-    __self: &'__anon1 ::str_golden::TypeWithStr,
+unsafe extern "C" fn __crubit_thunk_get_ustr_ulen(
+    __self: &'static ::str_golden::TypeWithStr,
 ) -> usize {
     unsafe { ::str_golden::TypeWithStr::get_str_len(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_get_ustr_udata<'__anon1>(
-    __self: &'__anon1 ::str_golden::TypeWithStr,
+unsafe extern "C" fn __crubit_thunk_get_ustr_udata(
+    __self: &'static ::str_golden::TypeWithStr,
 ) -> *const u8 {
     unsafe { ::str_golden::TypeWithStr::get_str_data(__self) }
 }
 const _: () = assert!(::core::mem::offset_of!(::str_golden::TypeWithStr, str_field) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_get_ustr_ulen<'__anon1>(s: &'__anon1 str) -> usize {
+unsafe extern "C" fn __crubit_thunk_get_ustr_ulen(s: &'static str) -> usize {
     unsafe { ::str_golden::get_str_len(s) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_get_ustr_udata<'__anon1>(s: &'__anon1 str) -> *const u8 {
+unsafe extern "C" fn __crubit_thunk_get_ustr_udata(s: &'static str) -> *const u8 {
     unsafe { ::str_golden::get_str_data(s) }
 }
 #[unsafe(no_mangle)]
