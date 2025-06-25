@@ -54,6 +54,14 @@ std::optional<Vec3<float>> MakeOptionalVec3(float x, float y, float z,
 std::optional<Vec3<float>> MapMultiply(std::optional<Vec3<float>> v,
                                        float factor);
 
+namespace inner {
+class Foo {
+ public:
+  int Bar() { return 42; }
+};
+}  // namespace inner
+inline std::optional<inner::Foo> MakeOptionalFoo() { return inner::Foo(); }
+
 std::pair<std::pair<int, float>, bool> MakePair(int a, float b, bool c);
 
 std::pair<std::optional<int>, std::optional<std::pair<float, Vec3<float>>>>
