@@ -38,11 +38,11 @@ crate_universe_dependencies()
 
 load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository", "render_config")
 
-# after changing `packages`, re-generate Cargo.lock:
+# after changing `packages`, re-generate Cargo.Bazel.lock:
 #   CARGO_BAZEL_REPIN=1 bazelisk sync --only=crate_index
 crates_repository(
     name = "crate_index",
-    cargo_lockfile = "//:Cargo.lock",
+    cargo_lockfile = "//:Cargo.Bazel.lock",
     packages = {
         "anyhow": crate.spec(
             version = ">0.0.0",
