@@ -144,6 +144,12 @@ message Evidence {
     // A pointer was used with an array subscript operator without being checked
     // for null first.
     ARRAY_SUBSCRIPT = 31;
+    // A smart pointer field was left not-nullable in the exit block of a
+    // supported late initializer method.
+    LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER = 32;
+    // A smart pointer field was left default-initialized (to null) or
+    // initialized to a nullable value in the exit block of a constructor.
+    LEFT_NULLABLE_BY_CONSTRUCTOR = 33;
   }
 }
 

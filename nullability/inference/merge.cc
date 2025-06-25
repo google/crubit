@@ -100,6 +100,11 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts, bool EnableSoftRules) {
   if (Counts[Evidence::ANNOTATED_NULLABLE])
     return {Nullability::NULLABLE, /*Conflict=*/false, /*Trivial=*/true};
 
+  bool AnyAssignmentFromNullable =
+      Counts[Evidence::ASSIGNED_FROM_NULLABLE] ||
+      (Counts[Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR] &&
+       !Counts[Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER]);
+
   // Mandatory inference rules, required by type-checking.
   // Ordered from most confident to least.
   std::optional<InferResult> Result;
@@ -111,8 +116,7 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts, bool EnableSoftRules) {
     update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::NONNULL_REFERENCE_ARGUMENT])
     update(Result, Nullability::NONNULL);
-  if (Counts[Evidence::ASSIGNED_FROM_NULLABLE])
-    update(Result, Nullability::NULLABLE);
+  if (AnyAssignmentFromNullable) update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::NULLABLE_RETURN]) update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::NULLABLE_REFERENCE_RETURN])
     update(Result, Nullability::NULLABLE);
@@ -144,8 +148,7 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts, bool EnableSoftRules) {
     return {Nullability::NONNULL};
   if (Counts[Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER])
     return {Nullability::NULLABLE};
-  if (!Counts[Evidence::ASSIGNED_FROM_NULLABLE] &&
-      !Counts[Evidence::ASSIGNED_FROM_UNKNOWN] &&
+  if (!AnyAssignmentFromNullable && !Counts[Evidence::ASSIGNED_FROM_UNKNOWN] &&
       Counts[Evidence::ASSIGNED_FROM_NONNULL])
     return {Nullability::NONNULL};
   if (!Counts[Evidence::NULLABLE_REFERENCE_RETURN] &&

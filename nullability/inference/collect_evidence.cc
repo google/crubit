@@ -151,9 +151,9 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::ASSIGNED_TO_NONNULL_REFERENCE:
     case Evidence::WELL_KNOWN_NONNULL:
     case Evidence::ARRAY_SUBSCRIPT:
-      // Evidence pointing toward Unknown is only used to prevent Nonnull
-      // inferences; it cannot override Nullable. So propagate it in the same
-      // direction we do for Nonnull-pointing evidence.
+    // Evidence pointing toward Unknown is only used to prevent Nonnull
+    // inferences; it cannot override Nullable. So propagate it in the same
+    // direction we do for Nonnull-pointing evidence.
     case Evidence::ANNOTATED_UNKNOWN:
     case Evidence::UNKNOWN_ARGUMENT:
     case Evidence::UNKNOWN_RETURN:
@@ -167,6 +167,11 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::NULLABLE_RETURN:
     case Evidence::ASSIGNED_TO_MUTABLE_NULLABLE:
     case Evidence::ASSIGNED_FROM_NULLABLE:
+    case Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR:
+    // Used to prevent a Nullable inference in combination with
+    // LEFT_NULLABLE_BY_CONSTRUCTOR evidence, so propagate in the same direction
+    // as the evidence with which it is combined.
+    case Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER:
     case Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER:
     case Evidence::WELL_KNOWN_NULLABLE:
       return ForReturnSlot
@@ -1482,9 +1487,9 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
 }
 
-// If D is a constructor definition, collect ASSIGNED_FROM_NULLABLE evidence for
-// smart pointer fields implicitly default-initialized and left nullable in the
-// exit block of the constructor body.
+// If D is a constructor definition, collect LEFT_NULLABLE_BY_CONSTRUCTOR
+// evidence for smart pointer fields implicitly default-initialized and left
+// nullable in the exit block of the constructor body.
 static void collectEvidenceFromConstructorExitBlock(
     const clang::Decl &MaybeConstructor, const Environment &ExitEnv,
     const Formula &InferableSlotsConstraint,
@@ -1524,19 +1529,63 @@ static void collectEvidenceFromConstructorExitBlock(
     // we'll collect the relevant evidence there. If we did try to model the
     // fields that are not directly referenced in the function body, we would
     // only get null state based on the annotated type, which is always Unknown
-    // if we're trying to infer for it. In these cases, return early without
-    // emitting evidence.
+    // if we're trying to infer for it. In these cases, skip this field.
     //
     // It's possible there are other cases that result in a lack of null state
     // that should be fixed, but we don't have the tools to detect the
     // difference between the case detailed above and other cases, so we give up
     // on finding other cases by way of loudly detecting a lack of null state
     // here.
-    if (!hasPointerNullState(*PV)) return;
+    if (!hasPointerNullState(*PV)) continue;
 
     if (isNullable(*PV, ExitEnv, &InferableSlotsConstraint)) {
-      Emit(*Field, Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+      Emit(*Field, Slot(0), Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
            Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
+    }
+  }
+}
+
+// Supported late initializers are no-argument SetUp methods of classes that
+// inherit from ::testing::Test. From the exit block of such a method, we
+// collect LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER evidence for smart pointer
+// fields that are not nullable. This allows ignoring the
+// LEFT_NULLABLE_BY_CONSTRUCTOR evidence for such a field.
+static void collectEvidenceFromSupportedLateInitializerExitBlock(
+    const clang::Decl &MaybeLateInitializationMethod,
+    const Environment &ExitEnv, const Formula &InferableSlotsConstraint,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  auto *Method = dyn_cast<CXXMethodDecl>(&MaybeLateInitializationMethod);
+  if (!Method || !Method->isVirtual() || Method->getNumParams() != 0) return;
+  if (IdentifierInfo *Identifier = Method->getIdentifier();
+      !Identifier || Identifier->getName() != "SetUp") {
+    return;
+  }
+  const CXXRecordDecl *absl_nullable Parent = Method->getParent();
+  if (!Parent) return;
+  CXXBasePaths BasePaths;
+  if (!Parent->lookupInBases(
+          [](const clang::CXXBaseSpecifier *BaseSpec,
+             clang::CXXBasePath &Path) {
+            return BaseSpec->getType().getAsString() == "::testing::Test";
+          },
+          BasePaths)) {
+    return;
+  }
+
+  const dataflow::RecordStorageLocation *ThisPointeeLoc =
+      ExitEnv.getThisPointeeStorageLocation();
+  CHECK(ThisPointeeLoc) << "Storage location for *this should be available "
+                           "while analyzing a method.";
+  for (const auto [ChildDecl, ChildLoc] : ThisPointeeLoc->children()) {
+    if (!isSupportedSmartPointerType(ChildDecl->getType()) ||
+        !isInferenceTarget(*ChildDecl))
+      continue;
+    const dataflow::PointerValue *PV = getPointerValueFromSmartPointer(
+        cast<dataflow::RecordStorageLocation>(ChildLoc), ExitEnv);
+    if (PV != nullptr && hasPointerNullState(*PV) &&
+        !isNullable(*PV, ExitEnv, &InferableSlotsConstraint)) {
+      Emit(*ChildDecl, Slot(0), Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
+           Method->getBeginLoc());
     }
   }
 }
@@ -1801,6 +1850,8 @@ llvm::Error collectEvidenceFromDefinition(
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
     collectEvidenceFromConstructorExitBlock(Definition, ExitBlockResult->Env,
                                             InferableSlotsConstraint, Emit);
+    collectEvidenceFromSupportedLateInitializerExitBlock(
+        Definition, ExitBlockResult->Env, InferableSlotsConstraint, Emit);
   }
 
   return llvm::Error::success();

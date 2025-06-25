@@ -1675,7 +1675,8 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
           cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
       // By the end of the constructor body, the field is still only
       // default-initialized, which for smart pointers means it is null.
-      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+      UnorderedElementsAre(evidence(Slot(0),
+                                    Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
                                     fieldNamed("Target::I"))));
 }
 
@@ -1718,18 +1719,17 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       // By the end of the constructor body, the field is still potentially
-      // default-initialized, which for smart pointers means it may be null, so
-      // we collect ASSIGNED_FROM_NULLABLE.
-      // We also collect ASSIGNED_FROM_NONNULL, because the field can be
-      // assigned a Nonnull value in the body, though this doesn't end up
-      // affecting the inferred annotation.
-      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                                    fieldNamed("Target::I")),
-                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                    fieldNamed("Target::I")),
-                           // evidence for the move assignment operator for
-                           // unique_ptr, which we don't care much about.
-                           evidence(_, _, functionNamed("operator="))));
+      // default-initialized, which for smart pointers means it may be null.
+      // We also collect from the Nonnull value assignment in the body, though
+      // this doesn't end up affecting the inferred annotation.
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
+                   fieldNamed("Target::I")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                   fieldNamed("Target::I")),
+          // evidence for the move assignment operator for
+          // unique_ptr, which we don't care much about.
+          evidence(_, _, functionNamed("operator="))));
 }
 
 TEST(SmartPointerCollectEvidenceFromDefinitionTest,

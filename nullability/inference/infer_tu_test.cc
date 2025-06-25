@@ -871,6 +871,70 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
                                  {inferredSlot(0, Nullability::NONNULL)})));
 }
 
+TEST_F(InferTUSmartPointerTest,
+       DefaultFieldInitializersAbsentSomeLateInitializationInTestSetUp) {
+  build(R"cc(
+#include <memory>
+    namespace testing {
+    class Test {
+      virtual void SetUp();
+    };
+    }  // namespace testing
+
+    class TestIntermediary : public ::testing::Test {};
+
+    struct Target : public TestIntermediary {
+      void SetUp() override { InitializedInSetUpTarget = std::make_unique<int>(0); }
+      std::unique_ptr<int> InitializedInSetUpTarget;
+      std::unique_ptr<int> OnlyDefaultInitializedTarget;
+    };
+
+    // Use the implicitly-declared default constructor so that it will be
+    // generated.
+    Target T;
+
+    struct DoesNotInheritFromTest {
+      DoesNotInheritFromTest() {}
+      void SetUp() { InitializedInSetUpDoesNotInherit = std::make_unique<int>(0); }
+      std::unique_ptr<int> InitializedInSetUpDoesNotInherit;
+    };
+
+    struct OneInConstructor : public TestIntermediary {
+      OneInConstructor() { InitializedInConstructor = std::make_unique<int>(0); }
+      void SetUp() override { InitializedInSetUp = std::make_unique<int>(0); }
+      std::unique_ptr<int> InitializedInConstructor;
+      std::unique_ptr<int> InitializedInSetUp;
+    };
+
+    // We may not even collect evidence from an empty SetUp method, so check
+    // that we still get the right inference for the field overall.
+    struct EmptySetUp : public TestIntermediary {
+      void SetUp() override {}
+      std::unique_ptr<int> NotInitializedInEmptySetUp;
+    };
+    // Use the implicitly-declared default constructor so that it will be
+    // generated. It's arguable that we should infer Nullable even without a
+    // constructor, but if there's no constructor, the class is unused. This is
+    // rare and unused code, so we don't care enough to handle it.
+    EmptySetUp E;
+  )cc");
+
+  EXPECT_THAT(
+      infer(),
+      IsSupersetOf({inference(hasName("InitializedInSetUpTarget"),
+                              {inferredSlot(0, Nullability::NONNULL)}),
+                    inference(hasName("OnlyDefaultInitializedTarget"),
+                              {inferredSlot(0, Nullability::NULLABLE)}),
+                    inference(hasName("InitializedInSetUpDoesNotInherit"),
+                              {inferredSlot(0, Nullability::NULLABLE)}),
+                    inference(hasName("InitializedInConstructor"),
+                              {inferredSlot(0, Nullability::NONNULL)}),
+                    inference(hasName("InitializedInSetUp"),
+                              {inferredSlot(0, Nullability::NONNULL)}),
+                    inference(hasName("NotInitializedInEmptySetUp"),
+                              {inferredSlot(0, Nullability::NULLABLE)})}));
+}
+
 using InferTUVirtualMethodsTest = InferTUTest;
 
 TEST_F(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
