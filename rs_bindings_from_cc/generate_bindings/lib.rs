@@ -743,18 +743,20 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
     }
 }
 
-/// Parses the given Rust path into a [`FullyQualifiedPath`]. If the path doesn't start with "::",
-/// it will be prepended with the crate name, or the keyword "crate" if the type is owned by the
-/// current target.
+/// Parses the given Rust path into a [`FullyQualifiedPath`]. If the path belongs to the current
+/// target, it will be prepended with the keyword "crate". Otherwise, it will be prepended with "::"
+/// and the crate name.
 fn make_rust_abi_path(mut rust_path: &str, ir: &IR, target: &BazelLabel) -> FullyQualifiedPath {
-    let start_with_colon2 = strip_leading_colon2(&mut rust_path);
-    let prefix = if start_with_colon2 {
-        None
-    } else if ir.is_current_target(target) {
+    let mut start_with_colon2 = strip_leading_colon2(&mut rust_path);
+
+    let prefix = if ir.is_current_target(target) {
+        start_with_colon2 = false;
         Some(Ident::new("crate", proc_macro2::Span::call_site()))
     } else {
+        start_with_colon2 = true;
         Some(make_rs_ident(target.target_name()))
     };
+
     FullyQualifiedPath {
         start_with_colon2,
         parts: prefix

@@ -1293,12 +1293,14 @@ impl RsTypeKind {
                         .defining_target
                         .as_ref()
                         .unwrap_or(&original_type.owning_target);
+
                     let prefix = if is_absolute_path {
                         quote! {}
                     } else if db.ir().is_current_target(target) {
                         quote! {crate}
                     } else {
-                        make_rs_ident(target.target_name()).to_token_stream()
+                        let ident = make_rs_ident(target.target_name());
+                        quote! { :: #ident }
                     };
                     quote! { #prefix :: #(#name_parts)::* }
                 };
