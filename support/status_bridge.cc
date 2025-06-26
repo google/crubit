@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -132,6 +133,32 @@ extern "C" bool absl_status_internal_operator_equals(uintptr_t lhs,
                                                      uintptr_t rhs) {
   return reinterpret_cast<const absl::Status&>(lhs) ==
          reinterpret_cast<const absl::Status&>(rhs);
+}
+
+// Writes the stringified representation to a Rust `fmt::Formatter`.
+//
+// The caller must ensure that:
+//   * `rep` is a valid `rep_` from a `Status`,
+//   * if `rep` is the allocated variant, the underlying `StatusRep*` has not
+//   been deleted,
+//   * `formatter` can be safely casted to a `&mut fmt::Formatter`,
+//   * `cb` is a function that takes the underlying type of `formatter` and
+//     returns true if the string was successfully written.
+//
+// The caller may assume that if `cb` is called, then the void* is the
+// `formatter` passed into this function, and that the c_string_view is valid
+// for the duration of `cb`.
+extern "C" bool absl_status_internal_to_string(uintptr_t rep, void* formatter,
+                                               bool (*cb)(void*,
+                                                          c_string_view)) {
+  std::string s = reinterpret_cast<absl::Status&>(rep).ToString();
+  if (s.empty()) {
+    return true;
+  }
+
+  // Need to use a function pointer so that :status can compile without linking
+  // against :additional_status_src.
+  return cb(formatter, {s.size(), s.data()});
 }
 
 #pragma clang diagnostic pop
