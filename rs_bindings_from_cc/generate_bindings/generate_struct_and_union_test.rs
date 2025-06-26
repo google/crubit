@@ -301,17 +301,13 @@ fn test_struct_vs_typedefed_struct() -> Result<()> {
 
 #[gtest]
 fn test_record_with_unsupported_field_type() -> Result<()> {
-    // Using a nested struct because it's currently not supported.
+    // Using a volatile field because it's currently not supported.
     // But... any other unsupported type would also work for this test.
     let ir = ir_from_cc(
         r#"
         struct StructWithUnsupportedField {
-          struct NestedStruct {
-            int nested_field;
-          };
-
           // Doc comment for `my_field`.
-          NestedStruct my_field;
+          volatile int my_field;
         };
     "#,
     )?;
@@ -322,7 +318,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithUnsupportedField"]
             pub struct StructWithUnsupportedField {
-                #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'"]
+                #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported `volatile` qualifier: volatile int"]
                 pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
             }
             ...
@@ -559,9 +555,8 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
         }; "#,
     )?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
-    // TODO(b/200067824): Once nested structs anhd unions are supported,
-    // `__unnamed_field1` and `__unnamed_field2` should have a real, usable
-    // type.
+    // Once anonymous structs and unions are supported, `__unnamed_field1` and `__unnamed_field2`
+    // should have a real, usable type.
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1841,23 +1836,22 @@ fn test_supported_no_unique_address_field() -> Result<()> {
     Ok(())
 }
 
-// TODO(b/200067824): These should generate nested types.
 #[gtest]
 fn test_nested_type_definitions() -> Result<()> {
-    for nested_type in ["enum NotPresent {};", "struct NotPresent {};", "struct NotPresent;"] {
+    for nested_type in ["enum Present {};", "struct Present {};"] {
         let mut ir = ir_from_cc(&format!(
             r#"
                 struct SomeStruct final {{
                     {nested_type}
                 }};
-                SomeStruct::NotPresent* AlsoNotPresent();
+                SomeStruct::Present* AlsoPresent();
             "#
         ))?;
         *ir.target_crubit_features_mut(&ir.current_target().clone()) =
             crubit_feature::CrubitFeature::Supported.into();
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
-        assert_rs_not_matches!(rs_api, quote! { NotPresent });
-        assert_rs_not_matches!(rs_api, quote! { AlsoNotPresent });
+        assert_rs_matches!(rs_api, quote! { Present });
+        assert_rs_matches!(rs_api, quote! { AlsoPresent });
     }
     Ok(())
 }
@@ -1875,8 +1869,7 @@ fn test_typedef_member() -> Result<()> {
     "#,
     )?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
-    // TODO(b/200067824): This should use the alias's real name in Rust, as well.
-    assert_rs_matches!(rs_api, quote! { pub fn Function() -> ::core::ffi::c_int { ... } },);
+    assert_rs_matches!(rs_api, quote! { pub fn Function() -> crate::some_struct::Type { ... } },);
 
     assert_cc_matches!(
         rs_api_impl,

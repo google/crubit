@@ -41,4 +41,51 @@ extern "C" struct Foo* __rust_thunk___ZN3FooaSEOS_(struct Foo* __this,
   return &__this->operator=(std::move(*__param_0));
 }
 
+static_assert(CRUBIT_SIZEOF(struct Foo::Bar) == 4);
+static_assert(alignof(struct Foo::Bar) == 4);
+static_assert(CRUBIT_OFFSET_OF(bar, struct Foo::Bar) == 0);
+
+extern "C" void __rust_thunk___ZN3Foo3BarC1Ev(struct Foo::Bar* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN3Foo3BarC1EOS0_(struct Foo::Bar* __this,
+                                                 struct Foo::Bar* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct Foo::Bar* __rust_thunk___ZN3Foo3BaraSERKS0_(
+    struct Foo::Bar* __this, const struct Foo::Bar* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct Foo::Bar* __rust_thunk___ZN3Foo3BaraSEOS0_(
+    struct Foo::Bar* __this, struct Foo::Bar* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
+static_assert(CRUBIT_SIZEOF(struct Foo::Bar::Baz) == 4);
+static_assert(alignof(struct Foo::Bar::Baz) == 4);
+static_assert(CRUBIT_OFFSET_OF(baz, struct Foo::Bar::Baz) == 0);
+
+extern "C" void __rust_thunk___ZN3Foo3Bar3BazC1Ev(
+    struct Foo::Bar::Baz* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN3Foo3Bar3BazC1EOS1_(
+    struct Foo::Bar::Baz* __this, struct Foo::Bar::Baz* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct Foo::Bar::Baz* __rust_thunk___ZN3Foo3Bar3BazaSERKS1_(
+    struct Foo::Bar::Baz* __this, const struct Foo::Bar::Baz* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+
+extern "C" struct Foo::Bar::Baz* __rust_thunk___ZN3Foo3Bar3BazaSEOS1_(
+    struct Foo::Bar::Baz* __this, struct Foo::Bar::Baz* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+
 #pragma clang diagnostic pop

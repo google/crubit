@@ -48,18 +48,4 @@ static_assert(CRUBIT_SIZEOF(struct NontrivialCustomType) == 4);
 static_assert(alignof(struct NontrivialCustomType) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct NontrivialCustomType) == 0);
 
-static_assert(sizeof(struct ContainingStruct) == 1);
-static_assert(alignof(struct ContainingStruct) == 1);
-static_assert(CRUBIT_OFFSET_OF(nested_struct, struct ContainingStruct) == 0);
-
-extern "C" struct ContainingStruct* __rust_thunk___ZN16ContainingStructaSERKS_(
-    struct ContainingStruct* __this, const struct ContainingStruct* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct ContainingStruct* __rust_thunk___ZN16ContainingStructaSEOS_(
-    struct ContainingStruct* __this, struct ContainingStruct* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 #pragma clang diagnostic pop

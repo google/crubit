@@ -41,14 +41,4 @@ struct PackedLayout final {
 // currently supported.
 volatile int* MultipleReasons(volatile int* n);
 
-struct ContainingStruct final {
-  struct NestedStruct final {
-    void NonStaticMemberFunction();
-    void StaticMemberFunction();
-  };
-
-  // Doc comment for an unsupported field.
-  NestedStruct nested_struct;
-};
-
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

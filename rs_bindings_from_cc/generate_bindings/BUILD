@@ -361,6 +361,7 @@ rust_library(
         "//common:crubit_feature",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:heck",
     ],
 )
 

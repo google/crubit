@@ -7,9 +7,10 @@
 use crate::db::BindingsGenerator;
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::{anyhow, Error, Result};
-use code_gen_utils::{expect_format_cc_type_name, CcInclude};
+use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
+use heck::ToSnakeCase;
 use ir::{BazelLabel, GenericItem, Item, RecordType, UnqualifiedIdentifier};
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
@@ -50,6 +51,16 @@ pub struct ApiSnippets {
 impl From<MainApi> for ApiSnippets {
     fn from(main_api: MainApi) -> Self {
         ApiSnippets { main_api: vec![main_api], ..Default::default() }
+    }
+}
+
+impl ApiSnippets {
+    pub fn append(&mut self, other: ApiSnippets) {
+        self.main_api.extend(other.main_api);
+        self.thunks.extend(other.thunks);
+        self.assertions.extend(other.assertions);
+        self.cc_details.extend(other.cc_details);
+        self.features |= other.features;
     }
 }
 
@@ -542,6 +553,8 @@ pub struct Record {
     pub incomplete_definition: Option<TokenStream>,
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
     pub items: Vec<MainApi>,
+    /// Specifically the items that were generated for nested records.
+    pub nested_items: Vec<MainApi>,
 }
 
 impl ToTokens for Record {
@@ -563,6 +576,7 @@ impl ToTokens for Record {
             incomplete_definition,
             no_unique_address_accessors,
             items,
+            nested_items,
         } = self;
 
         let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
@@ -594,6 +608,20 @@ impl ToTokens for Record {
             None
         };
 
+        let nested_items = if !nested_items.is_empty() {
+            let snake_case_name = make_rs_ident(&ident.to_string().to_snake_case());
+            Some(quote! {
+                pub mod #snake_case_name {
+                    #[allow(unused_imports)]
+                    use super::*; __NEWLINE__
+                    __NEWLINE__
+                    #( #nested_items )*
+                }
+            })
+        } else {
+            None
+        };
+
         quote! {
             #doc_comment_attr
             #derive_attr
@@ -615,6 +643,8 @@ impl ToTokens for Record {
 
             __NEWLINE__ __NEWLINE__
             #( #items __NEWLINE__ __NEWLINE__ )*
+
+            #nested_items
         }
         .to_tokens(tokens);
     }

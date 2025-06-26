@@ -77,8 +77,12 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     }
 }
 
-// Error while generating bindings for item 'nested_type':
-// Can't generate bindings for nested_type, because it is unsupported: b/200067824: type definitions nested inside records are not yet supported
+pub mod some_struct {
+    #[allow(unused_imports)]
+    use super::*;
+
+    pub type nested_type = ::core::ffi::c_int;
+}
 
 // Error while generating bindings for item 'SomeStruct':
 // Typedef only used to introduce a name in C. Not importing.
@@ -287,7 +291,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeOtherUni
 }
 
 #[inline(always)]
-pub fn FunctionUsingNestedType() -> ::core::ffi::c_int {
+pub fn FunctionUsingNestedType() -> crate::some_struct::nested_type {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
 }
 
@@ -340,7 +344,8 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         ) -> &'a mut crate::SomeOtherUnion;
         #[link_name = "_Z23FunctionUsingNestedTypev"]
-        pub(crate) unsafe fn __rust_thunk___Z23FunctionUsingNestedTypev() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z23FunctionUsingNestedTypev(
+        ) -> crate::some_struct::nested_type;
     }
 }
 

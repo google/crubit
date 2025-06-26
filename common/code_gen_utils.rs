@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, ensure, Result};
+use heck::ToSnakeCase;
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
@@ -312,13 +313,23 @@ impl NamespaceQualifier {
         self.namespaces.is_empty() && self.nested_records.is_empty()
     }
 
+    /// Returns an iterator over the Rust modules in the namespace qualifier.
+    /// Parent records are converted to snake case.
+    pub fn parts_with_snake_case_record_names(&self) -> impl Iterator<Item = Ident> + use<'_> {
+        self.namespaces.iter().map(|ns| make_rs_ident(ns)).chain(
+            self.nested_records
+                .iter()
+                .map(|record| make_rs_ident(&record.to_string().to_snake_case())),
+        )
+    }
+
     pub fn parts(&self) -> impl Iterator<Item = &Rc<str>> + use<'_> {
         self.namespaces.iter().chain(self.nested_records.iter())
     }
 
     /// Returns `foo::bar::baz::` (escaping Rust keywords as needed).
     pub fn format_for_rs(&self) -> TokenStream {
-        let rust_parts = self.parts().map(|module| make_rs_ident(module));
+        let rust_parts = self.parts_with_snake_case_record_names();
         quote! { #(#rust_parts::)* }
     }
 

@@ -143,83 +143,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCus
 //
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 
-#[derive(Clone, Copy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=ContainingStruct
-pub struct ContainingStruct {
-    /// Doc comment for an unsupported field.
-    ///
-    /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type 'struct ContainingStruct::NestedStruct': No generated bindings found for 'NestedStruct'
-    pub(crate) nested_struct: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for ContainingStruct {}
-impl !Sync for ContainingStruct {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("ContainingStruct"),
-    crate::ContainingStruct
-);
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN16ContainingStructC1Ev {}
-impl<'error> Default for ContainingStruct
-where
-    &'error (): BindingFailedFor_ZN16ContainingStructC1Ev,
-{
-    #[inline(always)]
-    fn default() -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
-    }
-}
-
-// Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN16ContainingStructC1EOS_ {}
-impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct
-where
-    &'error (): BindingFailedFor_ZN16ContainingStructC1EOS_,
-{
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for ContainingStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructaSEOS_(self, __param_0);
-        }
-    }
-}
-
-// Error while generating bindings for item 'ContainingStruct::NestedStruct':
-// Nested classes are not supported yet
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -244,14 +167,6 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructaSERKS_<'a, 'b>(
-            __this: &'a mut crate::ContainingStruct,
-            __param_0: &'b crate::ContainingStruct,
-        ) -> &'a mut crate::ContainingStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN16ContainingStructaSEOS_<'a, 'b>(
-            __this: &'a mut crate::ContainingStruct,
-            __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
-        ) -> &'a mut crate::ContainingStruct;
     }
 }
 
@@ -265,9 +180,4 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::NontrivialCustomType>() == 4);
     static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::NontrivialCustomType, i) == 0);
-    assert!(::core::mem::size_of::<crate::ContainingStruct>() == 1);
-    assert!(::core::mem::align_of::<crate::ContainingStruct>() == 1);
-    static_assertions::assert_impl_all!(crate::ContainingStruct: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::ContainingStruct: Drop);
-    assert!(::core::mem::offset_of!(crate::ContainingStruct, nested_struct) == 0);
 };

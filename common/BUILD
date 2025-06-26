@@ -72,6 +72,7 @@ rust_library(
     srcs = ["code_gen_utils.rs"],
     deps = [
         ":arc_anyhow",
+        "@crate_index//:heck",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:syn",

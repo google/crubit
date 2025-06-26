@@ -31,6 +31,7 @@ rust_library(
         "//common:token_stream_printer",
         "//rs_bindings_from_cc:ir",
         "@crate_index//:flagset",
+        "@crate_index//:heck",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",

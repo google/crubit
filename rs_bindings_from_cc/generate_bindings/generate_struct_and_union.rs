@@ -517,16 +517,19 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
 
     let fully_qualified_cc_name = cpp_tagless_type_name_for_record(&record, ir)?.to_string();
 
-    let mut record_generated_items = record
-        .child_item_ids
-        .iter()
-        .map(|id| {
-            let item: &Item = ir.find_decl(*id).with_context(|| {
-                format!("Failed to look up `record.child_item_ids` for {:?}", record)
-            })?;
-            db.generate_item(item.clone())
-        })
-        .collect::<Result<Vec<ApiSnippets>>>()?;
+    let mut record_generated_items = vec![];
+    let mut record_child_generated_main_apis = vec![];
+    for &child_item_id in &record.child_item_ids {
+        let item = ir.find_untyped_decl(child_item_id);
+        let mut api_snippets = db.generate_item(item.clone())?;
+        if item.place_in_nested_module_if_nested_in_record()
+            && db.has_bindings(item.clone()).is_ok()
+        {
+            // If it doesn't have bindings, we don't want to put it in the nested module.
+            record_child_generated_main_apis.append(&mut api_snippets.main_api);
+        }
+        record_generated_items.push(api_snippets);
+    }
 
     let generated_inherited_functions: Vec<ApiSnippets> = filter_out_ambiguous_member_functions(
         db,
@@ -616,7 +619,9 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         incomplete_definition,
         no_unique_address_accessors,
         items,
+        nested_items: record_child_generated_main_apis,
     };
+
     features |= Feature::negative_impls;
     let record_trait_assertions = {
         let mut assert_impls = FlagSet::empty();

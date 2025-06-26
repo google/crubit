@@ -1706,6 +1706,22 @@ impl Item {
             Item::TypeMapOverride(type_map_override) => Some(type_map_override.cc_name.clone()),
         }
     }
+
+    /// If this item is a child item of a Record, returns true if it should be
+    /// placed in a nested module.
+    pub fn place_in_nested_module_if_nested_in_record(&self) -> bool {
+        match self {
+            Item::IncompleteRecord(_)
+            | Item::Record(_)
+            | Item::GlobalVar(_)
+            | Item::TypeAlias(_)
+            | Item::Enum(_)
+            | Item::UseMod(_)
+            | Item::TypeMapOverride(_) => true,
+            Item::Func(_) | Item::UnsupportedItem(_) | Item::Comment(_) => false,
+            Item::Namespace(_) => unreachable!("Found a namespace that's opened inside of a record. This is not valid C++, so this is a bug."),
+        }
+    }
 }
 
 impl From<Func> for Item {
@@ -2057,28 +2073,28 @@ impl IR {
     #[track_caller]
     fn namespace_qualifier_from_id(&self, item: ItemId) -> NamespaceQualifier {
         let mut namespaces = vec![];
-        let item: &Item = self.find_decl(item).unwrap();
-        let mut enclosing_item_id = item.enclosing_item_id();
+        let mut nested_records = vec![];
+        let mut enclosing_item_id = self.find_untyped_decl(item).enclosing_item_id();
         while let Some(parent_id) = enclosing_item_id {
-            match self.find_decl(parent_id).expect("No item found for enclosing_item_id") {
+            match self.find_untyped_decl(parent_id) {
                 Item::Namespace(ns) => {
                     namespaces.push(ns.rs_name.identifier.clone());
                     enclosing_item_id = ns.enclosing_item_id;
                 }
-                // TODO(b/200067824): This can lead to bugs, if this is used without checking for a
-                // parent struct. This function will likely need to be expanded to navigate into
-                // records, as part of b/200067824.
-                Item::Record { .. } => {
+                Item::Record(parent_record) => {
                     assert!(
                         namespaces.is_empty(),
-                        "Record was listed as the enclosing item for a namespace."
+                        "Record was listed as the enclosing item for a namespace, this is a bug."
                     );
-                    break;
+                    nested_records.push(parent_record.rs_name.identifier.clone());
+                    enclosing_item_id = parent_record.enclosing_item_id;
                 }
-                _ => panic!("Expected namespace, found enclosing item {item:?}"),
+                _ => panic!("Expected namespace or parent record, found enclosing item {item:?}"),
             }
         }
-        NamespaceQualifier::new(namespaces.into_iter().rev())
+        namespaces.reverse();
+        nested_records.reverse();
+        NamespaceQualifier { namespaces, nested_records }
     }
 }
 

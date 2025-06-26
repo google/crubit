@@ -9,6 +9,7 @@ use database::code_snippet::{
 use database::db;
 use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
+use heck::ToSnakeCase;
 use ir::{BazelLabel, Func, GenericItem, Item};
 use std::rc::Rc;
 
@@ -52,15 +53,33 @@ pub fn has_bindings(
             });
         }
 
-        // TODO(b/200067824): Allow nested type items inside records.
-        if item.is_type_definition() {
-            if let ir::Item::Record(_) = parent {
-                return Err(NoBindingsReason::Unsupported {
+        if let ir::Item::Record(parent_record) = parent {
+            if item.is_type_definition() {
+                // If we have an ancestor that is a template specialization, we can't generate bindings.
+                // The parent check ensures that all ancestors are checked as well.
+                if parent_record.template_specialization.is_some() {
+                    return Err(NoBindingsReason::Unsupported {
+                        context: item.debug_name(ir),
+                        error: anyhow!(
+                            "b/200067824: type definitions nested inside templated records are not yet supported"
+                        ),
+                    });
+                }
+            }
+
+            if item.place_in_nested_module_if_nested_in_record() {
+                // If my parent's snake_case name is the same as their own name, then their children
+                // (including this) cannot be generated.
+                let parent_module_name = parent_record.rs_name.identifier.as_ref().to_snake_case();
+                if parent_record.rs_name.identifier.as_ref() == parent_module_name {
+                    return Err(NoBindingsReason::Unsupported {
                     context: item.debug_name(ir),
                     error: anyhow!(
-                        "b/200067824: type definitions nested inside records are not yet supported"
+                        "parent record '{}' name conflicts with automatically generated child module name, so a child module cannot be generated",
+                        parent_record.rs_name
                     ),
                 });
+                }
             }
         }
     }
