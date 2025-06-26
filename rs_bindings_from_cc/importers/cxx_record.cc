@@ -843,10 +843,10 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
           break;
         }
         *offset +=
-            {ictx_.ctx_.getASTRecordLayout(base_path_element.Class)
-                 .getBaseClassOffset(ABSL_DIE_IF_NULL(
-                     base_path_element.Base->getType()->getAsCXXRecordDecl()))
-                 .getQuantity()};
+            ictx_.ctx_.getASTRecordLayout(base_path_element.Class)
+                .getBaseClassOffset(ABSL_DIE_IF_NULL(
+                    base_path_element.Base->getType()->getAsCXXRecordDecl()))
+                .getQuantity();
       }
       CHECK((!offset.has_value() || *offset >= 0) &&
             "Concrete base classes should have non-negative offsets.");
