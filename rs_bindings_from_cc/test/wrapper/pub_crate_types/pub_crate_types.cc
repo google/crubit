@@ -4,16 +4,4 @@
 
 #include "rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h"
 
-struct ForwardDeclared {
-  int value;
-};
-
-ForwardDeclared* ForwardDeclaredConstant = nullptr;
-
-ForwardDeclared* CreateForwardDeclared() { return new ForwardDeclared{42}; }
-
-int ConsumeCompoundDataType(CompoundDataType container) {
-  int value = container.forward_declared->value;
-  delete container.forward_declared;
-  return value;
-}
+Template<int> TemplateConstant = Template<int>{42};

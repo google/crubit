@@ -324,9 +324,6 @@ fn type_target_restriction_shallow(
     rs_type_kind: RsTypeKind,
 ) -> TargetRestriction {
     let mut target = match &rs_type_kind {
-        RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
-            Some(&incomplete_record.owning_target)
-        }
         // Template types (except for the special-cased ones like `string_view`).
         RsTypeKind::Record { record, .. }
             if record.defining_target.is_some() && !record.is_allowed_template_instantiation() =>

@@ -7,39 +7,6 @@
 
 #include "rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h"
 
-// Forward-declared types are a simple instance of a `pub(crate)` type.
-
-struct ForwardDeclared;
-
-using ForwardDeclaredAlias = ForwardDeclared;
-
-struct CompoundDataType {
-  ForwardDeclared* forward_declared;
-};
-
-ForwardDeclared* CreateForwardDeclared();
-
-extern ForwardDeclared* ForwardDeclaredConstant;
-
-int ConsumeCompoundDataType(CompoundDataType container);
-
-// Using pub(crate) types from other libraries, in general, doesn't work well.
-inline void OtherPubCrateTypes(ForwardDeclared2*) {}
-
-// ... but templates do.
-inline Template2<int> GetOtherPubCrateTemplate2Int() {
-  return Template2<int>{42};
-}
-
-// Don't uncomment this: a `pair` include starts polluting the golden test with
-// a lot of implementation details.
-// But this function would produce a different error from the first,
-// because it sees the types earlier.
-// inline void MixedPubCrateTypes(std::pair<ForwardDeclared*,
-// ForwardDeclared2*>) {}
-
-// Other types are essentially the same, and just get an abbreviated test:
-
 template <typename T>
 struct Template {
   T value;
@@ -49,9 +16,42 @@ struct Template {
     CannotBeInstantiated();
   }
   void CannotBeInstantiated() { static_assert(false); }
-  ~Template() { value = T(); }
+};
+
+using TemplateIntAlias = Template<int>;
+
+struct CompoundDataType {
+  Template<int> template_int;
 };
 
 inline Template<int> GetTemplateInt() { return Template<int>{42}; }
+
+extern Template<int> TemplateConstant;
+
+inline int ConsumeCompoundDataType(CompoundDataType container) {
+  return container.template_int.value;
+}
+
+// Forward-declared types are not pub(crate), but could be in an alternate
+// implementation.
+
+struct ForwardDeclared;
+
+// Forward declared types are not pub(crate) so that they can work across
+// module boundaries like this.
+inline void OtherPubCrateTypes(ForwardDeclared2*) {}
+
+// Templates, otoh, are pub(crate), but work because templates are already
+// instantiated once per crate.
+inline Template2<int> GetOtherPubCrateTemplate2Int() {
+  return Template2<int>{42};
+}
+
+// Don't uncomment this: a `pair` include starts polluting the golden test with
+// a lot of implementation details.
+// But this function would produce a different error from the first,
+// because it sees the types earlier.
+// inline void MixedPubCrateTypes(std::pair<Template<int>*,
+// Template2<int>*>) {}
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_WRAPPER_WRAPPED_LIBRARY_H_
