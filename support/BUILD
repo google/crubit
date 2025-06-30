@@ -7,7 +7,10 @@ package(default_applicable_licenses = ["//:license"])
 
 exports_files(
     srcs = glob(["*"]),
-    visibility = [":__subpackages__"],
+    visibility = [
+        ":__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
 )
 
 rust_library(
@@ -122,7 +125,10 @@ rust_library(
 rust_proc_macro(
     name = "forward_declare_proc_macros",
     srcs = ["forward_declare_proc_macros.rs"],
-    visibility = [":__subpackages__"],
+    visibility = [
+        ":__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
