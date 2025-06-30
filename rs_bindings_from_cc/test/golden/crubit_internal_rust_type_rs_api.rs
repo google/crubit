@@ -50,6 +50,10 @@ pub struct TypeMapOverrideFieldTypes {
 }
 impl !Send for TypeMapOverrideFieldTypes {}
 impl !Sync for TypeMapOverrideFieldTypes {}
+unsafe impl ::cxx::ExternType for TypeMapOverrideFieldTypes {
+    type Id = ::cxx::type_id!("TypeMapOverrideFieldTypes");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TypeMapOverrideFieldTypes"),
     crate::TypeMapOverrideFieldTypes

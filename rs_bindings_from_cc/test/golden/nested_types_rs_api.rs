@@ -22,6 +22,10 @@ pub struct Foo {
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
+unsafe impl ::cxx::ExternType for Foo {
+    type Id = ::cxx::type_id!("Foo");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
 impl Default for Foo {
@@ -87,6 +91,10 @@ pub mod foo {
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
+    unsafe impl ::cxx::ExternType for Bar {
+        type Id = ::cxx::type_id!("Foo :: Bar");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(forward_declare::symbol!("Foo :: Bar"), crate::foo::Bar);
 
     impl Default for Bar {
@@ -154,6 +162,10 @@ pub mod foo {
         }
         impl !Send for Baz {}
         impl !Sync for Baz {}
+        unsafe impl ::cxx::ExternType for Baz {
+            type Id = ::cxx::type_id!("Foo :: Bar :: Baz");
+            type Kind = ::cxx::kind::Trivial;
+        }
         forward_declare::unsafe_define!(
             forward_declare::symbol!("Foo :: Bar :: Baz"),
             crate::foo::bar::Baz

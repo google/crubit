@@ -28,6 +28,10 @@ pub struct TrivialCustomType {
 }
 impl !Send for TrivialCustomType {}
 impl !Sync for TrivialCustomType {}
+unsafe impl ::cxx::ExternType for TrivialCustomType {
+    type Id = ::cxx::type_id!("TrivialCustomType");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TrivialCustomType"),
     crate::TrivialCustomType
@@ -101,6 +105,10 @@ pub struct NontrivialCustomType {
 }
 impl !Send for NontrivialCustomType {}
 impl !Sync for NontrivialCustomType {}
+unsafe impl ::cxx::ExternType for NontrivialCustomType {
+    type Id = ::cxx::type_id!("NontrivialCustomType");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialCustomType"),
     crate::NontrivialCustomType

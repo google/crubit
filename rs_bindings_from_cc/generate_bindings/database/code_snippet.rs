@@ -550,6 +550,7 @@ pub struct Record {
     pub field_definitions: Vec<FieldDefinition>,
     pub implements_send: bool,
     pub implements_sync: bool,
+    pub cxx_impl: Option<CxxExternTypeImpl>,
     pub incomplete_definition: Option<TokenStream>,
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
     pub items: Vec<MainApi>,
@@ -573,6 +574,7 @@ impl ToTokens for Record {
             field_definitions,
             implements_send,
             implements_sync,
+            cxx_impl,
             incomplete_definition,
             no_unique_address_accessors,
             items,
@@ -596,6 +598,16 @@ impl ToTokens for Record {
         let sync_impl = match implements_sync {
             true => quote! { unsafe impl Sync for #ident {} },
             false => quote! { impl !Sync for #ident {} },
+        };
+
+        let cxx_impl = match cxx_impl {
+            Some(CxxExternTypeImpl { id, kind }) => quote! {
+                unsafe impl ::cxx::ExternType for #ident {
+                    type Id = ::cxx::type_id!(#id);
+                    type Kind = #kind;
+                }
+            },
+            _ => quote! {},
         };
 
         let no_unique_address_accessors_impl = if !no_unique_address_accessors.is_empty() {
@@ -636,6 +648,7 @@ impl ToTokens for Record {
 
             #send_impl
             #sync_impl
+            #cxx_impl
 
             #incomplete_definition
 
@@ -701,6 +714,28 @@ impl ToTokens for MustUseAttr {
         match self.0.as_ref() {
             "" => quote! { #[must_use] },
             message => quote! { #[must_use = #message] },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CxxExternTypeImpl {
+    pub id: Rc<str>,
+    pub kind: CxxKind,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum CxxKind {
+    Opaque,
+    Trivial,
+}
+
+impl ToTokens for CxxKind {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            CxxKind::Opaque => quote! {::cxx::kind::Opaque},
+            CxxKind::Trivial => quote! {::cxx::kind::Trivial},
         }
         .to_tokens(tokens);
     }

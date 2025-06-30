@@ -22,6 +22,10 @@ pub struct DifferentScope {
 }
 impl !Send for DifferentScope {}
 impl !Sync for DifferentScope {}
+unsafe impl ::cxx::ExternType for DifferentScope {
+    type Id = ::cxx::type_id!("DifferentScope");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("DifferentScope"), crate::DifferentScope);
 
 impl Default for DifferentScope {
@@ -94,6 +98,10 @@ pub mod test_namespace_bindings {
     }
     impl !Send for TemplateParam {}
     impl !Sync for TemplateParam {}
+    unsafe impl ::cxx::ExternType for TemplateParam {
+        type Id = ::cxx::type_id!("test_namespace_bindings :: TemplateParam");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: TemplateParam"),
         crate::test_namespace_bindings::TemplateParam
@@ -242,6 +250,10 @@ pub mod private_classes {
     }
     impl !Send for HasPrivateType {}
     impl !Sync for HasPrivateType {}
+    unsafe impl ::cxx::ExternType for HasPrivateType {
+        type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("private_classes :: HasPrivateType"),
         crate::private_classes::HasPrivateType

@@ -59,6 +59,9 @@ crates_repository(
             ],
             version = ">=4.3.12",
         ),
+        "cxx": crate.spec(
+            version = ">1.0.0",
+        ),
         "either": crate.spec(
             version = ">1.0.0",
         ),

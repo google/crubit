@@ -35,6 +35,10 @@ pub struct Nontrivial {
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
+unsafe impl ::cxx::ExternType for Nontrivial {
+    type Id = ::cxx::type_id!("Nontrivial");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<()> for Nontrivial {
@@ -304,6 +308,10 @@ pub struct NontrivialInline {
 }
 impl !Send for NontrivialInline {}
 impl !Sync for NontrivialInline {}
+unsafe impl ::cxx::ExternType for NontrivialInline {
+    type Id = ::cxx::type_id!("NontrivialInline");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialInline"),
     crate::NontrivialInline
@@ -478,6 +486,10 @@ pub struct NontrivialMembers {
 }
 impl !Send for NontrivialMembers {}
 impl !Sync for NontrivialMembers {}
+unsafe impl ::cxx::ExternType for NontrivialMembers {
+    type Id = ::cxx::type_id!("NontrivialMembers");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialMembers"),
     crate::NontrivialMembers
@@ -588,6 +600,10 @@ pub struct NontrivialUnpin {
 }
 impl !Send for NontrivialUnpin {}
 impl !Sync for NontrivialUnpin {}
+unsafe impl ::cxx::ExternType for NontrivialUnpin {
+    type Id = ::cxx::type_id!("NontrivialUnpin");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialUnpin"),
     crate::NontrivialUnpin
@@ -843,6 +859,10 @@ pub struct NontrivialByValue {
 }
 impl !Send for NontrivialByValue {}
 impl !Sync for NontrivialByValue {}
+unsafe impl ::cxx::ExternType for NontrivialByValue {
+    type Id = ::cxx::type_id!("NontrivialByValue");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialByValue"),
     crate::NontrivialByValue
@@ -931,6 +951,10 @@ pub struct Nonmovable {
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
+unsafe impl ::cxx::ExternType for Nonmovable {
+    type Id = ::cxx::type_id!("Nonmovable");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
 
 impl ::ctor::CtorNew<()> for Nonmovable {

@@ -23,6 +23,10 @@ pub mod test_namespace_bindings {
     }
     impl !Send for S {}
     impl !Sync for S {}
+    unsafe impl ::cxx::ExternType for S {
+        type Id = ::cxx::type_id!("test_namespace_bindings :: S");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: S"),
         crate::test_namespace_bindings::S
@@ -133,6 +137,10 @@ pub mod test_namespace_bindings_reopened_0 {
         }
         impl !Send for S {}
         impl !Sync for S {}
+        unsafe impl ::cxx::ExternType for S {
+            type Id = ::cxx::type_id!("test_namespace_bindings_reopened :: inner :: S");
+            type Kind = ::cxx::kind::Trivial;
+        }
         forward_declare::unsafe_define!(
             forward_declare::symbol!("test_namespace_bindings_reopened :: inner :: S"),
             crate::test_namespace_bindings_reopened::inner::S
@@ -232,6 +240,12 @@ pub mod test_namespace_bindings_inline {
         }
         impl !Send for StructInInlineNamespace {}
         impl !Sync for StructInInlineNamespace {}
+        unsafe impl ::cxx::ExternType for StructInInlineNamespace {
+            type Id = ::cxx::type_id!(
+                "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
+            );
+            type Kind = ::cxx::kind::Trivial;
+        }
         forward_declare::unsafe_define!(
             forward_declare::symbol!(
                 "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"

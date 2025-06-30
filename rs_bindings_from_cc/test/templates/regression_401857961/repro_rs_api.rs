@@ -31,6 +31,10 @@ pub mod repro {
     }
     impl !Send for Interval {}
     impl !Sync for Interval {}
+    unsafe impl ::cxx::ExternType for Interval {
+        type Id = ::cxx::type_id!("repro :: Interval");
+        type Kind = ::cxx::kind::Trivial;
+    }
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     // Error while generating bindings for item 'Interval::Interval':

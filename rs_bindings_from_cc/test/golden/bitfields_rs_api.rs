@@ -36,6 +36,10 @@ pub struct WithBitfields {
 }
 impl !Send for WithBitfields {}
 impl !Sync for WithBitfields {}
+unsafe impl ::cxx::ExternType for WithBitfields {
+    type Id = ::cxx::type_id!("WithBitfields");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("WithBitfields"), crate::WithBitfields);
 impl WithBitfields {
     pub fn f7(&self) -> &::core::ffi::c_char {
@@ -111,6 +115,10 @@ pub struct AlignmentRegressionTest {
 }
 impl !Send for AlignmentRegressionTest {}
 impl !Sync for AlignmentRegressionTest {}
+unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
+    type Id = ::cxx::type_id!("AlignmentRegressionTest");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AlignmentRegressionTest"),
     crate::AlignmentRegressionTest

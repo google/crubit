@@ -25,6 +25,10 @@ pub struct TopLevel {
 }
 impl !Send for TopLevel {}
 impl !Sync for TopLevel {}
+unsafe impl ::cxx::ExternType for TopLevel {
+    type Id = ::cxx::type_id!("TopLevel");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::TopLevel);
 
 impl Default for TopLevel {
@@ -99,6 +103,10 @@ pub mod test_namespace_bindings {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
+    unsafe impl ::cxx::ExternType for Inner {
+        type Id = ::cxx::type_id!("test_namespace_bindings :: Inner");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: Inner"),
         crate::test_namespace_bindings::Inner

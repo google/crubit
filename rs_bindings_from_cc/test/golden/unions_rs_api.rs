@@ -28,6 +28,10 @@ pub union EmptyUnion {
 }
 impl !Send for EmptyUnion {}
 impl !Sync for EmptyUnion {}
+unsafe impl ::cxx::ExternType for EmptyUnion {
+    type Id = ::cxx::type_id!("EmptyUnion");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
 #[diagnostic::on_unimplemented(
@@ -96,6 +100,10 @@ pub struct Nontrivial {
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
+unsafe impl ::cxx::ExternType for Nontrivial {
+    type Id = ::cxx::type_id!("Nontrivial");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<()> for Nontrivial {
@@ -146,6 +154,10 @@ pub union RenamedUnion {
 }
 impl !Send for RenamedUnion {}
 impl !Sync for RenamedUnion {}
+unsafe impl ::cxx::ExternType for RenamedUnion {
+    type Id = ::cxx::type_id!("UnionToRename");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("UnionToRename"), crate::RenamedUnion);
 
 #[diagnostic::on_unimplemented(
@@ -213,6 +225,10 @@ pub struct TriviallyCopyableButNontriviallyDestructible {
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
+unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
+    type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
     crate::TriviallyCopyableButNontriviallyDestructible
@@ -270,6 +286,10 @@ pub union NonEmptyUnion {
 }
 impl !Send for NonEmptyUnion {}
 impl !Sync for NonEmptyUnion {}
+unsafe impl ::cxx::ExternType for NonEmptyUnion {
+    type Id = ::cxx::type_id!("NonEmptyUnion");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
 
 #[diagnostic::on_unimplemented(
@@ -338,6 +358,10 @@ pub union NonCopyUnion {
 }
 impl !Send for NonCopyUnion {}
 impl !Sync for NonCopyUnion {}
+unsafe impl ::cxx::ExternType for NonCopyUnion {
+    type Id = ::cxx::type_id!("NonCopyUnion");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate::NonCopyUnion);
 
 #[repr(C)]
@@ -349,6 +373,10 @@ pub union NonCopyUnion2 {
 }
 impl !Send for NonCopyUnion2 {}
 impl !Sync for NonCopyUnion2 {}
+unsafe impl ::cxx::ExternType for NonCopyUnion2 {
+    type Id = ::cxx::type_id!("NonCopyUnion2");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
 #[diagnostic::on_unimplemented(
@@ -415,6 +443,10 @@ pub union UnionWithOpaqueField {
 }
 impl !Send for UnionWithOpaqueField {}
 impl !Sync for UnionWithOpaqueField {}
+unsafe impl ::cxx::ExternType for UnionWithOpaqueField {
+    type Id = ::cxx::type_id!("UnionWithOpaqueField");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UnionWithOpaqueField"),
     crate::UnionWithOpaqueField
@@ -485,6 +517,10 @@ pub struct TrivialButInheritable {
 }
 impl !Send for TrivialButInheritable {}
 impl !Sync for TrivialButInheritable {}
+unsafe impl ::cxx::ExternType for TrivialButInheritable {
+    type Id = ::cxx::type_id!("TrivialButInheritable");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TrivialButInheritable"),
     crate::TrivialButInheritable
@@ -551,6 +587,10 @@ pub union UnionWithInheritable {
 }
 impl !Send for UnionWithInheritable {}
 impl !Sync for UnionWithInheritable {}
+unsafe impl ::cxx::ExternType for UnionWithInheritable {
+    type Id = ::cxx::type_id!("UnionWithInheritable");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UnionWithInheritable"),
     crate::UnionWithInheritable
@@ -621,6 +661,10 @@ pub union TypedefUnion {
 }
 impl !Send for TypedefUnion {}
 impl !Sync for TypedefUnion {}
+unsafe impl ::cxx::ExternType for TypedefUnion {
+    type Id = ::cxx::type_id!("TypedefUnion");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("TypedefUnion"), crate::TypedefUnion);
 
 #[diagnostic::on_unimplemented(
@@ -688,6 +732,10 @@ pub union TypedefUnionWithInheritable {
 }
 impl !Send for TypedefUnionWithInheritable {}
 impl !Sync for TypedefUnionWithInheritable {}
+unsafe impl ::cxx::ExternType for TypedefUnionWithInheritable {
+    type Id = ::cxx::type_id!("TypedefUnionWithInheritable");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TypedefUnionWithInheritable"),
     crate::TypedefUnionWithInheritable

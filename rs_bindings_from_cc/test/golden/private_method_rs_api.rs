@@ -25,6 +25,10 @@ pub struct Outer {
 }
 impl !Send for Outer {}
 impl !Sync for Outer {}
+unsafe impl ::cxx::ExternType for Outer {
+    type Id = ::cxx::type_id!("Outer");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer);
 
 impl Default for Outer {

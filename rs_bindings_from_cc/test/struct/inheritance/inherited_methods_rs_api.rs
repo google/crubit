@@ -30,6 +30,10 @@ pub struct Nonmovable {
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
+unsafe impl ::cxx::ExternType for Nonmovable {
+    type Id = ::cxx::type_id!("Nonmovable");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=11
@@ -56,6 +60,10 @@ pub struct Base {
 }
 impl !Send for Base {}
 impl !Sync for Base {}
+unsafe impl ::cxx::ExternType for Base {
+    type Id = ::cxx::type_id!("Base");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Base"), crate::Base);
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=16
@@ -152,6 +160,10 @@ pub struct Derived {
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
+unsafe impl ::cxx::ExternType for Derived {
+    type Id = ::cxx::type_id!("Derived");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=22

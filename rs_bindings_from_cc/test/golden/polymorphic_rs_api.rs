@@ -28,6 +28,10 @@ pub struct PolymorphicBase {
 }
 impl !Send for PolymorphicBase {}
 impl !Sync for PolymorphicBase {}
+unsafe impl ::cxx::ExternType for PolymorphicBase {
+    type Id = ::cxx::type_id!("PolymorphicBase");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicBase"),
     crate::PolymorphicBase
@@ -99,6 +103,10 @@ pub struct PolymorphicBase2 {
 }
 impl !Send for PolymorphicBase2 {}
 impl !Sync for PolymorphicBase2 {}
+unsafe impl ::cxx::ExternType for PolymorphicBase2 {
+    type Id = ::cxx::type_id!("PolymorphicBase2");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicBase2"),
     crate::PolymorphicBase2
@@ -177,6 +185,10 @@ pub struct PolymorphicDerived {
 }
 impl !Send for PolymorphicDerived {}
 impl !Sync for PolymorphicDerived {}
+unsafe impl ::cxx::ExternType for PolymorphicDerived {
+    type Id = ::cxx::type_id!("PolymorphicDerived");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicDerived"),
     crate::PolymorphicDerived

@@ -22,6 +22,10 @@ pub struct r#type {
 }
 impl !Send for r#type {}
 impl !Sync for r#type {}
+unsafe impl ::cxx::ExternType for r#type {
+    type Id = ::cxx::type_id!("type");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("type"), crate::r#type);
 
 impl Default for r#type {

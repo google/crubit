@@ -22,6 +22,10 @@ pub struct HasCustomAlignment {
 }
 impl !Send for HasCustomAlignment {}
 impl !Sync for HasCustomAlignment {}
+unsafe impl ::cxx::ExternType for HasCustomAlignment {
+    type Id = ::cxx::type_id!("HasCustomAlignment");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignment"),
     crate::HasCustomAlignment
@@ -88,6 +92,10 @@ pub struct HasFieldWithCustomAlignment {
 }
 impl !Send for HasFieldWithCustomAlignment {}
 impl !Sync for HasFieldWithCustomAlignment {}
+unsafe impl ::cxx::ExternType for HasFieldWithCustomAlignment {
+    type Id = ::cxx::type_id!("HasFieldWithCustomAlignment");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasFieldWithCustomAlignment"),
     crate::HasFieldWithCustomAlignment
@@ -154,6 +162,10 @@ pub struct InheritsFromBaseWithCustomAlignment {
 }
 impl !Send for InheritsFromBaseWithCustomAlignment {}
 impl !Sync for InheritsFromBaseWithCustomAlignment {}
+unsafe impl ::cxx::ExternType for InheritsFromBaseWithCustomAlignment {
+    type Id = ::cxx::type_id!("InheritsFromBaseWithCustomAlignment");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
     crate::InheritsFromBaseWithCustomAlignment
@@ -236,6 +248,10 @@ pub struct HasCustomAlignmentWithGnuAttr {
 }
 impl !Send for HasCustomAlignmentWithGnuAttr {}
 impl !Sync for HasCustomAlignmentWithGnuAttr {}
+unsafe impl ::cxx::ExternType for HasCustomAlignmentWithGnuAttr {
+    type Id = ::cxx::type_id!("HasCustomAlignmentWithGnuAttr");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),
     crate::HasCustomAlignmentWithGnuAttr

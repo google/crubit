@@ -31,6 +31,10 @@ pub struct Base0 {
 }
 impl !Send for Base0 {}
 impl !Sync for Base0 {}
+unsafe impl ::cxx::ExternType for Base0 {
+    type Id = ::cxx::type_id!("Base0");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
 impl Default for Base0 {
@@ -98,6 +102,10 @@ pub struct Base1 {
 }
 impl !Send for Base1 {}
 impl !Sync for Base1 {}
+unsafe impl ::cxx::ExternType for Base1 {
+    type Id = ::cxx::type_id!("Base1");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
 impl Default for Base1 {
@@ -162,6 +170,10 @@ pub struct Base2 {
 }
 impl !Send for Base2 {}
 impl !Sync for Base2 {}
+unsafe impl ::cxx::ExternType for Base2 {
+    type Id = ::cxx::type_id!("Base2");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
 impl Default for Base2 {
@@ -224,6 +236,10 @@ pub struct Derived {
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
+unsafe impl ::cxx::ExternType for Derived {
+    type Id = ::cxx::type_id!("Derived");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 
 impl Default for Derived {
@@ -303,6 +319,10 @@ pub struct VirtualBase1 {
 }
 impl !Send for VirtualBase1 {}
 impl !Sync for VirtualBase1 {}
+unsafe impl ::cxx::ExternType for VirtualBase1 {
+    type Id = ::cxx::type_id!("VirtualBase1");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
 
 impl ::ctor::CtorNew<()> for VirtualBase1 {
@@ -408,6 +428,10 @@ pub struct VirtualBase2 {
 }
 impl !Send for VirtualBase2 {}
 impl !Sync for VirtualBase2 {}
+unsafe impl ::cxx::ExternType for VirtualBase2 {
+    type Id = ::cxx::type_id!("VirtualBase2");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
 
 impl ::ctor::CtorNew<()> for VirtualBase2 {
@@ -513,6 +537,10 @@ pub struct VirtualDerived {
 }
 impl !Send for VirtualDerived {}
 impl !Sync for VirtualDerived {}
+unsafe impl ::cxx::ExternType for VirtualDerived {
+    type Id = ::cxx::type_id!("VirtualDerived");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
 
 impl ::ctor::CtorNew<()> for VirtualDerived {
@@ -630,6 +658,10 @@ pub struct MyAbstractClass {
 }
 impl !Send for MyAbstractClass {}
 impl !Sync for MyAbstractClass {}
+unsafe impl ::cxx::ExternType for MyAbstractClass {
+    type Id = ::cxx::type_id!("MyAbstractClass");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyAbstractClass"),
     crate::MyAbstractClass
@@ -659,6 +691,10 @@ pub struct MethodBase1 {
 }
 impl !Send for MethodBase1 {}
 impl !Sync for MethodBase1 {}
+unsafe impl ::cxx::ExternType for MethodBase1 {
+    type Id = ::cxx::type_id!("MethodBase1");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase1"), crate::MethodBase1);
 
 impl Default for MethodBase1 {
@@ -750,6 +786,10 @@ pub struct MethodBase2 {
 }
 impl !Send for MethodBase2 {}
 impl !Sync for MethodBase2 {}
+unsafe impl ::cxx::ExternType for MethodBase2 {
+    type Id = ::cxx::type_id!("MethodBase2");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase2"), crate::MethodBase2);
 
 impl Default for MethodBase2 {
@@ -827,6 +867,10 @@ pub struct MethodDerived {
 }
 impl !Send for MethodDerived {}
 impl !Sync for MethodDerived {}
+unsafe impl ::cxx::ExternType for MethodDerived {
+    type Id = ::cxx::type_id!("MethodDerived");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodDerived"), crate::MethodDerived);
 
 impl Default for MethodDerived {

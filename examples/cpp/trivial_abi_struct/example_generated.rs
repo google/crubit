@@ -28,6 +28,10 @@ pub struct Position {
 }
 impl !Send for Position {}
 impl !Sync for Position {}
+unsafe impl ::cxx::ExternType for Position {
+    type Id = ::cxx::type_id!("Position");
+    type Kind = ::cxx::kind::Trivial;
+}
 
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 // Error while generating bindings for item 'Position::Position':

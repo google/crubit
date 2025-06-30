@@ -49,6 +49,8 @@ deps_for_bindings(
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
         "@crate_index//:static_assertions",
+        # Required for `cxx.rs` integration.
+        "@crate_index//:cxx",
     ],
     visibility = ["//:__subpackages__"],
 )

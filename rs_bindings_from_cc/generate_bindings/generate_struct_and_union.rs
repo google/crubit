@@ -585,6 +585,21 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         features |= generated.features;
     }
 
+    let cxx_impl = if fully_qualified_cc_name.contains('<') {
+        // cxx can't parse templated type names.
+        // In particular, it can only parse ::-delimited idents.
+        None
+    } else {
+        Some(database::code_snippet::CxxExternTypeImpl {
+            id: Rc::from(fully_qualified_cc_name.as_ref()),
+            kind: if record.is_unpin() {
+                database::code_snippet::CxxKind::Trivial
+            } else {
+                database::code_snippet::CxxKind::Opaque
+            },
+        })
+    };
+
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
             record.doc_comment.as_deref(),
@@ -616,6 +631,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         field_definitions,
         implements_send: record.trait_derives.send,
         implements_sync: record.trait_derives.sync,
+        cxx_impl,
         incomplete_definition,
         no_unique_address_accessors,
         items,

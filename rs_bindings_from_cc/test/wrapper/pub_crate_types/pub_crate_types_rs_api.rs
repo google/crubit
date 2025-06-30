@@ -31,6 +31,10 @@ pub struct CompoundDataType {
 }
 impl !Send for CompoundDataType {}
 impl !Sync for CompoundDataType {}
+unsafe impl ::cxx::ExternType for CompoundDataType {
+    type Id = ::cxx::type_id!("CompoundDataType");
+    type Kind = ::cxx::kind::Trivial;
+}
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
 // Error while generating bindings for item 'CompoundDataType::CompoundDataType':

@@ -33,6 +33,10 @@ pub struct S {
 }
 impl !Send for S {}
 impl !Sync for S {}
+unsafe impl ::cxx::ExternType for S {
+    type Id = ::cxx::type_id!("S");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 impl Default for S {
@@ -116,6 +120,10 @@ pub struct TriviallyCopyableButNontriviallyDestructible {
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
+unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
+    type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
     crate::TriviallyCopyableButNontriviallyDestructible
@@ -182,6 +190,10 @@ pub struct WrappedValue {
 }
 impl !Send for WrappedValue {}
 impl !Sync for WrappedValue {}
+unsafe impl ::cxx::ExternType for WrappedValue {
+    type Id = ::cxx::type_id!("WrappedValue");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
 
 impl From<::ctor::RvalueReference<'_, Self>> for WrappedValue {

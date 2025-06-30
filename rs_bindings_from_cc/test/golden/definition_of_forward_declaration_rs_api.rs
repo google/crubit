@@ -22,6 +22,10 @@ pub struct ForwardDeclaredStruct {
 }
 impl !Send for ForwardDeclaredStruct {}
 impl !Sync for ForwardDeclaredStruct {}
+unsafe impl ::cxx::ExternType for ForwardDeclaredStruct {
+    type Id = ::cxx::type_id!("ForwardDeclaredStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("ForwardDeclaredStruct"),
     crate::ForwardDeclaredStruct

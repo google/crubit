@@ -31,6 +31,10 @@ pub struct AddableConstMember {
 }
 impl !Send for AddableConstMember {}
 impl !Sync for AddableConstMember {}
+unsafe impl ::cxx::ExternType for AddableConstMember {
+    type Id = ::cxx::type_id!("AddableConstMember");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableConstMember"),
     crate::AddableConstMember
@@ -116,6 +120,10 @@ pub struct AddableNonConstMember {
 }
 impl !Send for AddableNonConstMember {}
 impl !Sync for AddableNonConstMember {}
+unsafe impl ::cxx::ExternType for AddableNonConstMember {
+    type Id = ::cxx::type_id!("AddableNonConstMember");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableNonConstMember"),
     crate::AddableNonConstMember
@@ -203,6 +211,10 @@ pub struct AddableFriend {
 }
 impl !Send for AddableFriend {}
 impl !Sync for AddableFriend {}
+unsafe impl ::cxx::ExternType for AddableFriend {
+    type Id = ::cxx::type_id!("AddableFriend");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("AddableFriend"), crate::AddableFriend);
 
 impl Default for AddableFriend {
@@ -282,6 +294,10 @@ pub struct AddableFreeByConstRef {
 }
 impl !Send for AddableFreeByConstRef {}
 impl !Sync for AddableFreeByConstRef {}
+unsafe impl ::cxx::ExternType for AddableFreeByConstRef {
+    type Id = ::cxx::type_id!("AddableFreeByConstRef");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByConstRef"),
     crate::AddableFreeByConstRef
@@ -348,6 +364,10 @@ pub struct AddableFreeByMutRef {
 }
 impl !Send for AddableFreeByMutRef {}
 impl !Sync for AddableFreeByMutRef {}
+unsafe impl ::cxx::ExternType for AddableFreeByMutRef {
+    type Id = ::cxx::type_id!("AddableFreeByMutRef");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByMutRef"),
     crate::AddableFreeByMutRef
@@ -414,6 +434,10 @@ pub struct AddableFreeByValue {
 }
 impl !Send for AddableFreeByValue {}
 impl !Sync for AddableFreeByValue {}
+unsafe impl ::cxx::ExternType for AddableFreeByValue {
+    type Id = ::cxx::type_id!("AddableFreeByValue");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByValue"),
     crate::AddableFreeByValue
@@ -480,6 +504,10 @@ pub struct AddableFreeByRValueRef {
 }
 impl !Send for AddableFreeByRValueRef {}
 impl !Sync for AddableFreeByRValueRef {}
+unsafe impl ::cxx::ExternType for AddableFreeByRValueRef {
+    type Id = ::cxx::type_id!("AddableFreeByRValueRef");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableFreeByRValueRef"),
     crate::AddableFreeByRValueRef
@@ -601,6 +629,10 @@ pub struct Overloaded {
 }
 impl !Send for Overloaded {}
 impl !Sync for Overloaded {}
+unsafe impl ::cxx::ExternType for Overloaded {
+    type Id = ::cxx::type_id!("Overloaded");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Overloaded"), crate::Overloaded);
 
 impl Default for Overloaded {
@@ -680,6 +712,10 @@ pub struct IncompatibleLHS {
 }
 impl !Send for IncompatibleLHS {}
 impl !Sync for IncompatibleLHS {}
+unsafe impl ::cxx::ExternType for IncompatibleLHS {
+    type Id = ::cxx::type_id!("IncompatibleLHS");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("IncompatibleLHS"),
     crate::IncompatibleLHS
@@ -755,6 +791,10 @@ pub struct AddableReturnsVoid {
 }
 impl !Send for AddableReturnsVoid {}
 impl !Sync for AddableReturnsVoid {}
+unsafe impl ::cxx::ExternType for AddableReturnsVoid {
+    type Id = ::cxx::type_id!("AddableReturnsVoid");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableReturnsVoid"),
     crate::AddableReturnsVoid
@@ -832,6 +872,10 @@ pub struct AddableConstMemberNonunpin {
 }
 impl !Send for AddableConstMemberNonunpin {}
 impl !Sync for AddableConstMemberNonunpin {}
+unsafe impl ::cxx::ExternType for AddableConstMemberNonunpin {
+    type Id = ::cxx::type_id!("AddableConstMemberNonunpin");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddableConstMemberNonunpin"),
     crate::AddableConstMemberNonunpin
@@ -922,6 +966,10 @@ pub struct AddAssignMemberInt {
 }
 impl !Send for AddAssignMemberInt {}
 impl !Sync for AddAssignMemberInt {}
+unsafe impl ::cxx::ExternType for AddAssignMemberInt {
+    type Id = ::cxx::type_id!("AddAssignMemberInt");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignMemberInt"),
     crate::AddAssignMemberInt
@@ -997,6 +1045,10 @@ pub struct AddAssignMemberByConstRef {
 }
 impl !Send for AddAssignMemberByConstRef {}
 impl !Sync for AddAssignMemberByConstRef {}
+unsafe impl ::cxx::ExternType for AddAssignMemberByConstRef {
+    type Id = ::cxx::type_id!("AddAssignMemberByConstRef");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignMemberByConstRef"),
     crate::AddAssignMemberByConstRef
@@ -1072,6 +1124,10 @@ pub struct AddAssignFreeByConstRef {
 }
 impl !Send for AddAssignFreeByConstRef {}
 impl !Sync for AddAssignFreeByConstRef {}
+unsafe impl ::cxx::ExternType for AddAssignFreeByConstRef {
+    type Id = ::cxx::type_id!("AddAssignFreeByConstRef");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFreeByConstRef"),
     crate::AddAssignFreeByConstRef
@@ -1147,6 +1203,10 @@ pub struct AddAssignFreeByValue {
 }
 impl !Send for AddAssignFreeByValue {}
 impl !Sync for AddAssignFreeByValue {}
+unsafe impl ::cxx::ExternType for AddAssignFreeByValue {
+    type Id = ::cxx::type_id!("AddAssignFreeByValue");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFreeByValue"),
     crate::AddAssignFreeByValue
@@ -1222,6 +1282,10 @@ pub struct AddAssignFriendByConstRef {
 }
 impl !Send for AddAssignFriendByConstRef {}
 impl !Sync for AddAssignFriendByConstRef {}
+unsafe impl ::cxx::ExternType for AddAssignFriendByConstRef {
+    type Id = ::cxx::type_id!("AddAssignFriendByConstRef");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFriendByConstRef"),
     crate::AddAssignFriendByConstRef
@@ -1297,6 +1361,10 @@ pub struct AddAssignFriendByValue {
 }
 impl !Send for AddAssignFriendByValue {}
 impl !Sync for AddAssignFriendByValue {}
+unsafe impl ::cxx::ExternType for AddAssignFriendByValue {
+    type Id = ::cxx::type_id!("AddAssignFriendByValue");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignFriendByValue"),
     crate::AddAssignFriendByValue
@@ -1372,6 +1440,10 @@ pub struct AddAssignProhibitedConstMember {
 }
 impl !Send for AddAssignProhibitedConstMember {}
 impl !Sync for AddAssignProhibitedConstMember {}
+unsafe impl ::cxx::ExternType for AddAssignProhibitedConstMember {
+    type Id = ::cxx::type_id!("AddAssignProhibitedConstMember");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignProhibitedConstMember"),
     crate::AddAssignProhibitedConstMember
@@ -1458,6 +1530,10 @@ pub struct AddAssignProhibitedFriendConstLhs {
 }
 impl !Send for AddAssignProhibitedFriendConstLhs {}
 impl !Sync for AddAssignProhibitedFriendConstLhs {}
+unsafe impl ::cxx::ExternType for AddAssignProhibitedFriendConstLhs {
+    type Id = ::cxx::type_id!("AddAssignProhibitedFriendConstLhs");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("AddAssignProhibitedFriendConstLhs"),
     crate::AddAssignProhibitedFriendConstLhs
@@ -1548,6 +1624,10 @@ pub struct ManyOperators {
 }
 impl !Send for ManyOperators {}
 impl !Sync for ManyOperators {}
+unsafe impl ::cxx::ExternType for ManyOperators {
+    type Id = ::cxx::type_id!("ManyOperators");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("ManyOperators"), crate::ManyOperators);
 
 impl Default for ManyOperators {

@@ -22,6 +22,10 @@ pub struct PublicPointer {
 }
 impl !Send for PublicPointer {}
 impl !Sync for PublicPointer {}
+unsafe impl ::cxx::ExternType for PublicPointer {
+    type Id = ::cxx::type_id!("PublicPointer");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("PublicPointer"), crate::PublicPointer);
 
 #[diagnostic::on_unimplemented(
@@ -92,6 +96,10 @@ pub struct PrivatePointer {
 }
 impl !Send for PrivatePointer {}
 impl !Sync for PrivatePointer {}
+unsafe impl ::cxx::ExternType for PrivatePointer {
+    type Id = ::cxx::type_id!("PrivatePointer");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("PrivatePointer"), crate::PrivatePointer);
 
 impl Default for PrivatePointer {
@@ -161,6 +169,10 @@ pub struct TransitivePublicPointer {
 }
 impl !Send for TransitivePublicPointer {}
 impl !Sync for TransitivePublicPointer {}
+unsafe impl ::cxx::ExternType for TransitivePublicPointer {
+    type Id = ::cxx::type_id!("TransitivePublicPointer");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TransitivePublicPointer"),
     crate::TransitivePublicPointer
@@ -232,6 +244,10 @@ pub union Union {
 }
 impl !Send for Union {}
 impl !Sync for Union {}
+unsafe impl ::cxx::ExternType for Union {
+    type Id = ::cxx::type_id!("Union");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Union"), crate::Union);
 
 #[diagnostic::on_unimplemented(

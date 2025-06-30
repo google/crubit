@@ -25,6 +25,10 @@ pub mod foo {
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
+    unsafe impl ::cxx::ExternType for Bar {
+        type Id = ::cxx::type_id!("foo :: Bar");
+        type Kind = ::cxx::kind::Trivial;
+    }
 
     // Generated from: examples/cpp/method/example.h;l=12
     // Error while generating bindings for item 'Bar::Bar':

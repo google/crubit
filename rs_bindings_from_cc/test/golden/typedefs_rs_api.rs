@@ -22,6 +22,10 @@ pub struct SomeStruct {
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
+unsafe impl ::cxx::ExternType for SomeStruct {
+    type Id = ::cxx::type_id!("SomeStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
@@ -95,6 +99,10 @@ pub struct SomeOtherStruct {
 }
 impl !Send for SomeOtherStruct {}
 impl !Sync for SomeOtherStruct {}
+unsafe impl ::cxx::ExternType for SomeOtherStruct {
+    type Id = ::cxx::type_id!("SomeOtherStruct");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("SomeOtherStruct"),
     crate::SomeOtherStruct
@@ -161,6 +169,10 @@ pub union SomeUnion {
 }
 impl !Send for SomeUnion {}
 impl !Sync for SomeUnion {}
+unsafe impl ::cxx::ExternType for SomeUnion {
+    type Id = ::cxx::type_id!("SomeUnion");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
 #[diagnostic::on_unimplemented(
@@ -231,6 +243,10 @@ pub union SomeOtherUnion {
 }
 impl !Send for SomeOtherUnion {}
 impl !Sync for SomeOtherUnion {}
+unsafe impl ::cxx::ExternType for SomeOtherUnion {
+    type Id = ::cxx::type_id!("SomeOtherUnion");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crate::SomeOtherUnion);
 
 #[diagnostic::on_unimplemented(

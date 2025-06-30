@@ -48,6 +48,10 @@ pub struct CannotUpcastInCrubit {
 }
 impl !Send for CannotUpcastInCrubit {}
 impl !Sync for CannotUpcastInCrubit {}
+unsafe impl ::cxx::ExternType for CannotUpcastInCrubit {
+    type Id = ::cxx::type_id!("CannotUpcastInCrubit");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("CannotUpcastInCrubit"),
     crate::CannotUpcastInCrubit

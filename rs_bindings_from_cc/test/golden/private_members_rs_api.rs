@@ -27,6 +27,10 @@ pub mod test_namespace_bindings {
     }
     impl !Send for SomeClass {}
     impl !Sync for SomeClass {}
+    unsafe impl ::cxx::ExternType for SomeClass {
+        type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("test_namespace_bindings :: SomeClass"),
         crate::test_namespace_bindings::SomeClass

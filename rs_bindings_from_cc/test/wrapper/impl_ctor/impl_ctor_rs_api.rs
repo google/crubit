@@ -31,6 +31,10 @@ pub struct Nontrivial {
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
+unsafe impl ::cxx::ExternType for Nontrivial {
+    type Id = ::cxx::type_id!("Nontrivial");
+    type Kind = ::cxx::kind::Opaque;
+}
 
 // Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
 // Error while generating bindings for item 'Nontrivial::Nontrivial':

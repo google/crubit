@@ -26,6 +26,10 @@ pub struct CompatibleType {
 }
 impl !Send for CompatibleType {}
 impl !Sync for CompatibleType {}
+unsafe impl ::cxx::ExternType for CompatibleType {
+    type Id = ::cxx::type_id!("CompatibleType");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("CompatibleType"), crate::CompatibleType);
 
 impl CompatibleType {

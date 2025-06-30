@@ -27,6 +27,10 @@ pub struct DocCommentSlashes {
 }
 impl !Send for DocCommentSlashes {}
 impl !Sync for DocCommentSlashes {}
+unsafe impl ::cxx::ExternType for DocCommentSlashes {
+    type Id = ::cxx::type_id!("DocCommentSlashes");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("DocCommentSlashes"),
     crate::DocCommentSlashes
@@ -149,6 +153,10 @@ pub struct DocCommentBang {
 }
 impl !Send for DocCommentBang {}
 impl !Sync for DocCommentBang {}
+unsafe impl ::cxx::ExternType for DocCommentBang {
+    type Id = ::cxx::type_id!("DocCommentBang");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), crate::DocCommentBang);
 
 impl Default for DocCommentBang {
@@ -216,6 +224,10 @@ pub struct MultilineCommentTwoStars {
 }
 impl !Send for MultilineCommentTwoStars {}
 impl !Sync for MultilineCommentTwoStars {}
+unsafe impl ::cxx::ExternType for MultilineCommentTwoStars {
+    type Id = ::cxx::type_id!("MultilineCommentTwoStars");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MultilineCommentTwoStars"),
     crate::MultilineCommentTwoStars
@@ -286,6 +298,10 @@ pub struct LineComment {
 }
 impl !Send for LineComment {}
 impl !Sync for LineComment {}
+unsafe impl ::cxx::ExternType for LineComment {
+    type Id = ::cxx::type_id!("LineComment");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), crate::LineComment);
 
 impl Default for LineComment {
@@ -353,6 +369,10 @@ pub struct MultilineOneStar {
 }
 impl !Send for MultilineOneStar {}
 impl !Sync for MultilineOneStar {}
+unsafe impl ::cxx::ExternType for MultilineOneStar {
+    type Id = ::cxx::type_id!("MultilineOneStar");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MultilineOneStar"),
     crate::MultilineOneStar

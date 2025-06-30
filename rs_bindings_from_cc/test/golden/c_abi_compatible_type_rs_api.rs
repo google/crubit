@@ -24,6 +24,10 @@ pub struct X {
 }
 impl !Send for X {}
 impl !Sync for X {}
+unsafe impl ::cxx::ExternType for X {
+    type Id = ::cxx::type_id!("X");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("X"), crate::X);
 
 impl Default for X {

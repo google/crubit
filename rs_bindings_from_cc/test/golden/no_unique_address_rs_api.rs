@@ -41,6 +41,10 @@ pub struct Struct {
 }
 impl !Send for Struct {}
 impl !Sync for Struct {}
+unsafe impl ::cxx::ExternType for Struct {
+    type Id = ::cxx::type_id!("Struct");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
 impl Struct {
     pub fn field1(&self) -> &::core::ffi::c_int {
@@ -143,6 +147,10 @@ pub struct PaddingBetweenFields {
 }
 impl !Send for PaddingBetweenFields {}
 impl !Sync for PaddingBetweenFields {}
+unsafe impl ::cxx::ExternType for PaddingBetweenFields {
+    type Id = ::cxx::type_id!("PaddingBetweenFields");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PaddingBetweenFields"),
     crate::PaddingBetweenFields
@@ -240,6 +248,10 @@ pub struct FieldInTailPadding_InnerStruct {
 }
 impl !Send for FieldInTailPadding_InnerStruct {}
 impl !Sync for FieldInTailPadding_InnerStruct {}
+unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
+    type Id = ::cxx::type_id!("FieldInTailPadding_InnerStruct");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldInTailPadding_InnerStruct"),
     crate::FieldInTailPadding_InnerStruct
@@ -328,6 +340,10 @@ pub struct FieldInTailPadding {
 }
 impl !Send for FieldInTailPadding {}
 impl !Sync for FieldInTailPadding {}
+unsafe impl ::cxx::ExternType for FieldInTailPadding {
+    type Id = ::cxx::type_id!("FieldInTailPadding");
+    type Kind = ::cxx::kind::Opaque;
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldInTailPadding"),
     crate::FieldInTailPadding

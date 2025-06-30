@@ -22,6 +22,10 @@ pub struct Noninline {
 }
 impl !Send for Noninline {}
 impl !Sync for Noninline {}
+unsafe impl ::cxx::ExternType for Noninline {
+    type Id = ::cxx::type_id!("Noninline");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 
 impl Default for Noninline {
@@ -120,6 +124,10 @@ pub struct Inline {
 }
 impl !Send for Inline {}
 impl !Sync for Inline {}
+unsafe impl ::cxx::ExternType for Inline {
+    type Id = ::cxx::type_id!("Inline");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 
 impl Default for Inline {

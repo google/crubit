@@ -32,6 +32,10 @@ pub struct Foo {
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
+unsafe impl ::cxx::ExternType for Foo {
+    type Id = ::cxx::type_id!("Foo");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
 impl Default for Foo {
@@ -115,6 +119,10 @@ pub struct Bar {
 }
 impl !Send for Bar {}
 impl !Sync for Bar {}
+unsafe impl ::cxx::ExternType for Bar {
+    type Id = ::cxx::type_id!("Bar");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), crate::Bar);
 
 impl Default for Bar {
@@ -177,6 +185,10 @@ pub struct HasNoComments {
 }
 impl !Send for HasNoComments {}
 impl !Sync for HasNoComments {}
+unsafe impl ::cxx::ExternType for HasNoComments {
+    type Id = ::cxx::type_id!("HasNoComments");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), crate::HasNoComments);
 
 impl Default for HasNoComments {

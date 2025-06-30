@@ -60,6 +60,10 @@ pub struct Foo {
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
+unsafe impl ::cxx::ExternType for Foo {
+    type Id = ::cxx::type_id!("Foo");
+    type Kind = ::cxx::kind::Trivial;
+}
 forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
 impl Default for Foo {

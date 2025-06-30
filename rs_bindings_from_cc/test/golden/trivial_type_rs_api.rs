@@ -31,6 +31,10 @@ pub mod ns {
     }
     impl !Send for Trivial {}
     impl !Sync for Trivial {}
+    unsafe impl ::cxx::ExternType for Trivial {
+        type Id = ::cxx::type_id!("ns :: Trivial");
+        type Kind = ::cxx::kind::Trivial;
+    }
     forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Trivial"), crate::ns::Trivial);
 
     impl Default for Trivial {
