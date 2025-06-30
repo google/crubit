@@ -990,8 +990,8 @@ fn generate_func_body(
         } else {
             let return_type_or_self = {
                 let record = match impl_kind {
-                    ImplKind::Struct { ref record, .. }
-                    | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => Some(&**record),
+                    ImplKind::Struct { record, .. }
+                    | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
                     _ => None,
                 };
                 return_type.to_token_stream_replacing_by_self(db, record)
