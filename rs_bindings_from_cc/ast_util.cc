@@ -12,13 +12,13 @@
 #include "absl/functional/function_ref.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "clang/include/clang/AST/Attr.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/AST/DeclCXX.h"
-#include "clang/include/clang/AST/DeclTemplate.h"
-#include "clang/include/clang/AST/Type.h"
-#include "clang/include/clang/Basic/AttrKinds.h"
-#include "clang/include/clang/Basic/LLVM.h"
+#include "clang/AST/Attr.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/AttrKinds.h"
+#include "clang/Basic/LLVM.h"
 
 namespace crubit {
 

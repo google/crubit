@@ -11,12 +11,12 @@
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "nullability/type_nullability.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/AST/Expr.h"
-#include "clang/include/clang/Analysis/FlowSensitive/ASTOps.h"
-#include "clang/include/clang/Analysis/FlowSensitive/DataflowLattice.h"
-#include "clang/include/clang/Basic/LLVM.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/Expr.h"
+#include "clang/Analysis/FlowSensitive/ASTOps.h"
+#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "clang/Basic/LLVM.h"
 
 namespace clang::tidy::nullability {
 namespace {

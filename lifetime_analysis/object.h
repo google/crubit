@@ -11,7 +11,7 @@
 
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
-#include "clang/include/clang/AST/Type.h"
+#include "clang/AST/Type.h"
 
 namespace clang {
 namespace tidy {

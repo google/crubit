@@ -8,8 +8,8 @@
 #include <string>
 #include <string_view>
 
-#include "clang/include/clang/AST/DeclBase.h"
-#include "llvm/include/llvm/ADT/DenseMap.h"
+#include "clang/AST/DeclBase.h"
+#include "llvm/ADT/DenseMap.h"
 
 namespace clang::tidy::nullability {
 

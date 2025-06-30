@@ -5,10 +5,10 @@
 #include "nullability/inference/inferable.h"
 
 #include "nullability/type_nullability.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/AST/Type.h"
-#include "clang/include/clang/Basic/LLVM.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/LLVM.h"
 
 namespace clang::tidy::nullability {
 

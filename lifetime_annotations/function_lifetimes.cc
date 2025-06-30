@@ -19,13 +19,13 @@
 #include "lifetime_annotations/lifetime_error.h"
 #include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/type_lifetimes.h"
-#include "clang/include/clang/AST/DeclCXX.h"
-#include "clang/include/clang/AST/Type.h"
-#include "clang/include/clang/AST/TypeLoc.h"
-#include "clang/include/clang/Basic/LLVM.h"
-#include "llvm/include/llvm/ADT/DenseSet.h"
-#include "llvm/include/llvm/ADT/SmallVector.h"
-#include "llvm/include/llvm/Support/Error.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
+#include "clang/Basic/LLVM.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

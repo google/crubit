@@ -11,11 +11,11 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/AST/Attr.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/AST/Expr.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/Expr.h"
 
 namespace crubit {
 

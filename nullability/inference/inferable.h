@@ -5,8 +5,8 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_INFERRABLE_H_
 #define CRUBIT_NULLABILITY_INFERENCE_INFERRABLE_H_
 
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/AST/Type.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/Type.h"
 
 namespace clang::tidy::nullability {
 

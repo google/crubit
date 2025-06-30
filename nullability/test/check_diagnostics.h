@@ -6,10 +6,10 @@
 #define CRUBIT_NULLABILITY_TEST_CHECK_DIAGNOSTICS_H_
 
 #include "nullability/pragma.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/Testing/CommandLineArgs.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/Testing/Annotations/Annotations.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/Testing/CommandLineArgs.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Testing/Annotations/Annotations.h"
 
 namespace clang {
 namespace tidy {

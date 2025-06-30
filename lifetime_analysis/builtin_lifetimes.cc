@@ -12,14 +12,14 @@
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/Type.h"
-#include "clang/include/clang/AST/TypeLoc.h"
-#include "clang/include/clang/Basic/Builtins.h"
-#include "llvm/include/llvm/ADT/SmallVector.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/Support/Error.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
+#include "clang/Basic/Builtins.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

@@ -16,9 +16,9 @@
 #include "gtest/gtest.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
-#include "llvm/include/llvm/ADT/StringMap.h"
-#include "llvm/include/llvm/Support/ErrorHandling.h"
-#include "llvm/include/llvm/Support/FormatVariadic.h"
+#include "llvm/ADT/StringMap.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FormatVariadic.h"
 
 namespace clang {
 namespace tidy {

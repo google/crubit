@@ -11,7 +11,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
 
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/include/clang/AST/Decl.h"
+#include "clang/AST/Decl.h"
 
 namespace crubit {
 

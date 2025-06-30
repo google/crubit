@@ -4,9 +4,9 @@
 
 #include "nullability/pointer_nullability_matchers.h"
 
-#include "clang/include/clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/include/clang/Testing/TestAST.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Testing/TestAST.h"
+#include "llvm/ADT/StringRef.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {

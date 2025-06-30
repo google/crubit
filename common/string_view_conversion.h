@@ -11,7 +11,7 @@
 #define THIRD_PARTY_CRUBIT_COMMON_STRING_VIEW_CONVERSION_H_
 
 #include "absl/strings/string_view.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringRef.h"
 
 // Converts an `absl::string_view` to a `llvm::StringRef`.
 inline llvm::StringRef StringRefFromStringView(absl::string_view str) {

@@ -19,12 +19,12 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/AST/DeclTemplate.h"
-#include "clang/include/clang/AST/RawCommentList.h"
-#include "clang/include/clang/AST/Type.h"
-#include "clang/include/clang/Basic/SourceLocation.h"
-#include "clang/include/clang/Sema/Sema.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
+#include "clang/AST/RawCommentList.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Sema/Sema.h"
 
 namespace crubit {
 

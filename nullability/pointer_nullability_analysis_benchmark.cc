@@ -12,12 +12,12 @@
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pointer_nullability_diagnosis.h"
 #include "nullability/pragma.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/Analysis/FlowSensitive/DataflowAnalysis.h"
-#include "clang/include/clang/Basic/LLVM.h"
-#include "clang/include/clang/Testing/TestAST.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Testing/TestAST.h"
 
 namespace clang::tidy::nullability {
 namespace {

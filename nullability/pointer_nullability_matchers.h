@@ -6,9 +6,9 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_MATCHERS_H_
 
 #include "nullability/type_nullability.h"
-#include "clang/include/clang/AST/ExprCXX.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchersInternal.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchersMacros.h"
+#include "clang/AST/ExprCXX.h"
+#include "clang/ASTMatchers/ASTMatchersInternal.h"
+#include "clang/ASTMatchers/ASTMatchersMacros.h"
 
 namespace clang {
 namespace tidy {

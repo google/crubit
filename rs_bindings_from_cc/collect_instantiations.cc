@@ -12,9 +12,9 @@
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "common/ffi_types.h"
-#include "llvm/include/llvm/Support/Error.h"
-#include "llvm/include/llvm/Support/FormatVariadic.h"
-#include "llvm/include/llvm/Support/JSON.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/JSON.h"
 
 // This function is implemented in Rust.
 extern "C" crubit::FfiU8SliceBox CollectInstantiationsImpl(

@@ -6,9 +6,9 @@
 
 #include <string_view>
 
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/Index/USRGeneration.h"
-#include "llvm/include/llvm/ADT/SmallString.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/Index/USRGeneration.h"
+#include "llvm/ADT/SmallString.h"
 
 namespace clang::tidy::nullability {
 std::string_view getOrGenerateUSR(USRCache &Cache, const Decl &Decl) {

@@ -11,10 +11,10 @@
 #include "absl/log/check.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/AST/DeclTemplate.h"
-#include "llvm/include/llvm/Support/Casting.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
+#include "llvm/Support/Casting.h"
 
 namespace crubit {
 

@@ -21,14 +21,14 @@
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 #include "lifetime_annotations/test/run_on_code.h"
 #include "lifetime_annotations/type_lifetimes.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
-#include "clang/include/clang/Tooling/Tooling.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/Support/Error.h"
-#include "llvm/include/llvm/Support/FormatVariadic.h"
-#include "llvm/include/llvm/Support/raw_ostream.h"
+#include "clang/AST/Decl.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Tooling/Tooling.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/raw_ostream.h"
 
 // This file contains tests both for the "legacy" lifetime annotations
 // (`[[clang::annotate("lifetimes", ...)]]` placed on a function declaration)

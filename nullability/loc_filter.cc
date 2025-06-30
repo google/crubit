@@ -8,15 +8,15 @@
 #include <string>
 
 #include "absl/log/check.h"
-#include "clang/include/clang/Basic/FileEntry.h"
-#include "clang/include/clang/Basic/SourceLocation.h"
-#include "clang/include/clang/Basic/SourceManager.h"
-#include "llvm/include/llvm/ADT/DenseMap.h"
-#include "llvm/include/llvm/ADT/SmallVector.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/Support/ErrorHandling.h"
-#include "llvm/include/llvm/Support/Path.h"
-#include "llvm/include/llvm/Support/Regex.h"
+#include "clang/Basic/FileEntry.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/Path.h"
+#include "llvm/Support/Regex.h"
 
 namespace clang::tidy::nullability {
 namespace {

@@ -13,7 +13,7 @@
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "llvm/include/llvm/Support/JSON.h"
+#include "llvm/Support/JSON.h"
 
 namespace crubit {
 namespace {

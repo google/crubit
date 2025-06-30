@@ -4,12 +4,12 @@
 
 #include "nullability/pointer_nullability_matchers.h"
 
-#include "clang/include/clang/AST/DeclCXX.h"
-#include "clang/include/clang/AST/OperationKinds.h"
-#include "clang/include/clang/AST/Stmt.h"
-#include "clang/include/clang/AST/Type.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchersInternal.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/OperationKinds.h"
+#include "clang/AST/Stmt.h"
+#include "clang/AST/Type.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/ASTMatchers/ASTMatchersInternal.h"
 
 namespace clang::tidy::nullability {
 

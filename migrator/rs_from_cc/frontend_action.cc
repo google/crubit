@@ -7,8 +7,8 @@
 #include <memory>
 
 #include "migrator/rs_from_cc/ast_consumer.h"
-#include "clang/include/clang/AST/ASTConsumer.h"
-#include "clang/include/clang/Frontend/CompilerInstance.h"
+#include "clang/AST/ASTConsumer.h"
+#include "clang/Frontend/CompilerInstance.h"
 
 namespace crubit_rs_from_cc {
 

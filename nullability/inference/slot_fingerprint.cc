@@ -7,10 +7,10 @@
 #include <array>
 #include <cstdint>
 
-#include "llvm/include/llvm/ADT/ArrayRef.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/ADT/bit.h"
-#include "llvm/include/llvm/Support/MD5.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/bit.h"
+#include "llvm/Support/MD5.h"
 
 namespace clang::tidy::nullability {
 

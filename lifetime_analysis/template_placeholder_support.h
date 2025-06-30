@@ -8,9 +8,9 @@
 #include <functional>
 #include <string>
 
-#include "clang/include/clang/AST/Decl.h"
-#include "llvm/include/llvm/ADT/DenseMap.h"
-#include "llvm/include/llvm/Support/Error.h"
+#include "clang/AST/Decl.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

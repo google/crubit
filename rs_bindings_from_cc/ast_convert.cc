@@ -7,10 +7,10 @@
 #include "absl/functional/function_ref.h"
 #include "absl/log/check.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/DeclCXX.h"
-#include "clang/include/clang/Basic/LLVM.h"
-#include "clang/include/clang/Basic/Specifiers.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/Basic/LLVM.h"
+#include "clang/Basic/Specifiers.h"
 
 namespace crubit {
 namespace {

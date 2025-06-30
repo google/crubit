@@ -9,10 +9,10 @@
 
 #include <type_traits>
 
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/DeclCXX.h"
-#include "clang/include/clang/AST/Expr.h"
-#include "clang/include/clang/AST/ExprCXX.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 
 namespace clang::tidy::nullability {
 

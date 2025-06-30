@@ -11,7 +11,7 @@
 #include <string>
 
 #include "lifetime_analysis/object.h"
-#include "llvm/include/llvm/ADT/SmallSet.h"
+#include "llvm/ADT/SmallSet.h"
 
 namespace clang {
 namespace tidy {

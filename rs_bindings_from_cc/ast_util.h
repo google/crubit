@@ -10,9 +10,9 @@
 
 #include "absl/base/nullability.h"
 #include "absl/functional/function_ref.h"
-#include "clang/include/clang/AST/Attr.h"
-#include "clang/include/clang/AST/DeclBase.h"
-#include "clang/include/clang/Basic/AttrKinds.h"
+#include "clang/AST/Attr.h"
+#include "clang/AST/DeclBase.h"
+#include "clang/Basic/AttrKinds.h"
 
 namespace crubit {
 

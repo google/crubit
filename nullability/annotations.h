@@ -5,7 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_NULLABILITY_ANNOTATIONS_H_
 #define THIRD_PARTY_CRUBIT_NULLABILITY_ANNOTATIONS_H_
 
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 inline constexpr llvm::StringLiteral ClangNullable = "_Nullable";

@@ -10,8 +10,8 @@
 #include "lifetime_analysis/lifetime_constraints.h"
 #include "lifetime_analysis/object_set.h"
 #include "lifetime_analysis/points_to_map.h"
-#include "clang/include/clang/Analysis/FlowSensitive/DataflowLattice.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

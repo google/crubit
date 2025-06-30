@@ -5,7 +5,7 @@
 #ifndef CRUBIT_NULLABILITY_PROTO_MATCHERS_H_
 #define CRUBIT_NULLABILITY_PROTO_MATCHERS_H_
 
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringRef.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "google/protobuf/message.h"
 

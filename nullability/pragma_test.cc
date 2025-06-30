@@ -7,16 +7,16 @@
 #include <memory>
 #include <optional>
 
-#include "clang/include/clang/AST/ASTConsumer.h"
-#include "clang/include/clang/Basic/Diagnostic.h"
-#include "clang/include/clang/Basic/SourceLocation.h"
-#include "clang/include/clang/Basic/Specifiers.h"
-#include "clang/include/clang/Frontend/CompilerInstance.h"
-#include "clang/include/clang/Frontend/FrontendActions.h"
-#include "clang/include/clang/Testing/TestAST.h"
-#include "llvm/include/llvm/ADT/StringMap.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/Support/Error.h"
+#include "clang/AST/ASTConsumer.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/Specifiers.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendActions.h"
+#include "clang/Testing/TestAST.h"
+#include "llvm/ADT/StringMap.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 

@@ -9,7 +9,7 @@
 
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/include/clang/AST/DeclFriend.h"
+#include "clang/AST/DeclFriend.h"
 
 namespace crubit {
 

@@ -10,13 +10,13 @@
 
 #include "nullability/inference/ctn_replacement_macros.h"
 #include "nullability/macro_arg_capture.h"
-#include "clang/include/clang/AST/Decl.h"
-#include "clang/include/clang/AST/Expr.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
-#include "clang/include/clang/Testing/TestAST.h"
-#include "llvm/include/llvm/ADT/ArrayRef.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/Expr.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Testing/TestAST.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 

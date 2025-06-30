@@ -6,13 +6,13 @@
 
 #include <optional>
 
-#include "clang/include/clang/Basic/Diagnostic.h"
-#include "clang/include/clang/Basic/SourceLocation.h"
-#include "clang/include/clang/Basic/Specifiers.h"
-#include "clang/include/clang/Basic/TokenKinds.h"
-#include "clang/include/clang/Lex/Pragma.h"
-#include "clang/include/clang/Lex/Preprocessor.h"
-#include "llvm/include/llvm/ADT/StringSwitch.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/Specifiers.h"
+#include "clang/Basic/TokenKinds.h"
+#include "clang/Lex/Pragma.h"
+#include "clang/Lex/Preprocessor.h"
+#include "llvm/ADT/StringSwitch.h"
 
 namespace clang {
 namespace tidy::nullability {

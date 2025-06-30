@@ -17,16 +17,16 @@
 
 #include "absl/base/nullability.h"
 #include "nullability/type_nullability.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/AST/ASTDumper.h"
-#include "clang/include/clang/AST/Expr.h"
-#include "clang/include/clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
-#include "clang/include/clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/include/clang/Analysis/FlowSensitive/Formula.h"
-#include "clang/include/clang/Analysis/FlowSensitive/StorageLocation.h"
-#include "clang/include/clang/Analysis/FlowSensitive/Value.h"
-#include "clang/include/clang/Basic/Specifiers.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTDumper.h"
+#include "clang/AST/Expr.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/Analysis/FlowSensitive/StorageLocation.h"
+#include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang::tidy::nullability {
 

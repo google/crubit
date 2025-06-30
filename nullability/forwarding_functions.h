@@ -12,7 +12,7 @@
 #define THIRD_PARTY_CRUBIT_NULLABILITY_FORWARDING_FUNCTIONS_H_
 
 #include "absl/base/nullability.h"
-#include "clang/include/clang/AST/Decl.h"
+#include "clang/AST/Decl.h"
 
 namespace clang::tidy::nullability {
 

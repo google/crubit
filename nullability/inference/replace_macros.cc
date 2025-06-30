@@ -7,13 +7,13 @@
 #include <cassert>
 #include <string_view>
 
-#include "clang/include/clang/Basic/IdentifierTable.h"
-#include "clang/include/clang/Basic/SourceLocation.h"
-#include "clang/include/clang/Basic/SourceManager.h"
-#include "clang/include/clang/Lex/MacroInfo.h"
-#include "clang/include/clang/Lex/PPCallbacks.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
-#include "llvm/include/llvm/Support/Path.h"
+#include "clang/Basic/IdentifierTable.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
+#include "clang/Lex/MacroInfo.h"
+#include "clang/Lex/PPCallbacks.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Path.h"
 
 namespace clang::tidy::nullability {
 namespace {

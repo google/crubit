@@ -11,7 +11,7 @@
 #include <ostream>
 #include <string>
 
-#include "llvm/include/llvm/ADT/Hashing.h"
+#include "llvm/ADT/Hashing.h"
 
 namespace clang {
 namespace tidy {

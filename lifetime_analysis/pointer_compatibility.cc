@@ -7,10 +7,10 @@
 #include <cassert>
 
 #include "lifetime_annotations/pointee_type.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/AST/DeclCXX.h"
-#include "clang/include/clang/AST/Type.h"
-#include "llvm/include/llvm/Support/ErrorHandling.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/Type.h"
+#include "llvm/Support/ErrorHandling.h"
 
 namespace clang {
 namespace tidy {

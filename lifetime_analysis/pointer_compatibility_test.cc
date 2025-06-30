@@ -9,11 +9,11 @@
 #include "gtest/gtest.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/test/run_on_code.h"
-#include "clang/include/clang/AST/ASTContext.h"
-#include "clang/include/clang/AST/Type.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/include/clang/ASTMatchers/ASTMatchers.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Type.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {

@@ -9,7 +9,7 @@
 #include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/proto_matchers.h"
-#include "llvm/include/llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringRef.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 #include "google/protobuf/text_format.h"
