@@ -17,3 +17,4 @@ path = "../../../cc_bindings_from_rs/crubit_attr.rs"
 
 [dependencies]
 anyhow.workspace = true
+rustversion.workspace = true

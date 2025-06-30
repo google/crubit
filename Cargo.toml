@@ -26,6 +26,7 @@ quote = "1"
 unicode-ident = "1"
 either = "1"
 clap = { version = "4", features = [ "derive" ] }
+rustversion = "1"
 
 [workspace.package]
 
