@@ -659,6 +659,10 @@ impl Clone for NontrivialUnpin {
             tmp.assume_init()
         }
     }
+    fn clone_from(&mut self, other: &Self) {
+        use ::ctor::UnpinAssign;
+        self.unpin_assign(other);
+    }
 }
 
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {

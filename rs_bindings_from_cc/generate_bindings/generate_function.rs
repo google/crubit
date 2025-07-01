@@ -74,6 +74,9 @@ fn trait_name_to_token_stream_removing_trait_record(
                 format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
             quote! { ::ctor::CtorNew < #formatted_arg_types > }
         }
+        Clone => {
+            quote! { Clone }
+        }
     }
 }
 
@@ -703,7 +706,7 @@ fn api_func_shape_for_constructor(
             } else {
                 let func_name = make_rs_ident("clone");
                 let impl_kind = ImplKind::new_trait(
-                    TraitName::UnpinConstructor { name: Rc::from("Clone"), params: Rc::from([]) },
+                    TraitName::Clone,
                     record.clone(),
                     /* format_first_param_as_self= */ true,
                     /* force_const_reference_params= */ false,
@@ -958,106 +961,110 @@ fn generate_func_body(
 ) -> Result<TokenStream> {
     let ParamValueAdjustments { clone_prefixes, clone_suffixes } = param_value_adjustments;
 
-    if let ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } = &impl_kind {
-        // SAFETY: A user-defined constructor is not guaranteed to
-        // initialize all the fields. To make the `assume_init()` call
-        // below safe, the memory is zero-initialized first. This is a
-        // bit safer, because zero-initialized memory represents a valid
-        // value for the currently supported field types (this may
-        // change once the bindings generator starts supporting
-        // reference fields). TODO(b/213243309): Double-check if
-        // zero-initialization is desirable here.
-        Ok(quote! {
-            #thunk_prepare
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut ::core::ffi::c_void #( , #thunk_args )* );
-                tmp.assume_init()
-            }
-        })
-    } else {
-        // Note: for the time being, all !Unpin values are treated as if they were not
-        // trivially relocatable. We could, in the special case of trivial !Unpin types,
-        // not generate the thunk at all, but this would be a bit of extra work.
-        //
-        // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
-        let mut body = if return_type.is_c_abi_compatible_by_value() {
-            quote! {
-                #crate_root_path::detail::#thunk_ident(
-                    #( #clone_prefixes #thunk_args #clone_suffixes ),*
-                )
-            }
-        } else {
-            let return_type_or_self = {
-                let record = match impl_kind {
-                    ImplKind::Struct { record, .. }
-                    | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
-                    _ => None,
-                };
-                return_type.to_token_stream_replacing_by_self(db, record)
-            };
-            if return_type.is_crubit_abi_bridge_type() {
-                let crubit_abi_type = db.crubit_abi_type(return_type.clone())?;
-                let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
-                quote! {
-                    ::bridge_rust::unstable_return!(#crubit_abi_type_tokens, |__return_abi_buffer| {
-                        #crate_root_path::detail::#thunk_ident(
-                            __return_abi_buffer,
-                            #(#clone_prefixes #thunk_args #clone_suffixes ),*
-                        );
-                    })
+    match &impl_kind {
+        ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. }
+        | ImplKind::Trait { trait_name: TraitName::Clone, .. } => {
+            // SAFETY: A user-defined constructor is not guaranteed to
+            // initialize all the fields. To make the `assume_init()` call
+            // below safe, the memory is zero-initialized first. This is a
+            // bit safer, because zero-initialized memory represents a valid
+            // value for the currently supported field types (this may
+            // change once the bindings generator starts supporting
+            // reference fields). TODO(b/213243309): Double-check if
+            // zero-initialization is desirable here.
+            Ok(quote! {
+                #thunk_prepare
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut ::core::ffi::c_void #( , #thunk_args )* );
+                    tmp.assume_init()
                 }
-            } else if return_type.is_unpin() {
+            })
+        }
+        _ => {
+            // Note: for the time being, all !Unpin values are treated as if they were not
+            // trivially relocatable. We could, in the special case of trivial !Unpin types,
+            // not generate the thunk at all, but this would be a bit of extra work.
+            //
+            // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
+            let mut body = if return_type.is_c_abi_compatible_by_value() {
                 quote! {
-                    let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
                     #crate_root_path::detail::#thunk_ident(
-                        &raw mut __return as *mut ::core::ffi::c_void
-                        #( , #clone_prefixes #thunk_args #clone_suffixes )*
-                    );
-                    __return.assume_init()
+                        #( #clone_prefixes #thunk_args #clone_suffixes ),*
+                    )
                 }
             } else {
-                // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
-                // MaybeUninit<T> in Pin if T is !Unpin. It should understand
-                // 'structural pinning', so that we do not need into_inner_unchecked()
-                // here.
-                quote! {
-                    ::ctor::FnCtor::new(
-                        move |dest: *mut #return_type_or_self| {
+                let return_type_or_self = {
+                    let record = match impl_kind {
+                        ImplKind::Struct { record, .. }
+                        | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
+                        _ => None,
+                    };
+                    return_type.to_token_stream_replacing_by_self(db, record)
+                };
+                if return_type.is_crubit_abi_bridge_type() {
+                    let crubit_abi_type = db.crubit_abi_type(return_type.clone())?;
+                    let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
+                    quote! {
+                        ::bridge_rust::unstable_return!(#crubit_abi_type_tokens, |__return_abi_buffer| {
+                            #crate_root_path::detail::#thunk_ident(
+                                __return_abi_buffer,
+                                #(#clone_prefixes #thunk_args #clone_suffixes ),*
+                            );
+                        })
+                    }
+                } else if return_type.is_unpin() {
+                    quote! {
+                        let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
                         #crate_root_path::detail::#thunk_ident(
-                            dest as *mut ::core::ffi::c_void
-                            #( , #thunk_args )*
+                            &raw mut __return as *mut ::core::ffi::c_void
+                            #( , #clone_prefixes #thunk_args #clone_suffixes )*
                         );
-                    })
+                        __return.assume_init()
+                    }
+                } else {
+                    // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
+                    // MaybeUninit<T> in Pin if T is !Unpin. It should understand
+                    // 'structural pinning', so that we do not need into_inner_unchecked()
+                    // here.
+                    quote! {
+                        ::ctor::FnCtor::new(
+                            move |dest: *mut #return_type_or_self| {
+                            #crate_root_path::detail::#thunk_ident(
+                                dest as *mut ::core::ffi::c_void
+                                #( , #thunk_args )*
+                            );
+                        })
+                    }
                 }
-            }
-        };
-        // Discard the return value if requested (for example, when calling a C++
-        // operator that returns a value from a Rust trait that returns
-        // unit).
-        if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
-            if return_type.is_unpin() {
-                // If it's unpin, just discard it:
-                body = quote! { #body; };
-            } else {
-                // Otherwise, in order to discard the return value and return void, we
-                // need to run the constructor.
-                body = quote! {let _ = ::ctor::emplace!(#body);};
-            }
+            };
+            // Discard the return value if requested (for example, when calling a C++
+            // operator that returns a value from a Rust trait that returns
+            // unit).
+            if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
+                if return_type.is_unpin() {
+                    // If it's unpin, just discard it:
+                    body = quote! { #body; };
+                } else {
+                    // Otherwise, in order to discard the return value and return void, we
+                    // need to run the constructor.
+                    body = quote! {let _ = ::ctor::emplace!(#body);};
+                }
 
-            // We would need to do this, but it's no longer used:
-            //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
-            let _ = return_type; // proof that we don't need to update it.
+                // We would need to do this, but it's no longer used:
+                //    return_type = RsTypeKind::Primitive(PrimitiveType::Unit);
+                let _ = return_type; // proof that we don't need to update it.
+            }
+            // Only need to wrap everything in an `unsafe { ... }` block if
+            // the *whole* api function is safe.
+            if !impl_kind.is_unsafe() {
+                body = quote! { unsafe { #body } };
+            }
+            Ok(quote! {
+                #thunk_prepare
+                #body
+            })
         }
-        // Only need to wrap everything in an `unsafe { ... }` block if
-        // the *whole* api function is safe.
-        if !impl_kind.is_unsafe() {
-            body = quote! { unsafe { #body } };
-        }
-        Ok(quote! {
-            #thunk_prepare
-            #body
-        })
     }
 }
 
@@ -1533,6 +1540,24 @@ pub fn generate_function(
                     quote! {}
                 }
             };
+
+            let extra_api_func_def = match &trait_name {
+                // Check if the current function triggers Clone generation and if we also have a
+                // copy assignment operator also generate clone_from.
+                TraitName::Clone
+                    if reportable_status.is_ok()
+                        && has_copy_assignment_operator_from_const_reference(db, &func) =>
+                {
+                    Some(quote! {
+                        fn clone_from(&mut self, other: &Self) {
+                            use ::ctor::UnpinAssign;
+                            self.unpin_assign(other);
+                        }
+                    })
+                }
+                _ => None,
+            };
+
             let record_qualifier = ir.namespace_qualifier(&trait_record).format_for_rs();
             let full_record_qualifier = if Some(trait_record.id) == func.enclosing_item_id {
                 // If the method is defined in the record, then the record qualifier is not
@@ -1561,6 +1586,7 @@ pub fn generate_function(
                 impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for #unsatisfied_where_clause {
                     #extra_body
                     #api_func_def
+                    #extra_api_func_def
                 }
                 #extra_items
             };
@@ -1748,7 +1774,7 @@ fn function_signature(
                 *return_type = RsTypeKind::Primitive(Primitive::Bool);
             }
         }
-        Some(TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)) => {
+        Some(TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..) | TraitName::Clone) => {
             // For constructors, we move the output parameter to be the return value.
             // The return value is "really" void.
             assert!(
@@ -1958,6 +1984,38 @@ fn format_tuple_except_singleton_replacing_by_self(
             quote! { ( #elements_of_tuple ) }
         }
     }
+}
+
+/// Returns true if the copy constructor has the following form:
+///
+/// operator=(const SameType&);
+///
+/// where `SameType` is the same type as the class this function is declared in.
+fn has_copy_assignment_operator_from_const_reference(
+    db: &dyn BindingsGenerator,
+    copy_constructor: &Func,
+) -> bool {
+    let [_self, first_param] = &copy_constructor.params[..] else {
+        return false;
+    };
+    let first_param_type = db.rs_type_kind(first_param.type_.clone());
+    if first_param_type.is_err() {
+        return false;
+    };
+    let Some(Item::Record(record)) = db.ir().record_for_member_func(copy_constructor) else {
+        return false;
+    };
+    record
+        .child_item_ids
+        .iter()
+        .filter_map(|&child_item_id| db.ir().find_decl::<Rc<Func>>(child_item_id).ok())
+        .any(|func| {
+            let operator_equals = matches!(&func.cc_name,
+                    UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "=");
+            let same_as_self = matches!(&func.params[..],
+                    [_self, other] if db.rs_type_kind(other.type_.clone()) == first_param_type);
+            operator_equals && same_as_self
+        })
 }
 
 /// Implementation of `BindingsGenerator::overloaded_funcs`.

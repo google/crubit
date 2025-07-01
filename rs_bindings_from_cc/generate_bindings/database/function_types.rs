@@ -42,6 +42,8 @@ pub enum TraitName {
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
     CtorNew(Rc<[RsTypeKind]>),
+    /// The std::clone::Clone trait.
+    Clone,
     /// An Unpin constructor trait, e.g. From or Clone, with a list of parameter
     /// types.
     UnpinConstructor {
@@ -101,6 +103,9 @@ impl std::fmt::Display for TraitName {
             TraitName::Other { name, .. } => {
                 write!(f, "{name}")
             }
+            TraitName::Clone => {
+                write!(f, "Clone")
+            }
         }
     }
 }
@@ -113,6 +118,7 @@ impl TraitName {
             | Self::UnpinConstructor { params, .. }
             | Self::Other { params, .. } => params,
             Self::PartialEq { param } | Self::PartialOrd { param } => core::slice::from_ref(param),
+            Self::Clone => &[],
         }
     }
 
