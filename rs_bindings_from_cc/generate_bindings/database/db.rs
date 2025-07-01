@@ -17,6 +17,13 @@ use std::rc::Rc;
 #[unsafe(no_mangle)]
 pub fn test_again() {}
 
+#[derive(Clone)]
+pub struct CodegenFunctions {
+    pub generate_enum: fn(&dyn BindingsGenerator, Rc<Enum>) -> Result<ApiSnippets>,
+    pub generate_item: fn(&dyn BindingsGenerator, ir::Item) -> Result<ApiSnippets>,
+    pub generate_record: fn(&dyn BindingsGenerator, Rc<Record>) -> Result<ApiSnippets>,
+}
+
 memoized::query_group! {
     pub trait BindingsGenerator<'db> {
         #[input]
@@ -35,6 +42,9 @@ memoized::query_group! {
         #[input]
         fn environment(&self) -> Environment;
 
+        #[input]
+        fn codegen_functions(&self) -> CodegenFunctions;
+
         #[break_cycles_with = false]
         /// Returns true if the given Rust type is an unsafe type, such as a raw pointer.
         ///
@@ -45,23 +55,6 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:has_bindings
         fn has_bindings(&self, item: ir::Item) -> Result<BindingsInfo, NoBindingsReason>;
-
-        /// Returns the generated bindings for the given enum.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
-        fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets>;
-
-        /// Returns the generated bindings for an item, or `Err` if bindings generation
-        /// failed in such a way as to make the generated bindings as a whole invalid.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
-        fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets>;
-
-        /// Returns the generated bindings for the given record, along with associated safety
-        /// assertions.
-        ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
-        fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets>;
 
         /// Returns the Rust type kind of the given C++ type, optionally filling in missing
         /// reference lifetimes with the elided lifetime (`'_`).
@@ -137,6 +130,32 @@ memoized::query_group! {
 
         // You should probably use db::type_visibility instead of this function.
         fn type_target_restriction(&self, rs_type_kind: RsTypeKind) -> Result<Option<BazelLabel>>;
+
+        #[provided]
+        /// Returns the generated bindings for the given enum.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
+        fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets> {
+            (self.codegen_functions().generate_enum)(self, enum_)
+        }
+
+        #[provided]
+        /// Returns the generated bindings for an item, or `Err` if bindings generation
+        /// failed in such a way as to make the generated bindings as a whole invalid.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
+        fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets> {
+            (self.codegen_functions().generate_item)(self, item)
+        }
+
+        #[provided]
+        /// Returns the generated bindings for the given record, along with associated safety
+        /// assertions.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
+        fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets> {
+            (self.codegen_functions().generate_record)(self, record)
+        }
 
         #[provided]
         /// Returns the Rust type kind of the given C++ type.

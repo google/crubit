@@ -9,7 +9,7 @@ use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use database::code_snippet::{
     ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, MainApi,
 };
-use database::db::{self, BindingsGenerator, Database};
+use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
@@ -289,11 +289,13 @@ pub fn new_database<'db>(
         errors,
         fatal_errors,
         environment,
+        CodegenFunctions {
+            generate_enum: generate_enum::generate_enum,
+            generate_item,
+            generate_record: generate_struct_and_union::generate_record,
+        },
         is_rs_type_kind_unsafe,
         has_bindings::has_bindings,
-        generate_enum::generate_enum,
-        generate_item,
-        generate_struct_and_union::generate_record,
         rs_type_kind_with_lifetime_elision,
         generate_function::generate_function,
         generate_function::overloaded_funcs,

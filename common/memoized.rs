@@ -230,7 +230,7 @@ macro_rules! query_group {
       )*
       $(
         $(#[doc = $provided_doc])*
-        fn $provided_function(&$provided_self $(, $provided_arg: $provided_arg_type)*) -> $provided_type { $($provided_body)* }
+        fn $provided_function(&$provided_self $(, $provided_arg: $provided_arg_type)*) -> $provided_type { _ = ($($provided_arg),*); unimplemented!(concat!("provided function '", stringify!($provided_function), "'")) }
       )*
     }
 
@@ -312,6 +312,16 @@ macro_rules! query_group {
           ).unwrap_or_else(
             || panic!("Cycle detected: '{}' depends on its own return value", stringify!($function)),
           )
+        }
+      )*
+      $(
+        fn $provided_function(
+          &$provided_self,
+          $(
+            $provided_arg : $provided_arg_type
+          ),*
+        ) -> $provided_type {
+          $( $provided_body )*
         }
       )*
     }
