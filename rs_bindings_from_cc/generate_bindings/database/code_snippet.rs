@@ -1220,14 +1220,8 @@ pub struct CppDetails {
 }
 
 impl CppDetails {
-    pub fn new(includes: CppIncludes) -> Self {
-        CppDetails { includes, thunks: vec![] }
-    }
-}
-
-impl Extend<ThunkImpl> for CppDetails {
-    fn extend<T: IntoIterator<Item = ThunkImpl>>(&mut self, iter: T) {
-        self.thunks.extend(iter);
+    pub fn new(includes: CppIncludes, thunks: Vec<ThunkImpl>) -> Self {
+        CppDetails { includes, thunks }
     }
 }
 

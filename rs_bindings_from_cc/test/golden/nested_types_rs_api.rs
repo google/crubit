@@ -273,19 +273,19 @@ mod detail {
 }
 
 const _: () = {
-    assert!(::core::mem::size_of::<crate::Foo>() == 4);
-    assert!(::core::mem::align_of::<crate::Foo>() == 4);
-    static_assertions::assert_impl_all!(crate::Foo: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::Foo: Drop);
-    assert!(::core::mem::offset_of!(crate::Foo, foo) == 0);
-    assert!(::core::mem::size_of::<crate::foo::Bar>() == 4);
-    assert!(::core::mem::align_of::<crate::foo::Bar>() == 4);
-    static_assertions::assert_impl_all!(crate::foo::Bar: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::foo::Bar: Drop);
-    assert!(::core::mem::offset_of!(crate::foo::Bar, bar) == 0);
     assert!(::core::mem::size_of::<crate::foo::bar::Baz>() == 4);
     assert!(::core::mem::align_of::<crate::foo::bar::Baz>() == 4);
     static_assertions::assert_impl_all!(crate::foo::bar::Baz: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::foo::bar::Baz: Drop);
     assert!(::core::mem::offset_of!(crate::foo::bar::Baz, baz) == 0);
+    assert!(::core::mem::size_of::<crate::foo::Bar>() == 4);
+    assert!(::core::mem::align_of::<crate::foo::Bar>() == 4);
+    static_assertions::assert_impl_all!(crate::foo::Bar: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::foo::Bar: Drop);
+    assert!(::core::mem::offset_of!(crate::foo::Bar, bar) == 0);
+    assert!(::core::mem::size_of::<crate::Foo>() == 4);
+    assert!(::core::mem::align_of::<crate::Foo>() == 4);
+    static_assertions::assert_impl_all!(crate::Foo: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::Foo: Drop);
+    assert!(::core::mem::offset_of!(crate::Foo, foo) == 0);
 };

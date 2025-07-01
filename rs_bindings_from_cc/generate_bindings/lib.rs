@@ -24,6 +24,7 @@ use quote::{quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
 use std::collections::BTreeSet;
 use std::ffi::OsStr;
+use std::mem;
 use std::path::Path;
 use std::rc::Rc;
 use token_stream_printer::{
@@ -128,22 +129,11 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result
 
 fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
     let ir = db.ir();
-    let mut items = vec![];
-    let mut thunks = vec![];
-    let mut cc_details = vec![];
-    let mut assertions = vec![];
-    let mut features = FlagSet::empty();
+    let mut api_snippets = ApiSnippets::default();
 
     for item_id in namespace.child_item_ids.iter() {
-        let item: &Item = ir.find_decl(*item_id).with_context(|| {
-            format!("Failed to look up namespace.child_item_ids for {:?}", namespace)
-        })?;
-        let generated = db.generate_item(item.clone())?;
-        items.extend(generated.main_api);
-        thunks.extend(generated.thunks);
-        cc_details.extend(generated.cc_details);
-        assertions.extend(generated.assertions);
-        features |= generated.features;
+        let item = ir.find_untyped_decl(*item_id);
+        api_snippets.append(db.generate_item(item.clone())?);
     }
 
     let reopened_namespace_idx = ir.get_reopened_namespace_idx(namespace.id)?;
@@ -163,19 +153,14 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
     });
     let insert_use_stmt_for_inline_namespace = namespace.is_inline && is_canonical_namespace_module;
 
-    Ok(ApiSnippets {
-        main_api: vec![MainApi::Namespace {
-            name,
-            previous_namespace_to_use,
-            items,
-            insert_use_stmt_for_inline_namespace,
-        }],
-        features,
-        thunks,
-        cc_details,
-        assertions,
-        ..Default::default()
-    })
+    let items = mem::take(&mut api_snippets.main_api);
+    api_snippets.main_api.push(MainApi::Namespace {
+        name,
+        previous_namespace_to_use,
+        items,
+        insert_use_stmt_for_inline_namespace,
+    });
+    Ok(api_snippets)
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
@@ -319,29 +304,23 @@ pub fn generate_bindings_tokens(
     environment: Environment,
 ) -> Result<BindingsTokens> {
     let db = new_database(ir, errors, fatal_errors, environment);
-    let mut items = vec![];
-    let mut thunks = vec![];
-    let mut cc_details =
-        CppDetails::new(generate_rs_api_impl_includes(&db, crubit_support_path_format));
-    let mut assertions = vec![];
-
-    let mut features = FlagSet::empty();
+    let mut snippets = ApiSnippets::default();
 
     // For #![rustfmt::skip].
-    features |= Feature::custom_inner_attributes;
+    snippets.features |= Feature::custom_inner_attributes;
     // For the `vector` in `cc_std`.
-    features |= Feature::allocator_api;
-    features |= Feature::cfg_sanitize;
+    snippets.features |= Feature::allocator_api;
+    snippets.features |= Feature::cfg_sanitize;
 
     for top_level_item_id in ir.top_level_item_ids() {
-        let item: &Item = ir.find_untyped_decl(*top_level_item_id);
-        let generated = db.generate_item(item.clone())?;
-        items.extend(generated.main_api);
-        thunks.extend(generated.thunks);
-        assertions.extend(generated.assertions);
-        cc_details.extend(generated.cc_details);
-        features |= generated.features;
+        let item = ir.find_untyped_decl(*top_level_item_id);
+        snippets.append(db.generate_item(item.clone())?);
     }
+
+    let ApiSnippets { main_api, thunks, assertions, cc_details, features } = snippets;
+
+    let cc_details =
+        CppDetails::new(generate_rs_api_impl_includes(&db, crubit_support_path_format), cc_details);
 
     let mod_detail = if thunks.is_empty() {
         quote! {}
@@ -396,7 +375,7 @@ pub fn generate_bindings_tokens(
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
 
 
-            #( #items __NEWLINE__ __NEWLINE__ )*
+            #( #main_api __NEWLINE__ __NEWLINE__ )*
 
             #mod_detail __NEWLINE__ __NEWLINE__
 

@@ -23,9 +23,9 @@ use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::collections::HashMap;
-use std::iter;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
+use std::{iter, mem};
 
 /// Returns whether fields of type `ty` need to be wrapped in `ManuallyDrop<T>`
 /// to prevent the fields from being destructed twice (once by the C++
@@ -478,15 +478,14 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
             })
             .collect(),
     };
-    let mut features = FlagSet::empty();
-
+    let mut api_snippets = ApiSnippets::default();
     let recursively_pinned_attr = if record.is_unpin() {
         None
     } else {
         // negative_impls are necessary for universal initialization due to Rust's
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
-        features |= Feature::negative_impls;
+        api_snippets.features |= Feature::negative_impls;
         Some(RecursivelyPinnedAttr { pinned_drop: record.should_implement_drop() })
     };
 
@@ -517,21 +516,21 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
 
     let fully_qualified_cc_name = cpp_tagless_type_name_for_record(&record, ir)?.to_string();
 
-    let mut record_generated_items = vec![];
+    let mut record_generated_snippets = ApiSnippets::default();
     let mut record_child_generated_main_apis = vec![];
     for &child_item_id in &record.child_item_ids {
         let item = ir.find_untyped_decl(child_item_id);
-        let mut api_snippets = db.generate_item(item.clone())?;
+        let mut child_api_snippets = db.generate_item(item.clone())?;
         if item.place_in_nested_module_if_nested_in_record()
             && db.has_bindings(item.clone()).is_ok()
         {
             // If it doesn't have bindings, we don't want to put it in the nested module.
-            record_child_generated_main_apis.append(&mut api_snippets.main_api);
+            record_child_generated_main_apis.append(&mut child_api_snippets.main_api);
         }
-        record_generated_items.push(api_snippets);
+        record_generated_snippets.append(child_api_snippets);
     }
 
-    let generated_inherited_functions: Vec<ApiSnippets> = filter_out_ambiguous_member_functions(
+    filter_out_ambiguous_member_functions(
         db,
         record.clone(),
         collect_unqualified_member_functions_from_all_bases(db, &record),
@@ -544,8 +543,9 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
             db.generate_function(ir_func.clone(), Some(record.clone())).ok().flatten()?;
         Some((*generated_func.snippets).clone())
     })
-    .collect();
-    record_generated_items.extend(generated_inherited_functions);
+    .for_each(|func_snippets| {
+        record_generated_snippets.append(func_snippets);
+    });
 
     // Both the template definition and its instantiation should enable experimental
     // features.
@@ -554,7 +554,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         crubit_features |= ir.target_crubit_features(defining_target);
     }
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
-        record_generated_items.push(cc_struct_upcast_impl(db, &record, ir)?);
+        record_generated_snippets.append(cc_struct_upcast_impl(db, &record, ir)?);
     }
     let no_unique_address_accessors =
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
@@ -572,18 +572,10 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         None
     };
 
-    let mut items = vec![];
-    let mut thunks_from_record_items = vec![];
-    let mut thunk_impls_from_record_items = vec![cc_struct_layout_assertion(db, &record)?];
-    let mut assertions_from_record_items = vec![];
+    api_snippets.cc_details.push(cc_struct_layout_assertion(db, &record)?);
 
-    for generated in record_generated_items {
-        items.extend(generated.main_api);
-        thunks_from_record_items.extend(generated.thunks);
-        assertions_from_record_items.extend(generated.assertions);
-        thunk_impls_from_record_items.extend(generated.cc_details);
-        features |= generated.features;
-    }
+    let items = mem::take(&mut record_generated_snippets.main_api);
+    api_snippets.append(record_generated_snippets);
 
     let cxx_impl = if fully_qualified_cc_name.contains('<') {
         // cxx can't parse templated type names.
@@ -638,7 +630,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         nested_items: record_child_generated_main_apis,
     };
 
-    features |= Feature::negative_impls;
+    api_snippets.features |= Feature::negative_impls;
     let record_trait_assertions = {
         let mut assert_impls = FlagSet::empty();
         let mut assert_not_impls = FlagSet::empty();
@@ -665,27 +657,19 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         }
     };
 
-    let mut assertions = vec![];
-    assertions.push(rs_size_align_assertions(qualified_ident, &record.size_align));
-    assertions.push(record_trait_assertions);
-    assertions.push(field_offset_assertions);
-    assertions.extend(fields_that_must_be_copy.into_iter().map(|formatted_field_type| {
-        Assertion::Impls {
+    api_snippets.assertions.push(rs_size_align_assertions(qualified_ident, &record.size_align));
+    api_snippets.assertions.push(record_trait_assertions);
+    api_snippets.assertions.push(field_offset_assertions);
+    api_snippets.assertions.extend(fields_that_must_be_copy.into_iter().map(
+        |formatted_field_type| Assertion::Impls {
             type_name: formatted_field_type,
             all_of: AssertableTrait::Copy.into(),
             none_of: FlagSet::empty(),
-        }
-    }));
-    assertions.extend(assertions_from_record_items);
+        },
+    ));
 
-    Ok(ApiSnippets {
-        main_api: vec![MainApi::Record(record_tokens)],
-        features,
-        assertions,
-        thunks: thunks_from_record_items,
-        cc_details: thunk_impls_from_record_items,
-        ..Default::default()
-    })
+    api_snippets.main_api.push(MainApi::Record(record_tokens));
+    Ok(api_snippets)
 }
 
 pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> Assertion {
