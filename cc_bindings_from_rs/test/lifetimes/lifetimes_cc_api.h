@@ -86,6 +86,50 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// Generated from:
+// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=62
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
+    [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
+ public:
+  // `StructWithLifetimeAndDropGlue<'_>` doesn't implement the `Default` trait
+  StructWithLifetimeAndDropGlue() = delete;
+
+  // Drop::drop
+  ~StructWithLifetimeAndDropGlue();
+
+  // C++ moves are deleted because there's no non-destructive implementation
+  // available.
+  StructWithLifetimeAndDropGlue(StructWithLifetimeAndDropGlue&&) = delete;
+  StructWithLifetimeAndDropGlue& operator=(StructWithLifetimeAndDropGlue&&) =
+      delete;
+  // `StructWithLifetimeAndDropGlue<'_>` doesn't implement the `Clone` trait
+  StructWithLifetimeAndDropGlue(const StructWithLifetimeAndDropGlue&) = delete;
+  StructWithLifetimeAndDropGlue& operator=(
+      const StructWithLifetimeAndDropGlue&) = delete;
+  StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
+                                StructWithLifetimeAndDropGlue&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=68
+  static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
+
+ private:
+  // Field type has been replaced with a blob of bytes: Type
+  // `std::string::String` comes from the `alloc` crate, but no `--crate-header`
+  // was specified for this crate
+  unsigned char field_with_drop_glue[24];
+  // Field type has been replaced with a blob of bytes: Can't format `&i32`,
+  // because references are only supported in function parameter types, return
+  // types, and consts (b/286256327)
+  unsigned char field_with_lifetime[8];
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 static_assert(
     sizeof(StructWithLifetime) == 8,
     "Verify that ADT layout didn't change since this header got generated");
@@ -133,6 +177,38 @@ StructWithLifetime::from_static_ref_where_bound(
 }
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithLifetime, field_with_lifetime));
+}
+static_assert(
+    sizeof(StructWithLifetimeAndDropGlue) == 32,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(StructWithLifetimeAndDropGlue) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_drop(
+    ::lifetimes::StructWithLifetimeAndDropGlue& [[clang::annotate_type(
+        "lifetime", "__anon1")]]);
+}
+inline StructWithLifetimeAndDropGlue::~StructWithLifetimeAndDropGlue() {
+  __crubit_internal::__crubit_thunk_drop(*this);
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_make_ustatic_u42(
+    ::lifetimes::StructWithLifetimeAndDropGlue* __ret_ptr);
+}
+inline ::lifetimes::StructWithLifetimeAndDropGlue
+StructWithLifetimeAndDropGlue::make_static_42() {
+  crubit::Slot<::lifetimes::StructWithLifetimeAndDropGlue>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_make_ustatic_u42(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void StructWithLifetimeAndDropGlue::__crubit_field_offset_assertions() {
+  static_assert(0 ==
+                offsetof(StructWithLifetimeAndDropGlue, field_with_drop_glue));
+  static_assert(24 ==
+                offsetof(StructWithLifetimeAndDropGlue, field_with_lifetime));
 }
 }  // namespace lifetimes
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN

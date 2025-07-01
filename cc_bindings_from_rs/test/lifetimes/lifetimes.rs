@@ -5,7 +5,7 @@
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
 //! generated C++ bindings are then tested via `lifetimes_test.cc`.
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct StructWithLifetime<'a> {
     pub field_with_lifetime: &'a i32,
 }
@@ -56,5 +56,16 @@ impl StructWithLifetime<'static> {
         'a: 'static,
     {
         Self { field_with_lifetime }
+    }
+}
+
+pub struct StructWithLifetimeAndDropGlue<'a> {
+    pub field_with_lifetime: &'a i32,
+    pub field_with_drop_glue: String,
+}
+
+impl StructWithLifetimeAndDropGlue<'static> {
+    pub fn make_static_42() -> Self {
+        Self { field_with_lifetime: &42, field_with_drop_glue: "foo".into() }
     }
 }

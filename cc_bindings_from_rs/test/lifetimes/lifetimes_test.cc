@@ -9,6 +9,7 @@
 namespace {
 
 using ::lifetimes::StructWithLifetime;
+using ::lifetimes::StructWithLifetimeAndDropGlue;
 
 TEST(LifetimesTest, StructWithStaticLifetimeCanBeReturnedFromFunction) {
   StructWithLifetime s = StructWithLifetime::make_static_42();
@@ -19,6 +20,11 @@ TEST(LifetimesTest, TemporariesDontBindToStaticLifetimes) {
   // TODO: b/396735681 - This should fail to compile. Instead, such input
   // references should be converted to pointers.
   (void)StructWithLifetime::from_static_ref_where_bound(42);
+}
+
+TEST(LifetimesTest, StructWithLifetimesAndDropGlueExists) {
+  StructWithLifetimeAndDropGlue s =
+      StructWithLifetimeAndDropGlue::make_static_42();
 }
 
 }  // namespace

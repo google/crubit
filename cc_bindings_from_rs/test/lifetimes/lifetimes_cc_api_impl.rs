@@ -42,3 +42,33 @@ unsafe extern "C" fn __crubit_thunk_from_ustatic_uref_uwhere_ubound(
 const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );
+const _: () =
+    assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 32);
+const _: () =
+    assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 8);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_drop(
+    __self: &'static mut ::core::mem::MaybeUninit<
+        ::lifetimes_golden::StructWithLifetimeAndDropGlue,
+    >,
+) {
+    unsafe { __self.assume_init_drop() };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_make_ustatic_u42(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::lifetimes_golden::StructWithLifetimeAndDropGlue::make_static_42();
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue)
+            .write(__rs_return_value);
+    }
+}
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        ::lifetimes_golden::StructWithLifetimeAndDropGlue,
+        field_with_drop_glue
+    ) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetimeAndDropGlue, field_with_lifetime)
+        == 24
+);

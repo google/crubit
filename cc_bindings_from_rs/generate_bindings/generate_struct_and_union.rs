@@ -311,10 +311,13 @@ pub fn generate_adt<'tcx>(
             tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
             method_name_to_cc_thunk_name,
-            cc_thunk_decls,
+            mut cc_thunk_decls,
             rs_thunk_impls: rs_details,
         } = generate_trait_thunks(db, drop_trait_id, &core)
             .expect("`generate_adt_core` should have already validated `Drop` support");
+        // Don't introduce additional feature prerequisites for the `Drop` trait impl, as this
+        // will cause type generation to fail based on an API that isn't even user-accessible.
+        cc_thunk_decls.prereqs.required_features = flagset::FlagSet::empty();
         let drop_thunk_name = method_name_to_cc_thunk_name
             .into_values()
             .exactly_one()
