@@ -562,8 +562,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         } else {
             vec![]
         };
-    let incomplete_definition = if crubit_features
-        .contains(crubit_feature::CrubitFeature::Experimental)
+    let incomplete_definition = if crubit_features.contains(crubit_feature::CrubitFeature::Wrapper)
     {
         Some(quote! {
             forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident);
