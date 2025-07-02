@@ -18,3 +18,4 @@ path = "../../../cc_bindings_from_rs/run_compiler.rs"
 [dependencies]
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 either.workspace = true
+rustversion.workspace = true

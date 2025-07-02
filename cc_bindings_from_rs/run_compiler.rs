@@ -21,6 +21,7 @@ use rustc_interface::interface::Compiler;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use rustc_session::config::ErrorOutputType;
 use rustc_session::EarlyDiagCtxt;
+use std::path::PathBuf;
 
 /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
 /// simplified API:
@@ -202,6 +203,16 @@ mod tests {
         Ok(())
     }
 
+    #[rustversion::before(2025-06-25)]
+    fn sysroot_path() -> PathBuf {
+        get_sysroot_for_testing()
+    }
+
+    #[rustversion::since(2025-06-25)]
+    fn sysroot_path() -> PathBuf {
+        get_sysroot_for_testing().path().to_path_buf()
+    }
+
     /// `test_run_compiler_no_output_file` tests that we stop the compilation
     /// midway (i.e. that we return `Stop` from `after_analysis`).
     #[test]
@@ -216,7 +227,7 @@ mod tests {
             // Default parameters.
             "run_compiler_unittest_executable".to_string(),
             "--crate-type=lib".to_string(),
-            format!("--sysroot={}", get_sysroot_for_testing().display()),
+            format!("--sysroot={}", sysroot_path().display()),
             rs_path.display().to_string(),
             // Test-specific parameter: asking for after-analysis output
             "-o".to_string(),

@@ -19,10 +19,17 @@ use itertools::Itertools;
 
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes};
+
+#[rustversion::since(2025-06-25)]
+use rustc_session::config::Sysroot;
+
 use rustc_span::def_id::LocalDefId;
 use rustc_target::spec::TargetTuple;
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+#[rustversion::before(2025-06-25)]
+use std::path::PathBuf;
 
 #[cfg(oss)]
 const TOOLCHAIN_ROOT: &str = "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu";
@@ -35,12 +42,23 @@ const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
 /// The sysroot is used internally by `run_compiler_for_testing`, but it may
 /// also be passed as `--sysroot=...` in `rustc_args` argument of
 /// `run_compiler`
+
+#[rustversion::before(2025-06-25)]
 pub fn get_sysroot_for_testing() -> PathBuf {
     let runfiles = runfiles::Runfiles::create().unwrap();
     let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
     assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
     assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
     loc
+}
+
+#[rustversion::since(2025-06-25)]
+pub fn get_sysroot_for_testing() -> Sysroot {
+    let runfiles = runfiles::Runfiles::create().unwrap();
+    let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
+    assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
+    assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
+    Sysroot::new(Some(loc))
 }
 
 /// If a rustc --target arg is necessary, sets it up and returns its value.
