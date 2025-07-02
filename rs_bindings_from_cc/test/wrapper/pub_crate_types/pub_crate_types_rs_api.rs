@@ -35,6 +35,10 @@ unsafe impl ::cxx::ExternType for CompoundDataType {
     type Id = ::cxx::type_id!("CompoundDataType");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("CompoundDataType"),
+    crate::CompoundDataType
+);
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
 // Error while generating bindings for item 'CompoundDataType::CompoundDataType':
@@ -130,6 +134,10 @@ pub(crate) struct __CcTemplateInst9Template2IiE {
 }
 impl !Send for __CcTemplateInst9Template2IiE {}
 impl !Sync for __CcTemplateInst9Template2IiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("Template2 < int >"),
+    crate::__CcTemplateInst9Template2IiE
+);
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for item 'Template2<int>::Template2<int>':
@@ -166,6 +174,10 @@ pub(crate) struct __CcTemplateInst8TemplateIiE {
 }
 impl !Send for __CcTemplateInst8TemplateIiE {}
 impl !Sync for __CcTemplateInst8TemplateIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("Template < int >"),
+    crate::__CcTemplateInst8TemplateIiE
+);
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for item 'Template<int>::Template<int>':
