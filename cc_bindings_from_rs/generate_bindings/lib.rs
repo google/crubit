@@ -1131,7 +1131,7 @@ fn generate_item_impl(
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `generate_adt`
         Item { kind: ItemKind::Mod(_, _), .. } =>  // Handled by `generate_crate`
             Ok(None),
-        Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
+        Item { .. } => bail!("Unsupported rustc_hir::hir::ItemKind"),  // Don't Debug print: slow
     };
 
     if let Ok(Some(item)) = item {
