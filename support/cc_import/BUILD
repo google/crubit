@@ -12,6 +12,7 @@ rust_proc_macro(
     srcs = [
         "cc_import.rs",
     ],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],

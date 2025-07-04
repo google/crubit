@@ -10,6 +10,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_proc_macro(
     name = "cc_template",
     srcs = ["cc_template.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],

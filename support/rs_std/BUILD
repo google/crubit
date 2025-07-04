@@ -46,6 +46,7 @@ cc_library(
     srcs = ["cpp_waker.cc"],
     hdrs = ["cpp_waker.h"],
     aspect_hints = ["//features:supported"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
 
@@ -61,6 +62,7 @@ rust_library(
 
 cc_bindings_from_rust(
     name = "dyn_future_cc",
+    compatible_with = ["//buildenv/target:non_prod"],
     crate = ":dyn_future",
     visibility = ["//visibility:public"],
 )

@@ -26,6 +26,7 @@ rust_library(
 rust_proc_macro(
     name = "ctor_proc_macros",
     srcs = ["ctor_proc_macros.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -47,6 +48,7 @@ cc_library(
 rust_proc_macro(
     name = "crubit_annotate",
     srcs = ["crubit_annotate.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
     ],
@@ -125,6 +127,7 @@ rust_library(
 rust_proc_macro(
     name = "forward_declare_proc_macros",
     srcs = ["forward_declare_proc_macros.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         ":__subpackages__",
         "//google_internal/release:crubit_support_lib_visibility",
