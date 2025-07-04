@@ -86,7 +86,7 @@ constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
 
 // Error generating bindings for `STATIC_STR_FOO` defined at
 // cc_bindings_from_rs/test/str/str.rs;l=44:
-// Unsupported rustc_hir::hir::ItemKind: static item
+// Unsupported rustc_hir::hir::ItemKind
 
 static_assert(
     sizeof(TypeWithStr) == 16,
