@@ -170,8 +170,8 @@ mod tests {
 
     use itertools::Itertools;
     use regex::{Regex, RegexBuilder};
-    use run_compiler_test_support::get_sysroot_for_testing;
     use run_compiler_test_support::setup_rustc_target_for_testing;
+    use run_compiler_test_support::sysroot_path;
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
     use token_stream_printer::{CLANG_FORMAT_EXE_PATH_FOR_TESTING, RUSTFMT_EXE_PATH_FOR_TESTING};
@@ -318,7 +318,7 @@ mod tests {
                 "--".to_string(),
                 format!("--codegen=panic={}", &self.panic_mechanism),
                 "--crate-type=lib".to_string(),
-                format!("--sysroot={}", get_sysroot_for_testing().display()),
+                format!("--sysroot={}", sysroot_path().display()),
                 rs_input_path.display().to_string(),
             ]);
 

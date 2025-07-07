@@ -27,8 +27,6 @@ use rustc_span::def_id::LocalDefId;
 use rustc_target::spec::TargetTuple;
 
 use std::path::Path;
-
-#[rustversion::before(2025-06-25)]
 use std::path::PathBuf;
 
 #[cfg(oss)]
@@ -59,6 +57,16 @@ pub fn get_sysroot_for_testing() -> Sysroot {
     assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
     assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
     Sysroot::new(Some(loc))
+}
+
+#[rustversion::before(2025-06-25)]
+pub fn sysroot_path() -> PathBuf {
+    get_sysroot_for_testing()
+}
+
+#[rustversion::since(2025-06-25)]
+pub fn sysroot_path() -> PathBuf {
+    get_sysroot_for_testing().path().to_path_buf()
 }
 
 /// If a rustc --target arg is necessary, sets it up and returns its value.
