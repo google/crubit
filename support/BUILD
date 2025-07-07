@@ -38,6 +38,8 @@ cc_library(
     name = "annotations",
     hdrs = ["annotations.h"],
     visibility = [
+        # INTERNAL VISIBILITY ONLY.
+        # FOR USAGE ADD TO //support/public:annotations
         "//:__subpackages__",
     ],
     deps = [
@@ -163,6 +165,8 @@ rust_library(
     rustc_flags = ["-Zallow-features=negative_impls"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
+        # INTERNAL VISIBILITY ONLY.
+        # FOR USAGE ADD TO //support:oops
         "//:__subpackages__",
     ],
 )
@@ -182,6 +186,8 @@ rust_library(
     name = "bridge_rust",
     srcs = ["bridge.rs"],
     visibility = [
+        # INTERNAL VISIBILITY ONLY.
+        # FOR USAGE ADD TO //support/public:bridge_rust
         "//:__subpackages__",
     ],
 )
@@ -198,6 +204,8 @@ cc_library(
     name = "bridge_cpp",
     hdrs = ["bridge.h"],
     visibility = [
+        # INTERNAL VISIBILITY ONLY.
+        # FOR USAGE ADD TO //support/public:bridge_cpp
         "//:__subpackages__",
         "//google_internal/release:crubit_support_lib_visibility",
     ],
@@ -217,6 +225,8 @@ cc_library(
     srcs = ["status_bridge.cc"],
     hdrs = ["status_bridge.h"],
     visibility = [
+        # INTERNAL VISIBILITY ONLY.
+        # FOR USAGE ADD TO //support/public:status_bridge_cpp
         "//:__subpackages__",
     ],
     deps = [
