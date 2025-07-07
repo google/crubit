@@ -11,7 +11,7 @@ use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use ir::{BazelLabel, CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 #[unsafe(no_mangle)]
@@ -92,12 +92,14 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:generate_function
         fn generate_function(&self, func: Rc<Func>, derived_record: Option<Rc<Record>>) -> Result<Option<GeneratedFunction>>;
 
+        /// You should call is_function_ambiguous() instead.
+        ///
         /// Identifies all functions having overloads that we can't import (yet).
         ///
         /// TODO(b/213280424): Implement support for overloaded functions.
         ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:overloaded_funcs
-        fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
+        /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:overload_sets
+        fn overload_sets(&self) -> Rc<HashMap<Rc<FunctionId>, Option<ir::ItemId>>>;
 
         /// Returns whether the given record either implements or derives the Clone
         /// trait.
@@ -164,6 +166,19 @@ memoized::query_group! {
         /// with missing lifetimes with pointer types.
         fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
             self.rs_type_kind_with_lifetime_elision(cc_type, /*elide_missing_lifetimes=*/false)
+        }
+
+        #[provided]
+        /// Returns true if an ItemId refers to a function that cannot receive bindings, because
+        /// it is overloaded and ambiguous.
+        ///
+        /// This does not include functions that are overloaded, where all but one overload is
+        /// deprecated.
+        fn is_ambiguous_function(&self, function_id: &FunctionId, item_id: ir::ItemId) -> bool {
+            match self.overload_sets().get(function_id) {
+                None => false,
+                Some(id) => *id != Some(item_id),
+            }
         }
     }
     pub struct Database;

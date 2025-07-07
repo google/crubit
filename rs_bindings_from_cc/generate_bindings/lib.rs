@@ -204,7 +204,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
                     // uncallable function item.
                     db.errors().report(e);
                 }
-                if db.overloaded_funcs().contains(&generated_function.id) {
+                if db.is_ambiguous_function(&generated_function.id, func.id) {
                     bail!("Cannot generate bindings for overloaded function")
                 } else {
                     (*generated_function.snippets).clone()
@@ -283,7 +283,7 @@ pub fn new_database<'db>(
         has_bindings::has_bindings,
         rs_type_kind_with_lifetime_elision,
         generate_function::generate_function,
-        generate_function::overloaded_funcs,
+        generate_function::overload_sets,
         generate_function::is_record_clonable,
         generate_function::get_binding,
         generate_struct_and_union::collect_unqualified_member_functions,

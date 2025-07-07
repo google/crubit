@@ -2018,21 +2018,73 @@ fn has_copy_assignment_operator_from_const_reference(
         })
 }
 
-/// Implementation of `BindingsGenerator::overloaded_funcs`.
-pub fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
-    let mut seen_funcs = HashSet::new();
-    let mut overloaded_funcs = HashSet::new();
+/// Implementation of `BindingsGenerator::overload_sets`.
+pub fn overload_sets(
+    db: &dyn BindingsGenerator,
+) -> Rc<HashMap<Rc<FunctionId>, Option<ir::ItemId>>> {
+    #[derive(Copy, Clone)]
+    struct CandidateFunction {
+        item_id: ir::ItemId,
+        rank: Rank,
+        is_ambiguous: bool,
+    }
+    /// A quick and dirty total order over functions.
+    ///
+    /// If a single unique function in the overload set is the most canonical / highest rank, then
+    /// it is unambiguous, and gets bindings.
+    ///
+    /// Using an enum, rather than a bool, because it is very predictable that we might
+    /// add extra ranking factors. For example, a `CRUBIT_CANONICAL` attribute.
+    // TODO(b/381931334): Allow explicitly marking functions as canonical,
+    // adding e.g. `Canonical = 2`.
+    #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    #[repr(u8)]
+    enum Rank {
+        Deprecated = 0,
+        Default = 1,
+    }
+    // Map from function name to the most canonical candidate function in that overload set.
+    let mut overload_sets = HashMap::new();
+
+    fn rank(func: &Func) -> Rank {
+        if func.deprecated.is_some() {
+            Rank::Deprecated
+        } else {
+            Rank::Default
+        }
+    }
+
     for func in db.ir().functions() {
         // TODO(b/251045039) This check shouldn't fail so eagerly.
         // Functions that fail to receive bindings may still
         // participate in a C++ overload set, and we must still detect the
         // overload.
-        if let Ok(Some(f)) = db.generate_function(func.clone(), None) {
-            let function_id = &f.id;
-            if !seen_funcs.insert(function_id.clone()) {
-                overloaded_funcs.insert(function_id.clone());
-            }
+        let Ok(Some(generated_function)) = db.generate_function(func.clone(), None) else {
+            continue;
+        };
+        let new = CandidateFunction { item_id: func.id, rank: rank(func), is_ambiguous: false };
+        let value = overload_sets.entry(generated_function.id.clone()).or_insert(new);
+        if value.item_id == new.item_id {
+            continue;
+        }
+        if new.rank > value.rank {
+            *value = new;
+        } else if new.rank == value.rank {
+            value.is_ambiguous = true;
         }
     }
-    Rc::new(overloaded_funcs)
+    Rc::new(
+        overload_sets
+            .into_iter()
+            .map(
+                |(id, canonical)| {
+                    if canonical.is_ambiguous {
+                        (id, None)
+                    } else {
+                        (id, Some(canonical.item_id))
+                    }
+                },
+            )
+            .collect(),
+    )
 }
