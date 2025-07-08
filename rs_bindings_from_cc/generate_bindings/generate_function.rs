@@ -289,8 +289,7 @@ fn api_func_shape_for_operator_lt(
     let lhs_record = lhs_record.clone();
     // PartialOrd requires PartialEq, so we need to make sure operator== is
     // implemented for this Record type.
-    let partialeq_binding = get_binding(
-        db,
+    let partialeq_binding = db.get_binding(
         UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
         param_types.to_vec(),
     );
