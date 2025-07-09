@@ -1204,7 +1204,6 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
     if (clang::isa<clang::ClassTemplateSpecializationDecl>(named_decl)) {
       // We prepend __CcTemplateInst to reduce chances of conflict
       // with regular C and C++ structs.
-      LOG(INFO) << "E";
       constexpr llvm::StringRef kCcTemplatePrefix = "__CcTemplateInst";
       return llvm::formatv("{0}{1}", kCcTemplatePrefix, mangled_record_name);
     }
