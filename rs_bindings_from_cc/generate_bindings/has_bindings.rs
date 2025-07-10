@@ -80,6 +80,26 @@ pub fn has_bindings(
                     ),
                 });
                 }
+
+                // Temporary fix: if the nested record's parent is at the root-level, there's risk of a name conflict for the generated enclosing namespace for nested items. We need to skip these nested records for now.
+                if parent_record.enclosing_item_id.is_none() {
+                    // Root-level.
+                    for &top_item_id in ir.top_level_item_ids() {
+                        let top_item = ir.find_untyped_decl(top_item_id);
+
+                        if let ir::Item::Namespace(ns) = top_item {
+                            if ns.rs_name.identifier.as_ref() == parent_module_name {
+                                return Err(NoBindingsReason::Unsupported {
+                        context: item.debug_name(ir),
+                        error: anyhow!(
+                            "b/430329367: cannot generate bindings for {} because it would lead to a name conflict with a child module",
+                            parent_record.rs_name
+                        ),
+                    });
+                            }
+                        }
+                    }
+                }
             }
         }
     }
