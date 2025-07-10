@@ -17,10 +17,19 @@ TEST(ConsistentAnnotations, ConsistentParameter) {
   )cc"));
 }
 
-TEST(ConsistentAnnotations, InconsistentParameter) {
+TEST(ConsistentAnnotations, InconsistentParameter1) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable p);
     void target(int *_Nonnull p) {  // [[unsafe]]
+      *p;
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentParameter2) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* p);
+    void target(int* _Nonnull p) {  // [[unsafe]]
       *p;
     }
   )cc"));
@@ -79,10 +88,28 @@ TEST(ConsistentAnnotations, ConsistentReturnType) {
   )cc"));
 }
 
-TEST(ConsistentAnnotations, InconsistentReturnType) {
+TEST(ConsistentAnnotations, InconsistentReturnType1) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull target();
     int *_Nullable target() {  // [[unsafe]]
+      return nullptr;
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentReturnType2) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* target();
+    int* _Nullable target() {  // [[unsafe]]
+      return nullptr;
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentReturnType3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* _Nullable target();
+    int* target() {  // [[unsafe]]
       return nullptr;
     }
   )cc"));
@@ -123,11 +150,25 @@ TEST(ConsistentAnnotations, ConsistentGlobal) {
   )cc"));
 }
 
-TEST(ConsistentAnnotations, InconsistentGlobal) {
+TEST(ConsistentAnnotations, InconsistentGlobal1) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     extern int *_Nonnull target;
     // Annotation has to go within the declaration to be picked up.
     int *_Nullable target /* [[unsafe]] */ = nullptr;
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentGlobal2) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    extern int* target;
+    int* _Nullable target /* [[unsafe]] */ = nullptr;
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentGlobal3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    extern int* _Nullable target;
+    int* target /* [[unsafe]] */ = nullptr;
   )cc"));
 }
 
