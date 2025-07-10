@@ -13,10 +13,6 @@
 unsafe extern "C" fn __crubit_thunk_never_ureturn() -> ! {
     unsafe { ::never_golden::never_return() }
 }
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_extern_unever_ureturn() -> ! {
-    unsafe { ::never_golden::extern_never_return() }
-}
 const _: () = assert!(::std::mem::size_of::<::never_golden::NeverStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::never_golden::NeverStruct>() == 4);
 #[unsafe(no_mangle)]

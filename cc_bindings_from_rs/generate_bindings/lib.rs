@@ -30,7 +30,7 @@ use crate::format_type::{
     format_ret_ty_for_cc, format_top_level_ns_for_crate, format_ty_for_cc, format_ty_for_rs,
     is_bridged_type, BridgedType, BridgedTypeConversionInfo,
 };
-use crate::generate_function::generate_function;
+use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{generate_adt, generate_adt_core, scalar_value_to_string};
 use arc_anyhow::{Context, Error, Result};
@@ -466,12 +466,12 @@ pub enum AllowReferences {
 /// Returns the C++ must_use tag for the item identified by `def_id`, or None if there is no such
 /// tag.
 fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
-    if let Some(must_use_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::must_use) {
-        let cc_must_use_tag = match must_use_attr.value_str() {
+    if let Some(must_use_attr) = must_use_attr_of(tcx, def_id) {
+        let cc_must_use_tag = match must_use_attr.reason {
             None => quote! {[[nodiscard]]},
-            Some(symbol) => {
-                let message = symbol.as_str();
-                quote! {[[nodiscard(#message)]]}
+            Some(reason) => {
+                let reason = reason.as_str();
+                quote! {[[nodiscard(#reason)]]}
             }
         };
         return Some(cc_must_use_tag);

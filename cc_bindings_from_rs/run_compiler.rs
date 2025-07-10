@@ -21,7 +21,6 @@ use rustc_interface::interface::Compiler;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use rustc_session::config::ErrorOutputType;
 use rustc_session::EarlyDiagCtxt;
-use std::path::PathBuf;
 
 /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
 /// simplified API:
@@ -151,6 +150,7 @@ mod tests {
     use super::*;
     use run_compiler_test_support::get_sysroot_for_testing;
     use run_compiler_test_support::setup_rustc_target_for_testing;
+    use std::path::PathBuf;
     use tempfile::tempdir;
 
     const DEFAULT_RUST_SOURCE_FOR_TESTING: &'static str = r#" pub mod public_module {

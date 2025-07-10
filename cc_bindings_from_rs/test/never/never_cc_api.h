@@ -25,7 +25,7 @@ namespace never {
 
 // Generated from:
 // cc_bindings_from_rs/test/never/never.rs;l=13
-[[noreturn]] void extern_never_return();
+extern "C" [[noreturn]] void extern_never_return();
 
 // Generated from:
 // cc_bindings_from_rs/test/never/never.rs;l=18
@@ -76,13 +76,6 @@ extern "C" [[noreturn]] void __crubit_thunk_never_ureturn();
 }
 inline void never_return() {
   __crubit_internal::__crubit_thunk_never_ureturn();
-}
-
-namespace __crubit_internal {
-extern "C" [[noreturn]] void __crubit_thunk_extern_unever_ureturn();
-}
-inline void extern_never_return() {
-  __crubit_internal::__crubit_thunk_extern_unever_ureturn();
 }
 
 static_assert(

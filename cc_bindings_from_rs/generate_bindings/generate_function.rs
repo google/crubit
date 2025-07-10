@@ -25,7 +25,8 @@ use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use query_compiler::{is_copy, post_analysis_typing_env};
 use quote::quote;
-use rustc_hir::Node;
+use rustc_attr_data_structures::AttributeKind;
+use rustc_hir::{self as hir, Node};
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
@@ -311,6 +312,39 @@ fn cc_return_value_from_c_abi<'tcx>(
     }
 }
 
+fn export_name_and_no_mangle_attrs_of<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    def_id: DefId,
+) -> (Option<Symbol>, bool) {
+    let mut export_name: Option<Symbol> = None;
+    let mut no_mangle = false;
+    for attr in tcx.get_all_attrs(def_id) {
+        match attr {
+            hir::Attribute::Parsed(AttributeKind::ExportName { name, .. }) => {
+                export_name = Some(*name);
+            }
+            hir::Attribute::Parsed(AttributeKind::NoMangle(..)) => {
+                no_mangle = true;
+            }
+            _ => {}
+        }
+    }
+    (export_name, no_mangle)
+}
+
+pub(crate) struct MustUseAttr {
+    pub reason: Option<Symbol>,
+}
+
+pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<MustUseAttr> {
+    for attr in tcx.get_all_attrs(def_id) {
+        if let hir::Attribute::Parsed(AttributeKind::MustUse { reason, .. }) = attr {
+            return Some(MustUseAttr { reason: *reason });
+        }
+    }
+    None
+}
+
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function(
     db: &dyn BindingsGenerator<'_>,
@@ -327,11 +361,8 @@ pub fn generate_function(
     let (sig_mid, sig_hir) = get_fn_sig(tcx, local_def_id);
     check_fn_sig(&sig_mid)?;
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
-    let export_name: Option<Symbol> = tcx
-        .get_attr(def_id, rustc_span::symbol::sym::export_name)
-        .map(|attr| attr.value_str().expect("export_name is a string"));
+    let (export_name, has_no_mangle) = export_name_and_no_mangle_attrs_of(tcx, def_id);
     let has_export_name = export_name.is_some();
-    let has_no_mangle = tcx.get_attr(def_id, rustc_span::symbol::sym::no_mangle).is_some();
     let needs_thunk = is_thunk_required(&sig_mid).is_err() || (!has_no_mangle && !has_export_name);
     let thunk_name = thunk_name(db, def_id, export_name, needs_thunk);
 
@@ -476,8 +507,8 @@ pub fn generate_function(
 
         let mut attributes = vec![];
         // Attribute: must_use
-        if let Some(must_use_attr) = tcx.get_attr(def_id, rustc_span::symbol::sym::must_use) {
-            match must_use_attr.value_str() {
+        if let Some(must_use_attr) = must_use_attr_of(tcx, def_id) {
+            match must_use_attr.reason {
                 None => attributes.push(quote! {[[nodiscard]]}),
                 Some(symbol) => {
                     let message = symbol.as_str();
