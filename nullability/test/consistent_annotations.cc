@@ -65,7 +65,7 @@ TEST(ConsistentAnnotations, ConsistentDoublePointer) {
   )cc"));
 }
 
-TEST(ConsistentAnnotations, InconsistentOuterPointer) {
+TEST(ConsistentAnnotations, InconsistentOuterPointer1) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull *_Nullable p);
     void target(int *_Nonnull *_Nonnull p) {  // [[unsafe]]
@@ -73,10 +73,34 @@ TEST(ConsistentAnnotations, InconsistentOuterPointer) {
   )cc"));
 }
 
-TEST(ConsistentAnnotations, InconsistentInnerPointer) {
+TEST(ConsistentAnnotations, InconsistentOuterPointer2) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nonnull *p);
+    void target(int *_Nonnull *_Nonnull p) {  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentInnerPointer1) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull *_Nullable p);
     void target(int *_Nullable *_Nullable p) {  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentInnerPointer2) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nonnull *_Nullable p);
+    void target(int **_Nullable p) {  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentInnerPointer3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int **_Nullable p);
+    void target(int *_Nonnull *_Nullable p) {  // [[unsafe]]
     }
   )cc"));
 }
@@ -123,10 +147,20 @@ TEST(ConsistentAnnotations, ConsistentSmartPointer) {
   )cc"));
 }
 
-TEST(ConsistentAnnotations, InconsistentSmartPointer) {
+TEST(ConsistentAnnotations, InconsistentSmartPointer1) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #include <memory>
     void target(_Nullable std::unique_ptr<int> p);
+    void target(_Nonnull std::unique_ptr<int> p) {  // [[unsafe]]
+      *p;
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentSmartPointer2) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    void target(std::unique_ptr<int> p);
     void target(_Nonnull std::unique_ptr<int> p) {  // [[unsafe]]
       *p;
     }
