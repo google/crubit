@@ -73,12 +73,12 @@ pub fn has_bindings(
                 let parent_module_name = parent_record.rs_name.identifier.as_ref().to_snake_case();
                 if parent_record.rs_name.identifier.as_ref() == parent_module_name {
                     return Err(NoBindingsReason::Unsupported {
-                    context: item.debug_name(ir),
-                    error: anyhow!(
-                        "parent record '{}' name conflicts with automatically generated child module name, so a child module cannot be generated",
-                        parent_record.rs_name
-                    ),
-                });
+                        context: item.debug_name(ir),
+                        error: anyhow!(
+                            "parent record '{}' name conflicts with automatically generated child module name, so a child module cannot be generated",
+                            parent_record.rs_name
+                        ),
+                    });
                 }
 
                 // Temporary fix: if the nested record's parent is at the root-level, there's risk of a name conflict for the generated enclosing namespace for nested items. We need to skip these nested records for now.
@@ -90,12 +90,12 @@ pub fn has_bindings(
                         if let ir::Item::Namespace(ns) = top_item {
                             if ns.rs_name.identifier.as_ref() == parent_module_name {
                                 return Err(NoBindingsReason::Unsupported {
-                        context: item.debug_name(ir),
-                        error: anyhow!(
-                            "b/430329367: cannot generate bindings for {} because it would lead to a name conflict with a child module",
-                            parent_record.rs_name
-                        ),
-                    });
+                                    context: item.debug_name(ir),
+                                    error: anyhow!(
+                                        "b/430329367: cannot generate bindings for {} because it would lead to a name conflict with a child module",
+                                        parent_record.rs_name
+                                    ),
+                                });
                             }
                         }
                     }
