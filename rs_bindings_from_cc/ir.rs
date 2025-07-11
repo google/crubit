@@ -498,7 +498,7 @@ impl Debug for ItemId {
 }
 
 impl ItemId {
-    pub fn new_for_testing(value: usize) -> Self {
+    pub const fn new_for_testing(value: usize) -> Self {
         Self(value)
     }
 }
@@ -1880,8 +1880,8 @@ impl IR {
         self.flat_ir.items.iter()
     }
 
-    pub fn top_level_item_ids(&self) -> impl Iterator<Item = &ItemId> {
-        self.flat_ir.top_level_item_ids.iter()
+    pub fn top_level_item_ids(&self) -> &[ItemId] {
+        &self.flat_ir.top_level_item_ids
     }
 
     pub fn items_mut(&mut self) -> impl Iterator<Item = &mut Item> {

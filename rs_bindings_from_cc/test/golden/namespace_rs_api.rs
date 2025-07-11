@@ -122,13 +122,22 @@ pub fn identity(mut s: crate::test_namespace_bindings::S) -> crate::test_namespa
     }
 }
 
-pub mod test_namespace_bindings_reopened_0 {
+// namespace test_namespace_bindings_reopened
+
+pub mod test_namespace_bindings_reopened {
     #[inline(always)]
     pub fn x() {
         unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1xEv() }
     }
 
-    pub mod inner_0 {
+    // namespace inner
+
+    #[inline(always)]
+    pub fn y() {
+        unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1yEv() }
+    }
+
+    pub mod inner {
         #[derive(Clone, Copy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_reopened :: inner :: S
@@ -195,25 +204,6 @@ pub mod test_namespace_bindings_reopened_0 {
                 }
             }
         }
-    }
-
-    // namespace inner
-}
-
-// namespace test_namespace_bindings_reopened
-
-pub mod test_namespace_bindings_reopened {
-    #[allow(unused_imports)]
-    pub use super::test_namespace_bindings_reopened_0::*;
-
-    #[inline(always)]
-    pub fn y() {
-        unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1yEv() }
-    }
-
-    pub mod inner {
-        #[allow(unused_imports)]
-        pub use super::inner_0::*;
 
         #[inline(always)]
         pub fn z(mut s: crate::test_namespace_bindings_reopened::inner::S) {

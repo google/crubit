@@ -5,6 +5,7 @@
 //! Tests for comment generation.
 
 use arc_anyhow::Result;
+use database::code_snippet;
 use database::{BindingsGenerator, Database};
 use error_report::{ErrorReport, FatalErrors};
 use ffi_types::Environment;
@@ -79,9 +80,12 @@ fn test_no_generate_doc_comment_with_comment_with_no_source_loc_with_environment
 struct TestItem {
     source_loc: Option<Rc<str>>,
 }
+
+const TEST_ITEM_ID: ItemId = ItemId::new_for_testing(123);
+
 impl ir::GenericItem for TestItem {
     fn id(&self) -> ItemId {
-        ItemId::new_for_testing(123)
+        TEST_ITEM_ID
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
@@ -135,9 +139,10 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
         )
         .into(),
     )
-    .main_api;
+    .generated_items;
+    let actual = code_snippet::generated_items_to_token_stream(&actual, db.ir(), &[TEST_ITEM_ID]);
     let expected = "Generated from: some/header;l=1\nError while generating bindings for item 'test_item':\nunsupported_message";
-    assert_rs_matches!(quote! { #(#actual)* }, quote! { __COMMENT__ #expected});
+    assert_rs_matches!(quote! { #actual }, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
@@ -158,9 +163,10 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
         )
         .into(),
     )
-    .main_api;
+    .generated_items;
+    let actual = code_snippet::generated_items_to_token_stream(&actual, db.ir(), &[TEST_ITEM_ID]);
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
-    assert_rs_matches!(quote! { #(#actual)* }, quote! { __COMMENT__ #expected});
+    assert_rs_matches!(quote! { #actual }, quote! { __COMMENT__ #expected});
     Ok(())
 }
 
@@ -178,8 +184,9 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
         )
         .into(),
     )
-    .main_api;
+    .generated_items;
+    let actual = code_snippet::generated_items_to_token_stream(&actual, db.ir(), &[TEST_ITEM_ID]);
     let expected = "Error while generating bindings for item 'test_item':\nunsupported_message";
-    assert_rs_matches!(quote! { #(#actual)* }, quote! { __COMMENT__ #expected});
+    assert_rs_matches!(quote! { #actual }, quote! { __COMMENT__ #expected});
     Ok(())
 }

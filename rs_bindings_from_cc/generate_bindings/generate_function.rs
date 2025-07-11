@@ -5,7 +5,7 @@
 use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustTokens;
-use database::code_snippet::{ApiSnippets, Feature, MainApi, Thunk, Visibility};
+use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
@@ -46,7 +46,7 @@ fn trait_name_to_token_stream_removing_trait_record(
             quote! {#name_as_token_stream #formatted_params}
         }
         PartialEq { param } => {
-            if trait_record.is_some() && param.is_record(trait_record.unwrap()) {
+            if trait_record.is_some_and(|trait_record| param.is_record(trait_record)) {
                 quote! {PartialEq}
             } else {
                 let formatted_params = format_generic_params_replacing_by_self(
@@ -1425,18 +1425,19 @@ pub fn generate_function(
             };
         }
         ImplKind::Struct { record, .. } => {
-            let record_name;
-            if let Some(ref derived_record) = derived_record {
-                // Generate the bindings for the derived record.
-                record_name = make_rs_ident(derived_record.rs_name.identifier.as_ref());
-            } else {
-                record_name = make_rs_ident(record.rs_name.identifier.as_ref());
+            let record_name = make_rs_ident(
+                derived_record.as_deref().unwrap_or(record.as_ref()).rs_name.identifier.as_ref(),
+            );
+            let error_lifetime_generic =
+                error_lifetime_param.as_ref().map(|lifetime| quote! { <#lifetime> });
+            api_func = quote! {
+                #unimplemented_trait_def
+                impl #error_lifetime_generic #record_name
+                #unsatisfied_where_clause {
+                    #doc_comment
+                    #api_func_def
+                }
             };
-            let error_lifetime_generic = match &error_lifetime_param {
-                Some(lifetime) => quote! { <#lifetime> },
-                None => quote! {},
-            };
-            api_func = quote! { #unimplemented_trait_def impl #error_lifetime_generic #record_name #unsatisfied_where_clause { #doc_comment #api_func_def } };
             function_id = FunctionId {
                 self_type: None,
                 function_path: syn::parse2(quote! {
@@ -1608,7 +1609,7 @@ pub fn generate_function(
     };
 
     let generated_item = ApiSnippets {
-        main_api: vec![MainApi::Func(api_func)],
+        generated_items: HashMap::from([(func.id, GeneratedItem::Func(api_func))]),
         thunks: match thunk {
             Some(thunk) if !failed => vec![thunk],
             _ => vec![],

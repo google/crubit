@@ -4,10 +4,11 @@
 
 //! Generate comments for the bindings.
 
-use database::code_snippet::{ApiSnippets, DocCommentAttr, MainApi};
+use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
 use database::BindingsGenerator;
 use ffi_types::Environment;
 use ir::{Comment, GenericItem, UnsupportedItem, IR};
+use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::rc::Rc;
 
@@ -116,10 +117,22 @@ pub fn generate_unsupported(db: &dyn BindingsGenerator, item: Rc<UnsupportedItem
         db.fatal_errors().report(&must_bind_message);
     }
 
-    MainApi::Comment { message: message.into() }.into()
+    ApiSnippets {
+        generated_items: HashMap::from([(
+            item.id,
+            GeneratedItem::Comment { message: message.into() },
+        )]),
+        ..Default::default()
+    }
 }
 
 /// Generates Rust source code for a given `Comment`.
 pub fn generate_comment(comment: Rc<Comment>) -> ApiSnippets {
-    MainApi::Comment { message: comment.text.clone() }.into()
+    ApiSnippets {
+        generated_items: HashMap::from([(
+            comment.id,
+            GeneratedItem::Comment { message: comment.text.clone() },
+        )]),
+        ..Default::default()
+    }
 }

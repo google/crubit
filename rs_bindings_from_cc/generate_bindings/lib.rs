@@ -7,13 +7,12 @@ use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use database::code_snippet::{
-    ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, MainApi,
+    self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
 use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
 use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
-use flagset::FlagSet;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
@@ -22,9 +21,8 @@ use itertools::Itertools;
 use proc_macro2::Ident;
 use quote::{quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
-use std::mem;
 use std::path::Path;
 use std::rc::Rc;
 use token_stream_printer::{
@@ -89,77 +87,67 @@ fn generate_type_alias(
 ) -> Result<ApiSnippets> {
     // Skip the type alias if it maps to a bridge type.
     let rs_type_kind = db.rs_type_kind((&*type_alias).into())?;
-    if rs_type_kind.unalias().is_bridge_type() {
+    let generated_item = if rs_type_kind.unalias().is_bridge_type() {
         let disable_comment = format!(
             "Type alias for {cpp_type} suppressed due to being a bridge type",
             cpp_type = type_alias.debug_name(db.ir()),
         );
-        return Ok(MainApi::Comment { message: disable_comment.into() }.into());
-    }
-    let underlying_type = db
-        .rs_type_kind(type_alias.underlying_type.clone())
-        .with_context(|| format!("Failed to format underlying type for {}", type_alias))?;
+        GeneratedItem::Comment { message: disable_comment.into() }
+    } else {
+        let underlying_type = db
+            .rs_type_kind(type_alias.underlying_type.clone())
+            .with_context(|| format!("Failed to format underlying type for {type_alias}"))?;
 
-    Ok(MainApi::TypeAlias {
-        doc_comment: generate_doc_comment(
-            type_alias.doc_comment.as_deref(),
-            Some(&type_alias.source_loc),
-            db.environment(),
-        ),
-        visibility: db::type_visibility(db, &type_alias.owning_target, rs_type_kind)
-            .unwrap_or_default(),
-        ident: make_rs_ident(&type_alias.rs_name.identifier),
-        underlying_type: underlying_type.to_token_stream(db),
-    }
-    .into())
+        GeneratedItem::TypeAlias {
+            doc_comment: generate_doc_comment(
+                type_alias.doc_comment.as_deref(),
+                Some(&type_alias.source_loc),
+                db.environment(),
+            ),
+            visibility: db::type_visibility(db, &type_alias.owning_target, rs_type_kind)
+                .unwrap_or_default(),
+            ident: make_rs_ident(&type_alias.rs_name.identifier),
+            underlying_type: underlying_type.to_token_stream(db),
+        }
+    };
+    Ok(ApiSnippets {
+        generated_items: HashMap::from([(type_alias.id, generated_item)]),
+        ..Default::default()
+    })
 }
 
 fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
-    Ok(MainApi::GlobalVar {
-        link_name: var.mangled_name.clone(),
-        is_mut: !var.type_.is_const,
-        ident: make_rs_ident(&var.rs_name.identifier),
-        type_tokens: type_.to_token_stream(db),
-        visibility: db::type_visibility(db, &var.owning_target, type_).unwrap_or_default(),
-    }
-    .into())
+    Ok(ApiSnippets {
+        generated_items: HashMap::from([(
+            var.id,
+            GeneratedItem::GlobalVar {
+                link_name: var.mangled_name.clone(),
+                is_mut: !var.type_.is_const,
+                ident: make_rs_ident(&var.rs_name.identifier),
+                type_tokens: type_.to_token_stream(db),
+                visibility: db::type_visibility(db, &var.owning_target, type_).unwrap_or_default(),
+            },
+        )]),
+        ..Default::default()
+    })
 }
 
 fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
     let ir = db.ir();
     let mut api_snippets = ApiSnippets::default();
 
-    for item_id in namespace.child_item_ids.iter() {
-        let item = ir.find_untyped_decl(*item_id);
+    for &item_id in &namespace.child_item_ids {
+        let item = ir.find_untyped_decl(item_id);
         api_snippets.append(db.generate_item(item.clone())?);
     }
 
-    let reopened_namespace_idx = ir.get_reopened_namespace_idx(namespace.id)?;
-    // True if this is actually the module with the name `#name`, rather than e.g.
-    // `#name_0`, `#name_1`, etc.
-    let is_canonical_namespace_module =
-        ir.is_last_reopened_namespace(namespace.id, namespace.canonical_namespace_id)?;
-
-    let name = if is_canonical_namespace_module {
-        make_rs_ident(&namespace.rs_name.identifier)
-    } else {
-        make_rs_ident(&format!("{}_{}", &namespace.rs_name.identifier, reopened_namespace_idx))
-    };
-
-    let previous_namespace_to_use = reopened_namespace_idx.checked_sub(1).map(|prev_index| {
-        make_rs_ident(&format!("{}_{}", &namespace.rs_name.identifier, prev_index))
-    });
-    let insert_use_stmt_for_inline_namespace = namespace.is_inline && is_canonical_namespace_module;
-
-    let items = mem::take(&mut api_snippets.main_api);
-    api_snippets.main_api.push(MainApi::Namespace {
-        name,
-        previous_namespace_to_use,
-        items,
-        insert_use_stmt_for_inline_namespace,
-    });
+    api_snippets.generated_items.insert(namespace.id, GeneratedItem::NonCanonicalNamespace);
+    api_snippets.generated_items.insert(
+        namespace.canonical_namespace_id,
+        GeneratedItem::CanonicalNamespace { items: namespace.child_item_ids.to_vec() },
+    );
     Ok(api_snippets)
 }
 
@@ -226,7 +214,13 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
             let mod_name = make_rs_ident(&mod_name.identifier);
             // TODO(b/308949532): Skip re-export if the module being used is empty
             // (transitively).
-            MainApi::UseMod { path: path.clone(), mod_name }.into()
+            ApiSnippets {
+                generated_items: HashMap::from([(
+                    use_mod.id,
+                    GeneratedItem::UseMod { path: path.clone(), mod_name },
+                )]),
+                ..Default::default()
+            }
         }
         Item::TypeMapOverride(type_override) => {
             let rs_type_kind = db.rs_type_kind((&**type_override).into())?;
@@ -249,7 +243,10 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
                 .collect_vec();
 
             ApiSnippets {
-                main_api: vec![MainApi::Comment { message: disable_comment.into() }],
+                generated_items: HashMap::from([(
+                    type_override.id,
+                    GeneratedItem::Comment { message: disable_comment.into() },
+                )]),
                 assertions,
                 ..Default::default()
             }
@@ -317,7 +314,15 @@ pub fn generate_bindings_tokens(
         snippets.append(db.generate_item(item.clone())?);
     }
 
-    let ApiSnippets { main_api, thunks, assertions, cc_details, features } = snippets;
+    // when we go through the main_api, we want to go through one at a time.
+    // if the parent is none, we're responsible.
+    // each thing needs to go through all its children.
+    let ApiSnippets { generated_items, thunks, assertions, cc_details, features } = snippets;
+    let main_api = code_snippet::generated_items_to_token_stream(
+        &generated_items,
+        ir,
+        ir.top_level_item_ids(),
+    );
 
     let cc_details =
         CppDetails::new(generate_rs_api_impl_includes(&db, crubit_support_path_format), cc_details);
@@ -374,8 +379,7 @@ pub fn generate_bindings_tokens(
             #![allow(dead_code, unused_mut)] __NEWLINE__
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
 
-
-            #( #main_api __NEWLINE__ __NEWLINE__ )*
+            #main_api
 
             #mod_detail __NEWLINE__ __NEWLINE__
 

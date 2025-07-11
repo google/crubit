@@ -1098,7 +1098,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
     let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
     // Make sure the instantiation of the class template appears exactly once in the
     // `top_level_item_ids`.
-    assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record_id).count());
+    assert_eq!(1, ir.top_level_item_ids().iter().filter(|&&id| id == record_id).count());
     // Type alias for the class template specialization.
     assert_ir_matches!(
         ir,
@@ -1284,6 +1284,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     // detail: the ordering is by mangled name).
     let class_template_specialization_names = ir
         .top_level_item_ids()
+        .iter()
         .filter_map(|id| match ir.find_decl(*id).unwrap() {
             ir::Item::Record(r) if r.rs_name.identifier.contains("__CcTemplateInst") => {
                 Some(r.rs_name.identifier.as_ref())
@@ -3214,7 +3215,7 @@ fn test_top_level_items() {
     .unwrap();
 
     let top_level_items =
-        ir.top_level_item_ids().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+        ir.top_level_item_ids().iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
     assert_items_match!(
         top_level_items,
@@ -3630,7 +3631,7 @@ fn test_items_inside_linkage_spec_decl_are_imported() {
 fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
     // The test below assumes the first top_level_item_ids element is the one added
     // by the the source code under test. Let's double check that assumption here.
-    assert!(ir_from_cc("").unwrap().top_level_item_ids().next().is_none());
+    assert!(ir_from_cc("").unwrap().top_level_item_ids().is_empty());
 
     let ir = ir_from_cc(
         r#"
@@ -3639,7 +3640,7 @@ fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
     }"#,
     )
     .unwrap();
-    let item_id = ir.top_level_item_ids().next().unwrap();
+    let item_id = ir.top_level_item_ids()[0];
 
     assert_ir_matches!(
         ir,

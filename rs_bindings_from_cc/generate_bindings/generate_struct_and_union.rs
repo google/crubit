@@ -8,9 +8,9 @@ use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
     ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeriveAttr,
-    DocCommentAttr, Feature, FieldDefinition, FieldType, MainApi, MustUseAttr,
+    DocCommentAttr, Feature, FieldDefinition, FieldType, GeneratedItem, MustUseAttr,
     NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk, ThunkImpl,
-    UpcastImplBody, Visibility,
+    UpcastImpl, UpcastImplBody, Visibility,
 };
 use database::db;
 use database::rs_snippet::{should_derive_clone, should_derive_copy, RsTypeKind};
@@ -23,9 +23,9 @@ use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use std::collections::HashMap;
+use std::iter;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
-use std::{iter, mem};
 
 /// Returns whether fields of type `ty` need to be wrapped in `ManuallyDrop<T>`
 /// to prevent the fields from being destructed twice (once by the C++
@@ -63,12 +63,17 @@ pub fn generate_incomplete_record(
         .visibility;
     let cc_type = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
     let namespace_qualifier = db.ir().namespace_qualifier(&incomplete_record).format_for_cc()?;
-    Ok(MainApi::ForwardDeclare {
-        visibility,
-        ident: make_rs_ident(incomplete_record.rs_name.identifier.as_ref()),
-        symbol: quote! {#namespace_qualifier #cc_type}.to_string(),
-    }
-    .into())
+    Ok(ApiSnippets {
+        generated_items: HashMap::from([(
+            incomplete_record.id,
+            GeneratedItem::ForwardDeclare {
+                visibility,
+                ident: make_rs_ident(incomplete_record.rs_name.identifier.as_ref()),
+                symbol: quote! {#namespace_qualifier #cc_type}.to_string(),
+            },
+        )]),
+        ..Default::default()
+    })
 }
 
 fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
@@ -514,22 +519,25 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     let head_padding =
         if head_padding > 0 || !allow_direct_init { Some(head_padding) } else { None };
 
+    api_snippets.cc_details.push(cc_struct_layout_assertion(db, &record)?);
+
     let fully_qualified_cc_name = cpp_tagless_type_name_for_record(&record, ir)?.to_string();
 
-    let mut record_generated_snippets = ApiSnippets::default();
-    let mut record_child_generated_main_apis = vec![];
+    let mut items = vec![];
+    let mut nested_items = vec![];
     for &child_item_id in &record.child_item_ids {
         let item = ir.find_untyped_decl(child_item_id);
-        let mut child_api_snippets = db.generate_item(item.clone())?;
+        api_snippets.append(db.generate_item(item.clone())?);
         if item.place_in_nested_module_if_nested_in_record()
             && db.has_bindings(item.clone()).is_ok()
         {
-            // If it doesn't have bindings, we don't want to put it in the nested module.
-            record_child_generated_main_apis.append(&mut child_api_snippets.main_api);
+            nested_items.push(child_item_id);
+        } else {
+            items.push(child_item_id);
         }
-        record_generated_snippets.append(child_api_snippets);
     }
 
+    let mut indirect_functions = vec![];
     filter_out_ambiguous_member_functions(
         db,
         record.clone(),
@@ -543,8 +551,21 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
             db.generate_function(ir_func.clone(), Some(record.clone())).ok().flatten()?;
         Some((*generated_func.snippets).clone())
     })
-    .for_each(|func_snippets| {
-        record_generated_snippets.append(func_snippets);
+    .for_each(|mut func_snippets| {
+        // After generating the functions pertaining to our record, we pull them out of the
+        // generated_items list and add them to the indirect_functions list.
+        assert_eq!(
+            func_snippets.generated_items.len(),
+            1,
+            "Expected exactly one generated item per function"
+        );
+        for (_itemid, generated_item) in func_snippets.generated_items.drain() {
+            let GeneratedItem::Func(generated_func) = generated_item else {
+                unreachable!("generate_function only creates GeneratedItem::Func");
+            };
+            indirect_functions.push(generated_func);
+        }
+        api_snippets.append(func_snippets);
     });
 
     // Both the template definition and its instantiation should enable experimental
@@ -553,8 +574,12 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     if let Some(defining_target) = &record.defining_target {
         crubit_features |= ir.target_crubit_features(defining_target);
     }
+    let mut upcast_impls = vec![];
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
-        record_generated_snippets.append(cc_struct_upcast_impl(db, &record, ir)?);
+        let (new_upcast_impls, thunks, thunk_impls) = cc_struct_upcast_impl(db, &record, ir)?;
+        upcast_impls = new_upcast_impls;
+        api_snippets.thunks.extend(thunks);
+        api_snippets.cc_details.extend(thunk_impls);
     }
     let no_unique_address_accessors =
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
@@ -570,11 +595,6 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     } else {
         None
     };
-
-    api_snippets.cc_details.push(cc_struct_layout_assertion(db, &record)?);
-
-    let items = mem::take(&mut record_generated_snippets.main_api);
-    api_snippets.append(record_generated_snippets);
 
     let cxx_impl = if fully_qualified_cc_name.contains('<') {
         // cxx can't parse templated type names.
@@ -624,9 +644,11 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         implements_sync: record.trait_derives.sync,
         cxx_impl,
         incomplete_definition,
+        upcast_impls,
         no_unique_address_accessors,
         items,
-        nested_items: record_child_generated_main_apis,
+        nested_items,
+        indirect_functions,
     };
 
     api_snippets.features |= Feature::negative_impls;
@@ -667,7 +689,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         },
     ));
 
-    api_snippets.main_api.push(MainApi::Record(record_tokens));
+    api_snippets.generated_items.insert(record.id, GeneratedItem::Record(Box::new(record_tokens)));
     Ok(api_snippets)
 }
 
@@ -787,31 +809,30 @@ fn cc_struct_no_unique_address_impl(
     Ok(no_unique_address_accessors)
 }
 
+type UpcastImplResult = Result<UpcastImpl, String>;
+
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
 fn cc_struct_upcast_impl(
     db: &dyn BindingsGenerator,
     record: &Rc<Record>,
     ir: &IR,
-) -> Result<ApiSnippets> {
-    let mut main_api = Vec::with_capacity(record.unambiguous_public_bases.len());
+) -> Result<(Vec<UpcastImplResult>, Vec<Thunk>, Vec<ThunkImpl>)> {
     let mut thunks = vec![];
-    let mut cc_details = vec![];
+    let mut thunk_impls = vec![];
+    let mut upcast_impls = vec![];
+    let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
     for base in &record.unambiguous_public_bases {
         let base_record: &Rc<Record> = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
         let Ok(base_type) = db.rs_type_kind(base_record.as_ref().into()) else {
             // The base type is unknown to Crubit, so don't generate upcast code for it.
-            let base_name = &base_record.cc_name;
-            let derived_name = &record.cc_name;
-            main_api.extend([
-                MainApi::Newline,
-                MainApi::Comment {
-                    message: format!("'{derived_name}' cannot be upcasted to '{base_name}' because the base type doesn't have Crubit bindings.").into(),
-                },
-                MainApi::Newline,
-            ]);
+            upcast_impls.push(Err(format!(
+                "'{}' cannot be upcasted to '{}' because the base type doesn't have Crubit bindings.",
+                &record.cc_name,
+                &base_record.cc_name,
+            )));
             continue;
         };
         if let RsTypeKind::Error { .. } = base_type {
@@ -822,7 +843,6 @@ fn cc_struct_upcast_impl(
             continue;
         }
         let base_name = base_type.to_token_stream(db);
-        let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
         let body = if let Some(offset) = base.offset {
             UpcastImplBody::PointerOffset { offset }
         } else {
@@ -834,15 +854,16 @@ fn cc_struct_upcast_impl(
             ));
             let base_cc_name = cpp_type_name_for_record(base_record.as_ref(), ir)?;
             let derived_cc_name = cpp_type_name_for_record(record.as_ref(), ir)?;
-            cc_details.push(ThunkImpl::Upcast {
-                base_cc_name: base_cc_name.clone(),
-                cast_fn_name: cast_fn_name.clone(),
-                derived_cc_name: derived_cc_name.clone(),
-            });
+
             thunks.push(Thunk::Upcast {
                 cast_fn_name: cast_fn_name.clone(),
                 derived_name: derived_name.clone(),
                 base_name: base_name.clone(),
+            });
+            thunk_impls.push(ThunkImpl::Upcast {
+                base_cc_name: base_cc_name.clone(),
+                cast_fn_name: cast_fn_name.clone(),
+                derived_cc_name: derived_cc_name.clone(),
             });
 
             UpcastImplBody::CastThunk {
@@ -850,8 +871,13 @@ fn cc_struct_upcast_impl(
                 cast_fn_name,
             }
         };
-        main_api.push(MainApi::UpcastImpl { base_name, derived_name, body });
+
+        upcast_impls.push(Ok(UpcastImpl {
+            base_name: base_name.clone(),
+            derived_name: derived_name.clone(),
+            body,
+        }));
     }
 
-    Ok(ApiSnippets { main_api, thunks, cc_details, ..Default::default() })
+    Ok((upcast_impls, thunks, thunk_impls))
 }

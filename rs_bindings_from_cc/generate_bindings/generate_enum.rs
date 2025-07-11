@@ -6,11 +6,12 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
-use database::code_snippet::{ApiSnippets, Feature, MainApi};
+use database::code_snippet::{ApiSnippets, Feature, GeneratedItem};
 use database::BindingsGenerator;
 use ir::Enum;
 use proc_macro2::Literal;
 use quote::{quote, ToTokens};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::generate_enum`.
@@ -69,7 +70,7 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
         }
     };
     Ok(ApiSnippets {
-        main_api: vec![MainApi::Enum(item)],
+        generated_items: HashMap::from([(enum_.id, GeneratedItem::Enum(item))]),
         features: Feature::register_tool.into(),
         ..Default::default()
     })

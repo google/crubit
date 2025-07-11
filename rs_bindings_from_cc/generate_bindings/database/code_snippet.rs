@@ -11,9 +11,10 @@ use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use heck::ToSnakeCase;
-use ir::{BazelLabel, GenericItem, Item, RecordType, UnqualifiedIdentifier};
+use ir::{BazelLabel, GenericItem, Item, ItemId, Namespace, RecordType, UnqualifiedIdentifier, IR};
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{quote, ToTokens};
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::num::NonZeroUsize;
 use std::rc::Rc;
@@ -29,10 +30,12 @@ pub struct FfiBindings {
 
 #[derive(Clone, Debug, Default)]
 pub struct ApiSnippets {
-    /// Main API - for example:
-    /// - A Rust definition of a function (with a doc comment),
-    /// - A Rust definition of a struct (with a doc comment).
-    pub main_api: Vec<MainApi>,
+    /// Mapping from an item to the abstract representation of its generated bindings.
+    ///
+    /// The ordering of the items is irrelevant; the GeneratedItems are quoted by traversing the
+    /// IR's top level items in order which is deterministic, and traversing their children in
+    /// order, which is also deterministic.
+    pub generated_items: HashMap<ItemId, GeneratedItem>,
 
     /// Rust implementation details - for example:
     /// - A Rust declaration of an `extern "C"` thunk,
@@ -48,15 +51,20 @@ pub struct ApiSnippets {
     pub features: FlagSet<Feature>,
 }
 
-impl From<MainApi> for ApiSnippets {
-    fn from(main_api: MainApi) -> Self {
-        ApiSnippets { main_api: vec![main_api], ..Default::default() }
-    }
-}
-
 impl ApiSnippets {
     pub fn append(&mut self, other: ApiSnippets) {
-        self.main_api.extend(other.main_api);
+        for (item_id, generated_item) in other.generated_items {
+            use std::collections::hash_map::Entry::*;
+            match self.generated_items.entry(item_id) {
+                Vacant(vacant) => {
+                    // Other has generated bindings for an Item that self hasn't.
+                    vacant.insert(generated_item);
+                }
+                Occupied(mut occupied) => {
+                    occupied.get_mut().merge(generated_item);
+                }
+            }
+        }
         self.thunks.extend(other.thunks);
         self.assertions.extend(other.assertions);
         self.cc_details.extend(other.cc_details);
@@ -386,25 +394,290 @@ impl From<NoBindingsReason> for Error {
     }
 }
 
+pub fn generated_items_to_token_stream(
+    generated_items: &HashMap<ItemId, GeneratedItem>,
+    ir: &IR,
+    elements: &[ItemId],
+) -> TokenStream {
+    let mut tokens = quote! {};
+    generated_items_to_tokens(generated_items, ir, elements, &mut tokens);
+    tokens
+}
+
+pub fn generated_items_to_tokens(
+    generated_items: &HashMap<ItemId, GeneratedItem>,
+    ir: &IR,
+    elements: &[ItemId],
+    tokens: &mut TokenStream,
+) {
+    for &id in elements {
+        let Some(generated_item) = generated_items.get(&id) else {
+            continue;
+        };
+
+        match generated_item {
+            GeneratedItem::Comment { message } => quote! { __COMMENT__ #message }.to_tokens(tokens),
+            GeneratedItem::Enum(enum_item) => enum_item.to_tokens(tokens),
+            GeneratedItem::Func(function_tokens) => function_tokens.to_tokens(tokens),
+            GeneratedItem::Record(record_item) => {
+                let Record {
+                    doc_comment_attr,
+                    derive_attr,
+                    recursively_pinned_attr,
+                    must_use_attr,
+                    align,
+                    crubit_annotation,
+                    visibility,
+                    struct_or_union,
+                    ident,
+                    head_padding,
+                    field_definitions,
+                    implements_send,
+                    implements_sync,
+                    cxx_impl,
+                    incomplete_definition,
+                    upcast_impls,
+                    no_unique_address_accessors,
+                    items,
+                    nested_items,
+                    indirect_functions,
+                } = record_item.as_ref();
+
+                let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
+                    let align = Literal::usize_unsuffixed(align);
+                    quote! { align(#align) }
+                }));
+
+                let head_padding = head_padding.map(|n| {
+                    let n = Literal::usize_unsuffixed(n);
+                    quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
+                });
+
+                let send_impl = match implements_send {
+                    true => quote! { unsafe impl Send for #ident {} },
+                    false => quote! { impl !Send for #ident {} },
+                };
+                let sync_impl = match implements_sync {
+                    true => quote! { unsafe impl Sync for #ident {} },
+                    false => quote! { impl !Sync for #ident {} },
+                };
+
+                let cxx_impl = match cxx_impl {
+                    Some(CxxExternTypeImpl { id, kind }) => quote! {
+                        unsafe impl ::cxx::ExternType for #ident {
+                            type Id = ::cxx::type_id!(#id);
+                            type Kind = #kind;
+                        }
+                    },
+                    _ => quote! {},
+                };
+
+                let no_unique_address_accessors_impl = if !no_unique_address_accessors.is_empty() {
+                    Some(quote! {
+                        impl #ident {
+                            #( #no_unique_address_accessors )*
+                        }
+                    })
+                } else {
+                    None
+                };
+
+                quote! {
+                    #doc_comment_attr
+                    #derive_attr
+                    #recursively_pinned_attr
+                    #must_use_attr
+                    #[repr(#(#repr_attrs),*)]
+                    #crubit_annotation
+                    #visibility #struct_or_union #ident {
+                        #head_padding
+                        #( #field_definitions )*
+                    }
+
+                    #send_impl
+                    #sync_impl
+                    #cxx_impl
+
+                    #incomplete_definition
+
+                    #no_unique_address_accessors_impl
+
+                    __NEWLINE__ __NEWLINE__
+                }
+                .to_tokens(tokens);
+
+                generated_items_to_tokens(generated_items, ir, items, tokens);
+
+                quote! { #( #indirect_functions __NEWLINE__ __NEWLINE__ )* }.to_tokens(tokens);
+
+                for upcast_impl_or_err in upcast_impls {
+                    match upcast_impl_or_err {
+                        Ok(UpcastImpl { base_name, derived_name, body }) => {
+                            let body = match body {
+                                UpcastImplBody::PointerOffset { offset } => {
+                                    let offset = Literal::i64_unsuffixed(*offset);
+                                    quote! { (derived as *const _ as *const u8).offset(#offset) as *const #base_name }
+                                }
+                                UpcastImplBody::CastThunk { crate_root_path, cast_fn_name } => {
+                                    let path = if let Some(crate_root_path) = crate_root_path {
+                                        quote! { crate :: #crate_root_path }
+                                    } else {
+                                        quote! { crate }
+                                    };
+                                    quote! { #path::detail::#cast_fn_name(derived) }
+                                }
+                            };
+
+                            quote! {
+                                unsafe impl oops::Inherits<#base_name> for #derived_name {
+                                    unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
+                                        #body
+                                    }
+                                }
+                                __NEWLINE__
+                                __NEWLINE__
+                            }
+                            .to_tokens(tokens);
+                        }
+                        Err(err) => {
+                            quote! {
+                                __NEWLINE__
+                                __COMMENT__ #err
+                                __NEWLINE__
+                            }
+                            .to_tokens(tokens);
+                        }
+                    }
+                }
+
+                if !nested_items.is_empty() {
+                    let snake_case_name = make_rs_ident(&ident.to_string().to_snake_case());
+                    let nested_items_to_tokens =
+                        generated_items_to_token_stream(generated_items, ir, nested_items);
+                    quote! {
+                        pub mod #snake_case_name {
+                            #[allow(unused_imports)]
+                            use super::*; __NEWLINE__
+                            __NEWLINE__
+                            #nested_items_to_tokens
+                        }
+                    }
+                    .to_tokens(tokens);
+                }
+            }
+            GeneratedItem::NonCanonicalNamespace | GeneratedItem::CanonicalNamespace { .. } => {
+                // For a given namespace, canonical_namespace_id is not necessarily in this target,
+                // meaning it may never be visited if we branch down just from the top level items in
+                // this target. To mitigate this issue, we instead agree to pick the last reopened
+                // namespace _in this target_ as the representative that gets to generate all the items
+                // in the canonical namespace.
+                // The reason this occurs is because although Crubit only generates items for this
+                // target, Clang looks at all the includes, meaning it can see the same namespace in
+                // headers from different targets. The canonical namespace is picked by Clang, resulting
+                // in sometimes getting a canonical namespace that's not in our target.
+                // We do not have to worry about getting items from other targets though because Crubit
+                // only generates items for this target.
+                let namespace =
+                    ir.find_decl::<Rc<Namespace>>(id).expect("should always be a namespace");
+                let is_last_reopened_namespace_in_this_target = ir
+                    .is_last_reopened_namespace(id, namespace.canonical_namespace_id)
+                    .expect("should always be a namespace");
+
+                if !is_last_reopened_namespace_in_this_target {
+                    // It is not the representative, so we don't generate any items in order to
+                    // avoid generating duplicate bindings.
+                    continue;
+                }
+                // It is the representative, so we generate all the items keyed under the
+                // canonical namespace id.
+
+                let Some(GeneratedItem::CanonicalNamespace { items }) =
+                    generated_items.get(&namespace.canonical_namespace_id)
+                else {
+                    panic!("the entry we generated for the canonical namespace should be a GeneratedItem::CanonicalNamespace");
+                };
+
+                let namespace_tokens = generated_items_to_token_stream(generated_items, ir, items);
+
+                let canonical_namespace: &Rc<ir::Namespace> = ir
+                    .find_decl(namespace.canonical_namespace_id)
+                    .expect("should always be a namespace");
+                let name = make_rs_ident(&canonical_namespace.rs_name.identifier);
+
+                quote! {
+                    pub mod #name {
+                        #namespace_tokens
+                    }
+                    __NEWLINE__
+                }
+                .to_tokens(tokens);
+
+                if canonical_namespace.is_inline {
+                    // TODO(b/308949532): Skip re-export if the canonical module is empty
+                    // (transitively).
+                    quote! {
+                        __HASH_TOKEN__ [allow(unused_imports)]
+                        pub use #name::*;
+                    }
+                    .to_tokens(tokens);
+                }
+            }
+            GeneratedItem::ForwardDeclare { visibility, ident, symbol } => {
+                quote! {
+                    forward_declare::forward_declare!(
+                        #visibility #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
+                    );
+                }
+                .to_tokens(tokens);
+            }
+            GeneratedItem::UseMod { path, mod_name } => quote! {
+                #[path = #path]
+                mod #mod_name;
+                __HASH_TOKEN__ [allow(unused_imports)]
+                pub use #mod_name::*;
+            }
+            .to_tokens(tokens),
+            GeneratedItem::GlobalVar { link_name, visibility, is_mut, ident, type_tokens } => {
+                let link_name_attr =
+                    link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
+                let mut_kw = if *is_mut { Some(quote! { mut }) } else { None };
+                quote! {
+                    extern "C" {
+                        #link_name_attr
+                        #visibility static #mut_kw #ident: #type_tokens;
+                    }
+                }
+                .to_tokens(tokens);
+            }
+            GeneratedItem::TypeAlias { doc_comment, visibility, ident, underlying_type } => {
+                quote! {
+                    #doc_comment
+                    #visibility type #ident = #underlying_type;
+                }
+                .to_tokens(tokens);
+            }
+        }
+        quote! {
+            __NEWLINE__
+            __NEWLINE__
+        }
+        .to_tokens(tokens);
+    }
+}
+
 #[derive(Clone, Debug)]
-pub enum MainApi {
+pub enum GeneratedItem {
     Comment {
         message: Rc<str>,
     },
     Enum(TokenStream),
     Func(TokenStream),
-    Record(Record),
-    Newline,
-    UpcastImpl {
-        base_name: TokenStream,
-        derived_name: TokenStream,
-        body: UpcastImplBody,
-    },
-    Namespace {
-        name: Ident,
-        previous_namespace_to_use: Option<Ident>,
-        items: Vec<MainApi>,
-        insert_use_stmt_for_inline_namespace: bool,
+    // Box used to mitigate disproportionaly large enum variant lint
+    Record(Box<Record>),
+    NonCanonicalNamespace,
+    CanonicalNamespace {
+        /// List of all the items from all the namespaces
+        items: Vec<ItemId>,
     },
     ForwardDeclare {
         visibility: Visibility,
@@ -430,106 +703,24 @@ pub enum MainApi {
     },
 }
 
-impl ToTokens for MainApi {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            MainApi::Comment { message } => quote! { __COMMENT__ #message }.to_tokens(tokens),
-            MainApi::Enum(enum_item) => enum_item.to_tokens(tokens),
-            MainApi::Func(func_item) => func_item.to_tokens(tokens),
-            MainApi::Record(record_item) => record_item.to_tokens(tokens),
-            MainApi::Newline => quote! { __NEWLINE__ }.to_tokens(tokens),
-            MainApi::UpcastImpl { base_name, derived_name, body } => {
-                let body = match body {
-                    UpcastImplBody::PointerOffset { offset } => {
-                        let offset = Literal::i64_unsuffixed(*offset);
-                        quote! { (derived as *const _ as *const u8).offset(#offset) as *const #base_name }
-                    }
-                    UpcastImplBody::CastThunk { crate_root_path, cast_fn_name } => {
-                        let path = if let Some(crate_root_path) = crate_root_path {
-                            quote! { crate :: #crate_root_path }
-                        } else {
-                            quote! { crate }
-                        };
-                        quote! { #path::detail::#cast_fn_name(derived) }
-                    }
-                };
-
-                quote! {
-                    unsafe impl oops::Inherits<#base_name> for #derived_name {
-                        unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
-                            #body
-                        }
-                    }
-                }
-                .to_tokens(tokens);
+impl GeneratedItem {
+    fn merge(&mut self, other: GeneratedItem) {
+        match (self, other) {
+            (
+                GeneratedItem::CanonicalNamespace { items },
+                GeneratedItem::CanonicalNamespace { items: other_items },
+            ) => {
+                items.extend(other_items);
             }
-            MainApi::Namespace {
-                name,
-                previous_namespace_to_use,
-                items,
-                insert_use_stmt_for_inline_namespace,
-            } => {
-                let use_stmt_for_previous_namespace =
-                    previous_namespace_to_use.as_ref().map(|previous_namespace_ident| {
-                        quote! {
-                          __HASH_TOKEN__ [allow(unused_imports)]
-                          pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__
-                        }
-                    });
-
-                quote! {
-                    pub mod #name {
-                        #use_stmt_for_previous_namespace
-
-                        #( #items __NEWLINE__ __NEWLINE__ )*
-                    }
-                    __NEWLINE__
-                }
-                .to_tokens(tokens);
-
-                if *insert_use_stmt_for_inline_namespace {
-                    // TODO(b/308949532): Skip re-export if the canonical module is empty
-                    // (transitively).
-                    quote! {
-                        __HASH_TOKEN__ [allow(unused_imports)]
-                        pub use #name::*;
-                    }
-                    .to_tokens(tokens);
-                }
+            (
+                GeneratedItem::Comment { message },
+                GeneratedItem::Comment { message: other_message },
+            ) => {
+                assert_eq!(message.as_ref(), other_message.as_ref());
             }
-            MainApi::ForwardDeclare { visibility, ident, symbol } => {
-                quote! {
-                    forward_declare::forward_declare!(
-                        #visibility #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#symbol)
-                    );
-                }
-                .to_tokens(tokens);
-            }
-            MainApi::UseMod { path, mod_name } => quote! {
-                #[path = #path]
-                mod #mod_name;
-                __HASH_TOKEN__ [allow(unused_imports)]
-                pub use #mod_name::*;
-            }
-            .to_tokens(tokens),
-            MainApi::GlobalVar { link_name, visibility, is_mut, ident, type_tokens } => {
-                let link_name_attr =
-                    link_name.as_deref().map(|link_name| quote! { #[link_name = #link_name] });
-                let mut_kw = if *is_mut { Some(quote! { mut }) } else { None };
-                quote! {
-                    extern "C" {
-                        #link_name_attr
-                        #visibility static #mut_kw #ident: #type_tokens;
-                    }
-                }
-                .to_tokens(tokens);
-            }
-            MainApi::TypeAlias { doc_comment, visibility, ident, underlying_type } => {
-                quote! {
-                    #doc_comment
-                    #visibility type #ident = #underlying_type;
-                }
-                .to_tokens(tokens);
+            (this, other) => {
+                // The bindings are not mergable, this should never happen.
+                unreachable!("Two ApiSnippets generated bindings for the same ItemId that's not a canonical namespace: {this:#?} and {other:#?}");
             }
         }
     }
@@ -552,115 +743,19 @@ pub struct Record {
     pub implements_sync: bool,
     pub cxx_impl: Option<CxxExternTypeImpl>,
     pub incomplete_definition: Option<TokenStream>,
+    pub upcast_impls: Vec<Result<UpcastImpl, String>>,
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
-    pub items: Vec<MainApi>,
-    /// Specifically the items that were generated for nested records.
-    pub nested_items: Vec<MainApi>,
+    pub items: Vec<ItemId>,
+    pub nested_items: Vec<ItemId>,
+    /// Functions that get attached either by a trait or from a base class.
+    pub indirect_functions: Vec<TokenStream>,
 }
 
-impl ToTokens for Record {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Self {
-            doc_comment_attr,
-            derive_attr,
-            recursively_pinned_attr,
-            must_use_attr,
-            align,
-            crubit_annotation,
-            visibility,
-            struct_or_union,
-            ident,
-            head_padding,
-            field_definitions,
-            implements_send,
-            implements_sync,
-            cxx_impl,
-            incomplete_definition,
-            no_unique_address_accessors,
-            items,
-            nested_items,
-        } = self;
-
-        let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
-            let align = Literal::usize_unsuffixed(align);
-            quote! { align(#align) }
-        }));
-
-        let head_padding = head_padding.map(|n| {
-            let n = Literal::usize_unsuffixed(n);
-            quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
-        });
-
-        let send_impl = match implements_send {
-            true => quote! { unsafe impl Send for #ident {} },
-            false => quote! { impl !Send for #ident {} },
-        };
-        let sync_impl = match implements_sync {
-            true => quote! { unsafe impl Sync for #ident {} },
-            false => quote! { impl !Sync for #ident {} },
-        };
-
-        let cxx_impl = match cxx_impl {
-            Some(CxxExternTypeImpl { id, kind }) => quote! {
-                unsafe impl ::cxx::ExternType for #ident {
-                    type Id = ::cxx::type_id!(#id);
-                    type Kind = #kind;
-                }
-            },
-            _ => quote! {},
-        };
-
-        let no_unique_address_accessors_impl = if !no_unique_address_accessors.is_empty() {
-            Some(quote! {
-                impl #ident {
-                    #( #no_unique_address_accessors )*
-                }
-            })
-        } else {
-            None
-        };
-
-        let nested_items = if !nested_items.is_empty() {
-            let snake_case_name = make_rs_ident(&ident.to_string().to_snake_case());
-            Some(quote! {
-                pub mod #snake_case_name {
-                    #[allow(unused_imports)]
-                    use super::*; __NEWLINE__
-                    __NEWLINE__
-                    #( #nested_items )*
-                }
-            })
-        } else {
-            None
-        };
-
-        quote! {
-            #doc_comment_attr
-            #derive_attr
-            #recursively_pinned_attr
-            #must_use_attr
-            #[repr(#(#repr_attrs),*)]
-            #crubit_annotation
-            #visibility #struct_or_union #ident {
-                #head_padding
-                #( #field_definitions )*
-            }
-
-            #send_impl
-            #sync_impl
-            #cxx_impl
-
-            #incomplete_definition
-
-            #no_unique_address_accessors_impl
-
-            __NEWLINE__ __NEWLINE__
-            #( #items __NEWLINE__ __NEWLINE__ )*
-
-            #nested_items
-        }
-        .to_tokens(tokens);
-    }
+#[derive(Clone, Debug)]
+pub struct UpcastImpl {
+    pub base_name: TokenStream,
+    pub derived_name: TokenStream,
+    pub body: UpcastImplBody,
 }
 
 #[derive(Clone, Debug)]
