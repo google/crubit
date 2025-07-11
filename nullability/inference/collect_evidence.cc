@@ -1483,7 +1483,7 @@ static bool hasAnyInferenceTargets(dataflow::ReferencedDecls &RD) {
 }
 
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
-  constexpr std::int64_t MaxSATIterations = 200'000;
+  constexpr std::int64_t MaxSATIterations = 2'000'000;
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
 }
 
