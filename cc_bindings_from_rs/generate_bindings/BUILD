@@ -84,6 +84,7 @@ crubit_rust_test(
         "//common:crubit_feature",
         "//common:token_stream_matchers",
         "@crate_index//:flagset",
+        "@crate_index//:proc-macro2",
         "@crate_index//:quote",
     ],
 )

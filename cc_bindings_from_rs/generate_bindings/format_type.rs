@@ -410,7 +410,7 @@ pub fn format_ty_for_cc<'tcx>(
 
         ty::TyKind::Ref(region, referent_mid, mutability) => {
             match location {
-                TypeLocation::FnReturn | TypeLocation::FnParam | TypeLocation::Const => (),
+                TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::Const => (),
                 TypeLocation::Other => bail!(
                     "Can't format `{ty}`, because references are only supported in \
                      function parameter types, return types, and consts (b/286256327)",
@@ -437,6 +437,36 @@ pub fn format_ty_for_cc<'tcx>(
             }
 
             let lifetime = format_region_as_cc_lifetime(region);
+            let treat_ref_as_ptr: bool = (|| {
+                // Parameter type references are only converted to C++ references if they are
+                // valid exclusively for the lifetime of the function.
+                //
+                // References with a more complex lifetime are converted to pointers.
+                // See <internal link> for more details on the motivation.
+                let TypeLocation::FnParam { is_self_param, elided_is_output } = location else {
+                    return false;
+                };
+                // `self` parameters are always passed by-ref, never by pointer.
+                if is_self_param {
+                    return false;
+                }
+                // Explicit lifetimes are always converted to pointers.
+                if !region_is_elided(*region) {
+                    return true;
+                }
+                // Elided lifetimes are converted to pointers if the elided lifetime is captured by
+                // the output of the function.
+                if elided_is_output {
+                    return true;
+                }
+                false
+            })();
+
+            let ptr_or_ref_prefix = if treat_ref_as_ptr {
+                quote! { * #lifetime }
+            } else {
+                quote! { & #lifetime }
+            };
 
             // Early return in case we handle a transparent reference type.
             if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
@@ -444,33 +474,16 @@ pub fn format_ty_for_cc<'tcx>(
                 *referent_mid,
                 referent_hir,
                 *mutability,
-                quote! { & #lifetime },
+                ptr_or_ref_prefix.clone(),
             ) {
                 return Ok(snippet);
             }
 
             let referent = SugaredTy::new(*referent_mid, referent_hir);
-            let mut cc_type = format_pointer_or_reference_ty_for_cc(
-                db,
-                referent,
-                *mutability,
-                quote! { & #lifetime },
-            )
-            .with_context(|| {
-                format!("Failed to format the referent of the reference type `{ty}`")
-            })?;
-            // For function parameters which are `'_`, we allow the caller to decide whether
-            // to require the reference feature. Some use cases are safe (e.g.
-            // if it's the only reference/pointer parameter.)
-            //
-            // In all other cases, we assume it is unsafe and require references to be
-            // enabled.
-            if location != TypeLocation::FnParam {
-                cc_type.prereqs.required_features |= FineGrainedFeature::References;
-            } else if !region.is_param() {
-                cc_type.prereqs.required_features |= FineGrainedFeature::NonFreeReferenceParams;
-            }
-            cc_type
+            format_pointer_or_reference_ty_for_cc(db, referent, *mutability, ptr_or_ref_prefix)
+                .with_context(|| {
+                    format!("Failed to format the referent of the reference type `{ty}`")
+                })?
         }
         ty::TyKind::FnPtr(sig_tys, fn_header) => {
             let sig = {
@@ -500,7 +513,7 @@ pub fn format_ty_for_cc<'tcx>(
             // top-level return types and parameter types (and pointers are used
             // in other locations).
             let ptr_or_ref_sigil = match location {
-                TypeLocation::FnReturn | TypeLocation::FnParam | TypeLocation::Const => {
+                TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::Const => {
                     quote! { & }
                 }
                 TypeLocation::Other => quote! { * },
@@ -516,9 +529,15 @@ pub fn format_ty_for_cc<'tcx>(
                 }
             }
             let ret_type = format_ret_ty_for_cc(db, &sig, sig_hir)?.into_tokens(&mut prereqs);
-            let param_types = format_param_types_for_cc(db, &sig, sig_hir, AllowReferences::Safe)?
-                .into_iter()
-                .map(|snippet| snippet.into_tokens(&mut prereqs));
+            let param_types = format_param_types_for_cc(
+                db,
+                &sig,
+                sig_hir,
+                AllowReferences::Safe,
+                /*has_self_param=*/ false,
+            )?
+            .into_iter()
+            .map(|snippet| snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
                 crubit::type_identity_t<
                     #ret_type( #( #param_types ),* )
@@ -618,6 +637,35 @@ pub fn format_ret_ty_for_cc<'tcx>(
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
 
+pub fn has_elided_region<'tcx>(search_ty: ty::Ty<'tcx>) -> bool {
+    use core::ops::ControlFlow;
+    use rustc_middle::ty::{Region, TyCtxt, TypeVisitor};
+
+    struct HasUnnamedRegion;
+    struct Searcher;
+    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for Searcher {
+        type Result = ControlFlow<HasUnnamedRegion>;
+        fn visit_region(&mut self, region: Region<'tcx>) -> ControlFlow<HasUnnamedRegion> {
+            if region_is_elided(region) {
+                ControlFlow::Break(HasUnnamedRegion)
+            } else {
+                ControlFlow::Continue(())
+            }
+        }
+    }
+    match Searcher.visit_ty(search_ty) {
+        ControlFlow::Break(HasUnnamedRegion) => true,
+        ControlFlow::Continue(()) => false,
+    }
+}
+
+pub fn region_is_elided(region: ty::Region) -> bool {
+    match region.get_name() {
+        Some(name) => name.as_str().starts_with(query_compiler::ANON_REGION_PREFIX),
+        None => true,
+    }
+}
+
 /// Returns the C++ parameter types.
 ///
 /// `sig_hir` is the optional HIR FnSig, if available. This is used to retrieve
@@ -630,27 +678,23 @@ pub fn format_param_types_for_cc<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     allow_references: AllowReferences,
+    has_self_param: bool,
 ) -> Result<Vec<CcSnippet>> {
     let region_counts = std::cell::LazyCell::new(|| count_regions(sig_mid));
-
+    let elided_is_output = has_elided_region(sig_mid.output());
     let param_types = SugaredTy::fn_inputs(sig_mid, sig_hir);
     let mut snippets = Vec::with_capacity(param_types.len());
     for (i, param_type) in param_types.enumerate() {
+        let is_self_param = i == 0 && has_self_param;
         let mut cc_type = db
-            .format_ty_for_cc(param_type, TypeLocation::FnParam)
+            .format_ty_for_cc(param_type, TypeLocation::FnParam { elided_is_output, is_self_param })
             .with_context(|| format!("Error handling parameter #{i} of type `{param_type}`"))?;
         if allow_references == AllowReferences::Safe {
             // In parameter position, format_ty_for_cc defaults to allowing free
             // (non-static) references. We need to decide which references we
             // allow -- in this case, we choose to allow references _only_ if
-            // the reference cannot mutably alias, and does not have any lifetime
-            // requirements from the caller.
+            // the reference cannot mutably alias.
             match param_type.mid().kind() {
-                ty::TyKind::Ref(input_region, .., Mutability::Not) => {
-                    if region_counts[input_region] > 1 {
-                        cc_type.prereqs.required_features |= FineGrainedFeature::LifetimeReuse;
-                    }
-                }
                 ty::TyKind::Ref(input_region, .., Mutability::Mut) => {
                     if region_counts.len() > 1 || region_counts[input_region] > 1 {
                         cc_type.prereqs.required_features |=
@@ -718,7 +762,31 @@ pub fn format_ty_for_rs<'tcx>(
                 has_cpp_type || !has_non_lifetime_substs(substs),
                 "Generic types are not supported yet (b/259749095)"
             );
-            FullyQualifiedName::new(db, adt.did()).format_for_rs()
+            let type_name = FullyQualifiedName::new(db, adt.did()).format_for_rs();
+            let generic_params = if substs.len() == 0 {
+                quote! {}
+            } else {
+                let generic_params = substs
+                    .iter()
+                    .map(|subst| match subst.kind() {
+                        ty::GenericArgKind::Type(ty) => format_ty_for_rs(db, ty),
+                        ty::GenericArgKind::Lifetime(region) => {
+                            assert_eq!(
+                                region.kind(),
+                                ty::RegionKind::ReStatic,
+                                "We should never format types with non-'static regions, as \
+                                    thunks should first call `replace_all_regions_with_static`."
+                            );
+                            Ok(quote! { 'static })
+                        }
+                        ty::GenericArgKind::Const(_) => {
+                            panic!("Const parameters are not supported, but found {ty}")
+                        }
+                    })
+                    .collect::<Result<Vec<TokenStream>>>()?;
+                quote! { < #(#generic_params),* > }
+            };
+            quote! { #type_name #generic_params }
         }
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
             let qualifier = match mutbl {

@@ -37,7 +37,7 @@ fn test_ty<TestFn, Expectation>(
                 #preamble
                 pub fn test_function() -> #ty_tokens { unimplemented!() }
             },
-            TypeLocation::FnParam => quote! {
+            TypeLocation::FnParam { .. } => quote! {
                 #preamble
                 pub fn test_function(_arg: #ty_tokens) { unimplemented!() }
             },
@@ -61,7 +61,9 @@ fn test_ty<TestFn, Expectation>(
                 };
                 SugaredTy::new(sig_mid.output(), Some(ty_hir))
             }
-            TypeLocation::FnParam => SugaredTy::new(sig_mid.inputs()[0], Some(&sig_hir.inputs[0])),
+            TypeLocation::FnParam { .. } => {
+                SugaredTy::new(sig_mid.inputs()[0], Some(&sig_hir.inputs[0]))
+            }
             TypeLocation::Const | TypeLocation::Other => unimplemented!(),
         }
     }
@@ -169,7 +171,7 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "*const std::ffi::c_uchar", cc: "unsigned char const *"),
         case!(
             rs: "&'static std::ffi::c_uchar",
-            cc: "unsigned char const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]"
+            cc: "unsigned char const * [[clang :: annotate_type (\"lifetime\" , \"static\")]]"
         ),
         // Generics lose type alias information.
         case!(rs: "Identity<std::ffi::c_longlong>", cc: "std::int64_t", includes: ["<cstdint>"]),
@@ -195,12 +197,12 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "*mut i32", cc: "std :: int32_t *", includes: ["<cstdint>"]),
         case!(
             rs: "&'static i32",
-            cc: "std :: int32_t const & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
+            cc: "std :: int32_t const * [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
             includes: ["<cstdint>"]
         ),
         case!(
             rs: "&'static mut i32",
-            cc: "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
+            cc: "std :: int32_t * [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
             includes: ["<cstdint>"]
         ),
         // Slice pointers:
@@ -320,7 +322,7 @@ fn test_format_ty_for_cc_successes() {
         // pub type MyChar = core::ffi::c_char;
     };
     test_ty(
-        TypeLocation::FnParam,
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
         &testcases,
         preamble,
         |desc,
@@ -334,7 +336,12 @@ fn test_format_ty_for_cc_successes() {
          }| {
             let (actual_tokens, actual_prereqs) = {
                 let db = bindings_db_for_tests(tcx);
-                let s = format_ty_for_cc(&db, ty, TypeLocation::FnParam).unwrap();
+                let s = format_ty_for_cc(
+                    &db,
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap();
                 (s.tokens.to_string(), s.prereqs)
             };
             let (actual_includes, actual_prereq_defs, actual_prereq_fwd_decls) =
@@ -502,13 +509,22 @@ fn test_format_ty_for_cc_failures() {
             pub t: T,
         }
     };
-    test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_msg| {
-        let db = bindings_db_for_tests(tcx);
-        let anyhow_err = format_ty_for_cc(&db, ty, TypeLocation::FnParam)
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &testcases,
+        preamble,
+        |desc, tcx, ty, expected_msg| {
+            let db = bindings_db_for_tests(tcx);
+            let anyhow_err = format_ty_for_cc(
+                &db,
+                ty,
+                TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+            )
             .expect_err(&format!("Expecting error for: {desc}"));
-        let actual_msg = format!("{anyhow_err:#}");
-        assert_eq!(&actual_msg, *expected_msg, "{desc}");
-    });
+            let actual_msg = format!("{anyhow_err:#}");
+            assert_eq!(&actual_msg, *expected_msg, "{desc}");
+        },
+    );
 }
 
 #[test]
@@ -563,7 +579,7 @@ fn test_format_ty_for_rs_successes() {
         ),
         ("*const std::mem::MaybeUninit<i32>", "*const std::mem::MaybeUninit<i32>"),
         ("*mut std::mem::MaybeUninit<i32>", "*mut std::mem::MaybeUninit<i32>"),
-        ("LifetimeGenericStruct<'static>", "::rust_out::LifetimeGenericStruct"),
+        ("LifetimeGenericStruct<'static>", "::rust_out::LifetimeGenericStruct< 'static >"),
     ];
     let preamble = quote! {
         #![feature(never_type)]
@@ -584,12 +600,17 @@ fn test_format_ty_for_rs_successes() {
             pub reference: &'a u8,
         }
     };
-    test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_tokens| {
-        let db = bindings_db_for_tests(tcx);
-        let actual_tokens = format_ty_for_rs(&db, ty.mid()).unwrap().to_string();
-        let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
-        assert_eq!(actual_tokens, expected_tokens, "{desc}");
-    });
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &testcases,
+        preamble,
+        |desc, tcx, ty, expected_tokens| {
+            let db = bindings_db_for_tests(tcx);
+            let actual_tokens = format_ty_for_rs(&db, ty.mid()).unwrap().to_string();
+            let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual_tokens, expected_tokens, "{desc}");
+        },
+    );
 }
 
 #[test]
@@ -612,11 +633,16 @@ fn test_format_ty_for_rs_failures() {
         ),
     ];
     let preamble = quote! {};
-    test_ty(TypeLocation::FnParam, &testcases, preamble, |desc, tcx, ty, expected_err| {
-        let db = bindings_db_for_tests(tcx);
-        let anyhow_err =
-            format_ty_for_rs(&db, ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
-        let actual_err = format!("{anyhow_err:#}");
-        assert_eq!(&actual_err, *expected_err, "{desc}");
-    });
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &testcases,
+        preamble,
+        |desc, tcx, ty, expected_err| {
+            let db = bindings_db_for_tests(tcx);
+            let anyhow_err =
+                format_ty_for_rs(&db, ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
+            let actual_err = format!("{anyhow_err:#}");
+            assert_eq!(&actual_err, *expected_err, "{desc}");
+        },
+    );
 }

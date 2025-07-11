@@ -40,6 +40,10 @@ impl<'a> StructWithLifetime<'a> {
     pub fn value(self) -> i32 {
         *self.field_with_lifetime
     }
+
+    pub fn borrow_from_self(&self) -> &i32 {
+        self.field_with_lifetime
+    }
 }
 
 impl StructWithLifetime<'static> {
@@ -57,7 +61,13 @@ impl StructWithLifetime<'static> {
     {
         Self { field_with_lifetime }
     }
+
+    pub fn borrow_from_static_self(&'static self) -> &'static i32 {
+        self.field_with_lifetime
+    }
 }
+
+pub fn function_with_trivial_unnamed_lifetime_param(_: &i32) {}
 
 pub struct StructWithLifetimeAndDropGlue<'a> {
     pub field_with_lifetime: &'a i32,

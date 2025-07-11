@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::{format_cc_ident, format_ty_for_cc};
+use crate::format_type::{format_cc_ident, format_ty_for_cc, has_elided_region, region_is_elided};
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, ident_or_opt_ident, is_thunk_required,
@@ -26,11 +26,11 @@ use proc_macro2::{Literal, TokenStream};
 use query_compiler::{is_copy, post_analysis_typing_env};
 use quote::quote;
 use rustc_attr_data_structures::AttributeKind;
-use rustc_hir::{self as hir, Node};
+use rustc_hir::{self as hir, def::DefKind};
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
-use rustc_span::symbol::{kw, Symbol};
+use rustc_span::symbol::Symbol;
 use std::collections::BTreeSet;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -38,8 +38,8 @@ enum FunctionKind {
     /// Free function (i.e. not a method).
     Free,
 
-    /// Static method (i.e. the first parameter is not named `self`).
-    StaticMethod,
+    /// Non-method associated function (i.e. the first parameter is not named `self`).
+    AssociatedFn,
 
     /// Instance method taking `self` by value (i.e. `self: Self`).
     MethodTakingSelfByValue,
@@ -53,7 +53,7 @@ impl FunctionKind {
     fn has_self_param(&self) -> bool {
         match self {
             FunctionKind::MethodTakingSelfByValue | FunctionKind::MethodTakingSelfByRef => true,
-            FunctionKind::Free | FunctionKind::StaticMethod => false,
+            FunctionKind::Free | FunctionKind::AssociatedFn => false,
         }
     }
 }
@@ -312,6 +312,41 @@ fn cc_return_value_from_c_abi<'tcx>(
     }
 }
 
+/// Returns the kind of a function (free, method, etc.) or an error if the self type is unsupported.
+fn function_kind<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    def_id: DefId,
+    self_ty: Option<Ty<'tcx>>,
+    param_types: &[Ty<'tcx>],
+) -> Result<FunctionKind> {
+    match tcx.def_kind(def_id) {
+        DefKind::Fn => return Ok(FunctionKind::Free),
+        DefKind::AssocFn => {}
+        other => panic!("Unexpected HIR node kind: {other:?}"),
+    }
+    if !tcx.associated_item(def_id).is_method() {
+        return Ok(FunctionKind::AssociatedFn);
+    }
+    let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
+    if param_types[0] == self_ty {
+        return Ok(FunctionKind::MethodTakingSelfByValue);
+    }
+    match param_types[0].kind() {
+        ty::TyKind::Ref(_, referent_ty, _) if *referent_ty == self_ty => {
+            Ok(FunctionKind::MethodTakingSelfByRef)
+        }
+        _ => bail!("Unsupported `self` type `{}`", param_types[0]),
+    }
+}
+
+fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<Ty<'tcx>> {
+    let impl_id = tcx.impl_of_method(def_id)?;
+    match tcx.impl_subject(impl_id).instantiate_identity() {
+        ty::ImplSubject::Inherent(ty) => Some(ty),
+        ty::ImplSubject::Trait(_) => panic!("Trait methods should be filtered by caller"),
+    }
+}
+
 fn export_name_and_no_mangle_attrs_of<'tcx>(
     tcx: TyCtxt<'tcx>,
     def_id: DefId,
@@ -360,6 +395,8 @@ pub fn generate_function(
 
     let (sig_mid, sig_hir) = get_fn_sig(tcx, local_def_id);
     check_fn_sig(&sig_mid)?;
+    let self_ty = self_ty_of_method(tcx, def_id);
+    let function_kind = function_kind(tcx, def_id, self_ty, sig_mid.inputs())?;
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
     let (export_name, has_no_mangle) = export_name_and_no_mangle_attrs_of(tcx, def_id);
     let has_export_name = export_name.is_some();
@@ -383,8 +420,13 @@ pub fn generate_function(
     }
     let params = {
         let names = tcx.fn_arg_idents(def_id).iter();
-        let cpp_types =
-            format_param_types_for_cc(db, &sig_mid, Some(sig_hir), AllowReferences::Safe)?;
+        let cpp_types = format_param_types_for_cc(
+            db,
+            &sig_mid,
+            Some(sig_hir),
+            AllowReferences::Safe,
+            function_kind.has_self_param(),
+        )?;
         names
             .enumerate()
             .zip(SugaredTy::fn_inputs(&sig_mid, Some(sig_hir)))
@@ -410,37 +452,9 @@ pub fn generate_function(
             .collect_vec()
     };
 
-    let self_ty: Option<Ty> = match tcx.impl_of_method(def_id) {
-        Some(impl_id) => match tcx.impl_subject(impl_id).instantiate_identity() {
-            ty::ImplSubject::Inherent(ty) => Some(ty),
-            ty::ImplSubject::Trait(_) => panic!("Trait methods should be filtered by caller"),
-        },
-        None => None,
-    };
-
-    let method_kind = match tcx.hir_node_by_def_id(local_def_id) {
-        Node::Item(_) => FunctionKind::Free,
-        Node::ImplItem(_) => match tcx.fn_arg_idents(def_id).first().and_then(ident_or_opt_ident) {
-            Some(ident) if ident.name == kw::SelfLower => {
-                let self_ty = self_ty.expect("ImplItem => non-None `self_ty`");
-                if params[0].ty.mid() == self_ty {
-                    FunctionKind::MethodTakingSelfByValue
-                } else {
-                    match params[0].ty.mid().kind() {
-                        ty::TyKind::Ref(_, referent_ty, _) if *referent_ty == self_ty => {
-                            FunctionKind::MethodTakingSelfByRef
-                        }
-                        _ => bail!("Unsupported `self` type"),
-                    }
-                }
-            }
-            _ => FunctionKind::StaticMethod,
-        },
-        other => panic!("Unexpected HIR node kind: {other:?}"),
-    };
     let mut takes_self_by_copy = false;
-    let method_qualifiers = match method_kind {
-        FunctionKind::Free | FunctionKind::StaticMethod => quote! {},
+    let method_qualifiers = match function_kind {
+        FunctionKind::Free | FunctionKind::AssociatedFn => quote! {},
         FunctionKind::MethodTakingSelfByValue => {
             let self_ty = params[0].ty.mid();
             if is_copy(tcx, def_id, self_ty) {
@@ -452,12 +466,21 @@ pub fn generate_function(
         }
         FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
             ty::TyKind::Ref(region, _, mutability) => {
+                // Ref-qualify if the lifetime of `&self` is a named lifetime or if it the elided
+                // lifetime appears in the return type.
+                // See <internal link> for more details on the motivation.
+                let ref_qualifier =
+                    if !region_is_elided(*region) || has_elided_region(sig_mid.output()) {
+                        quote! { & }
+                    } else {
+                        quote! {}
+                    };
                 let lifetime_annotation = format_region_as_cc_lifetime(region);
                 let mutability = match mutability {
                     Mutability::Mut => quote! {},
                     Mutability::Not => quote! { const },
                 };
-                quote! { #mutability #lifetime_annotation }
+                quote! { #mutability #ref_qualifier #lifetime_annotation }
             }
             _ => panic!("Expecting TyKind::Ref for MethodKind...Self...Ref"),
         },
@@ -480,7 +503,7 @@ pub fn generate_function(
     let needs_definition = unqualified_rust_fn_name.as_str() != thunk_name;
     let main_api_params = params
         .iter()
-        .skip(if method_kind.has_self_param() { 1 } else { 0 })
+        .skip(if function_kind.has_self_param() { 1 } else { 0 })
         .map(|Param { cc_name, cpp_type, .. }| quote! { #cpp_type #cc_name })
         .collect_vec();
     let rs_return_type = SugaredTy::fn_output(&sig_mid, Some(sig_hir));
@@ -494,7 +517,7 @@ pub fn generate_function(
         let mut prereqs = main_api_prereqs.clone();
         prereqs.move_defs_to_fwd_decls();
 
-        let static_ = if method_kind == FunctionKind::StaticMethod {
+        let static_ = if function_kind == FunctionKind::AssociatedFn {
             quote! { static }
         } else {
             quote! {}
@@ -562,16 +585,22 @@ pub fn generate_function(
         };
 
         let mut prereqs = main_api_prereqs;
-        let thunk_decl =
-            generate_thunk_decl(db, &sig_mid, Some(sig_hir), &thunk_name, AllowReferences::Safe)?
-                .into_tokens(&mut prereqs);
+        let thunk_decl = generate_thunk_decl(
+            db,
+            &sig_mid,
+            Some(sig_hir),
+            &thunk_name,
+            AllowReferences::Safe,
+            function_kind.has_self_param(),
+        )?
+        .into_tokens(&mut prereqs);
 
         let mut statements = TokenStream::new();
         let mut thunk_args = params
             .iter()
             .enumerate()
             .map(|(i, Param { cc_name, ty, .. })| {
-                if i == 0 && method_kind.has_self_param() {
+                if i == 0 && function_kind.has_self_param() {
                     if takes_self_by_copy {
                         // Self-by-copy methods are `const` qualified. The Rust thunk does not
                         // accept a const pointer, but we can just const_cast since underlying C++

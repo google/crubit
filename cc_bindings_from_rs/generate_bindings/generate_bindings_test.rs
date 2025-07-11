@@ -1476,7 +1476,7 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
                 struct ... SomeStruct final {
                     ...
                     static std::int32_t fn_taking_reference(
-                        std::int32_t const& [[clang::annotate_type("lifetime", "a")]] x);
+                        std::int32_t const* [[clang::annotate_type("lifetime", "a")]] x);
                     ...
                 };
                 ...
@@ -1487,10 +1487,10 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
             quote! {
                 namespace __crubit_internal {
                 extern "C" std::int32_t ...(
-                    std::int32_t const& [[clang::annotate_type("lifetime", "a")]]);
+                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]]);
                 }
                 inline std::int32_t SomeStruct::fn_taking_reference(
-                    std::int32_t const& [[clang::annotate_type("lifetime", "a")]] x) {
+                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]] x) {
                   return __crubit_internal::...(x);
                 }
             },
@@ -1530,7 +1530,7 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_impl_level
                 struct ... SomeStruct final {
                     ...
                     static std::int32_t fn_taking_reference(
-                        std::int32_t const& [[clang::annotate_type("lifetime", "a")]] x);
+                        std::int32_t const* [[clang::annotate_type("lifetime", "a")]] x);
                     ...
                 };
                 ...
@@ -1784,8 +1784,7 @@ fn test_format_item_method_taking_self_by_arc() {
         let main_api = &result.main_api;
         let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
                                defined at <crubit_unittests.rs>;l=7: \
-                               Error handling parameter #0 of type `std::sync::Arc<SomeStruct>`\
-                               : Generic types are not supported yet (b/259749095)";
+                               Unsupported `self` type `std::sync::Arc<SomeStruct>`";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -1821,9 +1820,7 @@ fn test_format_item_method_taking_self_by_pinned_mut_ref() {
         let main_api = &result.main_api;
         let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
                                defined at <crubit_unittests.rs>;l=7: \
-                               Error handling parameter #0 of type \
-                               `std::pin::Pin<&'__anon1 mut SomeStruct>`: \
-                               Generic types are not supported yet (b/259749095)";
+                               Unsupported `self` type `std::pin::Pin<&'__anon1 mut SomeStruct>`";
         assert_cc_matches!(
             main_api.tokens,
             quote! {

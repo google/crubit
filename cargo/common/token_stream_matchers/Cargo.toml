@@ -19,4 +19,5 @@ path = "../../../common/token_stream_matchers.rs"
 token_stream_matchers_fastpath = { path = "../../../cargo/common/token_stream_matchers_fastpath"}
 token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
 anyhow.workspace = true
+indenter.workspace = true
 proc-macro2.workspace = true

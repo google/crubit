@@ -12,8 +12,29 @@
 const _: () = assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetime>() == 8);
 const _: () = assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetime>() == 8);
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_uref(
+    field_with_lifetime: &'static i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::lifetimes_golden::StructWithLifetime::from_ref(field_with_lifetime);
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetime<'static>)
+            .write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_uref(
+    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
+) -> &'static i32 {
+    unsafe {
+        let __self = __self.assume_init_read();
+        ::lifetimes_golden::StructWithLifetime::into_ref(__self)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_value(
-    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime>,
+    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
 ) -> i32 {
     unsafe {
         let __self = __self.assume_init_read();
@@ -21,10 +42,29 @@ unsafe extern "C" fn __crubit_thunk_value(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_borrow_ufrom_uself(
+    __self: &'static ::lifetimes_golden::StructWithLifetime<'static>,
+) -> &'static i32 {
+    unsafe { ::lifetimes_golden::StructWithLifetime::borrow_from_self(__self) }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_make_ustatic_u42(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::lifetimes_golden::StructWithLifetime::make_static_42();
-        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetime).write(__rs_return_value);
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetime<'static>)
+            .write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_ustatic_uref(
+    field_with_lifetime: &'static i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::lifetimes_golden::StructWithLifetime::from_static_ref(field_with_lifetime);
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetime<'static>)
+            .write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -36,12 +76,25 @@ unsafe extern "C" fn __crubit_thunk_from_ustatic_uref_uwhere_ubound(
         let __rs_return_value = ::lifetimes_golden::StructWithLifetime::from_static_ref_where_bound(
             field_with_lifetime,
         );
-        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetime).write(__rs_return_value);
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetime<'static>)
+            .write(__rs_return_value);
     }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_borrow_ufrom_ustatic_uself(
+    __self: &'static ::lifetimes_golden::StructWithLifetime<'static>,
+) -> &'static i32 {
+    unsafe { ::lifetimes_golden::StructWithLifetime::borrow_from_static_self(__self) }
 }
 const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
+    __param_0: &'static i32,
+) -> () {
+    unsafe { ::lifetimes_golden::function_with_trivial_unnamed_lifetime_param(__param_0) }
+}
 const _: () =
     assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 32);
 const _: () =
@@ -58,7 +111,7 @@ extern "C" fn __crubit_thunk_drop(
 unsafe extern "C" fn __crubit_thunk_make_ustatic_u42(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::lifetimes_golden::StructWithLifetimeAndDropGlue::make_static_42();
-        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue)
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue<'static>)
             .write(__rs_return_value);
     }
 }

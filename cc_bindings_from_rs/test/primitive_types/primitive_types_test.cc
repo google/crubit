@@ -48,10 +48,10 @@ TEST(PrimitiveTypesTest, MaybeUninitTest) {
   int32_t val = 0;
   const int32_t const_val = 0;
 
-  auto& ref = maybe_uninit::maybe_uninit_ref(const_val);
+  auto& ref = maybe_uninit::maybe_uninit_ref(&const_val);
   static_assert(std::is_same_v<const int32_t&, decltype(ref)>);
 
-  auto& ref_mut = maybe_uninit::maybe_uninit_ref_mut(val);
+  auto& ref_mut = maybe_uninit::maybe_uninit_ref_mut(&val);
   static_assert(std::is_same_v<int32_t&, decltype(ref_mut)>);
 
   auto ptr = maybe_uninit::maybe_uninit_ptr(&const_val);

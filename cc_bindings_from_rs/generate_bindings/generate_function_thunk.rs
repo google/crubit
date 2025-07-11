@@ -56,12 +56,14 @@ pub fn generate_thunk_decl<'tcx>(
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     thunk_name: &TokenStream,
     allow_references: AllowReferences,
+    has_self_param: bool,
 ) -> Result<CcSnippet> {
     let mut prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid, sig_hir)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cpp_types = format_param_types_for_cc(db, sig_mid, sig_hir, allow_references)?;
+        let cpp_types =
+            format_param_types_for_cc(db, sig_mid, sig_hir, allow_references, has_self_param)?;
         sig_mid
             .inputs()
             .iter()
@@ -610,7 +612,14 @@ pub fn generate_trait_thunks<'tcx>(
 
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(db, &thunk_name)?;
-            generate_thunk_decl(db, &sig_mid, sig_hir, &thunk_name, allow_references)?
+            generate_thunk_decl(
+                db,
+                &sig_mid,
+                sig_hir,
+                &thunk_name,
+                allow_references,
+                /*has_self_param=*/ true,
+            )?
         });
 
         rs_thunk_impls += {

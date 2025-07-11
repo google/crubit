@@ -22,7 +22,16 @@ pub enum TypeLocation {
     // TODO(b/278141494, b/278141418): Once `const` and `static` items are supported,
     // we may want to apply parameter-like formatting to their types (e.g. have
     // `format_ty_for_cc` emit `T&` rather than `T*`).
-    FnParam,
+    FnParam {
+        /// Whether the parameter is a self parameter.
+        /// Self parameter references are never transformed into pointers, but may instead result
+        /// in a member function being ref-qualified.
+        is_self_param: bool,
+
+        /// Whether elided lifetimes correspond to an elided lifetime in the return type.
+        /// This is used to determine whether to emit a pointer or a reference.
+        elided_is_output: bool,
+    },
 
     /// The type of a constant item.
     Const,

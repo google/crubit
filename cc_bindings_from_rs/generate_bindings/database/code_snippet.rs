@@ -15,6 +15,7 @@ use rustc_span::Symbol;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
 use std::collections::HashSet;
+use std::fmt;
 use std::ops::{Add, AddAssign};
 
 #[derive(Clone, Debug, Default)]
@@ -95,10 +96,21 @@ impl Add for CcPrerequisites {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct CcSnippet {
     pub tokens: TokenStream,
     pub prereqs: CcPrerequisites,
+}
+
+// Override debug to use the Display impl for tokens, as the Debug impl for TokenStream is rarely
+// useful (it shows the structure of the tokens, not the actual text).
+impl fmt::Debug for CcSnippet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("CcSnippet")
+            .field("tokens", &self.tokens.to_string())
+            .field("prereqs", &self.prereqs)
+            .finish()
+    }
 }
 
 impl CcSnippet {
@@ -194,12 +206,23 @@ impl PartialEq for ExternCDecl {
 
 impl Eq for ExternCDecl {}
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct RsSnippet {
     pub tokens: TokenStream,
 
     /// Set of extern "C" declarations needed by `tokens`.
     pub extern_c_decls: BTreeSet<ExternCDecl>,
+}
+
+// Override debug to use the Display impl for tokens, as the Debug impl for TokenStream is rarely
+// useful (it shows the structure of the tokens, not the actual text).
+impl fmt::Debug for RsSnippet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("RsSnippet")
+            .field("tokens", &self.tokens.to_string())
+            .field("extern_c_decls", &self.extern_c_decls)
+            .finish()
+    }
 }
 
 impl FromIterator<RsSnippet> for RsSnippet {

@@ -169,8 +169,8 @@ fn test_format_item_unsupported_lifetime_generic_struct() {
                  public:
                   ...
                   static ::rust_out::Point new_(
-                    std::int32_t const& [[clang::annotate_type("lifetime", "b")]] _x,
-                    std::int32_t const& [[clang::annotate_type("lifetime", "c")]] _y);
+                    std::int32_t const* [[clang::annotate_type("lifetime", "b")]] _x,
+                    std::int32_t const* [[clang::annotate_type("lifetime", "c")]] _y);
                   ...
                 };
             }

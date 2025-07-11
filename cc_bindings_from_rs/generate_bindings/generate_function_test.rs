@@ -3,9 +3,24 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use code_gen_utils::format_cc_includes;
+use proc_macro2::TokenStream;
 use quote::quote;
+use std::str::FromStr;
 use test_helpers::{test_format_item, test_format_item_with_features, test_generated_bindings};
 use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
+
+#[track_caller]
+fn assert_cc_item(src: &str, item_name: &str, expected_cc: TokenStream) {
+    let actual_cc_string = test_format_item(src, item_name, |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Convert `TokenStream` to a string and back in order to avoid `TokenStream` not being
+        // `Send`.
+        main_api.tokens.to_string()
+    });
+    let actual_cc = TokenStream::from_str(&actual_cc_string).unwrap();
+    assert_cc_matches!(actual_cc, expected_cc);
+}
 
 /// `test_generated_bindings_fn_export_name` covers a scenario where
 /// `MixedSnippet::cc` is present but `MixedSnippet::rs` is empty
@@ -159,17 +174,13 @@ fn test_format_item_fn_explicit_unit_return_type() {
             #[unsafe(no_mangle)]
             pub extern "C" fn explicit_unit_return_type() -> () {}
         "#;
-    test_format_item(test_src, "explicit_unit_return_type", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert!(main_api.prereqs.is_empty());
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                extern "C" void explicit_unit_return_type();
-            }
-        );
-    });
+    assert_cc_item(
+        test_src,
+        "explicit_unit_return_type",
+        quote! {
+            extern "C" void explicit_unit_return_type();
+        },
+    );
 }
 
 #[test]
@@ -180,19 +191,15 @@ fn test_format_item_fn_never_return_type() {
                 panic!("This function panics and therefore never returns");
             }
         "#;
-    test_format_item(test_src, "never_returning_function", |result| {
-        // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
-        // details).
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert!(main_api.prereqs.is_empty());
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                extern "C" [[noreturn]] void never_returning_function();
-            }
-        );
-    })
+    // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
+    // details).
+    assert_cc_item(
+        test_src,
+        "never_returning_function",
+        quote! {
+            extern "C" [[noreturn]] void never_returning_function();
+        },
+    )
 }
 
 /// `test_format_item_fn_mangling` checks that bindings can be generated for
@@ -375,17 +382,13 @@ fn test_format_item_fn_static_reference() {
             #[unsafe(no_mangle)]
             pub fn foo(_x: &'static i32) {}
         "#;
-    test_format_item_with_features(
+    assert_cc_item(
         test_src,
         "foo",
-        <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
-        |result| {
-            assert_eq!(
-                result.unwrap_err(),
-                "support for bound reference lifetimes (such as 'static) requires //features:experimental"
-            )
+        quote! {
+            void foo(std::int32_t const* ... _x);
         },
-    );
+    )
 }
 
 // NOTE: If we gain support for references as non-parameter types, we must
@@ -415,15 +418,11 @@ fn test_format_item_fn_returned_static_reference() {
             #[unsafe(no_mangle)]
             pub fn foo() -> &'static i32 {todo!()}
         "#;
-    test_format_item_with_features(
+    assert_cc_item(
         test_src,
         "foo",
-        <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
-        |result| {
-            assert_eq!(
-                result.unwrap_err(),
-                "support for references of non-function-param types requires //features:experimental"
-            )
+        quote! {
+            std::int32_t const& ... foo();
         },
     );
 }
@@ -434,15 +433,11 @@ fn test_format_item_fn_reused_reference_lifetime() {
             #[unsafe(no_mangle)]
             pub fn foo<'a>(_x: &'a i32, _y: &'a i32) {}
         "#;
-    test_format_item_with_features(
+    assert_cc_item(
         test_src,
         "foo",
-        <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
-        |result| {
-            assert_eq!(
-                result.unwrap_err(),
-                "support for multiple uses of a lifetime parameter requires //features:experimental"
-            )
+        quote! {
+            void foo(std::int32_t const* ... _x, std::int32_t const* ... _y);
         },
     );
 }
@@ -456,15 +451,11 @@ fn test_format_item_fn_reused_reference_lifetime_struct() {
             #[unsafe(no_mangle)]
             pub fn foo<'a>(_x: &'a Foo<'a>) {}
         "#;
-    test_format_item_with_features(
+    assert_cc_item(
         test_src,
         "foo",
-        <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
-        |result| {
-            assert_eq!(
-                result.unwrap_err(),
-                "support for multiple uses of a lifetime parameter requires //features:experimental"
-            )
+        quote! {
+            void foo(::rust_out::Foo const* ... _x);
         },
     );
 }
@@ -829,7 +820,7 @@ fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
             main_api.tokens,
             quote! {
                 std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]
-                foo(std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg);
+                foo(std::int32_t const* [[clang::annotate_type("lifetime", "__anon1")]] arg);
             }
         );
         assert_cc_matches!(
@@ -838,11 +829,11 @@ fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
                 namespace __crubit_internal {
                 extern "C"
                 std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] ...(
-                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]);
+                    std::int32_t const* [[clang::annotate_type("lifetime", "__anon1")]]);
                 }
                 inline
                 std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]
-                foo(std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg) {
+                foo(std::int32_t const* [[clang::annotate_type("lifetime", "__anon1")]] arg) {
                   return __crubit_internal::...(arg);
                 }
             }
@@ -894,10 +885,10 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
             quote! {
               std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
               foo(
-                std::int32_t const& [[clang::annotate_type("lifetime", "a")]] arg1,
-                std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg2,
-                std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg3,
-                std::int32_t const& [[clang::annotate_type("lifetime", "static")]] arg4,
+                std::int32_t const* [[clang::annotate_type("lifetime", "a")]] arg1,
+                std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg2,
+                std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg3,
+                std::int32_t const* [[clang::annotate_type("lifetime", "static")]] arg4,
                 std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg5,
                 std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]] arg6);
             }
@@ -909,20 +900,20 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
                 extern "C"
                 std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
                 ...(
-                    std::int32_t const& [[clang::annotate_type("lifetime", "a")]],
-                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]],
-                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]],
-                    std::int32_t const& [[clang::annotate_type("lifetime", "static")]],
+                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]],
+                    std::int32_t const* [[clang::annotate_type("lifetime", "foo")]],
+                    std::int32_t const* [[clang::annotate_type("lifetime", "foo")]],
+                    std::int32_t const* [[clang::annotate_type("lifetime", "static")]],
                     std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]],
                     std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]]);
                 }
                 inline
                 std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
                 foo(
-                    std::int32_t const& [[clang::annotate_type("lifetime", "a")]] arg1,
-                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg2,
-                    std::int32_t const& [[clang::annotate_type("lifetime", "foo")]] arg3,
-                    std::int32_t const& [[clang::annotate_type("lifetime", "static")]] arg4,
+                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]] arg1,
+                    std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg2,
+                    std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg3,
+                    std::int32_t const* [[clang::annotate_type("lifetime", "static")]] arg4,
                     std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg5,
                     std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]] arg6) {
                   return __crubit_internal::...(arg1, arg2, arg3, arg4, arg5, arg6);

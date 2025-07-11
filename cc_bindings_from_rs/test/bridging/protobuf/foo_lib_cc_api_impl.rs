@@ -34,12 +34,12 @@ unsafe extern "C" fn __crubit_thunk_handle_urequest(
 ) -> bool {
     unsafe {
         let req = {
-            let mut __crubit_temp=::core::mem::MaybeUninit::<::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestView>::uninit();
+            let mut __crubit_temp=::core::mem::MaybeUninit::<::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestView<'static>>::uninit();
             __crubit_temp.write(::core::mem::transmute(req));
             __crubit_temp.assume_init()
         };
         let rsp = {
-            let mut __crubit_temp=::core::mem::MaybeUninit::<::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooResponseMut>::uninit();
+            let mut __crubit_temp=::core::mem::MaybeUninit::<::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooResponseMut<'static>>::uninit();
             __crubit_temp.write(::core::mem::transmute(rsp));
             __crubit_temp.assume_init()
         };
@@ -53,7 +53,7 @@ unsafe extern "C" fn __crubit_thunk_request_ustats(
 ) -> () {
     unsafe {
         let __rs_return_value = ::foo_lib_golden::FooService::request_stats(__self);
-        (__ret_ptr as*mut::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestStatsView).write(__rs_return_value);
+        (__ret_ptr as*mut::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestStatsView<'static>).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

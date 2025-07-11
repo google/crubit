@@ -65,14 +65,15 @@ TEST(FnParamTyTest, Int32Ptr) {
 TEST(FnParamTyTest, Int32Ref) {
   std::int32_t x = 123;
   std::int32_t y = 456;
-  const std::int32_t& result = fn_param_ty_tests::get_ref_to_smaller_int(x, y);
+  const std::int32_t& result =
+      fn_param_ty_tests::get_ref_to_smaller_int(&x, &y);
   EXPECT_EQ(&result, &x);
 }
 
 TEST(FnParamTyTest, Int32RefWithInferredLifetime) {
   std::int32_t x = 123;
   const std::int32_t& result =
-      fn_param_ty_tests::get_identical_ref_with_inferred_lifetime(x);
+      fn_param_ty_tests::get_identical_ref_with_inferred_lifetime(&x);
   EXPECT_EQ(&result, &x);
 }
 

@@ -108,6 +108,9 @@ pub fn count_regions<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> HashMap<Region<'tcx>, u
     visitor.0
 }
 
+/// The prefix for deanonymized region names.
+pub const ANON_REGION_PREFIX: &str = "'__anon";
+
 /// Similar to `TyCtxt::liberate_and_name_late_bound_regions` but also replaces
 /// anonymous regions with new names.
 pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
@@ -121,7 +124,7 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
         let new_kind: &ty::BoundRegionKind = translated_kinds.entry(br.var).or_insert_with(|| {
             let name = br.kind.get_name().unwrap_or_else(|| {
                 anon_count += 1;
-                Symbol::intern(&format!("'__anon{anon_count}"))
+                Symbol::intern(&format!("{ANON_REGION_PREFIX}{anon_count}"))
             });
             let id = br.kind.get_id().unwrap_or(fn_def_id);
             ty::BoundRegionKind::Named(id, name)

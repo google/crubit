@@ -261,6 +261,7 @@ rust_library(
         ":token_stream_matchers_fastpath",
         ":token_stream_printer",
         "@crate_index//:anyhow",
+        "@crate_index//:indenter",
         "@crate_index//:proc-macro2",
     ],
 )

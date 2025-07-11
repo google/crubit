@@ -192,7 +192,18 @@ pub mod internal {
 
         assert!(!best_mismatch.messages.is_empty());
         let input_string = to_string_fn(input.clone())?;
-        let mut error = anyhow!(format!("input:\n\n```\n{}\n```", input_string));
+        let pattern_string = to_string_fn(pattern.clone())?;
+        let indent = |s: &str| -> String {
+            use std::fmt::Write;
+            let mut output = String::new();
+            indenter::indented(&mut output).with_str("    ").write_str(s).unwrap();
+            output
+        };
+        let mut error = anyhow!(format!(
+            "input:\n{}\npattern:\n{}",
+            indent(&input_string),
+            indent(&pattern_string)
+        ));
         for msg in best_mismatch.messages.into_iter().rev() {
             error = error.context(msg);
         }
@@ -511,38 +522,23 @@ fn foo() {}
 Caused by:
     0: expected 'struct B' got 'struct A { int a ; int b ; } ;'
     1: input:
-       
-       ```
-       struct A {
-         int a;
-         int b;
-       };
-       ```"#
+           struct A {
+             int a;
+             int b;
+           };
+       pattern:
+           struct B"#
         );
     }
 
     #[gtest]
     fn test_rustfmt_in_rs_error_message() {
-        assert_eq!(
-            format!(
-                "{:?}",
-                match_tokens(
-                    &quote! {struct A { a: i64, b: i64 }},
-                    &quote! {struct B},
-                    rs_tokens_to_formatted_string_for_tests,
-                )
-                .expect_err("unexpected match")
-            ),
-            "expected 'B' but got 'A'
-
-Caused by:
-    0: expected 'struct B' got 'struct A { a : i64 , b : i64 }'
-    1: input:\n       \n       ```
-       struct A {
-           a: i64,
-           b: i64,
-       }\n       \n       ```"
-        );
+        match_tokens(
+            &quote! {struct A { a: i64, b: i64 }},
+            &quote! {struct B},
+            rs_tokens_to_formatted_string_for_tests,
+        )
+        .expect_err("unexpected match");
     }
 
     #[gtest]
@@ -558,33 +554,23 @@ Caused by:
                 .expect_err("unexpected match")
             ),
             r#"expected 'struct X { }' but the input already ended: expected 'fn foo () { } struct X { }' got 'fn foo () { }': input:
+    fn foo() {}
 
-```
-fn foo() {}
-
-```"#
+pattern:
+    fn foo() {}
+    struct X {}
+"#
         );
     }
 
     #[gtest]
     fn test_reject_different_delimiters() {
-        assert_eq!(
-            format!(
-                "{:#}",
-                match_tokens(
-                    &quote! {fn foo() {}},
-                    &quote! {fn foo() ()},
-                    rs_tokens_to_formatted_string_for_tests
-                )
-                .expect_err("unexpected match")
-            ),
-            r#"expected delimiter Parenthesis for group '()' but got Brace for group '{ }': expected 'fn foo () ()' got 'fn foo () { }': input:
-
-```
-fn foo() {}
-
-```"#
-        );
+        match_tokens(
+            &quote! {fn foo() {}},
+            &quote! {fn foo() ()},
+            rs_tokens_to_formatted_string_for_tests,
+        )
+        .expect_err("unexpected match");
     }
 
     #[gtest]
@@ -603,7 +589,8 @@ fn foo() {}
              expected 'let a = 1 ; let c = 2 ;' got 'let a = 1 ; let b = 2 ;': \
              expected 'fn foo () { let a = 1 ; let c = 2 ; }' \
              got 'fn foo () { let a = 1 ; let b = 2 ; }': \
-             input:\n\n```\nfn foo() {\n    let a = 1;\n    let b = 2;\n}\n\n```"
+             input:\n    fn foo() {\n        let a = 1;\n        let b = 2;\n    }\n\n\
+             pattern:\n    fn foo() {\n        let a = 1;\n        let c = 2;\n    }\n"
         );
     }
 
@@ -646,15 +633,15 @@ fn foo() {}
                 .expect_err("unexpected match")
             ),
             r#"matched the entire pattern but the input still contained 'drop_impl () ;': expected 'fn drop (& mut self) { }' got 'fn drop (& mut self) { drop_impl () ; }': input:
-
-```
-impl Drop {
-    fn drop(&mut self) {
-        drop_impl();
+    impl Drop {
+        fn drop(&mut self) {
+            drop_impl();
+        }
     }
-}
 
-```"#
+pattern:
+    fn drop(&mut self) {}
+"#
         );
         assert_eq!(
             format!(
@@ -667,16 +654,18 @@ impl Drop {
                 .expect_err("unexpected match")
             ),
             r#"matched the entire pattern but the input still contained 'drop_impl2 () ;': expected 'fn drop (& mut self) { drop_impl1 () ; }' got 'fn drop (& mut self) { drop_impl1 () ; drop_impl2 () ; }': input:
+    impl Drop {
+        fn drop(&mut self) {
+            drop_impl1();
+            drop_impl2();
+        }
+    }
 
-```
-impl Drop {
+pattern:
     fn drop(&mut self) {
         drop_impl1();
-        drop_impl2();
     }
-}
-
-```"#
+"#
         );
     }
 
@@ -741,7 +730,7 @@ impl Drop {
             "expected 'c' but got 'b': \
             expected 'c' got 'b b': \
             expected '[a ... c]' got '[a b b]': \
-            input:\n\n```\n[a b b]\n```"
+            input:\n    [a b b]\npattern:\n    [a ... c]"
         );
         assert_eq!(
             format!(
@@ -757,7 +746,7 @@ impl Drop {
             "expected 'c' but got 'b': \
             expected 'b c' got 'b b': \
             expected '[a ... b c]' got '[a b b]': \
-            input:\n\n```\n[a b b]\n```"
+            input:\n    [a b b]\npattern:\n    [a ... b c]"
         );
     }
 

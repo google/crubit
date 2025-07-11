@@ -10,10 +10,7 @@ flagset::flags! {
     /// stating "<big thing> requires experimental", we can say it requires experimental because
     /// it needs e.g. "references".
     pub enum FineGrainedFeature : u8 {
-        References,
-        LifetimeReuse,
         PossibleMutableAliasing,
-        NonFreeReferenceParams,
         EscapeCppReservedKeyword,
         RustChar,
     }
@@ -26,27 +23,6 @@ impl FineGrainedFeature {
     ) -> Result<()> {
         use crubit_feature::CrubitFeature::*;
         match self {
-            Self::References => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for references of non-function-param types requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::LifetimeReuse => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for multiple uses of a lifetime parameter requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::NonFreeReferenceParams => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for bound reference lifetimes (such as 'static) requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
             Self::PossibleMutableAliasing => {
                 ensure!(
                     crubit_features.contains(Experimental),
