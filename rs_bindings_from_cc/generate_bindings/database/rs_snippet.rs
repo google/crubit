@@ -273,9 +273,12 @@ pub enum TypeLocation {
 // specialization.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct GenericMonomorphization {
-    template_name: Rc<str>,     // The name of the C++ template.
-    rust_generic_name: Rc<str>, // The name of the corresponding Rust generic type.
-    type_args: Vec<RsTypeKind>, // The type arguments of the generic translated from C++.
+    /// The name of the C++ template.
+    template_name: Rc<str>,
+    /// The name of the corresponding Rust generic type.
+    rust_generic_name: Rc<str>,
+    /// The type arguments of the generic translated from C++.
+    type_args: Vec<RsTypeKind>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -319,6 +322,7 @@ pub enum RsTypeKind {
     Record {
         record: Rc<Record>,
         crate_path: Rc<CratePath>,
+        /// The template type arguments of the generic translated from C++.
         known_generic_monomorphization: Option<Rc<GenericMonomorphization>>,
     },
     Enum {
@@ -533,8 +537,9 @@ impl RsTypeKind {
             ir.namespace_qualifier(&record),
             rs_imported_crate_name(&record.owning_target, ir),
         ));
+        let type_args = get_template_args(db, &record.template_specialization)?;
         let known_generic_monomorphization =
-            map_to_supported_generic(db, &record.template_specialization).map(Rc::new);
+            map_to_supported_generic(type_args, &record.template_specialization).map(Rc::new);
         Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
     }
 
@@ -1092,29 +1097,41 @@ impl std::fmt::Display for DisplayRsTypeKind<'_, '_> {
     }
 }
 
+/// Returns the type arguments for a template (if this is a template).
+fn get_template_args(
+    db: &dyn BindingsGenerator,
+    template_specialization: &Option<ir::TemplateSpecialization>,
+) -> Result<Vec<RsTypeKind>> {
+    let Some(template_specialization) = template_specialization.as_ref() else {
+        return Ok(vec![]);
+    };
+    template_specialization
+        .template_args
+        .iter()
+        .map(|arg| {
+            let arg_type = match &arg.type_ {
+                Ok(arg_type) => arg_type.clone(),
+                Err(e) => bail!("{e}"),
+            };
+            let arg_type_kind = db.rs_type_kind(arg_type)?;
+            ensure!(
+                !arg_type_kind.is_bridge_type(),
+                "Bridge types cannot be used as template arguments"
+            );
+            Ok(arg_type_kind)
+        })
+        .collect()
+}
+
 /// Returns the Rust generic information if:
 /// - it is a known and supported template specialization.
 /// - all of the template argument types are supported.
 pub fn map_to_supported_generic(
-    db: &dyn BindingsGenerator,
+    type_args: Vec<RsTypeKind>,
     template_specialization: &Option<ir::TemplateSpecialization>,
 ) -> Option<GenericMonomorphization> {
     let template_specialization = template_specialization.as_ref()?;
     let template_name = template_specialization.template_name.to_string();
-    let mut type_args = Vec::new();
-    for arg in template_specialization.template_args.iter() {
-        if arg.type_.is_err() {
-            return None;
-        }
-        let arg_type = arg.type_.clone().unwrap();
-        let Ok(arg_type_kind) = db.rs_type_kind(arg_type.clone()) else {
-            return None;
-        };
-        if arg_type_kind.is_bridge_type() {
-            return None;
-        }
-        type_args.push(arg_type_kind);
-    }
 
     let rust_generic_name = match (template_name.as_str(), &type_args[..]) {
         ("std::unique_ptr", [_t, RsTypeKind::Record { record, .. }]) => {

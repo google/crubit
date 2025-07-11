@@ -18,6 +18,9 @@ crubit_rust_test(
         ":helper_lib",
         "//support/cc_std",
     ],
+    proc_macro_deps = [
+        "//common:item_exists",
+    ],
     deps = [
         "@crate_index//:googletest",
     ],

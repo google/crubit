@@ -2,9 +2,5 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[cfg(test)]
-mod tests {
-
-    #[gtest]
-    fn test_compile() {}
-}
+// This test target checks that the Rust bindings for the cc_deps compiles, so nothing is needed in
+// this file.

@@ -4,7 +4,6 @@
 
 use googletest::prelude::*;
 use helper_lib::*;
-use std::any::Any as _;
 
 #[gtest]
 fn test_trivial_type_wrapped_by_unique_ptr_as_function_arg_and_return_value() {
@@ -28,16 +27,11 @@ fn test_nontrivial_type_wrapped_by_unique_ptr_as_function_arg_and_return_value()
 /// the corresponding Rust type is different, and a vector cannot be "reinterpreted" in place.
 #[gtest]
 fn test_unique_ptr_string() {
-    // MakeUniquePtrString still gets bindings in :experimental, using ctor
+    // MakeUniquePtrString still gets bindings in :experimental, using ctor and templates
     // -- but it won't be the Rust vector reimplementation.
-    let rv = helper_lib::MakeUniquePtrString();
-    let rust_unique_ptr_string_type =
-        std::any::TypeId::of::<cc_std::std::unique_ptr<cc_std::std::string>>();
-    let rv_type = rv.type_id();
-    assert_ne!(
-        rust_unique_ptr_string_type, rv_type,
-        "Crubit must not return a unique_ptr<std::string>, because string is bridged"
-    )
+    // However, because of the bridging operation, we don't necessarily know how to spell
+    // the underlying type, and can't safely generate bindings here.
+    assert!(!item_exists::value_exists!(helper_lib::MakeUniquePtrString))
 }
 
 #[gtest]
@@ -53,14 +47,9 @@ fn test_vector_wrapped_by_value_as_function_arg_and_return_value() {
 /// the corresponding Rust type is different, and a vector cannot be "reinterpreted" in place.
 #[gtest]
 fn test_vector_string() {
-    // MakeVectorString still gets bindings in :experimental, using ctor
+    // MakeVectorString could still get bindings in :wrapper, using ctor and templates
     // -- but it won't be the Rust vector reimplementation.
-    let rv = helper_lib::MakeVectorString();
-    let rust_vector_string_type =
-        std::any::TypeId::of::<cc_std::std::Vector<cc_std::std::string>>();
-    let rv_type = rv.type_id();
-    assert_ne!(
-        rust_vector_string_type, rv_type,
-        "Crubit must not return a Vector<std::string>, because string is bridged"
-    )
+    // However, because of the bridging operation, we don't necessarily know how to spell
+    // the underlying type, and can't safely generate bindings here.
+    assert!(!item_exists::value_exists!(helper_lib::MakeVectorString))
 }
