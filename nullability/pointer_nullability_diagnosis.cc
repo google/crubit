@@ -42,6 +42,7 @@
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
+#include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
@@ -801,6 +802,28 @@ void checkAnnotationsConsistentHelper(
     Diags.push_back({ErrorCode, PointerNullabilityDiagnostic::Context::Other,
                      CharSourceRange::getTokenRange(Range), nullptr, nullptr,
                      CharSourceRange::getTokenRange(CanonicalRange)});
+    return;
+  }
+  // If a function parameter has a nullability annotation in the canonical
+  // declaration but no annotation in its corresponding definition, the
+  // annotation in the declaration is infused into the definition at the AST
+  // level. Consequently, T and CanonicalT will have the same nullabilities
+  // even though they are inconsistent in code. To catch this specific case,
+  // we attempt to read the raw attribute. If the nullability is set, but
+  // there's either no nullability attribute (or no attribute altogether), it
+  // means that there's an inconsistency in annotations.
+  if (const auto *AT = dyn_cast<AttributedType>(T)) {
+    if (AT->getImmediateNullability().has_value() &&
+        (!AT->getAttr() || (AT->getAttrKind() != attr::TypeNonNull &&
+                            AT->getAttrKind() != attr::TypeNullable &&
+                            AT->getAttrKind() != attr::TypeNullUnspecified)) &&
+        // Only issue the diagnostic if the infused nullability is different
+        // from the default.
+        Defaults.get(File) != *AT->getImmediateNullability()) {
+      Diags.push_back({ErrorCode, PointerNullabilityDiagnostic::Context::Other,
+                       CharSourceRange::getTokenRange(Range), nullptr, nullptr,
+                       CharSourceRange::getTokenRange(CanonicalRange)});
+    }
   }
 }
 

@@ -35,6 +35,15 @@ TEST(ConsistentAnnotations, InconsistentParameter2) {
   )cc"));
 }
 
+TEST(ConsistentAnnotations, InconsistentParameter3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int target(int* _Nonnull p);
+    int target(int* p) {  // [[unsafe]]
+      *p;
+    }
+  )cc"));
+}
+
 TEST(ConsistentAnnotations, ConsistentParameterAcrossFormats) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #define nonnull_macro _Nonnull
@@ -77,6 +86,14 @@ TEST(ConsistentAnnotations, InconsistentOuterPointer2) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull *p);
     void target(int *_Nonnull *_Nonnull p) {  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, InconsistentOuterPointer3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nonnull *_Nullable p);
+    void target(int *_Nonnull *p) {  // [[unsafe]]
     }
   )cc"));
 }
@@ -167,6 +184,16 @@ TEST(ConsistentAnnotations, InconsistentSmartPointer2) {
   )cc"));
 }
 
+TEST(ConsistentAnnotations, InconsistentSmartPointer3) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    void target(_Nonnull std::unique_ptr<int> p);
+    void target(std::unique_ptr<int> p) {  // [[unsafe]]
+      *p;
+    }
+  )cc"));
+}
+
 TEST(ConsistentAnnotations, InconsistentWithPragma) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
 #pragma nullability file_default nullable
@@ -174,6 +201,14 @@ TEST(ConsistentAnnotations, InconsistentWithPragma) {
     void target(int *_Nonnull p) {  // [[unsafe]]
       *p;
     }
+  )cc"));
+}
+
+TEST(ConsistentAnnotations, ConsistentWithPragma) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#pragma nullability file_default nonnull
+    void target(int* _Nonnull p);
+    void target(int* p) { *p; }
   )cc"));
 }
 
