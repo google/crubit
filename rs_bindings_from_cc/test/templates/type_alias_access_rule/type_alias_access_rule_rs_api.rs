@@ -16,7 +16,7 @@
 #![deny(warnings)]
 
 // Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=10
-// Error while generating bindings for item 'A':
+// Error while generating bindings for class 'A':
 // Class templates are not supported yet
 
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
@@ -56,7 +56,7 @@ where
 }
 
 // Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-// Error while generating bindings for item 'B::B':
+// Error while generating bindings for function 'B::B':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -99,7 +99,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for B {
 }
 
 // Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=11
-// Error while generating bindings for item 'A<B::PrivateMember>':
+// Error while generating bindings for class 'A<B::PrivateMember>':
 // Can't generate bindings for A<B::PrivateMember> due to missing bindings for its dependency: Unsupported type 'struct B::PrivateMember': No generated bindings found for 'PrivateMember'
 
 mod detail {
