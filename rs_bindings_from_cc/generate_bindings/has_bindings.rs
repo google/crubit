@@ -2,15 +2,17 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{anyhow, Context, Error, Result};
+use arc_anyhow::{anyhow, bail, Context, Error, Result};
 use database::code_snippet::{
-    required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature, Visibility,
+    required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature,
+    ResolvedTypeName, Visibility,
 };
 use database::db;
 use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
 use heck::ToSnakeCase;
-use ir::{BazelLabel, Func, GenericItem, Item};
+use ir::{BazelLabel, Func, GenericItem, Item, ItemId, Record};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::has_bindings`.
@@ -53,7 +55,7 @@ pub fn has_bindings(
             });
         }
 
-        if let ir::Item::Record(parent_record) = parent {
+        if let Item::Record(parent_record) = parent {
             if item.is_type_definition() {
                 // If we have an ancestor that is a template specialization, we can't generate bindings.
                 // The parent check ensures that all ancestors are checked as well.
@@ -68,37 +70,46 @@ pub fn has_bindings(
             }
 
             if item.place_in_nested_module_if_nested_in_record() {
-                // If my parent's snake_case name is the same as their own name, then their children
-                // (including this) cannot be generated.
-                let parent_module_name = parent_record.rs_name.identifier.as_ref().to_snake_case();
-                if parent_record.rs_name.identifier.as_ref() == parent_module_name {
-                    return Err(NoBindingsReason::Unsupported {
-                        context: item.debug_name(ir),
-                        error: anyhow!(
-                            "parent record '{}' name conflicts with automatically generated child module name, so a child module cannot be generated",
-                            parent_record.rs_name
-                        ),
+                // Our parent will be the module generated to hold nested items of the parent
+                // record. So we try to resolve all the names in the namespace of the parent record,
+                // and then seeing what the parent module name resolves to. If it resolves to the
+                // parent module, and it was unique, great! If it resolves to something else, that
+                // means it got overwritten. That would mean this item's parent cannot be generated,
+                // so we cannot generate this item.
+                let resolved_type_names = db
+                    .resolve_type_names(parent_record.enclosing_item_id)
+                    .expect("enclosing_item_id should always be a record or a namespace");
+
+                let parent_module_name: Rc<str> =
+                    parent_record.rs_name.identifier.as_ref().to_snake_case().into();
+
+                let ResolvedTypeName::RecordNestedItems { parent_records_that_map_to_this_name } =
+                    &resolved_type_names[&parent_module_name]
+                else {
+                    // The parent module name was overwritten by something else.
+                    return Err(NoBindingsReason::ParentModuleNameOverwritten {
+                        conflicting_name: parent_module_name,
                     });
-                }
+                };
 
-                // Temporary fix: if the nested record's parent is at the root-level, there's risk of a name conflict for the generated enclosing namespace for nested items. We need to skip these nested records for now.
-                if parent_record.enclosing_item_id.is_none() {
-                    // Root-level.
-                    for &top_item_id in ir.top_level_item_ids() {
-                        let top_item = ir.find_untyped_decl(top_item_id);
-
-                        if let ir::Item::Namespace(ns) = top_item {
-                            if ns.rs_name.identifier.as_ref() == parent_module_name {
-                                return Err(NoBindingsReason::Unsupported {
-                                    context: item.debug_name(ir),
-                                    error: anyhow!(
-                                        "b/430329367: cannot generate bindings for {} because it would lead to a name conflict with a child module",
-                                        parent_record.rs_name
-                                    ),
-                                });
-                            }
-                        }
-                    }
+                assert!(
+                    parent_records_that_map_to_this_name.contains(&parent_record.id),
+                    "this parent module name should be in the list, this is a bug"
+                );
+                if parent_records_that_map_to_this_name.len() > 1 {
+                    return Err(NoBindingsReason::ParentModuleNameNotUnique {
+                        conflicting_name: parent_module_name,
+                        parent_names_that_map_to_same_name: parent_records_that_map_to_this_name
+                            .iter()
+                            .map(|&parent_record_id| {
+                                ir.find_decl::<Rc<Record>>(parent_record_id)
+                                    .unwrap()
+                                    .rs_name
+                                    .identifier
+                                    .clone()
+                            })
+                            .collect(),
+                    });
                 }
             }
         }
@@ -394,4 +405,89 @@ fn type_visibility(
             })
         }
     }
+}
+
+/// Resolves type names to a map from name to ResolvedTypeName.
+///
+/// This only checks the type namespace, as described here:
+/// https://doc.rust-lang.org/reference/names/namespaces.html.
+///
+/// In the future, we may want to extend this to check the value namespace for functions and
+/// global variables as well.
+pub fn resolve_type_names(
+    db: &dyn BindingsGenerator,
+    parent: Option<ItemId>,
+) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>> {
+    let child_item_ids: &[ItemId] = match parent.map(|id| db.ir().find_untyped_decl(id)) {
+        Some(Item::Namespace(ns)) => &ns.child_item_ids,
+        Some(Item::Record(record)) => &record.child_item_ids,
+        None => db.ir().top_level_item_ids(),
+        _ => bail!("not a parent namespace or record"),
+    };
+
+    let mut names: HashMap<Rc<str>, ResolvedTypeName> = HashMap::new();
+    let mut insert = |name: Rc<str>, resolved_type_name: ResolvedTypeName| {
+        use std::collections::hash_map::Entry::*;
+        match names.entry(name) {
+            Vacant(vacant) => {
+                vacant.insert(resolved_type_name);
+            }
+            Occupied(mut occupied) => {
+                occupied
+                    .get_mut()
+                    .coalesce(resolved_type_name)
+                    .expect("name collision, this should never happen");
+            }
+        }
+    };
+
+    for &id in child_item_ids {
+        match db.ir().find_untyped_decl(id) {
+            Item::IncompleteRecord(incomplete_record) => {
+                insert(
+                    incomplete_record.rs_name.identifier.clone(),
+                    ResolvedTypeName::ExplicitItem(id),
+                );
+            }
+            Item::Record(record) => {
+                insert(record.rs_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id));
+                let make_module_for_nested_items = record.child_item_ids.iter().any(|id| {
+                    db.ir().find_untyped_decl(*id).place_in_nested_module_if_nested_in_record()
+                });
+                if make_module_for_nested_items {
+                    insert(
+                        record.rs_name.identifier.as_ref().to_snake_case().into(),
+                        ResolvedTypeName::RecordNestedItems {
+                            parent_records_that_map_to_this_name: vec![id],
+                        },
+                    );
+                }
+            }
+            Item::Enum(enum_) => {
+                insert(enum_.rs_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id))
+            }
+            Item::TypeAlias(type_alias) => {
+                insert(type_alias.rs_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id));
+            }
+            Item::Namespace(ns) => {
+                insert(
+                    ns.rs_name.identifier.clone(),
+                    ResolvedTypeName::Namespace {
+                        canonical_namespace_id: ns.canonical_namespace_id,
+                    },
+                );
+            }
+            Item::UseMod(use_mod) => {
+                insert(use_mod.mod_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id));
+            }
+            Item::TypeMapOverride(type_map_override) => {
+                insert(type_map_override.rs_name.clone(), ResolvedTypeName::ExplicitItem(id));
+            }
+            Item::Func(_) | Item::GlobalVar(_) | Item::UnsupportedItem(_) | Item::Comment(_) => {
+                // Not in the type namespace.
+            }
+        }
+    }
+
+    Ok(Rc::new(names))
 }

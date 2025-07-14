@@ -286,6 +286,7 @@ pub fn new_database<'db>(
         generate_struct_and_union::collect_unqualified_member_functions,
         crubit_abi_type,
         has_bindings::type_target_restriction,
+        has_bindings::resolve_type_names,
     )
 }
 

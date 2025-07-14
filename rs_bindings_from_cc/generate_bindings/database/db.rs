@@ -2,14 +2,16 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::code_snippet::{ApiSnippets, BindingsInfo, NoBindingsReason, Visibility};
+use crate::code_snippet::{
+    ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedTypeName, Visibility,
+};
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
 use crate::rs_snippet::RsTypeKind;
 use arc_anyhow::{anyhow, Result};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
-use ir::{BazelLabel, CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
+use ir::{BazelLabel, CcType, Enum, Func, ItemId, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -132,6 +134,14 @@ memoized::query_group! {
 
         // You should probably use db::type_visibility instead of this function.
         fn type_target_restriction(&self, rs_type_kind: RsTypeKind) -> Result<Option<BazelLabel>>;
+
+        /// Resolves type names to a map from name to ResolvedTypeName.
+        ///
+        /// This only checks the type namespace, as described here:
+        /// https://doc.rust-lang.org/reference/names/namespaces.html.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_type_names
+        fn resolve_type_names(&self, parent: Option<ItemId>) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>>;
 
         #[provided]
         /// Returns the generated bindings for the given enum.

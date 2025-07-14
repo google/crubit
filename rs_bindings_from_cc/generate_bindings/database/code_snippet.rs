@@ -6,7 +6,7 @@
 /// gating, etc.
 use crate::db::BindingsGenerator;
 use crate::rs_snippet::RsTypeKind;
-use arc_anyhow::{anyhow, Error, Result};
+use arc_anyhow::{anyhow, bail, ensure, Error, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
@@ -353,6 +353,20 @@ pub enum NoBindingsReason {
         context: Rc<str>,
         error: Error,
     },
+    /// This item's parent was a record, but no nested items module could be generated because there
+    /// were other records with nested items whose nested items module mapped to the same name.
+    ParentModuleNameNotUnique {
+        conflicting_name: Rc<str>,
+        /// Invariant: more than 1 element.
+        parent_names_that_map_to_same_name: Vec<Rc<str>>,
+    },
+    /// This item's parent was a record, but no nested items module could be generated because there
+    /// were other items that occupied the name in that parent's namespace. For example, a struct
+    /// called `foo` would not be able to receive nested items because its nested module name would
+    /// also be `foo`. `Foo` would be fine though, because it gets `foo`.
+    ParentModuleNameOverwritten {
+        conflicting_name: Rc<str>,
+    },
 }
 
 impl Display for NoBindingsReason {
@@ -390,6 +404,82 @@ impl From<NoBindingsReason> for Error {
             NoBindingsReason::Unsupported { context, error } => error.context(format!(
                 "Can't generate bindings for {context}, because it is unsupported"
             )),
+            NoBindingsReason::ParentModuleNameNotUnique {
+                conflicting_name,
+                parent_names_that_map_to_same_name,
+            } => {
+                anyhow!(
+                    "records {parent_names_that_map_to_same_name:?} all have nested items, but all map to the same nested module name: `{conflicting_name}`",
+                )
+            }
+            NoBindingsReason::ParentModuleNameOverwritten { conflicting_name } => {
+                anyhow!(
+                    "parent record has nested items, but the module to contain them could not be generated because another item named `{conflicting_name}` already exists",
+                )
+            }
+        }
+    }
+}
+
+/// The thing that a type name resolves to.
+pub enum ResolvedTypeName {
+    Namespace {
+        /// Namespaces with the same canonical namespace id are coalesced together.
+        canonical_namespace_id: ItemId,
+    },
+    /// An item that is explicitly generated (as opposed to RecordNestedItems, which is implicitly
+    /// generated).
+    ExplicitItem(ItemId),
+    /// The module that is generated to hold the nested items of a record.
+    /// If there's more than one, that means the multiple records with nested items, when
+    /// snake_cased, map to the same name. For now, this is treated as an error, but we may want to
+    /// behave differently in the future.
+    RecordNestedItems {
+        /// Invariant: at least one item.
+        parent_records_that_map_to_this_name: Vec<ItemId>,
+    },
+}
+
+impl ResolvedTypeName {
+    /// If two names resolve to different ResolvedTypeNames, try and coalesce them together.
+    /// For example, namespaces that correspond to the same canonical namespace id can be flattened.
+    pub fn coalesce(&mut self, other: ResolvedTypeName) -> Result<()> {
+        match (self, other) {
+            // RecordNestedItems coalesce together. Right now, this is just to provide a better
+            // error message ("several record nested items modules map to the same name"), but we
+            // can later change this to actually coalesce them (may lead to nested name conflicts
+            // though) or pick one or something else.
+            (
+                Self::RecordNestedItems { parent_records_that_map_to_this_name },
+                Self::RecordNestedItems {
+                    parent_records_that_map_to_this_name:
+                        mut other_parent_records_that_map_to_this_name,
+                },
+            ) => {
+                parent_records_that_map_to_this_name
+                    .append(&mut other_parent_records_that_map_to_this_name);
+                Ok(())
+            }
+            // RecordNestedItems are always overwritten by other resolved names, because they are
+            // implicitly generated and therefore have low priority.
+            (_, Self::RecordNestedItems { .. }) => Ok(()),
+            (this @ Self::RecordNestedItems { .. }, other) => {
+                *this = other;
+                Ok(())
+            }
+            // Namespaces with the same canonical namespace id flatten into a single resolved name.
+            (
+                Self::Namespace { canonical_namespace_id },
+                Self::Namespace { canonical_namespace_id: other_canonical_namespace_id },
+            ) => {
+                ensure!(
+                    *canonical_namespace_id == other_canonical_namespace_id,
+                    "multiple namespaces with the same name but differing canonical namespace ids"
+                );
+                Ok(())
+            }
+            // Everything else is a conflict, and should never happen.
+            _ => bail!("conflicting name occupants"),
         }
     }
 }
