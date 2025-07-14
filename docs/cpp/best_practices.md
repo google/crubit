@@ -5,7 +5,7 @@
 This document is an attempt at guidance for how Rust changes can be made to
 existing C++ libraries, including core foundational libraries.
 
-For an introduction, see [Rust Bindings for C++ Libraries](index).
+For an introduction, see [Rust Bindings for C++ Libraries](index.md).
 
 ## Code Organization {#organization}
 
