@@ -122,7 +122,6 @@ rust_library(
     visibility = [
         "//:__subpackages__",
         "//google_internal/release:crubit_support_lib_visibility",
-        "@protobuf//rust:__subpackages__",
     ],
 )
 
