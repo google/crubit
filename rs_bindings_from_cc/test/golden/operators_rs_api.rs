@@ -618,7 +618,7 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
     }
 }
 
-// Error while generating bindings for item 'operator+':
+// Error while generating bindings for function 'operator+':
 // Rvalue reference types are not yet supported as first parameter of operators (b/219826128)
 
 #[derive(Clone, Copy)]
@@ -774,10 +774,10 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Incompatible
     }
 }
 
-// Error while generating bindings for item 'operator+':
+// Error while generating bindings for function 'operator+':
 // Non-record-nor-reference operator parameters are not yet supported, found ::core::ffi::c_int
 
-// Error while generating bindings for item 'operator+':
+// Error while generating bindings for function 'operator+':
 // Expected first operator parameter to be a record or incomplete record, found ::core::ffi::c_int
 
 #[derive(Clone, Copy)]
@@ -1727,7 +1727,7 @@ impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
     }
 }
 
-// Error while generating bindings for item 'ManyOperators::operator~':
+// Error while generating bindings for function 'ManyOperators::operator~':
 // Bindings for this kind of operator (operator ~ with 1 parameter(s)) are not supported
 
 impl<'a, 'b> ::core::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperators {

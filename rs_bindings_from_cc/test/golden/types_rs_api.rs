@@ -14,10 +14,10 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-// Error while generating bindings for item 'PtrDiff':
+// Error while generating bindings for type alias 'PtrDiff':
 // Unsupported type 'decltype(static_cast<int *>(nullptr) - static_cast<int *>(nullptr))': Unsupported clang::Type class 'Decltype'
 
-// Error while generating bindings for item 'Size':
+// Error while generating bindings for type alias 'Size':
 // Unsupported type 'decltype(sizeof (0))': Unsupported clang::Type class 'Decltype'
 
 #[derive(Clone, Copy)]
@@ -148,7 +148,7 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-// Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Error while generating bindings for function 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(

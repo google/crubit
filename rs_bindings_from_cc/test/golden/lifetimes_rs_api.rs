@@ -43,7 +43,7 @@ pub unsafe fn ConsumeArray(pair: *mut ::core::ffi::c_int) {
     crate::detail::__rust_thunk___Z12ConsumeArrayPi(pair)
 }
 
-// Error while generating bindings for item 'Arr':
+// Error while generating bindings for type alias 'Arr':
 // Unsupported type 'int[2]': Unsupported clang::Type class 'ConstantArray'
 
 #[inline(always)]

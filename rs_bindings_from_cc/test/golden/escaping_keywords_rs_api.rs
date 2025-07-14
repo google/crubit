@@ -84,10 +84,10 @@ pub fn r#impl(r#match: ::core::ffi::c_int) {
     unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }
 }
 
-// Error while generating bindings for item 'await':
+// Error while generating bindings for class 'await':
 // Class templates are not supported yet
 
-// Error while generating bindings for item 'become':
+// Error while generating bindings for function 'become':
 // Function templates are not supported yet
 
 mod detail {

@@ -36,7 +36,7 @@ pub fn TakeCppStruct(__param_0: crate::RustStruct) {
     }
 }
 
-// Error while generating bindings for item 'MyOption':
+// Error while generating bindings for class 'MyOption':
 // Class templates are not supported yet
 
 #[derive(Clone, Copy)]

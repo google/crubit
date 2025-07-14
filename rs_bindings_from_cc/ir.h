@@ -824,16 +824,19 @@ class FormattedError final {
 
 // A placeholder for an item that we can't generate bindings for (yet)
 struct UnsupportedItem {
-  // Kind is used to indicate which Rust namespace the unsupported item would
-  // be generated in.
-  //
-  // See https://doc.rust-lang.org/reference/names/namespaces.html
+  // Kind is used to indicate which item would cannot be wrapped.
   enum class Kind {
-    kValue,
-    kType,
+    kFunc,
+    kGlobalVar,
+    kStruct,
+    kUnion,
+    kClass,
+    kEnum,
+    kTypeAlias,
+    kNamespace,
     // Unnameable items include things like comments that do not result in
     // Rust types.
-    kUnnameable,
+    kOther,
   };
 
   struct Path {

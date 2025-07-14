@@ -100,7 +100,7 @@ impl ir::GenericItem for TestItem {
         None
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Unnameable
+        UnsupportedItemKind::Other
     }
     fn must_bind(&self) -> bool {
         false

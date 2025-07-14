@@ -99,8 +99,13 @@ pub fn generate_unsupported(db: &dyn BindingsGenerator, item: Rc<UnsupportedItem
     if !source_loc.is_empty() {
         writeln!(&mut message, "{source_loc}").unwrap();
     }
-    writeln!(&mut message, "Error while generating bindings for item '{}':", item.name.as_ref())
-        .unwrap();
+    writeln!(
+        &mut message,
+        "Error while generating bindings for {} '{}':",
+        item.unsupported_kind(),
+        item.name.as_ref()
+    )
+    .unwrap();
     for (index, error) in item.errors().iter().enumerate() {
         if index != 0 {
             message.push_str("\n\n");

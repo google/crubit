@@ -25,35 +25,35 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     // `enum { kFoo = 1 }`, which only exists to provide constants into the
     // surrounding scope and doesn't actually introduce an enum namespace. It
     // seems like it should probably be handled with other constants.
-    return ictx_.ImportUnsupportedItem(
-        enum_decl, UnsupportedItem::Kind::kUnnameable, std::nullopt,
+    return ictx_.ImportUnsupportedRecord(
+        *enum_decl, std::nullopt,
         FormattedError::Static("Unnamed enums are not supported yet"));
   }
   absl::StatusOr<TranslatedIdentifier> enum_name =
       ictx_.GetTranslatedIdentifier(enum_decl);
   if (!enum_name.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        enum_decl, UnsupportedItem::Kind::kType, std::nullopt,
+    return ictx_.ImportUnsupportedRecord(
+        *enum_decl, std::nullopt,
         FormattedError::PrefixedStrCat("Enum name is not supported",
                                        enum_name.status().message()));
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_decl);
   if (!enclosing_item_id.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        enum_decl, UnsupportedItem::Kind::kType, std::nullopt,
+    return ictx_.ImportUnsupportedRecord(
+        *enum_decl, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   // Reports an unsupported enum with the given error.
   //
-  // This is preferred to invoking `ImportUnsupportedItem` directly because it
+  // This is preferred to invoking `ImportUnsupportedRecord` directly because it
   // ensures that the path is set correctly. Note that this cannot be used above
   // because the enclosing item ID and translated name are not yet available.
   auto unsupported = [this, &enum_name, &enclosing_item_id,
                       enum_decl](FormattedError error) {
-    return ictx_.ImportUnsupportedItem(
-        enum_decl, UnsupportedItem::Kind::kType,
+    return ictx_.ImportUnsupportedRecord(
+        *enum_decl,
         UnsupportedItem::Path{.ident = (*enum_name).rs_identifier(),
                               .enclosing_item_id = *enclosing_item_id},
         error);

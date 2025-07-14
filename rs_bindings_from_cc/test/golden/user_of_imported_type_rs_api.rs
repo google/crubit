@@ -61,7 +61,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
+// Error while generating bindings for function 'UserOfImportedType::UserOfImportedType':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(

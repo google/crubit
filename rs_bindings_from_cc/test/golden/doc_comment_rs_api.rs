@@ -440,7 +440,7 @@ pub fn foo() -> ::core::ffi::c_int {
 /// A type alias
 pub type MyTypeAlias = crate::DocCommentSlashes;
 
-// Error while generating bindings for item 'MyTemplate':
+// Error while generating bindings for class 'MyTemplate':
 // Class templates are not supported yet
 
 // Class template specialization.
@@ -455,7 +455,7 @@ pub type MyInstantiation = crate::__CcTemplateInst10MyTemplateIiE;
 /// Type alias to instantiation of a template specialization.
 pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 
-// Error while generating bindings for item 'OuterTemplate':
+// Error while generating bindings for class 'OuterTemplate':
 // Class templates are not supported yet
 
 /// Type alias to a struct nested in a template instantiation.
@@ -682,7 +682,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
 
 // Doc comment for the nested struct.
 
-// Error while generating bindings for item 'NestedStruct':
+// Error while generating bindings for struct 'NestedStruct':
 // Can't generate bindings for NestedStruct, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
 
 // Data member in a nested struct.

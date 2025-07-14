@@ -752,8 +752,32 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
 }
 
 IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
-  return ImportUnsupportedItem(&decl, UnsupportedItem::Kind::kUnnameable,
+  return ImportUnsupportedItem(&decl, UnsupportedItem::Kind::kOther,
                                std::nullopt, {error}, /*is_hard_error=*/true);
+}
+
+IR::Item Importer::ImportUnsupportedRecord(
+    const clang::TagDecl& decl, std::optional<UnsupportedItem::Path> path,
+    FormattedError error) {
+  auto kind = UnsupportedItem::Kind::kOther;
+  switch (decl.getTagKind()) {
+    case clang::TagTypeKind::Struct:
+      kind = UnsupportedItem::Kind::kStruct;
+      break;
+    case clang::TagTypeKind::Class:
+      kind = UnsupportedItem::Kind::kClass;
+      break;
+    case clang::TagTypeKind::Enum:
+      kind = UnsupportedItem::Kind::kEnum;
+      break;
+    case clang::TagTypeKind::Union:
+      kind = UnsupportedItem::Kind::kUnion;
+      break;
+    default:
+      break;
+  }
+  return ImportUnsupportedItem(&decl, kind, std::move(path),
+                               std::vector<FormattedError>({std::move(error)}));
 }
 
 IR::Item Importer::ImportUnsupportedItem(

@@ -311,7 +311,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasCustomAli
 }
 
 pub mod template_with_preferred_name {
-    // Error while generating bindings for item 'template_with_preferred_name::SomeTemplate':
+    // Error while generating bindings for class 'template_with_preferred_name::SomeTemplate':
     // Class templates are not supported yet
 
     /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics

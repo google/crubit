@@ -379,8 +379,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     return std::nullopt;
   }
   if (clang::isa<clang::ClassTemplatePartialSpecializationDecl>(record_decl)) {
-    return ictx_.ImportUnsupportedItem(
-        record_decl, UnsupportedItem::Kind::kType, std::nullopt,
+    return ictx_.ImportUnsupportedRecord(
+        *record_decl, std::nullopt,
         FormattedError::Static(
             "Partially-specialized class templates are not supported"));
   }
@@ -399,8 +399,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                    visibility && record_decl->isInStdNamespace()) {
           if (visibility->getVisibility() ==
               clang::VisibilityAttr::VisibilityType::Hidden) {
-            attr_error_item = ictx_.ImportUnsupportedItem(
-                record_decl, UnsupportedItem::Kind::kType, std::nullopt,
+            attr_error_item = ictx_.ImportUnsupportedRecord(
+                *record_decl, std::nullopt,
                 FormattedError::Static("Records from the standard library with "
                                        "hidden visibility are not supported"));
           }
@@ -469,8 +469,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       absl::StatusOr<std::optional<BridgeType>> builtin_bridge_type =
           GetBuiltinBridgeType(specialization_decl);
       if (!builtin_bridge_type.ok()) {
-        return ictx_.ImportUnsupportedItem(
-            record_decl, UnsupportedItem::Kind::kType, std::nullopt,
+        return ictx_.ImportUnsupportedRecord(
+            *record_decl, std::nullopt,
             FormattedError::FromStatus(
                 std::move(builtin_bridge_type).status()));
       }
@@ -512,8 +512,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       doc_comment = ictx_.GetComment(record_decl);
       source_loc = record_decl->getBeginLoc();
     } else {
-      return ictx_.ImportUnsupportedItem(
-          record_decl, UnsupportedItem::Kind::kType, std::nullopt,
+      return ictx_.ImportUnsupportedRecord(
+          *record_decl, std::nullopt,
           FormattedError::PrefixedStrCat("Record name is not supported",
                                          record_name.status().message()));
     }
@@ -534,20 +534,20 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(record_decl);
   if (!enclosing_item_id.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        record_decl, UnsupportedItem::Kind::kType, std::nullopt,
+    return ictx_.ImportUnsupportedRecord(
+        *record_decl, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   // Reports an unsupported type with the given error.
   //
-  // This is preferred to invoking `ImportUnsupportedItem` directly because it
+  // This is preferred to invoking `ImportUnsupportedRecord` directly because it
   // ensures that the path is set correctly. Note that this cannot be used above
   // because the enclosing item ID and translated name are not yet available.
   auto unsupported = [this, &record_decl, &rs_name,
                       &enclosing_item_id](FormattedError error) {
-    return ictx_.ImportUnsupportedItem(
-        record_decl, UnsupportedItem::Kind::kType,
+    return ictx_.ImportUnsupportedRecord(
+        *record_decl,
         UnsupportedItem::Path{.ident = Identifier(rs_name),
                               .enclosing_item_id = *enclosing_item_id},
         error);

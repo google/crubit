@@ -446,7 +446,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {impl From});
     assert_rs_matches!(rs_api, {
         let txt = "Generated from: ir_from_cc_virtual_header.h;l=34\n\
-                       Error while generating bindings for item 'Foo::Foo':\n\
+                       Error while generating bindings for function 'Foo::Foo':\n\
                        The lifetime of `__this` is \
                            unexpectedly also used by another parameter: &'a::core::ffi::c_int";
         quote! { __COMMENT__ #txt }
@@ -1073,7 +1073,7 @@ fn test_overloaded_functions() -> Result<()> {
     // Cannot overload free functions.
     assert_cc_matches!(rs_api, {
         let txt = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
-                       Error while generating bindings for item 'f':\n\
+                       Error while generating bindings for function 'f':\n\
                        Cannot generate bindings for overloaded function";
         quote! { __COMMENT__ #txt }
     });
@@ -1082,7 +1082,7 @@ fn test_overloaded_functions() -> Result<()> {
 
     assert_cc_matches!(rs_api, {
         let txt = "Generated from: ir_from_cc_virtual_header.h;l=7\n\
-                       Error while generating bindings for item 'S1::f':\n\
+                       Error while generating bindings for function 'S1::f':\n\
                        Cannot generate bindings for overloaded function";
         quote! { __COMMENT__ #txt }
     });

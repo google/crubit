@@ -88,7 +88,7 @@ pub mod some_struct {
     pub type nested_type = ::core::ffi::c_int;
 }
 
-// Error while generating bindings for item 'SomeStruct':
+// Error while generating bindings for type alias 'SomeStruct':
 // Typedef only used to introduce a name in C. Not importing.
 
 #[derive(Clone, Copy)]
@@ -193,7 +193,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'SomeUnion::SomeUnion':
+// Error while generating bindings for function 'SomeUnion::SomeUnion':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -232,7 +232,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeUnion {
     }
 }
 
-// Error while generating bindings for item 'SomeUnion':
+// Error while generating bindings for type alias 'SomeUnion':
 // Typedef only used to introduce a name in C. Not importing.
 
 #[derive(Clone, Copy)]
@@ -267,7 +267,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'SomeOtherUnion::SomeOtherUnion':
+// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(

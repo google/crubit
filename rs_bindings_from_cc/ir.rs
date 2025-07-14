@@ -779,7 +779,7 @@ impl GenericItem for Func {
         }
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Value
+        UnsupportedItemKind::Func
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -874,7 +874,7 @@ impl GenericItem for IncompleteRecord {
         self.cc_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Type
+        self.record_type.unsupported_item_kind()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -892,6 +892,16 @@ pub enum RecordType {
     Struct,
     Union,
     Class,
+}
+
+impl RecordType {
+    fn unsupported_item_kind(&self) -> UnsupportedItemKind {
+        match self {
+            RecordType::Struct => UnsupportedItemKind::Struct,
+            RecordType::Union => UnsupportedItemKind::Union,
+            RecordType::Class => UnsupportedItemKind::Class,
+        }
+    }
 }
 
 impl ToTokens for RecordType {
@@ -1028,7 +1038,7 @@ impl GenericItem for Record {
         self.cc_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Type
+        self.record_type.unsupported_item_kind()
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -1137,7 +1147,7 @@ impl GenericItem for GlobalVar {
         self.rs_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Value
+        UnsupportedItemKind::GlobalVar
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -1182,7 +1192,7 @@ impl GenericItem for Enum {
         self.rs_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Type
+        UnsupportedItemKind::Enum
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -1231,7 +1241,7 @@ impl GenericItem for TypeAlias {
         self.rs_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Type
+        UnsupportedItemKind::TypeAlias
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -1280,14 +1290,44 @@ pub struct FormattedError {
     pub message: Rc<str>,
 }
 
-/// Which Rust namespace a particular unsupported item belongs to.
-/// See https://doc.rust-lang.org/reference/names/namespaces.html
+/// Kind is used to indicate which item would cannot be wrapped.
+/// Need to be synced with UnsupportedItem::Kind in ir.h.
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum UnsupportedItemKind {
-    Value,
-    Type,
-    Unnameable,
+    Func,
+    GlobalVar,
+    Struct,
+    Union,
+    Class,
+    Enum,
+    TypeAlias,
+    Namespace,
+    // Represents: Comment, Type Map (crubit_internal_rust_type),
+    // Use Mod, Hard Error in c++.
+    Other,
+}
+
+impl UnsupportedItemKind {
+    fn str(&self) -> &'static str {
+        match self {
+            UnsupportedItemKind::Func => "function",
+            UnsupportedItemKind::GlobalVar => "global variable",
+            UnsupportedItemKind::Struct => "struct",
+            UnsupportedItemKind::Union => "union",
+            UnsupportedItemKind::Class => "class",
+            UnsupportedItemKind::Enum => "enum",
+            UnsupportedItemKind::TypeAlias => "type alias",
+            UnsupportedItemKind::Namespace => "namespace",
+            UnsupportedItemKind::Other => "item",
+        }
+    }
+}
+
+impl Display for UnsupportedItemKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.str())
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1419,7 +1459,7 @@ impl GenericItem for Comment {
         "comment".into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Unnameable
+        UnsupportedItemKind::Other
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -1460,7 +1500,7 @@ impl GenericItem for Namespace {
         self.rs_name.to_string().into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Type
+        UnsupportedItemKind::Namespace
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -1493,7 +1533,7 @@ impl GenericItem for UseMod {
         format!("[internal] use mod {}::* = {}", self.mod_name, self.path).into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Unnameable
+        UnsupportedItemKind::Other
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -1530,7 +1570,7 @@ impl GenericItem for TypeMapOverride {
         self.cc_name.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Type
+        UnsupportedItemKind::Other
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         None
@@ -1599,19 +1639,10 @@ impl GenericItem for Item {
         }
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        use Item::*;
-        match self {
-            Func(_) => UnsupportedItemKind::Value,
-            IncompleteRecord(_) => UnsupportedItemKind::Type,
-            Record(_) => UnsupportedItemKind::Type,
-            Enum(_) => UnsupportedItemKind::Type,
-            GlobalVar(_) => UnsupportedItemKind::Value,
-            TypeAlias(_) => UnsupportedItemKind::Type,
-            UnsupportedItem(unsupported) => unsupported.kind,
-            Comment(_) => UnsupportedItemKind::Unnameable,
-            Namespace(_) => UnsupportedItemKind::Type,
-            UseMod(_) => UnsupportedItemKind::Unnameable,
-            TypeMapOverride(_) => UnsupportedItemKind::Type,
+        forward_item! {
+            match self {
+                _(x) => x.unsupported_kind()
+            }
         }
     }
     fn source_loc(&self) -> Option<Rc<str>> {

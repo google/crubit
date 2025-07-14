@@ -23,7 +23,7 @@ pub fn Overload() {
     unsafe { crate::detail::__rust_thunk___Z8Overloadv() }
 }
 
-// Error while generating bindings for item 'Overload':
+// Error while generating bindings for function 'Overload':
 // Function templates are not supported yet
 
 mod detail {

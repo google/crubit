@@ -46,7 +46,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'PublicPointer::PublicPointer':
+// Error while generating bindings for function 'PublicPointer::PublicPointer':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -196,7 +196,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'TransitivePublicPointer::TransitivePublicPointer':
+// Error while generating bindings for function 'TransitivePublicPointer::TransitivePublicPointer':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -268,7 +268,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'Union::Union':
+// Error while generating bindings for function 'Union::Union':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(

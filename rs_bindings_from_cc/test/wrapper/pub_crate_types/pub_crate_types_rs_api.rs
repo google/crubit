@@ -16,7 +16,7 @@
 #![deny(warnings)]
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=10
-// Error while generating bindings for item 'Template':
+// Error while generating bindings for class 'Template':
 // Class templates are not supported yet
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=21
@@ -41,29 +41,29 @@ forward_declare::unsafe_define!(
 );
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for item 'CompoundDataType::CompoundDataType':
+// Error while generating bindings for function 'CompoundDataType::CompoundDataType':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
 // Expected first parameter to be a `__this` reference, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for item 'CompoundDataType::CompoundDataType':
+// Error while generating bindings for function 'CompoundDataType::CompoundDataType':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
 // Expected first parameter to be a `__this` reference, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for item 'CompoundDataType::CompoundDataType':
+// Error while generating bindings for function 'CompoundDataType::CompoundDataType':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
 // Expected first parameter to be a `__this` reference, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for item 'CompoundDataType::operator=':
+// Error while generating bindings for function 'CompoundDataType::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for item 'CompoundDataType::operator=':
+// Error while generating bindings for function 'CompoundDataType::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=27
@@ -140,29 +140,29 @@ forward_declare::unsafe_define!(
 );
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template2<int>::Template2<int>':
+// Error while generating bindings for function 'Template2<int>::Template2<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst9Template2IiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template2<int>::Template2<int>':
+// Error while generating bindings for function 'Template2<int>::Template2<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst9Template2IiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template2<int>::Template2<int>':
+// Error while generating bindings for function 'Template2<int>::Template2<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst9Template2IiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template2<int>::operator=':
+// Error while generating bindings for function 'Template2<int>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template2<int>::operator=':
+// Error while generating bindings for function 'Template2<int>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
@@ -180,38 +180,38 @@ forward_declare::unsafe_define!(
 );
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template<int>::Template<int>':
+// Error while generating bindings for function 'Template<int>::Template<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template<int>::Template<int>':
+// Error while generating bindings for function 'Template<int>::Template<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template<int>::Template<int>':
+// Error while generating bindings for function 'Template<int>::Template<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template<int>::operator=':
+// Error while generating bindings for function 'Template<int>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
-// Error while generating bindings for item 'Template<int>::operator=':
+// Error while generating bindings for function 'Template<int>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=14
-// Error while generating bindings for item 'Template<int>::IndirectCannotBeInstantiated':
+// Error while generating bindings for function 'Template<int>::IndirectCannotBeInstantiated':
 // Can't generate bindings for Template<int>::IndirectCannotBeInstantiated, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::IndirectCannotBeInstantiated (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18
-// Error while generating bindings for item 'Template<int>::CannotBeInstantiated':
+// Error while generating bindings for function 'Template<int>::CannotBeInstantiated':
 // Failed to instantiate the function/method template: Diagnostics emitted:
 // rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=16:5: note: in instantiation of member function 'Template<int>::CannotBeInstantiated' requested here
 // rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=18:47: error: static assertion failed

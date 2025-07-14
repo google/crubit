@@ -90,10 +90,10 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCusto
     }
 }
 
-// Error while generating bindings for item 'TrivialCustomType::operator||':
+// Error while generating bindings for function 'TrivialCustomType::operator||':
 // Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
-// Error while generating bindings for item 'TrivialCustomType::operator int':
+// Error while generating bindings for function 'TrivialCustomType::operator int':
 // Function name is not supported: Unsupported name: operator int
 
 #[::ctor::recursively_pinned]
@@ -140,13 +140,13 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCus
     }
 }
 
-// Error while generating bindings for item 'NontrivialCustomType::operator||':
+// Error while generating bindings for function 'NontrivialCustomType::operator||':
 // Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
-// Error while generating bindings for item 'PackedLayout':
+// Error while generating bindings for struct 'PackedLayout':
 // Records with packed layout are not supported
 
-// Error while generating bindings for item 'MultipleReasons':
+// Error while generating bindings for function 'MultipleReasons':
 // Parameter #0 is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 //
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int

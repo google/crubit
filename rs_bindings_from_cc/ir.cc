@@ -673,12 +673,24 @@ llvm::json::Value FormattedError::ToJson() const {
 
 static std::string UnsupportedItemKindToString(UnsupportedItem::Kind kind) {
   switch (kind) {
-    case UnsupportedItem::Kind::kValue:
-      return "Value";
-    case UnsupportedItem::Kind::kType:
-      return "Type";
-    case UnsupportedItem::Kind::kUnnameable:
-      return "Unnameable";
+    case UnsupportedItem::Kind::kFunc:
+      return "Func";
+    case UnsupportedItem::Kind::kGlobalVar:
+      return "GlobalVar";
+    case UnsupportedItem::Kind::kStruct:
+      return "Struct";
+    case UnsupportedItem::Kind::kUnion:
+      return "Union";
+    case UnsupportedItem::Kind::kClass:
+      return "Class";
+    case UnsupportedItem::Kind::kEnum:
+      return "Enum";
+    case UnsupportedItem::Kind::kTypeAlias:
+      return "TypeAlias";
+    case UnsupportedItem::Kind::kNamespace:
+      return "Namespace";
+    case UnsupportedItem::Kind::kOther:
+      return "Other";
   }
 }
 

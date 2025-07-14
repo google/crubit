@@ -38,19 +38,19 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 // Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
-// Error while generating bindings for item 'Nontrivial::Nontrivial':
+// Error while generating bindings for function 'Nontrivial::Nontrivial':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Nontrivial
 // Expected first parameter to be a `__this` reference, found *mut crate::Nontrivial
 
 // Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=11
-// Error while generating bindings for item 'Nontrivial::Nontrivial':
+// Error while generating bindings for function 'Nontrivial::Nontrivial':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Nontrivial
 // Expected first parameter to be a `__this` reference, found *mut crate::Nontrivial
 
 // Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=12
-// Error while generating bindings for item 'Nontrivial::operator=':
+// Error while generating bindings for function 'Nontrivial::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=13

@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -87,6 +86,13 @@ class ImportContext {
   // Returns an unsupported item that will result in a hard error at binding
   // generation time.
   virtual IR::Item HardError(const clang::Decl& decl, FormattedError error) = 0;
+
+  // Imports an unsupported struct/union/enum/class with a single formatted
+  // error message. Delegates to ImportUnsupportedItem with inferred
+  // UnsupportedItem::Kind from the decl parameter.
+  virtual IR::Item ImportUnsupportedRecord(
+      const clang::TagDecl& decl, std::optional<UnsupportedItem::Path> path,
+      FormattedError error) = 0;
 
   // Imports an unsupported item with a single formatted error message.
   virtual IR::Item ImportUnsupportedItem(

@@ -31,29 +31,29 @@ unsafe impl ::cxx::ExternType for Position {
 }
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for item 'Position::Position':
+// Error while generating bindings for function 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first parameter to be a `__this` reference, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for item 'Position::Position':
+// Error while generating bindings for function 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first parameter to be a `__this` reference, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for item 'Position::Position':
+// Error while generating bindings for function 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first parameter to be a `__this` reference, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for item 'Position::operator=':
+// Error while generating bindings for function 'Position::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for item 'Position::operator=':
+// Error while generating bindings for function 'Position::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 const _: () = {

@@ -252,7 +252,7 @@ impl PartialEq for Nontrivial {
     }
 }
 
-// Error while generating bindings for item 'Nontrivial::operator!=':
+// Error while generating bindings for function 'Nontrivial::operator!=':
 // Bindings for this kind of operator (operator != with 2 parameter(s)) are not supported
 
 impl PartialOrd for Nontrivial {
@@ -292,7 +292,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::Nontrivial> for &'a crate::Nontrivial {
     }
 }
 
-// Error while generating bindings for item 'Nontrivial::operator+=':
+// Error while generating bindings for function 'Nontrivial::operator+=':
 // Compound assignment operators are not supported for non-Unpin types, found ::core::pin::Pin<&'a mut crate::Nontrivial>
 
 /// Nontrivial due to (inline) user-specified constructor and destructor.
@@ -644,7 +644,7 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialUnpin {
     }
 }
 
-// Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
+// Error while generating bindings for function 'NontrivialUnpin::NontrivialUnpin':
 // Constructors with more than one parameter are not yet supported. See b/216648347.
 
 impl Clone for NontrivialUnpin {

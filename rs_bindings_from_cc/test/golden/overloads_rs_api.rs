@@ -14,10 +14,10 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-// Error while generating bindings for item 'Overload':
+// Error while generating bindings for function 'Overload':
 // Cannot generate bindings for overloaded function
 
-// Error while generating bindings for item 'Overload':
+// Error while generating bindings for function 'Overload':
 // Cannot generate bindings for overloaded function
 
 /// Both Overload2() overloads should be generated, because one should be
@@ -32,16 +32,16 @@ pub fn RenamedOverload2(__param_0: ::core::ffi::c_int) {
     unsafe { crate::detail::__rust_thunk___Z9Overlaod2i(__param_0) }
 }
 
-// Error while generating bindings for item 'UncallableOverload':
+// Error while generating bindings for function 'UncallableOverload':
 // Cannot generate bindings for overloaded function
 
-// Error while generating bindings for item 'UncallableOverload':
+// Error while generating bindings for function 'UncallableOverload':
 // Cannot generate bindings for overloaded function
 
-// Error while generating bindings for item 'Sizeof':
+// Error while generating bindings for class 'Sizeof':
 // Class templates are not supported yet
 
-// Error while generating bindings for item 'UncallableOverload':
+// Error while generating bindings for function 'UncallableOverload':
 // Function templates are not supported yet
 
 #[inline(always)]
@@ -49,7 +49,7 @@ pub fn AlsoTemplateOverload() {
     unsafe { crate::detail::__rust_thunk___Z20AlsoTemplateOverloadv() }
 }
 
-// Error while generating bindings for item 'AlsoTemplateOverload':
+// Error while generating bindings for function 'AlsoTemplateOverload':
 // Function templates are not supported yet
 
 #[derive(Clone, Copy)]
@@ -205,7 +205,7 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst
     }
 }
 
-// Error while generating bindings for item 'Sizeof<float>::size':
+// Error while generating bindings for global variable 'Sizeof<float>::size':
 // static data members are not supported
 
 #[derive(Clone, Copy)]
@@ -269,7 +269,7 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for __CcTemplateInst
     }
 }
 
-// Error while generating bindings for item 'Sizeof<int>::size':
+// Error while generating bindings for global variable 'Sizeof<int>::size':
 // static data members are not supported
 
 mod detail {

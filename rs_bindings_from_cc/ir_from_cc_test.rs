@@ -319,7 +319,7 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
             name: "MyTemplate",
-            kind: Type,
+            kind: Class,
             path: Some(UnsupportedItemPath { ident: "MyTemplate", enclosing_item_id: None, }),
             errors: [FormattedError {
                 ..., message: "Class templates are not supported yet", ...
@@ -335,7 +335,7 @@ fn test_function_template_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
             name: "SomeFunctionTemplate",
-            kind: Value,
+            kind: Func,
             path: Some(UnsupportedItemPath { ident: "SomeFunctionTemplate", enclosing_item_id: None, }),
             errors: [FormattedError {
                 ..., message: "Function templates are not supported yet", ...
@@ -638,7 +638,7 @@ fn test_conflicting_unsafe_annotation() {
         ir,
         quote! { UnsupportedItem {
             name: "S",
-            kind: Type,
+            kind: Struct,
             path: Some(UnsupportedItemPath { ident: "S", enclosing_item_id: None, }),
             errors: [FormattedError {
                 ..., message: "Different declarations have inconsistent `crubit_override_unsafe` annotations.", ...
@@ -3135,7 +3135,7 @@ fn test_unnamed_enum_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "(unnamed enum at ./ir_from_cc_virtual_header.h:3:1)",
-                kind: Unnameable,
+                kind: Enum,
                 path: None,
                 errors: [FormattedError {
                     ..., message: "Unnamed enums are not supported yet", ...
@@ -3159,7 +3159,7 @@ fn test_literal_operator_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "operator\"\"_foobar",
-                kind: Value,
+                kind: Func,
                 path: None,
                 errors: [FormattedError {
                     ..., message: "Function name is not supported: Unsupported name: operator\"\"_foobar", ...
@@ -3314,7 +3314,7 @@ fn test_record_items() {
             quote! {
               ... UnsupportedItem {
                   name: "TopLevelStruct::operator int",
-                  kind: Value,
+                  kind: Func,
                   path: None,
                   errors: [FormattedError {
                     ..., message: "Function name is not supported: Unsupported name: operator int",

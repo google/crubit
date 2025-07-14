@@ -142,7 +142,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'AlignmentRegressionTest::AlignmentRegressionTest':
+// Error while generating bindings for function 'AlignmentRegressionTest::AlignmentRegressionTest':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -181,7 +181,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AlignmentReg
     }
 }
 
-// Error while generating bindings for item 'AlignmentRegressionTest::(unnamed enum at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)':
+// Error while generating bindings for enum 'AlignmentRegressionTest::(unnamed enum at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)':
 // Unnamed enums are not supported yet
 
 mod detail {

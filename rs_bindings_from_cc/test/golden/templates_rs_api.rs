@@ -82,7 +82,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DifferentSco
 }
 
 pub mod test_namespace_bindings {
-    // Error while generating bindings for item 'test_namespace_bindings::MyTemplate':
+    // Error while generating bindings for class 'test_namespace_bindings::MyTemplate':
     // Class templates are not supported yet
 
     pub type MyTypeAlias = crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
@@ -170,7 +170,7 @@ pub mod test_namespace_bindings {
     pub type ParamFromDifferentScope =
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
 
-    // Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams':
+    // Error while generating bindings for class 'test_namespace_bindings::TemplateWithTwoParams':
     // Class templates are not supported yet
 
     pub type AliasToTemplateWithTwoParams =
@@ -179,7 +179,7 @@ pub mod test_namespace_bindings {
     pub type AliasToTemplateOfATemplate =
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE;
 
-    // Error while generating bindings for item 'test_namespace_bindings::MyStruct':
+    // Error while generating bindings for class 'test_namespace_bindings::MyStruct':
     // Class templates are not supported yet
 
     // Explicit class template specialization with definition should not be imported
@@ -203,7 +203,7 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-// Error while generating bindings for item 'MyTopLevelTemplate':
+// Error while generating bindings for class 'MyTopLevelTemplate':
 // Class templates are not supported yet
 
 pub type TopLevelTemplateWithNonTopLevelParam =
@@ -219,10 +219,10 @@ pub fn processForwardDeclaredSpecialization<'a>(
 }
 
 pub mod template_template_params {
-    // Error while generating bindings for item 'template_template_params::Policy':
+    // Error while generating bindings for class 'template_template_params::Policy':
     // Class templates are not supported yet
 
-    // Error while generating bindings for item 'template_template_params::MyTemplate':
+    // Error while generating bindings for class 'template_template_params::MyTemplate':
     // Class templates are not supported yet
 
     pub type MyTypeAlias =
@@ -232,7 +232,7 @@ pub mod template_template_params {
 // namespace template_template_params
 
 pub mod forward_declared_template {
-    // Error while generating bindings for item 'forward_declared_template::ForwardDeclaredTemplate':
+    // Error while generating bindings for class 'forward_declared_template::ForwardDeclaredTemplate':
     // Class templates are not supported yet
 
     pub type TypeAliasToForwardDeclaredTemplate =

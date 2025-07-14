@@ -52,7 +52,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'EmptyUnion::EmptyUnion':
+// Error while generating bindings for function 'EmptyUnion::EmptyUnion':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -178,7 +178,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'UnionToRename::UnionToRename':
+// Error while generating bindings for function 'UnionToRename::UnionToRename':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -310,7 +310,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'NonEmptyUnion::NonEmptyUnion':
+// Error while generating bindings for function 'NonEmptyUnion::NonEmptyUnion':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -470,7 +470,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'UnionWithOpaqueField::UnionWithOpaqueField':
+// Error while generating bindings for function 'UnionWithOpaqueField::UnionWithOpaqueField':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -614,7 +614,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'UnionWithInheritable::UnionWithInheritable':
+// Error while generating bindings for function 'UnionWithInheritable::UnionWithInheritable':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -685,7 +685,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'TypedefUnion::TypedefUnion':
+// Error while generating bindings for function 'TypedefUnion::TypedefUnion':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(
@@ -759,7 +759,7 @@ where
     }
 }
 
-// Error while generating bindings for item 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
+// Error while generating bindings for function 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 
 #[diagnostic::on_unimplemented(

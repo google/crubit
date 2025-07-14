@@ -34,19 +34,19 @@ unsafe impl ::cxx::ExternType for Position {
 }
 
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
-// Error while generating bindings for item 'Position::Position':
+// Error while generating bindings for function 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first parameter to be a `__this` reference, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
-// Error while generating bindings for item 'Position::Position':
+// Error while generating bindings for function 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first parameter to be a `__this` reference, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
-// Error while generating bindings for item 'Position::operator=':
+// Error while generating bindings for function 'Position::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 /// Generated from: examples/cpp/trivial_abi_struct/example.h;l=16
@@ -58,12 +58,12 @@ impl Drop for Position {
 }
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for item 'std::integral_constant<bool, false>':
+// Error while generating bindings for struct 'std::integral_constant<bool, false>':
 // Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (<internal link>):
 // //examples/cpp/trivial_abi_struct:example_lib needs [//features:wrapper] for std::integral_constant<bool, false> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE is a template instantiation)
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
-// Error while generating bindings for item 'std::integral_constant<bool, true>':
+// Error while generating bindings for struct 'std::integral_constant<bool, true>':
 // Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (<internal link>):
 // //examples/cpp/trivial_abi_struct:example_lib needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
 

@@ -85,10 +85,10 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for SomeClass {
     }
 }
 
-// Error while generating bindings for item 'Overload':
+// Error while generating bindings for function 'Overload':
 // Cannot generate bindings for overloaded function
 
-// Error while generating bindings for item 'Overload':
+// Error while generating bindings for function 'Overload':
 // Cannot generate bindings for overloaded function
 
 mod detail {

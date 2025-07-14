@@ -667,10 +667,10 @@ forward_declare::unsafe_define!(
     crate::MyAbstractClass
 );
 
-// Error while generating bindings for item 'MyAbstractClass::MyAbstractClass':
+// Error while generating bindings for function 'MyAbstractClass::MyAbstractClass':
 // Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
 
-// Error while generating bindings for item 'MyAbstractClass::MyAbstractClass':
+// Error while generating bindings for function 'MyAbstractClass::MyAbstractClass':
 // Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
 
 impl<'b> ::ctor::Assign<&'b Self> for MyAbstractClass {

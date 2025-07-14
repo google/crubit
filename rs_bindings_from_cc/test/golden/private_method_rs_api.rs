@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-// Error while generating bindings for item 'Ptr':
+// Error while generating bindings for class 'Ptr':
 // Class templates are not supported yet
 
 #[derive(Clone, Copy)]

@@ -190,7 +190,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (clang::IdentifierInfo* id = function_decl->getIdentifier();
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
       return ictx_.ImportUnsupportedItem(
-          function_decl, UnsupportedItem::Kind::kValue, std::nullopt,
+          function_decl, UnsupportedItem::Kind::kFunc, std::nullopt,
           FormattedError::Static("Internal functions from the standard "
                                  "library are not supported"));
     }
@@ -214,7 +214,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       ictx_.GetTranslatedName(function_decl);
   if (!translated_name.ok()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, UnsupportedItem::Kind::kValue, std::nullopt,
+        function_decl, UnsupportedItem::Kind::kFunc, std::nullopt,
         FormattedError::PrefixedStrCat("Function name is not supported",
                                        translated_name.status().message()));
   }
@@ -222,7 +222,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, UnsupportedItem::Kind::kValue, std::nullopt,
+        function_decl, UnsupportedItem::Kind::kFunc, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
@@ -234,7 +234,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   auto unsupported = [this, &translated_name, &enclosing_item_id,
                       function_decl](FormattedError error) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, UnsupportedItem::Kind::kValue,
+        function_decl, UnsupportedItem::Kind::kFunc,
         UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         error);
@@ -504,7 +504,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   if (!errors.error_set.empty()) {
     return ictx_.ImportUnsupportedItem(
-        function_decl, UnsupportedItem::Kind::kValue,
+        function_decl, UnsupportedItem::Kind::kFunc,
         UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         std::vector(errors.error_set.begin(), errors.error_set.end()));

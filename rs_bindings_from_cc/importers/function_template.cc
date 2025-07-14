@@ -15,7 +15,7 @@ std::optional<IR::Item> FunctionTemplateDeclImporter::Import(
     clang::FunctionTemplateDecl* function_template_decl) {
   if (!ictx_.IsFromCurrentTarget(function_template_decl)) return std::nullopt;
   return ictx_.ImportUnsupportedItem(
-      function_template_decl, UnsupportedItem::Kind::kValue,
+      function_template_decl, UnsupportedItem::Kind::kFunc,
       ictx_.GetUnsupportedItemPathForTemplateDecl(function_template_decl),
       FormattedError::Static("Function templates are not supported yet"));
 }

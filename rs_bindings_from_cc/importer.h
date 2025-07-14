@@ -71,6 +71,9 @@ class Importer final : public ImportContext {
   void ImportDeclsFromDeclContext(
       const clang::DeclContext* decl_context) override;
   IR::Item HardError(const clang::Decl& decl, FormattedError error) override;
+  IR::Item ImportUnsupportedRecord(const clang::TagDecl& decl,
+                                   std::optional<UnsupportedItem::Path> path,
+                                   FormattedError error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                  UnsupportedItem::Kind kind,
                                  std::optional<UnsupportedItem::Path> path,
