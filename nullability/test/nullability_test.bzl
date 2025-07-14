@@ -8,6 +8,8 @@ contained assertions about the nullability of expressions.
 See nullability_test.h for details.
 """
 
+load("//third_party/bazel_rules/rules_cc/cc:cc_library.bzl", "cc_library")
+
 def nullability_test(name, srcs):
     native.sh_test(
         name = name,
@@ -23,7 +25,7 @@ def nullability_test(name, srcs):
     # Additional target to verify that the source file builds with non-mock headers.
     # TODO Add support for nested directories, like `absl`, so we can verify against real headers in
     # the production repo.
-    native.cc_library(
+    cc_library(
         name = name + "_compile_test",
         srcs = srcs + ["nullability_test.h", "nullability_annotations.h", "check.h"],
     )
