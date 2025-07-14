@@ -23,7 +23,7 @@ use database::{FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::TokenStream;
 use quote::quote;
-use rustc_abi::{BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
+use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 use rustc_hir::def::Res;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty};
@@ -870,6 +870,16 @@ pub enum BridgedTypeConversionInfo {
     },
 }
 
+/// Whether the layout is from a type that implements [`std::marker::PointerLike`].
+///
+/// Currently, that means that the type is pointer-sized, pointer-aligned,
+/// and has a initialized (non-union), scalar ABI.
+fn layout_pointer_like(from: &Layout, data_layout: &TargetDataLayout) -> bool {
+    from.size() == data_layout.pointer_size
+        && from.align().abi == data_layout.pointer_align.abi
+        && matches!(from.backend_repr(), BackendRepr::Scalar(Scalar::Initialized { .. }))
+}
+
 /// Returns an error if `ty` is not pointer-like.
 pub fn ensure_ty_is_pointer_like<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
@@ -880,7 +890,7 @@ pub fn ensure_ty_is_pointer_like<'tcx>(
             bail!("Can't convert {ty} to a C++ pointer as it's not `repr(transparent)`");
         }
 
-        if !get_layout(db.tcx(), ty)?.is_pointer_like(db.tcx().data_layout()) {
+        if !layout_pointer_like(&get_layout(db.tcx(), ty)?, db.tcx().data_layout()) {
             bail!(
                 "Can't convert {ty} to a C++ pointer as its layout is not pointer-like. \
                 To be considered pointer-like it may only have one non-ZST field that needs \
