@@ -3,14 +3,14 @@
 Rust code can call (non-member) functions defined in C++, provided that the
 parameter and return types are supported by Crubit:
 
-*   If a parameter or return type is a [primitive type](../types/primitive),
+*   If a parameter or return type is a [primitive type](../types/primitive.md),
     then the bindings for the function use the corresponding Rust type.
 *   Similarly, if a parameter or return type is a
-    [pointer type](../types/pointer), then the bindings for the function use the
-    corresponding Rust pointer type.
+    [pointer type](../types/pointer.md), then the bindings for the function use
+    the corresponding Rust pointer type.
 *   If the type is a user-defined type, such as a
-    [class type](classes_and_structs) or [enum](enums), then the bindings for
-    the function use the bindings for that type.
+    [class type](classes_and_structs.md) or [enum](enums.md), then the bindings
+    for the function use the bindings for that type.
 
 Additionally, code can call member functions defined in C++ if the parameter and
 return types are supported by Crubit (see above). Currently, member functions
@@ -26,8 +26,8 @@ Given the following C++ header:
 cs/file:examples/cpp/function/example.h function:add_two_integers
 ```
 
-Crubit will generate the following bindings, with a safe public function
-that calls into the corresponding FFI glue:
+Crubit will generate the following bindings, with a safe public function that
+calls into the corresponding FFI glue:
 
 ```live-snippet
 cs/file:examples/cpp/function/example_generated.rs function:add_two_integers

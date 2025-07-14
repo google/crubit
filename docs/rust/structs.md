@@ -5,7 +5,7 @@ field cannot be represented in C++, the struct itself will still have bindings,
 but [the relevant field will be private](#opaque_fields).
 
 To receive C++ bindings, the `struct` must be movable in C++. See
-[Movable Types](movable_types).
+[Movable Types](movable_types.md).
 
 ## Example
 
@@ -27,11 +27,11 @@ cs/file:examples/rust/struct/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE
 
 The fields on the C++ class are the corresponding Rust types:
 
-*   If the Rust field has [primitive type](../types/primitive), then the C++
+*   If the Rust field has [primitive type](../types/primitive.md), then the C++
     field uses the corresponding C++ type.
-*   Similarly, if the Rust field has [pointer type](../types/pointer), then the
-    C++ field has the corresponding C++ pointer type.
-*   If the field has a user-defined type, such as a struct or [enum](enums),
+*   Similarly, if the Rust field has [pointer type](../types/pointer.md), then
+    the C++ field has the corresponding C++ pointer type.
+*   If the field has a user-defined type, such as a struct or [enum](enums.md),
     then the bindings for the function use the bindings for that type.
 
 ### Unsupported fields {#opaque_fields}
@@ -63,4 +63,4 @@ blobs:
 ## C++ movable {#cpp_movable}
 
 To receive C++ bindings, the `struct` must be movable in C++. See
-[Movable Types](movable_types).
+[Movable Types](movable_types.md).

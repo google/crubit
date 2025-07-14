@@ -138,8 +138,8 @@ graph.
 
 Crubit automatically generates layout-compatible Rust equivalents of C++ types.
 When the C++ type is
-[trivially relocatable](<internal link>/cpp/classes_and_structs#trivially_relocatable),
-the Crubit-generated Rust type is Rust-movable, these can be used by value, by
+[trivially relocatable](classes_and_structs.md#trivially_relocatable), the
+Crubit-generated Rust type is Rust-movable, these can be used by value, by
 pointer, in struct fields, arrays, and any other compound data type. A C++
 pointer `const T*` can become a Rust `*const T`, and a C++ `T` field can become
 a Rust `T` field, and so on, with few restrictions.
@@ -181,8 +181,8 @@ type).
 *   If the type is **not** trivially relocatable, but it's important for the
     Rust type to be Rust-movable. It may be possible to make changes to the C++
     code to make the type trivially relocatable/Rust-movable using some of the
-    strategies described in [the cookbook](cookbook#rust_movable). This allows
-    the greatest flexibility, as the type becomes usable in almost every
+    strategies described in [the cookbook](cookbook.md#rust_movable). This
+    allows the greatest flexibility, as the type becomes usable in almost every
     context. But if that is not possible, writing a new "wrapper" type can keep
     Rust programmers productive.
 *   Some Rust types have very special semantics, which are impossible to

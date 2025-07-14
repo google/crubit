@@ -13,8 +13,9 @@ copy-pasting something, start there.
 ## How to use Crubit {#introduction}
 
 Crubit allows you to call some C++ interfaces from Rust. It supports
-[functions](functions), [rust-movable classes and structs](classes_and_structs),
-and [enums](enums). Crubit does **not** support advanced features like templates
+[functions](functions.md),
+[rust-movable classes and structs](classes_and_structs.md), and
+[enums](enums.md). Crubit does **not** support advanced features like templates
 or virtual inheritance.
 
 The rest of this document goes over how to create a C++ library that can be
@@ -85,9 +86,10 @@ depending on a C++ target from Rust. They consist of:
 You don't need to check them in, as they are regenerated automatically whenever
 you build a Rust build target which depends on C++.
 
-The `.rs` file is the interesting one for end users. For a library like `:example_lib_broken`, which does not enable Crubit, the
-`.rs` file will be essentially empty, only consisting of comments describing the
-bindings it did not generate:
+The `.rs` file is the interesting one for end users. For a library like
+`:example_lib_broken`, which does not enable Crubit, the `.rs` file will be
+essentially empty, only consisting of comments describing the bindings it did
+not generate:
 
 ```rust
 // Generated from: examples/cpp/function/example.h;l=11
@@ -106,9 +108,9 @@ target. The parameter and return types require `supported`, as does the function
 itself in the abstract.
 
 `supported` indicates that a library target supports Rust callers via Crubit,
-using the stable features. Other functions and classes might
-require `experimental`, for experimental features of Crubit. For example, if we
-had defined an`operator+`. For more on this, see <internal link>.
+using the stable features. Other functions and classes might require
+`experimental`, for experimental features of Crubit. For example, if we had
+defined an`operator+`. For more on this, see <internal link>.
 
 ### Enable Crubit on a target {#enable}
 
@@ -163,8 +165,8 @@ because `std::string` has properties around move semantics that Crubit does not
 yet support. In turn, this means the class *containing* the `std::string` has
 semantics that Crubit doesn't yet support.
 
-The way to work around this kind of problem, in all cases, is to wrap or hide the problematic
-interface behind an interface Crubit can handle:
+The way to work around this kind of problem, in all cases, is to wrap or hide
+the problematic interface behind an interface Crubit can handle:
 
 *   Move nontrivial types behind a `unique_ptr<T>`. A `std::string` field is not
     rust-movable, but a `unique_ptr<std::string>` field is.

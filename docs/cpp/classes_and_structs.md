@@ -30,13 +30,13 @@ For an example of a trivially-relocatable class with a destructor, see
 
 The fields on the Rust struct type are the corresponding Rust types:
 
-*   If the C++ field has [primitive type](../types/primitive), then the Rust
+*   If the C++ field has [primitive type](../types/primitive.md), then the Rust
     field uses the corresponding Rust type.
-*   Similarly, if the C++ field has [pointer type](../types/pointer), then the
-    Rust field has the corresponding Rust pointer type.
+*   Similarly, if the C++ field has [pointer type](../types/pointer.md), then
+    the Rust field has the corresponding Rust pointer type.
 *   If the field has a user-defined type, such as a
-    [class type](classes_and_structs) or [enum](enums), then the bindings for
-    the function use the bindings for that type.
+    [class type](classes_and_structs.md) or [enum](enums.md), then the bindings
+    for the function use the bindings for that type.
 
 ### Unsupported fields {#opaque_fields}
 
@@ -58,8 +58,8 @@ blobs:
 A Rust struct with opaque blobs is ABI-incompatible with the C++ struct or class
 that it corresponds to. As a consequence, if the struct is used for FFI outside
 of Crubit, it should not be passed by value. Within Crubit, it can't be passed
-by value in [function pointers](../types/pointer#function), but can otherwise be
-used as normal.
+by value in [function pointers](../types/pointer.md#function), but can otherwise
+be used as normal.
 
 ## Trivially relocatable classes {#trivially_relocatable}
 

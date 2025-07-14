@@ -33,8 +33,8 @@ For each feature we use, we document the following:
 ### `vec_into_raw_parts`
 
 *   **Crubit feature:** `experimental`
-*   **Use case:** Used for conversions of vectors of forward-declared
-    objects, which is not yet released.
+*   **Use case:** Used for conversions of vectors of forward-declared objects,
+    which is not yet released.
 *   **Exit strategy:** We could delete this if we had to. Hopefully low-risk,
     people love raw parts.
 
@@ -163,8 +163,8 @@ returned by value.
 ### `fn_traits`
 
 Much like `try_traits_v2`, we'd like to support C++ "function objects" which
-implement the call operator. In Rust, without `fn_traits`, the API is
-awkward: given a `foo` of type `std::function`, `absl::AnyInvocable`, or
+implement the call operator. In Rust, without `fn_traits`, the API is awkward:
+given a `foo` of type `std::function`, `absl::AnyInvocable`, or
 `absl::FunctionRef`, you cannot just write `foo()` to call it, because it cannot
 implement the `Fn*` family of traits. This makes these types less convenient to
 use than they are in C++, requiring something like `foo.as_closure()()` to
@@ -174,8 +174,8 @@ create a closure out of a `FunctionRef` or similar.
 function objects, `fn_traits` could also be used to implement overloading,
 including overloaded function objects. For example, an overloaded function
 could, instead, be a constant with many different implementations of `Fn`, for
-different parameter types. Though, this ends up looking a bit
-odd: `(mystruct.overloaded)()`)
+different parameter types. Though, this ends up looking a bit odd:
+`(mystruct.overloaded)()`)
 
 ### `min_specialization`
 
@@ -186,8 +186,8 @@ Rust features are especially risky.
 
 ### `inherent_associated_types`
 
-Inherent associated types give a natural Rust spelling of the following C++
-type definition:
+Inherent associated types give a natural Rust spelling of the following C++ type
+definition:
 
 ```c++
 struct Foo {
@@ -202,12 +202,12 @@ closed, but not necessarily permanently. See also
 https://github.com/rust-lang/rust/issues/20400.
 
 Not every C++ type supports the Rust move operation. For more on this, see
-[Classes and Structs](../cpp/classes_and_structs#trivially_relocatable).
+[Classes and Structs](../cpp/classes_and_structs.md#trivially_relocatable).
 
-Crubit (in `experimental` mode) supports passing and returning these non-Rust-movable C++
-objects by value. But since they are not Rust-movable, they cannot literally
-be returned in Rust by value: `pub fn foo() -> X` performs a Rust move of its
-return type by definition.
+Crubit (in `experimental` mode) supports passing and returning these
+non-Rust-movable C++ objects by value. But since they are not Rust-movable, they
+cannot literally be returned in Rust by value: `pub fn foo() -> X` performs a
+Rust move of its return type by definition.
 
 Instead, these objects support lazy construction, in the same style as
 [`moveit`](https://mcyoung.xyz/2021/04/26/move-ctors/). See
@@ -225,6 +225,7 @@ The problem comes in with operator overloading: the following is valid:
 impl Add<X> for &C {...}
 impl Add<Y> for &C {...}
 ```
+
 But the equivalent using this lazy-construction trait is not:
 
 ```rust
@@ -238,7 +239,6 @@ Rust doesn't know that these two are disjoint, meaning that we cannot use the
 An alternative fix would be language support for in-place pinned construction.
 That would render the `Ctor` trait obsolete, and reduce Crubit's needs around
 trait coherence (as well as `negative_impls`, above).
-
 
 ### `register_tool`
 

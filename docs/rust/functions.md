@@ -4,14 +4,14 @@ C++ code can call functions defined in Rust, provided that the parameter and
 return types are supported by Crubit:
 
 *   If a parameter or return type is a
-    [fundamental type](../cpp/fundamental_types), then the bindings for the
+    [fundamental type](../cpp/fundamental_types.md), then the bindings for the
     function use the corresponding Rust type.
 *   Similarly, if a parameter or return type is a
-    [pointer type](../cpp/pointer_types), then the bindings for the function use
-    the corresponding Rust pointer type.
-*   If the type is a user-defined type, such as a [struct](struct) or
-    [enum](enums), then the bindings for the function use the bindings for that
-    type.
+    [pointer type](../cpp/pointer_types.md), then the bindings for the function
+    use the corresponding Rust pointer type.
+*   If the type is a user-defined type, such as a [struct](struct.md) or
+    [enum](enums.md), then the bindings for the function use the bindings for
+    that type.
 
 As a special case, functions also support reference parameters to supported
 types, with some restrictions to ensure safety. See [References](#references).

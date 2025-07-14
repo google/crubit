@@ -4,7 +4,7 @@ A Rust `enum` is mapped to an opaque C++ type. C++ code cannot create a specific
 variant, but can call functions accepting or returning an `enum`.
 
 To receive C++ bindings, the `enum` must be movable in C++. See
-[Movable Types](movable_types).
+[Movable Types](movable_types.md).
 
 ## Example
 
@@ -43,4 +43,4 @@ cannot be used to represent a Rust `enum`. Instead, the C++ bindings are a
 ## C++ movable {#cpp_movable}
 
 To receive C++ bindings, the `enum` must be movable in C++. See
-[Movable Types](movable_types).
+[Movable Types](movable_types.md).

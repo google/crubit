@@ -1,35 +1,35 @@
 <!--* css: "//depot/docs/includes/sitemap.css" *-->
 
 *   [Home](/docs/index.md)
-*   [Are We Crubit Yet?](/docs/overview/status)
+*   [Are We Crubit Yet?](/docs/overview/status.md)
 *   Types
 
     *   [Overview](/docs/types/)
-    *   [Primitive Types](/docs/types/primitive)
-    *   [Pointer Types](/docs/types/pointer)
+    *   [Primitive Types](/docs/types/primitive.md)
+    *   [Pointer Types](/docs/types/pointer.md)
     *   <hr>
-    *   [Visibility](/docs/types/visibility)
+    *   [Visibility](/docs/types/visibility.md)
 
 *   Rust Bindings for C++ Libraries
 
     *   [Overview](/docs/cpp/)
-    *   [Cookbook](/docs/cpp/cookbook)
-    *   [Best Practices](/docs/cpp/best_practices)
-    *   [Customizing](/docs/cpp/customizing)
+    *   [Cookbook](/docs/cpp/cookbook.md)
+    *   [Best Practices](/docs/cpp/best_practices.md)
+    *   [Customizing](/docs/cpp/customizing.md)
     *   <hr>
-    *   [Functions](/docs/cpp/functions)
-    *   [Classes and Structs](/docs/cpp/classes_and_structs)
-    *   [Enums](/docs/cpp/enums)
+    *   [Functions](/docs/cpp/functions.md)
+    *   [Classes and Structs](/docs/cpp/classes_and_structs.md)
+    *   [Enums](/docs/cpp/enums.md)
 
 *   C++ Bindings for Rust Libraries
 
     *   [Overview](/docs/rust/)
-    *   [Functions](/docs/rust/functions)
-    *   [Structs](/docs/rust/structs)
-    *   [Enums](/docs/rust/enums)
-    *   [Type Aliases](/docs/rust/type_aliases)
-    *   [`use` Declarations](/docs/rust/use_declarations)
-    *   <hr> [Movable types](/docs/rust/movable_types)
+    *   [Functions](/docs/rust/functions.md)
+    *   [Structs](/docs/rust/structs.md)
+    *   [Enums](/docs/rust/enums.md)
+    *   [Type Aliases](/docs/rust/type_aliases.md)
+    *   [`use` Declarations](/docs/rust/use_declarations.md)
+    *   <hr> [Movable types](/docs/rust/movable_types.md)
 
 *   Design {.cnav-collapsed-by-default}
 

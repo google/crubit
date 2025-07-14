@@ -50,9 +50,9 @@ C++                                   | Rust
 `std::type_identity_t<void(int32_t)>` | Not supported [^function_types]
 
 If the corresponding C++ function definition would be `unsafe` in Rust (per the
-rules for [C++ function declarations](../cpp/functions#unsafe)), then so is the
-function pointer – for example, a C++ reference to `void(void*)` becomes a Rust
-`unsafe extern "C" fn(_: *mut c_void)`.
+rules for [C++ function declarations](../cpp/functions.md#unsafe)), then so is
+the function pointer – for example, a C++ reference to `void(void*)` becomes a
+Rust `unsafe extern "C" fn(_: *mut c_void)`.
 
 Not all function pointers receive bindings. If the function cannot be called
 directly, due to a known or potential ABI mismatch between Rust and C++, then
