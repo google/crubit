@@ -28,42 +28,38 @@ unsafe impl ::cxx::ExternType for PublicPointer {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("PublicPointer"), crate::PublicPointer);
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN13PublicPointerC1Ev {}
-impl<'error> Default for PublicPointer
-where
-    &'error (): BindingFailedFor_ZN13PublicPointerC1Ev,
-{
+impl Default for PublicPointer {
     #[inline(always)]
     fn default() -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13PublicPointerC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
     }
 }
 
-// Error while generating bindings for function 'PublicPointer::PublicPointer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN13PublicPointerC1EOS_ {}
-impl<'error> From<::ctor::RvalueReference<'_, Self>> for PublicPointer
-where
-    &'error (): BindingFailedFor_ZN13PublicPointerC1EOS_,
-{
+impl From<::ctor::RvalueReference<'_, Self>> for PublicPointer {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13PublicPointerC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for PublicPointer {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
     }
 }
 
@@ -178,42 +174,38 @@ forward_declare::unsafe_define!(
     crate::TransitivePublicPointer
 );
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN23TransitivePublicPointerC1Ev {}
-impl<'error> Default for TransitivePublicPointer
-where
-    &'error (): BindingFailedFor_ZN23TransitivePublicPointerC1Ev,
-{
+impl Default for TransitivePublicPointer {
     #[inline(always)]
     fn default() -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23TransitivePublicPointerC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
     }
 }
 
-// Error while generating bindings for function 'TransitivePublicPointer::TransitivePublicPointer':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN23TransitivePublicPointerC1EOS_ {}
-impl<'error> From<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer
-where
-    &'error (): BindingFailedFor_ZN23TransitivePublicPointerC1EOS_,
-{
+impl From<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23TransitivePublicPointerC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
     }
 }
 
@@ -250,42 +242,36 @@ unsafe impl ::cxx::ExternType for Union {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Union"), crate::Union);
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN5UnionC1Ev {}
-impl<'error> Default for Union
-where
-    &'error (): BindingFailedFor_ZN5UnionC1Ev,
-{
+impl Default for Union {
     #[inline(always)]
     fn default() -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN5UnionC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
     }
 }
 
-// Error while generating bindings for function 'Union::Union':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN5UnionC1EOS_ {}
-impl<'error> From<::ctor::RvalueReference<'_, Self>> for Union
-where
-    &'error (): BindingFailedFor_ZN5UnionC1EOS_,
-{
+impl From<::ctor::RvalueReference<'_, Self>> for Union {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN5UnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Union {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
     }
 }
 
@@ -333,6 +319,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointerC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointerC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::PublicPointer>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN13PublicPointeraSERKS_<'__return_lifetime>(
             __this: &mut crate::PublicPointer,
             __param_0: &crate::PublicPointer,
@@ -359,6 +350,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
             p: &mut crate::PrivatePointer,
         ) -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointerC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointerC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::TransitivePublicPointer>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointeraSERKS_<'__return_lifetime>(
             __this: &mut crate::TransitivePublicPointer,
             __param_0: &crate::TransitivePublicPointer,
@@ -367,6 +365,11 @@ mod detail {
             __this: &mut crate::TransitivePublicPointer,
             __param_0: ::ctor::RvalueReference<'_, crate::TransitivePublicPointer>,
         ) -> &'__return_lifetime mut crate::TransitivePublicPointer;
+        pub(crate) unsafe fn __rust_thunk___ZN5UnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5UnionC1EOS_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::Union>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN5UnionaSERKS_<'__return_lifetime>(
             __this: &mut crate::Union,
             __param_0: &crate::Union,

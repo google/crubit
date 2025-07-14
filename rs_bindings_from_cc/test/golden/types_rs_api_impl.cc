@@ -103,6 +103,11 @@ static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
 static_assert(CRUBIT_OFFSET_OF(cyclic_ptr_field, struct FieldTypeTestStruct) ==
               200);
 
+extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
+    struct FieldTypeTestStruct* __this, struct FieldTypeTestStruct* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();
 }

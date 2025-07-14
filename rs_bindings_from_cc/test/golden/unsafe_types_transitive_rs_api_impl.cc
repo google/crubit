@@ -22,6 +22,16 @@ static_assert(CRUBIT_SIZEOF(struct PublicPointer) == 8);
 static_assert(alignof(struct PublicPointer) == 8);
 static_assert(CRUBIT_OFFSET_OF(p, struct PublicPointer) == 0);
 
+extern "C" void __rust_thunk___ZN13PublicPointerC1Ev(
+    struct PublicPointer* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN13PublicPointerC1EOS_(
+    struct PublicPointer* __this, struct PublicPointer* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
 extern "C" struct PublicPointer* __rust_thunk___ZN13PublicPointeraSERKS_(
     struct PublicPointer* __this, const struct PublicPointer* __param_0) {
   return &__this->operator=(*__param_0);
@@ -65,6 +75,17 @@ static_assert(alignof(struct TransitivePublicPointer) == 8);
 static_assert(CRUBIT_OFFSET_OF(pub, struct TransitivePublicPointer) == 0);
 static_assert(CRUBIT_OFFSET_OF(priv, struct TransitivePublicPointer) == 8);
 
+extern "C" void __rust_thunk___ZN23TransitivePublicPointerC1Ev(
+    struct TransitivePublicPointer* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN23TransitivePublicPointerC1EOS_(
+    struct TransitivePublicPointer* __this,
+    struct TransitivePublicPointer* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
 extern "C" struct TransitivePublicPointer*
 __rust_thunk___ZN23TransitivePublicPointeraSERKS_(
     struct TransitivePublicPointer* __this,
@@ -83,6 +104,15 @@ static_assert(CRUBIT_SIZEOF(union Union) == 4);
 static_assert(alignof(union Union) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, union Union) == 0);
 static_assert(CRUBIT_OFFSET_OF(f, union Union) == 0);
+
+extern "C" void __rust_thunk___ZN5UnionC1Ev(union Union* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN5UnionC1EOS_(union Union* __this,
+                                              union Union* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
 
 extern "C" union Union* __rust_thunk___ZN5UnionaSERKS_(
     union Union* __this, const union Union* __param_0) {

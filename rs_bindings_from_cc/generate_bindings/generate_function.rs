@@ -643,14 +643,6 @@ fn api_func_shape_for_constructor(
     let Some(record) = maybe_record else {
         panic!("Constructors must be associated with a record.");
     };
-    if is_unsafe {
-        // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
-        // translating C++ constructors into static methods in Rust).
-        errors.add(anyhow!(
-            "Unsafe constructors (e.g. with no elided or explicit lifetimes) \
-            are intentionally not supported. See b/216648347.",
-        ));
-    }
     if let Err(err) = check_by_value(record) {
         errors.add(err);
     }
@@ -714,6 +706,18 @@ fn api_func_shape_for_constructor(
             }
         }
         2 => {
+            // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
+            // translating C++ constructors into static methods in Rust).
+            //
+            // Note: move and copy constructors are excepted from this check, as Google C++ style
+            // disallows move and copy constructors which require invariants to hold on public
+            // fields of the source object.
+            if is_unsafe && !param_types[1].is_ref_to(record) {
+                errors.add(anyhow!(
+                    "Unsafe constructors (e.g. with no elided or explicit lifetimes) \
+                    are intentionally not supported. See b/216648347."
+                ));
+            }
             let param_type = &param_types[1];
             let func_name = make_rs_ident("from");
             let impl_kind = ImplKind::new_trait(

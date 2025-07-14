@@ -42,7 +42,6 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
 // Error while generating bindings for function 'CompoundDataType::CompoundDataType':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
 // Expected first parameter to be a `__this` reference, found *mut crate::CompoundDataType
 
@@ -141,7 +140,6 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for function 'Template2<int>::Template2<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst9Template2IiE
 
@@ -181,7 +179,6 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for function 'Template<int>::Template<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
 // Expected first parameter to be a `__this` reference, found *mut crate::__CcTemplateInst8TemplateIiE
 

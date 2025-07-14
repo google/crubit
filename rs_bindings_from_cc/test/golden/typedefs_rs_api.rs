@@ -175,42 +175,38 @@ unsafe impl ::cxx::ExternType for SomeUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN9SomeUnionC1Ev {}
-impl<'error> Default for SomeUnion
-where
-    &'error (): BindingFailedFor_ZN9SomeUnionC1Ev,
-{
+impl Default for SomeUnion {
     #[inline(always)]
     fn default() -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeUnionC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
     }
 }
 
-// Error while generating bindings for function 'SomeUnion::SomeUnion':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN9SomeUnionC1EOS_ {}
-impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion
-where
-    &'error (): BindingFailedFor_ZN9SomeUnionC1EOS_,
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeUnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeUnion {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -249,42 +245,38 @@ unsafe impl ::cxx::ExternType for SomeOtherUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crate::SomeOtherUnion);
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN14SomeOtherUnionC1Ev {}
-impl<'error> Default for SomeOtherUnion
-where
-    &'error (): BindingFailedFor_ZN14SomeOtherUnionC1Ev,
-{
+impl Default for SomeOtherUnion {
     #[inline(always)]
     fn default() -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1Ev(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+            );
+            tmp.assume_init()
+        }
     }
 }
 
-// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN14SomeOtherUnionC1EOS_ {}
-impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion
-where
-    &'error (): BindingFailedFor_ZN14SomeOtherUnionC1EOS_,
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -343,6 +335,11 @@ mod detail {
             __this: &'a mut crate::SomeOtherStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
         ) -> &'a mut crate::SomeOtherStruct;
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeUnion,
             __param_0: &'b crate::SomeUnion,
@@ -351,6 +348,13 @@ mod detail {
             __this: &'a mut crate::SomeUnion,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         ) -> &'a mut crate::SomeUnion;
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionaSERKS_<'a, 'b>(
             __this: &'a mut crate::SomeOtherUnion,
             __param_0: &'b crate::SomeOtherUnion,

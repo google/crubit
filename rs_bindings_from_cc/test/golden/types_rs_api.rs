@@ -148,24 +148,25 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-// Error while generating bindings for function 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN19FieldTypeTestStructC1EOS_ {}
-impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct
-where
-    &'error (): BindingFailedFor_ZN19FieldTypeTestStructC1EOS_,
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -230,6 +231,10 @@ mod detail {
             __this: &'a mut crate::SomeStruct,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         ) -> &'a mut crate::SomeStruct;
+        pub(crate) unsafe fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
+        );
         #[link_name = "_Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi"]
         pub(crate) unsafe fn __rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi<
             'a,

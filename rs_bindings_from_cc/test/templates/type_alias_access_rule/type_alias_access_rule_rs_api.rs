@@ -36,45 +36,38 @@ unsafe impl ::cxx::ExternType for B {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("B"), crate::B);
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN1BC1Ev {}
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-impl<'error> Default for B
-where
-    &'error (): BindingFailedFor_ZN1BC1Ev,
-{
+impl Default for B {
     #[inline(always)]
     fn default() -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1BC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            tmp.assume_init()
+        }
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-// Error while generating bindings for function 'B::B':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
-)]
-pub trait BindingFailedFor_ZN1BC1EOS_ {}
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-impl<'error, 'b> From<::ctor::RvalueReference<'b, Self>> for B
-where
-    &'error (): BindingFailedFor_ZN1BC1EOS_,
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for B {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1BC1EOS_(
+                &raw mut tmp as *mut ::core::ffi::c_void,
+                __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for B {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
+        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
     }
 }
 
@@ -106,6 +99,11 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN1BC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN1BC1EOS_<'b>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'b, crate::B>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN1BaSERKS_<'a, 'b>(
             __this: &'a mut crate::B,
             __param_0: &'b crate::B,

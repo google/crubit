@@ -27,6 +27,16 @@ static_assert(CRUBIT_SIZEOF(struct UserOfImportedType) == 8);
 static_assert(alignof(struct UserOfImportedType) == 8);
 static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);
 
+extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
+    struct UserOfImportedType* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1EOS_(
+    struct UserOfImportedType* __this, struct UserOfImportedType* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
 extern "C" struct UserOfImportedType*
 __rust_thunk___ZN18UserOfImportedTypeaSERKS_(
     struct UserOfImportedType* __this,
