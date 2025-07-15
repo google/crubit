@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // rust_api_golden
-// Features: infer_operator_lifetimes, supported, unsafe_types
+// Features: supported, unsafe_types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN

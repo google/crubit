@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // never_golden
-// Features: infer_operator_lifetimes, supported, unsafe_types
+// Features: supported, unsafe_types
 
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]

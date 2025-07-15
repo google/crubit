@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/method:example_lib
-// Features: infer_operator_lifetimes, supported, unsafe_types
+// Features: supported, unsafe_types
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -30,62 +30,30 @@ pub mod foo {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    /// Generated from: examples/cpp/method/example.h;l=12
-    impl Default for Bar {
-        #[inline(always)]
-        fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk___ZN3foo3BarC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
-                );
-                tmp.assume_init()
-            }
-        }
-    }
+    // Generated from: examples/cpp/method/example.h;l=12
+    // Error while generating bindings for function 'Bar::Bar':
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
+    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
 
-    /// Generated from: examples/cpp/method/example.h;l=12
-    impl From<::ctor::RvalueReference<'_, Self>> for Bar {
-        #[inline(always)]
-        fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk___ZN3foo3BarC1EOS0_(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-                tmp.assume_init()
-            }
-        }
-    }
-    impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Bar {
-        type CtorType = Self;
-        type Error = ::ctor::Infallible;
-        #[inline(always)]
-        fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-            <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-        }
-    }
+    // Generated from: examples/cpp/method/example.h;l=12
+    // Error while generating bindings for function 'Bar::Bar':
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
+    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
 
-    /// Generated from: examples/cpp/method/example.h;l=12
-    impl ::ctor::UnpinAssign<&Self> for Bar {
-        #[inline(always)]
-        fn unpin_assign(&mut self, __param_0: &Self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN3foo3BaraSERKS0_(self, __param_0);
-            }
-        }
-    }
+    // Generated from: examples/cpp/method/example.h;l=12
+    // Error while generating bindings for function 'Bar::Bar':
+    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
+    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
 
-    /// Generated from: examples/cpp/method/example.h;l=12
-    impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Bar {
-        #[inline(always)]
-        fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN3foo3BaraSEOS0_(self, __param_0);
-            }
-        }
-    }
+    // Generated from: examples/cpp/method/example.h;l=12
+    // Error while generating bindings for function 'Bar::operator=':
+    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+
+    // Generated from: examples/cpp/method/example.h;l=12
+    // Error while generating bindings for function 'Bar::operator=':
+    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
     impl Bar {
         /// Generated from: examples/cpp/method/example.h;l=14
@@ -102,19 +70,6 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN3foo3BarC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN3foo3BarC1EOS0_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::foo::Bar>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN3foo3BaraSERKS0_<'__return_lifetime>(
-            __this: &mut crate::foo::Bar,
-            __param_0: &crate::foo::Bar,
-        ) -> &'__return_lifetime mut crate::foo::Bar;
-        pub(crate) unsafe fn __rust_thunk___ZN3foo3BaraSEOS0_<'__return_lifetime>(
-            __this: &mut crate::foo::Bar,
-            __param_0: ::ctor::RvalueReference<'_, crate::foo::Bar>,
-        ) -> &'__return_lifetime mut crate::foo::Bar;
         pub(crate) unsafe fn __rust_thunk___ZN3foo3Bar8MyMethodEv(__this: *mut crate::foo::Bar);
     }
 }

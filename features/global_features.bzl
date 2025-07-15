@@ -9,5 +9,4 @@ visibility(["//..."])
 SUPPORTED_FEATURES = [
     "supported",
     "unsafe_types",
-    "infer_operator_lifetimes",
 ]
