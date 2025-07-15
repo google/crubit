@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro
-// Features: supported, unsafe_types
+// Features: infer_operator_lifetimes, supported, unsafe_types
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -36,30 +36,62 @@ pub mod repro {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for function 'Interval::Interval':
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Expected first parameter to be a `__this` reference, found *mut crate::repro::Interval
+    /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
+    impl Default for Interval {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN5repro8IntervalC1Ev(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
 
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for function 'Interval::Interval':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Expected first parameter to be a `__this` reference, found *mut crate::repro::Interval
+    /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
+    impl From<::ctor::RvalueReference<'_, Self>> for Interval {
+        #[inline(always)]
+        fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN5repro8IntervalC1EOS0_(
+                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
+    impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Interval {
+        type CtorType = Self;
+        type Error = ::ctor::Infallible;
+        #[inline(always)]
+        fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+            <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+        }
+    }
 
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for function 'Interval::Interval':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Expected first parameter to be a `__this` reference, found *mut crate::repro::Interval
+    /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
+    impl ::ctor::UnpinAssign<&Self> for Interval {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __param_0: &Self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN5repro8IntervalaSERKS0_(self, __param_0);
+            }
+        }
+    }
 
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for function 'Interval::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for function 'Interval::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+    /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
+    impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Interval {
+        #[inline(always)]
+        fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN5repro8IntervalaSEOS0_(self, __param_0);
+            }
+        }
+    }
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=19
     // Error while generating bindings for class 'repro::Nullable':
@@ -88,6 +120,26 @@ pub mod repro {
 // Can't generate bindings for repro::Nullable<repro::Interval>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN5repro8IntervalC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5repro8IntervalC1EOS0_(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'_, crate::repro::Interval>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN5repro8IntervalaSERKS0_<'__return_lifetime>(
+            __this: &mut crate::repro::Interval,
+            __param_0: &crate::repro::Interval,
+        ) -> &'__return_lifetime mut crate::repro::Interval;
+        pub(crate) unsafe fn __rust_thunk___ZN5repro8IntervalaSEOS0_<'__return_lifetime>(
+            __this: &mut crate::repro::Interval,
+            __param_0: ::ctor::RvalueReference<'_, crate::repro::Interval>,
+        ) -> &'__return_lifetime mut crate::repro::Interval;
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::repro::Interval>() == 1);

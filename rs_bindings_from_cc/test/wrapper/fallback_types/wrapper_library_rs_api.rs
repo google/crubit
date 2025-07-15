@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/fallback_types:wrapper_library
-// Features: supported, unsafe_types, wrapper
+// Features: infer_operator_lifetimes, supported, unsafe_types, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]

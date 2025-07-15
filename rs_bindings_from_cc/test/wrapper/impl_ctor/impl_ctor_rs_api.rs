@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/impl_ctor:impl_ctor
-// Features: supported, unsafe_types, wrapper
+// Features: infer_operator_lifetimes, supported, unsafe_types, wrapper
 
 #![rustfmt::skip]
 #![feature(
@@ -37,19 +37,69 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
-// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Nontrivial
-// Expected first parameter to be a `__this` reference, found *mut crate::Nontrivial
+/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
+impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
+        let mut x = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
+                    dest as *mut ::core::ffi::c_void,
+                    x,
+                );
+            })
+        }
+    }
+}
+impl ::ctor::CtorNew<(::core::ffi::c_int,)> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::core::ffi::c_int>>::ctor_new(arg)
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=11
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Nontrivial
-// Expected first parameter to be a `__this` reference, found *mut crate::Nontrivial
+/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=11
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
+                    dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=12
-// Error while generating bindings for function 'Nontrivial::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+/// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=12
+impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for Nontrivial {
+    #[inline(always)]
+    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: ::ctor::RvalueReference<'_, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10NontrivialaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=13
 impl ::ctor::PinnedDrop for Nontrivial {
@@ -91,6 +141,18 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ei(
+            __this: *mut ::core::ffi::c_void,
+            x: ::core::ffi::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::Nontrivial>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEOS_<'__return_lifetime>(
+            __this: ::core::pin::Pin<&mut crate::Nontrivial>,
+            __param_0: ::ctor::RvalueReference<'_, crate::Nontrivial>,
+        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::Nontrivial>;
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
         );

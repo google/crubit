@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: supported, unsafe_types
+// Features: infer_operator_lifetimes, supported, unsafe_types
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_ENUM_EXAMPLE_CRATE_GOLDEN
