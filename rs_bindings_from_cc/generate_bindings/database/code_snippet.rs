@@ -864,8 +864,8 @@ impl ToTokens for DocCommentAttr {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct DeriveAttr(pub Vec<Ident>);
+#[derive(Clone, Debug)]
+pub struct DeriveAttr(pub Vec<TokenStream>);
 
 impl ToTokens for DeriveAttr {
     fn to_tokens(&self, tokens: &mut TokenStream) {

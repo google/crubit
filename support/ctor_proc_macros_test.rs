@@ -66,6 +66,28 @@ fn test_derive_default_tuple_struct() {
 }
 
 #[gtest]
+fn test_derive_move_and_assign_via_copy() {
+    #[derive(Copy, Clone, ::ctor::MoveAndAssignViaCopy)]
+    struct Struct {
+        #[allow(unused)]
+        x: i32,
+        #[allow(unused)]
+        y: f32,
+    }
+
+    fn implements_traits<T>()
+    where
+        T: for<'a> From<::ctor::RvalueReference<'a, T>>
+            + for<'a> ::ctor::CtorNew<::ctor::RvalueReference<'a, T>>
+            + for<'a> ::ctor::UnpinAssign<&'a T>
+            + for<'a> ::ctor::UnpinAssign<::ctor::RvalueReference<'a, T>>,
+    {
+    }
+
+    implements_traits::<Struct>();
+}
+
+#[gtest]
 fn test_recursively_pinned_unit_struct() {
     #[::ctor::recursively_pinned]
     struct S;

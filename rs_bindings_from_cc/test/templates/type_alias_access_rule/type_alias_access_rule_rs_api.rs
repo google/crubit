@@ -20,7 +20,7 @@
 // Class templates are not supported yet
 
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=B
 pub struct B {
@@ -48,49 +48,6 @@ impl Default for B {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for B {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN1BC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for B {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-impl<'b> ::ctor::UnpinAssign<&'b Self> for B {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN1BaSERKS_(self, __param_0);
-        }
-    }
-}
-
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for B {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN1BaSEOS_(self, __param_0);
-        }
-    }
-}
-
 // Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=11
 // Error while generating bindings for class 'A<B::PrivateMember>':
 // Can't generate bindings for A<B::PrivateMember> due to missing bindings for its dependency: Unsupported type 'struct B::PrivateMember': No generated bindings found for 'PrivateMember'
@@ -100,18 +57,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN1BC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN1BC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::B>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN1BaSERKS_<'a, 'b>(
-            __this: &'a mut crate::B,
-            __param_0: &'b crate::B,
-        ) -> &'a mut crate::B;
-        pub(crate) unsafe fn __rust_thunk___ZN1BaSEOS_<'a, 'b>(
-            __this: &'a mut crate::B,
-            __param_0: ::ctor::RvalueReference<'b, crate::B>,
-        ) -> &'a mut crate::B;
     }
 }
 

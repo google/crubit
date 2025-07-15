@@ -26,24 +26,6 @@ extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1EOS_(
-    struct HasCustomAlignment* __this, struct HasCustomAlignment* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct HasCustomAlignment*
-__rust_thunk___ZN18HasCustomAlignmentaSERKS_(
-    struct HasCustomAlignment* __this,
-    const struct HasCustomAlignment* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct HasCustomAlignment*
-__rust_thunk___ZN18HasCustomAlignmentaSEOS_(
-    struct HasCustomAlignment* __this, struct HasCustomAlignment* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct HasFieldWithCustomAlignment) == 64);
 static_assert(alignof(struct HasFieldWithCustomAlignment) == 64);
 static_assert(CRUBIT_OFFSET_OF(field, struct HasFieldWithCustomAlignment) == 0);
@@ -51,26 +33,6 @@ static_assert(CRUBIT_OFFSET_OF(field, struct HasFieldWithCustomAlignment) == 0);
 extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
     struct HasFieldWithCustomAlignment* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_(
-    struct HasFieldWithCustomAlignment* __this,
-    struct HasFieldWithCustomAlignment* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct HasFieldWithCustomAlignment*
-__rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_(
-    struct HasFieldWithCustomAlignment* __this,
-    const struct HasFieldWithCustomAlignment* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct HasFieldWithCustomAlignment*
-__rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_(
-    struct HasFieldWithCustomAlignment* __this,
-    struct HasFieldWithCustomAlignment* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(CRUBIT_SIZEOF(struct InheritsFromBaseWithCustomAlignment) == 64);
@@ -81,52 +43,12 @@ extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_(
-    struct InheritsFromBaseWithCustomAlignment* __this,
-    struct InheritsFromBaseWithCustomAlignment* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct InheritsFromBaseWithCustomAlignment*
-__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_(
-    struct InheritsFromBaseWithCustomAlignment* __this,
-    const struct InheritsFromBaseWithCustomAlignment* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct InheritsFromBaseWithCustomAlignment*
-__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_(
-    struct InheritsFromBaseWithCustomAlignment* __this,
-    struct InheritsFromBaseWithCustomAlignment* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct HasCustomAlignmentWithGnuAttr) == 64);
 static_assert(alignof(struct HasCustomAlignmentWithGnuAttr) == 64);
 
 extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
     struct HasCustomAlignmentWithGnuAttr* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_(
-    struct HasCustomAlignmentWithGnuAttr* __this,
-    struct HasCustomAlignmentWithGnuAttr* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct HasCustomAlignmentWithGnuAttr*
-__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_(
-    struct HasCustomAlignmentWithGnuAttr* __this,
-    const struct HasCustomAlignmentWithGnuAttr* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct HasCustomAlignmentWithGnuAttr*
-__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_(
-    struct HasCustomAlignmentWithGnuAttr* __this,
-    struct HasCustomAlignmentWithGnuAttr* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(struct template_with_preferred_name::SomeTemplate<int>) ==
@@ -138,27 +60,6 @@ extern "C" void
 __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
     struct template_with_preferred_name::SomeTemplate<int>* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void
-__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
-    struct template_with_preferred_name::SomeTemplate<int>* __this,
-    struct template_with_preferred_name::SomeTemplate<int>* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct template_with_preferred_name::SomeTemplate<int>*
-__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
-    struct template_with_preferred_name::SomeTemplate<int>* __this,
-    const struct template_with_preferred_name::SomeTemplate<int>* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct template_with_preferred_name::SomeTemplate<int>*
-__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
-    struct template_with_preferred_name::SomeTemplate<int>* __this,
-    struct template_with_preferred_name::SomeTemplate<int>* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 extern "C" int

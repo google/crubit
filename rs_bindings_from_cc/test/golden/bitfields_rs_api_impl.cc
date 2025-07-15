@@ -29,47 +29,12 @@ extern "C" void __rust_thunk___ZN13WithBitfieldsC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN13WithBitfieldsC1EOS_(
-    struct WithBitfields* __this, struct WithBitfields* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct WithBitfields* __rust_thunk___ZN13WithBitfieldsaSERKS_(
-    struct WithBitfields* __this, const struct WithBitfields* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct WithBitfields* __rust_thunk___ZN13WithBitfieldsaSEOS_(
-    struct WithBitfields* __this, struct WithBitfields* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct AlignmentRegressionTest) == 4);
 static_assert(alignof(struct AlignmentRegressionTest) == 4);
 
 extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
     struct AlignmentRegressionTest* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1EOS_(
-    struct AlignmentRegressionTest* __this,
-    struct AlignmentRegressionTest* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct AlignmentRegressionTest*
-__rust_thunk___ZN23AlignmentRegressionTestaSERKS_(
-    struct AlignmentRegressionTest* __this,
-    const struct AlignmentRegressionTest* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct AlignmentRegressionTest*
-__rust_thunk___ZN23AlignmentRegressionTestaSEOS_(
-    struct AlignmentRegressionTest* __this,
-    struct AlignmentRegressionTest* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 #pragma clang diagnostic pop

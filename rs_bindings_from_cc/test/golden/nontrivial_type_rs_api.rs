@@ -855,7 +855,7 @@ pub fn TakesUnpinByConstRvalueReference<'a>(
 }
 
 /// Finally, testing for strange by-value APIs.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
 pub struct NontrivialByValue {
@@ -871,46 +871,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialByValue"),
     crate::NontrivialByValue
 );
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
-    #[inline(always)]
-    fn from(other: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN17NontrivialByValueC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                other,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for NontrivialByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, other: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN17NontrivialByValueaSERKS_(self, other);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, other: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN17NontrivialByValueaSEOS_(self, other);
-        }
-    }
-}
 
 impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivial>>
     for NontrivialByValue
@@ -1261,18 +1221,6 @@ mod detail {
         >(
             nontrivial: ::ctor::ConstRvalueReference<'a, crate::NontrivialUnpin>,
         ) -> ::ctor::ConstRvalueReference<'a, crate::NontrivialUnpin>;
-        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            other: ::ctor::RvalueReference<'b, crate::NontrivialByValue>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueaSERKS_<'a, 'b>(
-            __this: &'a mut crate::NontrivialByValue,
-            other: &'b crate::NontrivialByValue,
-        ) -> &'a mut crate::NontrivialByValue;
-        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueaSEOS_<'a, 'b>(
-            __this: &'a mut crate::NontrivialByValue,
-            other: ::ctor::RvalueReference<'b, crate::NontrivialByValue>,
-        ) -> &'a mut crate::NontrivialByValue;
         pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial<'a, 'other>(
             __return: *mut ::core::ffi::c_void,
             __this: &'a mut crate::NontrivialByValue,

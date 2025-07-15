@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WithBitfields
 pub struct WithBitfields {
@@ -63,49 +63,9 @@ impl Default for WithBitfields {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for WithBitfields {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for WithBitfields {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for WithBitfields {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13WithBitfieldsaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for WithBitfields {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13WithBitfieldsaSEOS_(self, __param_0);
-        }
-    }
-}
-
 /// This is a regression test for b/283835873 where the alignment of the
 /// generated struct was wrong/missing.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AlignmentRegressionTest
 pub struct AlignmentRegressionTest {
@@ -137,46 +97,6 @@ impl Default for AlignmentRegressionTest {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AlignmentRegressionTest {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AlignmentRegressionTest {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AlignmentRegressionTest {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AlignmentRegressionTest {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestaSEOS_(self, __param_0);
-        }
-    }
-}
-
 // Error while generating bindings for enum 'AlignmentRegressionTest::(unnamed enum at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)':
 // Unnamed enums are not supported yet
 
@@ -185,33 +105,9 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsaSERKS_<'a, 'b>(
-            __this: &'a mut crate::WithBitfields,
-            __param_0: &'b crate::WithBitfields,
-        ) -> &'a mut crate::WithBitfields;
-        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsaSEOS_<'a, 'b>(
-            __this: &'a mut crate::WithBitfields,
-            __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
-        ) -> &'a mut crate::WithBitfields;
         pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AlignmentRegressionTest>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AlignmentRegressionTest,
-            __param_0: &'b crate::AlignmentRegressionTest,
-        ) -> &'a mut crate::AlignmentRegressionTest;
-        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AlignmentRegressionTest,
-            __param_0: ::ctor::RvalueReference<'b, crate::AlignmentRegressionTest>,
-        ) -> &'a mut crate::AlignmentRegressionTest;
     }
 }
 

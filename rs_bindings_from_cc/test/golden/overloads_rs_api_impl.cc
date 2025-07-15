@@ -29,21 +29,6 @@ extern "C" void __rust_thunk___ZN3FooC1Ev(class Foo* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN3FooC1EOS_(class Foo* __this,
-                                            class Foo* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class Foo* __rust_thunk___ZN3FooaSERKS_(class Foo* __this,
-                                                   const class Foo* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class Foo* __rust_thunk___ZN3FooaSEOS_(class Foo* __this,
-                                                  class Foo* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 extern "C" void __rust_thunk___ZN3Foo3BarE6SizeofIiE(
     class Foo* __this, struct Sizeof<int>* __param_0) {
   __this->Bar(std::move(*__param_0));
@@ -63,24 +48,6 @@ __rust_thunk___ZN6SizeofIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ff
   crubit::construct_at(__this);
 }
 
-extern "C" void
-__rust_thunk___ZN6SizeofIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<float>* __this, struct Sizeof<float>* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct Sizeof<float>*
-__rust_thunk___ZN6SizeofIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<float>* __this, const struct Sizeof<float>* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct Sizeof<float>*
-__rust_thunk___ZN6SizeofIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<float>* __this, struct Sizeof<float>* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(sizeof(struct Sizeof<int>) == 1);
 static_assert(alignof(struct Sizeof<int>) == 1);
 
@@ -88,24 +55,6 @@ extern "C" void
 __rust_thunk___ZN6SizeofIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
     struct Sizeof<int>* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void
-__rust_thunk___ZN6SizeofIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<int>* __this, struct Sizeof<int>* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct Sizeof<int>*
-__rust_thunk___ZN6SizeofIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<int>* __this, const struct Sizeof<int>* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct Sizeof<int>*
-__rust_thunk___ZN6SizeofIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<int>* __this, struct Sizeof<int>* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 #pragma clang diagnostic pop

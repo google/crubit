@@ -25,7 +25,7 @@
 /// rs_bindings_from_cc/test/golden/ because the format provides end-to-end
 /// coverage for working accessor functions, while the latter helps manually
 /// inspect and verify the expected layout of the generated Rust struct.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Struct
 pub struct Struct {
@@ -72,46 +72,6 @@ impl Default for Struct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for Struct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN6StructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Struct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for Struct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN6StructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Struct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN6StructaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl Struct {
     #[inline(always)]
     pub fn Make(f1: ::core::ffi::c_int, f2: ::core::ffi::c_char) -> crate::Struct {
@@ -132,7 +92,7 @@ impl Struct {
 /// between `field1` and `field2`).  The verification is mostly done through
 /// compile-time assertions of field offsets in the generated Rust code.  Before
 /// cl/448287893 `field2` would be incorrectly placed at offset 1.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=PaddingBetweenFields
 pub struct PaddingBetweenFields {
@@ -173,46 +133,6 @@ impl Default for PaddingBetweenFields {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for PaddingBetweenFields {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsaSEOS_(self, __param_0);
         }
     }
 }
@@ -465,18 +385,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN6StructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::Struct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN6StructaSERKS_<'a, 'b>(
-            __this: &'a mut crate::Struct,
-            __param_0: &'b crate::Struct,
-        ) -> &'a mut crate::Struct;
-        pub(crate) unsafe fn __rust_thunk___ZN6StructaSEOS_<'a, 'b>(
-            __this: &'a mut crate::Struct,
-            __param_0: ::ctor::RvalueReference<'b, crate::Struct>,
-        ) -> &'a mut crate::Struct;
         pub(crate) unsafe fn __rust_thunk___ZN6Struct4MakeEic(
             __return: *mut ::core::ffi::c_void,
             f1: ::core::ffi::c_int,
@@ -485,18 +393,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsaSERKS_<'a, 'b>(
-            __this: &'a mut crate::PaddingBetweenFields,
-            __param_0: &'b crate::PaddingBetweenFields,
-        ) -> &'a mut crate::PaddingBetweenFields;
-        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsaSEOS_<'a, 'b>(
-            __this: &'a mut crate::PaddingBetweenFields,
-            __param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>,
-        ) -> &'a mut crate::PaddingBetweenFields;
         pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
             __return: *mut ::core::ffi::c_void,
             f1: ::core::ffi::c_char,

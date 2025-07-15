@@ -20,7 +20,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableConstMember
 pub struct AddableConstMember {
@@ -53,46 +53,6 @@ impl Default for AddableConstMember {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableConstMemberC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableConstMember {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableConstMemberaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableConstMemberaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMember> for &'a crate::AddableConstMember {
     type Output = crate::AddableConstMember;
     #[inline(always)]
@@ -109,7 +69,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMember> for &'a crate::Adda
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableNonConstMember
 pub struct AddableNonConstMember {
@@ -142,46 +102,6 @@ impl Default for AddableNonConstMember {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableNonConstMember {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableNonConstMemberaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableNonConstMemberaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl<'a, 'b> ::core::ops::Add<&'b crate::AddableNonConstMember>
     for &'a mut crate::AddableNonConstMember
 {
@@ -200,7 +120,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableNonConstMember>
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFriend
 pub struct AddableFriend {
@@ -230,46 +150,6 @@ impl Default for AddableFriend {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFriend {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13AddableFriendC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFriend {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFriend {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13AddableFriendaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFriend {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13AddableFriendaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFriend {
     type Output = crate::AddableFriend;
     #[inline(always)]
@@ -286,7 +166,7 @@ impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFr
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByConstRef
 pub struct AddableFreeByConstRef {
@@ -316,47 +196,7 @@ impl Default for AddableFreeByConstRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByConstRef {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByConstRef {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByMutRef
 pub struct AddableFreeByMutRef {
@@ -386,47 +226,7 @@ impl Default for AddableFreeByMutRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByMutRef {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByMutRef {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByMutRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByMutRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByValue
 pub struct AddableFreeByValue {
@@ -456,47 +256,7 @@ impl Default for AddableFreeByValue {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByValue {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableFreeByValueC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByValue {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableFreeByValueaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableFreeByValueaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByRValueRef
 pub struct AddableFreeByRValueRef {
@@ -522,46 +282,6 @@ impl Default for AddableFreeByRValueRef {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFreeByRValueRef {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableFreeByRValueRef {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFreeByRValueRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFreeByRValueRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefaSEOS_(self, __param_0);
         }
     }
 }
@@ -621,7 +341,7 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
 // Error while generating bindings for function 'operator+':
 // Rvalue reference types are not yet supported as first parameter of operators (b/219826128)
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Overloaded
 pub struct Overloaded {
@@ -648,46 +368,6 @@ impl Default for Overloaded {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for Overloaded {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10OverloadedC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Overloaded {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for Overloaded {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10OverloadedaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Overloaded {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10OverloadedaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl<'a> ::core::ops::Add<::core::ffi::c_int> for &'a crate::Overloaded {
     type Output = ::core::ffi::c_int;
     #[inline(always)]
@@ -704,7 +384,7 @@ impl<'a> ::core::ops::Add<::core::ffi::c_uint> for &'a crate::Overloaded {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=IncompatibleLHS
 pub struct IncompatibleLHS {
@@ -734,53 +414,13 @@ impl Default for IncompatibleLHS {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN15IncompatibleLHSC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for IncompatibleLHS {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN15IncompatibleLHSaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN15IncompatibleLHSaSEOS_(self, __param_0);
-        }
-    }
-}
-
 // Error while generating bindings for function 'operator+':
 // Non-record-nor-reference operator parameters are not yet supported, found ::core::ffi::c_int
 
 // Error while generating bindings for function 'operator+':
 // Expected first operator parameter to be a record or incomplete record, found ::core::ffi::c_int
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableReturnsVoid
 pub struct AddableReturnsVoid {
@@ -809,46 +449,6 @@ impl Default for AddableReturnsVoid {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableReturnsVoid {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableReturnsVoidaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableReturnsVoidaSEOS_(self, __param_0);
         }
     }
 }
@@ -958,7 +558,7 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberInt
 pub struct AddAssignMemberInt {
@@ -988,46 +588,6 @@ impl Default for AddAssignMemberInt {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberInt {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddAssignMemberIntaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddAssignMemberIntaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignMemberInt {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
@@ -1037,7 +597,7 @@ impl ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignMemberInt {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberByConstRef
 pub struct AddAssignMemberByConstRef {
@@ -1067,46 +627,6 @@ impl Default for AddAssignMemberByConstRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl<'b> ::core::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1116,7 +636,7 @@ impl<'b> ::core::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByConstRef
 pub struct AddAssignFreeByConstRef {
@@ -1146,46 +666,6 @@ impl Default for AddAssignFreeByConstRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
     #[inline(always)]
     fn add_assign(&mut self, rhs: &Self) {
@@ -1195,7 +675,7 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByValue
 pub struct AddAssignFreeByValue {
@@ -1225,46 +705,6 @@ impl Default for AddAssignFreeByValue {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl ::core::ops::AddAssign<Self> for crate::AddAssignFreeByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, mut rhs: Self) {
@@ -1274,7 +714,7 @@ impl ::core::ops::AddAssign<Self> for crate::AddAssignFreeByValue {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByConstRef
 pub struct AddAssignFriendByConstRef {
@@ -1304,46 +744,6 @@ impl Default for AddAssignFriendByConstRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
     #[inline(always)]
     fn add_assign(&mut self, rhs: &Self) {
@@ -1353,7 +753,7 @@ impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByValue
 pub struct AddAssignFriendByValue {
@@ -1383,46 +783,6 @@ impl Default for AddAssignFriendByValue {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueaSEOS_(self, __param_0);
-        }
-    }
-}
-
 impl ::core::ops::AddAssign<Self> for crate::AddAssignFriendByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, mut rhs: Self) {
@@ -1432,7 +792,7 @@ impl ::core::ops::AddAssign<Self> for crate::AddAssignFriendByValue {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedConstMember
 pub struct AddAssignProhibitedConstMember {
@@ -1462,48 +822,6 @@ impl Default for AddAssignProhibitedConstMember {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedConstMember {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberaSERKS_(
-                self, __param_0,
-            );
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberaSEOS_(self, __param_0);
-        }
-    }
-}
-
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
 )]
@@ -1522,7 +840,7 @@ where
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedFriendConstLhs
 pub struct AddAssignProhibitedFriendConstLhs {
@@ -1552,52 +870,6 @@ impl Default for AddAssignProhibitedFriendConstLhs {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendConstLhs {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendConstLhs {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedFriendConstLhs {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSERKS_(
-                self, __param_0,
-            );
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
-    for AddAssignProhibitedFriendConstLhs
-{
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSEOS_(
-                self, __param_0,
-            );
-        }
-    }
-}
-
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedFriendConstLhs"
 )]
@@ -1616,7 +888,7 @@ where
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ManyOperators
 pub struct ManyOperators {
@@ -1639,46 +911,6 @@ impl Default for ManyOperators {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for ManyOperators {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for ManyOperators {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ManyOperators {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsaSEOS_(self, __param_0);
         }
     }
 }
@@ -1987,18 +1219,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableConstMember,
-            __param_0: &'b crate::AddableConstMember,
-        ) -> &'a mut crate::AddableConstMember;
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableConstMember,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
-        ) -> &'a mut crate::AddableConstMember;
         pub(crate) unsafe fn __rust_thunk___ZNK18AddableConstMemberplERKS_<'a, 'b>(
             __return: *mut ::core::ffi::c_void,
             __this: &'a crate::AddableConstMember,
@@ -2007,36 +1227,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableNonConstMember,
-            __param_0: &'b crate::AddableNonConstMember,
-        ) -> &'a mut crate::AddableNonConstMember;
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableNonConstMember,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
-        ) -> &'a mut crate::AddableNonConstMember;
         pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberplERKS_<'a, 'b>(
             __return: *mut ::core::ffi::c_void,
             __this: &'a mut crate::AddableNonConstMember,
             rhs: &'b crate::AddableNonConstMember,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableFriend,
-            __param_0: &'b crate::AddableFriend,
-        ) -> &'a mut crate::AddableFriend;
-        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableFriend,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
-        ) -> &'a mut crate::AddableFriend;
         pub(crate) unsafe fn __rust_thunk___ZplRK13AddableFriendS1_<'a, 'b>(
             __return: *mut ::core::ffi::c_void,
             lhs: &'a crate::AddableFriend,
@@ -2045,63 +1241,15 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByConstRef>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByConstRef,
-            __param_0: &'b crate::AddableFreeByConstRef,
-        ) -> &'a mut crate::AddableFreeByConstRef;
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByConstRef,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByConstRef>,
-        ) -> &'a mut crate::AddableFreeByConstRef;
         pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByMutRef>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByMutRef,
-            __param_0: &'b crate::AddableFreeByMutRef,
-        ) -> &'a mut crate::AddableFreeByMutRef;
-        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByMutRef,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByMutRef>,
-        ) -> &'a mut crate::AddableFreeByMutRef;
         pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByValue>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByValue,
-            __param_0: &'b crate::AddableFreeByValue,
-        ) -> &'a mut crate::AddableFreeByValue;
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByValue,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByValue>,
-        ) -> &'a mut crate::AddableFreeByValue;
         pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByRValueRef>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByRValueRef,
-            __param_0: &'b crate::AddableFreeByRValueRef,
-        ) -> &'a mut crate::AddableFreeByRValueRef;
-        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableFreeByRValueRef,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableFreeByRValueRef>,
-        ) -> &'a mut crate::AddableFreeByRValueRef;
         pub(crate) unsafe fn __rust_thunk___ZplRK21AddableFreeByConstRefS1_<'a, 'b>(
             __return: *mut ::core::ffi::c_void,
             lhs: &'a crate::AddableFreeByConstRef,
@@ -2118,18 +1266,6 @@ mod detail {
             rhs: &mut crate::AddableFreeByValue,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedaSERKS_<'a, 'b>(
-            __this: &'a mut crate::Overloaded,
-            __param_0: &'b crate::Overloaded,
-        ) -> &'a mut crate::Overloaded;
-        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedaSEOS_<'a, 'b>(
-            __this: &'a mut crate::Overloaded,
-            __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
-        ) -> &'a mut crate::Overloaded;
         #[link_name = "_ZplRK10Overloadedi"]
         pub(crate) unsafe fn __rust_thunk___ZplRK10Overloadedi<'a>(
             lhs: &'a crate::Overloaded,
@@ -2143,33 +1279,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSaSERKS_<'a, 'b>(
-            __this: &'a mut crate::IncompatibleLHS,
-            __param_0: &'b crate::IncompatibleLHS,
-        ) -> &'a mut crate::IncompatibleLHS;
-        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSaSEOS_<'a, 'b>(
-            __this: &'a mut crate::IncompatibleLHS,
-            __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
-        ) -> &'a mut crate::IncompatibleLHS;
         pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddableReturnsVoid,
-            __param_0: &'b crate::AddableReturnsVoid,
-        ) -> &'a mut crate::AddableReturnsVoid;
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddableReturnsVoid,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
-        ) -> &'a mut crate::AddableReturnsVoid;
         #[link_name = "_ZNK18AddableReturnsVoidplERKS_"]
         pub(crate) unsafe fn __rust_thunk___ZNK18AddableReturnsVoidplERKS_<'a, 'b>(
             __this: &'a crate::AddableReturnsVoid,
@@ -2197,18 +1309,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignMemberInt,
-            __param_0: &'b crate::AddAssignMemberInt,
-        ) -> &'a mut crate::AddAssignMemberInt;
-        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignMemberInt,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
-        ) -> &'a mut crate::AddAssignMemberInt;
         #[link_name = "_ZN18AddAssignMemberIntpLEi"]
         pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
             __this: &'a mut crate::AddAssignMemberInt,
@@ -2217,18 +1317,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignMemberByConstRef,
-            __param_0: &'b crate::AddAssignMemberByConstRef,
-        ) -> &'a mut crate::AddAssignMemberByConstRef;
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignMemberByConstRef,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
-        ) -> &'a mut crate::AddAssignMemberByConstRef;
         #[link_name = "_ZN25AddAssignMemberByConstRefpLERKS_"]
         pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignMemberByConstRef,
@@ -2237,18 +1325,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFreeByConstRef,
-            __param_0: &'b crate::AddAssignFreeByConstRef,
-        ) -> &'a mut crate::AddAssignFreeByConstRef;
-        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFreeByConstRef,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
-        ) -> &'a mut crate::AddAssignFreeByConstRef;
         #[link_name = "_ZpLR23AddAssignFreeByConstRefRKS_"]
         pub(crate) unsafe fn __rust_thunk___ZpLR23AddAssignFreeByConstRefRKS_<'__return_lifetime>(
             lhs: &mut crate::AddAssignFreeByConstRef,
@@ -2257,18 +1333,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFreeByValue,
-            __param_0: &'b crate::AddAssignFreeByValue,
-        ) -> &'a mut crate::AddAssignFreeByValue;
-        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFreeByValue,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
-        ) -> &'a mut crate::AddAssignFreeByValue;
         pub(crate) unsafe fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFreeByValue,
             rhs: &mut crate::AddAssignFreeByValue,
@@ -2276,18 +1340,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFriendByConstRef,
-            __param_0: &'b crate::AddAssignFriendByConstRef,
-        ) -> &'a mut crate::AddAssignFriendByConstRef;
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFriendByConstRef,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
-        ) -> &'a mut crate::AddAssignFriendByConstRef;
         #[link_name = "_ZpLR25AddAssignFriendByConstRefRKS_"]
         pub(crate) unsafe fn __rust_thunk___ZpLR25AddAssignFriendByConstRefRKS_<
             '__return_lifetime,
@@ -2298,18 +1350,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFriendByValue,
-            __param_0: &'b crate::AddAssignFriendByValue,
-        ) -> &'a mut crate::AddAssignFriendByValue;
-        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignFriendByValue,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
-        ) -> &'a mut crate::AddAssignFriendByValue;
         pub(crate) unsafe fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFriendByValue,
             rhs: &mut crate::AddAssignFriendByValue,
@@ -2317,46 +1357,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignProhibitedConstMember,
-            __param_0: &'b crate::AddAssignProhibitedConstMember,
-        ) -> &'a mut crate::AddAssignProhibitedConstMember;
-        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignProhibitedConstMember,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
-        ) -> &'a mut crate::AddAssignProhibitedConstMember;
         pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignProhibitedFriendConstLhs,
-            __param_0: &'b crate::AddAssignProhibitedFriendConstLhs,
-        ) -> &'a mut crate::AddAssignProhibitedFriendConstLhs;
-        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSEOS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignProhibitedFriendConstLhs,
-            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
-        ) -> &'a mut crate::AddAssignProhibitedFriendConstLhs;
         pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsaSERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            __param_0: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsaSEOS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
-        ) -> &'a mut crate::ManyOperators;
         pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorspsEv<'a>(
             __return: *mut ::core::ffi::c_void,
             __this: &'a crate::ManyOperators,

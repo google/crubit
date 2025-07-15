@@ -26,7 +26,7 @@ pub fn UsesImportedType(mut t: trivial_type_cc::ns::Trivial) -> trivial_type_cc:
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UserOfImportedType
 pub struct UserOfImportedType {
@@ -56,46 +56,6 @@ impl Default for UserOfImportedType {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for UserOfImportedType {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeaSEOS_(self, __param_0);
-        }
-    }
-}
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -107,18 +67,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeaSERKS_<'a, 'b>(
-            __this: &'a mut crate::UserOfImportedType,
-            __param_0: &'b crate::UserOfImportedType,
-        ) -> &'a mut crate::UserOfImportedType;
-        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeaSEOS_<'a, 'b>(
-            __this: &'a mut crate::UserOfImportedType,
-            __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
-        ) -> &'a mut crate::UserOfImportedType;
     }
 }
 

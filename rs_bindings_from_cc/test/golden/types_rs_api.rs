@@ -20,7 +20,7 @@
 // Error while generating bindings for type alias 'Size':
 // Unsupported type 'decltype(sizeof (0))': Unsupported clang::Type class 'Decltype'
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
@@ -47,49 +47,9 @@ impl Default for SomeStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeStruct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructaSEOS_(self, __param_0);
-        }
-    }
-}
-
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct
 pub struct FieldTypeTestStruct {
@@ -148,28 +108,6 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
 #[inline(always)]
 pub fn FunctionTakingPointersAndReferences<'a, 'b, 'c, 'd>(
     const_ref_param: &'a ::core::ffi::c_int,
@@ -219,22 +157,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
-            __this: &'a mut crate::SomeStruct,
-            __param_0: &'b crate::SomeStruct,
-        ) -> &'a mut crate::SomeStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
-            __this: &'a mut crate::SomeStruct,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
-        ) -> &'a mut crate::SomeStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
-        );
         #[link_name = "_Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi"]
         pub(crate) unsafe fn __rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi<
             'a,

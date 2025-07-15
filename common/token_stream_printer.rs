@@ -193,7 +193,8 @@ pub fn write_unformatted_tokens(
     Ok(())
 }
 
-fn tokens_to_string(tokens: TokenStream) -> Result<String> {
+/// Writes unformatted tokens into a string.
+pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
     let mut result = String::new();
     write_unformatted_tokens(&mut result, tokens)?;
     Ok(result)

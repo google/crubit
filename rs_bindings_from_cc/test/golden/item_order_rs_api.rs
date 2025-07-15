@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=FirstStruct
 pub struct FirstStruct {
@@ -41,52 +41,12 @@ impl Default for FirstStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FirstStruct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for FirstStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for FirstStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructaSEOS_(self, __param_0);
-        }
-    }
-}
-
 #[inline(always)]
 pub fn first_func() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SecondStruct
 pub struct SecondStruct {
@@ -113,46 +73,6 @@ impl Default for SecondStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SecondStruct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for SecondStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SecondStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructaSEOS_(self, __param_0);
-        }
-    }
-}
-
 #[inline(always)]
 pub fn second_func() -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z11second_funcv() }
@@ -163,32 +83,8 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructaSERKS_<'a, 'b>(
-            __this: &'a mut crate::FirstStruct,
-            __param_0: &'b crate::FirstStruct,
-        ) -> &'a mut crate::FirstStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructaSEOS_<'a, 'b>(
-            __this: &'a mut crate::FirstStruct,
-            __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
-        ) -> &'a mut crate::FirstStruct;
         pub(crate) unsafe fn __rust_thunk___Z10first_funcv() -> ::core::ffi::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructaSERKS_<'a, 'b>(
-            __this: &'a mut crate::SecondStruct,
-            __param_0: &'b crate::SecondStruct,
-        ) -> &'a mut crate::SecondStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructaSEOS_<'a, 'b>(
-            __this: &'a mut crate::SecondStruct,
-            __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
-        ) -> &'a mut crate::SecondStruct;
         pub(crate) unsafe fn __rust_thunk___Z11second_funcv() -> ::core::ffi::c_int;
     }
 }

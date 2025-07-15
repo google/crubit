@@ -25,21 +25,6 @@ extern "C" void __rust_thunk___ZN10EmptyUnionC1Ev(union EmptyUnion* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN10EmptyUnionC1EOS_(
-    union EmptyUnion* __this, union EmptyUnion* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" union EmptyUnion* __rust_thunk___ZN10EmptyUnionaSERKS_(
-    union EmptyUnion* __this, const union EmptyUnion* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" union EmptyUnion* __rust_thunk___ZN10EmptyUnionaSEOS_(
-    union EmptyUnion* __this, union EmptyUnion* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct Nontrivial) == 4);
 static_assert(alignof(struct Nontrivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
@@ -50,21 +35,6 @@ static_assert(alignof(union UnionToRename) == 1);
 extern "C" void __rust_thunk___ZN13UnionToRenameC1Ev(
     union UnionToRename* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN13UnionToRenameC1EOS_(
-    union UnionToRename* __this, union UnionToRename* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" union UnionToRename* __rust_thunk___ZN13UnionToRenameaSERKS_(
-    union UnionToRename* __this, const union UnionToRename* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" union UnionToRename* __rust_thunk___ZN13UnionToRenameaSEOS_(
-    union UnionToRename* __this, union UnionToRename* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
@@ -103,21 +73,6 @@ extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN13NonEmptyUnionC1EOS_(
-    union NonEmptyUnion* __this, union NonEmptyUnion* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" union NonEmptyUnion* __rust_thunk___ZN13NonEmptyUnionaSERKS_(
-    union NonEmptyUnion* __this, const union NonEmptyUnion* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" union NonEmptyUnion* __rust_thunk___ZN13NonEmptyUnionaSEOS_(
-    union NonEmptyUnion* __this, union NonEmptyUnion* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(union NonCopyUnion) == 4);
 static_assert(alignof(union NonCopyUnion) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_member, union NonCopyUnion) == 0);
@@ -148,24 +103,6 @@ extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(
-    union UnionWithOpaqueField* __this, union UnionWithOpaqueField* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" union UnionWithOpaqueField*
-__rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_(
-    union UnionWithOpaqueField* __this,
-    const union UnionWithOpaqueField* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" union UnionWithOpaqueField*
-__rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_(
-    union UnionWithOpaqueField* __this, union UnionWithOpaqueField* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct TrivialButInheritable) == 4);
 static_assert(alignof(struct TrivialButInheritable) == 4);
 static_assert(CRUBIT_OFFSET_OF(x, struct TrivialButInheritable) == 0);
@@ -173,26 +110,6 @@ static_assert(CRUBIT_OFFSET_OF(x, struct TrivialButInheritable) == 0);
 extern "C" void __rust_thunk___ZN21TrivialButInheritableC1Ev(
     struct TrivialButInheritable* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN21TrivialButInheritableC1EOS_(
-    struct TrivialButInheritable* __this,
-    struct TrivialButInheritable* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct TrivialButInheritable*
-__rust_thunk___ZN21TrivialButInheritableaSERKS_(
-    struct TrivialButInheritable* __this,
-    const struct TrivialButInheritable* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct TrivialButInheritable*
-__rust_thunk___ZN21TrivialButInheritableaSEOS_(
-    struct TrivialButInheritable* __this,
-    struct TrivialButInheritable* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(CRUBIT_SIZEOF(union UnionWithInheritable) == 4);
@@ -204,45 +121,12 @@ extern "C" void __rust_thunk___ZN20UnionWithInheritableC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN20UnionWithInheritableC1EOS_(
-    union UnionWithInheritable* __this, union UnionWithInheritable* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" union UnionWithInheritable*
-__rust_thunk___ZN20UnionWithInheritableaSERKS_(
-    union UnionWithInheritable* __this,
-    const union UnionWithInheritable* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" union UnionWithInheritable*
-__rust_thunk___ZN20UnionWithInheritableaSEOS_(
-    union UnionWithInheritable* __this, union UnionWithInheritable* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(sizeof(TypedefUnion) == 1);
 static_assert(alignof(TypedefUnion) == 1);
 static_assert(CRUBIT_OFFSET_OF(trivial_member, TypedefUnion) == 0);
 
 extern "C" void __rust_thunk___ZN12TypedefUnionC1Ev(TypedefUnion* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN12TypedefUnionC1EOS_(TypedefUnion* __this,
-                                                      TypedefUnion* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" TypedefUnion* __rust_thunk___ZN12TypedefUnionaSERKS_(
-    TypedefUnion* __this, const TypedefUnion* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" TypedefUnion* __rust_thunk___ZN12TypedefUnionaSEOS_(
-    TypedefUnion* __this, TypedefUnion* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(CRUBIT_SIZEOF(TypedefUnionWithInheritable) == 4);
@@ -252,26 +136,6 @@ static_assert(CRUBIT_OFFSET_OF(t, TypedefUnionWithInheritable) == 0);
 extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
     TypedefUnionWithInheritable* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_(
-    TypedefUnionWithInheritable* __this,
-    TypedefUnionWithInheritable* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" TypedefUnionWithInheritable*
-__rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_(
-    TypedefUnionWithInheritable* __this,
-    const TypedefUnionWithInheritable* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" TypedefUnionWithInheritable*
-__rust_thunk___ZN27TypedefUnionWithInheritableaSEOS_(
-    TypedefUnionWithInheritable* __this,
-    TypedefUnionWithInheritable* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 #pragma clang diagnostic pop

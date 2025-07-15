@@ -16,7 +16,7 @@
 #![deny(warnings)]
 
 /// Generated from: examples/cpp/trivial_struct/example.h;l=8
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Position
 pub struct Position {

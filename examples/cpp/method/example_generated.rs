@@ -17,7 +17,7 @@
 
 pub mod foo {
     /// Generated from: examples/cpp/method/example.h;l=12
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Bar
     pub struct Bar {

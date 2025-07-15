@@ -9,7 +9,7 @@ use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibil
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
-    should_derive_clone, unique_lifetimes, Lifetime, Mutability, RsTypeKind,
+    should_derive_clone, should_derive_copy, unique_lifetimes, Lifetime, Mutability, RsTypeKind,
 };
 use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
@@ -312,10 +312,11 @@ fn api_func_shape_for_operator_assign(
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> Option<(Ident, ImplKind)> {
     assert_eq!(param_types.len(), 2, "Unexpected number of parameters in operator=: {func:?}");
     let Some(record) = maybe_record else {
-        bail_to_errors!(errors, "operator= must be a member function")
+        errors.add(anyhow!("operator= must be a member function"));
+        return None;
     };
     materialize_ctor_in_caller(func, param_types);
 
@@ -325,6 +326,12 @@ fn api_func_shape_for_operator_assign(
     let trait_name;
     let func_name;
     if record.is_unpin() {
+        if rhs.is_ref_to(record) && should_derive_copy(record) {
+            // `MoveAndAssignViaCopy` is derived for `Copy` types, so we don't need to generate
+            // `UnpinAssign` explicitly.
+            return None;
+        }
+
         trait_name = Rc::from("::ctor::UnpinAssign");
         func_name = make_rs_ident("unpin_assign");
     } else {
@@ -352,7 +359,7 @@ fn api_func_shape_for_operator_assign(
         // not usable outside this crate.
         always_public: true,
     };
-    Ok((func_name, impl_kind))
+    Some((func_name, impl_kind))
 }
 
 fn api_func_shape_for_operator_unary_plus(
@@ -483,35 +490,37 @@ fn api_func_shape_for_operator(
     param_types: &mut [RsTypeKind],
     op: &Operator,
     errors: &Errors,
-) -> ErrorsOr<(Ident, ImplKind)> {
+) -> Option<(Ident, ImplKind)> {
     if let SafetyAnnotation::Unsafe = func.safety_annotation {
         report_fatal_func_error(db, func, "Unsafe annotations on operators are not supported");
     }
     match op.name.as_ref() {
-        "==" => api_func_shape_for_operator_eq(db, func, param_types, errors),
+        "==" => api_func_shape_for_operator_eq(db, func, param_types, errors).ok(),
         "<=>" => {
-            bail_to_errors!(errors, "Three-way comparison operator not yet supported (b/219827738)")
+            errors.add(anyhow!("Three-way comparison operator not yet supported (b/219827738)"));
+            None
         }
-        "<" => api_func_shape_for_operator_lt(db, func, param_types, errors),
+        "<" => api_func_shape_for_operator_lt(db, func, param_types, errors).ok(),
         "=" => api_func_shape_for_operator_assign(func, maybe_record, param_types, errors),
         "+" if param_types.len() == 1 => {
-            api_func_shape_for_operator_unary_plus(db, &param_types[0], errors)
+            api_func_shape_for_operator_unary_plus(db, &param_types[0], errors).ok()
         }
         _ => {
             let Some(op_metadata) =
                 OPERATOR_METADATA.by_cc_name_and_params.get(&(&op.name, param_types.len()))
             else {
-                bail_to_errors!(
-                    errors,
+                errors.add(anyhow!(
                     "Bindings for this kind of operator (operator {op} with {n} parameter(s)) are not supported",
                     op = &op.name,
                     n = param_types.len(),
-                );
+                ));
+                return None;
             };
             materialize_ctor_in_caller(func, param_types);
             let trait_name = op_metadata.trait_name;
             if op_metadata.is_compound_assignment {
-                let record = record_type_of_compound_assignment(db, &mut param_types[0], errors)?;
+                let record =
+                    record_type_of_compound_assignment(db, &mut param_types[0], errors).ok()?;
                 let func_name = make_rs_ident(op_metadata.method_name);
                 let impl_kind = ImplKind::Trait {
                     record: record.clone(),
@@ -528,10 +537,10 @@ fn api_func_shape_for_operator(
                     force_const_reference_params: false,
                     always_public: false,
                 };
-                Ok((func_name, impl_kind))
+                Some((func_name, impl_kind))
             } else {
                 let (record, impl_for) =
-                    extract_first_operator_parameter(db, &param_types[0], errors)?;
+                    extract_first_operator_parameter(db, &param_types[0], errors).ok()?;
                 let func_name = make_rs_ident(op_metadata.method_name);
                 let impl_kind = ImplKind::Trait {
                     record,
@@ -548,7 +557,7 @@ fn api_func_shape_for_operator(
                     force_const_reference_params: false,
                     always_public: false,
                 };
-                Ok((func_name, impl_kind))
+                Some((func_name, impl_kind))
             }
         }
     }
@@ -691,21 +700,27 @@ fn api_func_shape_for_constructor(
             Some((func_name, impl_kind))
         }
         2 if param_types[1].is_shared_ref_to(record) => {
-            // Copy constructor
+            // Copy constructor.
             if should_derive_clone(record) {
-                None
-            } else {
-                let func_name = make_rs_ident("clone");
-                let impl_kind = ImplKind::new_trait(
-                    TraitName::Clone,
-                    record.clone(),
-                    /* format_first_param_as_self= */ true,
-                    /* force_const_reference_params= */ false,
-                );
-                Some((func_name, impl_kind))
+                // `Clone` is derived, so we don't need to generate it explicitly.
+                return None;
             }
+            let func_name = make_rs_ident("clone");
+            let impl_kind = ImplKind::new_trait(
+                TraitName::Clone,
+                record.clone(),
+                /* format_first_param_as_self= */ true,
+                /* force_const_reference_params= */ false,
+            );
+            Some((func_name, impl_kind))
         }
         2 => {
+            if param_types[1].is_rvalue_ref_to(record) && should_derive_copy(record) {
+                // `MoveAndAssignViaCopy` is derived for `Copy` types, so we don't need to
+                // generate move constructor bindings explicitly.
+                return None;
+            }
+
             // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
             // translating C++ constructors into static methods in Rust).
             //
@@ -785,7 +800,7 @@ fn api_func_shape(
 
     match &func.rs_name {
         UnqualifiedIdentifier::Operator(op) => {
-            api_func_shape_for_operator(db, func, maybe_record, param_types, op, errors).ok()
+            api_func_shape_for_operator(db, func, maybe_record, param_types, op, errors)
         }
         UnqualifiedIdentifier::Identifier(id) => {
             Some(api_func_shape_for_identifier(func, maybe_record, param_types, id, is_unsafe))

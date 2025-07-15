@@ -40,21 +40,6 @@ extern "C" void __rust_thunk___ZN4Vec3C1Ev(struct Vec3* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN4Vec3C1EOS_(struct Vec3* __this,
-                                             struct Vec3* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct Vec3* __rust_thunk___ZN4Vec3aSERKS_(
-    struct Vec3* __this, const struct Vec3* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct Vec3* __rust_thunk___ZN4Vec3aSEOS_(struct Vec3* __this,
-                                                     struct Vec3* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 extern "C" void __rust_thunk___Z16MakeOptionalVec3fffb(
     unsigned char* __return_abi_buffer, float x, float y, float z,
     bool is_present) {

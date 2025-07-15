@@ -25,47 +25,12 @@ extern "C" void __rust_thunk___ZN9NoDiscardC1Ev(struct NoDiscard* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN9NoDiscardC1EOS_(struct NoDiscard* __this,
-                                                  struct NoDiscard* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct NoDiscard* __rust_thunk___ZN9NoDiscardaSERKS_(
-    struct NoDiscard* __this, const struct NoDiscard* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct NoDiscard* __rust_thunk___ZN9NoDiscardaSEOS_(
-    struct NoDiscard* __this, struct NoDiscard* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(sizeof(struct NoDiscardWithMessage) == 1);
 static_assert(alignof(struct NoDiscardWithMessage) == 1);
 
 extern "C" void __rust_thunk___ZN20NoDiscardWithMessageC1Ev(
     struct NoDiscardWithMessage* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN20NoDiscardWithMessageC1EOS_(
-    struct NoDiscardWithMessage* __this,
-    struct NoDiscardWithMessage* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct NoDiscardWithMessage*
-__rust_thunk___ZN20NoDiscardWithMessageaSERKS_(
-    struct NoDiscardWithMessage* __this,
-    const struct NoDiscardWithMessage* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct NoDiscardWithMessage*
-__rust_thunk___ZN20NoDiscardWithMessageaSEOS_(
-    struct NoDiscardWithMessage* __this,
-    struct NoDiscardWithMessage* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 #pragma clang diagnostic pop

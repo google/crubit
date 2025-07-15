@@ -26,21 +26,6 @@ extern "C" void __rust_thunk___ZN11FirstStructC1Ev(struct FirstStruct* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN11FirstStructC1EOS_(
-    struct FirstStruct* __this, struct FirstStruct* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct FirstStruct* __rust_thunk___ZN11FirstStructaSERKS_(
-    struct FirstStruct* __this, const struct FirstStruct* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct FirstStruct* __rust_thunk___ZN11FirstStructaSEOS_(
-    struct FirstStruct* __this, struct FirstStruct* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 extern "C" int __rust_thunk___Z10first_funcv() { return first_func(); }
 
 static_assert(CRUBIT_SIZEOF(struct SecondStruct) == 4);
@@ -50,21 +35,6 @@ static_assert(CRUBIT_OFFSET_OF(field, struct SecondStruct) == 0);
 extern "C" void __rust_thunk___ZN12SecondStructC1Ev(
     struct SecondStruct* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN12SecondStructC1EOS_(
-    struct SecondStruct* __this, struct SecondStruct* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct SecondStruct* __rust_thunk___ZN12SecondStructaSERKS_(
-    struct SecondStruct* __this, const struct SecondStruct* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct SecondStruct* __rust_thunk___ZN12SecondStructaSEOS_(
-    struct SecondStruct* __this, struct SecondStruct* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 extern "C" int __rust_thunk___Z11second_funcv() { return second_func(); }

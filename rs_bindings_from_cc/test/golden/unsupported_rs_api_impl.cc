@@ -27,23 +27,6 @@ extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1EOS_(
-    struct TrivialCustomType* __this, struct TrivialCustomType* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct TrivialCustomType*
-__rust_thunk___ZN17TrivialCustomTypeaSERKS_(
-    struct TrivialCustomType* __this,
-    const struct TrivialCustomType* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct TrivialCustomType* __rust_thunk___ZN17TrivialCustomTypeaSEOS_(
-    struct TrivialCustomType* __this, struct TrivialCustomType* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct NontrivialCustomType) == 4);
 static_assert(alignof(struct NontrivialCustomType) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct NontrivialCustomType) == 0);

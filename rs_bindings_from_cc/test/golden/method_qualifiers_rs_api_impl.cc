@@ -25,41 +25,11 @@ extern "C" void __rust_thunk___ZN9NoninlineC1Ev(struct Noninline* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN9NoninlineC1EOS_(struct Noninline* __this,
-                                                  struct Noninline* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct Noninline* __rust_thunk___ZN9NoninlineaSERKS_(
-    struct Noninline* __this, const struct Noninline* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct Noninline* __rust_thunk___ZN9NoninlineaSEOS_(
-    struct Noninline* __this, struct Noninline* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(sizeof(struct Inline) == 1);
 static_assert(alignof(struct Inline) == 1);
 
 extern "C" void __rust_thunk___ZN6InlineC1Ev(struct Inline* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN6InlineC1EOS_(struct Inline* __this,
-                                               struct Inline* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct Inline* __rust_thunk___ZN6InlineaSERKS_(
-    struct Inline* __this, const struct Inline* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct Inline* __rust_thunk___ZN6InlineaSEOS_(
-    struct Inline* __this, struct Inline* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 extern "C" void __rust_thunk___ZN6Inline17UnqualifiedMethodEv(

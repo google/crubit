@@ -17,7 +17,7 @@
 // Error while generating bindings for class 'Ptr':
 // Class templates are not supported yet
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Outer
 pub struct Outer {
@@ -42,63 +42,11 @@ impl Default for Outer {
     }
 }
 
-impl From<::ctor::RvalueReference<'_, Self>> for Outer {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN5OuterC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Outer {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for Outer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN5OuteraSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Outer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN5OuteraSEOS_(self, __param_0);
-        }
-    }
-}
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN5OuterC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN5OuterC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::Outer>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN5OuteraSERKS_<'__return_lifetime>(
-            __this: &mut crate::Outer,
-            __param_0: &crate::Outer,
-        ) -> &'__return_lifetime mut crate::Outer;
-        pub(crate) unsafe fn __rust_thunk___ZN5OuteraSEOS_<'__return_lifetime>(
-            __this: &mut crate::Outer,
-            __param_0: ::ctor::RvalueReference<'_, crate::Outer>,
-        ) -> &'__return_lifetime mut crate::Outer;
     }
 }
 

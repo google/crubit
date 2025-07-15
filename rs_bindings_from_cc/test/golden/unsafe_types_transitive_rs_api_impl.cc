@@ -27,42 +27,12 @@ extern "C" void __rust_thunk___ZN13PublicPointerC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN13PublicPointerC1EOS_(
-    struct PublicPointer* __this, struct PublicPointer* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct PublicPointer* __rust_thunk___ZN13PublicPointeraSERKS_(
-    struct PublicPointer* __this, const struct PublicPointer* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct PublicPointer* __rust_thunk___ZN13PublicPointeraSEOS_(
-    struct PublicPointer* __this, struct PublicPointer* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(class PrivatePointer) == 8);
 static_assert(alignof(class PrivatePointer) == 8);
 
 extern "C" void __rust_thunk___ZN14PrivatePointerC1Ev(
     class PrivatePointer* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN14PrivatePointerC1EOS_(
-    class PrivatePointer* __this, class PrivatePointer* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class PrivatePointer* __rust_thunk___ZN14PrivatePointeraSERKS_(
-    class PrivatePointer* __this, const class PrivatePointer* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class PrivatePointer* __rust_thunk___ZN14PrivatePointeraSEOS_(
-    class PrivatePointer* __this, class PrivatePointer* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 extern "C" int __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
@@ -80,26 +50,6 @@ extern "C" void __rust_thunk___ZN23TransitivePublicPointerC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN23TransitivePublicPointerC1EOS_(
-    struct TransitivePublicPointer* __this,
-    struct TransitivePublicPointer* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct TransitivePublicPointer*
-__rust_thunk___ZN23TransitivePublicPointeraSERKS_(
-    struct TransitivePublicPointer* __this,
-    const struct TransitivePublicPointer* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct TransitivePublicPointer*
-__rust_thunk___ZN23TransitivePublicPointeraSEOS_(
-    struct TransitivePublicPointer* __this,
-    struct TransitivePublicPointer* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(union Union) == 4);
 static_assert(alignof(union Union) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, union Union) == 0);
@@ -107,21 +57,6 @@ static_assert(CRUBIT_OFFSET_OF(f, union Union) == 0);
 
 extern "C" void __rust_thunk___ZN5UnionC1Ev(union Union* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN5UnionC1EOS_(union Union* __this,
-                                              union Union* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" union Union* __rust_thunk___ZN5UnionaSERKS_(
-    union Union* __this, const union Union* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" union Union* __rust_thunk___ZN5UnionaSEOS_(union Union* __this,
-                                                      union Union* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 extern "C" int __rust_thunk___Z18DerefPublicPointer13PublicPointer(

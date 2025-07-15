@@ -21,7 +21,7 @@ pub mod repro {
     // Class templates are not supported yet
 
     /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=repro :: Interval
     pub struct Interval {

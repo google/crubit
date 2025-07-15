@@ -39,7 +39,7 @@ pub fn TakeCppStruct(__param_0: crate::RustStruct) {
 // Error while generating bindings for class 'MyOption':
 // Class templates are not supported yet
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Vec3
 pub struct Vec3 {
@@ -62,46 +62,6 @@ impl Default for Vec3 {
         unsafe {
             crate::detail::__rust_thunk___ZN4Vec3C1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
-        }
-    }
-}
-
-impl From<::ctor::RvalueReference<'_, Self>> for Vec3 {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN4Vec3C1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Vec3 {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for Vec3 {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN4Vec3aSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Vec3 {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN4Vec3aSEOS_(self, __param_0);
         }
     }
 }
@@ -155,18 +115,6 @@ mod detail {
             __param_0: *const ::core::ffi::c_uchar,
         );
         pub(crate) unsafe fn __rust_thunk___ZN4Vec3C1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN4Vec3C1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::Vec3>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN4Vec3aSERKS_<'__return_lifetime>(
-            __this: &mut crate::Vec3,
-            __param_0: &crate::Vec3,
-        ) -> &'__return_lifetime mut crate::Vec3;
-        pub(crate) unsafe fn __rust_thunk___ZN4Vec3aSEOS_<'__return_lifetime>(
-            __this: &mut crate::Vec3,
-            __param_0: ::ctor::RvalueReference<'_, crate::Vec3>,
-        ) -> &'__return_lifetime mut crate::Vec3;
         pub(crate) unsafe fn __rust_thunk___Z16MakeOptionalVec3fffb(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
             x: f32,

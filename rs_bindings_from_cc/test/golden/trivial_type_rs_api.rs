@@ -23,7 +23,7 @@
 pub mod ns {
     /// Implicitly defined special member functions are trivial on a struct with
     /// only trivial members.
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: Trivial
     pub struct Trivial {
@@ -46,46 +46,6 @@ pub mod ns {
                     &raw mut tmp as *mut ::core::ffi::c_void,
                 );
                 tmp.assume_init()
-            }
-        }
-    }
-
-    impl<'b> From<::ctor::RvalueReference<'b, Self>> for Trivial {
-        #[inline(always)]
-        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk___ZN2ns7TrivialC1EOS0_(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-                tmp.assume_init()
-            }
-        }
-    }
-    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Trivial {
-        type CtorType = Self;
-        type Error = ::ctor::Infallible;
-        #[inline(always)]
-        fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-            <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-        }
-    }
-
-    impl<'b> ::ctor::UnpinAssign<&'b Self> for Trivial {
-        #[inline(always)]
-        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN2ns7TrivialaSERKS0_(self, __param_0);
-            }
-        }
-    }
-
-    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Trivial {
-        #[inline(always)]
-        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN2ns7TrivialaSEOS0_(self, __param_0);
             }
         }
     }
@@ -186,18 +146,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1EOS0_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialaSERKS0_<'a, 'b>(
-            __this: &'a mut crate::ns::Trivial,
-            __param_0: &'b crate::ns::Trivial,
-        ) -> &'a mut crate::ns::Trivial;
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialaSEOS0_<'a, 'b>(
-            __this: &'a mut crate::ns::Trivial,
-            __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
-        ) -> &'a mut crate::ns::Trivial;
         #[link_name = "_ZN2ns7Trivial11UnqualifiedEv"]
         pub(crate) unsafe fn __rust_thunk___ZN2ns7Trivial11UnqualifiedEv<'a>(
             __this: &'a mut crate::ns::Trivial,

@@ -40,7 +40,7 @@ pub(crate) unsafe fn UseNotCrubitExposed<'error>(
     )
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=CannotUpcastInCrubit
 pub struct CannotUpcastInCrubit {
@@ -70,46 +70,6 @@ impl Default for CannotUpcastInCrubit {
     }
 }
 
-impl From<::ctor::RvalueReference<'_, Self>> for CannotUpcastInCrubit {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20CannotUpcastInCrubitC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for CannotUpcastInCrubit {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for CannotUpcastInCrubit {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20CannotUpcastInCrubitaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for CannotUpcastInCrubit {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20CannotUpcastInCrubitaSEOS_(self, __param_0);
-        }
-    }
-}
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -117,18 +77,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN20CannotUpcastInCrubitC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20CannotUpcastInCrubitC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::CannotUpcastInCrubit>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN20CannotUpcastInCrubitaSERKS_<'__return_lifetime>(
-            __this: &mut crate::CannotUpcastInCrubit,
-            __param_0: &crate::CannotUpcastInCrubit,
-        ) -> &'__return_lifetime mut crate::CannotUpcastInCrubit;
-        pub(crate) unsafe fn __rust_thunk___ZN20CannotUpcastInCrubitaSEOS_<'__return_lifetime>(
-            __this: &mut crate::CannotUpcastInCrubit,
-            __param_0: ::ctor::RvalueReference<'_, crate::CannotUpcastInCrubit>,
-        ) -> &'__return_lifetime mut crate::CannotUpcastInCrubit;
     }
 }
 

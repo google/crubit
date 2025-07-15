@@ -9,11 +9,13 @@ use generate_struct_and_union::generate_derives;
 use googletest::prelude::gtest;
 use ir_testing::with_lifetime_macros;
 use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record};
+use proc_macro2::TokenStream;
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
+use token_stream_printer::tokens_to_string;
 
 #[gtest]
 fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
@@ -588,38 +590,46 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
     Ok(())
 }
 
+#[track_caller]
+fn assert_derives(record: &ir::Record, expected: &[&str]) {
+    let derives: Vec<TokenStream> = generate_derives(record).0;
+    let formatted_derives: Vec<String> =
+        derives.into_iter().map(|d| tokens_to_string(d).unwrap()).collect();
+    assert_eq!(formatted_derives, expected);
+}
+
 #[gtest]
 fn test_copy_derives() {
     let record = ir_record("S");
-    assert_eq!(generate_derives(&record).0, &["Clone", "Copy"]);
+    assert_derives(&record, &["Clone", "Copy", "::ctor::MoveAndAssignViaCopy"]);
 }
 
 #[gtest]
 fn test_copy_derives_not_is_trivial_abi() {
     let mut record = ir_record("S");
     record.is_trivial_abi = false;
-    assert_eq!(generate_derives(&record).0, &[""; 0]);
+    assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_deleted() {
     let mut record = ir_record("S");
     record.copy_constructor = ir::SpecialMemberFunc::Unavailable;
-    assert_eq!(generate_derives(&record).0, &[""; 0]);
+    assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_members() {
     let mut record = ir_record("S");
     record.copy_constructor = ir::SpecialMemberFunc::NontrivialMembers;
-    assert_eq!(generate_derives(&record).0, &[""; 0]);
+    assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_self() {
     let mut record = ir_record("S");
     record.copy_constructor = ir::SpecialMemberFunc::NontrivialUserDefined;
-    assert_eq!(generate_derives(&record).0, &[""; 0]);
+    assert_derives(&record, &[]);
 }
 
 /// In Rust, a Drop type cannot be Copy.
@@ -630,7 +640,7 @@ fn test_copy_derives_dtor_nontrivial_self() {
         [ir::SpecialMemberFunc::NontrivialUserDefined, ir::SpecialMemberFunc::NontrivialMembers]
     {
         record.destructor = definition;
-        assert_eq!(generate_derives(&record).0, &["Clone"]);
+        assert_derives(&record, &["Clone"]);
     }
 }
 
@@ -1005,7 +1015,7 @@ fn test_doc_comment_record() -> Result<()> {
         generate_bindings_tokens_for_test(ir)?.rs_api,
         quote! {
             #[doc = " Doc Comment\n \n  * with bullet\n \n Generated from: ir_from_cc_virtual_header.h;l=6"]
-            #[derive(Clone, Copy)]
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
@@ -1033,7 +1043,7 @@ fn test_basic_union() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[derive(Clone, Copy)]
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnion"]
             pub union SomeUnion {
@@ -1144,7 +1154,7 @@ fn test_union_with_private_fields() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[derive(Clone, Copy)]
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnionWithPrivateFields"]
             pub union SomeUnionWithPrivateFields {
@@ -1213,7 +1223,7 @@ fn test_empty_struct() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[derive(Clone, Copy)]
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyStruct"]
             pub struct EmptyStruct {
@@ -1250,7 +1260,7 @@ fn test_empty_union() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[derive(Clone, Copy)]
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyUnion"]
             pub union EmptyUnion {
@@ -1329,7 +1339,7 @@ fn test_union_with_constructors() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[derive(Clone, Copy)]
+            #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithDefaultConstructors"]
             pub union UnionWithDefaultConstructors {
@@ -1353,23 +1363,6 @@ fn test_union_with_constructors() -> Result<()> {
             }
         }
     );
-
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithDefaultConstructors {
-                #[inline(always)]
-                fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-                    let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                    unsafe {
-                        crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&raw mut tmp as *mut ::core::ffi::c_void, __param_0);
-                        tmp.assume_init()
-                    }
-                }
-            }
-        }
-    );
-
     Ok(())
 }
 

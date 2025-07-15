@@ -25,7 +25,7 @@ pub unsafe fn free_function(p1: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_
     crate::detail::__rust_thunk___Z13free_functionRi(p1)
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=S
 pub struct S {
@@ -46,46 +46,6 @@ impl Default for S {
         unsafe {
             crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
-        }
-    }
-}
-
-impl From<::ctor::RvalueReference<'_, Self>> for S {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN1SC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for S {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for S {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN1SaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for S {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN1SaSEOS_(self, __param_0);
         }
     }
 }
@@ -179,7 +139,7 @@ pub unsafe fn take_pointer(p: *mut ::core::ffi::c_int) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WrappedValue
 pub struct WrappedValue {
@@ -195,46 +155,6 @@ unsafe impl ::cxx::ExternType for WrappedValue {
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
-
-impl From<::ctor::RvalueReference<'_, Self>> for WrappedValue {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN12WrappedValueC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for WrappedValue {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for WrappedValue {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN12WrappedValueaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for WrappedValue {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN12WrappedValueaSEOS_(self, __param_0);
-        }
-    }
-}
 
 impl From<::core::ffi::c_int> for WrappedValue {
     #[inline(always)]
@@ -283,18 +203,6 @@ mod detail {
             p1: *mut ::core::ffi::c_int,
         ) -> *mut ::core::ffi::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN1SC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::S>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN1SaSERKS_<'__return_lifetime>(
-            __this: &mut crate::S,
-            __param_0: &crate::S,
-        ) -> &'__return_lifetime mut crate::S;
-        pub(crate) unsafe fn __rust_thunk___ZN1SaSEOS_<'__return_lifetime>(
-            __this: &mut crate::S,
-            __param_0: ::ctor::RvalueReference<'_, crate::S>,
-        ) -> &'__return_lifetime mut crate::S;
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) unsafe fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const crate::S,
@@ -329,18 +237,6 @@ mod detail {
         );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(p: *mut ::core::ffi::c_int);
-        pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::WrappedValue>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueaSERKS_<'__return_lifetime>(
-            __this: &mut crate::WrappedValue,
-            __param_0: &crate::WrappedValue,
-        ) -> &'__return_lifetime mut crate::WrappedValue;
-        pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueaSEOS_<'__return_lifetime>(
-            __this: &mut crate::WrappedValue,
-            __param_0: ::ctor::RvalueReference<'_, crate::WrappedValue>,
-        ) -> &'__return_lifetime mut crate::WrappedValue;
         pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueC1Ei(
             __this: *mut ::core::ffi::c_void,
             value: ::core::ffi::c_int,

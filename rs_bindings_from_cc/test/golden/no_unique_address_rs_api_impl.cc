@@ -27,21 +27,6 @@ extern "C" void __rust_thunk___ZN6StructC1Ev(struct Struct* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN6StructC1EOS_(struct Struct* __this,
-                                               struct Struct* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct Struct* __rust_thunk___ZN6StructaSERKS_(
-    struct Struct* __this, const struct Struct* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct Struct* __rust_thunk___ZN6StructaSEOS_(
-    struct Struct* __this, struct Struct* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 extern "C" void __rust_thunk___ZN6Struct4MakeEic(struct Struct* __return,
                                                  int f1, char f2) {
   new (__return) auto(Struct::Make(f1, f2));
@@ -55,26 +40,6 @@ static_assert(CRUBIT_OFFSET_OF(field2, struct PaddingBetweenFields) == 4);
 extern "C" void __rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
     struct PaddingBetweenFields* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN20PaddingBetweenFieldsC1EOS_(
-    struct PaddingBetweenFields* __this,
-    struct PaddingBetweenFields* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct PaddingBetweenFields*
-__rust_thunk___ZN20PaddingBetweenFieldsaSERKS_(
-    struct PaddingBetweenFields* __this,
-    const struct PaddingBetweenFields* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct PaddingBetweenFields*
-__rust_thunk___ZN20PaddingBetweenFieldsaSEOS_(
-    struct PaddingBetweenFields* __this,
-    struct PaddingBetweenFields* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 extern "C" void __rust_thunk___ZN20PaddingBetweenFields4MakeEci(

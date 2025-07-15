@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ForwardDeclaredStruct
 pub struct ForwardDeclaredStruct {
@@ -44,46 +44,6 @@ impl Default for ForwardDeclaredStruct {
     }
 }
 
-impl From<::ctor::RvalueReference<'_, Self>> for ForwardDeclaredStruct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN21ForwardDeclaredStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for ForwardDeclaredStruct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for ForwardDeclaredStruct {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21ForwardDeclaredStructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for ForwardDeclaredStruct {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21ForwardDeclaredStructaSEOS_(self, __param_0);
-        }
-    }
-}
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -91,18 +51,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN21ForwardDeclaredStructC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN21ForwardDeclaredStructC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::ForwardDeclaredStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN21ForwardDeclaredStructaSERKS_<'__return_lifetime>(
-            __this: &mut crate::ForwardDeclaredStruct,
-            __param_0: &crate::ForwardDeclaredStruct,
-        ) -> &'__return_lifetime mut crate::ForwardDeclaredStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN21ForwardDeclaredStructaSEOS_<'__return_lifetime>(
-            __this: &mut crate::ForwardDeclaredStruct,
-            __param_0: ::ctor::RvalueReference<'_, crate::ForwardDeclaredStruct>,
-        ) -> &'__return_lifetime mut crate::ForwardDeclaredStruct;
     }
 }
 

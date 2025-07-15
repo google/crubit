@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
@@ -41,46 +41,6 @@ impl Default for SomeStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeStruct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructaSEOS_(self, __param_0);
-        }
-    }
-}
-
 pub mod some_struct {
     #[allow(unused_imports)]
     use super::*;
@@ -91,7 +51,7 @@ pub mod some_struct {
 // Error while generating bindings for type alias 'SomeStruct':
 // Typedef only used to introduce a name in C. Not importing.
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherStruct
 pub struct SomeOtherStruct {
@@ -121,47 +81,7 @@ impl Default for SomeOtherStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN15SomeOtherStructC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeOtherStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN15SomeOtherStructaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN15SomeOtherStructaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeUnion
 pub union SomeUnion {
@@ -188,50 +108,10 @@ impl Default for SomeUnion {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeUnion {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeUnionaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeUnionaSEOS_(self, __param_0);
-        }
-    }
-}
-
 // Error while generating bindings for type alias 'SomeUnion':
 // Typedef only used to introduce a name in C. Not importing.
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion
 pub union SomeOtherUnion {
@@ -258,46 +138,6 @@ impl Default for SomeOtherUnion {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeOtherUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN14SomeOtherUnionaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN14SomeOtherUnionaSEOS_(self, __param_0);
-        }
-    }
-}
-
 #[inline(always)]
 pub fn FunctionUsingNestedType() -> crate::some_struct::nested_type {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
@@ -308,61 +148,13 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
-            __this: &'a mut crate::SomeStruct,
-            __param_0: &'b crate::SomeStruct,
-        ) -> &'a mut crate::SomeStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
-            __this: &'a mut crate::SomeStruct,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
-        ) -> &'a mut crate::SomeStruct;
         pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructaSERKS_<'a, 'b>(
-            __this: &'a mut crate::SomeOtherStruct,
-            __param_0: &'b crate::SomeOtherStruct,
-        ) -> &'a mut crate::SomeOtherStruct;
-        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructaSEOS_<'a, 'b>(
-            __this: &'a mut crate::SomeOtherStruct,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherStruct>,
-        ) -> &'a mut crate::SomeOtherStruct;
         pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionaSERKS_<'a, 'b>(
-            __this: &'a mut crate::SomeUnion,
-            __param_0: &'b crate::SomeUnion,
-        ) -> &'a mut crate::SomeUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionaSEOS_<'a, 'b>(
-            __this: &'a mut crate::SomeUnion,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
-        ) -> &'a mut crate::SomeUnion;
         pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionaSERKS_<'a, 'b>(
-            __this: &'a mut crate::SomeOtherUnion,
-            __param_0: &'b crate::SomeOtherUnion,
-        ) -> &'a mut crate::SomeOtherUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionaSEOS_<'a, 'b>(
-            __this: &'a mut crate::SomeOtherUnion,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
-        ) -> &'a mut crate::SomeOtherUnion;
         #[link_name = "_Z23FunctionUsingNestedTypev"]
         pub(crate) unsafe fn __rust_thunk___Z23FunctionUsingNestedTypev(
         ) -> crate::some_struct::nested_type;

@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeClass
 pub struct SomeClass {
@@ -37,46 +37,6 @@ impl Default for SomeClass {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeClass {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeClass {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeClass {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassaSEOS_(self, __param_0);
         }
     }
 }
@@ -116,18 +76,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSERKS_<'a, 'b>(
-            __this: &'a mut crate::SomeClass,
-            __param_0: &'b crate::SomeClass,
-        ) -> &'a mut crate::SomeClass;
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassaSEOS_<'a, 'b>(
-            __this: &'a mut crate::SomeClass,
-            __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
-        ) -> &'a mut crate::SomeClass;
         pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
             __param_0: &mut crate::SomeClass,
         );

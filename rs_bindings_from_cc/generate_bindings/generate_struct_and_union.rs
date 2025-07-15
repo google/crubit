@@ -22,6 +22,7 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
+use quote::ToTokens;
 use std::collections::HashMap;
 use std::iter;
 use std::num::NonZeroUsize;
@@ -700,17 +701,18 @@ pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAli
 pub fn generate_derives(record: &Record) -> DeriveAttr {
     let mut derives = vec![];
     if should_derive_clone(record) {
-        derives.push(make_rs_ident("Clone"));
+        derives.push(quote! { Clone });
     }
     if should_derive_copy(record) {
-        derives.push(make_rs_ident("Copy"));
+        derives.push(quote! { Copy });
+        derives.push(quote! { ::ctor::MoveAndAssignViaCopy });
     }
     if record.trait_derives.debug == TraitImplPolarity::Positive {
-        derives.push(make_rs_ident("Debug"));
+        derives.push(quote! { Debug });
     }
     for custom_trait in &record.trait_derives.custom {
         // Breaks for paths right now...
-        derives.push(make_rs_ident(custom_trait));
+        derives.push(make_rs_ident(custom_trait).to_token_stream());
     }
     DeriveAttr(derives)
 }

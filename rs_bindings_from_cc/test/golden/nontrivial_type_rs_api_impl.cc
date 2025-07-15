@@ -148,22 +148,6 @@ extern "C" void __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
 static_assert(sizeof(struct NontrivialByValue) == 1);
 static_assert(alignof(struct NontrivialByValue) == 1);
 
-extern "C" void __rust_thunk___ZN17NontrivialByValueC1EOS_(
-    struct NontrivialByValue* __this, struct NontrivialByValue* other) {
-  crubit::construct_at(__this, std::move(*other));
-}
-
-extern "C" struct NontrivialByValue*
-__rust_thunk___ZN17NontrivialByValueaSERKS_(
-    struct NontrivialByValue* __this, const struct NontrivialByValue* other) {
-  return &__this->operator=(*other);
-}
-
-extern "C" struct NontrivialByValue* __rust_thunk___ZN17NontrivialByValueaSEOS_(
-    struct NontrivialByValue* __this, struct NontrivialByValue* other) {
-  return &__this->operator=(std::move(*other));
-}
-
 extern "C" void __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial(
     struct NontrivialByValue* __return, struct NontrivialByValue* __this,
     struct Nontrivial* other) {

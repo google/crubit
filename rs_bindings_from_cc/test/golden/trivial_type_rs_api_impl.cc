@@ -26,21 +26,6 @@ extern "C" void __rust_thunk___ZN2ns7TrivialC1Ev(struct ns::Trivial* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN2ns7TrivialC1EOS0_(
-    struct ns::Trivial* __this, struct ns::Trivial* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct ns::Trivial* __rust_thunk___ZN2ns7TrivialaSERKS0_(
-    struct ns::Trivial* __this, const struct ns::Trivial* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct ns::Trivial* __rust_thunk___ZN2ns7TrivialaSEOS0_(
-    struct ns::Trivial* __this, struct ns::Trivial* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
     struct ns::Trivial* __return, struct ns::Trivial* trivial) {
   new (__return) auto(ns::TakesByValue(std::move(*trivial)));

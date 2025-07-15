@@ -937,6 +937,13 @@ impl RsTypeKind {
         }
     }
 
+    pub fn is_rvalue_ref_to(&self, expected_record: &Record) -> bool {
+        match self.unalias() {
+            RsTypeKind::RvalueReference { referent, .. } => referent.is_record(expected_record),
+            _ => false,
+        }
+    }
+
     pub fn is_shared_ref_to(&self, expected_record: &Record) -> bool {
         match self.unalias() {
             RsTypeKind::Reference { referent, mutability: Mutability::Const, .. } => {

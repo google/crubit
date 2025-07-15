@@ -15,7 +15,7 @@
 #![deny(warnings)]
 
 pub mod test_namespace_bindings {
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C, align(4))]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: SomeClass
     pub struct SomeClass {
@@ -45,50 +45,6 @@ pub mod test_namespace_bindings {
                     &raw mut tmp as *mut ::core::ffi::c_void,
                 );
                 tmp.assume_init()
-            }
-        }
-    }
-
-    impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
-        #[inline(always)]
-        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-                tmp.assume_init()
-            }
-        }
-    }
-    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeClass {
-        type CtorType = Self;
-        type Error = ::ctor::Infallible;
-        #[inline(always)]
-        fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-            <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-        }
-    }
-
-    impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeClass {
-        #[inline(always)]
-        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_(
-                    self, __param_0,
-                );
-            }
-        }
-    }
-
-    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeClass {
-        #[inline(always)]
-        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassaSEOS0_(
-                    self, __param_0,
-                );
             }
         }
     }
@@ -123,18 +79,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_<'a, 'b>(
-            __this: &'a mut crate::test_namespace_bindings::SomeClass,
-            __param_0: &'b crate::test_namespace_bindings::SomeClass,
-        ) -> &'a mut crate::test_namespace_bindings::SomeClass;
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSEOS0_<'a, 'b>(
-            __this: &'a mut crate::test_namespace_bindings::SomeClass,
-            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
-        ) -> &'a mut crate::test_namespace_bindings::SomeClass;
         #[link_name = "_ZN23test_namespace_bindings9SomeClass13public_methodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv<
             'a,

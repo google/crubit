@@ -16,7 +16,7 @@
 
 // Type bindings for struct MyI8 suppressed due to being mapped to an existing Rust type (i8)
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=X
 pub struct X {
@@ -41,46 +41,6 @@ impl Default for X {
     }
 }
 
-impl From<::ctor::RvalueReference<'_, Self>> for X {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN1XC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for X {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for X {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN1XaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for X {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN1XaSEOS_(self, __param_0);
-        }
-    }
-}
-
 #[inline(always)]
 pub fn ffi(a: i8, mut b: crate::X) -> i8 {
     unsafe { crate::detail::__rust_thunk___Z3ffi4MyI81X(a, &mut b) }
@@ -98,18 +58,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN1XC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN1XC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::X>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN1XaSERKS_<'__return_lifetime>(
-            __this: &mut crate::X,
-            __param_0: &crate::X,
-        ) -> &'__return_lifetime mut crate::X;
-        pub(crate) unsafe fn __rust_thunk___ZN1XaSEOS_<'__return_lifetime>(
-            __this: &mut crate::X,
-            __param_0: ::ctor::RvalueReference<'_, crate::X>,
-        ) -> &'__return_lifetime mut crate::X;
         pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
         pub(crate) unsafe fn __rust_thunk___Z1fiPvi(
             a: crate::MyTypedefDecl,

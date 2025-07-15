@@ -25,21 +25,6 @@ extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN10SomeStructC1EOS_(
-    struct SomeStruct* __this, struct SomeStruct* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSERKS_(
-    struct SomeStruct* __this, const struct SomeStruct* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSEOS_(
-    struct SomeStruct* __this, struct SomeStruct* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct FieldTypeTestStruct) == 208);
 static_assert(alignof(struct FieldTypeTestStruct) == 8);
 static_assert(CRUBIT_OFFSET_OF(bool_field, struct FieldTypeTestStruct) == 0);
@@ -102,11 +87,6 @@ static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
                                struct FieldTypeTestStruct) == 192);
 static_assert(CRUBIT_OFFSET_OF(cyclic_ptr_field, struct FieldTypeTestStruct) ==
               200);
-
-extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
-    struct FieldTypeTestStruct* __this, struct FieldTypeTestStruct* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
 
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();

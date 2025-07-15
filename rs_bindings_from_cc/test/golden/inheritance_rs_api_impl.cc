@@ -25,41 +25,11 @@ extern "C" void __rust_thunk___ZN5Base0C1Ev(class Base0* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN5Base0C1EOS_(class Base0* __this,
-                                              class Base0* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class Base0* __rust_thunk___ZN5Base0aSERKS_(
-    class Base0* __this, const class Base0* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class Base0* __rust_thunk___ZN5Base0aSEOS_(class Base0* __this,
-                                                      class Base0* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(class Base1) == 16);
 static_assert(alignof(class Base1) == 8);
 
 extern "C" void __rust_thunk___ZN5Base1C1Ev(class Base1* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN5Base1C1EOS_(class Base1* __this,
-                                              class Base1* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class Base1* __rust_thunk___ZN5Base1aSERKS_(
-    class Base1* __this, const class Base1* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class Base1* __rust_thunk___ZN5Base1aSEOS_(class Base1* __this,
-                                                      class Base1* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(CRUBIT_SIZEOF(class Base2) == 2);
@@ -69,42 +39,12 @@ extern "C" void __rust_thunk___ZN5Base2C1Ev(class Base2* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN5Base2C1EOS_(class Base2* __this,
-                                              class Base2* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class Base2* __rust_thunk___ZN5Base2aSERKS_(
-    class Base2* __this, const class Base2* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class Base2* __rust_thunk___ZN5Base2aSEOS_(class Base2* __this,
-                                                      class Base2* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(CRUBIT_SIZEOF(struct Derived) == 16);
 static_assert(alignof(struct Derived) == 8);
 static_assert(CRUBIT_OFFSET_OF(derived_1, struct Derived) == 12);
 
 extern "C" void __rust_thunk___ZN7DerivedC1Ev(struct Derived* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN7DerivedC1EOS_(struct Derived* __this,
-                                                struct Derived* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct Derived* __rust_thunk___ZN7DerivedaSERKS_(
-    struct Derived* __this, const struct Derived* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct Derived* __rust_thunk___ZN7DerivedaSEOS_(
-    struct Derived* __this, struct Derived* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(CRUBIT_SIZEOF(class VirtualBase1) == 24);
@@ -236,41 +176,11 @@ extern "C" void __rust_thunk___ZN11MethodBase1C1Ev(class MethodBase1* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN11MethodBase1C1EOS_(
-    class MethodBase1* __this, class MethodBase1* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class MethodBase1* __rust_thunk___ZN11MethodBase1aSERKS_(
-    class MethodBase1* __this, const class MethodBase1* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class MethodBase1* __rust_thunk___ZN11MethodBase1aSEOS_(
-    class MethodBase1* __this, class MethodBase1* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(sizeof(class MethodBase2) == 1);
 static_assert(alignof(class MethodBase2) == 1);
 
 extern "C" void __rust_thunk___ZN11MethodBase2C1Ev(class MethodBase2* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN11MethodBase2C1EOS_(
-    class MethodBase2* __this, class MethodBase2* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class MethodBase2* __rust_thunk___ZN11MethodBase2aSERKS_(
-    class MethodBase2* __this, const class MethodBase2* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class MethodBase2* __rust_thunk___ZN11MethodBase2aSEOS_(
-    class MethodBase2* __this, class MethodBase2* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(class MethodDerived) == 1);
@@ -279,21 +189,6 @@ static_assert(alignof(class MethodDerived) == 1);
 extern "C" void __rust_thunk___ZN13MethodDerivedC1Ev(
     class MethodDerived* __this) {
   crubit::construct_at(__this);
-}
-
-extern "C" void __rust_thunk___ZN13MethodDerivedC1EOS_(
-    class MethodDerived* __this, class MethodDerived* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class MethodDerived* __rust_thunk___ZN13MethodDerivedaSERKS_(
-    class MethodDerived* __this, const class MethodDerived* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class MethodDerived* __rust_thunk___ZN13MethodDerivedaSEOS_(
-    class MethodDerived* __this, class MethodDerived* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 
 #pragma clang diagnostic pop

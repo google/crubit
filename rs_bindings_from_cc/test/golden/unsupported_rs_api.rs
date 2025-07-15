@@ -20,7 +20,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialCustomType
 pub struct TrivialCustomType {
@@ -46,46 +46,6 @@ impl Default for TrivialCustomType {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialCustomType {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN17TrivialCustomTypeaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN17TrivialCustomTypeaSEOS_(self, __param_0);
         }
     }
 }
@@ -158,18 +118,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeaSERKS_<'a, 'b>(
-            __this: &'a mut crate::TrivialCustomType,
-            __param_0: &'b crate::TrivialCustomType,
-        ) -> &'a mut crate::TrivialCustomType;
-        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeaSEOS_<'a, 'b>(
-            __this: &'a mut crate::TrivialCustomType,
-            __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
-        ) -> &'a mut crate::TrivialCustomType;
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
         pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'b>(
             __this: *mut ::core::ffi::c_void,

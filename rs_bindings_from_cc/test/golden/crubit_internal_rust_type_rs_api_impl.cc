@@ -35,24 +35,4 @@ extern "C" void __rust_thunk___ZN25TypeMapOverrideFieldTypesC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN25TypeMapOverrideFieldTypesC1EOS_(
-    struct TypeMapOverrideFieldTypes* __this,
-    struct TypeMapOverrideFieldTypes* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct TypeMapOverrideFieldTypes*
-__rust_thunk___ZN25TypeMapOverrideFieldTypesaSERKS_(
-    struct TypeMapOverrideFieldTypes* __this,
-    const struct TypeMapOverrideFieldTypes* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct TypeMapOverrideFieldTypes*
-__rust_thunk___ZN25TypeMapOverrideFieldTypesaSEOS_(
-    struct TypeMapOverrideFieldTypes* __this,
-    struct TypeMapOverrideFieldTypes* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 #pragma clang diagnostic pop

@@ -25,21 +25,6 @@ extern "C" void __rust_thunk___ZN1SC1Ev(struct S* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN1SC1EOS_(struct S* __this,
-                                          struct S* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" struct S* __rust_thunk___ZN1SaSERKS_(struct S* __this,
-                                                const struct S* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" struct S* __rust_thunk___ZN1SaSEOS_(struct S* __this,
-                                               struct S* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
-
 static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
 static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
               1);
@@ -60,21 +45,6 @@ __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
 
 static_assert(CRUBIT_SIZEOF(class WrappedValue) == 4);
 static_assert(alignof(class WrappedValue) == 4);
-
-extern "C" void __rust_thunk___ZN12WrappedValueC1EOS_(
-    class WrappedValue* __this, class WrappedValue* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
-
-extern "C" class WrappedValue* __rust_thunk___ZN12WrappedValueaSERKS_(
-    class WrappedValue* __this, const class WrappedValue* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-
-extern "C" class WrappedValue* __rust_thunk___ZN12WrappedValueaSEOS_(
-    class WrappedValue* __this, class WrappedValue* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
-}
 
 extern "C" void __rust_thunk___ZN12WrappedValueC1Ei(class WrappedValue* __this,
                                                     int value) {

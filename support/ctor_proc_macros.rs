@@ -93,6 +93,54 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
+/// Derives `Ctor`-based move and copy constructors and assignment for a `Copy` type.
+///
+/// Specifically, this will provide an implementation of:
+///
+/// * `From<RvalueReference<_, Self>>`
+/// * `CtorNew<RvalueReference<_, Self>>`
+/// * `UnpinAssign<&Self>`
+/// * `UnpinAssign<RvalueReference<_, Self>>`
+#[proc_macro_derive(MoveAndAssignViaCopy)]
+pub fn derive_move_and_assign_via_copy(item: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(item as syn::DeriveInput);
+    let type_name = input.ident;
+    quote! {
+        // Move construct.
+        impl From<::ctor::RvalueReference<'_, Self>> for #type_name {
+            #[inline(always)]
+            fn from(this: ::ctor::RvalueReference<'_, Self>) -> Self { *this.get_ref() }
+        }
+
+        // Ctor move construct.
+        impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for #type_name {
+            type CtorType = Self;
+            type Error = ::ctor::Infallible;
+            #[inline(always)]
+            fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+                <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+            }
+        }
+
+        // Copy assign.
+        impl ::ctor::UnpinAssign<&Self> for #type_name {
+            #[inline(always)]
+            fn unpin_assign(&mut self, other: &Self) {
+                *self = *other;
+            }
+        }
+
+        // Move assign.
+        impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for #type_name {
+            #[inline(always)]
+            fn unpin_assign(&mut self, other: ::ctor::RvalueReference<'_, Self>) {
+                *self = *other.get_ref();
+            }
+        }
+    }
+    .into()
+}
+
 /// `project_pin_type!(foo::T)` is the name of the type returned by
 /// `foo::T::project_pin()`.
 ///

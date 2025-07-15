@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PublicPointer
 pub struct PublicPointer {
@@ -41,47 +41,7 @@ impl Default for PublicPointer {
     }
 }
 
-impl From<::ctor::RvalueReference<'_, Self>> for PublicPointer {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13PublicPointerC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for PublicPointer {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for PublicPointer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13PublicPointeraSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for PublicPointer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13PublicPointeraSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PrivatePointer
 pub struct PrivatePointer {
@@ -111,52 +71,12 @@ impl Default for PrivatePointer {
     }
 }
 
-impl From<::ctor::RvalueReference<'_, Self>> for PrivatePointer {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN14PrivatePointerC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for PrivatePointer {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for PrivatePointer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN14PrivatePointeraSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for PrivatePointer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN14PrivatePointeraSEOS_(self, __param_0);
-        }
-    }
-}
-
 #[inline(always)]
 pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::core::ffi::c_int {
     unsafe { crate::detail::__rust_thunk___Z19DerefPrivatePointer14PrivatePointer(&mut p) }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TransitivePublicPointer
 pub struct TransitivePublicPointer {
@@ -187,47 +107,7 @@ impl Default for TransitivePublicPointer {
     }
 }
 
-impl From<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23TransitivePublicPointerC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for TransitivePublicPointer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN23TransitivePublicPointeraSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for TransitivePublicPointer {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN23TransitivePublicPointeraSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Union
 pub union Union {
@@ -249,46 +129,6 @@ impl Default for Union {
         unsafe {
             crate::detail::__rust_thunk___ZN5UnionC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
             tmp.assume_init()
-        }
-    }
-}
-
-impl From<::ctor::RvalueReference<'_, Self>> for Union {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN5UnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for Union {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
-    }
-}
-
-impl ::ctor::UnpinAssign<&Self> for Union {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: &Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN5UnionaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for Union {
-    #[inline(always)]
-    fn unpin_assign(&mut self, __param_0: ::ctor::RvalueReference<'_, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN5UnionaSEOS_(self, __param_0);
         }
     }
 }
@@ -320,64 +160,16 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN13PublicPointerC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointerC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::PublicPointer>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointeraSERKS_<'__return_lifetime>(
-            __this: &mut crate::PublicPointer,
-            __param_0: &crate::PublicPointer,
-        ) -> &'__return_lifetime mut crate::PublicPointer;
-        pub(crate) unsafe fn __rust_thunk___ZN13PublicPointeraSEOS_<'__return_lifetime>(
-            __this: &mut crate::PublicPointer,
-            __param_0: ::ctor::RvalueReference<'_, crate::PublicPointer>,
-        ) -> &'__return_lifetime mut crate::PublicPointer;
         pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointerC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointerC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::PrivatePointer>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointeraSERKS_<'__return_lifetime>(
-            __this: &mut crate::PrivatePointer,
-            __param_0: &crate::PrivatePointer,
-        ) -> &'__return_lifetime mut crate::PrivatePointer;
-        pub(crate) unsafe fn __rust_thunk___ZN14PrivatePointeraSEOS_<'__return_lifetime>(
-            __this: &mut crate::PrivatePointer,
-            __param_0: ::ctor::RvalueReference<'_, crate::PrivatePointer>,
-        ) -> &'__return_lifetime mut crate::PrivatePointer;
         pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
             p: &mut crate::PrivatePointer,
         ) -> ::core::ffi::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointerC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointerC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::TransitivePublicPointer>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointeraSERKS_<'__return_lifetime>(
-            __this: &mut crate::TransitivePublicPointer,
-            __param_0: &crate::TransitivePublicPointer,
-        ) -> &'__return_lifetime mut crate::TransitivePublicPointer;
-        pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointeraSEOS_<'__return_lifetime>(
-            __this: &mut crate::TransitivePublicPointer,
-            __param_0: ::ctor::RvalueReference<'_, crate::TransitivePublicPointer>,
-        ) -> &'__return_lifetime mut crate::TransitivePublicPointer;
         pub(crate) unsafe fn __rust_thunk___ZN5UnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN5UnionC1EOS_(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'_, crate::Union>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN5UnionaSERKS_<'__return_lifetime>(
-            __this: &mut crate::Union,
-            __param_0: &crate::Union,
-        ) -> &'__return_lifetime mut crate::Union;
-        pub(crate) unsafe fn __rust_thunk___ZN5UnionaSEOS_<'__return_lifetime>(
-            __this: &mut crate::Union,
-            __param_0: ::ctor::RvalueReference<'_, crate::Union>,
-        ) -> &'__return_lifetime mut crate::Union;
         #[link_name = "_Z12DerefPointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12DerefPointerPi(
             p: *mut ::core::ffi::c_int,

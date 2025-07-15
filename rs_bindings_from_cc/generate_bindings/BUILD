@@ -144,6 +144,7 @@ multiplatform_rust_test(
         "//common:crubit_feature",
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
+        "//common:token_stream_printer",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc:ir_matchers",
         "//rs_bindings_from_cc:ir_testing",

@@ -20,7 +20,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
 pub union EmptyUnion {
@@ -43,46 +43,6 @@ impl Default for EmptyUnion {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for EmptyUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionaSEOS_(self, __param_0);
         }
     }
 }
@@ -142,7 +102,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionToRename
 pub union RenamedUnion {
@@ -165,46 +125,6 @@ impl Default for RenamedUnion {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for RenamedUnion {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13UnionToRenameC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for RenamedUnion {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for RenamedUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13UnionToRenameaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for RenamedUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13UnionToRenameaSEOS_(self, __param_0);
         }
     }
 }
@@ -267,7 +187,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion
 pub union NonEmptyUnion {
@@ -293,46 +213,6 @@ impl Default for NonEmptyUnion {
                 &raw mut tmp as *mut ::core::ffi::c_void,
             );
             tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for NonEmptyUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionaSEOS_(self, __param_0);
         }
     }
 }
@@ -421,7 +301,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NonCopyUnion
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField
 pub union UnionWithOpaqueField {
@@ -453,47 +333,7 @@ impl Default for UnionWithOpaqueField {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for UnionWithOpaqueField {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable
 pub struct TrivialButInheritable {
@@ -523,47 +363,7 @@ impl Default for TrivialButInheritable {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN21TrivialButInheritableC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialButInheritable {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21TrivialButInheritableaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN21TrivialButInheritableaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable
 pub union UnionWithInheritable {
@@ -593,47 +393,7 @@ impl Default for UnionWithInheritable {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for UnionWithInheritable {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnion
 pub union TypedefUnion {
@@ -660,47 +420,7 @@ impl Default for TypedefUnion {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for TypedefUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionaSEOS_(self, __param_0);
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable
 pub union TypedefUnionWithInheritable {
@@ -730,63 +450,11 @@ impl Default for TypedefUnionWithInheritable {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable {
-    #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                __param_0,
-            );
-            tmp.assume_init()
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        <Self as From<::ctor::RvalueReference<'b, Self>>>::from(args)
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<&'b Self> for TypedefUnionWithInheritable {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_(self, __param_0);
-        }
-    }
-}
-
-impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable {
-    #[inline(always)]
-    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableaSEOS_(self, __param_0);
-        }
-    }
-}
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionaSERKS_<'a, 'b>(
-            __this: &'a mut crate::EmptyUnion,
-            __param_0: &'b crate::EmptyUnion,
-        ) -> &'a mut crate::EmptyUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionaSEOS_<'a, 'b>(
-            __this: &'a mut crate::EmptyUnion,
-            __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
-        ) -> &'a mut crate::EmptyUnion;
         #[link_name = "_ZN10NontrivialC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN10NontrivialC1EOS_"]
@@ -795,18 +463,6 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::RenamedUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameaSERKS_<'a, 'b>(
-            __this: &'a mut crate::RenamedUnion,
-            __param_0: &'b crate::RenamedUnion,
-        ) -> &'a mut crate::RenamedUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameaSEOS_<'a, 'b>(
-            __this: &'a mut crate::RenamedUnion,
-            __param_0: ::ctor::RvalueReference<'b, crate::RenamedUnion>,
-        ) -> &'a mut crate::RenamedUnion;
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
             'a,
             'b,
@@ -826,18 +482,6 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionaSERKS_<'a, 'b>(
-            __this: &'a mut crate::NonEmptyUnion,
-            __param_0: &'b crate::NonEmptyUnion,
-        ) -> &'a mut crate::NonEmptyUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionaSEOS_<'a, 'b>(
-            __this: &'a mut crate::NonEmptyUnion,
-            __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
-        ) -> &'a mut crate::NonEmptyUnion;
         pub(crate) unsafe fn __rust_thunk___ZN13NonCopyUnion2aSERKS_<'a, 'b>(
             __this: &'a mut crate::NonCopyUnion2,
             __param_0: &'b crate::NonCopyUnion2,
@@ -849,76 +493,16 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_<'a, 'b>(
-            __this: &'a mut crate::UnionWithOpaqueField,
-            __param_0: &'b crate::UnionWithOpaqueField,
-        ) -> &'a mut crate::UnionWithOpaqueField;
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_<'a, 'b>(
-            __this: &'a mut crate::UnionWithOpaqueField,
-            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
-        ) -> &'a mut crate::UnionWithOpaqueField;
         pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::TrivialButInheritable>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableaSERKS_<'a, 'b>(
-            __this: &'a mut crate::TrivialButInheritable,
-            __param_0: &'b crate::TrivialButInheritable,
-        ) -> &'a mut crate::TrivialButInheritable;
-        pub(crate) unsafe fn __rust_thunk___ZN21TrivialButInheritableaSEOS_<'a, 'b>(
-            __this: &'a mut crate::TrivialButInheritable,
-            __param_0: ::ctor::RvalueReference<'b, crate::TrivialButInheritable>,
-        ) -> &'a mut crate::TrivialButInheritable;
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithInheritable>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableaSERKS_<'a, 'b>(
-            __this: &'a mut crate::UnionWithInheritable,
-            __param_0: &'b crate::UnionWithInheritable,
-        ) -> &'a mut crate::UnionWithInheritable;
-        pub(crate) unsafe fn __rust_thunk___ZN20UnionWithInheritableaSEOS_<'a, 'b>(
-            __this: &'a mut crate::UnionWithInheritable,
-            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithInheritable>,
-        ) -> &'a mut crate::UnionWithInheritable;
         pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionaSERKS_<'a, 'b>(
-            __this: &'a mut crate::TypedefUnion,
-            __param_0: &'b crate::TypedefUnion,
-        ) -> &'a mut crate::TypedefUnion;
-        pub(crate) unsafe fn __rust_thunk___ZN12TypedefUnionaSEOS_<'a, 'b>(
-            __this: &'a mut crate::TypedefUnion,
-            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
-        ) -> &'a mut crate::TypedefUnion;
         pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_<'a, 'b>(
-            __this: &'a mut crate::TypedefUnionWithInheritable,
-            __param_0: &'b crate::TypedefUnionWithInheritable,
-        ) -> &'a mut crate::TypedefUnionWithInheritable;
-        pub(crate) unsafe fn __rust_thunk___ZN27TypedefUnionWithInheritableaSEOS_<'a, 'b>(
-            __this: &'a mut crate::TypedefUnionWithInheritable,
-            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
-        ) -> &'a mut crate::TypedefUnionWithInheritable;
     }
 }
 

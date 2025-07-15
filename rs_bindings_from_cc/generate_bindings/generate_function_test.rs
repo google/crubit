@@ -7,7 +7,7 @@ use code_gen_utils::make_rs_ident;
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{format_generic_params, Lifetime};
 use generate_function_thunk::thunk_ident;
-use googletest::prelude::{assert_that, contains_substring, expect_that, gtest, OrFail as _};
+use googletest::prelude::{assert_that, contains_substring, gtest, OrFail as _};
 use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
@@ -16,7 +16,6 @@ use test_generators::generate_bindings_tokens_for_test;
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
-use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
 #[gtest]
 fn test_simple_function() -> Result<()> {
@@ -526,18 +525,6 @@ fn test_impl_from_for_implicit_conversion_from_reference() -> Result<()> {
             }
         },
     );
-    Ok(())
-}
-
-#[gtest]
-fn test_operator_with_missing_lifetime_uses_elision() -> Result<()> {
-    // Missing lifetimes currently only causes hard errors for trait impls,
-    // not For inherent methods.
-    let ir = ir_from_cc("struct SomeStruct{SomeStruct& operator=(const SomeStruct&);};")?;
-
-    let rs_api =
-        rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens_for_test(ir)?.rs_api)?;
-    expect_that!(rs_api, contains_substring("UnpinAssign<&Self> for SomeStruct"));
     Ok(())
 }
 
