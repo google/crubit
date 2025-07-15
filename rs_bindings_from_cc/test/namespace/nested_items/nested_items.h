@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_NESTED_ITEMS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_NESTED_ITEMS_H_
 
+#include "support/annotations.h"
+
 namespace same {
 inline int AFunction() { return 42; }
 }  // namespace same
@@ -31,5 +33,9 @@ struct Foo {
   };
 };
 }  // namespace foo
+
+struct CRUBIT_RUST_NAME("OuterRustName") OuterCpp {
+  struct Inner {};
+};
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_NESTED_ITEMS_H_

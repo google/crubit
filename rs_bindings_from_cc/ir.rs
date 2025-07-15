@@ -2117,7 +2117,10 @@ impl IR {
                         namespaces.is_empty(),
                         "Record was listed as the enclosing item for a namespace, this is a bug."
                     );
-                    nested_records.push(parent_record.rs_name.identifier.clone());
+                    nested_records.push((
+                        parent_record.rs_name.identifier.clone(),
+                        parent_record.cc_name.identifier.clone(),
+                    ));
                     enclosing_item_id = parent_record.enclosing_item_id;
                 }
                 _ => panic!("Expected namespace or parent record, found enclosing item {item:?}"),

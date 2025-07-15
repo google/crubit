@@ -289,8 +289,8 @@ pub fn escape_non_identifier_chars(symbol: &str) -> String {
 pub struct NamespaceQualifier {
     // Outer to innermost
     pub namespaces: Vec<Rc<str>>,
-    // Outer to innermost
-    pub nested_records: Vec<Rc<str>>,
+    // Outer to innermost. Paired as (rs_name, cc_name)
+    pub nested_records: Vec<(Rc<str>, Rc<str>)>,
 }
 
 impl NamespaceQualifier {
@@ -315,12 +315,12 @@ impl NamespaceQualifier {
         self.namespaces.iter().map(|ns| make_rs_ident(ns)).chain(
             self.nested_records
                 .iter()
-                .map(|record| make_rs_ident(&record.to_string().to_snake_case())),
+                .map(|(rs_name, _cc_name)| make_rs_ident(&rs_name.to_string().to_snake_case())),
         )
     }
 
     pub fn parts(&self) -> impl Iterator<Item = &Rc<str>> + use<'_> {
-        self.namespaces.iter().chain(self.nested_records.iter())
+        self.namespaces.iter().chain(self.nested_records.iter().map(|(_rs_name, cc_name)| cc_name))
     }
 
     /// Returns `foo::bar::baz::` (escaping Rust keywords as needed).
