@@ -63,6 +63,11 @@ be used as normal.
 
 ## Trivially relocatable classes {#trivially_relocatable}
 
+NOTE: The wording on this page needs to be updated given standards changes in
+C++26.
+
+<!-- TODO(b/432107690): Update these docs. -->
+
 For a type to be passed or returned by value in Rust, it must be
 ["trivially relocatable"](https://clang.llvm.org/docs/LanguageExtensions.html#:~:text=__is_trivially_relocatable).
 This is the C++ version of saying a class is "Rust-movable": the class can be
