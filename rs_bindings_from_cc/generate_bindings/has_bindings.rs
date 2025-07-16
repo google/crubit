@@ -83,8 +83,9 @@ pub fn has_bindings(
                 let parent_module_name: Rc<str> =
                     parent_record.rs_name.identifier.as_ref().to_snake_case().into();
 
-                let ResolvedTypeName::RecordNestedItems { parent_records_that_map_to_this_name } =
-                    &resolved_type_names[&parent_module_name]
+                let Some(ResolvedTypeName::RecordNestedItems {
+                    parent_records_that_map_to_this_name,
+                }) = &resolved_type_names.get(&parent_module_name)
                 else {
                     // The parent module name was overwritten by something else.
                     return Err(NoBindingsReason::ParentModuleNameOverwritten {
