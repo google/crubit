@@ -21,9 +21,13 @@ interface, using the `Ctor` trait.
 NOTE: The API documentation and source code is at
 support/ctor.rs
 
-`Ctor<Output=T, Error=E>` is a trait for **lazily evaluated values**, which, on
-success, return `T`, and which on failure return `E`. These values are
-constructed in-place, in a C++-compatible way, and pinned.
+`Ctor<Output=T, Error=E>` is a trait for implementing **lazily evaluated
+values**. These values are constructed in-place, in a C++-compatible way, and
+pinned.
+
+However, `Ctor` is not a lazily-initialized value itself. It is a value
+initialization procedure, which returns `T` upon success and `E` upon failure.
+So a `Ctor` creates a value upon request, which is why we describe it as lazy.
 
 Since exceptions are disabled at Google, we currently only work with
 `Error=Infallible`, and for exposition will omit the error type.
@@ -51,9 +55,10 @@ takes_const_reference(&x);
 accepts_value(mov!(x));
 ```
 
-NOTE: The actual code in `returns` is not executed when the `returns()` call
-happens, but when the `Ctor` is executed as part of `Box::emplace`. Remember,
-`Ctor` is a lazily evaluated value.
+NOTE: The call to `returns()` does not construct a value of type `CppType`, it
+merely returns a `Ctor<Output=CppType>`, which is a procedure to lazily create
+such a value. A `CppType` is created only when the `Ctor` is executed as part of
+the `Box::emplace(...)` expression in the caller.
 
 If you happen to be *directly* passing a return value into a parameter, you can
 avoid the intermediate boxed value:
