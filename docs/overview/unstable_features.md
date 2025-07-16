@@ -202,7 +202,7 @@ closed, but not necessarily permanently. See also
 https://github.com/rust-lang/rust/issues/20400.
 
 Not every C++ type supports the Rust move operation. For more on this, see
-[Classes and Structs](../cpp/classes_and_structs.md#trivially_relocatable).
+[Classes and Structs](../cpp/classes_and_structs.md#rust_movable).
 
 Crubit (in `experimental` mode) supports passing and returning these
 non-Rust-movable C++ objects by value. But since they are not Rust-movable, they

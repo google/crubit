@@ -11,9 +11,9 @@ Instead, it makes the following assumptions:
 1.  Functions which are not marked `CRUBIT_UNSAFE` only require validity of
     their parameters for safety. Such functions will not require `unsafe`.
 
-2.  Rust moves of a trivially relocatable (and replaceable) object produce a
-    valid object with the same state. A Rust move of a trivially relocatable
-    object does not cause UB in C++.
+2.  Rust moves of an object that we consider Rust-movable produces a valid
+    object with the same state. A Rust move of such an object does not cause UB
+    in C++.
 
 When these are not true of the C++ functions, then the corresponding Rust
 functions will be unsound. This can be fixed by marking types as `CRUBIT_UNSAFE`

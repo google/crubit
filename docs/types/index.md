@@ -34,12 +34,12 @@ one of three categories ranging from "most widely supported" to
     Examples include Rust tuples, which are bridged by-value into C++
     `std::tuple`.
 
-| Level of Support            | Example             | Pass by-reference |         Pass by-value        |        Return by-value       | Fields | In Function Pointer Types |
-|-----------------------------|---------------------|:-----------------:|:----------------------------:|:----------------------------:|:------:|:-------------------------:|
-| ABI Compatible              | `i32`               |         Y         |               Y              |               Y              |    Y   |             Y             |
-| Layout-compatible C++ type  | `absl::string_view` |         Y         | if trivially relocatable[^1] | if trivially relocatable[^2] |    Y   |             N             |
-| Layout-compatible Rust type | `UserDefinedStruct` |         Y         |      if C++ movable[^3]      |               Y              |    Y   |             N             |
-| Bridged                     | `(i32, i32)`        |         N         |               Y              |               Y              |    N   |             N             |
+Level of Support            | Example             | Pass by-reference | Pass by-value       | Return by-value     | Fields | In Function Pointer Types
+--------------------------- | ------------------- | :---------------: | :-----------------: | :-----------------: | :----: | :-----------------------:
+ABI Compatible              | `i32`               | Y                 | Y                   | Y                   | Y      | Y
+Layout-compatible C++ type  | `absl::string_view` | Y                 | if Rust-movable[^1] | if Rust-movable[^2] | Y      | N
+Layout-compatible Rust type | `UserDefinedStruct` | Y                 | if C++ movable[^3]  | Y                   | Y      | N
+Bridged                     | `(i32, i32)`        | N                 | Y                   | Y                   | N      | N
 
 [^1]: See <internal link>/cpp/classes_and_structs#trivially_relocatable
 [^2]: See <internal link>/cpp/classes_and_structs#trivially_relocatable

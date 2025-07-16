@@ -70,9 +70,9 @@ The following types are **not** yet supported, among many others:
 For C++ libraries, used from Rust, we have support for the following **language
 features**, used in public interfaces:
 
-*   trivially-relocatable structs. (Either trivially copyable, or
+*   rust-movable structs. (Either trivially copyable, or
     `[[clang::trivial_abi]]`)
-*   trivially relocatable unions.
+*   rust-movable unions.
 *   enums
 *   type aliases
 *   non-overloaded functions (which are **not** member functions)

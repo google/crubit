@@ -137,8 +137,7 @@ graph.
 ## Wrapping and type bridging vs direct use of types {#bridging}
 
 Crubit automatically generates layout-compatible Rust equivalents of C++ types.
-When the C++ type is
-[trivially relocatable](classes_and_structs.md#trivially_relocatable), the
+When the C++ type is [Rust-movable](classes_and_structs.md#rust_movable), the
 Crubit-generated Rust type is Rust-movable, these can be used by value, by
 pointer, in struct fields, arrays, and any other compound data type. A C++
 pointer `const T*` can become a Rust `*const T`, and a C++ `T` field can become
@@ -178,13 +177,13 @@ There are, still, a handful of reasons to manually write "wrapper" types which
 encapsulate or replace the original C++ type (or its Crubit-generated Rust
 type).
 
-*   If the type is **not** trivially relocatable, but it's important for the
+*   If the type is **not** naturally Rust-movable, but it's important for the
     Rust type to be Rust-movable. It may be possible to make changes to the C++
-    code to make the type trivially relocatable/Rust-movable using some of the
-    strategies described in [the cookbook](cookbook.md#rust_movable). This
-    allows the greatest flexibility, as the type becomes usable in almost every
-    context. But if that is not possible, writing a new "wrapper" type can keep
-    Rust programmers productive.
+    code to make the type Rust-movable using some of the strategies described in
+    [the cookbook](cookbook.md#rust_movable). This allows the greatest
+    flexibility, as the type becomes usable in almost every context. But if that
+    is not possible, writing a new "wrapper" type can keep Rust programmers
+    productive.
 *   Some Rust types have very special semantics, which are impossible to
     implement in the bindings for a C++ type. For example, Rust has special
     support for `Result` and `Option` in error handling via the `?` operator,

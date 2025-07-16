@@ -127,7 +127,7 @@ enough to accommodate existing codebases. C++ API owners can:
         API,
     *   Nullability information for pointers in the C++ API,
     *   Assertions (verified at compile time) and promises (not verified by
-        tooling) that certain C++ types are trivially relocatable.
+        tooling) that certain C++ types are Rust-movable.
 *   **Provide custom logic to bridge types**, for example, mapping C++
     `absl::StatusOr` to Rust `Result`.
 *   **Provide API overlays** that improve the automatically generated Rust API.
@@ -333,11 +333,11 @@ stable enough will be reflected in API projections, for example:
     64-bit targets), but this makes it harder to provide idiomatic, transparent,
     high-performance interop.
 *   The C++ standard does not specify whether standard library types like
-    `std::vector` are trivially relocatable; it is an implementation detail.
+    `std::vector` are in any sense Rust-movable; it is an implementation detail.
     Universal interop tooling would have to conservatively assume
-    non-trivially-relocatable types. Interop tooling specific to certain
-    environments can rely on libc++ providing a trivially-relocatable
-    `std::vector` and project it into Rust in a much more ergonomic way.
+    non-Rust-movable types. Interop tooling specific to certain environments can
+    rely on libc++ providing a Rust-movable `std::vector` and project it into
+    Rust in a much more ergonomic way.
 
 **Pros**
 
@@ -351,16 +351,15 @@ stable enough will be reflected in API projections, for example:
         generate thunks in the first place, if the target platform does not need
         them.
 *   **Ergonomics of API projections will be improved.**
-    *   For example, whether a C++ type is trivially relocatable or not is an
+    *   For example, whether a C++ type is Rust-movable or not is an
         implementation detail in C++, transparent to C++ users of that type, but
         it makes a huge ergonomic difference in the Rust API projection.
 
 **Cons**
 
 *   **C++ code will have additional evolution constraints.**
-    *   For example, changing a type from trivially relocatable to non-trivially
-        relocatable is a non-API-breaking change for C++ users, but it would
-        break Rust users.
+    *   For example, changing a type from Rust-movable to non-Rust-movable is a
+        non-API-breaking change for C++ users, but it would break Rust users.
 *   **It would be more difficult to switch internal environments to a different
     C++ standard library.**
 *   **Code that is deployed in environments that have incompatible

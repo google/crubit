@@ -9,9 +9,9 @@ Many, if not most, types in C++ are not Rust-movable. That is, you cannot
 initialize them using `let x = y`, you cannot assign them using `x = y`, and you
 cannot otherwise relocate the bits in memory, such as by `std::mem::swap`.
 
-In general, it's better to make these types Rust-movable. See [Trivially
-relocatable classes](classes_and_structs.md#trivially_relocatable) and [Making
-types Rust-movable](cookbook.md#rust_movable).
+In general, it's better to make these types Rust-movable. See [Rust-movable
+classes](classes_and_structs.md#rust_movable) and [Making types
+Rust-movable](cookbook.md#rust_movable).
 
 If the class cannot be made Rust-movable, then it will be given a less ergonomic
 interface, using the `Ctor` trait.

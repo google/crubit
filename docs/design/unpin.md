@@ -1,11 +1,11 @@
 # `Unpin` for C++ Types
 
-SUMMARY: A C++ type is `Unpin` if it is trivially relocatable (e.g., a trivial
-type, or a nontrivial type which is `[[clang::trivial_abi]]`). Any such type can
-be used by value or plain reference/pointer in interop, all non-`Unpin` types
-must instead be used behind pinned pointers and references.
+SUMMARY: A C++ type is `Unpin` if it is Rust-movable (e.g., a trivial type, or a
+nontrivial type which is `[[clang::trivial_abi]]`). Any such type can be used by
+value or plain reference/pointer in interop, all non-`Unpin` types must instead
+be used behind pinned pointers and references.
 
-A C++ type `T` is `Unpin` if it is known to be a **trivially relocatable type**
+A C++ type `T` is `Unpin` if it is known to be a **Rust-movable type**
 (move+destroy is logically equivalent to `memcpy`+release).
 
 `Unpin` C++ types can be used like any other normal Rust type: they are always
@@ -13,14 +13,14 @@ safe to access by reference or by value. Non-`Unpin` types, in contrast, can
 only be accessed behind pins such as `Pin<&mut T>`, or `Pin<Box<T>>`, because it
 may not be safe to directly mutate. These types are never used directly by value
 in Rust, because value-like assignment has incorrect semantics: it fails to run
-C++ special members for non-trivially-relocatable types.
+C++ special members for non-Rust-movable types.
 
 Note that not every object with an `Unpin` type is actually safe to hold in a
 mutable reference. Objects with live aliases still must not be used with `&mut`,
 and "potentially overlapping objects" can produce unexpected behavior in Rust.
 (See [Reference Safety](#reference_safety).)
 
-## Trivially Relocatable Types
+## Rust-movable types
 
 In C++, moving a value between locations in memory involves executing code to
 either initialize (move-construct) or overwrite (move-assign) the new location.
@@ -39,28 +39,23 @@ swapping an object means changing its location in memory, as if by `memcpy`
 without running the destructor logic in the old location. Another way of looking
 at it is that it's as if an object moved around in memory over time: it is
 constructed in one place, and then further operations and eventual destruction
-might happen in other places. We call such a Rust-like move a "trivial
-relocation" operation.
+might happen in other places. This is a Rust move.
 
 Despite C++ moves using explicit construction and destruction calls, many C++
 types could also have used the Rust movement model. We call such types
-**trivially relocatable** types.
+**Rust-movable** types.
 
 For example, a C++ `std::unique_ptr`, implemented in the obvious way, is
-trivially relocatable: its actual location in memory does not matter. In
-contrast, a self-referential type is not trivially relocatable, because to
-relocate it, you must also update the pointer it has to itself. This is done
-inside the move constructor in C++, but cannot be done in the Rust model, where
-the move operation is not customizable.
+Rust-movable: its actual location in memory does not matter. In contrast, a
+self-referential type is not Rust-movable, because to move it, you must also
+update the pointer it has to itself. This is done inside the move constructor in
+C++, but cannot be done in the Rust model, where the move operation is not
+customizable.
 
-For more background, see
-[P1144](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1144r5.html).
+### Which types are Rust-movable?
 
-### Which types are trivially relocatable?
-
-For the purpose of Rust/C++ interop, we define a type to be trivially
-relocatable if, and only if, it is "trivial for calls" in Clang. That is,
-either:
+For the purpose of Rust/C++ interop, we define a type to be Rust-movable if, and
+only if, it is "trivial for calls" in Clang. That is, either:
 
 1.  It is actually
     [trivial](https://en.cppreference.com/w/cpp/named_req/TrivialType), **or**
@@ -68,32 +63,26 @@ either:
     [`[[clang::trivial_abi]]`](https://clang.llvm.org/docs/AttributeReference.html#trivial-abi)
     to make itself trivial for calls
 
-This definition is conservative: some types that could be considered trivially
-relocatable are not trivial for calls. (For example, `std::unique_ptr` uses
+This definition is conservative: some types that could be considered
+Rust-movable are not trivial for calls. (For example, `std::unique_ptr` uses
 `[[clang::trivial_abi]]` only in the unstable libc++ ABI; the stable libc++ ABI
 predates this attribute, and adding it now is ABI-breaking.)
 
 This definition is, however, sound: all types which are trivial for calls are
-trivially relocatable, because a type which is trivial for calls is
-trivially-relocated when passed by value as a function argument.
+Rust-movable, because a type which is trivial for calls is Rust-moved when
+passed by value as a function argument.
 
-### Expanding trivial relocatability
+### Expanding Rust-movability
 
-We are working to extend libc++ and Clang to trivially relocate these types in
-even more circumstances, which would make `[[clang::trivial_abi]]` more
-compelling and more widely used, enhancing both performance and
-Rust-compatibility for our C++ core libraries.
+C++26 introduces a concept called "trivial relocation" and "trivially
+relocatable types". These are types which have an alternate relocation operation
+that does not throw exceptions or run the move constructor or destructor.
+Ideally, a type would be Rust-movable if and only if it is trivially
+relocatable, replaceable, and trivial relocation is tantamount to a `memcpy`.
+(For example, perhaps `T` is Rust-movable if and only if any union containing
+`T` is trivially relocatable.)
 
-*   [[clang] Mark `trivial_abi` types as "trivially relocatable".](https://reviews.llvm.org/D114732)
-*   [Use trivial relocation operations in std::vector, by porting D67524 and
-    part of D61761 to work on top of the changes in
-    D114732.](https://reviews.llvm.org/D119385)
-
-A future change to C++ or Clang in the vein of
-[P1144](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1144r5.html)
-could make types trivially relocatable without requiring ABI changes as
-`[[clang::trivial_abi]]` does, although in the short term this doesn't seem very
-likely.
+TODO: This is a work in progress.
 
 ## Reference Safety
 

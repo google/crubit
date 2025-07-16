@@ -18,33 +18,32 @@ the recommended practices to evolve over time, as Crubit's capabilities expand!
 
 ## Making types Rust-movable {#rust_movable}
 
-As described in <internal link>/cpp/classes_and_structs#trivially_relocatable, types
-cannot be passed by value in Rust unless they are Rust-movable, or, in C++
-terminology, trivially relocatable.
+As described in <internal link>/cpp/classes_and_structs#rust_movable, types cannot be
+passed by value in Rust unless they are Rust-movable.
 
 This can happen for a couple of easily fixable reasons, described in
 subsections:
 
 *   The type defines a destructor or copy/move constructor / assignment
-    operator. If it is in-principle still trivially relocatable, and these
-    functions do not care about the address of the object in memory, then the
-    type can be [annotated with `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi)
+    operator. If it is in-principle still Rust-movable, and these functions do
+    not care about the address of the object in memory, then the type can be
+    [annotated with `ABSL_ATTRIBUTE_TRIVIAL_ABI`](#trivial_abi)
 *   The type has a field which is not rust-movable. In that case, the field can
     be [boxed in a pointer](#boxing).
 
-There are *other* reasons a type can become non-trivially-relocatable, which do
-not have these easy fixes described below. For example, virtual methods, or
-non-trivially-relocatable base classes. For those, your only option is the hard
-option of more radically restructuring your code to avoid those patterns.
+There are *other* reasons a type can become non-Rust-movable, which do not have
+these easy fixes described below. For example, virtual methods, or
+non-Rust-movable base classes. For those, your only option is the hard option of
+more radically restructuring your code to avoid those patterns.
 
 ### `ABSL_ATTRIBUTE_TRIVIAL_ABI` {#trivial_abi}
 
 <internal link>/cpp/cookbook#trivial_abi
 
-One of the ways a type can become non-trivially-relocatable is if it has a
-copy/move constructor / assignment operator, or a destructor. In that case,
-Clang will assume that it cannot be trivially relocated, **unless** it is
-annotated with `ABSL_ATTRIBUTE_TRIVIAL_ABI`.
+One of the ways a type can become non-Rust-movable is if it has a copy/move
+constructor / assignment operator, or a destructor. In that case, Clang will
+assume that it cannot be trivially relocated, **unless** it is annotated with
+`ABSL_ATTRIBUTE_TRIVIAL_ABI`.
 
 ```c++ {.bad}
 struct LogWhenDestroyed {
@@ -83,29 +82,29 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI LogWhenDestroyed {
 
 <internal link>/cpp/cookbook#boxing
 
-One of the ways a type can become non-trivially-relocatable is if it has a
-field, where the type of that field is not trivially relocatable. There is no
-way to override this: there is nothing a type can do to make itself trivially
-relocatable if one subobject is not.
+One of the ways a type can become non-Rust-movable is if it has a field, where
+the type of that field is not Rust-movable. There is no way to override this:
+there is nothing a type can do to make itself Rust-movable if one subobject is
+not.
 
 For example, consider a field like `std::string name;`. `std::string` defines a
 custom destructor and copy / move constructor/assignment operator, in order to
 correctly manage owned heap memory for the string. Because of this, it also is
-not trivially relocatable / rust-movable. And, at the time of writing,
-`std::string` currently cannot use `ABSL_ATTRIBUTE_TRIVIAL_ABI` in any STL
-implementation. In the case of libstdc++, for example, `std::string` contains a
-self-referential pointer: when the string is small enough, the `data()` pointer
-refers to the inside of the string. Rust-moving it would cause the pointer to
-refer back to the *old* object, which would cause undefined behavior.
+not Rust-movable. And, at the time of writing, `std::string` currently cannot
+use `ABSL_ATTRIBUTE_TRIVIAL_ABI` in any STL implementation. In the case of
+libstdc++, for example, `std::string` contains a self-referential pointer: when
+the string is small enough, the `data()` pointer refers to the inside of the
+string. Rust-moving it would cause the pointer to refer back to the *old*
+object, which would cause undefined behavior.
 
 If a struct or class contains a `std::string` as a subobject by value, or any
-other non-trivially-relocatable object, then that struct or class is itself also
-not trivially relocatable. (If you somehow were able to Rust-move the parent
-object, this would also Rust-move the `string`, causing the very same issues.)
+other non-Rust-movable object, then that struct or class is itself also not
+Rust-movable. (If you somehow were able to Rust-move the parent object, this
+would also Rust-move the `string`, causing the very same issues.)
 
 Instead, what you can do is change the type of the field, so that it doesn't
 contain the problematic type *by value*. Instead, it can hold the
-non-trivially-relocatable type by pointer.
+non-Rust-movable type by pointer.
 
 BEST PRACTICE: Except where necessary for better Rust interop, this is **not**
 good C++ style. When you use this trick, document why, and try to limit it to
@@ -121,11 +120,11 @@ ABI. If you aren't sure about whether you are using the unstable ABI, it is like
 
 If you tightly control your dependencies, you might be using
 libc++'s unstable ABI. The unstable ABI, among other things, makes
-`unique_ptr<T>` trivially relocatable (in C++) and Rust-movable (in Rust). In
-fact, it is trivially relocatable even if `T` itself is not.
+`unique_ptr<T>` Rust-movable. In fact, it is Rust-movable even if `T` itself is
+not.
 
 This means that if a particular field is making its parent type
-non-trivially-relocatable, one fix is to wrap it in a `unique_ptr`:
+non-Rust-movable, one fix is to wrap it in a `unique_ptr`:
 
 ```c++ {.bad}
 struct Person {
@@ -144,15 +143,15 @@ struct Person {
 
 #### Raw pointers {#raw_ptr}
 
-BEST PRACTICE: This should only be used in codebases that do not use a trivially
-relocatable `unique_ptr` or `unique_ptr` equivalent. Consider wrapping this in
+BEST PRACTICE: This should only be used in codebases that do not use a
+Rust-movable `unique_ptr` or `unique_ptr` equivalent. Consider wrapping this in
 an `ABSL_ATTRIBUTE_TRIVIAL_ABI` type which resembles `unique_ptr`, instead.
 
 <section class="zippy" markdown="1">
 
 When not using libc++'s unstable ABI, the most straightforward way to make a
-field trivially relocatable is to instead use a **raw** pointer, and delete it
-in the destructor (as if it were held by a `unique_ptr`).
+field Rust-movable is to instead use a **raw** pointer, and delete it in the
+destructor (as if it were held by a `unique_ptr`).
 
 ```c++ {.bad}
 struct Person {

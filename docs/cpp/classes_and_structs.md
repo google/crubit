@@ -5,9 +5,8 @@ any subobject of the class cannot be represented in Rust, the class itself will
 still have bindings, but
 [the relevant subobject will be private](#opaque_fields).
 
-To have bindings, the class must be
-["trivially relocatable"](#trivially_relocatable). For example, any trivial or
-"POD" class is trivially relocatable.
+To have bindings, the class must be ["Rust-movable"](#rust_movable). For
+example, any trivial or "POD" class is Rust-movable.
 
 ## Example
 
@@ -23,7 +22,7 @@ Crubit will generate a struct with the same layout:
 cs/file:examples/cpp/trivial_struct/example_generated.rs class:Position
 ```
 
-For an example of a trivially-relocatable class with a destructor, see
+For an example of a Rust-movable class with a destructor, see
 [examples/cpp/trivial_abi_struct/](http://examples/cpp/trivial_abi_struct/).
 
 ## Fields {#fields}
@@ -61,27 +60,22 @@ of Crubit, it should not be passed by value. Within Crubit, it can't be passed
 by value in [function pointers](../types/pointer.md#function), but can otherwise
 be used as normal.
 
-## Trivially relocatable classes {#trivially_relocatable}
+<span id="trivially_relocatable"></span>
 
-NOTE: The wording on this page needs to be updated given standards changes in
-C++26.
+## Rust-movable classes {#rust_movable}
 
-<!-- TODO(b/432107690): Update these docs. -->
+For a type to be passed or returned by value in Rust, it must be "Rust-movable":
+the class must be able to be "teleported" in memory during its lifetime, as if
+by using `memcpy` and then discarding the old location without running any
+destruction logic. This means that it can be present in Rust using normal
+objects and pointers and references, without using `Pin`.
 
-For a type to be passed or returned by value in Rust, it must be
-["trivially relocatable"](https://clang.llvm.org/docs/LanguageExtensions.html#:~:text=__is_trivially_relocatable).
-This is the C++ version of saying a class is "Rust-movable": the class can be
-"teleported" in memory during its lifetime, as if by using `memcpy` and then
-discarding the old location without running any destruction logic. This means
-that it can be present in Rust using normal objects and pointers and references,
-without using `Pin`.
+For example, a `string_view` is Rust-movable. In fact, every trivially copyable
+type is Rust-movable
 
-For example, a `string_view` is trivially relocatable. In fact, every trivially
-copyable type is trivially relocatable.
-
-However, unlike Rust, many types in C++ are **not** trivially relocatable. For
-example, a `std::string` might be implemented using the "short string
-optimization", in a fashion similar to this:
+However, unlike Rust, many types in C++ are **not** Rust-movable. For example, a
+`std::string` might be implemented using the "short string optimization", in a
+fashion similar to this:
 
 ```c++
 class String {
@@ -119,37 +113,36 @@ as they are. This would break on the `String` type defined above, or any other
 self-referential type.
 
 Unfortunately, any class with a user-defined copy/move operation or destructor
-*might* be self-referential, and so by default they are not trivially
-relocatable. If a class has a user-defined destructor or copy/move
-constructor/assignment operator, and "should be" trivially relocatable, it must
-explicitly declare that it is safe to trivially relocate, using the attribute
+*might* be self-referential, and so by default they are not Rust-movable. If a
+class has a user-defined destructor or copy/move constructor/assignment
+operator, and "should be" Rust-movable, it must explicitly declare that it is
+safe to perform a Rust move, using the attribute
 [`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI).
 This attribute allows a class to be trivially relocated, even though it defines
 an operation that would ordinarily disable trivial relocation.
 
 For example, in the unstable libc++ ABI we use within Google, a `unique_ptr<T>`
-is trivially relocatable, because it applies `ABSL_ATTRIBUTE_TRIVIAL_ABI`. This
-is safe to do, for `unique_ptr`, because its exact location in memory does not
-matter, and paired move/destroy operations can be replaced with trivial
-relocations.
+is Rust-movable, because it applies `ABSL_ATTRIBUTE_TRIVIAL_ABI`. This is safe
+to do, for `unique_ptr`, because its exact location in memory does not matter,
+and paired move/destroy operations can be replaced with Rust move operations.
 
 ### Requirements
 
-The exact requirements for a class to be trivially relocatable are subject to
-change, because they are still being defined within Clang and within the C++
-standard. But at the least:
+The exact requirements for a class to be Rust-movable are subject to change,
+because they are still being defined within Clang and within the C++ standard.
+But at the least:
 
 *   Any
     [trivially copyable](https://en.cppreference.com/w/cpp/language/classes#Trivially_copyable_clas)
-    type is also trivially relocatable.
-*   Any `class` or `struct` type with only trivially relocatable fields and base
-    classes is trivially relocatable, unless:
+    type is also Rust-movable.
+*   Any `class` or `struct` type with only Rust-movable fields and base classes
+    is Rust-movable, unless:
     *   it is not `ABSL_ATTRIBUTE_TRIVIAL_ABI` and defines a copy/move
         constructor, copy/move assignment operator, or destructor, or,
     *   it is otherwise nontrivial, e.g., from defining a `virtual` member
         function.
 
-Some examples of trivially relocatable types:
+Some examples of Rust-movable types:
 
 *   any primitive type (integers, character types, floats, etc.)
 *   raw pointers
@@ -159,7 +152,7 @@ Some examples of trivially relocatable types:
 *   `unique_ptr`, in the Clang unstable ABI.
 *   `absl::Status`
 
-Some examples of types that are **not** trivially relocatable:
+Some examples of types that are **not** Rust-movable:
 
 *   (For now) `std::string`, `std::vector`, and other nontrivial standard
     library types.
@@ -172,4 +165,4 @@ Some examples of types that are **not** trivially relocatable:
 Crubit does not support most attributes on structs and their fields. If a struct
 is marked using any attribute other than alignment or
 `ABSL_ATTRIBUTE_TRIVIAL_ABI`, it will not receive bindings. If a field is marked
-using any attribute, it will be replaced with a private opaque blob.
+using any other attribute, it will be replaced with a private opaque blob.
