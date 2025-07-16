@@ -10,9 +10,12 @@
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
 
+#include "support/internal/attribute_macros.h"
+
 #include <cstdint>
 
 namespace example_crate {
-using TypeAlias = std::int32_t;
+using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: example_crate_golden :: TypeAlias") = std::int32_t;
 }
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN

@@ -60,7 +60,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace module
 
 using ::example_crate::module::function;
-using Type = ::example_crate::module::Type;
+using Type CRUBIT_INTERNAL_RUST_TYPE(
+    ":: example_crate_golden :: module :: Type") =
+    ::example_crate::module::Type;
 
 namespace module {
 

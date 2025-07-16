@@ -11,13 +11,19 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
 
+#include "support/internal/attribute_macros.h"
+
 #include <cstdint>
 
 namespace type_aliases_rust {
 
 namespace test_type_aliases {
-using TypeAlias2 = std::int32_t;
-using TypeAlias = std::int32_t;
+using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias2") =
+    std::int32_t;
+using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias") =
+    std::int32_t;
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/type_aliases.rs;l=9
@@ -26,7 +32,9 @@ std::int32_t func_using_alias();
 }  // namespace test_type_aliases
 
 namespace test_deprecated_type_alias {
-using TypeAlias [[deprecated("Use `OtherTypeAlias` instead")]] = std::int32_t;
+using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_rust_golden :: test_deprecated_type_alias :: TypeAlias")
+    [[deprecated("Use `OtherTypeAlias` instead")]] = std::int32_t;
 }
 
 namespace test_type_aliases {

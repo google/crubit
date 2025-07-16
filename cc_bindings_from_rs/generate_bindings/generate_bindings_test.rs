@@ -2582,7 +2582,7 @@ fn test_format_item_use_normal_type() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                using G = ::rust_out::test_mod::S;
+                using G CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: S") = ::rust_out::test_mod::S;
             }
         );
     });
@@ -2608,8 +2608,8 @@ fn test_generate_bindings_use_list_items() {
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
-                using X = ::rust_out::test_mod::X;
-                using Y = ::rust_out::test_mod::Y;
+                using X CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") = ::rust_out::test_mod::X;
+                using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") = ::rust_out::test_mod::Y;
             }
         );
     });
@@ -2635,8 +2635,8 @@ fn test_generate_bindings_use_glob() {
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
-                using X = ::rust_out::test_mod::X;
-                using Y = ::rust_out::test_mod::Y;
+                using X CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: test_mod :: X") = ::rust_out::test_mod::X;
+                using Y CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: test_mod :: Y") = ::rust_out::test_mod::Y;
             }
         );
     });
@@ -2654,7 +2654,7 @@ fn test_format_item_type_alias() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                using TypeAlias = std::int32_t;
+                using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias") = std::int32_t;
             }
         );
     });
@@ -2673,7 +2673,7 @@ fn test_format_item_type_alias_should_give_underlying_type() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                using TypeAlias2 = std::int32_t;
+                using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias2") = std::int32_t;
             }
         );
     });
@@ -2749,7 +2749,10 @@ fn test_format_item_type_alias_deprecated() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                using TypeAlias [[deprecated("Use `OtherTypeAlias` instead")]] = std::int32_t;
+                using TypeAlias
+                    CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: TypeAlias")
+                    [[deprecated("Use `OtherTypeAlias` instead")]]
+                    = std::int32_t;
             }
         );
     });

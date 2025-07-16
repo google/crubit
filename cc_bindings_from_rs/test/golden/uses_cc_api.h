@@ -67,7 +67,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 using ::uses_rust::test_use_glob::f1;
 using ::uses_rust::test_use_glob::f2;
-using X1 = ::uses_rust::test_use_glob::X1;
+using X1 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: uses_rust_golden :: test_use_glob :: X1") =
+    ::uses_rust::test_use_glob::X1;
 
 namespace __crubit_internal {
 
@@ -158,8 +160,10 @@ std::int32_t g2();
 
 }  // namespace __crubit_internal
 
-using Bar = ::uses_rust::__crubit_internal::Bar;
-using Foo = ::uses_rust::__crubit_internal::Foo;
+using Bar CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") =
+    ::uses_rust::__crubit_internal::Bar;
+using Foo CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") =
+    ::uses_rust::__crubit_internal::Foo;
 using ::uses_rust::__crubit_internal::g1;
 using ::uses_rust::__crubit_internal::g2;
 
@@ -198,7 +202,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
 
 }  // namespace __crubit_internal
 
-using InnerX = ::uses_rust::__crubit_internal::InnerX;
+using InnerX CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") =
+    ::uses_rust::__crubit_internal::InnerX;
 
 namespace test_use_glob {
 
