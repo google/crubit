@@ -45,9 +45,7 @@ impl Default for AddableConstMember {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18AddableConstMemberC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN18AddableConstMemberC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -94,9 +92,7 @@ impl Default for AddableNonConstMember {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -142,9 +138,7 @@ impl Default for AddableFriend {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13AddableFriendC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN13AddableFriendC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -188,9 +182,7 @@ impl Default for AddableFreeByConstRef {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -218,9 +210,7 @@ impl Default for AddableFreeByMutRef {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -248,9 +238,7 @@ impl Default for AddableFreeByValue {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18AddableFreeByValueC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN18AddableFreeByValueC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -278,9 +266,7 @@ impl Default for AddableFreeByRValueRef {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -360,9 +346,7 @@ impl Default for Overloaded {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10OverloadedC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN10OverloadedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -406,9 +390,7 @@ impl Default for IncompatibleLHS {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN15IncompatibleLHSC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN15IncompatibleLHSC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -445,9 +427,7 @@ impl Default for AddableReturnsVoid {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -580,9 +560,7 @@ impl Default for AddAssignMemberInt {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -619,9 +597,7 @@ impl Default for AddAssignMemberByConstRef {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -658,9 +634,7 @@ impl Default for AddAssignFreeByConstRef {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -697,9 +671,7 @@ impl Default for AddAssignFreeByValue {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -736,9 +708,7 @@ impl Default for AddAssignFriendByConstRef {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -775,9 +745,7 @@ impl Default for AddAssignFriendByValue {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -815,7 +783,7 @@ impl Default for AddAssignProhibitedConstMember {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
             );
             tmp.assume_init()
         }
@@ -863,7 +831,7 @@ impl Default for AddAssignProhibitedFriendConstLhs {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
             );
             tmp.assume_init()
         }
@@ -907,9 +875,7 @@ impl Default for ManyOperators {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN13ManyOperatorsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

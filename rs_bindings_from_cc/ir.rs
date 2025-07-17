@@ -434,6 +434,12 @@ pub struct Identifier {
     pub identifier: Rc<str>,
 }
 
+impl Identifier {
+    pub fn as_str(&self) -> &str {
+        &self.identifier
+    }
+}
+
 impl Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.identifier)
@@ -619,11 +625,26 @@ pub enum UnqualifiedIdentifier {
 }
 
 impl UnqualifiedIdentifier {
-    pub fn identifier_as_str(&self) -> Option<&str> {
+    pub fn is_constructor(&self) -> bool {
+        matches!(self, UnqualifiedIdentifier::Constructor)
+    }
+    pub fn is_destructor(&self) -> bool {
+        matches!(self, UnqualifiedIdentifier::Destructor)
+    }
+    pub fn as_identifier(&self) -> Option<&Identifier> {
         match self {
-            UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.identifier.as_ref()),
+            UnqualifiedIdentifier::Identifier(identifier) => Some(identifier),
             _ => None,
         }
+    }
+    pub fn as_operator(&self) -> Option<&Operator> {
+        match self {
+            UnqualifiedIdentifier::Operator(op) => Some(op),
+            _ => None,
+        }
+    }
+    pub fn identifier_as_str(&self) -> Option<&str> {
+        self.as_identifier().map(|id| id.identifier.as_ref())
     }
 }
 
@@ -811,7 +832,8 @@ pub enum AccessSpecifier {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Field {
-    pub identifier: Option<Identifier>,
+    pub rust_identifier: Option<Identifier>,
+    pub cpp_identifier: Option<Identifier>,
     pub doc_comment: Option<Rc<str>>,
     #[serde(rename(deserialize = "type"))]
     pub type_: Result<CcType, String>,

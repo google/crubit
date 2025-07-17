@@ -370,7 +370,12 @@ fn api_func_shape_for_operator_unary_plus(
     let (record, _) = extract_first_operator_parameter(db, param_type, errors)?;
     Ok((
         make_rs_ident("unary_plus"),
-        ImplKind::Struct { is_unsafe: false, record, format_first_param_as_self: true },
+        ImplKind::Struct {
+            is_unsafe: false,
+            record,
+            format_first_param_as_self: true,
+            is_renamed_unpin_constructor: false,
+        },
     ))
 }
 
@@ -580,7 +585,16 @@ fn api_func_shape_for_identifier(
     } else {
         false
     };
-    (func_name, ImplKind::Struct { record: record.clone(), format_first_param_as_self, is_unsafe })
+    let is_renamed_unpin_constructor = func.cc_name.is_constructor() && record.is_unpin();
+    (
+        func_name,
+        ImplKind::Struct {
+            record: record.clone(),
+            format_first_param_as_self,
+            is_renamed_unpin_constructor,
+            is_unsafe,
+        },
+    )
 }
 
 fn api_func_shape_for_destructor(
@@ -792,7 +806,16 @@ fn api_func_shape(
 
     let is_unsafe = match func.safety_annotation {
         SafetyAnnotation::Unannotated => {
-            param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone()))
+            let mut params_iter = param_types.iter();
+            let has_unsafe_self = func.cc_name.is_constructor()
+                && params_iter
+                    .next()
+                    .map(|this_arg| {
+                        let Some(self_type) = this_arg.referent() else { return false };
+                        db.is_rs_type_kind_unsafe(self_type.clone())
+                    })
+                    .unwrap_or(false);
+            has_unsafe_self || params_iter.any(|p| db.is_rs_type_kind_unsafe(p.clone()))
         }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
@@ -981,7 +1004,8 @@ fn generate_func_body(
 
     match &impl_kind {
         ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. }
-        | ImplKind::Trait { trait_name: TraitName::Clone, .. } => {
+        | ImplKind::Trait { trait_name: TraitName::Clone, .. }
+        | ImplKind::Struct { is_renamed_unpin_constructor: true, .. } => {
             // SAFETY: A user-defined constructor is not guaranteed to
             // initialize all the fields. To make the `assume_init()` call
             // below safe, the memory is zero-initialized first. This is a
@@ -994,7 +1018,7 @@ fn generate_func_body(
                 #thunk_prepare
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut ::core::ffi::c_void #( , #thunk_args )* );
+                    #crate_root_path::detail::#thunk_ident( &raw mut tmp as *mut _ #( , #thunk_args )* );
                     tmp.assume_init()
                 }
             })
@@ -1778,6 +1802,21 @@ fn function_signature(
     let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types).collect();
 
     let mut quoted_return_type = None;
+
+    if let ImplKind::Struct { is_renamed_unpin_constructor: true, .. } = impl_kind {
+        move_self_from_out_param_to_return_value(
+            db,
+            func,
+            return_type,
+            &mut api_params,
+            &mut thunk_args,
+            param_types,
+            &mut lifetimes,
+            /*allow_missing_this_lifetime=*/ true,
+        )?;
+        quoted_return_type = Some(quote! { Self });
+    }
+
     // TODO: b/389131731 - Unify adjustment of return and parameter types.
     let trait_name = match &impl_kind {
         ImplKind::Trait { trait_name, .. } => Some(trait_name),
@@ -1794,51 +1833,17 @@ fn function_signature(
             }
         }
         Some(TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..) | TraitName::Clone) => {
-            // For constructors, we move the output parameter to be the return value.
-            // The return value is "really" void.
-            assert!(
-                func.return_type.is_unit_type(),
-                "Unexpectedly non-void return type of a constructor: {func:?}"
-            );
-
-            //  Presence of element #0 is indirectly verified by a `Constructor`-related
-            // `match` branch a little bit above.
-            *return_type = param_types[0]
-                .referent()
-                .ok_or_else(|| {
-                    anyhow!(
-                        "Expected pointer/reference for `__this` parameter, found {}",
-                        param_types[0].display(db)
-                    )
-                })?
-                .clone();
-            quoted_return_type = Some(quote! {Self});
-
-            // Grab the `__this` lifetime to remove it from the lifetime parameters.
-            let this_lifetime = param_types[0].lifetime().ok_or_else(|| {
-                anyhow!(
-                    "Expected first parameter to be a `__this` reference, found {}",
-                    param_types[0].display(db)
-                )
-            })?;
-
-            // Drop `__this` parameter from the public Rust API.
-            api_params.remove(0);
-            thunk_args.remove(0);
-            param_types.remove(0);
-
-            // Remove the lifetime associated with `__this`.
-            lifetimes.retain(|l| l != &this_lifetime);
-            if let Some(type_still_dependent_on_removed_lifetime) = param_types
-                .iter()
-                .find(|t| t.lifetimes().filter(|lt| !lt.is_elided()).any(|lt| lt == this_lifetime))
-            {
-                bail!(
-                    "The lifetime of `__this` is unexpectedly also used by another \
-                    parameter: {}",
-                    type_still_dependent_on_removed_lifetime.display(db)
-                );
-            }
+            move_self_from_out_param_to_return_value(
+                db,
+                func,
+                return_type,
+                &mut api_params,
+                &mut thunk_args,
+                param_types,
+                &mut lifetimes,
+                /*allow_missing_this_lifetime=*/ false,
+            )?;
+            quoted_return_type = Some(quote! { Self });
 
             // CtorNew groups parameters into a tuple.
             if let Some(TraitName::CtorNew(args_type)) = trait_name {
@@ -1957,6 +1962,69 @@ fn function_signature(
         thunk_prepare,
         thunk_args,
     })
+}
+
+fn move_self_from_out_param_to_return_value(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    return_type: &mut RsTypeKind,
+    api_params: &mut Vec<TokenStream>,
+    thunk_args: &mut Vec<TokenStream>,
+    param_types: &mut Vec<RsTypeKind>,
+    lifetimes: &mut Vec<Lifetime>,
+    allow_missing_this_lifetime: bool,
+) -> Result<()> {
+    // For constructors, we move the output parameter to be the return value.
+    // The return value is "really" void.
+    assert!(
+        func.return_type.is_unit_type(),
+        "Unexpectedly non-void return type of a constructor: {func:?}"
+    );
+
+    //  Presence of element #0 is indirectly verified by a `Constructor`-related
+    // `match` branch a little bit above.
+    *return_type = param_types[0]
+        .referent()
+        .ok_or_else(|| {
+            anyhow!(
+                "Expected pointer/reference for `__this` parameter, found {}",
+                param_types[0].display(db)
+            )
+        })?
+        .clone();
+
+    // Grab the `__this` lifetime to remove it from the lifetime parameters.
+    let this_lifetime = param_types[0].lifetime();
+
+    // HACK: this prevents generation of uncallable bindings prior to stabilization of
+    // inferred lifetimes, and should be removed once InferOperatorLifetimes is enabled by default.
+    if this_lifetime.is_none() && !allow_missing_this_lifetime {
+        bail!(
+            "Expected first reference parameter `__this` to have a lifetime, found {}",
+            param_types[0].display(db)
+        )
+    }
+
+    // Drop `__this` parameter from the public Rust API.
+    api_params.remove(0);
+    thunk_args.remove(0);
+    param_types.remove(0);
+
+    // Remove the lifetime associated with `__this`.
+    if let Some(this_lifetime) = this_lifetime {
+        lifetimes.retain(|l| l != &this_lifetime);
+        if let Some(type_still_dependent_on_removed_lifetime) = param_types
+            .iter()
+            .find(|t| t.lifetimes().filter(|lt| !lt.is_elided()).any(|lt| lt == this_lifetime))
+        {
+            bail!(
+                "The lifetime of `__this` is unexpectedly also used by another \
+            parameter: {}",
+                type_still_dependent_on_removed_lifetime.display(db)
+            );
+        }
+    }
+    Ok(())
 }
 
 /// Formats singletons as themselves, and collections of n!=1 items as a tuple.

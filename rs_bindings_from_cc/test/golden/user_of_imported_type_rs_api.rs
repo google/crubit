@@ -48,9 +48,7 @@ impl Default for UserOfImportedType {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

@@ -142,6 +142,9 @@ pub enum ImplKind {
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
         format_first_param_as_self: bool,
+        /// Whether this function wraps a C++ constructor for an `Unpin` type, so it has an implicit
+        /// `out: *mut Self` parameter.
+        is_renamed_unpin_constructor: bool,
     },
     /// Used for trait methods for which we need an `impl TraitName for
     /// SomeStruct { ... }` block.

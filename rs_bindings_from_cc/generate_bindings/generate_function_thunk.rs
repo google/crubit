@@ -414,7 +414,7 @@ pub fn generate_function_thunk_impl(
         return_type_cpp_spelling.clone()
     };
 
-    let this_ref_qualification =
+    let mut this_ref_qualification =
         func.member_func_metadata.as_ref().and_then(|meta| match &func.rs_name {
             UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
             UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => meta
@@ -422,6 +422,9 @@ pub fn generate_function_thunk_impl(
                 .as_ref()
                 .map(|instance_method| instance_method.reference),
         });
+    if func.cc_name.is_constructor() {
+        this_ref_qualification = None;
+    }
     let (implementation_function, arg_expressions) =
         if let Some(this_ref_qualification) = this_ref_qualification {
             let this_param = func

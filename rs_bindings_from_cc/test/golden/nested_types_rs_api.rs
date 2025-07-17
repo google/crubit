@@ -33,7 +33,7 @@ impl Default for Foo {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -62,9 +62,7 @@ pub mod foo {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN3Foo3BarC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
-                );
+                crate::detail::__rust_thunk___ZN3Foo3BarC1Ev(&raw mut tmp as *mut _);
                 tmp.assume_init()
             }
         }
@@ -96,9 +94,7 @@ pub mod foo {
             fn default() -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN3Foo3Bar3BazC1Ev(
-                        &raw mut tmp as *mut ::core::ffi::c_void,
-                    );
+                    crate::detail::__rust_thunk___ZN3Foo3Bar3BazC1Ev(&raw mut tmp as *mut _);
                     tmp.assume_init()
                 }
             }
@@ -128,9 +124,7 @@ impl Default for already_snake_case {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18already_snake_caseC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN18already_snake_caseC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -161,9 +155,7 @@ impl Default for ConflictingSnakeCaseNames {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN25ConflictingSnakeCaseNamesC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN25ConflictingSnakeCaseNamesC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -195,7 +187,7 @@ impl Default for ConflictingSnakeCaseNames_ {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN26ConflictingSnakeCaseNames_C1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
             );
             tmp.assume_init()
         }
@@ -227,9 +219,7 @@ impl Default for OnlyOneHasNestedItems {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN21OnlyOneHasNestedItemsC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN21OnlyOneHasNestedItemsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -264,9 +254,7 @@ impl Default for OnlyOneHasNestedItems_ {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN22OnlyOneHasNestedItems_C1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN22OnlyOneHasNestedItems_C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -296,9 +284,7 @@ impl Default for SameNameAsNamespace {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN19SameNameAsNamespaceC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN19SameNameAsNamespaceC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -333,7 +319,7 @@ pub mod same_name_as_namespace {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN22same_name_as_namespace3FooC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -363,7 +349,7 @@ pub mod same_name_as_namespace {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN22same_name_as_namespace3BarC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -397,7 +383,7 @@ pub mod no_longer_top_level {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN19no_longer_top_level18already_snake_caseC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -429,7 +415,7 @@ pub mod no_longer_top_level {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNamesC1Ev(&raw mut tmp as*mut::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNamesC1Ev(&raw mut tmp as*mut _);
                 tmp.assume_init()
             }
         }
@@ -460,7 +446,7 @@ pub mod no_longer_top_level {
         fn default() -> Self {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
-                crate::detail::__rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_C1Ev(&raw mut tmp as*mut::core::ffi::c_void);
+                crate::detail::__rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_C1Ev(&raw mut tmp as*mut _);
                 tmp.assume_init()
             }
         }
@@ -492,7 +478,7 @@ pub mod no_longer_top_level {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN19no_longer_top_level21OnlyOneHasNestedItemsC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -529,7 +515,7 @@ pub mod no_longer_top_level {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN19no_longer_top_level22OnlyOneHasNestedItems_C1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -561,7 +547,7 @@ pub mod no_longer_top_level {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN19no_longer_top_level19SameNameAsNamespaceC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -596,7 +582,7 @@ pub mod no_longer_top_level {
             fn default() -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN19no_longer_top_level22same_name_as_namespace3FooC1Ev(&raw mut tmp as*mut::core::ffi::c_void);
+                    crate::detail::__rust_thunk___ZN19no_longer_top_level22same_name_as_namespace3FooC1Ev(&raw mut tmp as*mut _);
                     tmp.assume_init()
                 }
             }
@@ -624,7 +610,7 @@ pub mod no_longer_top_level {
             fn default() -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN19no_longer_top_level22same_name_as_namespace3BarC1Ev(&raw mut tmp as*mut::core::ffi::c_void);
+                    crate::detail::__rust_thunk___ZN19no_longer_top_level22same_name_as_namespace3BarC1Ev(&raw mut tmp as*mut _);
                     tmp.assume_init()
                 }
             }

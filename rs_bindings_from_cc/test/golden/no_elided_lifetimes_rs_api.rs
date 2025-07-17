@@ -44,7 +44,7 @@ impl Default for S {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -161,10 +161,7 @@ impl From<::core::ffi::c_int> for WrappedValue {
     fn from(value: ::core::ffi::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12WrappedValueC1Ei(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                value,
-            );
+            crate::detail::__rust_thunk___ZN12WrappedValueC1Ei(&raw mut tmp as *mut _, value);
             tmp.assume_init()
         }
     }

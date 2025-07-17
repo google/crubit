@@ -36,7 +36,7 @@ impl Default for TopLevel {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN8TopLevelC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN8TopLevelC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -78,7 +78,7 @@ pub mod test_namespace_bindings {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings5InnerC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -115,7 +115,7 @@ impl Default for __CcTemplateInst10MyTemplateI8TopLevelE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -149,7 +149,7 @@ impl Default for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -183,7 +183,7 @@ impl Default for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -220,7 +220,7 @@ impl Default for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5Inne
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -257,7 +257,7 @@ impl Default for __CcTemplateInst10MyTemplateIbE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIbEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIbEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -291,7 +291,7 @@ impl Default for __CcTemplateInst10MyTemplateIcE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -325,7 +325,7 @@ impl Default for __CcTemplateInst10MyTemplateIdE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIdEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIdEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -359,7 +359,7 @@ impl Default for __CcTemplateInst10MyTemplateIfE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -393,7 +393,7 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }

@@ -72,7 +72,7 @@ impl Default for Base {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN4BaseC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN4BaseC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -129,7 +129,7 @@ impl Default for Derived {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

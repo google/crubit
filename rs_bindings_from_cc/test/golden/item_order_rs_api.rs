@@ -33,9 +33,7 @@ impl Default for FirstStruct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -65,9 +63,7 @@ impl Default for SecondStruct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

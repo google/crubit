@@ -36,13 +36,13 @@ unsafe impl ::cxx::ExternType for Position {
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 // Error while generating bindings for function 'Position::Position':
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
-// Expected first parameter to be a `__this` reference, found *mut crate::Position
+// Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 // Error while generating bindings for function 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
-// Expected first parameter to be a `__this` reference, found *mut crate::Position
+// Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_abi_struct/example.h;l=12
 // Error while generating bindings for function 'Position::operator=':

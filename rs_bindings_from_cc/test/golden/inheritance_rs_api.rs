@@ -42,7 +42,7 @@ impl Default for Base0 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base0C1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN5Base0C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -73,7 +73,7 @@ impl Default for Base1 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base1C1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN5Base1C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -101,7 +101,7 @@ impl Default for Base2 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5Base2C1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN5Base2C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -127,7 +127,7 @@ impl Default for Derived {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -542,9 +542,7 @@ impl Default for MethodBase1 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -597,9 +595,7 @@ impl Default for MethodBase2 {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -638,9 +634,7 @@ impl Default for MethodDerived {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13MethodDerivedC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN13MethodDerivedC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

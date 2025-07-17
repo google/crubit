@@ -36,9 +36,7 @@ impl Default for HasCustomAlignment {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -67,7 +65,7 @@ impl Default for HasFieldWithCustomAlignment {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
             );
             tmp.assume_init()
         }
@@ -97,7 +95,7 @@ impl Default for InheritsFromBaseWithCustomAlignment {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
             );
             tmp.assume_init()
         }
@@ -135,7 +133,7 @@ impl Default for HasCustomAlignmentWithGnuAttr {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
             );
             tmp.assume_init()
         }
@@ -178,7 +176,7 @@ impl Default for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIi
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }

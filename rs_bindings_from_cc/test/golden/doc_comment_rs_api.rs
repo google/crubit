@@ -43,9 +43,7 @@ impl Default for DocCommentSlashes {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -59,7 +57,7 @@ impl From<::core::ffi::c_int> for DocCommentSlashes {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
                 __param_0,
             );
             tmp.assume_init()
@@ -124,9 +122,7 @@ impl Default for DocCommentBang {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -158,9 +154,7 @@ impl Default for MultilineCommentTwoStars {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -189,9 +183,7 @@ impl Default for LineComment {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11LineCommentC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN11LineCommentC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -223,9 +215,7 @@ impl Default for MultilineOneStar {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -284,7 +274,7 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -322,7 +312,7 @@ impl Default for __CcTemplateInst10MyTemplateIfE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -357,7 +347,7 @@ impl Default for __CcTemplateInst13OuterTemplateIiE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13OuterTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN13OuterTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }

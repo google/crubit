@@ -39,9 +39,7 @@ impl Default for EmptyUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -121,9 +119,7 @@ impl Default for RenamedUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13UnionToRenameC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN13UnionToRenameC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -209,9 +205,7 @@ impl Default for NonEmptyUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -325,9 +319,7 @@ impl Default for UnionWithOpaqueField {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -355,9 +347,7 @@ impl Default for TrivialButInheritable {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN21TrivialButInheritableC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN21TrivialButInheritableC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -385,9 +375,7 @@ impl Default for UnionWithInheritable {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN20UnionWithInheritableC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -412,9 +400,7 @@ impl Default for TypedefUnion {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12TypedefUnionC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN12TypedefUnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -443,7 +429,7 @@ impl Default for TypedefUnionWithInheritable {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
             );
             tmp.assume_init()
         }

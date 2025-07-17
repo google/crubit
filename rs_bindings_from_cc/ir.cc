@@ -364,7 +364,8 @@ std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access) {
 
 llvm::json::Value Field::ToJson() const {
   return llvm::json::Object{
-      {"identifier", identifier},
+      {"rust_identifier", rust_identifier},
+      {"cpp_identifier", cpp_identifier},
       {"doc_comment", doc_comment},
       {"type", type},
       {"access", AccessToString(access)},

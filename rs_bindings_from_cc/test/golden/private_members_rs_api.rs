@@ -42,7 +42,7 @@ pub mod test_namespace_bindings {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }

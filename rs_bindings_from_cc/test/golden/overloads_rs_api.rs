@@ -71,7 +71,7 @@ impl Default for Foo {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -122,7 +122,7 @@ impl Default for __CcTemplateInst6SizeofIfE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN6SizeofIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN6SizeofIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -149,7 +149,7 @@ impl Default for __CcTemplateInst6SizeofIiE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN6SizeofIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN6SizeofIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }

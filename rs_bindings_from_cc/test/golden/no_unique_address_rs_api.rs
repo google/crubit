@@ -66,7 +66,7 @@ impl Default for Struct {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN6StructC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN6StructC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -129,9 +129,7 @@ impl Default for PaddingBetweenFields {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

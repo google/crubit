@@ -42,7 +42,7 @@ pub mod crubit {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test23ArgumentToBoundOverloadC1Ev(
-                        &raw mut tmp as *mut ::core::ffi::c_void,
+                        &raw mut tmp as *mut _,
                     );
                     tmp.assume_init()
                 }
@@ -74,7 +74,7 @@ pub mod crubit {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test25ArgumentToUnboundOverloadC1Ev(
-                        &raw mut tmp as *mut ::core::ffi::c_void,
+                        &raw mut tmp as *mut _,
                     );
                     tmp.assume_init()
                 }
@@ -117,7 +117,7 @@ pub mod crubit {
             fn from(mut __param_0: crate::crubit::test::ArgumentToBoundOverload) -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut::core::ffi::c_void,&mut __param_0);
+                    crate::detail::__rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut _,&mut __param_0);
                     tmp.assume_init()
                 }
             }
@@ -158,7 +158,7 @@ pub mod crubit {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethodC1Ev(
-                        &raw mut tmp as *mut ::core::ffi::c_void,
+                        &raw mut tmp as *mut _,
                     );
                     tmp.assume_init()
                 }
@@ -200,7 +200,7 @@ impl Default for __CcTemplateInstNSt3__u17integral_constantIbLb0EEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZNSt3__u17integral_constantIbLb0EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3ado_5fnot_5fbind(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZNSt3__u17integral_constantIbLb0EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3ado_5fnot_5fbind(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }
@@ -248,7 +248,7 @@ impl Default for __CcTemplateInstNSt3__u17integral_constantIbLb1EEE {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZNSt3__u17integral_constantIbLb1EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3ado_5fnot_5fbind(&raw mut tmp as*mut::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZNSt3__u17integral_constantIbLb1EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3ado_5fnot_5fbind(&raw mut tmp as*mut _);
             tmp.assume_init()
         }
     }

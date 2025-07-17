@@ -614,9 +614,7 @@ impl Default for NontrivialUnpin {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -627,10 +625,7 @@ impl From<::core::ffi::c_int> for NontrivialUnpin {
     fn from(field: ::core::ffi::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ei(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                field,
-            );
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ei(&raw mut tmp as *mut _, field);
             tmp.assume_init()
         }
     }
@@ -652,10 +647,7 @@ impl Clone for NontrivialUnpin {
     fn clone<'b>(&'b self) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1ERKS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-                self,
-            );
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1ERKS_(&raw mut tmp as *mut _, self);
             tmp.assume_init()
         }
     }
@@ -671,7 +663,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1EOS_(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
                 __param_0,
             );
             tmp.assume_init()
@@ -693,7 +685,7 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpi
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1EO10Nontrivial(
-                &raw mut tmp as *mut ::core::ffi::c_void,
+                &raw mut tmp as *mut _,
                 __param_0,
             );
             tmp.assume_init()

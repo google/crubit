@@ -8,23 +8,6 @@ load(
 package(default_applicable_licenses = ["//:license"])
 
 crubit_test_cc_library(
-    name = "must_bind",
-    hdrs = ["must_bind.h"],
-    deps = [
-        "//support:annotations",
-        "//support/internal:bindings_support",
-    ],
-)
-
-crubit_rust_test(
-    name = "must_bind_test",
-    srcs = ["must_bind_test.rs"],
-    cc_deps = [
-        ":must_bind",
-    ],
-)
-
-crubit_test_cc_library(
     name = "do_not_bind",
     hdrs = ["do_not_bind.h"],
     deps = [
@@ -46,6 +29,51 @@ crubit_rust_test(
     srcs = ["do_not_bind_test.rs"],
     cc_deps = [
         ":do_not_bind",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "must_bind",
+    hdrs = ["must_bind.h"],
+    deps = [
+        "//support:annotations",
+        "//support/internal:bindings_support",
+    ],
+)
+
+crubit_rust_test(
+    name = "must_bind_test",
+    srcs = ["must_bind_test.rs"],
+    cc_deps = [
+        ":must_bind",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "rust_name",
+    hdrs = ["rust_name.h"],
+    deps = [
+        "//support:annotations",
+        "//support/internal:bindings_support",
+    ],
+)
+
+golden_test(
+    name = "rust_name_golden_test",
+    basename = "rust_name",
+    cc_library = "rust_name",
+    golden_cc = "rust_name_api_impl.cc",
+    golden_rs = "rust_name_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "rust_name_test",
+    srcs = ["rust_name_test.rs"],
+    cc_deps = [
+        ":rust_name",
     ],
     deps = [
         "@crate_index//:googletest",

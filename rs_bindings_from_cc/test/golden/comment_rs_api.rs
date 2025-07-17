@@ -43,7 +43,7 @@ impl Default for Foo {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -90,7 +90,7 @@ impl Default for Bar {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3BarC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN3BarC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -116,9 +116,7 @@ impl Default for HasNoComments {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

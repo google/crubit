@@ -381,7 +381,7 @@ fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
                 fn default() -> Self {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+                        crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&raw mut tmp as *mut _);
                         tmp.assume_init()
                     }
                 }
@@ -485,7 +485,7 @@ fn test_impl_from_for_1_arg_constructor() -> Result<()> {
                     fn from(i: ::core::ffi::c_int) -> Self {
                         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&raw mut tmp as *mut ::core::ffi::c_void, i);
+                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&raw mut tmp as *mut _, i);
                             tmp.assume_init()
                         }
                     }
@@ -518,7 +518,7 @@ fn test_impl_from_for_implicit_conversion_from_reference() -> Result<()> {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
                         crate::detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
-                            &raw mut tmp as *mut ::core::ffi::c_void, other);
+                            &raw mut tmp as *mut _, other);
                         tmp.assume_init()
                     }
                 }
@@ -1682,7 +1682,7 @@ fn test_nonunpin_trait_param() -> Result<()> {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
                         crate::detail::__rust_thunk___ZN7TrivialC1E10Nontrivial(
-                            &raw mut tmp as *mut ::core::ffi::c_void,
+                            &raw mut tmp as *mut _,
                             __param_0
                         );
                         tmp.assume_init()

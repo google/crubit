@@ -33,9 +33,7 @@ impl Default for PublicPointer {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13PublicPointerC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN13PublicPointerC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -63,9 +61,7 @@ impl Default for PrivatePointer {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN14PrivatePointerC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN14PrivatePointerC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -99,9 +95,7 @@ impl Default for TransitivePublicPointer {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN23TransitivePublicPointerC1Ev(
-                &raw mut tmp as *mut ::core::ffi::c_void,
-            );
+            crate::detail::__rust_thunk___ZN23TransitivePublicPointerC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
@@ -127,7 +121,7 @@ impl Default for Union {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN5UnionC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN5UnionC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }

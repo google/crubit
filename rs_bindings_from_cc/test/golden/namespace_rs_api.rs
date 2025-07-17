@@ -38,7 +38,7 @@ pub mod test_namespace_bindings {
             let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1Ev(
-                    &raw mut tmp as *mut ::core::ffi::c_void,
+                    &raw mut tmp as *mut _,
                 );
                 tmp.assume_init()
             }
@@ -119,7 +119,7 @@ pub mod test_namespace_bindings_reopened {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
-                        &raw mut tmp as *mut ::core::ffi::c_void,
+                        &raw mut tmp as *mut _,
                     );
                     tmp.assume_init()
                 }
@@ -169,7 +169,7 @@ pub mod test_namespace_bindings_inline {
             fn default() -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(&raw mut tmp as*mut::core::ffi::c_void);
+                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(&raw mut tmp as*mut _);
                     tmp.assume_init()
                 }
             }

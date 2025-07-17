@@ -425,7 +425,8 @@ struct Field {
   // Name of the field.  This may be missing for "unnamed members" - see:
   // - https://en.cppreference.com/w/c/language/struct
   // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
-  std::optional<Identifier> identifier;
+  std::optional<Identifier> rust_identifier;
+  std::optional<Identifier> cpp_identifier;
 
   std::optional<std::string> doc_comment;
   absl::StatusOr<CcType> type;

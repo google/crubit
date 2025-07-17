@@ -78,7 +78,7 @@ pub fn generate_incomplete_record(
 }
 
 fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
-    match field.identifier.as_ref() {
+    match field.rust_identifier.as_ref() {
         None => make_rs_ident(&format!("__unnamed_field{}", field_index)),
         Some(Identifier { identifier }) => make_rs_ident(identifier),
     }
@@ -401,7 +401,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
                     }
                 },
                 description: vec![BitfieldComment {
-                    field_name: field.identifier.as_ref().map(|i| i.identifier.clone()),
+                    field_name: field.rust_identifier.as_ref().map(|i| i.identifier.clone()),
                     bits: size,
                 }],
             })
@@ -740,7 +740,8 @@ fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Re
             // bitfields have been filtered out earlier.
             assert_eq!(field.offset % 8, 0);
             let expected_offset = field.offset / 8;
-            let field_ident = expect_format_cc_type_name(&field.identifier.as_ref()?.identifier);
+            let field_ident =
+                expect_format_cc_type_name(&field.cpp_identifier.as_ref()?.identifier);
             Some((field_ident, expected_offset))
         })
         .collect();
@@ -799,7 +800,7 @@ fn cc_struct_no_unique_address_impl(
             },
             field: make_rs_ident(
                 &field
-                    .identifier
+                    .rust_identifier
                     .as_ref()
                     .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
                     .identifier,

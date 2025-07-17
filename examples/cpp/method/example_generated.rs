@@ -33,19 +33,19 @@ pub mod foo {
     // Generated from: examples/cpp/method/example.h;l=12
     // Error while generating bindings for function 'Bar::Bar':
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
+    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::Bar
 
     // Generated from: examples/cpp/method/example.h;l=12
     // Error while generating bindings for function 'Bar::Bar':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
+    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::Bar
 
     // Generated from: examples/cpp/method/example.h;l=12
     // Error while generating bindings for function 'Bar::Bar':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Expected first parameter to be a `__this` reference, found *mut crate::foo::Bar
+    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::Bar
 
     // Generated from: examples/cpp/method/example.h;l=12
     // Error while generating bindings for function 'Bar::operator=':

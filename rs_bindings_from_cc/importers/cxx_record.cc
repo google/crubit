@@ -325,6 +325,13 @@ absl::StatusOr<bool> IsUnsafeType(const clang::Decl& decl) {
   return GetExprAsBool(*args->front(), decl.getASTContext());
 }
 
+std::optional<Identifier> StringRefToOptionalIdentifier(llvm::StringRef name) {
+  if (name.empty()) {
+    return std::nullopt;
+  }
+  return Identifier(std::string(name));
+}
+
 }  // namespace
 
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
@@ -761,7 +768,8 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     }
 
     fields.push_back(
-        {.identifier = GetTranslatedFieldName(field_decl),
+        {.rust_identifier = GetTranslatedFieldName(field_decl),
+         .cpp_identifier = StringRefToOptionalIdentifier(field_decl->getName()),
          .doc_comment = ictx_.GetComment(field_decl),
          .type = std::move(type),
          .access = TranslateAccessSpecifier(access),

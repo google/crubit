@@ -33,7 +33,7 @@ impl Default for r#type {
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN4typeC1Ev(&raw mut tmp as *mut ::core::ffi::c_void);
+            crate::detail::__rust_thunk___ZN4typeC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
     }
