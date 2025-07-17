@@ -122,12 +122,14 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     let mut translated_kinds: HashMap<ty::BoundVar, ty::BoundRegionKind> = HashMap::new();
     let region_f = |br: ty::BoundRegion| {
         let new_kind: &ty::BoundRegionKind = translated_kinds.entry(br.var).or_insert_with(|| {
-            let name = br.kind.get_name().unwrap_or_else(|| {
+            if br.kind.is_named(tcx) {
+                let id = br.kind.get_id().unwrap_or(fn_def_id);
+                ty::BoundRegionKind::Named(id)
+            } else {
                 anon_count += 1;
-                Symbol::intern(&format!("{ANON_REGION_PREFIX}{anon_count}"))
-            });
-            let id = br.kind.get_id().unwrap_or(fn_def_id);
-            ty::BoundRegionKind::Named(id, name)
+                let name = Symbol::intern(&format!("{ANON_REGION_PREFIX}{anon_count}"));
+                ty::BoundRegionKind::NamedAnon(name)
+            }
         });
         ty::Region::new_late_param(
             tcx,

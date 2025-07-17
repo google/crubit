@@ -26,7 +26,7 @@ use quote::quote;
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 use rustc_hir::def::Res;
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::{self, AdtDef, GenericArg, Ty};
+use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use std::rc::Rc;
@@ -436,7 +436,7 @@ pub fn format_ty_for_cc<'tcx>(
                 }
             }
 
-            let lifetime = format_region_as_cc_lifetime(region);
+            let lifetime = format_region_as_cc_lifetime(tcx, region);
             let treat_ref_as_ptr: bool = (|| {
                 // Parameter type references are only converted to C++ references if they are
                 // valid exclusively for the lifetime of the function.
@@ -451,7 +451,7 @@ pub fn format_ty_for_cc<'tcx>(
                     return false;
                 }
                 // Explicit lifetimes are always converted to pointers.
-                if !region_is_elided(*region) {
+                if !region_is_elided(tcx, *region) {
                     return true;
                 }
                 // Elided lifetimes are converted to pointers if the elided lifetime is captured by
@@ -637,30 +637,32 @@ pub fn format_ret_ty_for_cc<'tcx>(
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
 
-pub fn has_elided_region<'tcx>(search_ty: ty::Ty<'tcx>) -> bool {
+pub fn has_elided_region<'tcx>(tcx: TyCtxt<'tcx>, search_ty: ty::Ty<'tcx>) -> bool {
     use core::ops::ControlFlow;
     use rustc_middle::ty::{Region, TyCtxt, TypeVisitor};
 
     struct HasUnnamedRegion;
-    struct Searcher;
-    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for Searcher {
+    struct Searcher<'tcx> {
+        tcx: TyCtxt<'tcx>,
+    }
+    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for Searcher<'tcx> {
         type Result = ControlFlow<HasUnnamedRegion>;
         fn visit_region(&mut self, region: Region<'tcx>) -> ControlFlow<HasUnnamedRegion> {
-            if region_is_elided(region) {
+            if region_is_elided(self.tcx, region) {
                 ControlFlow::Break(HasUnnamedRegion)
             } else {
                 ControlFlow::Continue(())
             }
         }
     }
-    match Searcher.visit_ty(search_ty) {
+    match (Searcher { tcx }).visit_ty(search_ty) {
         ControlFlow::Break(HasUnnamedRegion) => true,
         ControlFlow::Continue(()) => false,
     }
 }
 
-pub fn region_is_elided(region: ty::Region) -> bool {
-    match region.get_name() {
+pub fn region_is_elided<'tcx>(tcx: TyCtxt<'tcx>, region: ty::Region<'tcx>) -> bool {
+    match region.get_name(tcx) {
         Some(name) => name.as_str().starts_with(query_compiler::ANON_REGION_PREFIX),
         None => true,
     }
@@ -681,7 +683,7 @@ pub fn format_param_types_for_cc<'tcx>(
     has_self_param: bool,
 ) -> Result<Vec<CcSnippet>> {
     let region_counts = std::cell::LazyCell::new(|| count_regions(sig_mid));
-    let elided_is_output = has_elided_region(sig_mid.output());
+    let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
     let param_types = SugaredTy::fn_inputs(sig_mid, sig_hir);
     let mut snippets = Vec::with_capacity(param_types.len());
     for (i, param_type) in param_types.enumerate() {
@@ -802,7 +804,7 @@ pub fn format_ty_for_rs<'tcx>(
             quote! { * #qualifier #ty }
         }
         ty::TyKind::Ref(region, referent_ty, mutability) => {
-            let lifetime = format_region_as_rs_lifetime(region);
+            let lifetime = format_region_as_rs_lifetime(db.tcx(), region);
             if matches!(referent_ty.kind(), ty::TyKind::Str) && mutability.is_not() {
                 return Ok(quote! { & #lifetime str });
             }
@@ -828,9 +830,13 @@ pub fn format_ty_for_rs<'tcx>(
     })
 }
 
-pub fn format_region_as_cc_lifetime(region: &ty::Region) -> TokenStream {
-    let name =
-        region.get_name().expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
+pub fn format_region_as_cc_lifetime<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    region: &ty::Region<'tcx>,
+) -> TokenStream {
+    let name = region
+        .get_name(tcx)
+        .expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
     let name = name
         .as_str()
         .strip_prefix('\'')
@@ -840,9 +846,13 @@ pub fn format_region_as_cc_lifetime(region: &ty::Region) -> TokenStream {
     quote! { [[clang::annotate_type("lifetime", #name)]] }
 }
 
-pub fn format_region_as_rs_lifetime(region: &ty::Region) -> TokenStream {
-    let name =
-        region.get_name().expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
+pub fn format_region_as_rs_lifetime<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    region: &ty::Region<'tcx>,
+) -> TokenStream {
+    let name = region
+        .get_name(tcx)
+        .expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
     let lifetime = syn::Lifetime::new(name.as_str(), proc_macro2::Span::call_site());
     quote! { #lifetime }
 }

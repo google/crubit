@@ -466,16 +466,18 @@ pub fn generate_function(
         }
         FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
             ty::TyKind::Ref(region, _, mutability) => {
+                let tcx = db.tcx();
                 // Ref-qualify if the lifetime of `&self` is a named lifetime or if it the elided
                 // lifetime appears in the return type.
                 // See <internal link> for more details on the motivation.
-                let ref_qualifier =
-                    if !region_is_elided(*region) || has_elided_region(sig_mid.output()) {
-                        quote! { & }
-                    } else {
-                        quote! {}
-                    };
-                let lifetime_annotation = format_region_as_cc_lifetime(region);
+                let ref_qualifier = if !region_is_elided(tcx, *region)
+                    || has_elided_region(tcx, sig_mid.output())
+                {
+                    quote! { & }
+                } else {
+                    quote! {}
+                };
+                let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
                 let mutability = match mutability {
                     Mutability::Mut => quote! {},
                     Mutability::Not => quote! { const },
