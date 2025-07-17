@@ -217,7 +217,8 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
                          options.clang_args.end());
 
   Invocation invocation(options.current_target, augmented_public_headers,
-                        options.headers_to_targets);
+                        options.headers_to_targets,
+                        std::move(options.do_not_bind_allowlist));
   if (!clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
           virtual_input_file_content, args_as_strings,

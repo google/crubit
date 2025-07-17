@@ -250,25 +250,6 @@ absl::StatusOr<std::optional<AnnotateArgs>> GetAnnotateAttrArgs(
   return AnnotateArgs(found_attr->args_begin(), found_attr->args_end());
 }
 
-std::optional<std::string> GetAnnotateArgAsStringByAttribute(
-    const clang::Decl* decl, absl::string_view attribute) {
-  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
-      GetAnnotateAttrArgs(*decl, attribute);
-  if (!maybe_args.ok() || !maybe_args->has_value()) {
-    return std::nullopt;
-  }
-  const AnnotateArgs& args = **maybe_args;
-  if (args.size() != 1) {
-    return std::nullopt;
-  }
-  absl::StatusOr<absl::string_view> maybe_val =
-      GetExprAsStringLiteral(*args[0], decl->getASTContext());
-  if (!maybe_val.ok()) {
-    return std::nullopt;
-  }
-  return std::string(*maybe_val);
-}
-
 absl::StatusOr<bool> HasAnnotationWithoutArgs(const clang::Decl& decl,
                                               absl::string_view annotation) {
   absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
@@ -286,25 +267,27 @@ absl::StatusOr<bool> HasAnnotationWithoutArgs(const clang::Decl& decl,
   return true;
 }
 
-absl::Status RequireSingleStringArgIfExists(const clang::Decl* decl,
-                                            absl::string_view attribute) {
-  absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
-      GetAnnotateAttrArgs(*decl, attribute);
-  if (!maybe_args.ok() || !maybe_args->has_value()) {
-    return absl::OkStatus();
+absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
+    const clang::Decl& decl, absl::string_view annotation_name) {
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> maybe_args,
+                          GetAnnotateAttrArgs(decl, annotation_name));
+  if (!maybe_args.has_value()) {
+    return std::nullopt;
   }
-  const AnnotateArgs& args = **maybe_args;
+  const AnnotateArgs& args = *maybe_args;
   if (args.size() != 1) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Attribute ", attribute, " must have a single string argument."));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Annotation ", annotation_name,
+                     " must have a single string argument."));
   }
   absl::StatusOr<absl::string_view> arg =
-      GetExprAsStringLiteral(*args[0], decl->getASTContext());
+      GetExprAsStringLiteral(*args[0], decl.getASTContext());
   if (!arg.ok()) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Attribute ", attribute, " must have a single string argument."));
+    return absl::InvalidArgumentError(
+        absl::StrCat("Annotation ", annotation_name,
+                     " must have a single string argument."));
   }
-  return absl::OkStatus();
+  return std::string(*arg);
 }
 
 }  // namespace crubit

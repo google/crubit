@@ -46,6 +46,15 @@
 // ```
 #define CRUBIT_MUST_BIND CRUBIT_INTERNAL_ANNOTATE("crubit_must_bind")
 
+// Prevents a function or type from receiving Rust bindings.
+//
+// Use of this annotation should be avoided where-possible as usage of it can
+// prevent Rust from accessing useful C++ functionality.
+//
+// Declarations using this annotation must be registered in the
+// `do_not_bind_allowlist` or bindings generation will fail with a hard error.
+#define CRUBIT_DO_NOT_BIND CRUBIT_INTERNAL_ANNOTATE("crubit_do_not_bind")
+
 // By default, <internal link> will infer Rust safety based on the types of the
 // function's parameters. This annotation can be used to override that
 // inference.

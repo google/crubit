@@ -68,6 +68,15 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       std::vector<std::string> requested_instantiations,
       CollectInstantiations(args.srcs_to_scan_for_instantiations));
 
+  std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist =
+      std::nullopt;
+  if (args.do_not_bind_allowlist.has_value()) {
+    do_not_bind_allowlist = absl::flat_hash_set<std::string>();
+    for (const std::string& decl : *args.do_not_bind_allowlist) {
+      do_not_bind_allowlist->insert(decl);
+    }
+  }
+
   CRUBIT_ASSIGN_OR_RETURN(
       IR ir, IrFromCc(IrFromCcOptions{
                  .current_target = args.current_target,
@@ -79,7 +88,8 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                  .clang_args = clang_args_view,
                  .extra_instantiations = requested_instantiations,
                  .crubit_features = args.target_to_features,
-                 .driver_path = args.driver_path}));
+                 .driver_path = args.driver_path,
+                 .do_not_bind_allowlist = std::move(do_not_bind_allowlist)}));
 
   if (!args.instantiations_out.empty()) {
     ir.crate_root_path = "__cc_template_instantiations_rs_api";

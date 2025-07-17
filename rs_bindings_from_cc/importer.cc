@@ -671,6 +671,30 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
     return HardError(*decl, FormattedError::FromStatus(must_bind.status()));
   }
 
+  const absl::StatusOr<bool> do_not_bind =
+      HasAnnotationWithoutArgs(*decl, "crubit_do_not_bind");
+  if (!do_not_bind.ok()) {
+    return HardError(*decl, FormattedError::FromStatus(do_not_bind.status()));
+  }
+  if (*do_not_bind) {
+    const std::optional<absl::flat_hash_set<std::string>>&
+        do_not_bind_allowlist = invocation_.do_not_bind_allowlist_;
+    const clang::NamedDecl* named_decl =
+        clang::dyn_cast<clang::NamedDecl>(decl);
+    if (do_not_bind_allowlist.has_value() && named_decl) {
+      std::string decl_name = named_decl->getQualifiedNameAsString();
+      if (!do_not_bind_allowlist->contains(decl_name)) {
+        return HardError(
+            *decl, FormattedError::PrefixedStrCat(
+                       "CRUBIT_DO_NOT_BIND annotation on non-allowlisted decl",
+                       std::move(decl_name),
+                       "\nOmitted bindings must be pre-registered using "
+                       "`do_not_bind_allowlist`"));
+      }
+    }
+    return std::nullopt;
+  }
+
   for (auto& importer : decl_importers_) {
     std::optional<IR::Item> result = importer->ImportDecl(decl);
     if (result.has_value()) {
@@ -1331,7 +1355,7 @@ std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {
 
 absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
-  std::optional<Identifier> crubit_rust_name = CrubitRustName(named_decl);
+  std::optional<Identifier> crubit_rust_name = CrubitRustName(*named_decl);
   switch (named_decl->getDeclName().getNameKind()) {
     case clang::DeclarationName::Identifier: {
       auto name = std::string(named_decl->getName());

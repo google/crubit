@@ -137,16 +137,16 @@ std::optional<std::array<std::string, N>> GetKeyValues(
     std::array<absl::string_view, N> keys) {
   std::array<std::string, N> values;
   for (int i = 0; i < N; ++i) {
-    CHECK_OK(RequireSingleStringArgIfExists(&record_decl, keys[i]));
-    std::optional<std::string> value =
-        GetAnnotateArgAsStringByAttribute(&record_decl, keys[i]);
-    if (!value.has_value()) {
+    absl::StatusOr<std::optional<std::string>> value =
+        GetAnnotationWithStringArg(record_decl, keys[i]);
+    CHECK_OK(value);
+    if (!value->has_value()) {
       CHECK_EQ(i, 0) << "Missing value for key: '" << keys[i]
                      << "'; use the provided annotation to ensure that all "
                         "keys are present";
       return std::nullopt;
     }
-    values[i] = *std::move(value);
+    values[i] = **std::move(value);
   }
   return values;
 }

@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
 
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -41,6 +42,11 @@ struct IrFromCcOptions final {
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       crubit_features = {};
   absl::string_view driver_path = "rs_bindings_from_cc_driver";
+
+  // Note: an empty allowlist disables the allowlist, allowing usage of
+  // CRUBIT_DO_NOT_BIND with arbitrary symbols.
+  std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist =
+      std::nullopt;
 
   // Not an argument, just here to prevent the options struct from being
   // copied/moved with nontrivial lifetime implications.

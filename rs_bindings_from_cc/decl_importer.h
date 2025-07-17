@@ -8,9 +8,11 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
@@ -30,12 +32,15 @@ namespace crubit {
 // Top-level parameters as well as return value of an importer invocation.
 class Invocation {
  public:
-  Invocation(BazelLabel target, absl::Span<const HeaderName> public_headers,
-             const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets)
+  Invocation(
+      BazelLabel target, absl::Span<const HeaderName> public_headers,
+      const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets,
+      std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
                           clang::tidy::lifetimes::LifetimeAnnotationContext>()),
+        do_not_bind_allowlist_(std::move(do_not_bind_allowlist)),
         header_targets_(header_targets) {
     // Caller should verify that the inputs are non-empty.
     CHECK(!public_headers_.empty());
@@ -62,6 +67,8 @@ class Invocation {
 
   const std::shared_ptr<clang::tidy::lifetimes::LifetimeAnnotationContext>
       lifetime_context_;
+
+  const std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist_;
 
   // The main output of the import process
   IR ir_;

@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -46,6 +47,8 @@ struct CmdlineArgs {
 
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
       target_to_features;
+
+  std::optional<std::vector<std::string>> do_not_bind_allowlist;
 };
 
 // A valid command line invocation.

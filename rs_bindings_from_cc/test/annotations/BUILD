@@ -1,5 +1,9 @@
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
+load(
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    "golden_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -17,5 +21,33 @@ crubit_rust_test(
     srcs = ["must_bind_test.rs"],
     cc_deps = [
         ":must_bind",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "do_not_bind",
+    hdrs = ["do_not_bind.h"],
+    deps = [
+        "//support:annotations",
+        "//support/internal:bindings_support",
+    ],
+)
+
+golden_test(
+    name = "do_not_bind_golden_test",
+    basename = "do_not_bind",
+    cc_library = "do_not_bind",
+    golden_cc = "do_not_bind_api_impl.cc",
+    golden_rs = "do_not_bind_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "do_not_bind_test",
+    srcs = ["do_not_bind_test.rs"],
+    cc_deps = [
+        ":do_not_bind",
+    ],
+    deps = [
+        "@crate_index//:googletest",
     ],
 )

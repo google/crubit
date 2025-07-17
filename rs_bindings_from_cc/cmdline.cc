@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -87,6 +88,10 @@ ABSL_FLAG(std::vector<std::string>, srcs_to_scan_for_instantiations,
           std::vector<std::string>(),
           "[template instantiation mode only] all Rust source files of a crate "
           "for which we are instantiating templates.");
+ABSL_FLAG(std::optional<std::vector<std::string>>, do_not_bind_allowlist,
+          std::nullopt,
+          "List of decls that are allowed to be omitted from bindings."
+          " If omitted, `CRUBIT_DO_NOT_BIND` can be used on any decl.");
 ABSL_FLAG(std::string, instantiations_out, "",
           "[template instantiation mode only] output path for the JSON file "
           "with mapping from a template instantiation to a generated Rust "
@@ -228,7 +233,8 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .extra_rs_srcs = absl::GetFlag(FLAGS_extra_rs_srcs),
       .srcs_to_scan_for_instantiations =
           absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
-      .instantiations_out = absl::GetFlag(FLAGS_instantiations_out)};
+      .instantiations_out = absl::GetFlag(FLAGS_instantiations_out),
+      .do_not_bind_allowlist = absl::GetFlag(FLAGS_do_not_bind_allowlist)};
   absl::Status parse_environment_status =
       internal::ParseEnvironment(absl::GetFlag(FLAGS_environment), args);
 

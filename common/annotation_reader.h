@@ -68,8 +68,13 @@ absl::StatusOr<bool> GetExprAsBool(const clang::Expr& expr,
 absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
     const clang::Expr& expr, const clang::ASTContext& ast_context);
 
-std::optional<std::string> GetAnnotateArgAsStringByAttribute(
-    const clang::Decl* decl, absl::string_view attribute);
+// Returns the `string_arg` of [[clang::annotate(annotation_name, string_arg)]]
+// annotation on `decl`, or none if the annotation does not exist.
+//
+// Returns an error if there are conflicting annotations or if the argument is
+// not a single string.
+absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
+    const clang::Decl& decl, absl::string_view annotation_name);
 
 // Returns true if `decl` has an annotation with the given name.
 //
@@ -78,8 +83,6 @@ std::optional<std::string> GetAnnotateArgAsStringByAttribute(
 absl::StatusOr<bool> HasAnnotationWithoutArgs(
     const clang::Decl& decl, absl::string_view annotation_name);
 
-absl::Status RequireSingleStringArgIfExists(const clang::Decl* decl,
-                                            absl::string_view attribute);
 }  // namespace crubit
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_ANNOTATION_READER_H_

@@ -245,6 +245,7 @@ cc_library(
         "//lifetime_annotations",
         "//lifetime_annotations:type_lifetimes",
         "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/types:span",
