@@ -524,7 +524,7 @@ pub fn format_ty_for_cc<'tcx>(
 
             let mut sig_hir = None;
             if let Some(hir) = ty.hir(db) {
-                if let rustc_hir::TyKind::BareFn(bare_fn) = &hir.kind {
+                if let rustc_hir::TyKind::FnPtr(bare_fn) = &hir.kind {
                     sig_hir = Some(bare_fn.decl);
                 }
             }
@@ -885,8 +885,8 @@ pub enum BridgedTypeConversionInfo {
 /// Currently, that means that the type is pointer-sized, pointer-aligned,
 /// and has a initialized (non-union), scalar ABI.
 fn layout_pointer_like(from: &Layout, data_layout: &TargetDataLayout) -> bool {
-    from.size() == data_layout.pointer_size
-        && from.align().abi == data_layout.pointer_align.abi
+    from.size() == data_layout.pointer_size()
+        && from.align().abi == data_layout.pointer_align().abi
         && matches!(from.backend_repr(), BackendRepr::Scalar(Scalar::Initialized { .. }))
 }
 
