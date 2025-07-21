@@ -135,6 +135,35 @@ For each feature we use, we document the following:
     can switch back with a single flag flip. The only impact is a regression on
     error messages.
 
+### `super_let`
+
+*   **Crubit feature:** `wrapper`
+*   **Use case:** Less painfully awkward syntax for in-place initialization.
+*   **Exit strategy:** Migrate all calls like `let x = emplace!(y)` to
+    `emplace!{let x = y;}`.
+
+Without this feature, Crubit's `ctor.rs` crate must use a syntax like
+`emplace!{let x = ...}` to in-place initialize a pinned value using a C++
+constructor. It cannot use the same trick that `pin!()` used to use, because it
+needs to actually call a function to initialize the memory, and so lifetime
+extension would not apply: the memory, being passed to a function, would have
+its lifetime end at the end of the statement.
+
+This doesn't work great with rustfmt, which gives up inside the macro call. It
+is also confusing, and even *alarming*, and makes the `ctor.rs` crate look less
+like a set of ecosystem and vocabulary types/traits, and more like a language
+dialect.
+
+`super_let` allows us to instead write `let x = emplace!(...)`, with the macro
+expanding to a use of `super_let` to lifetime-extend the storage subexpression.
+
+### `allow_internal_unstable`
+
+*   **Crubit feature:** `wrapper`
+*   **Use case:** Allow callers of the super_let version of `emplace` not to
+    require the feature.
+*   **Exit strategy:** Add `feature(super_let)` to all callers.
+
 ## Unstable features **not** used by Crubit {#rejected}
 
 The following features are ones we'd hypothetically like to use, but do not.
@@ -250,29 +279,3 @@ We use custom attributes so that Crubit can round-trip a type correctly, or to
 implement automated bridging so that a C++ `Status` becomes a Rust `Result<(),
 StatusError>`, or what have you.
 
-### `super_let`
-
-Crubit's `ctor.rs` crate uses a syntax like `emplace!{let x = ...}` to in-place
-initialize a pinned value using a C++ constructor. It cannot use the same trick
-that `pin!()` does, because it needs to actually call a function to initialize
-the memory, and so lifetime extension would not apply: the memory, being passed
-to a function, would have its lifetime end at the end of the statement.
-
-`super_let` would allow us to instead write `let x = emplace!(...)`, with the
-macro expanding to a use of `super` to lifetime-extend the storage
-subexpression.
-
-For example:
-
-```rust
-macro_rules! emplace {
-    ($expr:expr) => {
-        super($crate::Slot::unsafe_new())
-            .unsafe_construct($expr)
-            .unsafe_as_pin_unchecked()
-    };
-}
-```
-
-Until `super_let` is stabilized, the outer `emplace!{}` works OK, it's just
-unexpected and causes code formatting problems.

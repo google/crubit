@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![cfg_attr(not(test), no_std)]
 #![feature(negative_impls)]
+#![allow(internal_features)] // allow_internal_unstable 🤔
+#![cfg_attr(feature = "unstable", feature(allow_internal_unstable, super_let))]
 //! Traits for memory management operations on wrapped C++ objects, inspired by
 //! moveit, pin-init, and the current in-place initialization proposal at
 //! https://hackmd.io/@aliceryhl/BJutRcPblx.
@@ -61,7 +63,7 @@
 //!
 //! ```
 //! fn swap(mut x: Pin<&mut CxxClass>, mut y: Pin<&mut CxxClass>) {
-//!  emplace!{ let mut tmp = mov!(x.as_mut()); }
+//!  let mut tmp = emplace!(mov!(x.as_mut()));
 //!  x.assign(mov!(y.as_mut()));
 //!  y.assign(mov!(tmp));
 //! }
@@ -160,7 +162,7 @@ pub type Infallible = core::convert::Infallible;
 /// The string constant for #[must_use] to describe why you must use a `Ctor`.
 macro_rules! must_use_ctor {
     () => {
-        "A Ctor is not invoked unless emplaced, using e.g. `emplace!{}`, or `Box::emplace()`."
+        "A Ctor is not invoked unless emplaced, using e.g. `emplace!()`, or `Box::emplace()`."
     };
 }
 
@@ -170,7 +172,7 @@ macro_rules! must_use_ctor_assign {
     ($name:literal) => {
         concat!(
             $name,
-            " is not invoked unless emplaced, using e.g. `emplace!{}`, or `Box::emplace()`, or",
+            " is not invoked unless emplaced, using e.g. `emplace!()`, or `Box::emplace()`, or",
             " unless assigned from, using `.assign()`."
         )
     };
@@ -210,12 +212,12 @@ pub unsafe trait Ctor: Sized {
     /// for example, these two snippets are equivalent:
     ///
     /// ```
-    /// emplace! { let x = y; }
+    /// let mut x = emplace!(y);
     /// x.mutating_method();
     /// ```
     ///
     /// ```
-    /// emplace! { let x = y.ctor_then(|mut inited| inited.mutating_method()); Ok(()) }
+    /// let x = emplace!(y.ctor_then(|mut inited| {inited.mutating_method()); Ok(())}));
     /// ```
     fn ctor_then<F>(self, f: F) -> CtorThen<Self, F>
     where
@@ -614,24 +616,23 @@ impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> !Unpin for
 // ========
 //
 // The emplace!{} macro is now a little simpler, as it doesn't require StackBox
-// in the public interface: it can use &mut.
+// in the public interface: it can use &mut. It also uses `super_let` to avoid
+// the awkward sytnax otherwise required.
 
 /// Emplace a constructor into a local or temporary.
 ///
-/// Syntax: `emplace! { let mut varname = expr() }`, where `expr()` evaluates to
-/// a `Ctor<Output=T>`. `varname` will be a `Pin<&mut T>`.
+/// This can be used similarly to the `pin!()` macro: `let x = emplace!(some_ctor)`, where
+/// `some_ctor` evaluates to a `Ctor<Output=T>`. `x` will be a `Pin<&mut T>`.
 ///
 /// `emplace!` only works with non-failable `Ctor`s. See `try_emplace` for
 /// failable `Ctor`s.
 ///
-/// If the emplaced value will just be used for the duration of one statement,
-/// the `emplace!(ctor)` syntax can be used instead, to emplace the ctor into a
-/// temporary. e.g. `foo(emplace!(ctor))` to pass a pinned reference to the
-/// emplaced value to a function.
+/// NOTE: The `let x = emplace!(ctor)` syntax uses the super_let feature. To avoid this, an
+/// alternate syntax is `emplace! {let x = some_ctor;}`.
 #[macro_export]
 macro_rules! emplace {
     ($expr:expr) => {
-        $crate::Slot::unsafe_new().unsafe_construct($expr).unsafe_as_pin_unchecked()
+        $crate::internal_emplace_expr!($expr)
     };
     (@emplace_one let [$($mut_:tt)?] $var:ident [$($type_:tt)*]= $expr:expr;) => {
         let mut $var = $crate::Slot::unsafe_new();
@@ -658,6 +659,33 @@ macro_rules! emplace {
     (let $var:ident = $expr:expr; $($remaining_lets:tt)*) => {
         $crate::emplace! {@emplace_one let [] $var [] = $expr;}
         $crate::emplace! {$($remaining_lets)*};
+    };
+}
+
+// Needs to be a separate macro to isolate the cfg-guard, which can only apply to the
+// entire macro_rules.
+
+#[macro_export]
+#[doc(hidden)]
+#[cfg(not(feature = "unstable"))]
+macro_rules! internal_emplace_expr {
+    ($expr:expr) => {
+        $crate::Slot::unsafe_new().unsafe_construct($expr).unsafe_as_pin_unchecked()
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+#[cfg(feature = "unstable")]
+#[allow_internal_unstable(super_let)]
+// `super` gets removed by rustfmt, apparently.
+#[rustfmt::skip]
+macro_rules! internal_emplace_expr {
+    ($expr:expr) => {
+        {
+            super let mut slot = $crate::Slot::unsafe_new();
+            slot.unsafe_construct($expr).unsafe_as_pin_unchecked()
+        }
     };
 }
 
@@ -689,7 +717,7 @@ macro_rules! emplace {
 ///     slot.replace(42)
 /// }
 ///
-/// emplace! {let slot = Slot::uninit(); }
+/// let slot = emplace! (Slot::uninit());
 /// let rv = slotted_return(slot);
 /// assert_eq!(*rv, 42);
 /// ```
@@ -700,7 +728,7 @@ macro_rules! emplace {
 ///     slot.replace(42);
 /// }
 ///
-/// emplace! {let mut slot = Slot::uninit(); }
+/// let mut slot = emplace!(Slot::uninit());
 /// slotted_out_param(slot.as_mut());
 /// assert_eq!(*slot.as_opt().unwrap(), 42);
 /// ```
@@ -940,7 +968,7 @@ pub unsafe trait RecursivelyPinned {
     /// While construction using `ctor!()` works fine:
     ///
     /// ```ignore
-    /// emplace!{let x = ctor!(CtorOnly {field: 3})}
+    /// let x = emplace!(ctor!(CtorOnly {field: 3}));
     /// ```
     ///
     /// The size and layout of `CtorInitializedFields` is ignored; it only
@@ -991,7 +1019,7 @@ pub trait PinnedDrop {
 /// }
 ///
 /// // Actually invoke the Ctor to create a new MyStruct:
-/// emplace! { let mut my_struct = MyStruct::new(); }
+/// let mut my_struct = emplace!(MyStruct::new());
 /// ```
 #[macro_export]
 macro_rules! ctor {
@@ -1394,6 +1422,15 @@ mod test {
 
     // googletest prelude overwrites `Result` :(
     pub use core::result::Result;
+
+    /// Only really need one test for the new super-let syntax, as it uses the same
+    /// building blocks as the old syntax.
+    #[gtest]
+    #[cfg(feature = "unstable")]
+    fn test_emplace_super_let() {
+        let x = emplace!(u32::ctor_new(()));
+        assert_eq!(*x, 0);
+    }
 
     #[gtest]
     fn test_default_rust_type() {

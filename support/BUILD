@@ -16,9 +16,10 @@ exports_files(
 rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
+    crate_features = ["unstable"],
     proc_macro_deps = [":ctor_proc_macros"],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=negative_impls"],
+    rustc_flags = ["-Zallow-features=allow_internal_unstable,negative_impls,super_let"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = ["//:__subpackages__"],
 )
@@ -80,11 +81,8 @@ crubit_rust_test(
 
 rust_test(
     name = "ctor_test",
-    srcs = ["ctor.rs"],
+    crate = ":ctor",
     proc_macro_deps = [":ctor_proc_macros"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=negative_impls"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "@crate_index//:googletest",
     ],
