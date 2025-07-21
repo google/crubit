@@ -6,13 +6,7 @@
 // //rs_bindings_from_cc/test/golden:operators_cc
 
 #![rustfmt::skip]
-#![feature(
-    allocator_api,
-    cfg_sanitize,
-    custom_inner_attributes,
-    impl_trait_in_assoc_type,
-    negative_impls
-)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -35,37 +29,37 @@ unsafe impl ::cxx::ExternType for AddableConstMember {
     type Id = ::cxx::type_id!("AddableConstMember");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableConstMember"),
-    crate::AddableConstMember
-);
 
-impl Default for AddableConstMember {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableConstMemberC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableConstMember::AddableConstMember':
+// Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __this (parameter #0): references are not supported)
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMember> for &'a crate::AddableConstMember {
-    type Output = crate::AddableConstMember;
-    #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableConstMember) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::AddableConstMember>::uninit();
-            crate::detail::__rust_thunk___ZNK18AddableConstMemberplERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableConstMember::AddableConstMember':
+// Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableConstMember::AddableConstMember':
+// Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableConstMember::operator=':
+// Can't generate bindings for AddableConstMember::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableConstMember::operator=':
+// Can't generate bindings for AddableConstMember::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableConstMember::operator+':
+// Can't generate bindings for AddableConstMember::operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator+ (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator+ (the type of rhs (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
@@ -82,39 +76,37 @@ unsafe impl ::cxx::ExternType for AddableNonConstMember {
     type Id = ::cxx::type_id!("AddableNonConstMember");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableNonConstMember"),
-    crate::AddableNonConstMember
-);
 
-impl Default for AddableNonConstMember {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableNonConstMember::AddableNonConstMember':
+// Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __this (parameter #0): references are not supported)
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::AddableNonConstMember>
-    for &'a mut crate::AddableNonConstMember
-{
-    type Output = crate::AddableNonConstMember;
-    #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableNonConstMember) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::AddableNonConstMember>::uninit();
-            crate::detail::__rust_thunk___ZN21AddableNonConstMemberplERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableNonConstMember::AddableNonConstMember':
+// Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableNonConstMember::AddableNonConstMember':
+// Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableNonConstMember::operator=':
+// Can't generate bindings for AddableNonConstMember::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableNonConstMember::operator=':
+// Can't generate bindings for AddableNonConstMember::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableNonConstMember::operator+':
+// Can't generate bindings for AddableNonConstMember::operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator+ (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator+ (the type of rhs (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
@@ -131,34 +123,37 @@ unsafe impl ::cxx::ExternType for AddableFriend {
     type Id = ::cxx::type_id!("AddableFriend");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("AddableFriend"), crate::AddableFriend);
 
-impl Default for AddableFriend {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13AddableFriendC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFriend::AddableFriend':
+// Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __this (parameter #0): references are not supported)
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFriend {
-    type Output = crate::AddableFriend;
-    #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableFriend) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::AddableFriend>::uninit();
-            crate::detail::__rust_thunk___ZplRK13AddableFriendS1_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFriend::AddableFriend':
+// Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFriend::AddableFriend':
+// Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFriend::operator=':
+// Can't generate bindings for AddableFriend::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFriend::operator=':
+// Can't generate bindings for AddableFriend::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'operator+':
+// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of rhs (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -172,21 +167,32 @@ unsafe impl ::cxx::ExternType for AddableFreeByConstRef {
     type Id = ::cxx::type_id!("AddableFreeByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableFreeByConstRef"),
-    crate::AddableFreeByConstRef
-);
 
-impl Default for AddableFreeByConstRef {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN21AddableFreeByConstRefC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFreeByConstRef::AddableFreeByConstRef':
+// Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByConstRef::AddableFreeByConstRef':
+// Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByConstRef::AddableFreeByConstRef':
+// Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByConstRef::operator=':
+// Can't generate bindings for AddableFreeByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByConstRef::operator=':
+// Can't generate bindings for AddableFreeByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -200,21 +206,32 @@ unsafe impl ::cxx::ExternType for AddableFreeByMutRef {
     type Id = ::cxx::type_id!("AddableFreeByMutRef");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableFreeByMutRef"),
-    crate::AddableFreeByMutRef
-);
 
-impl Default for AddableFreeByMutRef {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN19AddableFreeByMutRefC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFreeByMutRef::AddableFreeByMutRef':
+// Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByMutRef::AddableFreeByMutRef':
+// Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByMutRef::AddableFreeByMutRef':
+// Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByMutRef::operator=':
+// Can't generate bindings for AddableFreeByMutRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByMutRef::operator=':
+// Can't generate bindings for AddableFreeByMutRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -228,21 +245,32 @@ unsafe impl ::cxx::ExternType for AddableFreeByValue {
     type Id = ::cxx::type_id!("AddableFreeByValue");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableFreeByValue"),
-    crate::AddableFreeByValue
-);
 
-impl Default for AddableFreeByValue {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableFreeByValueC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFreeByValue::AddableFreeByValue':
+// Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByValue::AddableFreeByValue':
+// Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByValue::AddableFreeByValue':
+// Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByValue::operator=':
+// Can't generate bindings for AddableFreeByValue::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByValue::operator=':
+// Can't generate bindings for AddableFreeByValue::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -256,57 +284,42 @@ unsafe impl ::cxx::ExternType for AddableFreeByRValueRef {
     type Id = ::cxx::type_id!("AddableFreeByRValueRef");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableFreeByRValueRef"),
-    crate::AddableFreeByRValueRef
-);
 
-impl Default for AddableFreeByRValueRef {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddableFreeByRValueRefC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFreeByRValueRef::AddableFreeByRValueRef':
+// Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __this (parameter #0): references are not supported)
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::AddableFreeByConstRef>
-    for &'a crate::AddableFreeByConstRef
-{
-    type Output = crate::AddableFreeByConstRef;
-    #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableFreeByConstRef) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::AddableFreeByConstRef>::uninit();
-            crate::detail::__rust_thunk___ZplRK21AddableFreeByConstRefS1_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFreeByRValueRef::AddableFreeByRValueRef':
+// Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Add<&'b mut crate::AddableFreeByMutRef>
-    for &'a mut crate::AddableFreeByMutRef
-{
-    type Output = crate::AddableFreeByMutRef;
-    #[inline(always)]
-    fn add(self, rhs: &'b mut crate::AddableFreeByMutRef) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::AddableFreeByMutRef>::uninit();
-            crate::detail::__rust_thunk___ZplR19AddableFreeByMutRefS0_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableFreeByRValueRef::AddableFreeByRValueRef':
+// Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByRValueRef::operator=':
+// Can't generate bindings for AddableFreeByRValueRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableFreeByRValueRef::operator=':
+// Can't generate bindings for AddableFreeByRValueRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'operator+':
+// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of rhs (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'operator+':
+// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of rhs (parameter #1): references are not supported)
 
 impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
     type Output = crate::AddableFreeByValue;
@@ -339,34 +352,40 @@ unsafe impl ::cxx::ExternType for Overloaded {
     type Id = ::cxx::type_id!("Overloaded");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Overloaded"), crate::Overloaded);
 
-impl Default for Overloaded {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10OverloadedC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'Overloaded::Overloaded':
+// Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __this (parameter #0): references are not supported)
 
-impl<'a> ::core::ops::Add<::core::ffi::c_int> for &'a crate::Overloaded {
-    type Output = ::core::ffi::c_int;
-    #[inline(always)]
-    fn add(self, rhs: ::core::ffi::c_int) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplRK10Overloadedi(self, rhs) }
-    }
-}
+// Error while generating bindings for function 'Overloaded::Overloaded':
+// Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'a> ::core::ops::Add<::core::ffi::c_uint> for &'a crate::Overloaded {
-    type Output = ::core::ffi::c_int;
-    #[inline(always)]
-    fn add(self, rhs: ::core::ffi::c_uint) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplRK10Overloadedj(self, rhs) }
-    }
-}
+// Error while generating bindings for function 'Overloaded::Overloaded':
+// Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'Overloaded::operator=':
+// Can't generate bindings for Overloaded::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'Overloaded::operator=':
+// Can't generate bindings for Overloaded::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'operator+':
+// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'operator+':
+// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -380,21 +399,32 @@ unsafe impl ::cxx::ExternType for IncompatibleLHS {
     type Id = ::cxx::type_id!("IncompatibleLHS");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("IncompatibleLHS"),
-    crate::IncompatibleLHS
-);
 
-impl Default for IncompatibleLHS {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN15IncompatibleLHSC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'IncompatibleLHS::IncompatibleLHS':
+// Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'IncompatibleLHS::IncompatibleLHS':
+// Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'IncompatibleLHS::IncompatibleLHS':
+// Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'IncompatibleLHS::operator=':
+// Can't generate bindings for IncompatibleLHS::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'IncompatibleLHS::operator=':
+// Can't generate bindings for IncompatibleLHS::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+':
 // Non-record-nor-reference operator parameters are not yet supported, found ::core::ffi::c_int
@@ -417,29 +447,37 @@ unsafe impl ::cxx::ExternType for AddableReturnsVoid {
     type Id = ::cxx::type_id!("AddableReturnsVoid");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableReturnsVoid"),
-    crate::AddableReturnsVoid
-);
 
-impl Default for AddableReturnsVoid {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddableReturnsVoid::AddableReturnsVoid':
+// Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __this (parameter #0): references are not supported)
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::AddableReturnsVoid {
-    type Output = ();
-    #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableReturnsVoid) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZNK18AddableReturnsVoidplERKS_(self, rhs) }
-    }
-}
+// Error while generating bindings for function 'AddableReturnsVoid::AddableReturnsVoid':
+// Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableReturnsVoid::AddableReturnsVoid':
+// Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableReturnsVoid::operator=':
+// Can't generate bindings for AddableReturnsVoid::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableReturnsVoid::operator=':
+// Can't generate bindings for AddableReturnsVoid::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddableReturnsVoid::operator+':
+// Can't generate bindings for AddableReturnsVoid::operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator+ (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator+ (the type of rhs (parameter #1): references are not supported)
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
@@ -456,80 +494,26 @@ unsafe impl ::cxx::ExternType for AddableConstMemberNonunpin {
     type Id = ::cxx::type_id!("AddableConstMemberNonunpin");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddableConstMemberNonunpin"),
-    crate::AddableConstMemberNonunpin
-);
 
-impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-                    dest as *mut ::core::ffi::c_void,
-                );
-            })
-        }
-    }
-}
+// Error while generating bindings for function 'AddableConstMemberNonunpin::AddableConstMemberNonunpin':
+// Can't generate bindings for AddableConstMemberNonunpin::AddableConstMemberNonunpin, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::AddableConstMemberNonunpin (the type of __this (parameter #0): references are not supported)
 
-impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let mut __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-            })
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
+// Error while generating bindings for function 'AddableConstMemberNonunpin::AddableConstMemberNonunpin':
+// Can't generate bindings for AddableConstMemberNonunpin::AddableConstMemberNonunpin, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::AddableConstMemberNonunpin (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::AddableConstMemberNonunpin (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_(self, __param_0);
-        }
-    }
-}
+// Error while generating bindings for function 'AddableConstMemberNonunpin::operator=':
+// Can't generate bindings for AddableConstMemberNonunpin::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::AddableConstMemberNonunpin>
-    for &'a crate::AddableConstMemberNonunpin
-{
-    type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin, Error = ::ctor::Infallible>
-        + use<'a, 'b>;
-    #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableConstMemberNonunpin) -> Self::Output {
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut crate::AddableConstMemberNonunpin| {
-                crate::detail::__rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
-                    dest as *mut ::core::ffi::c_void,
-                    self,
-                    rhs,
-                );
-            })
-        }
-    }
-}
+// Error while generating bindings for function 'AddableConstMemberNonunpin::operator+':
+// Can't generate bindings for AddableConstMemberNonunpin::operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator+ (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator+ (the type of rhs (parameter #1): references are not supported)
 
 impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     #[inline(always)]
@@ -550,30 +534,36 @@ unsafe impl ::cxx::ExternType for AddAssignMemberInt {
     type Id = ::cxx::type_id!("AddAssignMemberInt");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignMemberInt"),
-    crate::AddAssignMemberInt
-);
 
-impl Default for AddAssignMemberInt {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignMemberInt::AddAssignMemberInt':
+// Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __this (parameter #0): references are not supported)
 
-impl ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignMemberInt {
-    #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18AddAssignMemberIntpLEi(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignMemberInt::AddAssignMemberInt':
+// Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberInt::AddAssignMemberInt':
+// Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberInt::operator=':
+// Can't generate bindings for AddAssignMemberInt::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberInt::operator=':
+// Can't generate bindings for AddAssignMemberInt::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberInt::operator+=':
+// Can't generate bindings for AddAssignMemberInt::operator+=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator+= (the type of __this (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -587,30 +577,38 @@ unsafe impl ::cxx::ExternType for AddAssignMemberByConstRef {
     type Id = ::cxx::type_id!("AddAssignMemberByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignMemberByConstRef"),
-    crate::AddAssignMemberByConstRef
-);
 
-impl Default for AddAssignMemberByConstRef {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
+// Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __this (parameter #0): references are not supported)
 
-impl<'b> ::core::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
-    #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
+// Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
+// Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberByConstRef::operator=':
+// Can't generate bindings for AddAssignMemberByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberByConstRef::operator=':
+// Can't generate bindings for AddAssignMemberByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignMemberByConstRef::operator+=':
+// Can't generate bindings for AddAssignMemberByConstRef::operator+=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator+= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator+= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator+= (the type of rhs (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -624,21 +622,32 @@ unsafe impl ::cxx::ExternType for AddAssignFreeByConstRef {
     type Id = ::cxx::type_id!("AddAssignFreeByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignFreeByConstRef"),
-    crate::AddAssignFreeByConstRef
-);
 
-impl Default for AddAssignFreeByConstRef {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
+// Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
+// Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
+// Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFreeByConstRef::operator=':
+// Can't generate bindings for AddAssignFreeByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFreeByConstRef::operator=':
+// Can't generate bindings for AddAssignFreeByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 impl ::core::ops::AddAssign<&Self> for crate::AddAssignFreeByConstRef {
     #[inline(always)]
@@ -661,30 +670,37 @@ unsafe impl ::cxx::ExternType for AddAssignFreeByValue {
     type Id = ::cxx::type_id!("AddAssignFreeByValue");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignFreeByValue"),
-    crate::AddAssignFreeByValue
-);
 
-impl Default for AddAssignFreeByValue {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignFreeByValue::AddAssignFreeByValue':
+// Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __this (parameter #0): references are not supported)
 
-impl ::core::ops::AddAssign<Self> for crate::AddAssignFreeByValue {
-    #[inline(always)]
-    fn add_assign<'a>(&'a mut self, mut rhs: Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZpLR20AddAssignFreeByValueS_(self, &mut rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignFreeByValue::AddAssignFreeByValue':
+// Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFreeByValue::AddAssignFreeByValue':
+// Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFreeByValue::operator=':
+// Can't generate bindings for AddAssignFreeByValue::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFreeByValue::operator=':
+// Can't generate bindings for AddAssignFreeByValue::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'operator+=':
+// Can't generate bindings for operator+=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (the type of lhs (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -698,21 +714,32 @@ unsafe impl ::cxx::ExternType for AddAssignFriendByConstRef {
     type Id = ::cxx::type_id!("AddAssignFriendByConstRef");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignFriendByConstRef"),
-    crate::AddAssignFriendByConstRef
-);
 
-impl Default for AddAssignFriendByConstRef {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
+// Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
+// Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
+// Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFriendByConstRef::operator=':
+// Can't generate bindings for AddAssignFriendByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFriendByConstRef::operator=':
+// Can't generate bindings for AddAssignFriendByConstRef::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 impl ::core::ops::AddAssign<&Self> for crate::AddAssignFriendByConstRef {
     #[inline(always)]
@@ -735,30 +762,37 @@ unsafe impl ::cxx::ExternType for AddAssignFriendByValue {
     type Id = ::cxx::type_id!("AddAssignFriendByValue");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignFriendByValue"),
-    crate::AddAssignFriendByValue
-);
 
-impl Default for AddAssignFriendByValue {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignFriendByValue::AddAssignFriendByValue':
+// Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __this (parameter #0): references are not supported)
 
-impl ::core::ops::AddAssign<Self> for crate::AddAssignFriendByValue {
-    #[inline(always)]
-    fn add_assign<'a>(&'a mut self, mut rhs: Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, &mut rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignFriendByValue::AddAssignFriendByValue':
+// Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFriendByValue::AddAssignFriendByValue':
+// Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFriendByValue::operator=':
+// Can't generate bindings for AddAssignFriendByValue::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignFriendByValue::operator=':
+// Can't generate bindings for AddAssignFriendByValue::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'operator+=':
+// Can't generate bindings for operator+=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (the type of lhs (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -772,41 +806,36 @@ unsafe impl ::cxx::ExternType for AddAssignProhibitedConstMember {
     type Id = ::cxx::type_id!("AddAssignProhibitedConstMember");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignProhibitedConstMember"),
-    crate::AddAssignProhibitedConstMember
-);
 
-impl Default for AddAssignProhibitedConstMember {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
-                &raw mut tmp as *mut _,
-            );
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
+// Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __this (parameter #0): references are not supported)
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
-)]
-pub trait BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi {}
-impl<'error> ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignProhibitedConstMember
-where
-    &'error (): BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi,
-{
-    #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
-    }
-}
+// Error while generating bindings for function 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
+// Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
+// Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignProhibitedConstMember::operator=':
+// Can't generate bindings for AddAssignProhibitedConstMember::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignProhibitedConstMember::operator=':
+// Can't generate bindings for AddAssignProhibitedConstMember::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignProhibitedConstMember::operator+=':
+// Can't generate bindings for AddAssignProhibitedConstMember::operator+=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator+= (the type of __this (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -820,41 +849,36 @@ unsafe impl ::cxx::ExternType for AddAssignProhibitedFriendConstLhs {
     type Id = ::cxx::type_id!("AddAssignProhibitedFriendConstLhs");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AddAssignProhibitedFriendConstLhs"),
-    crate::AddAssignProhibitedFriendConstLhs
-);
 
-impl Default for AddAssignProhibitedFriendConstLhs {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(
-                &raw mut tmp as *mut _,
-            );
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __this (parameter #0): references are not supported)
 
-#[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedFriendConstLhs"
-)]
-pub trait BindingFailedFor_ZpLRK33AddAssignProhibitedFriendConstLhsi {}
-impl<'error> ::core::ops::AddAssign<::core::ffi::c_int> for crate::AddAssignProhibitedFriendConstLhs
-where
-    &'error (): BindingFailedFor_ZpLRK33AddAssignProhibitedFriendConstLhsi,
-{
-    #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
-    }
-}
+// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::operator=':
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::operator=':
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'operator+=':
+// Can't generate bindings for operator+=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (the type of lhs (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -868,444 +892,175 @@ unsafe impl ::cxx::ExternType for ManyOperators {
     type Id = ::cxx::type_id!("ManyOperators");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("ManyOperators"), crate::ManyOperators);
 
-impl Default for ManyOperators {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::ManyOperators':
+// Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __this (parameter #0): references are not supported)
 
-impl ManyOperators {
-    #[inline(always)]
-    pub fn unary_plus<'a>(&'a self) -> crate::ManyOperators {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::ManyOperators':
+// Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn neg(self) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsngEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::ManyOperators':
+// Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn not(self) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsntEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator=':
+// Can't generate bindings for ManyOperators::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'ManyOperators::operator=':
+// Can't generate bindings for ManyOperators::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'ManyOperators::operator+':
+// Can't generate bindings for ManyOperators::operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+ (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'ManyOperators::operator-':
+// Can't generate bindings for ManyOperators::operator-, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator- (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'ManyOperators::operator!':
+// Can't generate bindings for ManyOperators::operator!, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator! (the type of __this (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator~':
 // Bindings for this kind of operator (operator ~ with 1 parameter(s)) are not supported
 
-impl<'a, 'b> ::core::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn add(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsplERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator+':
+// Can't generate bindings for ManyOperators::operator+, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+ (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+ (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn sub(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsmiERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator-':
+// Can't generate bindings for ManyOperators::operator-, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator- (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator- (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn mul(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsmlERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator*':
+// Can't generate bindings for ManyOperators::operator*, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator* (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator* (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn div(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsdvERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator/':
+// Can't generate bindings for ManyOperators::operator/, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/ (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/ (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn rem(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsrmERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator%':
+// Can't generate bindings for ManyOperators::operator%, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator% (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator% (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn bitand(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsanERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator&':
+// Can't generate bindings for ManyOperators::operator&, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator& (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator& (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn bitor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsorERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator|':
+// Can't generate bindings for ManyOperators::operator|, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator| (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator| (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn bitxor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorseoERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator^':
+// Can't generate bindings for ManyOperators::operator^, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^ (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^ (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn shl(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorslsERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator<<':
+// Can't generate bindings for ManyOperators::operator<<, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<< (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<< (the type of rhs (parameter #1): references are not supported)
 
-impl<'a, 'b> ::core::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
-    type Output = crate::ManyOperators;
-    #[inline(always)]
-    fn shr(self, rhs: &'b crate::ManyOperators) -> Self::Output {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<crate::ManyOperators>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorsrsERKS_(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-                rhs,
-            );
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator>>':
+// Can't generate bindings for ManyOperators::operator>>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>> (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>> (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::AddAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorspLERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator+=':
+// Can't generate bindings for ManyOperators::operator+=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::SubAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn sub_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsmIERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator-=':
+// Can't generate bindings for ManyOperators::operator-=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator-= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator-= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator-= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::MulAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn mul_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsmLERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator*=':
+// Can't generate bindings for ManyOperators::operator*=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator*= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator*= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator*= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::DivAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn div_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsdVERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator/=':
+// Can't generate bindings for ManyOperators::operator/=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::RemAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn rem_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsrMERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator%=':
+// Can't generate bindings for ManyOperators::operator%=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator%= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator%= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator%= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::BitAndAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn bitand_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsaNERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator&=':
+// Can't generate bindings for ManyOperators::operator&=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator&= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator&= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator&= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::BitOrAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn bitor_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsoRERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator|=':
+// Can't generate bindings for ManyOperators::operator|=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator|= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator|= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator|= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::BitXorAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn bitxor_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorseOERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator^=':
+// Can't generate bindings for ManyOperators::operator^=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::ShlAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn shl_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorslSERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator<<=':
+// Can't generate bindings for ManyOperators::operator<<=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<<= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<<= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<<= (the type of rhs (parameter #1): references are not supported)
 
-impl<'b> ::core::ops::ShrAssign<&'b Self> for ManyOperators {
-    #[inline(always)]
-    fn shr_assign<'a>(&'a mut self, rhs: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN13ManyOperatorsrSERKS_(self, rhs);
-        }
-    }
-}
+// Error while generating bindings for function 'ManyOperators::operator>>=':
+// Can't generate bindings for ManyOperators::operator>>=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>>= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>>= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>>= (the type of rhs (parameter #1): references are not supported)
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableConstMemberC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK18AddableConstMemberplERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::AddableConstMember,
-            rhs: &'b crate::AddableConstMember,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableNonConstMemberplERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a mut crate::AddableNonConstMember,
-            rhs: &'b crate::AddableNonConstMember,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13AddableFriendC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZplRK13AddableFriendS1_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            lhs: &'a crate::AddableFriend,
-            rhs: &'b crate::AddableFriend,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN21AddableFreeByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN19AddableFreeByMutRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableFreeByValueC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN22AddableFreeByRValueRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZplRK21AddableFreeByConstRefS1_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            lhs: &'a crate::AddableFreeByConstRef,
-            rhs: &'b crate::AddableFreeByConstRef,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZplR19AddableFreeByMutRefS0_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            lhs: &'a mut crate::AddableFreeByMutRef,
-            rhs: &'b mut crate::AddableFreeByMutRef,
-        );
         pub(crate) unsafe fn __rust_thunk___Zpl18AddableFreeByValueS_(
             __return: *mut ::core::ffi::c_void,
             lhs: &mut crate::AddableFreeByValue,
             rhs: &mut crate::AddableFreeByValue,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1Ev(__this: *mut ::core::ffi::c_void);
-        #[link_name = "_ZplRK10Overloadedi"]
-        pub(crate) unsafe fn __rust_thunk___ZplRK10Overloadedi<'a>(
-            lhs: &'a crate::Overloaded,
-            rhs: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
-        #[link_name = "_ZplRK10Overloadedj"]
-        pub(crate) unsafe fn __rust_thunk___ZplRK10Overloadedj<'a>(
-            lhs: &'a crate::Overloaded,
-            rhs: ::core::ffi::c_uint,
-        ) -> ::core::ffi::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN15IncompatibleLHSC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddableReturnsVoidC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        #[link_name = "_ZNK18AddableReturnsVoidplERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZNK18AddableReturnsVoidplERKS_<'a, 'b>(
-            __this: &'a crate::AddableReturnsVoid,
-            rhs: &'b crate::AddableReturnsVoid,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: &'b crate::AddableConstMemberNonunpin,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
-            __param_0: &'b crate::AddableConstMemberNonunpin,
-        ) -> ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>;
-        pub(crate) unsafe fn __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::AddableConstMemberNonunpin,
-            rhs: &'b crate::AddableConstMemberNonunpin,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        #[link_name = "_ZN18AddAssignMemberIntpLEi"]
-        pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
-            __this: &'a mut crate::AddAssignMemberInt,
-            rhs: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        #[link_name = "_ZN25AddAssignMemberByConstRefpLERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_<'a, 'b>(
-            __this: &'a mut crate::AddAssignMemberByConstRef,
-            rhs: &'b crate::AddAssignMemberByConstRef,
-        ) -> &'a mut crate::AddAssignMemberByConstRef;
-        pub(crate) unsafe fn __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
         );
         #[link_name = "_ZpLR23AddAssignFreeByConstRefRKS_"]
         pub(crate) unsafe fn __rust_thunk___ZpLR23AddAssignFreeByConstRefRKS_<'__return_lifetime>(
             lhs: &mut crate::AddAssignFreeByConstRef,
             rhs: &crate::AddAssignFreeByConstRef,
         ) -> &'__return_lifetime mut crate::AddAssignFreeByConstRef;
-        pub(crate) unsafe fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'a>(
-            lhs: &'a mut crate::AddAssignFreeByValue,
-            rhs: &mut crate::AddAssignFreeByValue,
-        ) -> &'a mut crate::AddAssignFreeByValue;
-        pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
         #[link_name = "_ZpLR25AddAssignFriendByConstRefRKS_"]
         pub(crate) unsafe fn __rust_thunk___ZpLR25AddAssignFriendByConstRefRKS_<
             '__return_lifetime,
@@ -1313,132 +1068,6 @@ mod detail {
             lhs: &mut crate::AddAssignFriendByConstRef,
             rhs: &crate::AddAssignFriendByConstRef,
         ) -> &'__return_lifetime mut crate::AddAssignFriendByConstRef;
-        pub(crate) unsafe fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'a>(
-            lhs: &'a mut crate::AddAssignFriendByValue,
-            rhs: &mut crate::AddAssignFriendByValue,
-        ) -> &'a mut crate::AddAssignFriendByValue;
-        pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorspsEv<'a>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsntEv<'a>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsplERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsmiERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsmlERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsdvERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsrmERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsanERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsorERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorseoERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorslsERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK13ManyOperatorsrsERKS_<'a, 'b>(
-            __return: *mut ::core::ffi::c_void,
-            __this: &'a crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        );
-        #[link_name = "_ZN13ManyOperatorspLERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorspLERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorsmIERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsmIERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorsmLERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsmLERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorsdVERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsdVERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorsrMERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsrMERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorsaNERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsaNERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorsoRERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsoRERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorseOERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorseOERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorslSERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorslSERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
-        #[link_name = "_ZN13ManyOperatorsrSERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN13ManyOperatorsrSERKS_<'a, 'b>(
-            __this: &'a mut crate::ManyOperators,
-            rhs: &'b crate::ManyOperators,
-        ) -> &'a mut crate::ManyOperators;
     }
 }
 

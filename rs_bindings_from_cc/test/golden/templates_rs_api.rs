@@ -26,27 +26,48 @@ unsafe impl ::cxx::ExternType for DifferentScope {
     type Id = ::cxx::type_id!("DifferentScope");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("DifferentScope"), crate::DifferentScope);
 
-impl Default for DifferentScope {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN14DifferentScopeC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'DifferentScope::DifferentScope':
+// Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'DifferentScope::DifferentScope':
+// Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'DifferentScope::DifferentScope':
+// Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'DifferentScope::operator=':
+// Can't generate bindings for DifferentScope::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'DifferentScope::operator=':
+// Can't generate bindings for DifferentScope::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 pub mod test_namespace_bindings {
     // Error while generating bindings for class 'test_namespace_bindings::MyTemplate':
     // Class templates are not supported yet
 
-    pub type MyTypeAlias = crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
+    // Error while generating bindings for type alias 'MyTypeAlias':
+    // Can't generate bindings for MyTypeAlias, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTypeAlias (error: Can't generate bindings for test_namespace_bindings::MyTemplate<int>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation))
 
-    pub type OtherTypeAliasInSameTarget =
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
+    // Error while generating bindings for type alias 'OtherTypeAliasInSameTarget':
+    // Can't generate bindings for OtherTypeAliasInSameTarget, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for OtherTypeAliasInSameTarget (error: Can't generate bindings for test_namespace_bindings::MyTemplate<int>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation))
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
@@ -60,38 +81,59 @@ pub mod test_namespace_bindings {
         type Id = ::cxx::type_id!("test_namespace_bindings :: TemplateParam");
         type Kind = ::cxx::kind::Trivial;
     }
-    forward_declare::unsafe_define!(
-        forward_declare::symbol!("test_namespace_bindings :: TemplateParam"),
-        crate::test_namespace_bindings::TemplateParam
-    );
 
-    impl Default for TemplateParam {
-        #[inline(always)]
-        fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
-                    &raw mut tmp as *mut _,
-                );
-                tmp.assume_init()
-            }
-        }
-    }
+    // Error while generating bindings for function 'TemplateParam::TemplateParam':
+    // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
 
-    pub type TemplateWithStructTemplateParam =
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
+    // Error while generating bindings for function 'TemplateParam::TemplateParam':
+    // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
 
-    pub type ParamFromDifferentScope =
-        crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
+    // Error while generating bindings for function 'TemplateParam::TemplateParam':
+    // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'TemplateParam::operator=':
+    // Can't generate bindings for TemplateParam::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'TemplateParam::operator=':
+    // Can't generate bindings for TemplateParam::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for type alias 'TemplateWithStructTemplateParam':
+    // Can't generate bindings for TemplateWithStructTemplateParam, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for TemplateWithStructTemplateParam (error: Can't generate bindings for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation))
+
+    // Error while generating bindings for type alias 'ParamFromDifferentScope':
+    // Can't generate bindings for ParamFromDifferentScope, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for ParamFromDifferentScope (error: Can't generate bindings for test_namespace_bindings::MyTemplate<DifferentScope>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation))
 
     // Error while generating bindings for class 'test_namespace_bindings::TemplateWithTwoParams':
     // Class templates are not supported yet
 
-    pub type AliasToTemplateWithTwoParams =
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE;
+    // Error while generating bindings for type alias 'AliasToTemplateWithTwoParams':
+    // Can't generate bindings for AliasToTemplateWithTwoParams, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for AliasToTemplateWithTwoParams (error: Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, float>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation))
 
-    pub type AliasToTemplateOfATemplate =
-        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE;
+    // Error while generating bindings for type alias 'AliasToTemplateOfATemplate':
+    // Can't generate bindings for AliasToTemplateOfATemplate, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for AliasToTemplateOfATemplate (error: Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation))
 
     // Error while generating bindings for class 'test_namespace_bindings::MyStruct':
     // Class templates are not supported yet
@@ -102,7 +144,11 @@ pub mod test_namespace_bindings {
     // Explicit class template specialization with definition should be imported
     // even when not instantiated if there is a type alias for it.
 
-    pub type MyCharStruct = crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE;
+    // Error while generating bindings for type alias 'MyCharStruct':
+    // Can't generate bindings for MyCharStruct, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyCharStruct (error: Can't generate bindings for test_namespace_bindings::MyStruct<char>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation))
 
     // Forward declared explicit class template specialization should be imported
     // so the forward declaration code is generated (`forward_declare!`).
@@ -120,37 +166,39 @@ pub mod test_namespace_bindings {
 // Error while generating bindings for class 'MyTopLevelTemplate':
 // Class templates are not supported yet
 
-pub type TopLevelTemplateWithNonTopLevelParam =
-    crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE;
+// Error while generating bindings for type alias 'TopLevelTemplateWithNonTopLevelParam':
+// Can't generate bindings for TopLevelTemplateWithNonTopLevelParam, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for TopLevelTemplateWithNonTopLevelParam (error: Can't generate bindings for MyTopLevelTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation))
 
-#[inline(always)]
-pub fn processForwardDeclaredSpecialization<'a>(
-    i: Option<::core::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
-) {
-    unsafe {
-        crate::detail::__rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE(i)
-    }
-}
+// Error while generating bindings for function 'processForwardDeclaredSpecialization':
+// Can't generate bindings for processForwardDeclaredSpecialization, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper, //features:experimental] for processForwardDeclaredSpecialization (the type of i (parameter #0): error: Can't generate bindings for MyTopLevelTemplate<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<int> (incomplete type), references are not supported)
 
-pub mod template_template_params {
-    // Error while generating bindings for class 'template_template_params::Policy':
-    // Class templates are not supported yet
+pub mod template_template_params { // Error while generating bindings for class 'template_template_params::Policy':
+                                   // Class templates are not supported yet
 
     // Error while generating bindings for class 'template_template_params::MyTemplate':
     // Class templates are not supported yet
 
-    pub type MyTypeAlias =
-        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE;
+    // Error while generating bindings for type alias 'MyTypeAlias':
+    // Can't generate bindings for MyTypeAlias, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTypeAlias (error: Can't generate bindings for template_template_params::MyTemplate<template_template_params::Policy>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation))
 }
 
 // namespace template_template_params
 
-pub mod forward_declared_template {
-    // Error while generating bindings for class 'forward_declared_template::ForwardDeclaredTemplate':
-    // Class templates are not supported yet
+pub mod forward_declared_template { // Error while generating bindings for class 'forward_declared_template::ForwardDeclaredTemplate':
+                                    // Class templates are not supported yet
 
-    pub type TypeAliasToForwardDeclaredTemplate =
-        crate::__CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE;
+    // Error while generating bindings for type alias 'TypeAliasToForwardDeclaredTemplate':
+    // Can't generate bindings for TypeAliasToForwardDeclaredTemplate, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for TypeAliasToForwardDeclaredTemplate (error: Can't generate bindings for forward_declared_template::ForwardDeclaredTemplate<int>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for forward_declared_template::ForwardDeclaredTemplate<int> (incomplete type))
 }
 
 // namespace forward_declared_template
@@ -168,398 +216,84 @@ pub mod private_classes {
         type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
         type Kind = ::cxx::kind::Trivial;
     }
-    forward_declare::unsafe_define!(
-        forward_declare::symbol!("private_classes :: HasPrivateType"),
-        crate::private_classes::HasPrivateType
-    );
+
+    // Error while generating bindings for function 'HasPrivateType::HasPrivateType':
+    // Can't generate bindings for HasPrivateType::HasPrivateType, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'HasPrivateType::HasPrivateType':
+    // Can't generate bindings for HasPrivateType::HasPrivateType, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'HasPrivateType::operator=':
+    // Can't generate bindings for HasPrivateType::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'HasPrivateType::operator=':
+    // Can't generate bindings for HasPrivateType::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __param_0 (parameter #1): references are not supported)
 }
 
 // namespace private_classes
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < DifferentScope >
-pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    /// Reason for representing this field as a blob of bytes:
-    /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings :: MyTemplate < DifferentScope >"),
-    crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
-);
+// Error while generating bindings for class 'test_namespace_bindings::MyTemplate<DifferentScope>':
+// Can't generate bindings for test_namespace_bindings::MyTemplate<DifferentScope>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<DifferentScope> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE is a template instantiation)
 
-impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for class 'test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>':
+// Can't generate bindings for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE is a template instantiation)
 
-impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-    #[inline(always)]
-    pub fn Create(
-        mut value: crate::DifferentScope,
-    ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut __return as*mut::core::ffi::c_void,&mut value);
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for class 'test_namespace_bindings::MyTemplate<int>':
+// Can't generate bindings for test_namespace_bindings::MyTemplate<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
 
-impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-    #[inline(always)]
-    pub fn value<'a>(&'a self) -> &'a crate::DifferentScope {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK23test_namespace_bindings10MyTemplateI14DifferentScopeE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self)
-        }
-    }
-}
+// Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>':
+// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < test_namespace_bindings :: TemplateParam >
-pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    /// Reason for representing this field as a blob of bytes:
-    /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(
-        "test_namespace_bindings :: MyTemplate < test_namespace_bindings :: TemplateParam >"
-    ),
-    crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
-);
+// Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<int, float>':
+// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, float>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, float> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE is a template instantiation)
 
-impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<int, int>':
+// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE is a template instantiation)
 
-impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-    #[inline(always)]
-    pub fn Create(
-        mut value: crate::test_namespace_bindings::TemplateParam,
-    ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut __return as*mut::core::ffi::c_void,&mut value);
-            __return.assume_init()
-        }
-    }
-}
+// Error while generating bindings for struct 'test_namespace_bindings::MyStruct<char>':
+// Can't generate bindings for test_namespace_bindings::MyStruct<char>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyStruct<char> (crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE is a template instantiation)
 
-impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-    #[inline(always)]
-    pub fn value<'a>(&'a self) -> &'a crate::test_namespace_bindings::TemplateParam {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK23test_namespace_bindings10MyTemplateINS_13TemplateParamEE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self)
-        }
-    }
-}
+// Error while generating bindings for struct 'MyTopLevelTemplate<test_namespace_bindings::TemplateParam>':
+// Can't generate bindings for MyTopLevelTemplate<test_namespace_bindings::TemplateParam>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<test_namespace_bindings::TemplateParam> (crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE is a template instantiation)
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyTemplate < int >
-pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    /// Reason for representing this field as a blob of bytes:
-    /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [::core::mem::MaybeUninit<u8>; 4],
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings :: MyTemplate < int >"),
-    crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
-);
+// Error while generating bindings for struct 'MyTopLevelTemplate<int>':
+// Can't generate bindings for MyTopLevelTemplate<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<int> (incomplete type)
 
-impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for class 'template_template_params::MyTemplate<template_template_params::Policy>':
+// Can't generate bindings for template_template_params::MyTemplate<template_template_params::Policy>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for template_template_params::MyTemplate<template_template_params::Policy> (crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE is a template instantiation)
 
-impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    #[inline(always)]
-    pub fn Create(
-        value: ::core::ffi::c_int,
-    ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut __return as*mut::core::ffi::c_void,value);
-            __return.assume_init()
-        }
-    }
-}
-
-impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    #[inline(always)]
-    pub fn value<'a>(&'a self) -> &'a ::core::ffi::c_int {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK23test_namespace_bindings10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self)
-        }
-    }
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >
-pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
-    pub value1: crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-    pub value2: ::core::ffi::c_int,
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {}
-forward_declare::unsafe_define!(forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < test_namespace_bindings :: TemplateWithTwoParams < int , int >, int >"),crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE);
-
-impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , float >
-pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
-    pub value1: ::core::ffi::c_int,
-    pub value2: f32,
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , float >"),
-    crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
-);
-
-impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateWithTwoParams < int , int >
-pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
-    pub value1: ::core::ffi::c_int,
-    pub value2: ::core::ffi::c_int,
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings :: TemplateWithTwoParams < int , int >"),
-    crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
-);
-
-impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-/// Explicit class template specialization with definition should be imported
-/// even when not instantiated if there is a type alias for it.
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: MyStruct < char >
-pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {}
-impl !Sync for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("test_namespace_bindings :: MyStruct < char >"),
-    crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE
-);
-
-impl Default for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=MyTopLevelTemplate < test_namespace_bindings :: TemplateParam >
-pub struct __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {
-    pub value: crate::test_namespace_bindings::TemplateParam,
-}
-impl !Send for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {}
-impl !Sync for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTopLevelTemplate < test_namespace_bindings :: TemplateParam >"),
-    crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
-);
-
-impl Default for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("MyTopLevelTemplate < int >"));
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=template_template_params :: MyTemplate < template_template_params :: Policy >
-pub struct __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {}
-impl !Sync for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(
-        "template_template_params :: MyTemplate < template_template_params :: Policy >"
-    ),
-    crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
-);
-
-impl Default for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-impl __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
-    #[inline(always)]
-    pub fn GetPolicy() -> ::core::ffi::c_int {
-        unsafe {
-            crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc()
-        }
-    }
-}
-
-forward_declare::forward_declare!(pub __CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE = forward_declare::symbol!("forward_declared_template :: ForwardDeclaredTemplate < int >"));
-
-mod detail {
-    #[allow(unused_imports)]
-    use super::*;
-    unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN14DifferentScopeC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        #[link_name = "_Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE"]
-        pub(crate) unsafe fn __rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE<
-            'a,
-        >(
-            i: Option<::core::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __return: *mut ::core::ffi::c_void,
-            value: &mut crate::DifferentScope,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK23test_namespace_bindings10MyTemplateI14DifferentScopeE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
-            'a,
-        >(
-            __this: &'a crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-        ) -> &'a crate::DifferentScope;
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __return: *mut ::core::ffi::c_void,
-            value: &mut crate::test_namespace_bindings::TemplateParam,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK23test_namespace_bindings10MyTemplateINS_13TemplateParamEE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
-            'a,
-        >(
-            __this: &'a crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-        ) -> &'a crate::test_namespace_bindings::TemplateParam;
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __return: *mut ::core::ffi::c_void,
-            value: ::core::ffi::c_int,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK23test_namespace_bindings10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
-            'a,
-        >(
-            __this: &'a crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
-        ) -> &'a ::core::ffi::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-        ) -> ::core::ffi::c_int;
-    }
-}
+// Error while generating bindings for class 'forward_declared_template::ForwardDeclaredTemplate<int>':
+// Can't generate bindings for forward_declared_template::ForwardDeclaredTemplate<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for forward_declared_template::ForwardDeclaredTemplate<int> (incomplete type)
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::DifferentScope>() == 1);
@@ -576,170 +310,4 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::private_classes::HasPrivateType>() == 1);
     static_assertions::assert_impl_all!(crate::private_classes::HasPrivateType: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType: Drop);
-
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-        >() == 1
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-        >() == 1
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-            value_
-        ) == 0
-    );
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-        >() == 1
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-        >() == 1
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-            value_
-        ) == 0
-    );
-    assert!(
-        ::core::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>()
-            == 4
-    );
-    assert!(
-        ::core::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>(
-        ) == 4
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
-            value_
-        ) == 0
-    );
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-        >() == 12
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-        >() == 4
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-            value1
-        ) == 0
-    );
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-            value2
-        ) == 8
-    );
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-        >() == 8
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-        >() == 4
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-            value1
-        ) == 0
-    );
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-            value2
-        ) == 4
-    );
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        >() == 8
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        >() == 4
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-            value1
-        ) == 0
-    );
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-            value2
-        ) == 4
-    );
-    assert!(
-        ::core::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>()
-            == 1
-    );
-    assert!(
-        ::core::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>()
-            == 1
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE: Drop);
-
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-        >() == 1
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-        >() == 1
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE: Drop);
-    assert!(
-        ::core::mem::offset_of!(
-            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-            value
-        ) == 0
-    );
-    assert!(
-        ::core::mem::size_of::<
-            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >() == 1
-    );
-    assert!(
-        ::core::mem::align_of::<
-            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >() == 1
-    );
-    static_assertions::assert_impl_all!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE: Drop);
 };

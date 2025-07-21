@@ -31,34 +31,36 @@ pub mod test_namespace_bindings {
         type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");
         type Kind = ::cxx::kind::Trivial;
     }
-    forward_declare::unsafe_define!(
-        forward_declare::symbol!("test_namespace_bindings :: SomeClass"),
-        crate::test_namespace_bindings::SomeClass
-    );
 
-    impl Default for SomeClass {
-        #[inline(always)]
-        fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
-                    &raw mut tmp as *mut _,
-                );
-                tmp.assume_init()
-            }
-        }
-    }
+    // Error while generating bindings for function 'SomeClass::SomeClass':
+    // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
 
-    impl SomeClass {
-        #[inline(always)]
-        pub fn public_method<'a>(&'a mut self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv(
-                    self,
-                )
-            }
-        }
-    }
+    // Error while generating bindings for function 'SomeClass::SomeClass':
+    // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'SomeClass::SomeClass':
+    // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'SomeClass::operator=':
+    // Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'SomeClass::operator=':
+    // Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for function 'SomeClass::public_method':
+    // Can't generate bindings for SomeClass::public_method, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::public_method (the type of __this (parameter #0): references are not supported)
 
     impl SomeClass {
         #[inline(always)]
@@ -76,15 +78,6 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        #[link_name = "_ZN23test_namespace_bindings9SomeClass13public_methodEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv<
-            'a,
-        >(
-            __this: &'a mut crate::test_namespace_bindings::SomeClass,
-        );
         #[link_name = "_ZN23test_namespace_bindings9SomeClass20public_static_methodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv(
         );

@@ -26,7 +26,6 @@ unsafe impl ::cxx::ExternType for PublicPointer {
     type Id = ::cxx::type_id!("PublicPointer");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("PublicPointer"), crate::PublicPointer);
 
 impl Default for PublicPointer {
     #[inline(always)]
@@ -54,7 +53,6 @@ unsafe impl ::cxx::ExternType for PrivatePointer {
     type Id = ::cxx::type_id!("PrivatePointer");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("PrivatePointer"), crate::PrivatePointer);
 
 impl Default for PrivatePointer {
     #[inline(always)]
@@ -85,10 +83,6 @@ unsafe impl ::cxx::ExternType for TransitivePublicPointer {
     type Id = ::cxx::type_id!("TransitivePublicPointer");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("TransitivePublicPointer"),
-    crate::TransitivePublicPointer
-);
 
 impl Default for TransitivePublicPointer {
     #[inline(always)]
@@ -114,7 +108,6 @@ unsafe impl ::cxx::ExternType for Union {
     type Id = ::cxx::type_id!("Union");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Union"), crate::Union);
 
 impl Default for Union {
     #[inline(always)]

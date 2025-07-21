@@ -28,7 +28,6 @@ unsafe impl ::cxx::ExternType for X {
     type Id = ::cxx::type_id!("X");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("X"), crate::X);
 
 impl Default for X {
     #[inline(always)]
@@ -41,10 +40,10 @@ impl Default for X {
     }
 }
 
-#[inline(always)]
-pub fn ffi(a: i8, mut b: crate::X) -> i8 {
-    unsafe { crate::detail::__rust_thunk___Z3ffi4MyI81X(a, &mut b) }
-}
+// Error while generating bindings for function 'ffi':
+// Can't generate bindings for ffi, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:c_abi_compatible_type_cc needs [//features:experimental] for ffi (return type)
+// //rs_bindings_from_cc/test/golden:c_abi_compatible_type_cc needs [//features:experimental] for ffi (the type of a (parameter #0))
 
 pub type MyTypedefDecl = ::core::ffi::c_int;
 
@@ -58,7 +57,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN1XC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
         pub(crate) unsafe fn __rust_thunk___Z1fiPvi(
             a: crate::MyTypedefDecl,
             b: *mut ::core::ffi::c_void,

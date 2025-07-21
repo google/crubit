@@ -26,18 +26,32 @@ unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 
-impl Default for SomeClass {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'SomeClass::SomeClass':
+// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'SomeClass::SomeClass':
+// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeClass::SomeClass':
+// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeClass::operator=':
+// Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeClass::operator=':
+// Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 /// Friend functions that are visible via ADL.
 #[inline(always)]
@@ -45,53 +59,29 @@ pub fn visible_val(mut __param_0: crate::SomeClass) {
     unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(&mut __param_0) }
 }
 
-#[inline(always)]
-pub fn visible_ref<'a>(__param_0: &'a mut crate::SomeClass) {
-    unsafe { crate::detail::__rust_thunk___Z11visible_refR9SomeClass(__param_0) }
-}
+// Error while generating bindings for function 'visible_ref':
+// Can't generate bindings for visible_ref, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for visible_ref (the type of __param_0 (parameter #0): references are not supported)
 
-#[inline(always)]
-pub fn visible_cref<'a>(__param_0: &'a crate::SomeClass) {
-    unsafe { crate::detail::__rust_thunk___Z12visible_crefRK9SomeClass(__param_0) }
-}
+// Error while generating bindings for function 'visible_cref':
+// Can't generate bindings for visible_cref, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for visible_cref (the type of __param_0 (parameter #0): references are not supported)
 
-#[inline(always)]
-pub fn visible_rref<'a>(__param_0: ::ctor::RvalueReference<'a, crate::SomeClass>) {
-    unsafe { crate::detail::__rust_thunk___Z12visible_rrefO9SomeClass(__param_0) }
-}
+// Error while generating bindings for function 'visible_rref':
+// Can't generate bindings for visible_rref, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for visible_rref (the type of __param_0 (parameter #0): references are not supported)
 
-/// A function can be declared multiple times - e.g. once in a friend
-/// declaration below + in a definition below.  This example mimics
-/// Uint128Low64 declarations from absl/numeric/int128.h.  This is a
-/// regression test for b/244311755.
-#[inline(always)]
-pub fn multiple_declarations<'a>(__param_0: &'a crate::SomeClass) -> ::core::ffi::c_int {
-    unsafe { crate::detail::__rust_thunk___Z21multiple_declarationsRK9SomeClass(__param_0) }
-}
+// Error while generating bindings for function 'multiple_declarations':
+// Can't generate bindings for multiple_declarations, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for multiple_declarations (the type of __param_0 (parameter #0): references are not supported)
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
             __param_0: &mut crate::SomeClass,
         );
-        #[link_name = "_Z11visible_refR9SomeClass"]
-        pub(crate) unsafe fn __rust_thunk___Z11visible_refR9SomeClass<'a>(
-            __param_0: &'a mut crate::SomeClass,
-        );
-        #[link_name = "_Z12visible_crefRK9SomeClass"]
-        pub(crate) unsafe fn __rust_thunk___Z12visible_crefRK9SomeClass<'a>(
-            __param_0: &'a crate::SomeClass,
-        );
-        #[link_name = "_Z12visible_rrefO9SomeClass"]
-        pub(crate) unsafe fn __rust_thunk___Z12visible_rrefO9SomeClass<'a>(
-            __param_0: ::ctor::RvalueReference<'a, crate::SomeClass>,
-        );
-        pub(crate) unsafe fn __rust_thunk___Z21multiple_declarationsRK9SomeClass<'a>(
-            __param_0: &'a crate::SomeClass,
-        ) -> ::core::ffi::c_int;
     }
 }
 

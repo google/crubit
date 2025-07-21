@@ -42,10 +42,18 @@ pub type BadSameAbiAttr = ::core::ffi::c_uchar;
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeMapOverrideFieldTypes
 pub struct TypeMapOverrideFieldTypes {
-    pub my_i8_struct: i8,
-    pub my_i8_class: i8,
-    pub my_i8_enum: i8,
-    pub my_i8_alias: i8,
+    /// Reason for representing this field as a blob of bytes:
+    /// missing features: [//features:experimental]:
+    pub(crate) my_i8_struct: [::core::mem::MaybeUninit<u8>; 1],
+    /// Reason for representing this field as a blob of bytes:
+    /// missing features: [//features:experimental]:
+    pub(crate) my_i8_class: [::core::mem::MaybeUninit<u8>; 1],
+    /// Reason for representing this field as a blob of bytes:
+    /// missing features: [//features:experimental]:
+    pub(crate) my_i8_enum: [::core::mem::MaybeUninit<u8>; 1],
+    /// Reason for representing this field as a blob of bytes:
+    /// missing features: [//features:experimental]:
+    pub(crate) my_i8_alias: [::core::mem::MaybeUninit<u8>; 1],
     pub error: crate::TooFewArgs,
 }
 impl !Send for TypeMapOverrideFieldTypes {}
@@ -54,31 +62,32 @@ unsafe impl ::cxx::ExternType for TypeMapOverrideFieldTypes {
     type Id = ::cxx::type_id!("TypeMapOverrideFieldTypes");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("TypeMapOverrideFieldTypes"),
-    crate::TypeMapOverrideFieldTypes
-);
 
-impl Default for TypeMapOverrideFieldTypes {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN25TypeMapOverrideFieldTypesC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
+// Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
 
-mod detail {
-    #[allow(unused_imports)]
-    use super::*;
-    unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN25TypeMapOverrideFieldTypesC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-    }
-}
+// Error while generating bindings for function 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
+// Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
+// Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'TypeMapOverrideFieldTypes::operator=':
+// Can't generate bindings for TypeMapOverrideFieldTypes::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'TypeMapOverrideFieldTypes::operator=':
+// Can't generate bindings for TypeMapOverrideFieldTypes::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 const _: () = {
     assert!(::core::mem::size_of::<i8>() == 1);

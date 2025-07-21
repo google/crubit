@@ -53,7 +53,6 @@ unsafe impl ::cxx::ExternType for Vec3 {
     type Id = ::cxx::type_id!("Vec3");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Vec3"), crate::Vec3);
 
 impl Default for Vec3 {
     #[inline(always)]

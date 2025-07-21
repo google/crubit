@@ -30,9 +30,4 @@ static_assert(CRUBIT_OFFSET_OF(my_i8_alias, struct TypeMapOverrideFieldTypes) ==
               3);
 static_assert(CRUBIT_OFFSET_OF(error, struct TypeMapOverrideFieldTypes) == 4);
 
-extern "C" void __rust_thunk___ZN25TypeMapOverrideFieldTypesC1Ev(
-    struct TypeMapOverrideFieldTypes* __this) {
-  crubit::construct_at(__this);
-}
-
 #pragma clang diagnostic pop

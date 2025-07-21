@@ -32,20 +32,36 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-impl Default for SomeStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 
-forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
+// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeStruct::operator=':
+// Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeStruct::operator=':
+// Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for struct 'ForwardDeclaredStruct':
+// Can't generate bindings for ForwardDeclaredStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
@@ -92,7 +108,11 @@ pub struct FieldTypeTestStruct {
     /// TODO(b/226580208): Uncomment when these don't cause struct import to fail.
     /// SomeStruct&& struct_rvalue_ref_field;
     /// const SomeStruct&& const_struct_rvalue_ref_field;
-    pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
+    ///
+    /// Reason for representing this field as a blob of bytes:
+    /// missing features: [//features:wrapper]: error: Can't generate bindings for ForwardDeclaredStruct, because of missing required features (<internal link>):
+    /// //rs_bindings_from_cc/test/golden:types_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
+    pub(crate) forward_declared_ptr_field: [::core::mem::MaybeUninit<u8>; 8],
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
 impl !Send for FieldTypeTestStruct {}
@@ -101,27 +121,23 @@ unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
     type Id = ::cxx::type_id!("FieldTypeTestStruct");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("FieldTypeTestStruct"),
-    crate::FieldTypeTestStruct
-);
 
-#[inline(always)]
-pub fn FunctionTakingPointersAndReferences<'a, 'b, 'c, 'd>(
-    const_ref_param: &'a ::core::ffi::c_int,
-    mut_ref_param: &'b mut ::core::ffi::c_int,
-    const_ptr_param: Option<&'c ::core::ffi::c_int>,
-    mut_ptr_param: Option<&'d mut ::core::ffi::c_int>,
-) {
-    unsafe {
-        crate::detail::__rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi(
-            const_ref_param,
-            mut_ref_param,
-            const_ptr_param,
-            mut_ptr_param,
-        )
-    }
-}
+// Error while generating bindings for function 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'FunctionTakingPointersAndReferences':
+// Can't generate bindings for FunctionTakingPointersAndReferences, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of const_ref_param (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of mut_ref_param (parameter #1): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of const_ptr_param (parameter #2): references are not supported)
+// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of mut_ptr_param (parameter #3): references are not supported)
 
 #[inline(always)]
 pub fn VoidReturningFunction() {
@@ -154,19 +170,6 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
-        #[link_name = "_Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi"]
-        pub(crate) unsafe fn __rust_thunk___Z35FunctionTakingPointersAndReferencesRKiRiPS_Pi<
-            'a,
-            'b,
-            'c,
-            'd,
-        >(
-            const_ref_param: &'a ::core::ffi::c_int,
-            mut_ref_param: &'b mut ::core::ffi::c_int,
-            const_ptr_param: Option<&'c ::core::ffi::c_int>,
-            mut_ptr_param: Option<&'d mut ::core::ffi::c_int>,
-        );
         pub(crate) unsafe fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) unsafe fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
             unsafe extern "C" fn(

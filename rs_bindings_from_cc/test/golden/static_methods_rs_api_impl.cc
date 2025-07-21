@@ -21,10 +21,6 @@
 static_assert(CRUBIT_SIZEOF(class SomeClass) == 4);
 static_assert(alignof(class SomeClass) == 4);
 
-extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
-  crubit::construct_at(__this);
-}
-
 extern "C" void __rust_thunk___ZN9SomeClass21static_factory_methodEi(
     class SomeClass* __return, int initial_value_of_field) {
   new (__return) auto(SomeClass::static_factory_method(initial_value_of_field));

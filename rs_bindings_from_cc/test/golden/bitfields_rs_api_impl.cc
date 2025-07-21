@@ -24,17 +24,7 @@ static_assert(CRUBIT_OFFSET_OF(f2, struct WithBitfields) == 4);
 static_assert(CRUBIT_OFFSET_OF(f5, struct WithBitfields) == 20);
 static_assert(CRUBIT_OFFSET_OF(f7, struct WithBitfields) == 27);
 
-extern "C" void __rust_thunk___ZN13WithBitfieldsC1Ev(
-    struct WithBitfields* __this) {
-  crubit::construct_at(__this);
-}
-
 static_assert(CRUBIT_SIZEOF(struct AlignmentRegressionTest) == 4);
 static_assert(alignof(struct AlignmentRegressionTest) == 4);
-
-extern "C" void __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
-    struct AlignmentRegressionTest* __this) {
-  crubit::construct_at(__this);
-}
 
 #pragma clang diagnostic pop

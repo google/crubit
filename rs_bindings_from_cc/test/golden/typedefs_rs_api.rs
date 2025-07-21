@@ -26,18 +26,32 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-impl Default for SomeStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeStruct::operator=':
+// Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeStruct::operator=':
+// Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 pub mod some_struct {
     #[allow(unused_imports)]
@@ -61,21 +75,32 @@ unsafe impl ::cxx::ExternType for SomeOtherStruct {
     type Id = ::cxx::type_id!("SomeOtherStruct");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("SomeOtherStruct"),
-    crate::SomeOtherStruct
-);
 
-impl Default for SomeOtherStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN15SomeOtherStructC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'SomeOtherStruct::SomeOtherStruct':
+// Can't generate bindings for SomeOtherStruct::SomeOtherStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherStruct::SomeOtherStruct':
+// Can't generate bindings for SomeOtherStruct::SomeOtherStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherStruct::SomeOtherStruct':
+// Can't generate bindings for SomeOtherStruct::SomeOtherStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherStruct::operator=':
+// Can't generate bindings for SomeOtherStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherStruct::operator=':
+// Can't generate bindings for SomeOtherStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -89,18 +114,32 @@ unsafe impl ::cxx::ExternType for SomeUnion {
     type Id = ::cxx::type_id!("SomeUnion");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
-impl Default for SomeUnion {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeUnionC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'SomeUnion::SomeUnion':
+// Can't generate bindings for SomeUnion::SomeUnion, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'SomeUnion::SomeUnion':
+// Can't generate bindings for SomeUnion::SomeUnion, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeUnion::SomeUnion':
+// Can't generate bindings for SomeUnion::SomeUnion, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeUnion::operator=':
+// Can't generate bindings for SomeUnion::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeUnion::operator=':
+// Can't generate bindings for SomeUnion::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for type alias 'SomeUnion':
 // Typedef only used to introduce a name in C. Not importing.
@@ -117,18 +156,32 @@ unsafe impl ::cxx::ExternType for SomeOtherUnion {
     type Id = ::cxx::type_id!("SomeOtherUnion");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crate::SomeOtherUnion);
 
-impl Default for SomeOtherUnion {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN14SomeOtherUnionC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
+// Can't generate bindings for SomeOtherUnion::SomeOtherUnion, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
+// Can't generate bindings for SomeOtherUnion::SomeOtherUnion, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
+// Can't generate bindings for SomeOtherUnion::SomeOtherUnion, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherUnion::operator=':
+// Can't generate bindings for SomeOtherUnion::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SomeOtherUnion::operator=':
+// Can't generate bindings for SomeOtherUnion::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
 pub fn FunctionUsingNestedType() -> crate::some_struct::nested_type {
@@ -139,14 +192,6 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN15SomeOtherStructC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN9SomeUnionC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN14SomeOtherUnionC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
         #[link_name = "_Z23FunctionUsingNestedTypev"]
         pub(crate) unsafe fn __rust_thunk___Z23FunctionUsingNestedTypev(
         ) -> crate::some_struct::nested_type;

@@ -6,13 +6,7 @@
 // //rs_bindings_from_cc/test/golden:unsupported_cc
 
 #![rustfmt::skip]
-#![feature(
-    allocator_api,
-    cfg_sanitize,
-    custom_inner_attributes,
-    impl_trait_in_assoc_type,
-    negative_impls
-)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -32,21 +26,32 @@ unsafe impl ::cxx::ExternType for TrivialCustomType {
     type Id = ::cxx::type_id!("TrivialCustomType");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("TrivialCustomType"),
-    crate::TrivialCustomType
-);
 
-impl Default for TrivialCustomType {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'TrivialCustomType::TrivialCustomType':
+// Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'TrivialCustomType::TrivialCustomType':
+// Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'TrivialCustomType::TrivialCustomType':
+// Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'TrivialCustomType::operator=':
+// Can't generate bindings for TrivialCustomType::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'TrivialCustomType::operator=':
+// Can't generate bindings for TrivialCustomType::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'TrivialCustomType::operator||':
 // Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
@@ -67,36 +72,11 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
     type Id = ::cxx::type_id!("NontrivialCustomType");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("NontrivialCustomType"),
-    crate::NontrivialCustomType
-);
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustomType {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
-                    dest as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-            })
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCustomType {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
+// Error while generating bindings for function 'NontrivialCustomType::NontrivialCustomType':
+// Can't generate bindings for NontrivialCustomType::NontrivialCustomType, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for NontrivialCustomType::NontrivialCustomType (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for NontrivialCustomType::NontrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialCustomType::operator||':
 // Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
@@ -108,21 +88,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCus
 // Parameter #0 is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 //
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
-
-mod detail {
-    #[allow(unused_imports)]
-    use super::*;
-    unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>,
-        );
-    }
-}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::TrivialCustomType>() == 4);

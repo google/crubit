@@ -64,7 +64,6 @@ unsafe impl ::cxx::ExternType for Foo {
     type Id = ::cxx::type_id!("Foo");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
 impl Default for Foo {
     #[inline(always)]
@@ -77,25 +76,17 @@ impl Default for Foo {
     }
 }
 
-impl Foo {
-    #[inline(always)]
-    pub unsafe fn BarBridgedInt(
-        __this: *mut Self,
-        mut __param_0: crate::__CcTemplateInst6SizeofIiE,
-    ) {
-        crate::detail::__rust_thunk___ZN3Foo3BarE6SizeofIiE(__this, &mut __param_0)
-    }
-}
+// Error while generating bindings for function 'Foo::BarBridgedInt':
+// Can't generate bindings for Foo::BarBridgedInt, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::BarBridgedInt (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation))
 
-impl Foo {
-    #[inline(always)]
-    pub unsafe fn BarBridgedFloat(
-        __this: *mut Self,
-        mut __param_0: crate::__CcTemplateInst6SizeofIfE,
-    ) {
-        crate::detail::__rust_thunk___ZN3Foo3BarE6SizeofIfE(__this, &mut __param_0)
-    }
-}
+// Error while generating bindings for function 'Foo::BarBridgedFloat':
+// Can't generate bindings for Foo::BarBridgedFloat, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::BarBridgedFloat (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<float>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation))
 
 impl Foo {
     #[inline(always)]
@@ -104,59 +95,15 @@ impl Foo {
     }
 }
 
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Sizeof < float >
-pub struct __CcTemplateInst6SizeofIfE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst6SizeofIfE {}
-impl !Sync for __CcTemplateInst6SizeofIfE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("Sizeof < float >"),
-    crate::__CcTemplateInst6SizeofIfE
-);
+// Error while generating bindings for struct 'Sizeof<float>':
+// Can't generate bindings for Sizeof<float>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
 
-impl Default for __CcTemplateInst6SizeofIfE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN6SizeofIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-// Error while generating bindings for global variable 'Sizeof<float>::size':
-// static data members are not supported
-
-#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
-#[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=Sizeof < int >
-pub struct __CcTemplateInst6SizeofIiE {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
-}
-impl !Send for __CcTemplateInst6SizeofIiE {}
-impl !Sync for __CcTemplateInst6SizeofIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("Sizeof < int >"),
-    crate::__CcTemplateInst6SizeofIiE
-);
-
-impl Default for __CcTemplateInst6SizeofIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN6SizeofIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
-// Error while generating bindings for global variable 'Sizeof<int>::size':
-// static data members are not supported
+// Error while generating bindings for struct 'Sizeof<int>':
+// Can't generate bindings for Sizeof<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
 
 mod detail {
     #[allow(unused_imports)]
@@ -168,24 +115,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z9Overlaod2i(__param_0: ::core::ffi::c_int);
         pub(crate) unsafe fn __rust_thunk___Z20AlsoTemplateOverloadv();
         pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarE6SizeofIiE(
-            __this: *mut crate::Foo,
-            __param_0: &mut crate::__CcTemplateInst6SizeofIiE,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarE6SizeofIfE(
-            __this: *mut crate::Foo,
-            __param_0: &mut crate::__CcTemplateInst6SizeofIfE,
-        );
         #[link_name = "_ZN3Foo3BarEi"]
         pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarEi(
             __this: *mut crate::Foo,
             __param_0: ::core::ffi::c_int,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN6SizeofIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN6SizeofIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-            __this: *mut ::core::ffi::c_void,
         );
     }
 }
@@ -195,14 +128,4 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::Foo>() == 1);
     static_assertions::assert_impl_all!(crate::Foo: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Foo: Drop);
-
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst6SizeofIfE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst6SizeofIfE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst6SizeofIfE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst6SizeofIfE: Drop);
-
-    assert!(::core::mem::size_of::<crate::__CcTemplateInst6SizeofIiE>() == 1);
-    assert!(::core::mem::align_of::<crate::__CcTemplateInst6SizeofIiE>() == 1);
-    static_assertions::assert_impl_all!(crate::__CcTemplateInst6SizeofIiE: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst6SizeofIiE: Drop);
 };

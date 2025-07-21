@@ -40,26 +40,32 @@ unsafe impl ::cxx::ExternType for WithBitfields {
     type Id = ::cxx::type_id!("WithBitfields");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("WithBitfields"), crate::WithBitfields);
-impl WithBitfields {
-    pub fn f7(&self) -> &::core::ffi::c_char {
-        unsafe {
-            let ptr = (self as *const Self as *const u8).offset(27);
-            &*(ptr as *const ::core::ffi::c_char)
-        }
-    }
-}
 
-impl Default for WithBitfields {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'WithBitfields::WithBitfields':
+// Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'WithBitfields::WithBitfields':
+// Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'WithBitfields::WithBitfields':
+// Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'WithBitfields::operator=':
+// Can't generate bindings for WithBitfields::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'WithBitfields::operator=':
+// Can't generate bindings for WithBitfields::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 /// This is a regression test for b/283835873 where the alignment of the
 /// generated struct was wrong/missing.
@@ -77,35 +83,35 @@ unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
     type Id = ::cxx::type_id!("AlignmentRegressionTest");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("AlignmentRegressionTest"),
-    crate::AlignmentRegressionTest
-);
 
-impl Default for AlignmentRegressionTest {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN23AlignmentRegressionTestC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'AlignmentRegressionTest::AlignmentRegressionTest':
+// Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'AlignmentRegressionTest::AlignmentRegressionTest':
+// Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AlignmentRegressionTest::AlignmentRegressionTest':
+// Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AlignmentRegressionTest::operator=':
+// Can't generate bindings for AlignmentRegressionTest::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'AlignmentRegressionTest::operator=':
+// Can't generate bindings for AlignmentRegressionTest::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for enum 'AlignmentRegressionTest::(unnamed enum at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)':
 // Unnamed enums are not supported yet
-
-mod detail {
-    #[allow(unused_imports)]
-    use super::*;
-    unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN13WithBitfieldsC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN23AlignmentRegressionTestC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-    }
-}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::WithBitfields>() == 32);

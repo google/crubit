@@ -22,11 +22,6 @@ static_assert(CRUBIT_SIZEOF(struct test_namespace_bindings::S) == 4);
 static_assert(alignof(struct test_namespace_bindings::S) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct test_namespace_bindings::S) == 0);
 
-extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
-    struct test_namespace_bindings::S* __this) {
-  crubit::construct_at(__this);
-}
-
 extern "C" int __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
     struct test_namespace_bindings::S* s) {
   return test_namespace_bindings::f(std::move(*s));
@@ -46,11 +41,6 @@ extern "C" void __rust_thunk___Z8identityN23test_namespace_bindings1SE(
 static_assert(sizeof(struct test_namespace_bindings_reopened::inner::S) == 1);
 static_assert(alignof(struct test_namespace_bindings_reopened::inner::S) == 1);
 
-extern "C" void __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
-    struct test_namespace_bindings_reopened::inner::S* __this) {
-  crubit::construct_at(__this);
-}
-
 extern "C" void
 __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
     struct test_namespace_bindings_reopened::inner::S* s) {
@@ -61,13 +51,6 @@ static_assert(sizeof(struct test_namespace_bindings_inline::inner::
                          StructInInlineNamespace) == 1);
 static_assert(alignof(struct test_namespace_bindings_inline::inner::
                           StructInInlineNamespace) == 1);
-
-extern "C" void
-__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(
-    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
-        __this) {
-  crubit::construct_at(__this);
-}
 
 extern "C" void
 __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(

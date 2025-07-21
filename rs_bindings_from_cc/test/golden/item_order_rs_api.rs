@@ -26,18 +26,32 @@ unsafe impl ::cxx::ExternType for FirstStruct {
     type Id = ::cxx::type_id!("FirstStruct");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), crate::FirstStruct);
 
-impl Default for FirstStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'FirstStruct::FirstStruct':
+// Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'FirstStruct::FirstStruct':
+// Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'FirstStruct::FirstStruct':
+// Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'FirstStruct::operator=':
+// Can't generate bindings for FirstStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'FirstStruct::operator=':
+// Can't generate bindings for FirstStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
 pub fn first_func() -> ::core::ffi::c_int {
@@ -56,18 +70,32 @@ unsafe impl ::cxx::ExternType for SecondStruct {
     type Id = ::cxx::type_id!("SecondStruct");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), crate::SecondStruct);
 
-impl Default for SecondStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
+// Error while generating bindings for function 'SecondStruct::SecondStruct':
+// Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __this (parameter #0): references are not supported)
+
+// Error while generating bindings for function 'SecondStruct::SecondStruct':
+// Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SecondStruct::SecondStruct':
+// Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SecondStruct::operator=':
+// Can't generate bindings for SecondStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+// Error while generating bindings for function 'SecondStruct::operator=':
+// Can't generate bindings for SecondStruct::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
 pub fn second_func() -> ::core::ffi::c_int {
@@ -78,9 +106,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z10first_funcv() -> ::core::ffi::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z11second_funcv() -> ::core::ffi::c_int;
     }
 }

@@ -22,10 +22,6 @@ static_assert(CRUBIT_SIZEOF(struct ns::Trivial) == 4);
 static_assert(alignof(struct ns::Trivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::Trivial) == 0);
 
-extern "C" void __rust_thunk___ZN2ns7TrivialC1Ev(struct ns::Trivial* __this) {
-  crubit::construct_at(__this);
-}
-
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
     struct ns::Trivial* __return, struct ns::Trivial* trivial) {
   new (__return) auto(ns::TakesByValue(std::move(*trivial)));

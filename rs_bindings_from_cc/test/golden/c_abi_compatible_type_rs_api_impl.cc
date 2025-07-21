@@ -26,10 +26,6 @@ extern "C" void __rust_thunk___ZN1XC1Ev(struct X* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" struct MyI8 __rust_thunk___Z3ffi4MyI81X(struct MyI8 a, struct X* b) {
-  return ffi(std::move(a), std::move(*b));
-}
-
 extern "C" void __rust_thunk___Z1fiPvi(MyTypedefDecl a, void* b, int c) {
   f(a, b, c);
 }

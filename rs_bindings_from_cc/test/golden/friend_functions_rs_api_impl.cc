@@ -21,18 +21,9 @@
 static_assert(sizeof(class SomeClass) == 1);
 static_assert(alignof(class SomeClass) == 1);
 
-extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
-  crubit::construct_at(__this);
-}
-
 extern "C" void __rust_thunk___Z11visible_val9SomeClass(
     class SomeClass* __param_0) {
   visible_val(std::move(*__param_0));
-}
-
-extern "C" int __rust_thunk___Z21multiple_declarationsRK9SomeClass(
-    const class SomeClass* __param_0) {
-  return multiple_declarations(*__param_0);
 }
 
 #pragma clang diagnostic pop

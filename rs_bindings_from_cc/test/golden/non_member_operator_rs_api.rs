@@ -27,7 +27,6 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: X");
         type Kind = ::cxx::kind::Trivial;
     }
-    forward_declare::unsafe_define!(forward_declare::symbol!("ns :: X"), crate::ns::X);
 
     impl Default for X {
         #[inline(always)]

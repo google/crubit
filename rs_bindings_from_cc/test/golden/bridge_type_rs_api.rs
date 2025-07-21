@@ -30,18 +30,13 @@ pub fn TakeCppStruct(mut __param_0: crate::RustStruct) {
     unsafe { crate::detail::__rust_thunk___Z13TakeCppStruct9CppStruct(&mut __param_0) }
 }
 
-#[inline(always)]
-pub(crate) unsafe fn TakeCppStructByPtr(
-    __param_0: *mut ::forward_declare::Incomplete<::forward_declare::symbol!("CppStruct"), ()>,
-) {
-    crate::detail::__rust_thunk___Z18TakeCppStructByPtrP9CppStruct(__param_0)
-}
+// Error while generating bindings for function 'TakeCppStructByPtr':
+// Can't generate bindings for TakeCppStructByPtr, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bridge_type_cc needs [//features:wrapper] for TakeCppStructByPtr (the type of __param_0 (parameter #0): error: Bridging types are not supported as pointee/referent types.)
 
-#[inline(always)]
-pub(crate) fn ReturnCppStructByPtr(
-) -> *mut ::forward_declare::Incomplete<::forward_declare::symbol!("CppStruct"), ()> {
-    unsafe { crate::detail::__rust_thunk___Z20ReturnCppStructByPtrv() }
-}
+// Error while generating bindings for function 'ReturnCppStructByPtr':
+// Can't generate bindings for ReturnCppStructByPtr, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:bridge_type_cc needs [//features:wrapper] for ReturnCppStructByPtr (return type: error: Bridging types are not supported as pointee/referent types.)
 
 mod detail {
     #[allow(unused_imports)]
@@ -51,15 +46,5 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z13TakeCppStruct9CppStruct(
             __param_0: &mut crate::RustStruct,
         );
-        #[link_name = "_Z18TakeCppStructByPtrP9CppStruct"]
-        pub(crate) unsafe fn __rust_thunk___Z18TakeCppStructByPtrP9CppStruct(
-            __param_0: *mut ::forward_declare::Incomplete<
-                ::forward_declare::symbol!("CppStruct"),
-                (),
-            >,
-        );
-        #[link_name = "_Z20ReturnCppStructByPtrv"]
-        pub(crate) unsafe fn __rust_thunk___Z20ReturnCppStructByPtrv(
-        ) -> *mut ::forward_declare::Incomplete<::forward_declare::symbol!("CppStruct"), ()>;
     }
 }

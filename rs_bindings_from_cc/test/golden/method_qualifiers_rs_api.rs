@@ -26,7 +26,6 @@ unsafe impl ::cxx::ExternType for Noninline {
     type Id = ::cxx::type_id!("Noninline");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 
 impl Default for Noninline {
     #[inline(always)]
@@ -86,7 +85,6 @@ unsafe impl ::cxx::ExternType for Inline {
     type Id = ::cxx::type_id!("Inline");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 
 impl Default for Inline {
     #[inline(always)]

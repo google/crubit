@@ -14,7 +14,9 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
+// Error while generating bindings for struct 'ForwardDeclaredStruct':
+// Can't generate bindings for ForwardDeclaredStruct, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:forward_declaration_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
 
 // Intentionally forward declare this struct again, to ensure Crubit can handle
 // it.

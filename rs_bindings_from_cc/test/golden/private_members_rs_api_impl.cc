@@ -23,9 +23,4 @@ static_assert(alignof(class test_namespace_bindings::SomeClass) == 4);
 static_assert(CRUBIT_OFFSET_OF(public_member_variable_,
                                class test_namespace_bindings::SomeClass) == 0);
 
-extern "C" void __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
-    class test_namespace_bindings::SomeClass* __this) {
-  crubit::construct_at(__this);
-}
-
 #pragma clang diagnostic pop

@@ -27,7 +27,6 @@ unsafe impl ::cxx::ExternType for NoDiscard {
     type Id = ::cxx::type_id!("NoDiscard");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("NoDiscard"), crate::NoDiscard);
 
 impl Default for NoDiscard {
     #[inline(always)]
@@ -53,10 +52,6 @@ unsafe impl ::cxx::ExternType for NoDiscardWithMessage {
     type Id = ::cxx::type_id!("NoDiscardWithMessage");
     type Kind = ::cxx::kind::Trivial;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("NoDiscardWithMessage"),
-    crate::NoDiscardWithMessage
-);
 
 impl Default for NoDiscardWithMessage {
     #[inline(always)]

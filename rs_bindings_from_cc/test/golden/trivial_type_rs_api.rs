@@ -6,13 +6,7 @@
 // //rs_bindings_from_cc/test/golden:trivial_type_cc
 
 #![rustfmt::skip]
-#![feature(
-    allocator_api,
-    arbitrary_self_types,
-    cfg_sanitize,
-    custom_inner_attributes,
-    negative_impls
-)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -35,64 +29,56 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: Trivial");
         type Kind = ::cxx::kind::Trivial;
     }
-    forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Trivial"), crate::ns::Trivial);
 
-    impl Default for Trivial {
-        #[inline(always)]
-        fn default() -> Self {
-            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-            unsafe {
-                crate::detail::__rust_thunk___ZN2ns7TrivialC1Ev(&raw mut tmp as *mut _);
-                tmp.assume_init()
-            }
-        }
-    }
+    // Error while generating bindings for function 'Trivial::Trivial':
+    // Can't generate bindings for Trivial::Trivial, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __this (parameter #0): references are not supported)
 
-    impl Trivial {
-        #[inline(always)]
-        pub fn Unqualified<'a>(&'a mut self) {
-            unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(self) }
-        }
-    }
+    // Error while generating bindings for function 'Trivial::Trivial':
+    // Can't generate bindings for Trivial::Trivial, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)
 
-    impl Trivial {
-        #[inline(always)]
-        pub fn ConstQualified<'a>(&'a self) {
-            unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(self) }
-        }
-    }
+    // Error while generating bindings for function 'Trivial::Trivial':
+    // Can't generate bindings for Trivial::Trivial, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)
 
-    impl Trivial {
-        #[inline(always)]
-        pub fn LvalueRefQualified<'a>(&'a mut self) {
-            unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(self) }
-        }
-    }
+    // Error while generating bindings for function 'Trivial::operator=':
+    // Can't generate bindings for Trivial::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-    impl Trivial {
-        #[inline(always)]
-        pub fn ConstLvalueRefQualified<'a>(&'a self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(self)
-            }
-        }
-    }
+    // Error while generating bindings for function 'Trivial::operator=':
+    // Can't generate bindings for Trivial::operator=, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (the type of __this (parameter #0): references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-    impl Trivial {
-        #[inline(always)]
-        pub fn RvalueRefQualified<'a>(self: ::ctor::RvalueReference<'a, Self>) {
-            unsafe { crate::detail::__rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv(self) }
-        }
-    }
+    // Error while generating bindings for function 'Trivial::Unqualified':
+    // Can't generate bindings for Trivial::Unqualified, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Unqualified (the type of __this (parameter #0): references are not supported)
 
-    impl Trivial {
-        #[inline(always)]
-        pub fn ConstRvalueRefQualified<'a>(self: ::ctor::ConstRvalueReference<'a, Self>) {
-            unsafe {
-                crate::detail::__rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv(self)
-            }
-        }
-    }
+    // Error while generating bindings for function 'Trivial::ConstQualified':
+    // Can't generate bindings for Trivial::ConstQualified, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::ConstQualified (the type of __this (parameter #0): references are not supported)
+
+    // Error while generating bindings for function 'Trivial::LvalueRefQualified':
+    // Can't generate bindings for Trivial::LvalueRefQualified, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::LvalueRefQualified (the type of __this (parameter #0): references are not supported)
+
+    // Error while generating bindings for function 'Trivial::ConstLvalueRefQualified':
+    // Can't generate bindings for Trivial::ConstLvalueRefQualified, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::ConstLvalueRefQualified (the type of __this (parameter #0): references are not supported)
+
+    // Error while generating bindings for function 'Trivial::RvalueRefQualified':
+    // Can't generate bindings for Trivial::RvalueRefQualified, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::RvalueRefQualified (the type of __this (parameter #0): references are not supported)
+
+    // Error while generating bindings for function 'Trivial::ConstRvalueRefQualified':
+    // Can't generate bindings for Trivial::ConstRvalueRefQualified, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::ConstRvalueRefQualified (the type of __this (parameter #0): references are not supported)
 
     #[inline(always)]
     pub fn TakesByValue(mut trivial: crate::ns::Trivial) -> crate::ns::Trivial {
@@ -106,35 +92,25 @@ pub mod ns {
         }
     }
 
-    #[inline(always)]
-    pub fn TakesByReference<'a>(trivial: &'a mut crate::ns::Trivial) -> &'a mut crate::ns::Trivial {
-        unsafe { crate::detail::__rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE(trivial) }
-    }
+    // Error while generating bindings for function 'TakesByReference':
+    // Can't generate bindings for TakesByReference, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByReference (the type of trivial (parameter #0): references are not supported)
 
-    #[inline(always)]
-    pub fn TakesByConstReference<'a>(trivial: &'a crate::ns::Trivial) -> &'a crate::ns::Trivial {
-        unsafe {
-            crate::detail::__rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE(trivial)
-        }
-    }
+    // Error while generating bindings for function 'TakesByConstReference':
+    // Can't generate bindings for TakesByConstReference, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstReference (the type of trivial (parameter #0): references are not supported)
 
-    #[inline(always)]
-    pub fn TakesByRvalueReference<'a>(
-        trivial: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
-    ) -> ::ctor::RvalueReference<'a, crate::ns::Trivial> {
-        unsafe {
-            crate::detail::__rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE(trivial)
-        }
-    }
+    // Error while generating bindings for function 'TakesByRvalueReference':
+    // Can't generate bindings for TakesByRvalueReference, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByRvalueReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByRvalueReference (the type of trivial (parameter #0): references are not supported)
 
-    #[inline(always)]
-    pub fn TakesByConstRvalueReference<'a>(
-        trivial: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
-    ) -> ::ctor::ConstRvalueReference<'a, crate::ns::Trivial> {
-        unsafe {
-            crate::detail::__rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE(trivial)
-        }
-    }
+    // Error while generating bindings for function 'TakesByConstRvalueReference':
+    // Can't generate bindings for TakesByConstRvalueReference, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstRvalueReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstRvalueReference (the type of trivial (parameter #0): references are not supported)
 }
 
 // namespace ns
@@ -143,51 +119,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7TrivialC1Ev(__this: *mut ::core::ffi::c_void);
-        #[link_name = "_ZN2ns7Trivial11UnqualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN2ns7Trivial11UnqualifiedEv<'a>(
-            __this: &'a mut crate::ns::Trivial,
-        );
-        #[link_name = "_ZNK2ns7Trivial14ConstQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv<'a>(
-            __this: &'a crate::ns::Trivial,
-        );
-        #[link_name = "_ZNR2ns7Trivial18LvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv<'a>(
-            __this: &'a mut crate::ns::Trivial,
-        );
-        #[link_name = "_ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv<'a>(
-            __this: &'a crate::ns::Trivial,
-        );
-        #[link_name = "_ZNO2ns7Trivial18RvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNO2ns7Trivial18RvalueRefQualifiedEv<'a>(
-            __this: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
-        );
-        #[link_name = "_ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv"]
-        pub(crate) unsafe fn __rust_thunk___ZNKO2ns7Trivial23ConstRvalueRefQualifiedEv<'a>(
-            __this: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
             __return: *mut ::core::ffi::c_void,
             trivial: &mut crate::ns::Trivial,
         );
-        #[link_name = "_ZN2ns16TakesByReferenceERNS_7TrivialE"]
-        pub(crate) unsafe fn __rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE<'a>(
-            trivial: &'a mut crate::ns::Trivial,
-        ) -> &'a mut crate::ns::Trivial;
-        #[link_name = "_ZN2ns21TakesByConstReferenceERKNS_7TrivialE"]
-        pub(crate) unsafe fn __rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE<'a>(
-            trivial: &'a crate::ns::Trivial,
-        ) -> &'a crate::ns::Trivial;
-        #[link_name = "_ZN2ns22TakesByRvalueReferenceEONS_7TrivialE"]
-        pub(crate) unsafe fn __rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE<'a>(
-            trivial: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
-        ) -> ::ctor::RvalueReference<'a, crate::ns::Trivial>;
-        #[link_name = "_ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE"]
-        pub(crate) unsafe fn __rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE<'a>(
-            trivial: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
-        ) -> ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>;
     }
 }
 

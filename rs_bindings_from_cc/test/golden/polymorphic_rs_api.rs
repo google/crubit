@@ -6,13 +6,7 @@
 // //rs_bindings_from_cc/test/golden:polymorphic_cc
 
 #![rustfmt::skip]
-#![feature(
-    allocator_api,
-    cfg_sanitize,
-    custom_inner_attributes,
-    impl_trait_in_assoc_type,
-    negative_impls
-)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -32,61 +26,21 @@ unsafe impl ::cxx::ExternType for PolymorphicBase {
     type Id = ::cxx::type_id!("PolymorphicBase");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("PolymorphicBase"),
-    crate::PolymorphicBase
-);
 
-impl ::ctor::CtorNew<()> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN15PolymorphicBaseC1Ev(
-                    dest as *mut ::core::ffi::c_void,
-                );
-            })
-        }
-    }
-}
+// Error while generating bindings for function 'PolymorphicBase::PolymorphicBase':
+// Can't generate bindings for PolymorphicBase::PolymorphicBase, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::PolymorphicBase (the type of __this (parameter #0): references are not supported)
 
-impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let mut __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN15PolymorphicBaseC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-            })
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
+// Error while generating bindings for function 'PolymorphicBase::PolymorphicBase':
+// Can't generate bindings for PolymorphicBase::PolymorphicBase, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::PolymorphicBase (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::PolymorphicBase (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN15PolymorphicBaseaSERKS_(self, __param_0);
-        }
-    }
-}
+// Error while generating bindings for function 'PolymorphicBase::operator=':
+// Can't generate bindings for PolymorphicBase::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
@@ -107,68 +61,25 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
     type Id = ::cxx::type_id!("PolymorphicBase2");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("PolymorphicBase2"),
-    crate::PolymorphicBase2
-);
 
-impl ::ctor::CtorNew<()> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN16PolymorphicBase2C1Ev(
-                    dest as *mut ::core::ffi::c_void,
-                );
-            })
-        }
-    }
-}
+// Error while generating bindings for function 'PolymorphicBase2::PolymorphicBase2':
+// Can't generate bindings for PolymorphicBase2::PolymorphicBase2, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::PolymorphicBase2 (the type of __this (parameter #0): references are not supported)
 
-impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let mut __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN16PolymorphicBase2C1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-            })
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
+// Error while generating bindings for function 'PolymorphicBase2::PolymorphicBase2':
+// Can't generate bindings for PolymorphicBase2::PolymorphicBase2, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::PolymorphicBase2 (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::PolymorphicBase2 (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase2 {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN16PolymorphicBase2aSERKS_(self, __param_0);
-        }
-    }
-}
+// Error while generating bindings for function 'PolymorphicBase2::operator=':
+// Can't generate bindings for PolymorphicBase2::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-impl PolymorphicBase2 {
-    #[inline(always)]
-    pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(self) }
-    }
-}
+// Error while generating bindings for function 'PolymorphicBase2::Foo':
+// Can't generate bindings for PolymorphicBase2::Foo, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::Foo (the type of __this (parameter #0): references are not supported)
 
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
@@ -189,78 +100,20 @@ unsafe impl ::cxx::ExternType for PolymorphicDerived {
     type Id = ::cxx::type_id!("PolymorphicDerived");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("PolymorphicDerived"),
-    crate::PolymorphicDerived
-);
 
-impl ::ctor::CtorNew<()> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1Ev(
-                    dest as *mut ::core::ffi::c_void,
-                );
-            })
-        }
-    }
-}
+// Error while generating bindings for function 'PolymorphicDerived::PolymorphicDerived':
+// Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __this (parameter #0): references are not supported)
 
-impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: &'b Self) -> Self::CtorType {
-        let mut __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1ERKS_(
-                    dest as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-            })
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
-    }
-}
+// Error while generating bindings for function 'PolymorphicDerived::PolymorphicDerived':
+// Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(move |dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1EOS_(
-                    dest as *mut ::core::ffi::c_void,
-                    __param_0,
-                );
-            })
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'b>;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
-    }
-}
+// Error while generating bindings for function 'PolymorphicDerived::PolymorphicDerived':
+// Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __param_0 (parameter #1): references are not supported)
 
 impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
@@ -269,84 +122,31 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
     }
 }
 
-impl<'b> ::ctor::Assign<&'b Self> for PolymorphicDerived {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSERKS_(self, __param_0);
-        }
-    }
-}
+// Error while generating bindings for function 'PolymorphicDerived::operator=':
+// Can't generate bindings for PolymorphicDerived::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
-    #[inline(always)]
-    fn assign<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, Self>,
-    ) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSEOS_(self, __param_0);
-        }
-    }
-}
+// Error while generating bindings for function 'PolymorphicDerived::operator=':
+// Can't generate bindings for PolymorphicDerived::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseC1ERKS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: &'b crate::PolymorphicBase,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseaSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
-            __param_0: &'b crate::PolymorphicBase,
-        ) -> ::core::pin::Pin<&'a mut crate::PolymorphicBase>;
         pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1ERKS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: &'b crate::PolymorphicBase2,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2aSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
-            __param_0: &'b crate::PolymorphicBase2,
-        ) -> ::core::pin::Pin<&'a mut crate::PolymorphicBase2>;
-        pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase23FooEv<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1Ev(
-            __this: *mut ::core::ffi::c_void,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1ERKS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: &'b crate::PolymorphicDerived,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1EOS_<'b>(
-            __this: *mut ::core::ffi::c_void,
-            __param_0: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedaSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
-            __param_0: &'b crate::PolymorphicDerived,
-        ) -> ::core::pin::Pin<&'a mut crate::PolymorphicDerived>;
-        pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedaSEOS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
-            __param_0: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>,
-        ) -> ::core::pin::Pin<&'a mut crate::PolymorphicDerived>;
     }
 }
 

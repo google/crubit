@@ -21,10 +21,6 @@
 static_assert(sizeof(struct SomeStruct) == 1);
 static_assert(alignof(struct SomeStruct) == 1);
 
-extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
-  crubit::construct_at(__this);
-}
-
 static_assert(CRUBIT_SIZEOF(struct FieldTypeTestStruct) == 208);
 static_assert(alignof(struct FieldTypeTestStruct) == 8);
 static_assert(CRUBIT_OFFSET_OF(bool_field, struct FieldTypeTestStruct) == 0);

@@ -30,69 +30,25 @@ unsafe impl ::cxx::ExternType for CompatibleType {
     type Id = ::cxx::type_id!("CompatibleType");
     type Kind = ::cxx::kind::Opaque;
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("CompatibleType"), crate::CompatibleType);
 
-impl CompatibleType {
-    #[inline(always)]
-    pub fn renamed_default_constructor<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(self) }
-    }
-}
+// Error while generating bindings for function 'CompatibleType::renamed_default_constructor':
+// Can't generate bindings for CompatibleType::renamed_default_constructor, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_default_constructor (the type of __this (parameter #0): references are not supported)
 
-impl CompatibleType {
-    #[inline(always)]
-    pub fn renamed_copy_constructor<'a, 'b>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: &'b Self,
-    ) {
-        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1ERKS_(self, __param_0) }
-    }
-}
+// Error while generating bindings for function 'CompatibleType::renamed_copy_constructor':
+// Can't generate bindings for CompatibleType::renamed_copy_constructor, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_copy_constructor (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_copy_constructor (the type of __param_0 (parameter #1): references are not supported)
 
-impl<'b> ::ctor::Assign<&'b Self> for CompatibleType {
-    #[inline(always)]
-    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN14CompatibleTypeaSERKS_(self, __param_0);
-        }
-    }
-}
+// Error while generating bindings for function 'CompatibleType::operator=':
+// Can't generate bindings for CompatibleType::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-impl CompatibleType {
-    #[inline(always)]
-    pub fn renamed_constructor<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::core::ffi::c_int,
-    ) {
-        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(self, __param_0) }
-    }
-}
-
-mod detail {
-    #[allow(unused_imports)]
-    use super::*;
-    unsafe extern "C" {
-        #[link_name = "_ZN14CompatibleTypeC1Ev"]
-        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
-        );
-        #[link_name = "_ZN14CompatibleTypeC1ERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1ERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
-            __param_0: &'b crate::CompatibleType,
-        );
-        #[link_name = "_ZN14CompatibleTypeaSERKS_"]
-        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeaSERKS_<'a, 'b>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
-            __param_0: &'b crate::CompatibleType,
-        ) -> ::core::pin::Pin<&'a mut crate::CompatibleType>;
-        #[link_name = "_ZN14CompatibleTypeC1Ei"]
-        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ei<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
-            __param_0: ::core::ffi::c_int,
-        );
-    }
-}
+// Error while generating bindings for function 'CompatibleType::renamed_constructor':
+// Can't generate bindings for CompatibleType::renamed_constructor, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_constructor (the type of __this (parameter #0): references are not supported)
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::CompatibleType>() == 1);

@@ -29,32 +29,4 @@ extern "C" void __rust_thunk___ZN3FooC1Ev(class Foo* __this) {
   crubit::construct_at(__this);
 }
 
-extern "C" void __rust_thunk___ZN3Foo3BarE6SizeofIiE(
-    class Foo* __this, struct Sizeof<int>* __param_0) {
-  __this->Bar(std::move(*__param_0));
-}
-
-extern "C" void __rust_thunk___ZN3Foo3BarE6SizeofIfE(
-    class Foo* __this, struct Sizeof<float>* __param_0) {
-  __this->Bar(std::move(*__param_0));
-}
-
-static_assert(sizeof(struct Sizeof<float>) == 1);
-static_assert(alignof(struct Sizeof<float>) == 1);
-
-extern "C" void
-__rust_thunk___ZN6SizeofIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<float>* __this) {
-  crubit::construct_at(__this);
-}
-
-static_assert(sizeof(struct Sizeof<int>) == 1);
-static_assert(alignof(struct Sizeof<int>) == 1);
-
-extern "C" void
-__rust_thunk___ZN6SizeofIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aoverloads_5fcc(
-    struct Sizeof<int>* __this) {
-  crubit::construct_at(__this);
-}
-
 #pragma clang diagnostic pop
