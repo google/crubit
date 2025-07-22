@@ -92,7 +92,7 @@ fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
             quote! {
                 namespace rust_out {
                     ...
-                    // Verifing the presence of this forward declaration
+                    // Verifying the presence of this forward declaration
                     // it the essence of this test.  The order of the items
                     // below also matters.
                     struct S;
@@ -130,7 +130,7 @@ fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
             quote! {
                 namespace rust_out {
                     ...
-                    // Verifing the presence of this forward declaration
+                    // Verifying the presence of this forward declaration
                     // is the essence of this test.  The order also matters:
                     // 1. The fwd decl of `S` should come first,
                     // 2. Declaration of `f` and definition of `S` should come next

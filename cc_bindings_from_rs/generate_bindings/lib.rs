@@ -400,7 +400,7 @@ fn reexported_symbol_canonical_name_mapping(
     name_map
 }
 
-/// Checks whether an definition matches a specific qualified name.
+/// Checks whether a definition matches a specific qualified name.
 fn matches_qualified_name(
     db: &dyn BindingsGenerator<'_>,
     item_did: DefId,
