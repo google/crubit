@@ -31,18 +31,18 @@ unsafe impl ::cxx::ExternType for Position {
 }
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for function 'Position::Position':
+// Error while generating bindings for constructor 'Position::Position':
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for function 'Position::Position':
+// Error while generating bindings for constructor 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position
 
 // Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for function 'Position::Position':
+// Error while generating bindings for constructor 'Position::Position':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position

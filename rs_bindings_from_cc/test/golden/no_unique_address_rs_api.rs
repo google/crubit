@@ -40,16 +40,16 @@ unsafe impl ::cxx::ExternType for Struct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Struct::Struct':
+// Error while generating bindings for constructor 'Struct::Struct':
 // Can't generate bindings for Struct::Struct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Struct::Struct':
+// Error while generating bindings for constructor 'Struct::Struct':
 // Can't generate bindings for Struct::Struct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Struct::Struct':
+// Error while generating bindings for constructor 'Struct::Struct':
 // Can't generate bindings for Struct::Struct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __param_0 (parameter #1): references are not supported)
@@ -106,16 +106,16 @@ unsafe impl ::cxx::ExternType for PaddingBetweenFields {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'PaddingBetweenFields::PaddingBetweenFields':
+// Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
 // Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'PaddingBetweenFields::PaddingBetweenFields':
+// Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
 // Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'PaddingBetweenFields::PaddingBetweenFields':
+// Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
 // Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __param_0 (parameter #1): references are not supported)
@@ -168,11 +168,11 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct':
+// Error while generating bindings for constructor 'FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct':
 // Can't generate bindings for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct':
+// Error while generating bindings for constructor 'FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct':
 // Can't generate bindings for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct (the type of __param_0 (parameter #1): references are not supported)
@@ -218,12 +218,12 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'FieldInTailPadding::FieldInTailPadding':
+// Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
 // Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'FieldInTailPadding::FieldInTailPadding':
+// Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
 // Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __param_0 (parameter #1): references are not supported)
@@ -247,7 +247,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'FieldInTailPadding::FieldInTailPadding':
+// Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
 // Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __this (parameter #0): references are not supported)
 

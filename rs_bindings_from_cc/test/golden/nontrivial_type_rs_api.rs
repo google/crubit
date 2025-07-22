@@ -33,24 +33,24 @@ unsafe impl ::cxx::ExternType for Nontrivial {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
+// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
+// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
+// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
+// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
+// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __param_0 (parameter #1): references are not supported)
@@ -146,24 +146,24 @@ unsafe impl ::cxx::ExternType for NontrivialInline {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'NontrivialInline::NontrivialInline':
+// Error while generating bindings for constructor 'NontrivialInline::NontrivialInline':
 // Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'NontrivialInline::NontrivialInline':
+// Error while generating bindings for constructor 'NontrivialInline::NontrivialInline':
 // Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'NontrivialInline::NontrivialInline':
+// Error while generating bindings for constructor 'NontrivialInline::NontrivialInline':
 // Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'NontrivialInline::NontrivialInline':
+// Error while generating bindings for constructor 'NontrivialInline::NontrivialInline':
 // Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NontrivialInline::NontrivialInline':
+// Error while generating bindings for constructor 'NontrivialInline::NontrivialInline':
 // Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __param_0 (parameter #1): references are not supported)
@@ -216,16 +216,16 @@ unsafe impl ::cxx::ExternType for NontrivialMembers {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'NontrivialMembers::NontrivialMembers':
+// Error while generating bindings for constructor 'NontrivialMembers::NontrivialMembers':
 // Can't generate bindings for NontrivialMembers::NontrivialMembers, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::NontrivialMembers (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'NontrivialMembers::NontrivialMembers':
+// Error while generating bindings for constructor 'NontrivialMembers::NontrivialMembers':
 // Can't generate bindings for NontrivialMembers::NontrivialMembers, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::NontrivialMembers (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::NontrivialMembers (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NontrivialMembers::NontrivialMembers':
+// Error while generating bindings for constructor 'NontrivialMembers::NontrivialMembers':
 // Can't generate bindings for NontrivialMembers::NontrivialMembers, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::NontrivialMembers (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::NontrivialMembers (the type of __param_0 (parameter #1): references are not supported)
@@ -263,28 +263,28 @@ unsafe impl ::cxx::ExternType for NontrivialUnpin {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'NontrivialUnpin::NontrivialUnpin':
+// Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
 // Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'NontrivialUnpin::NontrivialUnpin':
+// Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
 // Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'NontrivialUnpin::NontrivialUnpin':
+// Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
 // Constructors with more than one parameter are not yet supported. See b/216648347.
 
-// Error while generating bindings for function 'NontrivialUnpin::NontrivialUnpin':
+// Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
 // Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NontrivialUnpin::NontrivialUnpin':
+// Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
 // Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NontrivialUnpin::NontrivialUnpin':
+// Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
 // Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __param_0 (parameter #1): references are not supported)
@@ -393,12 +393,12 @@ unsafe impl ::cxx::ExternType for NontrivialByValue {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'NontrivialByValue::NontrivialByValue':
+// Error while generating bindings for constructor 'NontrivialByValue::NontrivialByValue':
 // Can't generate bindings for NontrivialByValue::NontrivialByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::NontrivialByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::NontrivialByValue (the type of other (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NontrivialByValue::NontrivialByValue':
+// Error while generating bindings for constructor 'NontrivialByValue::NontrivialByValue':
 // Can't generate bindings for NontrivialByValue::NontrivialByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::NontrivialByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::NontrivialByValue (the type of other (parameter #1): references are not supported)
@@ -436,7 +436,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'Nonmovable::Nonmovable':
+// Error while generating bindings for constructor 'Nonmovable::Nonmovable':
 // Can't generate bindings for Nonmovable::Nonmovable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nonmovable::Nonmovable (the type of __this (parameter #0): references are not supported)
 

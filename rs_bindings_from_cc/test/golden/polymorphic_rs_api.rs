@@ -27,11 +27,11 @@ unsafe impl ::cxx::ExternType for PolymorphicBase {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'PolymorphicBase::PolymorphicBase':
+// Error while generating bindings for constructor 'PolymorphicBase::PolymorphicBase':
 // Can't generate bindings for PolymorphicBase::PolymorphicBase, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::PolymorphicBase (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'PolymorphicBase::PolymorphicBase':
+// Error while generating bindings for constructor 'PolymorphicBase::PolymorphicBase':
 // Can't generate bindings for PolymorphicBase::PolymorphicBase, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::PolymorphicBase (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase::PolymorphicBase (the type of __param_0 (parameter #1): references are not supported)
@@ -62,11 +62,11 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'PolymorphicBase2::PolymorphicBase2':
+// Error while generating bindings for constructor 'PolymorphicBase2::PolymorphicBase2':
 // Can't generate bindings for PolymorphicBase2::PolymorphicBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::PolymorphicBase2 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'PolymorphicBase2::PolymorphicBase2':
+// Error while generating bindings for constructor 'PolymorphicBase2::PolymorphicBase2':
 // Can't generate bindings for PolymorphicBase2::PolymorphicBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::PolymorphicBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::PolymorphicBase2 (the type of __param_0 (parameter #1): references are not supported)
@@ -101,16 +101,16 @@ unsafe impl ::cxx::ExternType for PolymorphicDerived {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'PolymorphicDerived::PolymorphicDerived':
+// Error while generating bindings for constructor 'PolymorphicDerived::PolymorphicDerived':
 // Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'PolymorphicDerived::PolymorphicDerived':
+// Error while generating bindings for constructor 'PolymorphicDerived::PolymorphicDerived':
 // Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'PolymorphicDerived::PolymorphicDerived':
+// Error while generating bindings for constructor 'PolymorphicDerived::PolymorphicDerived':
 // Can't generate bindings for PolymorphicDerived::PolymorphicDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::PolymorphicDerived (the type of __param_0 (parameter #1): references are not supported)

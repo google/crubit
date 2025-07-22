@@ -32,12 +32,12 @@ unsafe impl ::cxx::ExternType for DocCommentSlashes {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'DocCommentSlashes::DocCommentSlashes':
+// Error while generating bindings for constructor 'DocCommentSlashes::DocCommentSlashes':
 // Can't generate bindings for DocCommentSlashes::DocCommentSlashes, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'DocCommentSlashes::DocCommentSlashes':
+// Error while generating bindings for constructor 'DocCommentSlashes::DocCommentSlashes':
 // Can't generate bindings for DocCommentSlashes::DocCommentSlashes, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __param_0 (parameter #1): references are not supported)
@@ -54,11 +54,11 @@ unsafe impl ::cxx::ExternType for DocCommentSlashes {
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'DocCommentSlashes::DocCommentSlashes':
+// Error while generating bindings for constructor 'DocCommentSlashes::DocCommentSlashes':
 // Can't generate bindings for DocCommentSlashes::DocCommentSlashes, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'DocCommentSlashes::DocCommentSlashes':
+// Error while generating bindings for constructor 'DocCommentSlashes::DocCommentSlashes':
 // Can't generate bindings for DocCommentSlashes::DocCommentSlashes, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentSlashes::DocCommentSlashes (the type of __this (parameter #0): references are not supported)
 
@@ -95,16 +95,16 @@ unsafe impl ::cxx::ExternType for DocCommentBang {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'DocCommentBang::DocCommentBang':
+// Error while generating bindings for constructor 'DocCommentBang::DocCommentBang':
 // Can't generate bindings for DocCommentBang::DocCommentBang, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::DocCommentBang (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'DocCommentBang::DocCommentBang':
+// Error while generating bindings for constructor 'DocCommentBang::DocCommentBang':
 // Can't generate bindings for DocCommentBang::DocCommentBang, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::DocCommentBang (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::DocCommentBang (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'DocCommentBang::DocCommentBang':
+// Error while generating bindings for constructor 'DocCommentBang::DocCommentBang':
 // Can't generate bindings for DocCommentBang::DocCommentBang, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::DocCommentBang (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for DocCommentBang::DocCommentBang (the type of __param_0 (parameter #1): references are not supported)
@@ -138,16 +138,16 @@ unsafe impl ::cxx::ExternType for MultilineCommentTwoStars {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'MultilineCommentTwoStars::MultilineCommentTwoStars':
+// Error while generating bindings for constructor 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Can't generate bindings for MultilineCommentTwoStars::MultilineCommentTwoStars, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::MultilineCommentTwoStars (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'MultilineCommentTwoStars::MultilineCommentTwoStars':
+// Error while generating bindings for constructor 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Can't generate bindings for MultilineCommentTwoStars::MultilineCommentTwoStars, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::MultilineCommentTwoStars (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::MultilineCommentTwoStars (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'MultilineCommentTwoStars::MultilineCommentTwoStars':
+// Error while generating bindings for constructor 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Can't generate bindings for MultilineCommentTwoStars::MultilineCommentTwoStars, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::MultilineCommentTwoStars (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineCommentTwoStars::MultilineCommentTwoStars (the type of __param_0 (parameter #1): references are not supported)
@@ -181,16 +181,16 @@ unsafe impl ::cxx::ExternType for LineComment {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'LineComment::LineComment':
+// Error while generating bindings for constructor 'LineComment::LineComment':
 // Can't generate bindings for LineComment::LineComment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::LineComment (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'LineComment::LineComment':
+// Error while generating bindings for constructor 'LineComment::LineComment':
 // Can't generate bindings for LineComment::LineComment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::LineComment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::LineComment (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'LineComment::LineComment':
+// Error while generating bindings for constructor 'LineComment::LineComment':
 // Can't generate bindings for LineComment::LineComment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::LineComment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for LineComment::LineComment (the type of __param_0 (parameter #1): references are not supported)
@@ -224,16 +224,16 @@ unsafe impl ::cxx::ExternType for MultilineOneStar {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'MultilineOneStar::MultilineOneStar':
+// Error while generating bindings for constructor 'MultilineOneStar::MultilineOneStar':
 // Can't generate bindings for MultilineOneStar::MultilineOneStar, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::MultilineOneStar (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'MultilineOneStar::MultilineOneStar':
+// Error while generating bindings for constructor 'MultilineOneStar::MultilineOneStar':
 // Can't generate bindings for MultilineOneStar::MultilineOneStar, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::MultilineOneStar (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::MultilineOneStar (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'MultilineOneStar::MultilineOneStar':
+// Error while generating bindings for constructor 'MultilineOneStar::MultilineOneStar':
 // Can't generate bindings for MultilineOneStar::MultilineOneStar, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::MultilineOneStar (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:experimental] for MultilineOneStar::MultilineOneStar (the type of __param_0 (parameter #1): references are not supported)

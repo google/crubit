@@ -30,16 +30,16 @@ unsafe impl ::cxx::ExternType for SomeClass {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'SomeClass::SomeClass':
+// Error while generating bindings for constructor 'SomeClass::SomeClass':
 // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'SomeClass::SomeClass':
+// Error while generating bindings for constructor 'SomeClass::SomeClass':
 // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'SomeClass::SomeClass':
+// Error while generating bindings for constructor 'SomeClass::SomeClass':
 // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)

@@ -800,7 +800,11 @@ impl GenericItem for Func {
         }
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        UnsupportedItemKind::Func
+        if self.cc_name == UnqualifiedIdentifier::Constructor {
+            UnsupportedItemKind::Constructor
+        } else {
+            UnsupportedItemKind::Func
+        }
     }
     fn source_loc(&self) -> Option<Rc<str>> {
         Some(self.source_loc.clone())
@@ -1325,6 +1329,7 @@ pub enum UnsupportedItemKind {
     Enum,
     TypeAlias,
     Namespace,
+    Constructor,
     // Represents: Comment, Type Map (crubit_internal_rust_type),
     // Use Mod, Hard Error in c++.
     Other,
@@ -1341,6 +1346,7 @@ impl UnsupportedItemKind {
             UnsupportedItemKind::Enum => "enum",
             UnsupportedItemKind::TypeAlias => "type alias",
             UnsupportedItemKind::Namespace => "namespace",
+            UnsupportedItemKind::Constructor => "constructor",
             UnsupportedItemKind::Other => "item",
         }
     }

@@ -46,6 +46,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclFriend.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
@@ -801,21 +802,32 @@ IR::Item Importer::ImportUnsupportedRecord(
       break;
   }
   return ImportUnsupportedItem(&decl, kind, std::move(path),
+                               std::vector<FormattedError>({std::move(error)}),
+                               /*is_hard_error=*/false);
+}
+
+IR::Item Importer::ImportUnsupportedFunc(
+    const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
+    FormattedError error) {
+  return ImportUnsupportedFunc(decl, std::move(path),
                                std::vector<FormattedError>({std::move(error)}));
+}
+
+IR::Item Importer::ImportUnsupportedFunc(
+    const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
+    std::vector<FormattedError> errors) {
+  const auto kind = decl.getKind() == clang::NamedDecl::Kind::CXXConstructor
+                        ? UnsupportedItem::Kind::kConstructor
+                        : UnsupportedItem::Kind::kFunc;
+  return ImportUnsupportedItem(&decl, kind, std::move(path), std::move(errors),
+                               /*is_hard_error=*/false);
 }
 
 IR::Item Importer::ImportUnsupportedItem(
     const clang::Decl* decl, UnsupportedItem::Kind kind,
     std::optional<UnsupportedItem::Path> path, FormattedError error) {
   return ImportUnsupportedItem(decl, kind, std::move(path),
-                               std::vector<FormattedError>({std::move(error)}));
-}
-
-IR::Item Importer::ImportUnsupportedItem(
-    const clang::Decl* decl, UnsupportedItem::Kind kind,
-    std::optional<UnsupportedItem::Path> path,
-    std::vector<FormattedError> errors) {
-  return ImportUnsupportedItem(decl, kind, std::move(path), std::move(errors),
+                               std::vector<FormattedError>({std::move(error)}),
                                /*is_hard_error=*/false);
 }
 

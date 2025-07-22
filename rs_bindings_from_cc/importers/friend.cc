@@ -32,15 +32,15 @@ std::optional<IR::Item> FriendDeclImporter::Import(
   // Get the enclosing record declaration.
   clang::DeclContext* decl_context = friend_decl->getDeclContext();
   if (!decl_context) {
-    return ictx_.ImportUnsupportedItem(
-        friend_decl, UnsupportedItem::Kind::kFunc, std::nullopt,
+    return ictx_.ImportUnsupportedFunc(
+        *named_decl, std::nullopt,
         FormattedError::Static("DeclContext was unexpectedly null"));
   }
   clang::CXXRecordDecl* enclosing_record_decl =
       clang::dyn_cast<clang::CXXRecordDecl>(decl_context);
   if (!enclosing_record_decl) {
-    return ictx_.ImportUnsupportedItem(
-        friend_decl, UnsupportedItem::Kind::kFunc, std::nullopt,
+    return ictx_.ImportUnsupportedFunc(
+        *named_decl, std::nullopt,
         FormattedError::Static(
             "DeclContext was unexpectedly not a CXXRecordDecl"));
   }

@@ -27,16 +27,16 @@ unsafe impl ::cxx::ExternType for FirstStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'FirstStruct::FirstStruct':
+// Error while generating bindings for constructor 'FirstStruct::FirstStruct':
 // Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'FirstStruct::FirstStruct':
+// Error while generating bindings for constructor 'FirstStruct::FirstStruct':
 // Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'FirstStruct::FirstStruct':
+// Error while generating bindings for constructor 'FirstStruct::FirstStruct':
 // Can't generate bindings for FirstStruct::FirstStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::FirstStruct (the type of __param_0 (parameter #1): references are not supported)
@@ -71,16 +71,16 @@ unsafe impl ::cxx::ExternType for SecondStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'SecondStruct::SecondStruct':
+// Error while generating bindings for constructor 'SecondStruct::SecondStruct':
 // Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'SecondStruct::SecondStruct':
+// Error while generating bindings for constructor 'SecondStruct::SecondStruct':
 // Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'SecondStruct::SecondStruct':
+// Error while generating bindings for constructor 'SecondStruct::SecondStruct':
 // Can't generate bindings for SecondStruct::SecondStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::SecondStruct (the type of __param_0 (parameter #1): references are not supported)

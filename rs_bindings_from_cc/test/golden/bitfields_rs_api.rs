@@ -41,16 +41,16 @@ unsafe impl ::cxx::ExternType for WithBitfields {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'WithBitfields::WithBitfields':
+// Error while generating bindings for constructor 'WithBitfields::WithBitfields':
 // Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'WithBitfields::WithBitfields':
+// Error while generating bindings for constructor 'WithBitfields::WithBitfields':
 // Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'WithBitfields::WithBitfields':
+// Error while generating bindings for constructor 'WithBitfields::WithBitfields':
 // Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __param_0 (parameter #1): references are not supported)
@@ -84,16 +84,16 @@ unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AlignmentRegressionTest::AlignmentRegressionTest':
+// Error while generating bindings for constructor 'AlignmentRegressionTest::AlignmentRegressionTest':
 // Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AlignmentRegressionTest::AlignmentRegressionTest':
+// Error while generating bindings for constructor 'AlignmentRegressionTest::AlignmentRegressionTest':
 // Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AlignmentRegressionTest::AlignmentRegressionTest':
+// Error while generating bindings for constructor 'AlignmentRegressionTest::AlignmentRegressionTest':
 // Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __param_0 (parameter #1): references are not supported)

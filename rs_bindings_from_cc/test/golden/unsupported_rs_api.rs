@@ -27,16 +27,16 @@ unsafe impl ::cxx::ExternType for TrivialCustomType {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'TrivialCustomType::TrivialCustomType':
+// Error while generating bindings for constructor 'TrivialCustomType::TrivialCustomType':
 // Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'TrivialCustomType::TrivialCustomType':
+// Error while generating bindings for constructor 'TrivialCustomType::TrivialCustomType':
 // Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TrivialCustomType::TrivialCustomType':
+// Error while generating bindings for constructor 'TrivialCustomType::TrivialCustomType':
 // Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
@@ -73,7 +73,7 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'NontrivialCustomType::NontrivialCustomType':
+// Error while generating bindings for constructor 'NontrivialCustomType::NontrivialCustomType':
 // Can't generate bindings for NontrivialCustomType::NontrivialCustomType, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for NontrivialCustomType::NontrivialCustomType (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for NontrivialCustomType::NontrivialCustomType (the type of __param_0 (parameter #1): references are not supported)

@@ -835,6 +835,7 @@ struct UnsupportedItem {
     kEnum,
     kTypeAlias,
     kNamespace,
+    kConstructor,
     // Unnameable items include things like comments that do not result in
     // Rust types.
     kOther,

@@ -31,11 +31,11 @@ unsafe impl ::cxx::ExternType for CompatibleType {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'CompatibleType::renamed_default_constructor':
+// Error while generating bindings for constructor 'CompatibleType::renamed_default_constructor':
 // Can't generate bindings for CompatibleType::renamed_default_constructor, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_default_constructor (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'CompatibleType::renamed_copy_constructor':
+// Error while generating bindings for constructor 'CompatibleType::renamed_copy_constructor':
 // Can't generate bindings for CompatibleType::renamed_copy_constructor, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_copy_constructor (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_copy_constructor (the type of __param_0 (parameter #1): references are not supported)
@@ -46,7 +46,7 @@ unsafe impl ::cxx::ExternType for CompatibleType {
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'CompatibleType::renamed_constructor':
+// Error while generating bindings for constructor 'CompatibleType::renamed_constructor':
 // Can't generate bindings for CompatibleType::renamed_constructor, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_constructor (the type of __this (parameter #0): references are not supported)
 

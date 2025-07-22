@@ -28,16 +28,16 @@ pub mod test_namespace_bindings {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Error while generating bindings for function 'S::S':
+    // Error while generating bindings for constructor 'S::S':
     // Can't generate bindings for S::S, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __this (parameter #0): references are not supported)
 
-    // Error while generating bindings for function 'S::S':
+    // Error while generating bindings for constructor 'S::S':
     // Can't generate bindings for S::S, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for function 'S::S':
+    // Error while generating bindings for constructor 'S::S':
     // Can't generate bindings for S::S, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
@@ -118,16 +118,16 @@ pub mod test_namespace_bindings_reopened {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Error while generating bindings for function 'S::S':
+        // Error while generating bindings for constructor 'S::S':
         // Can't generate bindings for S::S, because of missing required features (<internal link>):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __this (parameter #0): references are not supported)
 
-        // Error while generating bindings for function 'S::S':
+        // Error while generating bindings for constructor 'S::S':
         // Can't generate bindings for S::S, because of missing required features (<internal link>):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __this (parameter #0): references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
 
-        // Error while generating bindings for function 'S::S':
+        // Error while generating bindings for constructor 'S::S':
         // Can't generate bindings for S::S, because of missing required features (<internal link>):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __this (parameter #0): references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
@@ -176,16 +176,16 @@ pub mod test_namespace_bindings_inline {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Error while generating bindings for function 'StructInInlineNamespace::StructInInlineNamespace':
+        // Error while generating bindings for constructor 'StructInInlineNamespace::StructInInlineNamespace':
         // Can't generate bindings for StructInInlineNamespace::StructInInlineNamespace, because of missing required features (<internal link>):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::StructInInlineNamespace (the type of __this (parameter #0): references are not supported)
 
-        // Error while generating bindings for function 'StructInInlineNamespace::StructInInlineNamespace':
+        // Error while generating bindings for constructor 'StructInInlineNamespace::StructInInlineNamespace':
         // Can't generate bindings for StructInInlineNamespace::StructInInlineNamespace, because of missing required features (<internal link>):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::StructInInlineNamespace (the type of __this (parameter #0): references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::StructInInlineNamespace (the type of __param_0 (parameter #1): references are not supported)
 
-        // Error while generating bindings for function 'StructInInlineNamespace::StructInInlineNamespace':
+        // Error while generating bindings for constructor 'StructInInlineNamespace::StructInInlineNamespace':
         // Can't generate bindings for StructInInlineNamespace::StructInInlineNamespace, because of missing required features (<internal link>):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::StructInInlineNamespace (the type of __this (parameter #0): references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::StructInInlineNamespace (the type of __param_0 (parameter #1): references are not supported)

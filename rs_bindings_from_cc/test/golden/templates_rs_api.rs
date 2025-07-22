@@ -27,16 +27,16 @@ unsafe impl ::cxx::ExternType for DifferentScope {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'DifferentScope::DifferentScope':
+// Error while generating bindings for constructor 'DifferentScope::DifferentScope':
 // Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'DifferentScope::DifferentScope':
+// Error while generating bindings for constructor 'DifferentScope::DifferentScope':
 // Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'DifferentScope::DifferentScope':
+// Error while generating bindings for constructor 'DifferentScope::DifferentScope':
 // Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
@@ -82,16 +82,16 @@ pub mod test_namespace_bindings {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Error while generating bindings for function 'TemplateParam::TemplateParam':
+    // Error while generating bindings for constructor 'TemplateParam::TemplateParam':
     // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
 
-    // Error while generating bindings for function 'TemplateParam::TemplateParam':
+    // Error while generating bindings for constructor 'TemplateParam::TemplateParam':
     // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for function 'TemplateParam::TemplateParam':
+    // Error while generating bindings for constructor 'TemplateParam::TemplateParam':
     // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
@@ -217,12 +217,12 @@ pub mod private_classes {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Error while generating bindings for function 'HasPrivateType::HasPrivateType':
+    // Error while generating bindings for constructor 'HasPrivateType::HasPrivateType':
     // Can't generate bindings for HasPrivateType::HasPrivateType, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for function 'HasPrivateType::HasPrivateType':
+    // Error while generating bindings for constructor 'HasPrivateType::HasPrivateType':
     // Can't generate bindings for HasPrivateType::HasPrivateType, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)

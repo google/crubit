@@ -101,16 +101,19 @@ class ImportContext {
       const clang::TagDecl& decl, std::optional<UnsupportedItem::Path> path,
       FormattedError error) = 0;
 
+  virtual IR::Item ImportUnsupportedFunc(
+      const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
+      FormattedError error) = 0;
+
+  // Imports an unsupported function with a vector of formatted error messages.
+  virtual IR::Item ImportUnsupportedFunc(
+      const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
+      std::vector<FormattedError> error) = 0;
+
   // Imports an unsupported item with a single formatted error message.
   virtual IR::Item ImportUnsupportedItem(
       const clang::Decl* decl, UnsupportedItem::Kind kind,
       std::optional<UnsupportedItem::Path> path, FormattedError error) = 0;
-
-  // Imports an unsupported item with a vector of formatted error messages.
-  virtual IR::Item ImportUnsupportedItem(
-      const clang::Decl* decl, UnsupportedItem::Kind kind,
-      std::optional<UnsupportedItem::Path> path,
-      std::vector<FormattedError> error) = 0;
 
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.

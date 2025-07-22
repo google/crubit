@@ -33,16 +33,16 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
@@ -122,12 +122,12 @@ unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Error while generating bindings for constructor 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Error while generating bindings for constructor 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)

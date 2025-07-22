@@ -690,6 +690,8 @@ static std::string UnsupportedItemKindToString(UnsupportedItem::Kind kind) {
       return "TypeAlias";
     case UnsupportedItem::Kind::kNamespace:
       return "Namespace";
+    case UnsupportedItem::Kind::kConstructor:
+      return "Constructor";
     case UnsupportedItem::Kind::kOther:
       return "Other";
   }

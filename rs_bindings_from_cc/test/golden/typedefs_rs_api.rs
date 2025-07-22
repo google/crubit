@@ -27,16 +27,16 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'SomeStruct::SomeStruct':
+// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
@@ -76,16 +76,16 @@ unsafe impl ::cxx::ExternType for SomeOtherStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'SomeOtherStruct::SomeOtherStruct':
+// Error while generating bindings for constructor 'SomeOtherStruct::SomeOtherStruct':
 // Can't generate bindings for SomeOtherStruct::SomeOtherStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'SomeOtherStruct::SomeOtherStruct':
+// Error while generating bindings for constructor 'SomeOtherStruct::SomeOtherStruct':
 // Can't generate bindings for SomeOtherStruct::SomeOtherStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'SomeOtherStruct::SomeOtherStruct':
+// Error while generating bindings for constructor 'SomeOtherStruct::SomeOtherStruct':
 // Can't generate bindings for SomeOtherStruct::SomeOtherStruct, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::SomeOtherStruct (the type of __param_0 (parameter #1): references are not supported)
@@ -115,16 +115,16 @@ unsafe impl ::cxx::ExternType for SomeUnion {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'SomeUnion::SomeUnion':
+// Error while generating bindings for constructor 'SomeUnion::SomeUnion':
 // Can't generate bindings for SomeUnion::SomeUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'SomeUnion::SomeUnion':
+// Error while generating bindings for constructor 'SomeUnion::SomeUnion':
 // Can't generate bindings for SomeUnion::SomeUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'SomeUnion::SomeUnion':
+// Error while generating bindings for constructor 'SomeUnion::SomeUnion':
 // Can't generate bindings for SomeUnion::SomeUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeUnion::SomeUnion (the type of __param_0 (parameter #1): references are not supported)
@@ -157,16 +157,16 @@ unsafe impl ::cxx::ExternType for SomeOtherUnion {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
+// Error while generating bindings for constructor 'SomeOtherUnion::SomeOtherUnion':
 // Can't generate bindings for SomeOtherUnion::SomeOtherUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
+// Error while generating bindings for constructor 'SomeOtherUnion::SomeOtherUnion':
 // Can't generate bindings for SomeOtherUnion::SomeOtherUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'SomeOtherUnion::SomeOtherUnion':
+// Error while generating bindings for constructor 'SomeOtherUnion::SomeOtherUnion':
 // Can't generate bindings for SomeOtherUnion::SomeOtherUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherUnion::SomeOtherUnion (the type of __param_0 (parameter #1): references are not supported)

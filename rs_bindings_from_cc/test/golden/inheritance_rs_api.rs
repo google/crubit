@@ -30,16 +30,16 @@ unsafe impl ::cxx::ExternType for Base0 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Base0::Base0':
+// Error while generating bindings for constructor 'Base0::Base0':
 // Can't generate bindings for Base0::Base0, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Base0::Base0':
+// Error while generating bindings for constructor 'Base0::Base0':
 // Can't generate bindings for Base0::Base0, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Base0::Base0':
+// Error while generating bindings for constructor 'Base0::Base0':
 // Can't generate bindings for Base0::Base0, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __param_0 (parameter #1): references are not supported)
@@ -75,16 +75,16 @@ unsafe impl ::cxx::ExternType for Base1 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Base1::Base1':
+// Error while generating bindings for constructor 'Base1::Base1':
 // Can't generate bindings for Base1::Base1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Base1::Base1':
+// Error while generating bindings for constructor 'Base1::Base1':
 // Can't generate bindings for Base1::Base1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Base1::Base1':
+// Error while generating bindings for constructor 'Base1::Base1':
 // Can't generate bindings for Base1::Base1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __param_0 (parameter #1): references are not supported)
@@ -117,16 +117,16 @@ unsafe impl ::cxx::ExternType for Base2 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Base2::Base2':
+// Error while generating bindings for constructor 'Base2::Base2':
 // Can't generate bindings for Base2::Base2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Base2::Base2':
+// Error while generating bindings for constructor 'Base2::Base2':
 // Can't generate bindings for Base2::Base2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Base2::Base2':
+// Error while generating bindings for constructor 'Base2::Base2':
 // Can't generate bindings for Base2::Base2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __param_0 (parameter #1): references are not supported)
@@ -157,16 +157,16 @@ unsafe impl ::cxx::ExternType for Derived {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Derived::Derived':
+// Error while generating bindings for constructor 'Derived::Derived':
 // Can't generate bindings for Derived::Derived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Derived::Derived':
+// Error while generating bindings for constructor 'Derived::Derived':
 // Can't generate bindings for Derived::Derived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Derived::Derived':
+// Error while generating bindings for constructor 'Derived::Derived':
 // Can't generate bindings for Derived::Derived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __param_0 (parameter #1): references are not supported)
@@ -196,16 +196,16 @@ unsafe impl ::cxx::ExternType for VirtualBase1 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'VirtualBase1::VirtualBase1':
+// Error while generating bindings for constructor 'VirtualBase1::VirtualBase1':
 // Can't generate bindings for VirtualBase1::VirtualBase1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'VirtualBase1::VirtualBase1':
+// Error while generating bindings for constructor 'VirtualBase1::VirtualBase1':
 // Can't generate bindings for VirtualBase1::VirtualBase1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'VirtualBase1::VirtualBase1':
+// Error while generating bindings for constructor 'VirtualBase1::VirtualBase1':
 // Can't generate bindings for VirtualBase1::VirtualBase1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __param_0 (parameter #1): references are not supported)
@@ -235,16 +235,16 @@ unsafe impl ::cxx::ExternType for VirtualBase2 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'VirtualBase2::VirtualBase2':
+// Error while generating bindings for constructor 'VirtualBase2::VirtualBase2':
 // Can't generate bindings for VirtualBase2::VirtualBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'VirtualBase2::VirtualBase2':
+// Error while generating bindings for constructor 'VirtualBase2::VirtualBase2':
 // Can't generate bindings for VirtualBase2::VirtualBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'VirtualBase2::VirtualBase2':
+// Error while generating bindings for constructor 'VirtualBase2::VirtualBase2':
 // Can't generate bindings for VirtualBase2::VirtualBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __param_0 (parameter #1): references are not supported)
@@ -274,16 +274,16 @@ unsafe impl ::cxx::ExternType for VirtualDerived {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'VirtualDerived::VirtualDerived':
+// Error while generating bindings for constructor 'VirtualDerived::VirtualDerived':
 // Can't generate bindings for VirtualDerived::VirtualDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'VirtualDerived::VirtualDerived':
+// Error while generating bindings for constructor 'VirtualDerived::VirtualDerived':
 // Can't generate bindings for VirtualDerived::VirtualDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'VirtualDerived::VirtualDerived':
+// Error while generating bindings for constructor 'VirtualDerived::VirtualDerived':
 // Can't generate bindings for VirtualDerived::VirtualDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __param_0 (parameter #1): references are not supported)
@@ -313,10 +313,10 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'MyAbstractClass::MyAbstractClass':
+// Error while generating bindings for constructor 'MyAbstractClass::MyAbstractClass':
 // Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
 
-// Error while generating bindings for function 'MyAbstractClass::MyAbstractClass':
+// Error while generating bindings for constructor 'MyAbstractClass::MyAbstractClass':
 // Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
 
 // Error while generating bindings for function 'MyAbstractClass::operator=':
@@ -339,16 +339,16 @@ unsafe impl ::cxx::ExternType for MethodBase1 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'MethodBase1::MethodBase1':
+// Error while generating bindings for constructor 'MethodBase1::MethodBase1':
 // Can't generate bindings for MethodBase1::MethodBase1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'MethodBase1::MethodBase1':
+// Error while generating bindings for constructor 'MethodBase1::MethodBase1':
 // Can't generate bindings for MethodBase1::MethodBase1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'MethodBase1::MethodBase1':
+// Error while generating bindings for constructor 'MethodBase1::MethodBase1':
 // Can't generate bindings for MethodBase1::MethodBase1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __param_0 (parameter #1): references are not supported)
@@ -395,16 +395,16 @@ unsafe impl ::cxx::ExternType for MethodBase2 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'MethodBase2::MethodBase2':
+// Error while generating bindings for constructor 'MethodBase2::MethodBase2':
 // Can't generate bindings for MethodBase2::MethodBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'MethodBase2::MethodBase2':
+// Error while generating bindings for constructor 'MethodBase2::MethodBase2':
 // Can't generate bindings for MethodBase2::MethodBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'MethodBase2::MethodBase2':
+// Error while generating bindings for constructor 'MethodBase2::MethodBase2':
 // Can't generate bindings for MethodBase2::MethodBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __param_0 (parameter #1): references are not supported)
@@ -442,16 +442,16 @@ unsafe impl ::cxx::ExternType for MethodDerived {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'MethodDerived::MethodDerived':
+// Error while generating bindings for constructor 'MethodDerived::MethodDerived':
 // Can't generate bindings for MethodDerived::MethodDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'MethodDerived::MethodDerived':
+// Error while generating bindings for constructor 'MethodDerived::MethodDerived':
 // Can't generate bindings for MethodDerived::MethodDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'MethodDerived::MethodDerived':
+// Error while generating bindings for constructor 'MethodDerived::MethodDerived':
 // Can't generate bindings for MethodDerived::MethodDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __param_0 (parameter #1): references are not supported)

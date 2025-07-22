@@ -445,7 +445,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {impl From});
     assert_rs_matches!(rs_api, {
         let txt = "Generated from: ir_from_cc_virtual_header.h;l=34\n\
-                       Error while generating bindings for function 'Foo::Foo':\n\
+                       Error while generating bindings for constructor 'Foo::Foo':\n\
                        The lifetime of `__this` is \
                            unexpectedly also used by another parameter: &'a::core::ffi::c_int";
         quote! { __COMMENT__ #txt }

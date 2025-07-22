@@ -30,16 +30,16 @@ pub mod ns {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Error while generating bindings for function 'Trivial::Trivial':
+    // Error while generating bindings for constructor 'Trivial::Trivial':
     // Can't generate bindings for Trivial::Trivial, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __this (parameter #0): references are not supported)
 
-    // Error while generating bindings for function 'Trivial::Trivial':
+    // Error while generating bindings for constructor 'Trivial::Trivial':
     // Can't generate bindings for Trivial::Trivial, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for function 'Trivial::Trivial':
+    // Error while generating bindings for constructor 'Trivial::Trivial':
     // Can't generate bindings for Trivial::Trivial, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)

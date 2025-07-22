@@ -27,16 +27,16 @@ unsafe impl ::cxx::ExternType for EmptyUnion {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'EmptyUnion::EmptyUnion':
+// Error while generating bindings for constructor 'EmptyUnion::EmptyUnion':
 // Can't generate bindings for EmptyUnion::EmptyUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::EmptyUnion (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'EmptyUnion::EmptyUnion':
+// Error while generating bindings for constructor 'EmptyUnion::EmptyUnion':
 // Can't generate bindings for EmptyUnion::EmptyUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::EmptyUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::EmptyUnion (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'EmptyUnion::EmptyUnion':
+// Error while generating bindings for constructor 'EmptyUnion::EmptyUnion':
 // Can't generate bindings for EmptyUnion::EmptyUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::EmptyUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::EmptyUnion (the type of __param_0 (parameter #1): references are not supported)
@@ -67,11 +67,11 @@ unsafe impl ::cxx::ExternType for Nontrivial {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
+// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Nontrivial::Nontrivial':
+// Error while generating bindings for constructor 'Nontrivial::Nontrivial':
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __param_0 (parameter #1): references are not supported)
@@ -89,16 +89,16 @@ unsafe impl ::cxx::ExternType for RenamedUnion {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'UnionToRename::UnionToRename':
+// Error while generating bindings for constructor 'UnionToRename::UnionToRename':
 // Can't generate bindings for UnionToRename::UnionToRename, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::UnionToRename (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'UnionToRename::UnionToRename':
+// Error while generating bindings for constructor 'UnionToRename::UnionToRename':
 // Can't generate bindings for UnionToRename::UnionToRename, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::UnionToRename (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::UnionToRename (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'UnionToRename::UnionToRename':
+// Error while generating bindings for constructor 'UnionToRename::UnionToRename':
 // Can't generate bindings for UnionToRename::UnionToRename, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::UnionToRename (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionToRename::UnionToRename (the type of __param_0 (parameter #1): references are not supported)
@@ -134,7 +134,7 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TriviallyCopyableButNontriviallyDestructible::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TriviallyCopyableButNontriviallyDestructible::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
+// Error while generating bindings for constructor 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
 // Can't generate bindings for TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible (the type of __param_0 (parameter #1): references are not supported)
@@ -162,16 +162,16 @@ unsafe impl ::cxx::ExternType for NonEmptyUnion {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'NonEmptyUnion::NonEmptyUnion':
+// Error while generating bindings for constructor 'NonEmptyUnion::NonEmptyUnion':
 // Can't generate bindings for NonEmptyUnion::NonEmptyUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::NonEmptyUnion (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'NonEmptyUnion::NonEmptyUnion':
+// Error while generating bindings for constructor 'NonEmptyUnion::NonEmptyUnion':
 // Can't generate bindings for NonEmptyUnion::NonEmptyUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::NonEmptyUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::NonEmptyUnion (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NonEmptyUnion::NonEmptyUnion':
+// Error while generating bindings for constructor 'NonEmptyUnion::NonEmptyUnion':
 // Can't generate bindings for NonEmptyUnion::NonEmptyUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::NonEmptyUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::NonEmptyUnion (the type of __param_0 (parameter #1): references are not supported)
@@ -216,12 +216,12 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'NonCopyUnion2::NonCopyUnion2':
+// Error while generating bindings for constructor 'NonCopyUnion2::NonCopyUnion2':
 // Can't generate bindings for NonCopyUnion2::NonCopyUnion2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::NonCopyUnion2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::NonCopyUnion2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NonCopyUnion2::NonCopyUnion2':
+// Error while generating bindings for constructor 'NonCopyUnion2::NonCopyUnion2':
 // Can't generate bindings for NonCopyUnion2::NonCopyUnion2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::NonCopyUnion2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::NonCopyUnion2 (the type of __param_0 (parameter #1): references are not supported)
@@ -253,16 +253,16 @@ unsafe impl ::cxx::ExternType for UnionWithOpaqueField {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'UnionWithOpaqueField::UnionWithOpaqueField':
+// Error while generating bindings for constructor 'UnionWithOpaqueField::UnionWithOpaqueField':
 // Can't generate bindings for UnionWithOpaqueField::UnionWithOpaqueField, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::UnionWithOpaqueField (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'UnionWithOpaqueField::UnionWithOpaqueField':
+// Error while generating bindings for constructor 'UnionWithOpaqueField::UnionWithOpaqueField':
 // Can't generate bindings for UnionWithOpaqueField::UnionWithOpaqueField, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::UnionWithOpaqueField (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::UnionWithOpaqueField (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'UnionWithOpaqueField::UnionWithOpaqueField':
+// Error while generating bindings for constructor 'UnionWithOpaqueField::UnionWithOpaqueField':
 // Can't generate bindings for UnionWithOpaqueField::UnionWithOpaqueField, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::UnionWithOpaqueField (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithOpaqueField::UnionWithOpaqueField (the type of __param_0 (parameter #1): references are not supported)
@@ -292,16 +292,16 @@ unsafe impl ::cxx::ExternType for TrivialButInheritable {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'TrivialButInheritable::TrivialButInheritable':
+// Error while generating bindings for constructor 'TrivialButInheritable::TrivialButInheritable':
 // Can't generate bindings for TrivialButInheritable::TrivialButInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::TrivialButInheritable (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'TrivialButInheritable::TrivialButInheritable':
+// Error while generating bindings for constructor 'TrivialButInheritable::TrivialButInheritable':
 // Can't generate bindings for TrivialButInheritable::TrivialButInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::TrivialButInheritable (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::TrivialButInheritable (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TrivialButInheritable::TrivialButInheritable':
+// Error while generating bindings for constructor 'TrivialButInheritable::TrivialButInheritable':
 // Can't generate bindings for TrivialButInheritable::TrivialButInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::TrivialButInheritable (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::TrivialButInheritable (the type of __param_0 (parameter #1): references are not supported)
@@ -331,16 +331,16 @@ unsafe impl ::cxx::ExternType for UnionWithInheritable {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'UnionWithInheritable::UnionWithInheritable':
+// Error while generating bindings for constructor 'UnionWithInheritable::UnionWithInheritable':
 // Can't generate bindings for UnionWithInheritable::UnionWithInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::UnionWithInheritable (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'UnionWithInheritable::UnionWithInheritable':
+// Error while generating bindings for constructor 'UnionWithInheritable::UnionWithInheritable':
 // Can't generate bindings for UnionWithInheritable::UnionWithInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::UnionWithInheritable (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::UnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'UnionWithInheritable::UnionWithInheritable':
+// Error while generating bindings for constructor 'UnionWithInheritable::UnionWithInheritable':
 // Can't generate bindings for UnionWithInheritable::UnionWithInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::UnionWithInheritable (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::UnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)
@@ -370,16 +370,16 @@ unsafe impl ::cxx::ExternType for TypedefUnion {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'TypedefUnion::TypedefUnion':
+// Error while generating bindings for constructor 'TypedefUnion::TypedefUnion':
 // Can't generate bindings for TypedefUnion::TypedefUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::TypedefUnion (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'TypedefUnion::TypedefUnion':
+// Error while generating bindings for constructor 'TypedefUnion::TypedefUnion':
 // Can't generate bindings for TypedefUnion::TypedefUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::TypedefUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::TypedefUnion (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TypedefUnion::TypedefUnion':
+// Error while generating bindings for constructor 'TypedefUnion::TypedefUnion':
 // Can't generate bindings for TypedefUnion::TypedefUnion, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::TypedefUnion (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::TypedefUnion (the type of __param_0 (parameter #1): references are not supported)
@@ -409,16 +409,16 @@ unsafe impl ::cxx::ExternType for TypedefUnionWithInheritable {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
+// Error while generating bindings for constructor 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
 // Can't generate bindings for TypedefUnionWithInheritable::TypedefUnionWithInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::TypedefUnionWithInheritable (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
+// Error while generating bindings for constructor 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
 // Can't generate bindings for TypedefUnionWithInheritable::TypedefUnionWithInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::TypedefUnionWithInheritable (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::TypedefUnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
+// Error while generating bindings for constructor 'TypedefUnionWithInheritable::TypedefUnionWithInheritable':
 // Can't generate bindings for TypedefUnionWithInheritable::TypedefUnionWithInheritable, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::TypedefUnionWithInheritable (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnionWithInheritable::TypedefUnionWithInheritable (the type of __param_0 (parameter #1): references are not supported)

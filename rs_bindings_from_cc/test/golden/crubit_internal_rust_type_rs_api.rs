@@ -63,16 +63,16 @@ unsafe impl ::cxx::ExternType for TypeMapOverrideFieldTypes {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
+// Error while generating bindings for constructor 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
 // Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
+// Error while generating bindings for constructor 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
 // Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
+// Error while generating bindings for constructor 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
 // Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __param_0 (parameter #1): references are not supported)

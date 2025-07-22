@@ -74,14 +74,16 @@ class Importer final : public ImportContext {
   IR::Item ImportUnsupportedRecord(const clang::TagDecl& decl,
                                    std::optional<UnsupportedItem::Path> path,
                                    FormattedError error) override;
+  IR::Item ImportUnsupportedFunc(const clang::NamedDecl& decl,
+                                 std::optional<UnsupportedItem::Path> path,
+                                 FormattedError error) override;
+  IR::Item ImportUnsupportedFunc(const clang::NamedDecl& decl,
+                                 std::optional<UnsupportedItem::Path> path,
+                                 std::vector<FormattedError> error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                  UnsupportedItem::Kind kind,
                                  std::optional<UnsupportedItem::Path> path,
                                  FormattedError error) override;
-  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                 UnsupportedItem::Kind kind,
-                                 std::optional<UnsupportedItem::Path> path,
-                                 std::vector<FormattedError> error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                  UnsupportedItem::Kind kind,
                                  std::optional<UnsupportedItem::Path> path,

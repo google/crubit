@@ -27,16 +27,16 @@ unsafe impl ::cxx::ExternType for r#type {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'type::type':
+// Error while generating bindings for constructor 'type::type':
 // Can't generate bindings for type::type, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'type::type':
+// Error while generating bindings for constructor 'type::type':
 // Can't generate bindings for type::type, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'type::type':
+// Error while generating bindings for constructor 'type::type':
 // Can't generate bindings for type::type, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __param_0 (parameter #1): references are not supported)

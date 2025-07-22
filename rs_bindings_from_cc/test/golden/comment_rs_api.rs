@@ -37,16 +37,16 @@ unsafe impl ::cxx::ExternType for Foo {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Foo::Foo':
+// Error while generating bindings for constructor 'Foo::Foo':
 // Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Foo::Foo':
+// Error while generating bindings for constructor 'Foo::Foo':
 // Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Foo::Foo':
+// Error while generating bindings for constructor 'Foo::Foo':
 // Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
@@ -98,16 +98,16 @@ unsafe impl ::cxx::ExternType for Bar {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Bar::Bar':
+// Error while generating bindings for constructor 'Bar::Bar':
 // Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Bar::Bar':
+// Error while generating bindings for constructor 'Bar::Bar':
 // Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Bar::Bar':
+// Error while generating bindings for constructor 'Bar::Bar':
 // Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
@@ -138,16 +138,16 @@ unsafe impl ::cxx::ExternType for HasNoComments {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'HasNoComments::HasNoComments':
+// Error while generating bindings for constructor 'HasNoComments::HasNoComments':
 // Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'HasNoComments::HasNoComments':
+// Error while generating bindings for constructor 'HasNoComments::HasNoComments':
 // Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'HasNoComments::HasNoComments':
+// Error while generating bindings for constructor 'HasNoComments::HasNoComments':
 // Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)

@@ -30,16 +30,16 @@ unsafe impl ::cxx::ExternType for AddableConstMember {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableConstMember::AddableConstMember':
+// Error while generating bindings for constructor 'AddableConstMember::AddableConstMember':
 // Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableConstMember::AddableConstMember':
+// Error while generating bindings for constructor 'AddableConstMember::AddableConstMember':
 // Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableConstMember::AddableConstMember':
+// Error while generating bindings for constructor 'AddableConstMember::AddableConstMember':
 // Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __param_0 (parameter #1): references are not supported)
@@ -77,16 +77,16 @@ unsafe impl ::cxx::ExternType for AddableNonConstMember {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableNonConstMember::AddableNonConstMember':
+// Error while generating bindings for constructor 'AddableNonConstMember::AddableNonConstMember':
 // Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableNonConstMember::AddableNonConstMember':
+// Error while generating bindings for constructor 'AddableNonConstMember::AddableNonConstMember':
 // Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableNonConstMember::AddableNonConstMember':
+// Error while generating bindings for constructor 'AddableNonConstMember::AddableNonConstMember':
 // Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __param_0 (parameter #1): references are not supported)
@@ -124,16 +124,16 @@ unsafe impl ::cxx::ExternType for AddableFriend {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableFriend::AddableFriend':
+// Error while generating bindings for constructor 'AddableFriend::AddableFriend':
 // Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableFriend::AddableFriend':
+// Error while generating bindings for constructor 'AddableFriend::AddableFriend':
 // Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableFriend::AddableFriend':
+// Error while generating bindings for constructor 'AddableFriend::AddableFriend':
 // Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __param_0 (parameter #1): references are not supported)
@@ -168,16 +168,16 @@ unsafe impl ::cxx::ExternType for AddableFreeByConstRef {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableFreeByConstRef::AddableFreeByConstRef':
+// Error while generating bindings for constructor 'AddableFreeByConstRef::AddableFreeByConstRef':
 // Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByConstRef::AddableFreeByConstRef':
+// Error while generating bindings for constructor 'AddableFreeByConstRef::AddableFreeByConstRef':
 // Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByConstRef::AddableFreeByConstRef':
+// Error while generating bindings for constructor 'AddableFreeByConstRef::AddableFreeByConstRef':
 // Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
@@ -207,16 +207,16 @@ unsafe impl ::cxx::ExternType for AddableFreeByMutRef {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableFreeByMutRef::AddableFreeByMutRef':
+// Error while generating bindings for constructor 'AddableFreeByMutRef::AddableFreeByMutRef':
 // Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByMutRef::AddableFreeByMutRef':
+// Error while generating bindings for constructor 'AddableFreeByMutRef::AddableFreeByMutRef':
 // Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByMutRef::AddableFreeByMutRef':
+// Error while generating bindings for constructor 'AddableFreeByMutRef::AddableFreeByMutRef':
 // Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __param_0 (parameter #1): references are not supported)
@@ -246,16 +246,16 @@ unsafe impl ::cxx::ExternType for AddableFreeByValue {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableFreeByValue::AddableFreeByValue':
+// Error while generating bindings for constructor 'AddableFreeByValue::AddableFreeByValue':
 // Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByValue::AddableFreeByValue':
+// Error while generating bindings for constructor 'AddableFreeByValue::AddableFreeByValue':
 // Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByValue::AddableFreeByValue':
+// Error while generating bindings for constructor 'AddableFreeByValue::AddableFreeByValue':
 // Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __param_0 (parameter #1): references are not supported)
@@ -285,16 +285,16 @@ unsafe impl ::cxx::ExternType for AddableFreeByRValueRef {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableFreeByRValueRef::AddableFreeByRValueRef':
+// Error while generating bindings for constructor 'AddableFreeByRValueRef::AddableFreeByRValueRef':
 // Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByRValueRef::AddableFreeByRValueRef':
+// Error while generating bindings for constructor 'AddableFreeByRValueRef::AddableFreeByRValueRef':
 // Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableFreeByRValueRef::AddableFreeByRValueRef':
+// Error while generating bindings for constructor 'AddableFreeByRValueRef::AddableFreeByRValueRef':
 // Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __param_0 (parameter #1): references are not supported)
@@ -353,16 +353,16 @@ unsafe impl ::cxx::ExternType for Overloaded {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'Overloaded::Overloaded':
+// Error while generating bindings for constructor 'Overloaded::Overloaded':
 // Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Overloaded::Overloaded':
+// Error while generating bindings for constructor 'Overloaded::Overloaded':
 // Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Overloaded::Overloaded':
+// Error while generating bindings for constructor 'Overloaded::Overloaded':
 // Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __param_0 (parameter #1): references are not supported)
@@ -400,16 +400,16 @@ unsafe impl ::cxx::ExternType for IncompatibleLHS {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'IncompatibleLHS::IncompatibleLHS':
+// Error while generating bindings for constructor 'IncompatibleLHS::IncompatibleLHS':
 // Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'IncompatibleLHS::IncompatibleLHS':
+// Error while generating bindings for constructor 'IncompatibleLHS::IncompatibleLHS':
 // Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'IncompatibleLHS::IncompatibleLHS':
+// Error while generating bindings for constructor 'IncompatibleLHS::IncompatibleLHS':
 // Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __param_0 (parameter #1): references are not supported)
@@ -448,16 +448,16 @@ unsafe impl ::cxx::ExternType for AddableReturnsVoid {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddableReturnsVoid::AddableReturnsVoid':
+// Error while generating bindings for constructor 'AddableReturnsVoid::AddableReturnsVoid':
 // Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableReturnsVoid::AddableReturnsVoid':
+// Error while generating bindings for constructor 'AddableReturnsVoid::AddableReturnsVoid':
 // Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddableReturnsVoid::AddableReturnsVoid':
+// Error while generating bindings for constructor 'AddableReturnsVoid::AddableReturnsVoid':
 // Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __param_0 (parameter #1): references are not supported)
@@ -495,11 +495,11 @@ unsafe impl ::cxx::ExternType for AddableConstMemberNonunpin {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'AddableConstMemberNonunpin::AddableConstMemberNonunpin':
+// Error while generating bindings for constructor 'AddableConstMemberNonunpin::AddableConstMemberNonunpin':
 // Can't generate bindings for AddableConstMemberNonunpin::AddableConstMemberNonunpin, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::AddableConstMemberNonunpin (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddableConstMemberNonunpin::AddableConstMemberNonunpin':
+// Error while generating bindings for constructor 'AddableConstMemberNonunpin::AddableConstMemberNonunpin':
 // Can't generate bindings for AddableConstMemberNonunpin::AddableConstMemberNonunpin, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::AddableConstMemberNonunpin (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::AddableConstMemberNonunpin (the type of __param_0 (parameter #1): references are not supported)
@@ -535,16 +535,16 @@ unsafe impl ::cxx::ExternType for AddAssignMemberInt {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignMemberInt::AddAssignMemberInt':
+// Error while generating bindings for constructor 'AddAssignMemberInt::AddAssignMemberInt':
 // Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignMemberInt::AddAssignMemberInt':
+// Error while generating bindings for constructor 'AddAssignMemberInt::AddAssignMemberInt':
 // Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignMemberInt::AddAssignMemberInt':
+// Error while generating bindings for constructor 'AddAssignMemberInt::AddAssignMemberInt':
 // Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __param_0 (parameter #1): references are not supported)
@@ -578,16 +578,16 @@ unsafe impl ::cxx::ExternType for AddAssignMemberByConstRef {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
+// Error while generating bindings for constructor 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
 // Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
+// Error while generating bindings for constructor 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
 // Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
+// Error while generating bindings for constructor 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
 // Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __param_0 (parameter #1): references are not supported)
@@ -623,16 +623,16 @@ unsafe impl ::cxx::ExternType for AddAssignFreeByConstRef {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
+// Error while generating bindings for constructor 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
 // Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
+// Error while generating bindings for constructor 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
 // Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
+// Error while generating bindings for constructor 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
 // Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
@@ -671,16 +671,16 @@ unsafe impl ::cxx::ExternType for AddAssignFreeByValue {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignFreeByValue::AddAssignFreeByValue':
+// Error while generating bindings for constructor 'AddAssignFreeByValue::AddAssignFreeByValue':
 // Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFreeByValue::AddAssignFreeByValue':
+// Error while generating bindings for constructor 'AddAssignFreeByValue::AddAssignFreeByValue':
 // Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFreeByValue::AddAssignFreeByValue':
+// Error while generating bindings for constructor 'AddAssignFreeByValue::AddAssignFreeByValue':
 // Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __param_0 (parameter #1): references are not supported)
@@ -715,16 +715,16 @@ unsafe impl ::cxx::ExternType for AddAssignFriendByConstRef {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
+// Error while generating bindings for constructor 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
 // Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
+// Error while generating bindings for constructor 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
 // Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
+// Error while generating bindings for constructor 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
 // Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __param_0 (parameter #1): references are not supported)
@@ -763,16 +763,16 @@ unsafe impl ::cxx::ExternType for AddAssignFriendByValue {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignFriendByValue::AddAssignFriendByValue':
+// Error while generating bindings for constructor 'AddAssignFriendByValue::AddAssignFriendByValue':
 // Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFriendByValue::AddAssignFriendByValue':
+// Error while generating bindings for constructor 'AddAssignFriendByValue::AddAssignFriendByValue':
 // Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignFriendByValue::AddAssignFriendByValue':
+// Error while generating bindings for constructor 'AddAssignFriendByValue::AddAssignFriendByValue':
 // Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __param_0 (parameter #1): references are not supported)
@@ -807,16 +807,16 @@ unsafe impl ::cxx::ExternType for AddAssignProhibitedConstMember {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
+// Error while generating bindings for constructor 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
 // Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
+// Error while generating bindings for constructor 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
 // Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
+// Error while generating bindings for constructor 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
 // Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __param_0 (parameter #1): references are not supported)
@@ -850,16 +850,16 @@ unsafe impl ::cxx::ExternType for AddAssignProhibitedFriendConstLhs {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
+// Error while generating bindings for constructor 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
 // Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
+// Error while generating bindings for constructor 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
 // Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
+// Error while generating bindings for constructor 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
 // Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __param_0 (parameter #1): references are not supported)
@@ -893,16 +893,16 @@ unsafe impl ::cxx::ExternType for ManyOperators {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'ManyOperators::ManyOperators':
+// Error while generating bindings for constructor 'ManyOperators::ManyOperators':
 // Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'ManyOperators::ManyOperators':
+// Error while generating bindings for constructor 'ManyOperators::ManyOperators':
 // Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'ManyOperators::ManyOperators':
+// Error while generating bindings for constructor 'ManyOperators::ManyOperators':
 // Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __param_0 (parameter #1): references are not supported)

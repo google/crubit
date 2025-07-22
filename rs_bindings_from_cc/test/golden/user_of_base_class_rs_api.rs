@@ -33,16 +33,16 @@ unsafe impl ::cxx::ExternType for Derived2 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'Derived2::Derived2':
+// Error while generating bindings for constructor 'Derived2::Derived2':
 // Can't generate bindings for Derived2::Derived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'Derived2::Derived2':
+// Error while generating bindings for constructor 'Derived2::Derived2':
 // Can't generate bindings for Derived2::Derived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Derived2::Derived2':
+// Error while generating bindings for constructor 'Derived2::Derived2':
 // Can't generate bindings for Derived2::Derived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __param_0 (parameter #1): references are not supported)
@@ -72,16 +72,16 @@ unsafe impl ::cxx::ExternType for VirtualDerived2 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for function 'VirtualDerived2::VirtualDerived2':
+// Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
 // Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'VirtualDerived2::VirtualDerived2':
+// Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
 // Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'VirtualDerived2::VirtualDerived2':
+// Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
 // Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __param_0 (parameter #1): references are not supported)

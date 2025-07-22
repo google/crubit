@@ -39,16 +39,16 @@ unsafe impl ::cxx::ExternType for UserOfImportedType {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'UserOfImportedType::UserOfImportedType':
+// Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
 // Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'UserOfImportedType::UserOfImportedType':
+// Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
 // Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'UserOfImportedType::UserOfImportedType':
+// Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
 // Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __param_0 (parameter #1): references are not supported)

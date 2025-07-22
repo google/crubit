@@ -27,16 +27,16 @@ unsafe impl ::cxx::ExternType for HasCustomAlignment {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'HasCustomAlignment::HasCustomAlignment':
+// Error while generating bindings for constructor 'HasCustomAlignment::HasCustomAlignment':
 // Can't generate bindings for HasCustomAlignment::HasCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::HasCustomAlignment (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'HasCustomAlignment::HasCustomAlignment':
+// Error while generating bindings for constructor 'HasCustomAlignment::HasCustomAlignment':
 // Can't generate bindings for HasCustomAlignment::HasCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::HasCustomAlignment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::HasCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'HasCustomAlignment::HasCustomAlignment':
+// Error while generating bindings for constructor 'HasCustomAlignment::HasCustomAlignment':
 // Can't generate bindings for HasCustomAlignment::HasCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::HasCustomAlignment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignment::HasCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
@@ -66,16 +66,16 @@ unsafe impl ::cxx::ExternType for HasFieldWithCustomAlignment {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
+// Error while generating bindings for constructor 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
 // Can't generate bindings for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
+// Error while generating bindings for constructor 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
 // Can't generate bindings for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
+// Error while generating bindings for constructor 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
 // Can't generate bindings for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasFieldWithCustomAlignment::HasFieldWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
@@ -105,16 +105,16 @@ unsafe impl ::cxx::ExternType for InheritsFromBaseWithCustomAlignment {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
+// Error while generating bindings for constructor 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
 // Can't generate bindings for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
+// Error while generating bindings for constructor 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
 // Can't generate bindings for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
+// Error while generating bindings for constructor 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
 // Can't generate bindings for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment (the type of __param_0 (parameter #1): references are not supported)
@@ -144,16 +144,16 @@ unsafe impl ::cxx::ExternType for HasCustomAlignmentWithGnuAttr {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for function 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
+// Error while generating bindings for constructor 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
 // Can't generate bindings for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for function 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
+// Error while generating bindings for constructor 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
 // Can't generate bindings for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
+// Error while generating bindings for constructor 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
 // Can't generate bindings for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:experimental] for HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr (the type of __param_0 (parameter #1): references are not supported)
