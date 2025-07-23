@@ -2560,7 +2560,7 @@ fn test_format_item_unsupported_static_value() {
         "#;
     test_format_item(test_src, "STATIC_VALUE", |result| {
         let err = result.unwrap_err();
-        assert!(err.starts_with("Unsupported rustc_hir::hir::ItemKind"));
+        assert_eq!(err, "Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not, nested: false }");
     });
 }
 

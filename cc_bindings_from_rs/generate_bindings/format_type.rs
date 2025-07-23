@@ -343,7 +343,7 @@ pub fn format_ty_for_cc<'tcx>(
                 );
 
                 if def_id.krate == LOCAL_CRATE {
-                    prereqs.defs.insert(def_id.expect_local());
+                    prereqs.defs.insert(def_id);
                 } else {
                     let other_crate_name = tcx.crate_name(def_id.krate);
                     let crate_name_to_include_paths = db.crate_name_to_include_paths();

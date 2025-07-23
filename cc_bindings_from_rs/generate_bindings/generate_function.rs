@@ -29,7 +29,7 @@ use rustc_attr_data_structures::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt};
-use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
 use std::collections::BTreeSet;
 
@@ -381,19 +381,14 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
 }
 
 /// Implementation of `BindingsGenerator::generate_function`.
-pub fn generate_function(
-    db: &dyn BindingsGenerator<'_>,
-    local_def_id: LocalDefId,
-) -> Result<ApiSnippets> {
+pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
-    let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
-
     ensure!(
         !query_compiler::has_non_lifetime_generics(tcx, def_id),
         "Generic functions are not supported yet (b/259749023)"
     );
 
-    let (sig_mid, sig_hir) = get_fn_sig(tcx, local_def_id);
+    let (sig_mid, sig_hir) = get_fn_sig(tcx, def_id);
     check_fn_sig(&sig_mid)?;
     let self_ty = self_ty_of_method(tcx, def_id);
     let function_kind = function_kind(tcx, def_id, self_ty, sig_mid.inputs())?;
@@ -411,7 +406,7 @@ pub fn generate_function(
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type =
-        format_ret_ty_for_cc(db, &sig_mid, Some(sig_hir))?.into_tokens(&mut main_api_prereqs);
+        format_ret_ty_for_cc(db, &sig_mid, sig_hir)?.into_tokens(&mut main_api_prereqs);
 
     struct Param<'tcx> {
         cc_name: TokenStream,
@@ -423,13 +418,13 @@ pub fn generate_function(
         let cpp_types = format_param_types_for_cc(
             db,
             &sig_mid,
-            Some(sig_hir),
+            sig_hir,
             AllowReferences::Safe,
             function_kind.has_self_param(),
         )?;
         names
             .enumerate()
-            .zip(SugaredTy::fn_inputs(&sig_mid, Some(sig_hir)))
+            .zip(SugaredTy::fn_inputs(&sig_mid, sig_hir))
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
                 // TODO(jeanpierreda): deduplicate this with thunk_param_names.
@@ -508,11 +503,11 @@ pub fn generate_function(
         .skip(if function_kind.has_self_param() { 1 } else { 0 })
         .map(|Param { cc_name, cpp_type, .. }| quote! { #cpp_type #cc_name })
         .collect_vec();
-    let rs_return_type = SugaredTy::fn_output(&sig_mid, Some(sig_hir));
+    let rs_return_type = SugaredTy::fn_output(&sig_mid, sig_hir);
     let fn_never_returns = *rs_return_type.mid().kind() == ty::TyKind::Never;
     let main_api = {
         let doc_comment = {
-            let doc_comment = generate_doc_comment(tcx, local_def_id);
+            let doc_comment = generate_doc_comment(tcx, def_id);
             quote! { __NEWLINE__ #doc_comment }
         };
 
@@ -590,7 +585,7 @@ pub fn generate_function(
         let thunk_decl = generate_thunk_decl(
             db,
             &sig_mid,
-            Some(sig_hir),
+            sig_hir,
             &thunk_name,
             AllowReferences::Safe,
             function_kind.has_self_param(),
@@ -706,13 +701,17 @@ pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
 /// pointers and actual functions. This makes it a more useful vocabulary type.
 /// `FnDecl` does drop information, but that information is already on the
 /// rustc_middle `FnSig`, so there is no loss.
-pub fn get_fn_sig(tcx: TyCtxt, local_def_id: LocalDefId) -> (ty::FnSig, &rustc_hir::FnDecl) {
-    let def_id = local_def_id.to_def_id();
+pub fn get_fn_sig<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    def_id: DefId,
+) -> (ty::FnSig, Option<&rustc_hir::FnDecl>) {
     let sig_mid = liberate_and_deanonymize_late_bound_regions(
         tcx,
         tcx.fn_sig(def_id).instantiate_identity(),
         def_id,
     );
-    let sig_hir = tcx.hir_node_by_def_id(local_def_id).fn_sig().unwrap();
-    (sig_mid, sig_hir.decl)
+    let hir_decl = def_id
+        .as_local()
+        .map(|local_def_id| tcx.hir_node_by_def_id(local_def_id).fn_sig().unwrap().decl);
+    (sig_mid, hir_decl)
 }

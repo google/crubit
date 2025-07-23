@@ -50,7 +50,9 @@ fn test_ty<TestFn, Expectation>(
         tcx: TyCtxt<'tcx>,
         type_location: TypeLocation,
     ) -> SugaredTy<'tcx> {
-        let (sig_mid, sig_hir) = get_fn_sig(tcx, find_def_id_by_name(tcx, "test_function"));
+        let (sig_mid, sig_hir_opt) =
+            get_fn_sig(tcx, find_def_id_by_name(tcx, "test_function").to_def_id());
+        let sig_hir = sig_hir_opt.unwrap();
         match type_location {
             TypeLocation::FnReturn => {
                 let FnRetTy::Return(ty_hir) = sig_hir.output else {
@@ -367,7 +369,7 @@ fn test_format_ty_for_cc_successes() {
             }
 
             if let Some(expected_prereq_def) = expected_prereq_def {
-                let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def);
+                let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def).to_def_id();
                 assert_eq!(1, actual_prereq_defs.len());
                 assert_eq!(expected_def_id, actual_prereq_defs.into_iter().next().unwrap());
             } else {
@@ -378,7 +380,8 @@ fn test_format_ty_for_cc_successes() {
             }
 
             if let Some(expected_prereq_fwd_decl) = expected_prereq_fwd_decl {
-                let expected_def_id = find_def_id_by_name(tcx, expected_prereq_fwd_decl);
+                let expected_def_id =
+                    find_def_id_by_name(tcx, expected_prereq_fwd_decl).to_def_id();
                 assert_eq!(1, actual_prereq_fwd_decls.len());
                 assert_eq!(expected_def_id, actual_prereq_fwd_decls.into_iter().next().unwrap());
             } else {

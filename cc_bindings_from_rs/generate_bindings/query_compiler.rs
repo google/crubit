@@ -9,7 +9,6 @@
 extern crate rustc_abi;
 extern crate rustc_ast;
 extern crate rustc_attr_data_structures;
-extern crate rustc_hir;
 extern crate rustc_infer;
 extern crate rustc_middle;
 extern crate rustc_span;
@@ -21,10 +20,9 @@ use rustc_abi::IntegerType;
 use rustc_abi::{FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_attr_data_structures::IntType;
-use rustc_hir::def::DefKind;
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::ty::{self, IntTy, Region, Ty, TyCtxt, UintTy};
-use rustc_span::def_id::{DefId, LocalDefId, LocalModDefId};
+use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use rustc_trait_selection::infer::InferCtxtExt;
 use std::collections::HashMap;
@@ -145,30 +143,6 @@ pub fn has_non_lifetime_generics<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool
         .own_params
         .iter()
         .any(|param| !matches!(param.kind, ty::GenericParamDefKind::Lifetime))
-}
-
-pub fn public_free_items_in_mod(tcx: TyCtxt, def_id: DefId) -> Vec<(DefId, DefKind)> {
-    let mut items = vec![];
-    if def_id.as_local().is_none() {
-        return items;
-    }
-    let local_mod_def_id = LocalModDefId::new_unchecked(def_id.as_local().unwrap());
-    for item_id in tcx.hir_module_items(local_mod_def_id).free_items() {
-        let item_local_def_id: LocalDefId = item_id.owner_id.def_id;
-        let item_def_id = item_local_def_id.to_def_id();
-        let item_def_kind = tcx.def_kind(item_def_id);
-
-        if !is_exported(tcx, item_def_id) {
-            continue;
-        }
-        match item_def_kind {
-            DefKind::Fn | DefKind::Struct | DefKind::Enum => {
-                items.push((item_def_id, item_def_kind));
-            }
-            _ => {}
-        }
-    }
-    items
 }
 
 pub fn post_analysis_typing_env(tcx: TyCtxt, def_id: DefId) -> ty::TypingEnv {

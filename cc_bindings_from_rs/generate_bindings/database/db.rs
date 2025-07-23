@@ -17,7 +17,7 @@ use code_gen_utils::CcInclude;
 use error_report::{ErrorReporting, ReportFatalError};
 use proc_macro2::TokenStream;
 use rustc_middle::ty::TyCtxt;
-use rustc_span::def_id::{CrateNum, DefId, LocalDefId};
+use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::Symbol;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -159,7 +159,7 @@ memoized::query_group! {
       /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:generate_item
-      fn generate_item(&self, def_id: LocalDefId) -> Result<Option<ApiSnippets>>;
+      fn generate_item(&self, def_id: DefId) -> Result<Option<ApiSnippets>>;
 
       /// Generates bindings for a function with the given `local_def_id`.
       ///
@@ -168,7 +168,7 @@ memoized::query_group! {
       /// - doesn't identify a function
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_function.rs?q=function:generate_function
-      fn generate_function(&self, local_def_id: LocalDefId) -> Result<ApiSnippets>;
+      fn generate_function(&self, def_id: DefId) -> Result<ApiSnippets>;
 
       /// Generates the bindings for the core of an algebraic data type (an ADT - a
       /// struct, an enum, or a union) represented by `def_id`.
@@ -185,8 +185,7 @@ memoized::query_group! {
       ///
       /// `generate_adt_core` is used both to 1) generate bindings for the core of an
       /// ADT, and 2) check if formatting would have succeeded (e.g. when called from
-      /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate - this
-      /// is why the `def_id` parameter is a DefId rather than LocalDefId.
+      /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate.
       fn generate_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
   }
   pub struct Database;

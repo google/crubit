@@ -82,11 +82,12 @@ std::uint8_t const* get_str_data(rs_std::StrRef s);
 // Generated from:
 // cc_bindings_from_rs/test/str/str.rs;l=38
 rs_std::StrRef foo_as_str();
-constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
+static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
 
 // Error generating bindings for `STATIC_STR_FOO` defined at
 // cc_bindings_from_rs/test/str/str.rs;l=44:
-// Unsupported rustc_hir::hir::ItemKind
+// Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not,
+// nested: false }
 
 static_assert(
     sizeof(TypeWithStr) == 16,

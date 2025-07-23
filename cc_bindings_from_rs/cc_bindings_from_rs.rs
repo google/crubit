@@ -395,9 +395,9 @@ mod tests {
         assert!(error_report_out_path.exists());
         let error_report = std::fs::read_to_string(&error_report_out_path)?;
         let expected_error_report = r#"{
-  "Unsupported use statement that refers to this type of the entity: {:#?}": {
+  "`use` of a module (`{}`) is not yet supported": {
     "count": 2,
-    "sample_message": "Unsupported use statement that refers to this type of the entity: Def(\n    Mod,\n    DefId(std::collections),\n)"
+    "sample_message": "`use` of a module (`std::collections`) is not yet supported"
   }
 }"#;
         assert_eq!(expected_error_report, error_report);

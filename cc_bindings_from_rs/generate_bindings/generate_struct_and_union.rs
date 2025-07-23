@@ -33,7 +33,7 @@ use rustc_hir::{self as hir, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
-use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use rustc_span::def_id::{DefId, LOCAL_CRATE};
 use std::collections::{BTreeSet, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -218,7 +218,7 @@ fn generate_cpp_enum<'tcx>(
         })
         .collect();
 
-    let doc_comment = generate_doc_comment(tcx, core.def_id.expect_local());
+    let doc_comment = generate_doc_comment(tcx, core.def_id);
     let keyword = &core.keyword;
     let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, core.def_id).unwrap();
     let underlying_cc_type = underlying_cc_type_snippet.tokens;
@@ -242,13 +242,13 @@ fn generate_cpp_enum<'tcx>(
 
 fn generate_associated_item<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    self_id: LocalDefId,
+    self_id: DefId,
     impl_item_id: hir::ImplItemId,
     member_function_names: &mut HashSet<String>,
 ) -> Option<ApiSnippets> {
     let tcx = db.tcx();
-    let def_id = impl_item_id.owner_id.def_id;
-    if !is_exported(tcx, def_id.to_def_id()) {
+    let def_id = impl_item_id.owner_id.def_id.to_def_id();
+    if !is_exported(tcx, def_id) {
         return None;
     }
     let impl_item = tcx.hir_impl_item(impl_item_id);
@@ -256,8 +256,7 @@ fn generate_associated_item<'tcx>(
         hir::ImplItemKind::Fn(..) => {
             let result = db.generate_function(def_id);
             if result.is_ok() {
-                let cpp_name =
-                    FullyQualifiedName::new(db, def_id.into()).cpp_name.unwrap().to_string();
+                let cpp_name = FullyQualifiedName::new(db, def_id).cpp_name.unwrap().to_string();
                 member_function_names.insert(cpp_name);
             }
             result
@@ -269,7 +268,7 @@ fn generate_associated_item<'tcx>(
         .and_then(|snippet| snippet.resolve_feature_requirements(crate_features(db, LOCAL_CRATE)));
     match result {
         Err(err) => {
-            if crubit_attr::get_attrs(tcx, def_id.to_def_id()).unwrap().must_bind {
+            if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
                 let self_name = crate::item_name(db, self_id);
                 let item_name = impl_item.ident.as_str();
                 let must_bind_message = format!(
@@ -294,11 +293,12 @@ pub fn generate_adt<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets {
+    if !core.def_id.is_local() {
+        panic!("`generate_adt` should only be called for local ADTS, got {:?}", core.def_id);
+    }
+
     let tcx = db.tcx();
     let adt_cc_name = &core.cc_short_name;
-
-    // `generate_adt` should only be called for local ADTs.
-    let local_def_id = core.def_id.expect_local();
 
     // Handle `cpp_enum` structs.
     let crubit_attrs = crubit_attr::get_attrs(tcx, core.def_id).unwrap_or_default();
@@ -375,8 +375,8 @@ pub fn generate_adt<'tcx>(
             let def_id = impl_item_id.owner_id.def_id;
             tcx.def_span(def_id)
         })
-        .filter_map(|impl_item_id| {
-            generate_associated_item(db, local_def_id, impl_item_id, &mut member_function_names)
+        .filter_map(|impl_item_ref| {
+            generate_associated_item(db, core.def_id, impl_item_ref, &mut member_function_names)
         })
         .collect();
 
@@ -426,14 +426,14 @@ pub fn generate_adt<'tcx>(
             attributes.push(tag);
         }
 
-        let doc_comment = generate_doc_comment(tcx, core.def_id.expect_local());
+        let doc_comment = generate_doc_comment(tcx, core.def_id);
         let keyword = &core.keyword;
 
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(db.support_header("internal/attribute_macros.h"));
         let public_functions_main_api = public_functions_main_api.into_tokens(&mut prereqs);
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
-        prereqs.fwd_decls.remove(&local_def_id);
+        prereqs.fwd_decls.remove(&core.def_id);
 
         CcSnippet {
             prereqs,
@@ -452,7 +452,7 @@ pub fn generate_adt<'tcx>(
         let mut prereqs = CcPrerequisites::default();
         let public_functions_cc_details = public_functions_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
-        prereqs.defs.insert(local_def_id);
+        prereqs.defs.insert(core.def_id);
         CcSnippet {
             prereqs,
             tokens: quote! {
@@ -800,10 +800,7 @@ fn generate_fields<'tcx>(
                                 index,
                                 offset,
                                 offset_of_next_field,
-                                doc_comment: generate_doc_comment(
-                                    tcx,
-                                    field_def.did.expect_local(),
-                                ),
+                                doc_comment: generate_doc_comment(tcx, field_def.did),
                                 attributes,
                             }
                         })

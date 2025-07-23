@@ -51,8 +51,9 @@ where
 {
     let features = features.into();
     run_compiler_for_testing(source, |tcx| {
-        let def_id = find_def_id_by_name(tcx, name);
-        let result = bindings_db_for_tests_with_features(tcx, features).generate_item(def_id);
+        let local_def_id = find_def_id_by_name(tcx, name);
+        let result = bindings_db_for_tests_with_features(tcx, features)
+            .generate_item(local_def_id.to_def_id());
 
         // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
         // To print causes as well [...], use the alternate selector “{:#}”.

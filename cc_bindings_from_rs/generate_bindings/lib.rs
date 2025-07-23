@@ -47,18 +47,17 @@ use proc_macro2::TokenStream;
 use query_compiler::{
     count_regions, does_type_implement_trait, get_layout, get_scalar_int_type,
     get_tag_size_with_padding, is_c_abi_compatible_by_value, is_copy, is_directly_public,
-    is_exported, liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env,
-    public_free_items_in_mod, repr_attrs,
+    is_exported, liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, repr_attrs,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
-use rustc_hir::{Item, ItemKind, Node, UseKind, UsePath};
+use rustc_hir::{self as hir, Item, ItemKind, Node, UseKind, UsePath};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
-use rustc_span::symbol::{sym, Symbol};
+use rustc_span::symbol::{sym, Ident, Symbol};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -282,105 +281,120 @@ fn symbols_from_extern_crate(db: &dyn BindingsGenerator<'_>) -> Vec<(DefId, Full
     visitor.symbols
 }
 
+#[derive(Debug)]
+struct AliasInfo {
+    using_name: String,
+    local_def_id: LocalDefId,
+    type_def_id: DefId,
+    def_kind: DefKind,
+}
+
+fn create_canonical_name(
+    db: &dyn BindingsGenerator<'_>,
+    name_map: &HashMap<DefId, FullyQualifiedName>,
+    alias_info: &AliasInfo,
+) -> Option<FullyQualifiedName> {
+    let alias_name = &alias_info.using_name;
+    let alias_local_def_id = alias_info.local_def_id;
+    let aliased_entity_def_id = alias_info.type_def_id;
+    let rs_name = Symbol::intern(alias_name);
+    if let Some(canonical_name) = name_map.get(&aliased_entity_def_id) {
+        // We keep the lexicographically smallest name.
+        if canonical_name.rs_name.unwrap().as_str() < rs_name.as_str() {
+            return None;
+        }
+    }
+    let def_id = alias_local_def_id.to_def_id();
+    let tcx = db.tcx();
+
+    // We only handle local reexported private symbols for `pub use`.
+    if !tcx.effective_visibilities(()).is_directly_public(alias_local_def_id) // not pub use
+            || !aliased_entity_def_id.is_local() // symbols from other crates
+            || tcx.effective_visibilities(()).is_directly_public(aliased_entity_def_id.expect_local())
+    {
+        return None;
+    }
+    let item_name = tcx.opt_item_name(aliased_entity_def_id)?;
+    let krate = tcx.crate_name(def_id.krate);
+    let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
+    let parent_def_key = tcx.def_key(def_id).parent?;
+    let parent_def_id = DefId::local(parent_def_key);
+
+    // If the parent is being aliased, we use its canonical name and we always
+    // process parents before their children.
+    let full_path_strs: Vec<Rc<str>> = if let Some(con_name) = name_map.get(&parent_def_id) {
+        con_name.rs_mod_path.parts().cloned().collect()
+    } else {
+        let mut full_path = tcx.def_path(def_id).data; // mod_path + name
+        full_path.pop().expect("At least the use exists");
+        full_path
+            .into_iter()
+            .filter_map(|p| p.data.get_opt_name())
+            .map(|s| Rc::<str>::from(s.as_str()))
+            .collect()
+    };
+
+    if krate.as_str() == "polars_plan" && matches!(rs_name.as_str(), "date_range" | "time_range") {
+        // Short-circuit `polars_plan::dsl::{date_range, time_range}`.
+        //
+        // These two paths are the result of a pathological chain of ambiguous reexports that is
+        // not supported by the compiler and must not be considered.
+        //
+        // See https://github.com/rust-lang/rust/issues/144333 for details.
+        let path_strs: Vec<&str> = full_path_strs.iter().map(|x| &**x).collect();
+        if matches!(&*path_strs, ["dsl"]) {
+            return None;
+        }
+    }
+
+    let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
+
+    let cpp_ns_path =
+        NamespaceQualifier::new(full_path_strs.into_iter().chain([Rc::from("__crubit_internal")]));
+    let attributes = crubit_attr::get_attrs(tcx, aliased_entity_def_id).unwrap();
+    let cpp_type = attributes.cpp_type;
+    Some(FullyQualifiedName {
+        cpp_name: Some(item_name),
+        cpp_ns_path,
+        rs_name: Some(rs_name),
+        krate,
+        cpp_top_level_ns,
+        rs_mod_path,
+        cpp_type,
+    })
+}
+
 /// Implementation of `BindingsGenerator::reexported_symbol_canonical_name_mapping`.
 // TODO(b/350772554): Don't generate bindings for ambiguous symbols.
 fn reexported_symbol_canonical_name_mapping(
     db: &dyn BindingsGenerator<'_>,
 ) -> HashMap<DefId, FullyQualifiedName> {
     let tcx = db.tcx();
-    let mut name_map: HashMap<DefId, FullyQualifiedName> = HashMap::new();
+    let mut name_map: HashMap<DefId, FullyQualifiedName> =
+        symbols_from_extern_crate(db).into_iter().collect();
 
-    #[derive(Debug)]
-    struct AliasInfo {
-        using_name: String,
-        local_def_id: LocalDefId,
-        type_def_id: DefId,
-        def_kind: DefKind,
-    }
-    let create_canonical_name = |name_map: &mut HashMap<DefId, FullyQualifiedName>,
-                                 alias_info: &AliasInfo|
-     -> Option<FullyQualifiedName> {
-        let alias_name = &alias_info.using_name;
-        let alias_local_def_id = alias_info.local_def_id;
-        let aliased_entity_def_id = alias_info.type_def_id;
-        let rs_name = Symbol::intern(alias_name);
-        if let Some(canonical_name) = name_map.get(&aliased_entity_def_id) {
-            // We keep the lexicographically smallest name.
-            if canonical_name.rs_name.unwrap().as_str() < rs_name.as_str() {
+    let aliases = tcx
+        .hir_free_items()
+        .filter_map(|item_id| {
+            let local_def_id: LocalDefId = item_id.owner_id.def_id;
+            let Item { kind: kind @ ItemKind::Use(use_path, use_kind), .. } =
+                tcx.hir_expect_item(local_def_id)
+            else {
                 return None;
-            }
-        }
-        let def_id = alias_local_def_id.to_def_id();
-        let tcx = db.tcx();
-
-        // We only handle local reexported private symbols for `pub use`.
-        if !tcx.effective_visibilities(()).is_directly_public(alias_local_def_id) // not pub use
-                || !aliased_entity_def_id.is_local() // symbols from other crates
-                || tcx.effective_visibilities(()).is_directly_public(aliased_entity_def_id.expect_local())
-        {
-            return None;
-        }
-        let item_name = tcx.opt_item_name(aliased_entity_def_id)?;
-        let krate = tcx.crate_name(def_id.krate);
-        let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
-        let parent_def_key = tcx.def_key(def_id).parent?;
-        let parent_def_id = DefId::local(parent_def_key);
-
-        // If the parent is being aliased, we use its canonical name and we always
-        // process parents before their children.
-        let full_path_strs: Vec<Rc<str>> = if let Some(con_name) = name_map.get(&parent_def_id) {
-            con_name.rs_mod_path.parts().cloned().collect()
-        } else {
-            let mut full_path = tcx.def_path(def_id).data; // mod_path + name
-            full_path.pop().expect("At least the use exists");
-            full_path
-                .into_iter()
-                .filter_map(|p| p.data.get_opt_name())
-                .map(|s| Rc::<str>::from(s.as_str()))
-                .collect()
-        };
-
-        let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
-        let cpp_ns_path = NamespaceQualifier::new(
-            full_path_strs.into_iter().chain([Rc::from("__crubit_internal")]),
-        );
-        let attributes = crubit_attr::get_attrs(tcx, aliased_entity_def_id).unwrap();
-        let cpp_type = attributes.cpp_type;
-        Some(FullyQualifiedName {
-            cpp_name: Some(item_name),
-            cpp_ns_path,
-            rs_name: Some(rs_name),
-            krate,
-            cpp_top_level_ns,
-            rs_mod_path,
-            cpp_type,
-        })
-    };
-
-    for (def_id, fully_qualified_name) in symbols_from_extern_crate(db).into_iter() {
-        name_map.insert(def_id, fully_qualified_name);
-    }
-    let aliases =
-        tcx.hir_free_items()
-            .filter_map(|item_id| {
-                let local_def_id: LocalDefId = item_id.owner_id.def_id;
-                if let Item { kind: kind @ ItemKind::Use(use_path, use_kind), .. } =
-                    tcx.hir_expect_item(local_def_id)
-                {
-                    let ident_str =
-                        &kind.ident().map_or("".to_owned(), |ident| ident.as_str().to_owned());
-                    // TODO(b/350772554): Preserve the errors.
-                    collect_alias_from_use(db, ident_str, use_path, use_kind).ok().map(|aliases| {
-                        aliases.into_iter().map(move |(using_name, type_def_id, def_kind)| {
-                            AliasInfo { using_name, local_def_id, type_def_id, def_kind }
-                        })
-                    })
-                } else {
-                    None
-                }
+            };
+            let ident_str = &kind.ident().map_or("".to_owned(), |ident| ident.as_str().to_owned());
+            // TODO(b/350772554): Preserve the errors.
+            collect_alias_from_use(db, ident_str, use_path, use_kind).ok().map(|aliases| {
+                aliases.into_iter().map(move |(using_name, type_def_id, def_kind)| AliasInfo {
+                    using_name,
+                    local_def_id,
+                    type_def_id,
+                    def_kind,
+                })
             })
-            .flatten()
-            .collect::<Vec<AliasInfo>>();
+        })
+        .flatten()
+        .collect::<Vec<AliasInfo>>();
 
     // TODO(b/350772554): Support mod.
     // We should process the aliases in the path order: mod -> struct ->
@@ -392,7 +406,7 @@ fn reexported_symbol_canonical_name_mapping(
             matches!(*def_kind, DefKind::Struct | DefKind::Enum | DefKind::Union)
         });
     for alias_info in struct_like_aliases.into_iter().chain(other_aliases.into_iter()) {
-        if let Some(canonical_name) = create_canonical_name(&mut name_map, &alias_info) {
+        if let Some(canonical_name) = create_canonical_name(db, &name_map, &alias_info) {
             name_map.insert(alias_info.type_def_id, canonical_name);
         }
     }
@@ -512,15 +526,17 @@ fn generate_using_statement(
     match def_kind {
         DefKind::Fn => {
             let mut prereqs;
+            if !def_id.is_local() {
+                bail!("`use` of external functions is not yet supported");
+            }
             // TODO(b/350772554): Support exporting private functions.
-            if let Some(local_id) = def_id.as_local() {
-                if let Ok(snippet) = db.generate_function(local_id) {
+            match db.generate_function(def_id) {
+                Ok(snippet) => {
                     prereqs = snippet.main_api.prereqs;
-                } else {
-                    bail!("Ignoring the use because the bindings for the target is not generated");
                 }
-            } else {
-                bail!("Unsupported checking for external function");
+                Err(err) => {
+                    bail!("Unable to `use` function whose bindings failed: {err:?}");
+                }
             }
             let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
@@ -530,7 +546,7 @@ fn generate_using_statement(
             let using_name =
                 format_cc_ident(db, using_name).context("Error formatting using name")?;
 
-            prereqs.defs.insert(def_id.expect_local());
+            prereqs.defs.insert(def_id);
             let tokens = if format!("{}", using_name) == format!("{}", main_api_fn_name) {
                 quote! {using #formatted_fully_qualified_fn_name;}
             } else {
@@ -549,25 +565,67 @@ fn generate_using_statement(
             let use_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), None);
             create_type_alias(db, def_id, using_name, use_type)
         }
-        DefKind::TyAlias => {
-            let hir_ty = if def_id.is_local() {
-                let local_def_id = def_id.as_local().unwrap();
-                let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } =
-                    tcx.hir_expect_item(local_def_id)
-                else {
-                    panic!("{:#?} is not a type alias", def_id);
-                };
-                Some(*hir_ty)
-            } else {
-                None
-            };
-            let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), hir_ty);
-            create_type_alias(db, def_id, using_name, alias_type)
-        }
+        DefKind::TyAlias => generate_type_alias(db, def_id, using_name),
         _ => {
             bail!("Unsupported use statement that refers to this type of the entity: {:#?}", def_id)
         }
     }
+}
+
+fn debug_print_use_path(use_path: &UsePath) -> String {
+    use_path.segments.iter().map(|segment| segment.ident.as_str()).collect::<Vec<&str>>().join("::")
+}
+
+fn use_path_as_single_res(use_path: &UsePath) -> Result<Res> {
+    // TODO(b/350772554): Support multiple items with the same name in `use`
+    // statements.`
+    let mut present_items: Vec<Res> =
+        use_path.res.present_items().filter(|res| !matches!(res, Res::Err)).collect();
+
+    // Filter `Ctor` functions with the same names as their types.
+    if present_items.len() > 1 {
+        present_items.retain(|item| !matches!(item, Res::Def(DefKind::Ctor(..), _)))
+    }
+
+    if present_items.is_empty() {
+        bail!("`use` path `{}` resolved to no non-error items", debug_print_use_path(use_path))
+    }
+
+    if present_items.len() > 1 {
+        bail!(
+            "`use` path `{}` resolved to multiple items with the same name: {:?}",
+            debug_print_use_path(use_path),
+            use_path.res.present_items().collect::<Vec<_>>()
+        );
+    }
+
+    Ok(present_items.into_iter().next().unwrap())
+}
+
+fn public_items_in_mod(tcx: TyCtxt, def_id: DefId) -> Vec<(Ident, DefId, DefKind)> {
+    let mut items = vec![];
+    let module_children = match def_id.as_local() {
+        None => tcx.module_children(def_id),
+        // Local `module_children` does not use the query due to perf impacts.
+        Some(local_def_id) => tcx.module_children_local(local_def_id),
+    };
+    for mod_child in module_children {
+        if !mod_child.vis.is_public() {
+            continue;
+        }
+
+        let hir::def::Res::Def(item_def_kind, item_def_id) = mod_child.res else {
+            continue;
+        };
+
+        match item_def_kind {
+            DefKind::Fn | DefKind::Struct | DefKind::Enum => {
+                items.push((mod_child.ident, item_def_id, item_def_kind));
+            }
+            _ => {}
+        }
+    }
+    items
 }
 
 // Collect all the aliases (alias_name, underlying_type_def_id,
@@ -579,35 +637,26 @@ fn collect_alias_from_use(
     use_path: &UsePath,
     use_kind: &UseKind,
 ) -> Result<Vec<(String, DefId, DefKind)>> {
-    let tcx = db.tcx();
-    // TODO(b/350772554): Support multiple items with the same name in `use`
-    // statements.`
-    if use_path.res.present_items().count() != 1 {
+    let res = use_path_as_single_res(use_path)?;
+    // TODO(b/350772554): Support PrimTy.
+    let Res::Def(def_kind, def_id) = res else {
         bail!(
-            "use statements which resolve to multiple items with the same name are not supported yet"
+            "`use` statement `{}` refers to unsupported definition kind: {:#?}",
+            debug_print_use_path(use_path),
+            res
         );
-    }
-
-    let res = use_path.res.present_items().next().unwrap();
-
-    let (def_kind, def_id) = match res {
-        // TODO(b/350772554): Support PrimTy.
-        // TODO(b/350772554): Support `use some_module`.
-        Res::Def(def_kind, def_id) if def_kind != DefKind::Mod || use_kind == &UseKind::Glob => {
-            (def_kind, def_id)
-        }
-        _ => {
-            bail!("Unsupported use statement that refers to this type of the entity: {:#?}", res);
-        }
     };
+    // TODO(b/350772554): Support `use some_module`.
+    if def_kind == DefKind::Mod && !matches!(use_kind, UseKind::Glob) {
+        bail!("`use` of a module (`{}`) is not yet supported", debug_print_use_path(use_path))
+    }
 
     let mut aliases = vec![];
     if def_kind == DefKind::Mod {
-        for (item_def_id, item_def_kind) in public_free_items_in_mod(db.tcx(), def_id) {
-            let item_name = tcx.item_name(item_def_id).to_string();
+        for (ident, item_def_id, item_def_kind) in public_items_in_mod(db.tcx(), def_id) {
             // TODO(b/350772554): Support export Enum fields.
-            if !item_name.is_empty() {
-                aliases.push((item_name, item_def_id, item_def_kind));
+            if !ident.name.is_empty() {
+                aliases.push((ident.name.to_string(), item_def_id, item_def_kind));
             }
         }
     } else {
@@ -642,19 +691,19 @@ fn generate_use(
         .collect())
 }
 
-fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Result<ApiSnippets> {
+fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
-    let def_id: DefId = local_def_id.to_def_id();
     let unsupported_node_item_msg = "Called `generate_const` with a `rustc_hir::Node` that is not a `Node::Item` or `Node::ImplItem`";
-    let hir_node = tcx.hir_node_by_def_id(local_def_id);
-
-    let hir_ty = match hir_node {
-        Node::Item(item) => item.expect_const().2,
-        Node::ImplItem(item) => item.expect_const().0,
-        _ => panic!("{}", unsupported_node_item_msg),
-    };
     let ty = tcx.type_of(def_id).instantiate_identity();
-    let rust_type = SugaredTy::new(ty, Some(hir_ty));
+    let hir_ty = def_id.as_local().map(|local_def_id| {
+        let hir_node = tcx.hir_node_by_def_id(local_def_id);
+        match hir_node {
+            Node::Item(item) => item.expect_const().2,
+            Node::ImplItem(item) => item.expect_const().0,
+            _ => panic!("{}", unsupported_node_item_msg),
+        }
+    });
+    let rust_type = SugaredTy::new(ty, hir_ty);
     let cc_type_snippet = format_ty_for_cc(db, rust_type, TypeLocation::Const)?;
 
     let cc_type = cc_type_snippet.tokens;
@@ -691,18 +740,8 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> R
 
     Ok(ApiSnippets {
         main_api: CcSnippet {
-            tokens: match hir_node {
-                Node::Item(_) => {
-                    quote! {
-                        constexpr #cc_type #cc_name = #cc_value;
-                    }
-                }
-                Node::ImplItem(_) => {
-                    quote! {
-                        static constexpr #cc_type #cc_name = #cc_value;
-                    }
-                }
-                _ => panic!("{}", unsupported_node_item_msg),
+            tokens: quote! {
+                static constexpr #cc_type #cc_name = #cc_value;
             },
             ..cc_type_snippet
         },
@@ -713,16 +752,20 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> R
 
 fn generate_type_alias(
     db: &dyn BindingsGenerator<'_>,
-    local_def_id: LocalDefId,
+    def_id: DefId,
+    using_name: &str,
 ) -> Result<ApiSnippets> {
     let tcx = db.tcx();
-    let def_id: DefId = local_def_id.to_def_id();
-    let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } = tcx.hir_expect_item(local_def_id)
-    else {
-        panic!("called generate_type_alias on a non-type-alias");
-    };
-    let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), Some(*hir_ty));
-    create_type_alias(db, def_id, tcx.item_name(def_id).as_str(), alias_type)
+    let hir_ty = def_id.as_local().map(|local_def_id| {
+        let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } =
+            tcx.hir_expect_item(local_def_id)
+        else {
+            panic!("called generate_type_alias on a non-type-alias");
+        };
+        *hir_ty
+    });
+    let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), hir_ty);
+    create_type_alias(db, def_id, using_name, alias_type)
 }
 
 fn create_type_alias<'tcx>(
@@ -1017,9 +1060,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
 ///
 /// Will panic if `def_id` doesn't identify an ADT that can be successfully
 /// handled by `generate_adt_core`.
-fn generate_fwd_decl(db: &Database<'_>, def_id: LocalDefId) -> TokenStream {
-    let def_id = def_id.to_def_id(); // LocalDefId -> DefId conversion.
-
+fn generate_fwd_decl(db: &Database<'_>, def_id: DefId) -> TokenStream {
     // `generate_fwd_decl` should only be called for items from
     // `CcPrerequisites::fwd_decls` and `fwd_decls` should only contain ADTs
     // that `generate_adt_core` succeeds for.
@@ -1031,8 +1072,8 @@ fn generate_fwd_decl(db: &Database<'_>, def_id: LocalDefId) -> TokenStream {
     quote! { #keyword #cc_short_name; }
 }
 
-fn generate_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
-    let def_span = tcx.def_span(local_def_id);
+fn generate_source_location(tcx: TyCtxt, def_id: DefId) -> String {
+    let def_span = tcx.def_span(def_id);
     let rustc_span::FileLines { file, lines } =
         match tcx.sess().source_map().span_to_lines(def_span) {
             Ok(filelines) => filelines,
@@ -1047,40 +1088,31 @@ fn generate_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
 /// Formats the doc comment (if any) associated with the item identified by
 /// `local_def_id`, and appends the source location at which the item is
 /// defined.
-fn generate_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
-    let hir_id = tcx.local_def_id_to_hir_id(local_def_id);
+fn generate_doc_comment(tcx: TyCtxt, def_id: DefId) -> TokenStream {
     let doc_comment = tcx
-        .hir_attrs(hir_id)
+        .get_all_attrs(def_id)
         .iter()
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
-        .chain(once(format!("Generated from: {}", generate_source_location(tcx, local_def_id))))
+        .chain(once(format!("Generated from: {}", generate_source_location(tcx, def_id))))
         .join("\n\n");
     quote! { __COMMENT__ #doc_comment}
 }
 
-/// Returns the name of the item identified by `local_def_id`, or "<unknown>" if
+/// Returns the name of the item identified by `def_id`, or "<unknown>" if
 /// the item can't be identified.
-fn item_name(db: &dyn BindingsGenerator<'_>, local_def_id: LocalDefId) -> Symbol {
-    db.tcx()
-        .hir_expect_item(local_def_id)
-        .kind
-        .ident()
-        .map(|ident| ident.name)
-        .unwrap_or_else(|| Symbol::intern("<unknown>"))
+fn item_name(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Symbol {
+    db.tcx().opt_item_name(def_id).unwrap_or_else(|| Symbol::intern("<unknown>"))
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
-fn generate_item(
-    db: &dyn BindingsGenerator<'_>,
-    local_def_id: LocalDefId,
-) -> Result<Option<ApiSnippets>> {
+fn generate_item(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
-    let generated = generate_item_impl(db, local_def_id);
-    let attributes = crubit_attr::get_attrs(tcx, local_def_id.to_def_id()).unwrap();
+    let generated = generate_item_impl(db, def_id);
+    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
     if attributes.must_bind {
         if let Err(e) = &generated {
-            let item_name = item_name(db, local_def_id);
+            let item_name = item_name(db, def_id);
             let must_bind_message = format!(
                 "Failed to generate bindings for `{item_name}`:\n\
                 {e:?}\n\
@@ -1097,45 +1129,50 @@ fn generate_item(
 // The wrapper is used to ensure that the `must_bind` annotation is enforced.
 fn generate_item_impl(
     db: &dyn BindingsGenerator<'_>,
-    def_id: LocalDefId,
+    def_id: DefId,
 ) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
 
     // TODO(b/350772554): Support `use` mod.
-    if !is_public_or_supported_export(db, def_id.to_def_id()) {
+    if !is_public_or_supported_export(db, def_id) {
         return Ok(None);
     }
 
-    let item = match tcx.hir_expect_item(def_id) {
-        Item { kind: ItemKind::Struct(..) |
-                     ItemKind::Enum(..) |
-                     ItemKind::Union(..),
-               .. } if query_compiler::has_non_lifetime_generics(tcx, def_id.to_def_id()) => {
-            bail!("Generic types are not supported yet (b/259749095)");
-        },
-        Item { kind: ItemKind::Fn{..}, .. } => db.generate_function(def_id).map(Some),
-        Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } => {
-            let attributes = crubit_attr::get_attrs(tcx, def_id.to_def_id()).unwrap();
+    let item = match tcx.def_kind(def_id) {
+        DefKind::Struct | DefKind::Enum | DefKind::Union => {
+            if query_compiler::has_non_lifetime_generics(tcx, def_id) {
+                bail!("Generic types are not supported yet (b/259749095)");
+            }
+            let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
             if let Some(cpp_type) = attributes.cpp_type {
-                let item_name = tcx.def_path_str(def_id.to_def_id());
+                let item_name = tcx.def_path_str(def_id);
                 bail!(
                     "Type bindings for {item_name} suppressed due to being mapped to \
                             an existing C++ type ({cpp_type})"
                 );
             }
-            db.generate_adt_core(def_id.to_def_id())
-                .map(|core| Some(generate_adt(db, core)))
+            db.generate_adt_core(def_id).map(|core| Some(generate_adt(db, core)))
         }
-        Item { kind: ItemKind::TyAlias(..), ..} => generate_type_alias(db, def_id).map(Some),
-        Item { kind: kind@ItemKind::Use(use_path, use_kind), ..} => {
-                let ident_str = &kind.ident().map_or("".to_owned(), |ident| ident.as_str().to_owned());
+        DefKind::Fn => db.generate_function(def_id).map(Some),
+        DefKind::TyAlias => {
+            generate_type_alias(db, def_id, tcx.item_name(def_id).as_str()).map(Some)
+        }
+        DefKind::Use => {
+            let Some(local_def_id) = def_id.as_local() else {
+                bail!("Generated bindings for `use` from remote crate not yet supported.");
+            };
+            let Item { kind: kind @ ItemKind::Use(use_path, use_kind), .. } =
+                tcx.hir_expect_item(local_def_id)
+            else {
+                panic!("Use item not found");
+            };
+            let ident_str = &kind.ident().map_or("".to_owned(), |ident| ident.as_str().to_owned());
             generate_use(db, ident_str, use_path, use_kind).map(Some)
-        },
-        Item { kind: ItemKind::Const(..), .. } => generate_const(db, def_id).map(Some),
-        Item { kind: ItemKind::Impl(_), .. } |  // Handled by `generate_adt`
-        Item { kind: ItemKind::Mod(_, _), .. } =>  // Handled by `generate_crate`
-            Ok(None),
-        Item { .. } => bail!("Unsupported rustc_hir::hir::ItemKind"),  // Don't Debug print: slow
+        }
+        DefKind::Const => generate_const(db, def_id).map(Some),
+        DefKind::Impl { .. } => Ok(None), // Handled by `generate_adt`
+        DefKind::Mod => Ok(None),         // Handled by `generate_crate`
+        kind => bail!("Unsupported rustc_hir::hir::DefKind: {kind:?}"),
     };
 
     if let Ok(Some(item)) = item {
@@ -1149,13 +1186,13 @@ fn generate_item_impl(
 /// `local_def_id`.
 fn generate_unsupported_def(
     db: &dyn BindingsGenerator<'_>,
-    local_def_id: LocalDefId,
+    def_id: DefId,
     err: Error,
 ) -> ApiSnippets {
     let tcx = db.tcx();
     db.errors().report(&err);
-    let source_loc = generate_source_location(tcx, local_def_id);
-    let name = tcx.def_path_str(local_def_id.to_def_id());
+    let source_loc = generate_source_location(tcx, def_id);
+    let name = tcx.def_path_str(def_id);
 
     // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
     // says: To print causes as well [...], use the alternate selector “{:#}”.
@@ -1243,20 +1280,22 @@ pub fn format_namespace_bound_cc_tokens(
 fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let tcx = db.tcx();
     let mut cc_details_prereqs = CcPrerequisites::default();
-    let mut cc_details: Vec<(LocalDefId, TokenStream)> = vec![];
+    let mut cc_details: Vec<(DefId, TokenStream)> = vec![];
     let mut cc_api_impl = TokenStream::default();
     let mut extern_c_decls = BTreeSet::new();
-    let mut main_apis = HashMap::<LocalDefId, CcSnippet>::new();
+    let mut main_apis = HashMap::<DefId, CcSnippet>::new();
     let formatted_items = tcx
         .hir_free_items()
         .filter_map(|item_id| {
-            let def_id: LocalDefId = item_id.owner_id.def_id;
+            let local_def_id = item_id.owner_id.def_id;
+            let def_id = local_def_id.to_def_id();
             db.generate_item(def_id)
                 .unwrap_or_else(|err| Some(generate_unsupported_def(db, def_id, err)))
-                .map(|api_snippets| (def_id, api_snippets))
+                .map(|api_snippets| (local_def_id, api_snippets))
         })
         .sorted_by_key(|(def_id, _)| tcx.def_span(*def_id));
-    for (def_id, api_snippets) in formatted_items {
+    for (local_def_id, api_snippets) in formatted_items {
+        let def_id = local_def_id.to_def_id();
         let old_item = main_apis.insert(def_id, api_snippets.main_api);
         assert!(old_item.is_none(), "Duplicated key: {def_id:?}");
 
@@ -1275,7 +1314,9 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
             let nodes = main_apis.keys().copied();
             let deps = main_apis.iter().flat_map(|(&successor, main_api)| {
-                let predecessors = main_api.prereqs.defs.iter().copied();
+                let predecessors = main_api.prereqs.defs.iter().copied().filter(|pre|
+                        // Only consider `pre`s that we're currently generating APIs for.
+                        main_apis.contains_key(pre));
                 predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
             });
             toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
@@ -1295,10 +1336,10 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     // Destructure/rebuild `main_apis` (in the same order as `ordered_ids`) into
     // `includes`, and `ordered_cc` (mixing in `fwd_decls` and `cc_details`).
     let (includes, ordered_cc) = {
-        let mut already_declared = HashSet::new();
-        let mut fwd_decls = HashSet::new();
+        let mut already_declared: HashSet<DefId> = HashSet::new();
+        let mut fwd_decls: HashSet<DefId> = HashSet::new();
         let mut includes = cc_details_prereqs.includes;
-        let mut ordered_main_apis: Vec<(LocalDefId, TokenStream)> = Vec::new();
+        let mut ordered_main_apis: Vec<(DefId, TokenStream)> = Vec::new();
         for def_id in ordered_ids.into_iter() {
             let CcSnippet {
                 tokens: cc_tokens,
@@ -1327,9 +1368,9 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
             .into_iter()
             .chain(ordered_main_apis)
             .chain(cc_details)
-            .map(|(local_def_id, tokens)| {
-                let ns_def_id = tcx.opt_parent(local_def_id.to_def_id());
-                let mod_path = FullyQualifiedName::new(db, local_def_id.to_def_id()).cpp_ns_path;
+            .map(|(def_id, tokens)| {
+                let ns_def_id = tcx.opt_parent(def_id);
+                let mod_path = FullyQualifiedName::new(db, def_id).cpp_ns_path;
                 (ns_def_id, mod_path, tokens)
             })
             .collect_vec();

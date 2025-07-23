@@ -10,7 +10,7 @@ use code_gen_utils::CcInclude;
 use error_report::bail;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use rustc_span::def_id::LocalDefId;
+use rustc_span::def_id::DefId;
 use rustc_span::Symbol;
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
@@ -28,20 +28,20 @@ pub struct CcPrerequisites {
     /// Set of local definitions that a `CcSnippet` depends on.  For example if
     /// `CcSnippet::tokens` expands to `void foo(S s) { ... }` then the
     /// definition of `S` should have appeared earlier - in this case `defs`
-    /// will include the `LocalDefId` corresponding to `S`.  Note that the
+    /// will include the `DefId` corresponding to `S`.  Note that the
     /// definition of `S` is covered by `ApiSnippets::main_api` (i.e. the
     /// predecessor of a toposort edge is `ApiSnippets::main_api` - it is not
     /// possible to depend on `ApiSnippets::cc_details`).
-    pub defs: HashSet<LocalDefId>,
+    pub defs: HashSet<DefId>,
 
     /// Set of forward declarations that a `CcSnippet` depends on.  For example
     /// if `CcSnippet::tokens` expands to `void foo(S* s)` then a forward
     /// declaration of `S` should have appeared earlier - in this case
-    /// `fwd_decls` will include the `LocalDefId` corresponding to `S`.
+    /// `fwd_decls` will include the `DefId` corresponding to `S`.
     /// Note that in this particular example the *definition* of `S` does
     /// *not* need to appear earlier (and therefore `defs` will *not*
-    /// contain `LocalDefId` corresponding to `S`).
-    pub fwd_decls: HashSet<LocalDefId>,
+    /// contain `DefId` corresponding to `S`).
+    pub fwd_decls: HashSet<DefId>,
 
     /// Set of Crubit feature flags required for the CcSnippet to be valid.
     pub required_features: flagset::FlagSet<FineGrainedFeature>,
