@@ -37,12 +37,14 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::anything;
 using ::clang::ast_matchers::asString;
 using ::clang::ast_matchers::booleanType;
 using ::clang::ast_matchers::cxxConstructorDecl;
 using ::clang::ast_matchers::cxxMethodDecl;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasAncestor;
+using ::clang::ast_matchers::hasBody;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::hasParameter;
 using ::clang::ast_matchers::hasTemplateArgument;
@@ -1794,6 +1796,36 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       IsEmpty());
+}
+
+TEST(CollectEvidenceFromDefinitionTest, LateInitializerThroughAliasForTest) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+
+    namespace testing {
+    class Test {
+     public:
+      virtual void SetUp() = 0;
+      virtual ~Test();
+    };
+    }  // namespace testing
+
+    using TestAlias = ::testing::Test;
+
+    // Even though the base class is named through an alias, we detect that this
+    // class inherits from testing::Test.
+    class FooTest : public TestAlias {
+     protected:
+      void SetUp() override { FieldInitializedInSetUp = std::make_unique<int>(1); }
+
+      std::unique_ptr<int> FieldInitializedInSetUp;
+    };
+  )cc";
+  EXPECT_THAT(collectFromDefinitionMatching(
+                  functionDecl(hasName("SetUp"), hasBody(anything())), Src),
+              Contains(evidence(
+                  Slot(0), Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
+                  fieldNamed("FooTest::FieldInitializedInSetUp"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnull) {

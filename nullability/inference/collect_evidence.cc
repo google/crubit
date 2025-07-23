@@ -1566,7 +1566,8 @@ static void collectEvidenceFromSupportedLateInitializerExitBlock(
   if (!Parent->lookupInBases(
           [](const clang::CXXBaseSpecifier *BaseSpec,
              clang::CXXBasePath &Path) {
-            return BaseSpec->getType().getAsString() == "::testing::Test";
+            return BaseSpec->getType().getCanonicalType().getAsString() ==
+                   "class testing::Test";
           },
           BasePaths)) {
     return;
