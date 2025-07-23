@@ -29,7 +29,7 @@ use quote::format_ident;
 use quote::quote;
 use quote::ToTokens;
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
-use rustc_hir::{AssocItemKind, ImplItemRef, ItemKind};
+use rustc_hir::{self as hir, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
@@ -181,20 +181,21 @@ fn generate_cpp_enum<'tcx>(
             ItemKind::Impl(impl_) => impl_.items,
             other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
         })
-        .sorted_by_key(|impl_item_ref| {
-            let local_def_id = impl_item_ref.id.owner_id.def_id;
+        .copied()
+        .sorted_by_key(|impl_item_id| {
+            let local_def_id = impl_item_id.owner_id.def_id;
             tcx.def_span(local_def_id)
         })
         // Generate the code for each enumerator item.
-        .filter_map(|impl_item_ref| {
-            let local_def_id = impl_item_ref.id.owner_id.def_id;
+        .filter_map(|impl_item_id| {
+            let local_def_id = impl_item_id.owner_id.def_id;
             let def_id = local_def_id.to_def_id();
             if !is_exported(db.tcx(), def_id) {
                 return None;
             }
-            match impl_item_ref.kind {
+            match tcx.hir_impl_item(impl_item_id).kind {
                 // Every item in an enumeration should be a const.
-                AssocItemKind::Const => {
+                hir::ImplItemKind::Const(..) => {
                     let enumerator_name =
                         format_cc_ident(db, tcx.item_name(def_id).as_str()).unwrap();
                     let value_kind =
@@ -242,16 +243,17 @@ fn generate_cpp_enum<'tcx>(
 fn generate_associated_item<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     self_id: LocalDefId,
-    impl_item_ref: &ImplItemRef,
+    impl_item_id: hir::ImplItemId,
     member_function_names: &mut HashSet<String>,
 ) -> Option<ApiSnippets> {
     let tcx = db.tcx();
-    let def_id = impl_item_ref.id.owner_id.def_id;
+    let def_id = impl_item_id.owner_id.def_id;
     if !is_exported(tcx, def_id.to_def_id()) {
         return None;
     }
-    let result = match impl_item_ref.kind {
-        AssocItemKind::Fn { .. } => {
+    let impl_item = tcx.hir_impl_item(impl_item_id);
+    let result = match impl_item.kind {
+        hir::ImplItemKind::Fn(..) => {
             let result = db.generate_function(def_id);
             if result.is_ok() {
                 let cpp_name =
@@ -260,7 +262,7 @@ fn generate_associated_item<'tcx>(
             }
             result
         }
-        AssocItemKind::Const => generate_const(db, def_id),
+        hir::ImplItemKind::Const(..) => generate_const(db, def_id),
         other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
     };
     let result = result
@@ -269,7 +271,7 @@ fn generate_associated_item<'tcx>(
         Err(err) => {
             if crubit_attr::get_attrs(tcx, def_id.to_def_id()).unwrap().must_bind {
                 let self_name = crate::item_name(db, self_id);
-                let item_name = impl_item_ref.ident.as_str();
+                let item_name = impl_item.ident.as_str();
                 let must_bind_message = format!(
                     "Failed to generate bindings for `{self_name}::{item_name}`:\n\
                     {err:?}\n\
@@ -368,12 +370,13 @@ pub fn generate_adt<'tcx>(
             ItemKind::Impl(impl_) => impl_.items,
             other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
         })
-        .sorted_by_key(|impl_item_ref| {
-            let def_id = impl_item_ref.id.owner_id.def_id;
+        .copied()
+        .sorted_by_key(|impl_item_id| {
+            let def_id = impl_item_id.owner_id.def_id;
             tcx.def_span(def_id)
         })
-        .filter_map(|impl_item_ref| {
-            generate_associated_item(db, local_def_id, impl_item_ref, &mut member_function_names)
+        .filter_map(|impl_item_id| {
+            generate_associated_item(db, local_def_id, impl_item_id, &mut member_function_names)
         })
         .collect();
 
