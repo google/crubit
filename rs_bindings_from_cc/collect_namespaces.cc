@@ -150,7 +150,7 @@ NamespacesHierarchy CollectNamespaces(const IR& ir) {
   }
 
   NamespaceTrie trie(ir.current_target, id_to_namespace);
-  for (auto namespace_id : ir.top_level_item_ids) {
+  for (auto namespace_id : ir.top_level_item_ids.at(ir.current_target)) {
     if (id_to_namespace.count(namespace_id) == 0) {
       continue;
     }

@@ -53,8 +53,9 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
   std::vector<Namespace*> all_namespaces = ir.get_items_if<Namespace>();
   absl::flat_hash_map<std::string, ItemId> name_to_top_level_ns;
   absl::flat_hash_set<ItemId> top_level_item_id_set =
-      absl::flat_hash_set<ItemId>(ir.top_level_item_ids.begin(),
-                                  ir.top_level_item_ids.end());
+      absl::flat_hash_set<ItemId>(
+          ir.top_level_item_ids[ir.current_target].begin(),
+          ir.top_level_item_ids[ir.current_target].end());
   absl::flat_hash_map<ItemId, Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
     if (ns->owning_target != ir.current_target) {
@@ -157,7 +158,8 @@ absl::Status AddUseModToIr(IR& ir,
       use_mod_from_src.enclosing_namespace.value()->child_item_ids.push_back(
           use_mod_from_src.use_mod.id);
     } else {
-      ir.top_level_item_ids.push_back(use_mod_from_src.use_mod.id);
+      ir.top_level_item_ids[ir.current_target].push_back(
+          use_mod_from_src.use_mod.id);
     }
   }
   return absl::OkStatus();

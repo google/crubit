@@ -409,18 +409,15 @@ absl::StatusOr<std::optional<ItemId>> Importer::GetEnclosingItemId(
   }
 }
 
-std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
-    clang::Decl* parent_decl) {
+Importer::DeclItems Importer::GetDeclItems(const clang::Decl* decl) {
+  DeclItems decl_items;
   clang::SourceManager& sm = ctx_.getSourceManager();
-  std::vector<SourceLocationComparator::OrderedItemId> items;
   auto compare_locations = SourceLocationComparator(sm);
 
   // We are only interested in comments within this decl context.
   std::vector<const clang::RawComment*> comments_in_range(
-      llvm::lower_bound(comments_, parent_decl->getBeginLoc(),
-                        compare_locations),
-      llvm::upper_bound(comments_, parent_decl->getEndLoc(),
-                        compare_locations));
+      llvm::lower_bound(comments_, decl->getBeginLoc(), compare_locations),
+      llvm::upper_bound(comments_, decl->getEndLoc(), compare_locations));
 
   std::map<clang::SourceLocation, const clang::RawComment*,
            SourceLocationComparator>
@@ -432,23 +429,16 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
 
   absl::flat_hash_set<ItemId> visited_item_ids;
 
-  auto* decl_context = clang::cast<clang::DeclContext>(parent_decl);
+  auto* decl_context = clang::cast<clang::DeclContext>(decl);
   for (auto decl : GetCanonicalChildren(decl_context)) {
-    auto item = GetDeclItem(decl);
-    // We generated IR for top level items coming from different targets,
-    // however we shouldn't generate bindings for them, so we don't add them
-    // to ir.top_level_item_ids.
-    if (decl_context->isTranslationUnit() && !IsFromCurrentTarget(decl)) {
-      continue;
-    }
     // Only add item ids for decls that can be successfully imported.
-    if (item.has_value()) {
+    if (auto item = GetDeclItem(decl); item.has_value()) {
       auto item_id = GenerateItemId(decl);
       // TODO(rosica): Drop this check when we start importing also other
       // redecls, not just the canonical
       if (visited_item_ids.find(item_id) == visited_item_ids.end()) {
         visited_item_ids.insert(item_id);
-        items.push_back({GetSourceOrderKey(decl), item_id});
+        decl_items.canonical_children.push_back({decl, item_id});
       }
     }
 
@@ -457,16 +447,79 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     if (auto raw_comment = ctx_.getRawCommentForDeclNoCache(decl)) {
       ordered_comments.erase(raw_comment->getBeginLoc());
     }
-    ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
-                           ordered_comments.upper_bound(decl->getEndLoc()));
+    if (decl->getLocation().isValid()) {
+      ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
+                             ordered_comments.upper_bound(decl->getEndLoc()));
+    }
   }
 
+  decl_items.comments.reserve(ordered_comments.size());
   for (auto& [_, comment] : ordered_comments) {
+    decl_items.comments.push_back(comment);
+  }
+  return decl_items;
+}
+
+absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
+Importer::GetTopLevelItemIdsInSourceOrder(
+    const clang::TranslationUnitDecl* translation_unit_decl) {
+  Importer::DeclItems decl_items = GetDeclItems(translation_unit_decl);
+
+  absl::flat_hash_map<BazelLabel,
+                      std::vector<SourceLocationComparator::OrderedItemId>>
+      items;
+
+  // Push the comments first
+  std::vector<SourceLocationComparator::OrderedItemId>& invocation_items =
+      items[invocation_.target_];
+  invocation_items.reserve(decl_items.comments.size());
+  for (auto& comment : decl_items.comments) {
+    invocation_items.push_back(
+        {GetSourceOrderKey(comment), GenerateItemId(comment)});
+  }
+
+  // Push all the other items
+  for (auto& [decl, item_id] : decl_items.canonical_children) {
+    items[GetOwningTarget(decl)].push_back({GetSourceOrderKey(decl), item_id});
+  }
+
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  auto compare_locations = SourceLocationComparator(sm);
+
+  absl::flat_hash_map<BazelLabel, std::vector<ItemId>> ordered_items;
+  for (auto& [target, item_ids_in_target] : items) {
+    llvm::sort(item_ids_in_target, compare_locations);
+
+    std::vector<ItemId>& ordered_item_ids = ordered_items[target];
+    ordered_item_ids.reserve(item_ids_in_target.size());
+    for (auto& ordered_item : item_ids_in_target) {
+      ordered_item_ids.push_back(ordered_item.second);
+    }
+  }
+  return ordered_items;
+}
+
+std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
+    clang::Decl* parent_decl) {
+  Importer::DeclItems decl_items = GetDeclItems(parent_decl);
+
+  std::vector<SourceLocationComparator::OrderedItemId> items;
+
+  items.reserve(decl_items.comments.size() +
+                decl_items.canonical_children.size());
+  for (auto& comment : decl_items.comments) {
     items.push_back({GetSourceOrderKey(comment), GenerateItemId(comment)});
   }
-  llvm::sort(items, compare_locations);
+  for (auto& [decl, item_id] : decl_items.canonical_children) {
+    items.push_back({GetSourceOrderKey(decl), item_id});
+  }
 
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  auto compare_locations = SourceLocationComparator(sm);
+
+  llvm::sort(items, compare_locations);
   std::vector<ItemId> ordered_item_ids;
+
   ordered_item_ids.reserve(items.size());
   for (auto& ordered_item : items) {
     ordered_item_ids.push_back(ordered_item.second);
@@ -538,12 +591,13 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     invocation_.ir_.items.push_back(ordered_item.second);
   }
   invocation_.ir_.top_level_item_ids =
-      GetItemIdsInSourceOrder(translation_unit_decl);
+      GetTopLevelItemIdsInSourceOrder(translation_unit_decl);
 
   // TODO(b/257302656): Consider placing the generated template instantiations
   // into a separate namespace (maybe `crubit::instantiated_templates` ?).
   llvm::copy(GetOrderedItemIdsOfTemplateInstantiations(),
-             std::back_inserter(invocation_.ir_.top_level_item_ids));
+             std::back_inserter(
+                 invocation_.ir_.top_level_item_ids[invocation_.target_]));
 }
 
 void Importer::ImportDeclsFromDeclContext(

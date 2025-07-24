@@ -990,7 +990,7 @@ struct IR {
                             GlobalVar, UnsupportedItem, Comment, Namespace,
                             UseMod, TypeMapOverride>;
   std::vector<Item> items;
-  std::vector<ItemId> top_level_item_ids;
+  absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids;
   // Empty string signals that the bindings should be generated in the crate
   // root. This is the default state.
   //

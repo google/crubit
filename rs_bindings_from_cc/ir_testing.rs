@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use std::collections::hash_map::HashMap;
+use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
 use arc_anyhow::Result;
@@ -57,10 +57,10 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
         /* current_target= */ TESTING_TARGET.into(),
-        /* top_level_item_ids= */ vec![],
+        /* top_level_item_ids= */ BTreeMap::new(),
         /* crate_root_path= */ None,
         /* crubit_features= */
-        <HashMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
+        <BTreeMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
     );
     update_test_ir(&mut ir);
     ir
@@ -163,9 +163,9 @@ mod tests {
         assert_ir_matches!(
             ir_from_cc(multiplatform_testing::Platform::X86Linux, "")?,
             quote! {
-                crubit_features: hash_map!{
+                crubit_features: map! {
                     ...
-                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|InferOperatorLifetimes|Experimental))
+                    BazelLabel(#TESTING_TARGET): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|InferOperatorLifetimes|Experimental))
                     ...
                 }
             }
@@ -177,9 +177,9 @@ mod tests {
         assert_ir_matches!(
             make_ir_from_items([]),
             quote! {
-                crubit_features: hash_map!{
+                crubit_features: map! {
                     ...
-                    BazelLabel("//test:testing_target"): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|InferOperatorLifetimes|Experimental))
+                    BazelLabel(#TESTING_TARGET): SerializedCrubitFeatures(FlagSet(Supported|Wrapper|InferOperatorLifetimes|Experimental))
                     ...
                 }
             }

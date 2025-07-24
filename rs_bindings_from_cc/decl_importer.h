@@ -140,6 +140,10 @@ class ImportContext {
   virtual absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
       clang::Decl* decl) = 0;
 
+  // Returns a map of top level item ids in source order for each target.
+  virtual absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
+  GetTopLevelItemIdsInSourceOrder(const clang::TranslationUnitDecl* decl) = 0;
+
   // Imports children of `decl`.
   //
   // Returns item ids of the children that belong to the current target.  This

@@ -7,7 +7,7 @@ use arc_anyhow::Result;
 use googletest::prelude::*;
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
-use ir_testing::{ir_id, retrieve_func, retrieve_record};
+use ir_testing::{ir_id, retrieve_func, retrieve_record, DEPENDENCY_TARGET, TESTING_TARGET};
 use itertools::Itertools;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
@@ -3732,7 +3732,7 @@ fn test_function_redeclared_as_friend() {
                     adl_enclosing_record: Some(ItemId(...)) ...
                 }),
             ],
-            top_level_item_ids: [ItemId(...)]
+            top_level_item_ids: map! { ... BazelLabel(#TESTING_TARGET): [ItemId(...)] ... }
         }
     );
 }
@@ -4009,6 +4009,25 @@ fn test_source_location_class_template_specialization() {
           ...
           }
         ...
+        }
+    );
+}
+
+#[gtest]
+fn test_top_level_item_ids_from_multiple_targets() {
+    let dependency_header = r#"struct FromDependency {};"#;
+    let header = "struct FromHeader {};";
+    let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+          top_level_item_ids: map! {
+            ...
+            BazelLabel(#DEPENDENCY_TARGET): [...]
+            ...
+            BazelLabel(#TESTING_TARGET): [...]
+            ...
+          }
         }
     );
 }

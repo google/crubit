@@ -13,7 +13,9 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use serde::Deserialize;
 use std::cell::OnceCell;
+use std::cmp::Ordering;
 use std::collections::hash_map::{Entry, HashMap};
+use std::collections::BTreeMap;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -87,9 +89,9 @@ pub fn make_ir_from_parts<CrubitFeatures>(
     items: Vec<Item>,
     public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
-    top_level_item_ids: Vec<ItemId>,
+    top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
     crate_root_path: Option<Rc<str>>,
-    crubit_features: HashMap<BazelLabel, CrubitFeatures>,
+    crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
 ) -> IR
 where
     CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
@@ -588,19 +590,35 @@ impl BazelLabel {
 
         result
     }
+
+    /// Private helper function for simplifying PartialEq, PartialOrd, and Hash implementations
+    /// to ensure that //foo:bar and //foo/bar:bar are considered identical.
+    fn components(&self) -> (&str, &str) {
+        (self.target_name(), self.package_name())
+    }
 }
 
 impl PartialEq for BazelLabel {
     fn eq(&self, other: &Self) -> bool {
-        // Ensure that `//foo` and `//foo:foo` are considered equal.
-        self.target_name() == other.target_name() && self.package_name() == other.package_name()
+        self.components() == other.components()
+    }
+}
+
+impl PartialOrd for BazelLabel {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for BazelLabel {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.components().cmp(&other.components())
     }
 }
 
 impl Hash for BazelLabel {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.target_name().hash(state);
-        self.package_name().hash(state);
+        self.components().hash(state);
     }
 }
 
@@ -1877,11 +1895,11 @@ struct FlatIR {
     #[serde(default)]
     items: Vec<Item>,
     #[serde(default)]
-    top_level_item_ids: Vec<ItemId>,
+    top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
     #[serde(default)]
     crate_root_path: Option<Rc<str>>,
     #[serde(default)]
-    crubit_features: HashMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
+    crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
@@ -1889,13 +1907,14 @@ struct FlatIR {
 /// See b/272530008.
 impl Debug for FlatIR {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        struct DebugHashMap<T: Debug>(pub T);
-        impl<T: Debug> Debug for DebugHashMap<T> {
+        // BTreeMap has consistent ordering, unlike HashMap, so it's reasonable to rely on a
+        // consistent Debug output.
+        struct DebugBTreeMap<T>(pub T);
+        impl<K: Debug, V: Debug> Debug for DebugBTreeMap<&BTreeMap<K, V>> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                // prefix the hash map with `hash_map!` so that the output can be fed to
-                // rustfmt. The end result is something like `hash_map!{k:v,
-                // k2:v2}`, which reads well.
-                write!(f, "hash_map!")?;
+                // prefix the map with `map!` so that the output can be fed to rustfmt.
+                // The end result is something like `map! { k1: v1, k2: v2 }`, which reads well.
+                write!(f, "map!")?;
                 Debug::fmt(&self.0, f)
             }
         }
@@ -1913,9 +1932,9 @@ impl Debug for FlatIR {
             .field("public_headers", public_headers)
             .field("current_target", current_target)
             .field("items", items)
-            .field("top_level_item_ids", top_level_item_ids)
+            .field("top_level_item_ids", &DebugBTreeMap(top_level_item_ids))
             .field("crate_root_path", crate_root_path)
-            .field("crubit_features", &DebugHashMap(crubit_features))
+            .field("crubit_features", &DebugBTreeMap(crubit_features))
             .finish()
     }
 }
@@ -1940,7 +1959,7 @@ impl IR {
     }
 
     pub fn top_level_item_ids(&self) -> &[ItemId] {
-        &self.flat_ir.top_level_item_ids
+        &self.flat_ir.top_level_item_ids[self.current_target()]
     }
 
     pub fn items_mut(&mut self) -> impl Iterator<Item = &mut Item> {
@@ -2208,7 +2227,7 @@ mod tests {
         let expected = FlatIR {
             public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
-            top_level_item_ids: vec![],
+            top_level_item_ids: BTreeMap::new(),
             items: vec![],
             crate_root_path: None,
             crubit_features: Default::default(),

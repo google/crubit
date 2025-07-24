@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -99,6 +100,22 @@ class Importer final : public ImportContext {
   absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
       clang::Decl* decl) override;
 
+  // The canonical children and comments that are within a decl.
+  // This is the return type of `GetDeclItems`, and is intended to only be used
+  // to abstract shared behavior between GetTopLevelItemIdsInSourceOrder and
+  // GetItemIdsInSourceOrder.
+  struct DeclItems {
+    std::vector<const clang::RawComment*> comments = {};
+    std::vector<std::pair<const clang::Decl*, ItemId>> canonical_children = {};
+  };
+
+  // This is intended to only be used to abstract shared behavior between
+  // GetTopLevelItemIdsInSourceOrder and GetItemIdsInSourceOrder.
+  DeclItems GetDeclItems(const clang::Decl* decl);
+
+  absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
+  GetTopLevelItemIdsInSourceOrder(
+      const clang::TranslationUnitDecl* decl) override;
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
   std::optional<UnsupportedItem::Path> GetUnsupportedItemPathForTemplateDecl(

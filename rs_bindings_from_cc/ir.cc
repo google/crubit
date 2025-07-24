@@ -771,10 +771,14 @@ llvm::json::Value IR::ToJson() const {
   }
   CHECK_EQ(json_items.size(), items.size());
 
-  std::vector<llvm::json::Value> top_level_ids;
-  top_level_ids.reserve(top_level_item_ids.size());
-  for (const auto& id : top_level_item_ids) {
-    top_level_ids.push_back(id.value());
+  llvm::json::Object top_level_item_ids_json;
+  for (const auto& [target, item_ids] : top_level_item_ids) {
+    std::vector<llvm::json::Value> item_ids_json;
+    item_ids_json.reserve(item_ids.size());
+    for (const auto& item_id : item_ids) {
+      item_ids_json.push_back(item_id.value());
+    }
+    top_level_item_ids_json[target.value()] = std::move(item_ids_json);
   }
 
   llvm::json::Object features_json;
@@ -790,7 +794,7 @@ llvm::json::Value IR::ToJson() const {
       {"public_headers", public_headers},
       {"current_target", current_target},
       {"items", std::move(json_items)},
-      {"top_level_item_ids", std::move(top_level_ids)},
+      {"top_level_item_ids", std::move(top_level_item_ids_json)},
       {"crubit_features", std::move(features_json)},
   };
   if (!crate_root_path.empty()) {
