@@ -43,6 +43,7 @@ DEPS = {
         "forward_declaration",
     ],
     "uses_not_crubit_exposed": ["not_crubit_exposed"],
+    "depends_on_nested_types": ["nested_types"],
 }
 
 TAGS = {}

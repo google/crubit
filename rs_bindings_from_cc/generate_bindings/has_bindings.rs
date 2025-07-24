@@ -77,15 +77,16 @@ pub fn has_bindings(
                 // means it got overwritten. That would mean this item's parent cannot be generated,
                 // so we cannot generate this item.
                 let resolved_type_names = db
-                    .resolve_type_names(parent_record.enclosing_item_id)
+                    .resolve_type_names(parent_record.clone())
                     .expect("enclosing_item_id should always be a record or a namespace");
 
                 let parent_module_name: Rc<str> =
                     parent_record.rs_name.identifier.as_ref().to_snake_case().into();
 
-                let Some(ResolvedTypeName::RecordNestedItems {
-                    parent_records_that_map_to_this_name,
-                }) = &resolved_type_names.get(&parent_module_name)
+                let ResolvedTypeName::RecordNestedItems { parent_records_that_map_to_this_name } =
+                    resolved_type_names
+                        .get(&parent_module_name)
+                        .expect("parent module name should always be in the list, this is a bug")
                 else {
                     // The parent module name was overwritten by something else.
                     return Err(NoBindingsReason::ParentModuleNameOverwritten {
@@ -417,14 +418,15 @@ fn type_visibility(
 /// global variables as well.
 pub fn resolve_type_names(
     db: &dyn BindingsGenerator,
-    parent: Option<ItemId>,
+    parent: Rc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>> {
-    let child_item_ids: &[ItemId] = match parent.map(|id| db.ir().find_untyped_decl(id)) {
-        Some(Item::Namespace(ns)) => &ns.child_item_ids,
-        Some(Item::Record(record)) => &record.child_item_ids,
-        None => db.ir().top_level_item_ids(),
-        _ => bail!("not a parent namespace or record"),
-    };
+    let child_item_ids: &[ItemId] =
+        match parent.enclosing_item_id.map(|id| db.ir().find_untyped_decl(id)) {
+            Some(Item::Namespace(ns)) => &ns.child_item_ids,
+            Some(Item::Record(record)) => &record.child_item_ids,
+            None => db.ir().top_level_item_ids_in_target(&parent.owning_target),
+            _ => bail!("not a parent namespace or record"),
+        };
 
     let mut names: HashMap<Rc<str>, ResolvedTypeName> = HashMap::new();
     let mut insert = |name: Rc<str>, resolved_type_name: ResolvedTypeName| {

@@ -43,8 +43,8 @@ extern "C" void __rust_thunk___ZN3Foo3Bar3BazC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct already_snake_case) == 4);
-static_assert(alignof(struct already_snake_case) == 4);
+static_assert(sizeof(struct already_snake_case) == 1);
+static_assert(alignof(struct already_snake_case) == 1);
 static_assert(CRUBIT_OFFSET_OF(i, struct already_snake_case) == 0);
 
 extern "C" void __rust_thunk___ZN18already_snake_caseC1Ev(
@@ -52,8 +52,8 @@ extern "C" void __rust_thunk___ZN18already_snake_caseC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct ConflictingSnakeCaseNames) == 4);
-static_assert(alignof(struct ConflictingSnakeCaseNames) == 4);
+static_assert(sizeof(struct ConflictingSnakeCaseNames) == 1);
+static_assert(alignof(struct ConflictingSnakeCaseNames) == 1);
 static_assert(CRUBIT_OFFSET_OF(i, struct ConflictingSnakeCaseNames) == 0);
 
 extern "C" void __rust_thunk___ZN25ConflictingSnakeCaseNamesC1Ev(
@@ -61,8 +61,8 @@ extern "C" void __rust_thunk___ZN25ConflictingSnakeCaseNamesC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct ConflictingSnakeCaseNames_) == 4);
-static_assert(alignof(struct ConflictingSnakeCaseNames_) == 4);
+static_assert(sizeof(struct ConflictingSnakeCaseNames_) == 1);
+static_assert(alignof(struct ConflictingSnakeCaseNames_) == 1);
 static_assert(CRUBIT_OFFSET_OF(i, struct ConflictingSnakeCaseNames_) == 0);
 
 extern "C" void __rust_thunk___ZN26ConflictingSnakeCaseNames_C1Ev(
@@ -70,12 +70,20 @@ extern "C" void __rust_thunk___ZN26ConflictingSnakeCaseNames_C1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct OnlyOneHasNestedItems) == 4);
-static_assert(alignof(struct OnlyOneHasNestedItems) == 4);
+static_assert(sizeof(struct OnlyOneHasNestedItems) == 1);
+static_assert(alignof(struct OnlyOneHasNestedItems) == 1);
 static_assert(CRUBIT_OFFSET_OF(i, struct OnlyOneHasNestedItems) == 0);
 
 extern "C" void __rust_thunk___ZN21OnlyOneHasNestedItemsC1Ev(
     struct OnlyOneHasNestedItems* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(struct OnlyOneHasNestedItems::Inner) == 1);
+static_assert(alignof(struct OnlyOneHasNestedItems::Inner) == 1);
+
+extern "C" void __rust_thunk___ZN21OnlyOneHasNestedItems5InnerC1Ev(
+    struct OnlyOneHasNestedItems::Inner* __this) {
   crubit::construct_at(__this);
 }
 
@@ -87,8 +95,8 @@ extern "C" void __rust_thunk___ZN22OnlyOneHasNestedItems_C1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct SameNameAsNamespace) == 4);
-static_assert(alignof(struct SameNameAsNamespace) == 4);
+static_assert(sizeof(struct SameNameAsNamespace) == 1);
+static_assert(alignof(struct SameNameAsNamespace) == 1);
 static_assert(CRUBIT_OFFSET_OF(i, struct SameNameAsNamespace) == 0);
 
 extern "C" void __rust_thunk___ZN19SameNameAsNamespaceC1Ev(
@@ -112,9 +120,8 @@ extern "C" void __rust_thunk___ZN22same_name_as_namespace3BarC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct no_longer_top_level::already_snake_case) ==
-              4);
-static_assert(alignof(struct no_longer_top_level::already_snake_case) == 4);
+static_assert(sizeof(struct no_longer_top_level::already_snake_case) == 1);
+static_assert(alignof(struct no_longer_top_level::already_snake_case) == 1);
 static_assert(
     CRUBIT_OFFSET_OF(i, struct no_longer_top_level::already_snake_case) == 0);
 
@@ -123,10 +130,10 @@ extern "C" void __rust_thunk___ZN19no_longer_top_level18already_snake_caseC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(
-    CRUBIT_SIZEOF(struct no_longer_top_level::ConflictingSnakeCaseNames) == 4);
+static_assert(sizeof(struct no_longer_top_level::ConflictingSnakeCaseNames) ==
+              1);
 static_assert(alignof(struct no_longer_top_level::ConflictingSnakeCaseNames) ==
-              4);
+              1);
 static_assert(CRUBIT_OFFSET_OF(
                   i, struct no_longer_top_level::ConflictingSnakeCaseNames) ==
               0);
@@ -137,10 +144,10 @@ __rust_thunk___ZN19no_longer_top_level25ConflictingSnakeCaseNamesC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(
-    CRUBIT_SIZEOF(struct no_longer_top_level::ConflictingSnakeCaseNames_) == 4);
+static_assert(sizeof(struct no_longer_top_level::ConflictingSnakeCaseNames_) ==
+              1);
 static_assert(alignof(struct no_longer_top_level::ConflictingSnakeCaseNames_) ==
-              4);
+              1);
 static_assert(CRUBIT_OFFSET_OF(
                   i, struct no_longer_top_level::ConflictingSnakeCaseNames_) ==
               0);
@@ -151,15 +158,25 @@ __rust_thunk___ZN19no_longer_top_level26ConflictingSnakeCaseNames_C1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(
-    CRUBIT_SIZEOF(struct no_longer_top_level::OnlyOneHasNestedItems) == 4);
-static_assert(alignof(struct no_longer_top_level::OnlyOneHasNestedItems) == 4);
+static_assert(sizeof(struct no_longer_top_level::OnlyOneHasNestedItems) == 1);
+static_assert(alignof(struct no_longer_top_level::OnlyOneHasNestedItems) == 1);
 static_assert(CRUBIT_OFFSET_OF(
                   i, struct no_longer_top_level::OnlyOneHasNestedItems) == 0);
 
 extern "C" void
 __rust_thunk___ZN19no_longer_top_level21OnlyOneHasNestedItemsC1Ev(
     struct no_longer_top_level::OnlyOneHasNestedItems* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(
+    sizeof(struct no_longer_top_level::OnlyOneHasNestedItems::Inner) == 1);
+static_assert(
+    alignof(struct no_longer_top_level::OnlyOneHasNestedItems::Inner) == 1);
+
+extern "C" void
+__rust_thunk___ZN19no_longer_top_level21OnlyOneHasNestedItems5InnerC1Ev(
+    struct no_longer_top_level::OnlyOneHasNestedItems::Inner* __this) {
   crubit::construct_at(__this);
 }
 
@@ -172,9 +189,8 @@ __rust_thunk___ZN19no_longer_top_level22OnlyOneHasNestedItems_C1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(CRUBIT_SIZEOF(struct no_longer_top_level::SameNameAsNamespace) ==
-              4);
-static_assert(alignof(struct no_longer_top_level::SameNameAsNamespace) == 4);
+static_assert(sizeof(struct no_longer_top_level::SameNameAsNamespace) == 1);
+static_assert(alignof(struct no_longer_top_level::SameNameAsNamespace) == 1);
 static_assert(
     CRUBIT_OFFSET_OF(i, struct no_longer_top_level::SameNameAsNamespace) == 0);
 

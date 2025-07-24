@@ -1958,8 +1958,12 @@ impl IR {
         self.flat_ir.items.iter()
     }
 
+    pub fn top_level_item_ids_in_target(&self, target: &BazelLabel) -> &[ItemId] {
+        &self.flat_ir.top_level_item_ids[target]
+    }
+
     pub fn top_level_item_ids(&self) -> &[ItemId] {
-        &self.flat_ir.top_level_item_ids[self.current_target()]
+        self.top_level_item_ids_in_target(self.current_target())
     }
 
     pub fn items_mut(&mut self) -> impl Iterator<Item = &mut Item> {

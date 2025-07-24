@@ -16,22 +16,22 @@ struct Foo {
 };
 
 struct already_snake_case {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
 struct ConflictingSnakeCaseNames {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
 struct ConflictingSnakeCaseNames_ {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
 struct OnlyOneHasNestedItems {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
@@ -40,7 +40,7 @@ struct OnlyOneHasNestedItems_ {
 };
 
 struct SameNameAsNamespace {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
@@ -54,22 +54,22 @@ struct Bar {};
 namespace no_longer_top_level {
 
 struct already_snake_case {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
 struct ConflictingSnakeCaseNames {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
 struct ConflictingSnakeCaseNames_ {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
 struct OnlyOneHasNestedItems {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 
@@ -78,7 +78,7 @@ struct OnlyOneHasNestedItems_ {
 };
 
 struct SameNameAsNamespace {
-  using Inner = int;
+  struct Inner {};
   Inner i;
 };
 

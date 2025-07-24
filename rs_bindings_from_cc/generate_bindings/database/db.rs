@@ -141,7 +141,7 @@ memoized::query_group! {
         /// https://doc.rust-lang.org/reference/names/namespaces.html.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_type_names
-        fn resolve_type_names(&self, parent: Option<ItemId>) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>>;
+        fn resolve_type_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>>;
 
         #[provided]
         /// Returns the generated bindings for the given enum.
