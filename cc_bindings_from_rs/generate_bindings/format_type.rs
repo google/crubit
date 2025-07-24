@@ -256,7 +256,7 @@ pub fn format_ty_for_cc<'tcx>(
         ty::TyKind::Float(ty::FloatTy::F64) => keyword(quote! { double }),
 
         // ABI compatibility and other details are described in the doc comments in
-        // `crubit/support/rs_std/rs_char.h` and `crubit/support/rs_std/char_test.cc` (search for
+        // `crubit/support/rs_std/char.h` and `crubit/support/rs_std/char_test.cc` (search for
         // "Layout tests").
         ty::TyKind::Char => {
             // Asserting that the target architecture meets the assumption from Crubit's
@@ -283,8 +283,8 @@ pub fn format_ty_for_cc<'tcx>(
             ));
 
             let mut cc_type = CcSnippet::with_include(
-                quote! { rs_std::rs_char },
-                db.support_header("rs_std/rs_char.h"),
+                quote! { rs_std::char_ },
+                db.support_header("rs_std/char.h"),
             );
             cc_type.prereqs.required_features |= FineGrainedFeature::RustChar;
             cc_type

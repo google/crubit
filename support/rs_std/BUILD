@@ -13,12 +13,13 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
-    name = "rs_char",
-    hdrs = ["rs_char.h"],
+    name = "char",
+    hdrs = ["char.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
     visibility = [
         "//visibility:public",
+        h,
     ],
 
     # It is important to be thoughtful when adding new dependencies for `char`
@@ -33,10 +34,10 @@ cc_library(
 )
 
 crubit_cc_test(
-    name = "rs_char_test",
-    srcs = ["rs_char_test.cc"],
+    name = "char_test",
+    srcs = ["char_test.cc"],
     deps = [
-        ":rs_char",
+        ":char",
         "@googletest//:gtest_main",
     ],
 )

@@ -9,7 +9,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "support/rs_std/rs_char.h"
+#include "support/rs_std/char.h"
 
 namespace crubit {
 namespace {
@@ -45,10 +45,10 @@ TEST(FnParamTyTest, Int32) {
   EXPECT_EQ(12 + 34, fn_param_ty_tests::add_i32(12, 34));
 }
 
-TEST(FnParamTyTest, rs_char) {
-  std::optional<const rs_std::rs_char> input = rs_std::rs_char::from_u32(U'A');
+TEST(FnParamTyTest, char_) {
+  std::optional<const rs_std::char_> input = rs_std::char_::from_u32(U'A');
   ASSERT_TRUE(input.has_value());
-  rs_std::rs_char output = fn_param_ty_tests::char_to_ascii_lowercase(*input);
+  rs_std::char_ output = fn_param_ty_tests::char_to_ascii_lowercase(*input);
   EXPECT_EQ(std::uint32_t{U'a'}, std::uint32_t{output});
 }
 

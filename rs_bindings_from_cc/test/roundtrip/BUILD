@@ -9,7 +9,7 @@ crubit_test_cc_library(
     name = "roundtrip",
     hdrs = ["roundtrip.h"],
     deps = [
-        "//support/rs_std:rs_char",
+        "//support/rs_std:char",
     ],
 )
 

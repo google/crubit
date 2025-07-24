@@ -38,7 +38,7 @@ pub enum CppTypeKind<'tcx> {
     /// Note that `&[T]` is a `SliceRef<const T>`, not a `SliceRef<const T>&`.
     SliceRef { element_type: Rc<CppType<'tcx>>, is_const: bool },
 
-    /// C++ binding for `char` as defined by `rs_char.h`.
+    /// C++ binding for `char` as defined by `char.h`.
     RsChar,
 
     /// A user-defined C++ type.

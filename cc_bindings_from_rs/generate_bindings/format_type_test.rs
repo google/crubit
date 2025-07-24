@@ -189,8 +189,8 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "usize", cc: "std::uintptr_t", includes: ["<cstdint>"]),
         case!(
             rs: "char",
-            cc: "rs_std::rs_char",
-            includes: ["<crubit/support/for/tests/rs_std/rs_char.h>"]
+            cc: "rs_std::char_",
+            includes: ["<crubit/support/for/tests/rs_std/char.h>"]
         ),
         case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
         case!(rs: "SomeEnum", cc: "::rust_out::SomeEnum", includes: [], prereq_def: "SomeEnum"),

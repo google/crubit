@@ -28,16 +28,16 @@ primitives are generally aligned to their size”. Furthermore Rust does *not*
 guarantee a particular ABI (e.g. whether `char` value can be passed in a
 general-purpose register VS in a vector register VS has to be passed by
 pointer). `cc_bindings_from_rs` assumes that Rust `char` has the same alignment
-and ABI as `uint32_t` (and therefore the same ABI as `rs_std::rs_char` from
-`crubit/support/rs_std/rs_char.h`).
+and ABI as `uint32_t` (and therefore the same ABI as `rs_std::char_` from
+`crubit/support/rs_std/char.h`).
 
 The assumptions are verified by assertions that verify the properties of the
 target architecture when `cc_bindings_from_rs` runs (`layout.align()`,
 `layout.size()`, and `layout.abi()` assertions in `format_ty_for_cc` in
 `cc_bindings_from_rs/bindings.rs`). Similar assertions are verified on C++ side
-in `support/rs_std/rs_char_test.cc`. These assertions seem unlikely to fail, but
-if they do, then hopefully `rs_char` can just be tweaked to wrap another of the
-C++ integer types.
+in `support/rs_std/char_test.cc`. These assertions seem unlikely to fail, but if
+they do, then hopefully `char_` can just be tweaked to wrap another of the C++
+integer types.
 
 ## Rust built-in `[T]` slice type
 

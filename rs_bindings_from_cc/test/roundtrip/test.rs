@@ -7,29 +7,29 @@ mod tests {
     use googletest::prelude::*;
 
     #[gtest]
-    fn test_rs_char_parameter_type_and_return_type() {
-        use roundtrip::rs_char_test::*;
+    fn test_rust_char_parameter_type_and_return_type() {
+        use roundtrip::char_test::*;
         let roundtrip = NextChar('a');
         assert_eq!(roundtrip, 'b');
     }
 
     #[gtest]
-    fn test_rs_char_field_type() {
-        use roundtrip::rs_char_test::*;
+    fn test_rust_char_field_type() {
+        use roundtrip::char_test::*;
         let s = SomeStruct { c: 'x' };
         assert_eq!('x', s.GetChar());
     }
 
     #[gtest]
-    fn test_rs_char_via_type_alias() {
-        use roundtrip::rs_char_test::*;
+    fn test_rust_char_via_type_alias() {
+        use roundtrip::char_test::*;
         let roundtrip = NextCharViaTypeAlias('a');
         assert_eq!(roundtrip, 'b');
     }
 
     #[gtest]
-    fn test_rs_char_via_import() {
-        use roundtrip::rs_char_test::*;
+    fn test_rust_char_via_import() {
+        use roundtrip::char_test::*;
         let roundtrip = NextCharViaImport('a');
         assert_eq!(roundtrip, 'b');
     }

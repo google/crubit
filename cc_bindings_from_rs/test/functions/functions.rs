@@ -73,7 +73,7 @@ pub mod fn_param_ty_tests {
         // This function used to return unmodified `c` value, but (as we learned when
         // authoring `rs_bindings_from_cc/test/struct/abi_class` tests) making
         // some simple calculations below helps to exercise the ABI
-        // compatibility between Rust `char` and C++ `rs_std::rs_char`.
+        // compatibility between Rust `char` and C++ `rs_std::char_`.
         c.to_ascii_lowercase()
     }
 
@@ -82,7 +82,11 @@ pub mod fn_param_ty_tests {
     }
 
     pub fn get_ref_to_smaller_int<'a>(x: &'a i32, y: &'a i32) -> &'a i32 {
-        if *x < *y { x } else { y }
+        if *x < *y {
+            x
+        } else {
+            y
+        }
     }
 
     pub fn get_identical_ref_with_inferred_lifetime(x: &'_ i32) -> &'_ i32 {
