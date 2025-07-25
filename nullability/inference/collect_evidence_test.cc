@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
@@ -54,6 +55,7 @@ using ::clang::ast_matchers::isImplicit;
 using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::lambdaExpr;
 using ::clang::ast_matchers::match;
+using ::clang::ast_matchers::ofClass;
 using ::clang::ast_matchers::parameterCountIs;
 using ::clang::ast_matchers::refersToType;
 using ::clang::ast_matchers::selectFirst;
@@ -1798,6 +1800,33 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest,
       IsEmpty());
 }
 
+TEST(CollectEvidenceFromDefinitionTest, LateInitializerDirectlyForTest) {
+  static constexpr llvm::StringRef Src = R"cc(
+#include <memory>
+    namespace testing {
+    class Test {
+     public:
+      virtual void SetUp() = 0;
+      virtual ~Test();
+    };
+    }  // namespace testing
+
+    class Target : public ::testing::Test {
+     protected:
+      void SetUp() override { FieldInitializedInSetUp = std::make_unique<int>(0); }
+      std::unique_ptr<int> FieldInitializedInSetUp;
+      std::unique_ptr<int> NotInit;
+    };
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))), Src),
+      AllOf(Contains(evidence(Slot(0),
+                              Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
+                              fieldNamed("Target::FieldInitializedInSetUp"))),
+            Not(Contains(evidence(_, _, fieldNamed("Target::NotInit"))))));
+}
+
 TEST(CollectEvidenceFromDefinitionTest, LateInitializerThroughAliasForTest) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1814,18 +1843,19 @@ TEST(CollectEvidenceFromDefinitionTest, LateInitializerThroughAliasForTest) {
 
     // Even though the base class is named through an alias, we detect that this
     // class inherits from testing::Test.
-    class FooTest : public TestAlias {
+    class Target : public TestAlias {
      protected:
       void SetUp() override { FieldInitializedInSetUp = std::make_unique<int>(1); }
 
       std::unique_ptr<int> FieldInitializedInSetUp;
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  functionDecl(hasName("SetUp"), hasBody(anything())), Src),
-              Contains(evidence(
-                  Slot(0), Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
-                  fieldNamed("FooTest::FieldInitializedInSetUp"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))), Src),
+      Contains(evidence(Slot(0),
+                        Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
+                        fieldNamed("Target::FieldInitializedInSetUp"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
