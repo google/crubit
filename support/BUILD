@@ -268,3 +268,12 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+# Used to fix SWIG syntax errors when you see Crubit annotations.
+filegroup(
+    name = "annotations_swig",
+    srcs = ["annotations.swig"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
