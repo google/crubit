@@ -218,6 +218,29 @@ cc_test(
 )
 
 cc_library(
+    name = "check_no_mutable_aliasing",
+    srcs = ["check_no_mutable_aliasing.cc"],
+    hdrs = ["check_no_mutable_aliasing.h"],
+    visibility = [
+        "//:__subpackages__",
+        "//google_internal/release:crubit_support_lib_visibility",
+    ],
+    deps = [
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "check_no_mutable_aliasing_test",
+    srcs = ["check_no_mutable_aliasing_test.cc"],
+    deps = [
+        ":check_no_mutable_aliasing",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "status_bridge_cpp",
     srcs = ["status_bridge.cc"],
     hdrs = ["status_bridge.h"],
