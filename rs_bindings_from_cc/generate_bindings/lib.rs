@@ -397,8 +397,9 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
         RsTypeKind::Pointer { .. } => true,
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
-        | RsTypeKind::TypeAlias { underlying_type: t, .. }
-        | RsTypeKind::Slice(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
+        | RsTypeKind::TypeAlias { underlying_type: t, .. } => {
+            db.is_rs_type_kind_unsafe(t.as_ref().clone())
+        }
         RsTypeKind::FuncPtr { return_type, param_types, .. } => {
             db.is_rs_type_kind_unsafe(return_type.as_ref().clone())
                 || param_types
@@ -553,7 +554,9 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             // We don't actually _have_ to expand the type alias here
             db.crubit_abi_type(underlying_type.as_ref().clone())
         }
-        RsTypeKind::Slice(_) => bail!("RsTypeKind::Slice is not supported yet"),
+        RsTypeKind::Pointer { is_slice: true, .. } => {
+            bail!("Slices are not supported yet")
+        }
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
         RsTypeKind::TypeMapOverride { .. } => {
             bail!("RsTypeKind::TypeMapOverride is not supported yet")

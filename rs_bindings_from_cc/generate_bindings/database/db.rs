@@ -11,7 +11,7 @@ use arc_anyhow::{anyhow, Result};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
-use ir::{BazelLabel, CcType, Enum, Func, ItemId, Record, UnqualifiedIdentifier, IR};
+use ir::{BazelLabel, CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashMap;
 use std::rc::Rc;

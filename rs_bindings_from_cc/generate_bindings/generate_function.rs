@@ -464,7 +464,7 @@ fn record_type_of_compound_assignment<'a>(
             fix_mutability(mutability);
             expect_possibly_incomplete_record(db, referent, "compound assignment first parameter", errors)?
         }
-        RsTypeKind::Pointer { pointee, mutability } => {
+        RsTypeKind::Pointer { pointee, mutability, .. } => {
             errors.add(anyhow!("Compound assignment operators are not yet supported for pointers with unknown lifetime (b/219826128), found {lhs_str}"));
             fix_mutability(mutability);
             expect_possibly_incomplete_record(db, pointee, "compound assignment first parameter", errors)?

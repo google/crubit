@@ -294,6 +294,7 @@ pub enum RsTypeKind {
     },
     Pointer {
         pointee: Rc<RsTypeKind>,
+        is_slice: bool,
         mutability: Mutability,
     },
     Reference {
@@ -335,7 +336,6 @@ pub enum RsTypeKind {
         crate_path: Rc<CratePath>,
     },
     Primitive(Primitive),
-    Slice(Rc<RsTypeKind>),
     /// Types that require custom logic to translate.
     BridgeType {
         bridge_type: BridgeRsTypeKind,
@@ -579,9 +579,8 @@ impl RsTypeKind {
             };
 
             return Ok(RsTypeKind::Pointer {
-                pointee: Rc::new(RsTypeKind::Slice(Rc::new(
-                    db.rs_type_kind(slice_type_inner.clone())?,
-                ))),
+                pointee: Rc::new(db.rs_type_kind(slice_type_inner.clone())?),
+                is_slice: true,
                 mutability: if slice_type_inner.is_const {
                     Mutability::Const
                 } else {
@@ -748,7 +747,6 @@ impl RsTypeKind {
                 // aliased type, which is also visited by dfs_iter.
                 RsTypeKind::TypeAlias { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::Primitive { .. } => require_feature(CrubitFeature::Supported, None),
-                RsTypeKind::Slice { .. } => require_feature(CrubitFeature::Supported, None),
                 RsTypeKind::BridgeType { bridge_type, original_type } => {
                     let is_pointer_bridge =
                         matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
@@ -914,7 +912,6 @@ impl RsTypeKind {
             RsTypeKind::Record { record, .. } => should_derive_copy(record),
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
-            RsTypeKind::Slice(t) => t.implements_copy(),
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                 // We cannot get the information of the Rust type so we assume it is not Copy.
                 BridgeRsTypeKind::BridgeVoidConverters { .. }
@@ -1007,10 +1004,14 @@ impl RsTypeKind {
         self_record: Option<&Record>,
     ) -> TokenStream {
         match self {
-            RsTypeKind::Pointer { pointee, mutability } => {
+            RsTypeKind::Pointer { pointee, is_slice, mutability } => {
                 let mutability = mutability.format_for_pointer();
                 let pointee_ = pointee.to_token_stream_replacing_by_self(db, self_record);
-                quote! {* #mutability #pointee_}
+                if *is_slice {
+                    quote! {* #mutability [#pointee_] }
+                } else {
+                    quote! {* #mutability #pointee_ }
+                }
             }
             RsTypeKind::Reference { option, referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
@@ -1062,10 +1063,6 @@ impl RsTypeKind {
                 } else {
                     self.to_token_stream(db)
                 }
-            }
-            RsTypeKind::Slice(t) => {
-                let type_arg = t.to_token_stream_replacing_by_self(db, self_record);
-                quote! {[#type_arg]}
             }
             RsTypeKind::BridgeType { .. } => self.to_token_stream(db),
             RsTypeKind::TypeMapOverride { .. } => self.to_token_stream(db),
@@ -1182,10 +1179,14 @@ impl RsTypeKind {
                 // the only types using `()` like this are all pub(crate) (generated here.)
                 quote! { ::forward_declare::Incomplete<::forward_declare::symbol!(#symbol), ()> }
             }
-            RsTypeKind::Pointer { pointee, mutability } => {
+            RsTypeKind::Pointer { pointee, is_slice, mutability } => {
                 let mutability = mutability.format_for_pointer();
                 let pointee_tokens = pointee.to_token_stream(db);
-                quote! {* #mutability #pointee_tokens}
+                if *is_slice {
+                    quote! {* #mutability [#pointee_tokens] }
+                } else {
+                    quote! {* #mutability #pointee_tokens }
+                }
             }
             RsTypeKind::Reference { option, referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
@@ -1302,10 +1303,6 @@ impl RsTypeKind {
                 Primitive::Uint32T | Primitive::StdUint32T => quote! { u32 },
                 Primitive::Uint64T | Primitive::StdUint64T => quote! { u64 },
             },
-            RsTypeKind::Slice(t) => {
-                let type_arg = t.to_token_stream(db);
-                quote! {[#type_arg]}
-            }
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 let make_path = |rust_name: &str| {
                     let is_absolute_path = rust_name.starts_with("::");
@@ -1409,7 +1406,6 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         self.todo.push(return_type);
                         self.todo.extend(param_types.iter().rev());
                     }
-                    RsTypeKind::Slice(t) => self.todo.push(t),
                     RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                         BridgeRsTypeKind::BridgeVoidConverters { .. }
                         | BridgeRsTypeKind::ProtoMessageBridge { .. }

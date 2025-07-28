@@ -59,7 +59,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                     .map(Lifetime::from)
                     .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
                 None if elide_missing_lifetimes => Lifetime::elided(),
-                None => return Ok(RsTypeKind::Pointer { pointee, mutability }),
+                None => return Ok(RsTypeKind::Pointer { pointee, is_slice: false, mutability }),
             };
             if let PointerTypeKind::RValueRef = pointer.kind {
                 Ok(RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime })
