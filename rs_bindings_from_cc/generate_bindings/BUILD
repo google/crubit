@@ -297,6 +297,9 @@ rust_library(
     srcs = [
         "generate_function.rs",
     ],
+    proc_macro_deps = [
+        "@crate_index//:rustversion",
+    ],
     visibility = [
         "//rs_bindings_from_cc:__subpackages__",
     ],
