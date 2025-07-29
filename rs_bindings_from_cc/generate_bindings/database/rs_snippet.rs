@@ -342,6 +342,9 @@ pub enum RsTypeKind {
         original_type: Rc<Record>,
     },
     /// Types that can be reinterpreted in place, e.g., signed char <-> i8
+    /// This variant comes from the `CRUBIT_INTERNAL_RUST_TYPE` attribute macro in C++,
+    /// which is used on types like `SliceRef`, `StrRef`, and C++ types generated from Rust
+    /// types by cc_bindings_from_rs.
     TypeMapOverride {
         name: Rc<str>,
         is_same_abi: bool,
