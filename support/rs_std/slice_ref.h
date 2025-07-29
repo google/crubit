@@ -14,6 +14,7 @@
 #include "absl/base/attributes.h"
 #include "absl/types/span.h"
 #include "support/internal/attribute_macros.h"
+#include "support/internal/check_no_mutable_aliasing.h"
 
 namespace rs_std {
 
@@ -98,5 +99,21 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
 };
 
 }  // namespace rs_std
+
+namespace crubit::internal {
+
+template <typename T>
+struct PtrLike<rs_std::SliceRef<T>> {
+  static constexpr bool kIsConst = std::is_const_v<T>;
+  static PtrData AsPtrData(rs_std::SliceRef<T> t) {
+    uintptr_t start = reinterpret_cast<uintptr_t>(t.data());
+    return {
+        .start = start,
+        .end = start + t.size() * sizeof(T),
+    };
+  }
+};
+
+}  // namespace crubit::internal
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_SLICEREF_H_

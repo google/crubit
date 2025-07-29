@@ -161,12 +161,12 @@ impl Default for __CcTemplateInstNSt3__u17integral_constantIbLb0EEE {
 // Error while generating bindings for type alias 'type':
 // Can't generate bindings for type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
 
-// Generated from: nowhere/llvm/src/libcxx/include/__config;l=367
+// Generated from: nowhere/llvm/src/libcxx/include/__config;l=358
 // Expanded at: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=25
 // Error while generating bindings for function 'std::integral_constant<bool, false>::operator bool':
 // Function name is not supported: Unsupported name: operator bool
 
-// Generated from: nowhere/llvm/src/libcxx/include/__config;l=367
+// Generated from: nowhere/llvm/src/libcxx/include/__config;l=358
 // Expanded at: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=27
 // Error while generating bindings for function 'std::integral_constant<bool, false>::operator()':
 // Bindings for this kind of operator (operator () with 1 parameter(s)) are not supported
@@ -209,12 +209,12 @@ impl Default for __CcTemplateInstNSt3__u17integral_constantIbLb1EEE {
 // Error while generating bindings for type alias 'type':
 // Can't generate bindings for type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
 
-// Generated from: nowhere/llvm/src/libcxx/include/__config;l=367
+// Generated from: nowhere/llvm/src/libcxx/include/__config;l=358
 // Expanded at: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=25
 // Error while generating bindings for function 'std::integral_constant<bool, true>::operator bool':
 // Function name is not supported: Unsupported name: operator bool
 
-// Generated from: nowhere/llvm/src/libcxx/include/__config;l=367
+// Generated from: nowhere/llvm/src/libcxx/include/__config;l=358
 // Expanded at: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=27
 // Error while generating bindings for function 'std::integral_constant<bool, true>::operator()':
 // Bindings for this kind of operator (operator () with 1 parameter(s)) are not supported

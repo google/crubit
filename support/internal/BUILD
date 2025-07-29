@@ -4,8 +4,10 @@ package(default_applicable_licenses = ["//:license"])
 
 cc_library(
     name = "bindings_support",
+    srcs = ["check_no_mutable_aliasing.cc"],
     hdrs = [
         "attribute_macros.h",
+        "check_no_mutable_aliasing.h",
         "cxx20_backports.h",
         "lazy_init.h",
         "memswap.h",
@@ -23,6 +25,17 @@ cc_library(
     # we can't rely on an exact version and/or exact absl/base/options.h).
     deps = [
         "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "check_no_mutable_aliasing_test",
+    srcs = ["check_no_mutable_aliasing_test.cc"],
+    deps = [
+        ":bindings_support",
+        "@googletest//:gtest_main",
     ],
 )
 

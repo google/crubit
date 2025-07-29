@@ -10,8 +10,8 @@ use crate::generate_function_thunk::{
 use crate::{
     format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
     generate_deprecated_tag, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, AllowReferences, BridgedType, CcType,
-    FullyQualifiedName, RsSnippet,
+    liberate_and_deanonymize_late_bound_regions, BridgedType, CcType, FullyQualifiedName,
+    RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{
@@ -383,6 +383,64 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
     None
 }
 
+struct Param<'tcx> {
+    cc_name: TokenStream,
+    cpp_type: TokenStream,
+    ty: SugaredTy<'tcx>,
+}
+
+fn can_shared_refs_to_ty_alias_mut_refs<'tcx>(tcx: TyCtxt<'tcx>, target_ty: Ty<'tcx>) -> bool {
+    let is_zero_sized =
+        query_compiler::get_layout(tcx, target_ty).map(|layout| layout.is_zst()).unwrap_or(false);
+    if is_zero_sized {
+        return true;
+    }
+
+    // Shared references to types which contain `UnsafeCell` may alias with mutable references.
+    if !target_ty.is_freeze(tcx, ty::TypingEnv::fully_monomorphized()) {
+        return true;
+    }
+
+    false
+}
+
+#[derive(Default)]
+struct RefsToCheckForAliasing<'a, 'tcx> {
+    mutable: Vec<&'a Param<'tcx>>,
+    shared: Vec<&'a Param<'tcx>>,
+}
+
+/// Returns function parameters which need to be checked for possible illegal mutable aliasing.
+///
+/// Rust does not allow mutable references to alias with other references (shared or mutable).
+/// C++ does not have this requirement, so we insert checks in the generated bindings to ensure that
+/// this requirement is not violated.
+fn refs_to_check_for_aliasing<'tcx, 'a>(
+    db: &dyn BindingsGenerator<'tcx>,
+    params: &'a [Param<'tcx>],
+) -> Option<RefsToCheckForAliasing<'a, 'tcx>> {
+    let tcx = db.tcx();
+    let mut refs = RefsToCheckForAliasing::default();
+    // TODO: b/351876244 - Apply this check to public reference fields of ADTs, not just top-level
+    // reference function parameters.
+    //
+    // TODO: b/351876244 - Apply this check to reference-like types such as
+    // `cpp_std::string_view` and `absl::Span`.
+    for param in params {
+        if let ty::TyKind::Ref(_region, target_ty, mutability) = param.ty.mid().kind() {
+            if mutability.is_mut() {
+                refs.mutable.push(param);
+            } else if !can_shared_refs_to_ty_alias_mut_refs(tcx, *target_ty) {
+                refs.shared.push(param);
+            }
+        }
+    }
+    if refs.mutable.is_empty() || (refs.shared.len() + refs.mutable.len() < 2) {
+        return None;
+    }
+    Some(refs)
+}
+
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
@@ -411,20 +469,10 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let main_api_ret_type =
         format_ret_ty_for_cc(db, &sig_mid, sig_hir)?.into_tokens(&mut main_api_prereqs);
 
-    struct Param<'tcx> {
-        cc_name: TokenStream,
-        cpp_type: TokenStream,
-        ty: SugaredTy<'tcx>,
-    }
     let params = {
         let names = tcx.fn_arg_idents(def_id).iter();
-        let cpp_types = format_param_types_for_cc(
-            db,
-            &sig_mid,
-            sig_hir,
-            AllowReferences::Safe,
-            function_kind.has_self_param(),
-        )?;
+        let cpp_types =
+            format_param_types_for_cc(db, &sig_mid, sig_hir, function_kind.has_self_param())?;
         names
             .enumerate()
             .zip(SugaredTy::fn_inputs(&sig_mid, sig_hir))
@@ -465,7 +513,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
             ty::TyKind::Ref(region, _, mutability) => {
                 let tcx = db.tcx();
-                // Ref-qualify if the lifetime of `&self` is a named lifetime or if it the elided
+                // Ref-qualify if the lifetime of `&self` is a named lifetime or if the elided
                 // lifetime appears in the return type.
                 // See <internal link> for more details on the motivation.
                 let ref_qualifier = if !region_is_elided(tcx, *region)
@@ -590,7 +638,6 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
             &sig_mid,
             sig_hir,
             &thunk_name,
-            AllowReferences::Safe,
             function_kind.has_self_param(),
         )?
         .into_tokens(&mut prereqs);
@@ -624,6 +671,23 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 )
             })
             .collect::<Result<Vec<TokenStream>>>()?;
+
+        if let Some(refs_to_check) = refs_to_check_for_aliasing(db, &params) {
+            let mut_cpp_tys = refs_to_check.mutable.iter().map(|param| &param.cpp_type);
+            let mut_cpp_names = refs_to_check.mutable.iter().map(|param| &param.cc_name);
+            let shared_cpp_tys = refs_to_check.shared.iter().map(|param| &param.cpp_type);
+            let shared_cpp_names = refs_to_check.shared.iter().map(|param| &param.cc_name);
+            prereqs.includes.insert(db.support_header("internal/check_no_mutable_aliasing.h"));
+            statements.extend(quote! {
+                __NEWLINE__
+                crubit::internal::CheckNoMutableAliasing(
+                    crubit::internal::AsMutPtrDatas<#( #mut_cpp_tys ),*>( #( #mut_cpp_names ),* ),
+                    crubit::internal::AsPtrDatas<#( #shared_cpp_tys ),*>(
+                        #( #shared_cpp_names ),* )
+                );
+                __NEWLINE__
+            });
+        }
 
         let impl_body: TokenStream = if is_bridged_type(db, rs_return_type.mid())?.is_none()
             && is_c_abi_compatible_by_value(rs_return_type.mid())

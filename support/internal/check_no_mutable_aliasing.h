@@ -18,48 +18,55 @@ struct PtrData {
   uintptr_t end;
 };
 
-// Converts a reference or pointer to const data into a `PtrData`.
+// Typeclass for types that are pointer-like. Specifically, C++ types that may
+// to a Rust reference should specialize this template to add `kIsConst` and
+// `AsPtrData` functionality.
+//
+// This is used to convert a reference or pointer to a `PtrData` for checking
+// for illegal mutable aliasing.
 template <typename T>
-PtrData AsPtrData(T t) {
-  if constexpr (std::is_pointer_v<T>) {
-    static_assert(std::is_const_v<std::remove_pointer_t<T>>);
+struct PtrLike {
+  static_assert(false, "Expected pointer or reference type");
+};
+
+template <typename T>
+struct PtrLike<T*> {
+  static constexpr bool kIsConst = std::is_const_v<T>;
+  static PtrData AsPtrData(T* t) {
     uintptr_t start = reinterpret_cast<uintptr_t>(t);
     return {
         .start = start,
-        .end = start + sizeof(std::remove_pointer_t<T>),
+        .end = start + sizeof(T),
     };
-  } else if constexpr (std::is_reference_v<T>) {
-    static_assert(std::is_const_v<std::remove_reference_t<T>>);
+  }
+};
+
+template <typename T>
+struct PtrLike<T&> {
+  static constexpr bool kIsConst = std::is_const_v<T>;
+  static PtrData AsPtrData(T& t) {
     uintptr_t start = reinterpret_cast<uintptr_t>(&t);
     return {
         .start = start,
-        .end = start + sizeof(std::remove_reference_t<T>),
+        .end = start + sizeof(T),
     };
-  } else {
-    static_assert(false, "Expected pointer or reference type");
   }
+};
+
+// Converts a reference or pointer to const data into a `PtrData`.
+template <typename T>
+PtrData AsPtrData(T t) {
+  static_assert(PtrLike<T>::kIsConst,
+                "Expected pointer or reference to be const");
+  return PtrLike<T>::AsPtrData(t);
 }
 
 // Converts a reference or pointer to mutable data into a `PtrData`.
 template <typename T>
 PtrData AsMutPtrData(T t) {
-  if constexpr (std::is_pointer_v<T>) {
-    static_assert(!std::is_const_v<std::remove_pointer_t<T>>);
-    uintptr_t start = reinterpret_cast<uintptr_t>(t);
-    return {
-        .start = start,
-        .end = start + sizeof(std::remove_pointer_t<T>),
-    };
-  } else if constexpr (std::is_reference_v<T>) {
-    static_assert(!std::is_const_v<std::remove_reference_t<T>>);
-    uintptr_t start = reinterpret_cast<uintptr_t>(&t);
-    return {
-        .start = start,
-        .end = start + sizeof(std::remove_reference_t<T>),
-    };
-  } else {
-    static_assert(false, "Expected pointer or reference type");
-  }
+  static_assert(!PtrLike<T>::kIsConst,
+                "Expected pointer or reference to be mutable");
+  return PtrLike<T>::AsPtrData(t);
 }
 
 template <typename... Ts>
@@ -79,10 +86,10 @@ void CheckNoMutableAliasingSpans(absl::Span<PtrData> mut_ptrs,
 
 // Convenience alias to allow calls with rvalue arrays.
 template <auto M = 0, auto N = 0>
-bool CheckNoMutableAliasing(std::array<PtrData, M>&& mut_ptrs,
+void CheckNoMutableAliasing(std::array<PtrData, M>&& mut_ptrs,
                             std::array<PtrData, N>&& const_ptrs) {
-  return CheckNoMutableAliasingSpans(absl::MakeSpan(mut_ptrs),
-                                     absl::MakeSpan(const_ptrs));
+  CheckNoMutableAliasingSpans(absl::MakeSpan(mut_ptrs),
+                              absl::MakeSpan(const_ptrs));
 }
 
 // Returns `true` if any of the mutable pointers alias with either each other or

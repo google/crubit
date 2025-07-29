@@ -9,12 +9,14 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
 #include "support/internal/attribute_macros.h"
+#include "support/internal/check_no_mutable_aliasing.h"
 #include "support/rs_std/internal/is_utf8.h"
 #include "support/rs_std/slice_ref.h"
 
@@ -155,5 +157,21 @@ constexpr bool operator!=(absl::string_view lhs, StrRef rhs) noexcept {
 }
 
 }  // namespace rs_std
+
+namespace crubit::internal {
+
+template <>
+struct PtrLike<rs_std::StrRef> {
+  static constexpr bool kIsConst = true;
+  static PtrData AsPtrData(rs_std::StrRef t) {
+    uintptr_t start = reinterpret_cast<uintptr_t>(t.data());
+    return {
+        .start = start,
+        .end = start + t.size(),
+    };
+  }
+};
+
+}  // namespace crubit::internal
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_STR_REF_H_

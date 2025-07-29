@@ -10,7 +10,6 @@ flagset::flags! {
     /// stating "<big thing> requires experimental", we can say it requires experimental because
     /// it needs e.g. "references".
     pub enum FineGrainedFeature : u8 {
-        PossibleMutableAliasing,
         EscapeCppReservedKeyword,
         RustChar,
     }
@@ -23,13 +22,6 @@ impl FineGrainedFeature {
     ) -> Result<()> {
         use crubit_feature::CrubitFeature::*;
         match self {
-            Self::PossibleMutableAliasing => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for functions taking a mutable reference, and which may alias in C++, requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
             Self::EscapeCppReservedKeyword => {
                 ensure!(
                     crubit_features.contains(Experimental),

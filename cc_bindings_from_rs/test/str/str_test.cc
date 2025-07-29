@@ -28,6 +28,11 @@ TEST(StrTest, StrAsField) {
             kFieldValue.data());
 }
 
+TEST(StrTest, StrAsPotentiallyAliasingArgument) {
+  uint8_t x = 5;
+  str::str_checked_as_potentially_aliasing(StrRef("hello"), x);
+}
+
 constexpr static StrRef kConst = str::CONST_STR_FOO;
 static_assert(kConst == "foo");
 static_assert(kConst != "bar");

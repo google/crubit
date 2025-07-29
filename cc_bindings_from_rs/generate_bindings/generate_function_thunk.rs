@@ -5,8 +5,8 @@
 use crate::{
     does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
     format_param_types_for_cc, format_ret_ty_for_cc, format_ty_for_rs, is_bridged_type,
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, AllowReferences,
-    BridgedType, BridgedTypeConversionInfo, FullyQualifiedName, RsSnippet,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType,
+    BridgedTypeConversionInfo, FullyQualifiedName, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -22,7 +22,7 @@ use quote::format_ident;
 use quote::quote;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{DefId, LOCAL_CRATE};
-use rustc_span::symbol::{kw, sym, Symbol};
+use rustc_span::symbol::{kw, Symbol};
 use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
 use std::ops::AddAssign;
@@ -55,15 +55,13 @@ pub fn generate_thunk_decl<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     thunk_name: &TokenStream,
-    allow_references: AllowReferences,
     has_self_param: bool,
 ) -> Result<CcSnippet> {
     let mut prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid, sig_hir)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cpp_types =
-            format_param_types_for_cc(db, sig_mid, sig_hir, allow_references, has_self_param)?;
+        let cpp_types = format_param_types_for_cc(db, sig_mid, sig_hir, has_self_param)?;
         sig_mid
             .inputs()
             .iter()
@@ -600,26 +598,9 @@ pub fn generate_trait_thunks<'tcx>(
         // to for traits defined or implemented in the current crate.
         let sig_hir = None;
 
-        let allow_references = if method.name() == sym::clone_from
-            && Some(trait_id) == tcx.lang_items().clone_trait()
-        {
-            // We specially handle aliases in `operator=` so that clone_from cannot be
-            // called with an alias. (`if (this != &other) {...}`)
-            AllowReferences::UnsafeAll
-        } else {
-            AllowReferences::Safe
-        };
-
         cc_thunk_decls.add_assign({
             let thunk_name = format_cc_ident(db, &thunk_name)?;
-            generate_thunk_decl(
-                db,
-                &sig_mid,
-                sig_hir,
-                &thunk_name,
-                allow_references,
-                /*has_self_param=*/ true,
-            )?
+            generate_thunk_decl(db, &sig_mid, sig_hir, &thunk_name, /*has_self_param=*/ true)?
         });
 
         rs_thunk_impls += {

@@ -356,22 +356,16 @@ fn test_format_item_fn_references() {
 }
 
 #[test]
-fn test_format_item_fn_risky_mut_reference() {
+fn test_format_item_fn_mut_reference_ensures_no_alias() {
     let test_src = r#"
             #[unsafe(no_mangle)]
             pub fn foo(_x: &mut i32, _y: &i32) {}
         "#;
-    test_format_item_with_features(
-        test_src,
-        "foo",
-        <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
-        |result| {
-            assert_eq!(
-                result.unwrap_err(),
-                "support for functions taking a mutable reference, and which may alias in C++, requires //features:experimental"
-            )
-        },
-    );
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        let cc_details = &result.cc_details.tokens;
+        assert_cc_matches!(cc_details, quote! { CheckNoMutableAliasing });
+    });
 }
 
 #[test]

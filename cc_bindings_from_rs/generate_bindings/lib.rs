@@ -45,9 +45,9 @@ use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use query_compiler::{
-    count_regions, does_type_implement_trait, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_c_abi_compatible_by_value, is_copy, is_directly_public,
-    is_exported, liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, repr_attrs,
+    does_type_implement_trait, get_layout, get_scalar_int_type, get_tag_size_with_padding,
+    is_c_abi_compatible_by_value, is_copy, is_directly_public, is_exported,
+    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, repr_attrs,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
@@ -466,15 +466,6 @@ impl AsRef<str> for CcType {
             CcType::Pointer { cpp_type, .. } => cpp_type.as_str(),
         }
     }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum AllowReferences {
-    /// Only allow references when it is safe.
-    Safe,
-    /// Allow references unconditionally, and rely on users to check for
-    /// aliasing.
-    UnsafeAll,
 }
 
 /// Returns the C++ must_use tag for the item identified by `def_id`, or None if there is no such

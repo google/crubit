@@ -24,8 +24,7 @@ impl TypeWithStr {
     }
 }
 
-// This function checks that we don't generate bindings for potentially aliasing mutable args.
-pub fn should_not_generate_bindings(_: &str, _: &mut u8) {}
+pub fn str_checked_as_potentially_aliasing(_: &str, _: &mut u8) {}
 
 pub fn get_str_len(s: &str) -> usize {
     s.len()

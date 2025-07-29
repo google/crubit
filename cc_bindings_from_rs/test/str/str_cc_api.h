@@ -11,6 +11,7 @@
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN
 
 #include "support/internal/attribute_macros.h"
+#include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/str_ref.h"
 
@@ -64,26 +65,26 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `should_not_generate_bindings` defined at
-// cc_bindings_from_rs/test/str/str.rs;l=28: support
-// for functions taking a mutable reference, and which may alias in C++,
-// requires //features:experimental
+// Generated from:
+// cc_bindings_from_rs/test/str/str.rs;l=27
+void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
+                                         std::uint8_t& __param_1);
 
 // Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=30
+// cc_bindings_from_rs/test/str/str.rs;l=29
 std::uintptr_t get_str_len(rs_std::StrRef s);
 
 // Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=34
+// cc_bindings_from_rs/test/str/str.rs;l=33
 std::uint8_t const* get_str_data(rs_std::StrRef s);
 
 // Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=38
+// cc_bindings_from_rs/test/str/str.rs;l=37
 rs_std::StrRef foo_as_str();
 static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
 
 // Error generating bindings for `STATIC_STR_FOO` defined at
-// cc_bindings_from_rs/test/str/str.rs;l=44:
+// cc_bindings_from_rs/test/str/str.rs;l=43:
 // Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not,
 // nested: false }
 
@@ -135,6 +136,20 @@ inline std::uint8_t const* TypeWithStr::get_str_data() const {
 inline void TypeWithStr::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TypeWithStr, str_field));
 }
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
+    rs_std::StrRef, std::uint8_t&);
+}
+inline void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
+                                                std::uint8_t& __param_1) {
+  crubit::internal::CheckNoMutableAliasing(
+      crubit::internal::AsMutPtrDatas<std::uint8_t&>(__param_1),
+      crubit::internal::AsPtrDatas<rs_std::StrRef>(__param_0));
+  return __crubit_internal::
+      __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(__param_0,
+                                                             __param_1);
+}
+
 namespace __crubit_internal {
 extern "C" std::uintptr_t __crubit_thunk_get_ustr_ulen(rs_std::StrRef);
 }

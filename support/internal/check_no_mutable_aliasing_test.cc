@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "support/check_no_mutable_aliasing.h"
+#include "support/internal/check_no_mutable_aliasing.h"
 
 #include <cstdint>
 

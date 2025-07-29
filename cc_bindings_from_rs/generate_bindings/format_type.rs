@@ -12,8 +12,8 @@ extern crate rustc_span;
 use crate::generate_function::check_fn_sig;
 use crate::generate_function_thunk::is_thunk_required;
 use crate::{
-    check_feature_enabled_on_self_and_all_deps, check_slice_layout, count_regions, get_layout,
-    is_public_or_supported_export, matches_qualified_name, AllowReferences, CcType,
+    check_feature_enabled_on_self_and_all_deps, check_slice_layout, get_layout,
+    is_public_or_supported_export, matches_qualified_name, CcType,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{CcInclude, NamespaceQualifier};
@@ -534,15 +534,10 @@ pub fn format_ty_for_cc<'tcx>(
                 }
             }
             let ret_type = format_ret_ty_for_cc(db, &sig, sig_hir)?.into_tokens(&mut prereqs);
-            let param_types = format_param_types_for_cc(
-                db,
-                &sig,
-                sig_hir,
-                AllowReferences::Safe,
-                /*has_self_param=*/ false,
-            )?
-            .into_iter()
-            .map(|snippet| snippet.into_tokens(&mut prereqs));
+            let param_types =
+                format_param_types_for_cc(db, &sig, sig_hir, /*has_self_param=*/ false)?
+                    .into_iter()
+                    .map(|snippet| snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
                 crubit::type_identity_t<
                     #ret_type( #( #param_types ),* )
@@ -677,40 +672,20 @@ pub fn region_is_elided<'tcx>(tcx: TyCtxt<'tcx>, region: ty::Region<'tcx>) -> bo
 ///
 /// `sig_hir` is the optional HIR FnSig, if available. This is used to retrieve
 /// alias information.
-///
-/// if `allow_references` is `Safe`, then this only allows exactly one reference
-/// parameter.
 pub fn format_param_types_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
-    allow_references: AllowReferences,
     has_self_param: bool,
 ) -> Result<Vec<CcSnippet>> {
-    let region_counts = std::cell::LazyCell::new(|| count_regions(sig_mid));
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
     let param_types = SugaredTy::fn_inputs(sig_mid, sig_hir);
     let mut snippets = Vec::with_capacity(param_types.len());
     for (i, param_type) in param_types.enumerate() {
         let is_self_param = i == 0 && has_self_param;
-        let mut cc_type = db
+        let cc_type = db
             .format_ty_for_cc(param_type, TypeLocation::FnParam { elided_is_output, is_self_param })
             .with_context(|| format!("Error handling parameter #{i} of type `{param_type}`"))?;
-        if allow_references == AllowReferences::Safe {
-            // In parameter position, format_ty_for_cc defaults to allowing free
-            // (non-static) references. We need to decide which references we
-            // allow -- in this case, we choose to allow references _only_ if
-            // the reference cannot mutably alias.
-            match param_type.mid().kind() {
-                ty::TyKind::Ref(input_region, .., Mutability::Mut) => {
-                    if region_counts.len() > 1 || region_counts[input_region] > 1 {
-                        cc_type.prereqs.required_features |=
-                            FineGrainedFeature::PossibleMutableAliasing;
-                    }
-                }
-                _ => {}
-            }
-        }
         snippets.push(cc_type);
     }
     Ok(snippets)
