@@ -83,9 +83,7 @@ inline NonTriviallyDestructable::NonTriviallyDestructable() {
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(
-    ::non_trivially_destructible_rust::
-        NonTriviallyDestructable& [[clang::annotate_type("lifetime",
-                                                         "__anon1")]]);
+    ::non_trivially_destructible_rust::NonTriviallyDestructable&);
 }
 inline NonTriviallyDestructable::~NonTriviallyDestructable() {
   __crubit_internal::__crubit_thunk_drop(*this);
@@ -102,19 +100,13 @@ inline NonTriviallyDestructable& NonTriviallyDestructable::operator=(
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone(
-    ::non_trivially_destructible_rust::
-        NonTriviallyDestructable const& [[clang::annotate_type("lifetime",
-                                                               "__anon1")]],
+    ::non_trivially_destructible_rust::NonTriviallyDestructable const&,
     ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_ufrom(
-    ::non_trivially_destructible_rust::
-        NonTriviallyDestructable& [[clang::annotate_type("lifetime",
-                                                         "__anon1")]],
-    ::non_trivially_destructible_rust::
-        NonTriviallyDestructable const& [[clang::annotate_type("lifetime",
-                                                               "__anon2")]]);
+    ::non_trivially_destructible_rust::NonTriviallyDestructable&,
+    ::non_trivially_destructible_rust::NonTriviallyDestructable const&);
 }
 inline NonTriviallyDestructable::NonTriviallyDestructable(
     const NonTriviallyDestructable& other) {

@@ -48,13 +48,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
 
   // Generated from:
   // cc_bindings_from_rs/test/str/str.rs;l=18
-  std::uintptr_t get_str_len() const
-      [[clang::annotate_type("lifetime", "__anon1")]];
+  std::uintptr_t get_str_len() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/str/str.rs;l=22
-  std::uint8_t const* get_str_data() const
-      [[clang::annotate_type("lifetime", "__anon1")]];
+  std::uint8_t const* get_str_data() const;
 
  private:
   // Field type has been replaced with a blob of bytes: Can't format `&'static
@@ -119,20 +117,18 @@ inline ::str::TypeWithStr TypeWithStr::create(rs_std::StrRef s) {
 
 namespace __crubit_internal {
 extern "C" std::uintptr_t __crubit_thunk_get_ustr_ulen(
-    ::str::TypeWithStr const& [[clang::annotate_type("lifetime", "__anon1")]]);
+    ::str::TypeWithStr const&);
 }
-inline std::uintptr_t TypeWithStr::get_str_len() const
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline std::uintptr_t TypeWithStr::get_str_len() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_ulen(self);
 }
 
 namespace __crubit_internal {
 extern "C" std::uint8_t const* __crubit_thunk_get_ustr_udata(
-    ::str::TypeWithStr const& [[clang::annotate_type("lifetime", "__anon1")]]);
+    ::str::TypeWithStr const&);
 }
-inline std::uint8_t const* TypeWithStr::get_str_data() const
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline std::uint8_t const* TypeWithStr::get_str_data() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_udata(self);
 }

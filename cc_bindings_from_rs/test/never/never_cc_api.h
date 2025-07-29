@@ -53,8 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/never/never.rs;l=29
-  [[noreturn]] void method_never_return() const
-      [[clang::annotate_type("lifetime", "__anon1")]];
+  [[noreturn]] void method_never_return() const;
 
  private:
   union {
@@ -102,11 +101,9 @@ inline void NeverStruct::associated_fn_never_return() {
 
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_method_unever_ureturn(
-    ::never::NeverStruct const& [[clang::annotate_type("lifetime",
-                                                       "__anon1")]]);
+    ::never::NeverStruct const&);
 }
-inline void NeverStruct::method_never_return() const
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline void NeverStruct::method_never_return() const {
   auto&& self = *this;
   __crubit_internal::__crubit_thunk_method_unever_ureturn(self);
 }

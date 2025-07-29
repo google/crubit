@@ -67,16 +67,12 @@ static_assert(std::is_trivially_destructible_v<Struct>);
 static_assert(std::is_trivially_move_constructible_v<Struct>);
 static_assert(std::is_trivially_move_assignable_v<Struct>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone(
-    ::example_crate::Struct const& [[clang::annotate_type("lifetime",
-                                                          "__anon1")]],
-    ::example_crate::Struct* __ret_ptr);
+extern "C" void __crubit_thunk_clone(::example_crate::Struct const&,
+                                     ::example_crate::Struct* __ret_ptr);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_clone_ufrom(
-    ::example_crate::Struct& [[clang::annotate_type("lifetime", "__anon1")]],
-    ::example_crate::Struct const& [[clang::annotate_type("lifetime",
-                                                          "__anon2")]]);
+extern "C" void __crubit_thunk_clone_ufrom(::example_crate::Struct&,
+                                           ::example_crate::Struct const&);
 }
 inline Struct::Struct(const Struct& other) {
   __crubit_internal::__crubit_thunk_clone(other, this);

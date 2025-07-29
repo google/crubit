@@ -348,9 +348,7 @@ fn test_format_item_fn_references() {
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
-                    void foo(
-                        std::int32_t const& [[clang::annotate_type("lifetime" , "__anon1")]] _x,
-                        std::int32_t const& [[clang::annotate_type("lifetime" , "__anon2")]] _y );
+                    void foo(std::int32_t const& _x, std::int32_t const& _y);
                 }
             );
         },
@@ -889,8 +887,8 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
                 std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg2,
                 std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg3,
                 std::int32_t const* [[clang::annotate_type("lifetime", "static")]] arg4,
-                std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg5,
-                std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]] arg6);
+                std::int32_t const& arg5,
+                std::int32_t const& arg6);
             }
         );
         assert_cc_matches!(
@@ -904,8 +902,8 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
                     std::int32_t const* [[clang::annotate_type("lifetime", "foo")]],
                     std::int32_t const* [[clang::annotate_type("lifetime", "foo")]],
                     std::int32_t const* [[clang::annotate_type("lifetime", "static")]],
-                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]],
-                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]]);
+                    std::int32_t const&,
+                    std::int32_t const&);
                 }
                 inline
                 std::int32_t const& [[clang::annotate_type("lifetime", "foo")]]
@@ -914,8 +912,8 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
                     std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg2,
                     std::int32_t const* [[clang::annotate_type("lifetime", "foo")]] arg3,
                     std::int32_t const* [[clang::annotate_type("lifetime", "static")]] arg4,
-                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]] arg5,
-                    std::int32_t const& [[clang::annotate_type("lifetime", "__anon2")]] arg6) {
+                    std::int32_t const& arg5,
+                    std::int32_t const& arg6) {
                   return __crubit_internal::...(arg1, arg2, arg3, arg4, arg5, arg6);
                 }
             }

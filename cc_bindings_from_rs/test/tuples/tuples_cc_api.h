@@ -278,8 +278,7 @@ inline NontrivialDrop::NontrivialDrop() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
-    ::tuples::NontrivialDrop& [[clang::annotate_type("lifetime", "__anon1")]]);
+extern "C" void __crubit_thunk_drop(::tuples::NontrivialDrop&);
 }
 inline NontrivialDrop::~NontrivialDrop() {
   __crubit_internal::__crubit_thunk_drop(*this);
@@ -338,8 +337,7 @@ static_assert(
     alignof(NonCppMovable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
-    ::tuples::NonCppMovable& [[clang::annotate_type("lifetime", "__anon1")]]);
+extern "C" void __crubit_thunk_drop(::tuples::NonCppMovable&);
 }
 inline NonCppMovable::~NonCppMovable() {
   __crubit_internal::__crubit_thunk_drop(*this);

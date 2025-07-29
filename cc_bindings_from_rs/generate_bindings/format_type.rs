@@ -436,7 +436,6 @@ pub fn format_ty_for_cc<'tcx>(
                 }
             }
 
-            let lifetime = format_region_as_cc_lifetime(tcx, region);
             let treat_ref_as_ptr: bool = (|| {
                 // Parameter type references are only converted to C++ references if they are
                 // valid exclusively for the lifetime of the function.
@@ -463,8 +462,14 @@ pub fn format_ty_for_cc<'tcx>(
             })();
 
             let ptr_or_ref_prefix = if treat_ref_as_ptr {
+                let lifetime = format_region_as_cc_lifetime(tcx, region);
                 quote! { * #lifetime }
+            } else if matches!(location, TypeLocation::FnParam { .. }) {
+                // Omit the lifetime of parameter-location references whose lifetime is trivial.
+                // References with non-trivial lifetimes will be converted to pointers above.
+                quote! { & }
             } else {
+                let lifetime = format_region_as_cc_lifetime(tcx, region);
                 quote! { & #lifetime }
             };
 

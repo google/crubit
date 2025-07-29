@@ -67,9 +67,7 @@ inline NonTrivialStruct::NonTrivialStruct() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
-    ::example_crate::NonTrivialStruct& [[clang::annotate_type("lifetime",
-                                                              "__anon1")]]);
+extern "C" void __crubit_thunk_drop(::example_crate::NonTrivialStruct&);
 }
 inline NonTrivialStruct::~NonTrivialStruct() {
   __crubit_internal::__crubit_thunk_drop(*this);

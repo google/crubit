@@ -43,11 +43,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=13
-  std::int32_t a() const [[clang::annotate_type("lifetime", "__anon1")]];
+  std::int32_t a() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/struct_with_conflicting_fields_and_member_functions.rs;l=16
-  std::int32_t b() const [[clang::annotate_type("lifetime", "__anon1")]];
+  std::int32_t b() const;
 
  public:
   union {
@@ -83,22 +83,18 @@ static_assert(std::is_trivially_move_constructible_v<X>);
 static_assert(std::is_trivially_move_assignable_v<X>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_a(
-    ::struct_with_conflicting_fields_and_member_functions_rust::
-        X const& [[clang::annotate_type("lifetime", "__anon1")]]);
+    ::struct_with_conflicting_fields_and_member_functions_rust::X const&);
 }
-inline std::int32_t X::a() const
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline std::int32_t X::a() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_a(self);
 }
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_b(
-    ::struct_with_conflicting_fields_and_member_functions_rust::
-        X const& [[clang::annotate_type("lifetime", "__anon1")]]);
+    ::struct_with_conflicting_fields_and_member_functions_rust::X const&);
 }
-inline std::int32_t X::b() const
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline std::int32_t X::b() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_b(self);
 }

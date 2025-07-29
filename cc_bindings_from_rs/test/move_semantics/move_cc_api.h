@@ -48,8 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
 
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=18
-  std::uint8_t read_byte() const
-      [[clang::annotate_type("lifetime", "__anon1")]];
+  std::uint8_t read_byte() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=22
@@ -127,8 +126,7 @@ extern "C" void __crubit_thunk_default(::move::Foo* __ret_ptr);
 }
 inline Foo::Foo() { __crubit_internal::__crubit_thunk_default(this); }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
-    ::move::Foo& [[clang::annotate_type("lifetime", "__anon1")]]);
+extern "C" void __crubit_thunk_drop(::move::Foo&);
 }
 inline Foo::~Foo() { __crubit_internal::__crubit_thunk_drop(*this); }
 inline Foo::Foo(Foo&& other) : Foo() { *this = std::move(other); }
@@ -147,11 +145,9 @@ inline ::move::Foo Foo::from_byte(std::uint8_t byte) {
 }
 
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_read_ubyte(
-    ::move::Foo const& [[clang::annotate_type("lifetime", "__anon1")]]);
+extern "C" std::uint8_t __crubit_thunk_read_ubyte(::move::Foo const&);
 }
-inline std::uint8_t Foo::read_byte() const
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline std::uint8_t Foo::read_byte() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_read_ubyte(self);
 }

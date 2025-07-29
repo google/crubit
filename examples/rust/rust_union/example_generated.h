@@ -42,11 +42,11 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 
   // Generated from:
   // examples/rust/rust_union/example.rs;l=21
-  void set_a(std::int32_t a) [[clang::annotate_type("lifetime", "__anon1")]];
+  void set_a(std::int32_t a);
 
   // Generated from:
   // examples/rust/rust_union/example.rs;l=25
-  void set_b(double b) [[clang::annotate_type("lifetime", "__anon1")]];
+  void set_b(double b);
 
  private:
   // Field type has been replaced with a blob of bytes: support for non-repr(C)
@@ -74,25 +74,18 @@ static_assert(std::is_trivially_destructible_v<ReprRustUnion>);
 static_assert(std::is_trivially_move_constructible_v<ReprRustUnion>);
 static_assert(std::is_trivially_move_assignable_v<ReprRustUnion>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_set_ua(
-    ::example_crate::ReprRustUnion& [[clang::annotate_type("lifetime",
-                                                           "__anon1")]],
-    std::int32_t);
+extern "C" void __crubit_thunk_set_ua(::example_crate::ReprRustUnion&,
+                                      std::int32_t);
 }
-inline void ReprRustUnion::set_a(std::int32_t a)
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline void ReprRustUnion::set_a(std::int32_t a) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ua(self, a);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_set_ub(
-    ::example_crate::ReprRustUnion& [[clang::annotate_type("lifetime",
-                                                           "__anon1")]],
-    double);
+extern "C" void __crubit_thunk_set_ub(::example_crate::ReprRustUnion&, double);
 }
-inline void ReprRustUnion::set_b(double b)
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline void ReprRustUnion::set_b(double b) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ub(self, b);
 }

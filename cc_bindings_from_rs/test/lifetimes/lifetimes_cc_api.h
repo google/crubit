@@ -98,8 +98,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Generated from:
 // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=70
 void function_with_trivial_unnamed_lifetime_param(
-    std::int32_t const& [[clang::annotate_type("lifetime",
-                                               "__anon1")]] __param_0);
+    std::int32_t const& __param_0);
 
 // Generated from:
 // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=72
@@ -194,9 +193,7 @@ namespace __crubit_internal {
 extern "C" std::int32_t const& [[clang::annotate_type(
     "lifetime",
     "__anon1")]] __crubit_thunk_borrow_ufrom_uself(::lifetimes::
-                                                       StructWithLifetime const& [[clang::annotate_type(
-                                                           "lifetime",
-                                                           "__anon1")]]);
+                                                       StructWithLifetime const&);
 }
 inline std::int32_t const& [[clang::annotate_type(
     "lifetime", "__anon1")]] StructWithLifetime::borrow_from_self()
@@ -251,9 +248,7 @@ namespace __crubit_internal {
 extern "C" std::int32_t const& [[clang::annotate_type(
     "lifetime",
     "static")]] __crubit_thunk_borrow_ufrom_ustatic_uself(::lifetimes::
-                                                              StructWithLifetime const& [[clang::annotate_type(
-                                                                  "lifetime",
-                                                                  "static")]]);
+                                                              StructWithLifetime const&);
 }
 inline std::int32_t const& [[clang::annotate_type(
     "lifetime", "static")]] StructWithLifetime::borrow_from_static_self()
@@ -267,11 +262,10 @@ inline void StructWithLifetime::__crubit_field_offset_assertions() {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
-    std::int32_t const& [[clang::annotate_type("lifetime", "__anon1")]]);
+    std::int32_t const&);
 }
 inline void function_with_trivial_unnamed_lifetime_param(
-    std::int32_t const& [[clang::annotate_type("lifetime",
-                                               "__anon1")]] __param_0) {
+    std::int32_t const& __param_0) {
   return __crubit_internal::
       __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
           __param_0);
@@ -285,8 +279,7 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop(
-    ::lifetimes::StructWithLifetimeAndDropGlue& [[clang::annotate_type(
-        "lifetime", "__anon1")]]);
+    ::lifetimes::StructWithLifetimeAndDropGlue&);
 }
 inline StructWithLifetimeAndDropGlue::~StructWithLifetimeAndDropGlue() {
   __crubit_internal::__crubit_thunk_drop(*this);

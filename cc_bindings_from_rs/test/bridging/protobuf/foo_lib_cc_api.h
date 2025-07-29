@@ -46,8 +46,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: foo_lib_golden :: FooService") alignas(8)
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=17
   bool handle_request(const ::foo_service::FooRequest* req,
-                      ::foo_service::FooResponse* rsp)
-      [[clang::annotate_type("lifetime", "__anon1")]];
+                      ::foo_service::FooResponse* rsp);
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=24
@@ -56,13 +55,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: foo_lib_golden :: FooService") alignas(8)
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=28
-  ::foo_service::FooRequestStats clone_request_stats() const
-      [[clang::annotate_type("lifetime", "__anon1")]];
+  ::foo_service::FooRequestStats clone_request_stats() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=32
-  void update_request_stats(::foo_service::FooRequestStats updated_stats)
-      [[clang::annotate_type("lifetime", "__anon1")]];
+  void update_request_stats(::foo_service::FooRequestStats updated_stats);
 
  private:
   // Field type has been replaced with a blob of bytes: Field is a bridged type
@@ -87,8 +84,7 @@ inline FooService::FooService() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(
-    ::foo_lib::FooService& [[clang::annotate_type("lifetime", "__anon1")]]);
+extern "C" void __crubit_thunk_drop(::foo_lib::FooService&);
 }
 inline FooService::~FooService() {
   __crubit_internal::__crubit_thunk_drop(*this);
@@ -101,21 +97,19 @@ inline FooService& FooService::operator=(FooService&& other) {
   return *this;
 }
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_handle_urequest(
-    ::foo_lib::FooService& [[clang::annotate_type("lifetime", "__anon1")]],
-    const ::foo_service::FooRequest*, ::foo_service::FooResponse*);
+extern "C" bool __crubit_thunk_handle_urequest(::foo_lib::FooService&,
+                                               const ::foo_service::FooRequest*,
+                                               ::foo_service::FooResponse*);
 }
 inline bool FooService::handle_request(const ::foo_service::FooRequest* req,
-                                       ::foo_service::FooResponse* rsp)
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+                                       ::foo_service::FooResponse* rsp) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_handle_urequest(self, req, rsp);
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_request_ustats(
-    ::foo_lib::FooService const& [[clang::annotate_type("lifetime",
-                                                        "__anon1")]],
+    ::foo_lib::FooService const&,
     const ::foo_service::FooRequestStats** __ret_ptr);
 }
 inline const ::foo_service::FooRequestStats* FooService::request_stats()
@@ -134,12 +128,9 @@ inline const ::foo_service::FooRequestStats* FooService::request_stats()
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_urequest_ustats(
-    ::foo_lib::FooService const& [[clang::annotate_type("lifetime",
-                                                        "__anon1")]],
-    ::foo_service::FooRequestStats* __ret_ptr);
+    ::foo_lib::FooService const&, ::foo_service::FooRequestStats* __ret_ptr);
 }
-inline ::foo_service::FooRequestStats FooService::clone_request_stats() const
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
   auto&& self = *this;
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -154,12 +145,10 @@ inline ::foo_service::FooRequestStats FooService::clone_request_stats() const
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_update_urequest_ustats(
-    ::foo_lib::FooService& [[clang::annotate_type("lifetime", "__anon1")]],
-    ::foo_service::FooRequestStats*);
+    ::foo_lib::FooService&, ::foo_service::FooRequestStats*);
 }
 inline void FooService::update_request_stats(
-    ::foo_service::FooRequestStats updated_stats)
-    [[clang::annotate_type("lifetime", "__anon1")]] {
+    ::foo_service::FooRequestStats updated_stats) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_update_urequest_ustats(
       self, &updated_stats);

@@ -471,16 +471,16 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 let ref_qualifier = if !region_is_elided(tcx, *region)
                     || has_elided_region(tcx, sig_mid.output())
                 {
-                    quote! { & }
+                    let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
+                    quote! { & #lifetime_annotation }
                 } else {
                     quote! {}
                 };
-                let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
                 let mutability = match mutability {
                     Mutability::Mut => quote! {},
                     Mutability::Not => quote! { const },
                 };
-                quote! { #mutability #ref_qualifier #lifetime_annotation }
+                quote! { #mutability #ref_qualifier }
             }
             _ => panic!("Expecting TyKind::Ref for MethodKind...Self...Ref"),
         },

@@ -279,7 +279,7 @@ fn test_format_ty_for_cc_successes() {
         ),
         case!(
             rs: "&mut std::mem::MaybeUninit<i32>",
-            cc: "std :: int32_t & [[clang :: annotate_type (\"lifetime\" , \"__anon1\")]]",
+            cc: "std :: int32_t &",
             includes: ["<cstdint>"]
         ),
         case!(

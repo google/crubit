@@ -1628,7 +1628,7 @@ fn test_format_item_method_taking_self_by_const_ref(test_src: &str) {
                 ...
                 struct ... SomeStruct final {
                     ...
-                    float get_f32() const [[clang::annotate_type("lifetime", "__anon1")]];
+                    float get_f32() const;
                     ...
                 };
                 ...
@@ -1638,12 +1638,9 @@ fn test_format_item_method_taking_self_by_const_ref(test_src: &str) {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" float ...(
-                    ::rust_out::SomeStruct const& [[clang::annotate_type("lifetime",
-                                                                         "__anon1")]]);
+                extern "C" float ...(::rust_out::SomeStruct const&);
                 }
-                inline float SomeStruct::get_f32()
-                    const [[clang::annotate_type("lifetime", "__anon1")]] {
+                inline float SomeStruct::get_f32() const {
                   auto&& self = *this;
                   return __crubit_internal::...(self);
                 }
@@ -1700,8 +1697,7 @@ fn test_format_item_method_taking_self_by_mutable_ref(test_src: &str) {
                 ...
                 struct ... SomeStruct final {
                     ...
-                    void set_f32(float new_value)
-                        [[clang::annotate_type("lifetime", "__anon1")]];
+                    void set_f32(float new_value);
                     ...
                 };
                 ...
@@ -1711,12 +1707,9 @@ fn test_format_item_method_taking_self_by_mutable_ref(test_src: &str) {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" void ...(
-                    ::rust_out::SomeStruct& [[clang::annotate_type("lifetime", "__anon1")]],
-                    float);
+                extern "C" void ...(::rust_out::SomeStruct&, float);
                 }
-                inline void SomeStruct::set_f32(float new_value)
-                        [[clang::annotate_type("lifetime", "__anon1")]] {
+                inline void SomeStruct::set_f32(float new_value) {
                   auto&& self = *this;
                   return __crubit_internal::...(self, new_value);
                 }
@@ -1979,16 +1972,10 @@ fn test_format_item_struct_with_clone_trait() {
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" void ...(
-                    ::rust_out::Point const& [[clang::annotate_type("lifetime",
-                                                                    "__anon1")]],
-                    ::rust_out::Point* __ret_ptr);
+                extern "C" void ...(::rust_out::Point const&, ::rust_out::Point* __ret_ptr);
                 }
                 namespace __crubit_internal {
-                extern "C" void ...(
-                    ::rust_out::Point& [[clang::annotate_type("lifetime", "__anon1")]],
-                    ::rust_out::Point const& [[clang::annotate_type("lifetime",
-                                                                    "__anon2")]]);
+                extern "C" void ...(::rust_out::Point&, ::rust_out::Point const&);
                 }
                 inline Point::Point(const Point& other) {
                   __crubit_internal::...(other, this);
@@ -2065,9 +2052,8 @@ fn test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" void ...(  // `drop` thunk decl
-                    ::rust_out::TypeUnderTest& [[clang::annotate_type(
-                        "lifetime", "__anon1")]]);
+                // `drop` thunk decl
+                extern "C" void ...(::rust_out::TypeUnderTest&);
                 }
                 inline TypeUnderTest::~TypeUnderTest() {
                   __crubit_internal::...(*this);
@@ -2173,9 +2159,8 @@ fn test_format_item_struct_with_custom_drop_and_with_default_impl(test_src: &str
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" void ...(  // `drop` thunk decl
-                    ::rust_out::TypeUnderTest& [[clang::annotate_type(
-                        "lifetime", "__anon1")]]);
+                // `drop` thunk decl
+                extern "C" void ...(::rust_out::TypeUnderTest&);
                 }
                 inline TypeUnderTest::~TypeUnderTest() {
                   __crubit_internal::...(*this);
@@ -2306,9 +2291,8 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
             result.cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                extern "C" void ...(  // `drop` thunk decl
-                    ::rust_out::TypeUnderTest& [[clang::annotate_type(
-                        "lifetime", "__anon1")]]);
+                // `drop` thunk decl
+                extern "C" void ...(::rust_out::TypeUnderTest&);
                 }
                 ...
                 namespace __crubit_internal {  // `pass_by_value` thunk decl
@@ -2453,15 +2437,15 @@ fn test_format_item_unsupported_struct_with_custom_drop_and_default_and_nonunpin
             quote! {
                 ...
                 namespace __crubit_internal {
-                extern "C" void ...(  // `default` thunk decl
-                    ::rust_out::SomeStruct* __ret_ptr);
+                 // `default` thunk decl
+                extern "C" void ...(::rust_out::SomeStruct* __ret_ptr);
                 }
                 inline SomeStruct::SomeStruct() {
                   __crubit_internal::...(this);
                 }
                 namespace __crubit_internal {
-                extern "C" void ...(  // `drop` thunk decl
-                    ::rust_out::SomeStruct& [[clang::annotate_type("lifetime", "__anon1")]]);
+                // `drop` thunk decl
+                extern "C" void ...(::rust_out::SomeStruct&);
                 }
                 inline SomeStruct::~SomeStruct() {
                   __crubit_internal::...(*this);
