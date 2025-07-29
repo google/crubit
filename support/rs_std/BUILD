@@ -33,6 +33,15 @@ cc_library(
     ],
 )
 
+alias(
+    name = "rs_char",
+    actual = "//support/rs_std:char",
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
 crubit_cc_test(
     name = "char_test",
     srcs = ["char_test.cc"],
