@@ -4,6 +4,7 @@
 
 """This module contains unit tests for the _namespace.json output file."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
@@ -31,7 +32,7 @@ action_outputs_analysis_test = crubit_make_analysis_test(
 )
 
 def _targets_for_namespaces():
-    native.cc_library(
+    cc_library(
         name = "lib",
         hdrs = [
             "lib.h",

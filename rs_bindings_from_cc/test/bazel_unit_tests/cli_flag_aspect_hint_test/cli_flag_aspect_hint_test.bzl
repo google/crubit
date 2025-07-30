@@ -4,6 +4,7 @@
 
 """This module contains unit tests for rust_bindings_from_cc_cli_flag aspect hint."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
@@ -30,7 +31,7 @@ def _test_rust_bindings_from_cc_cli_flag_aspect_hint_propagate_to_cli():
         flags = "--do_nothing",
         tags = ["manual"],
     )
-    native.cc_library(
+    cc_library(
         name = "cc_library_with_rs_bindings_from_cc_cli_flags",
         hdrs = ["stub_lib.h"],
         aspect_hints = [

@@ -4,6 +4,7 @@
 
 """This module contains unit tests for rust_bindings_from_cc_aspect."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
@@ -69,7 +70,7 @@ lib_has_toolchain_targets_and_headers_test = crubit_make_analysis_test(
 )
 
 def _test_lib_has_toolchain_targets_and_headers():
-    native.cc_library(name = "empty")
+    cc_library(name = "empty")
     attach_aspect(name = "empty_with_aspect", dep = ":empty")
     lib_has_toolchain_targets_and_headers_test(
         name = "lib_has_toolchain_targets_and_headers_test",
@@ -98,7 +99,7 @@ def _targets_and_headers_test_impl(ctx):
 targets_and_headers_test = crubit_make_analysis_test(_targets_and_headers_test_impl)
 
 def _test_targets_and_headers():
-    native.cc_library(
+    cc_library(
         name = "mylib",
         hdrs = ["lib.h"],
         aspect_hints = ["//features/internal:testonly_experimental"],
@@ -169,10 +170,10 @@ targets_and_headers_propagate_with_cc_info_test = crubit_make_analysis_test(
 )
 
 def _test_targets_and_headers_propagate_with_cc_infos():
-    native.cc_library(name = "bottommest_no_crubit_aspect_hint")
-    native.cc_library(name = "bottom", hdrs = ["lib.h"], deps = [":bottommest_no_crubit_aspect_hint"], aspect_hints = ["//features/internal:testonly_experimental"])
-    native.cc_library(name = "middle", deps = [":bottom"], aspect_hints = ["//features/internal:testonly_experimental"])
-    native.cc_library(name = "top", hdrs = ["top.h"], deps = [":middle"], aspect_hints = ["//features/internal:testonly_experimental"])
+    cc_library(name = "bottommest_no_crubit_aspect_hint")
+    cc_library(name = "bottom", hdrs = ["lib.h"], deps = [":bottommest_no_crubit_aspect_hint"], aspect_hints = ["//features/internal:testonly_experimental"])
+    cc_library(name = "middle", deps = [":bottom"], aspect_hints = ["//features/internal:testonly_experimental"])
+    cc_library(name = "top", hdrs = ["top.h"], deps = [":middle"], aspect_hints = ["//features/internal:testonly_experimental"])
     attach_aspect(name = "top_with_aspect", dep = ":top")
 
     targets_and_headers_propagate_with_cc_info_test(
@@ -233,7 +234,7 @@ toolchain_headers_in_header_analysis_action_test = crubit_make_analysis_test(
 )
 
 def _test_textual_hdrs_not_in_targets_and_hdrs():
-    native.cc_library(
+    cc_library(
         name = "textual",
         hdrs = [
             "nontextual.h",
@@ -251,7 +252,7 @@ def _test_textual_hdrs_not_in_targets_and_hdrs():
     )
 
 def _test_toolchain_headers_in_header_analysis_action():
-    native.cc_library(
+    cc_library(
         name = "somelib",
         hdrs = ["someheader.h"],
         aspect_hints = ["//features/internal:testonly_experimental"],
@@ -292,7 +293,7 @@ def _test_generated_headers_specified_with_full_path():
         outs = ["generated.h"],
         cmd = "touch $@",
     )
-    native.cc_library(
+    cc_library(
         name = "use_generated",
         hdrs = [
             "generated.h",
@@ -328,7 +329,7 @@ def _target_features_empty_test_impl(ctx):
 target_features_empty_test = crubit_make_analysis_test(_target_features_empty_test_impl)
 
 def _test_target_features_empty():
-    native.cc_library(name = "mylib_empty_features", hdrs = ["lib.h"])
+    cc_library(name = "mylib_empty_features", hdrs = ["lib.h"])
     attach_aspect(name = "mylib_empty_features_with_aspect", dep = ":mylib_empty_features")
 
     target_features_empty_test(
@@ -358,7 +359,7 @@ def _target_features_nonempty_test_impl(ctx):
 target_features_nonempty_test = crubit_make_analysis_test(_target_features_nonempty_test_impl)
 
 def _test_target_features_nonempty():
-    native.cc_library(name = "mylib_nonempty_features", hdrs = ["lib.h"], aspect_hints = [
+    cc_library(name = "mylib_nonempty_features", hdrs = ["lib.h"], aspect_hints = [
         "//features/internal:testonly_supported",
         "//features/internal:testonly_experimental",  # merged in as well
     ])

@@ -8,7 +8,7 @@ contained assertions about the nullability of expressions.
 See nullability_test.h for details.
 """
 
-load("//third_party/bazel_rules/rules_cc/cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 def nullability_test(name, srcs):
     native.sh_test(

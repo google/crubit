@@ -4,6 +4,7 @@
 
 """This module contains unit tests for extra_rs_srcs aspect hint."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
@@ -29,7 +30,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_propagate_to_cli(
         ],
         tags = ["manual"],
     )
-    native.cc_library(
+    cc_library(
         name = "empty_cc_lib_with_stub_additional_rust_srcs",
         hdrs = ["empty.h"],
         aspect_hints = [
@@ -69,7 +70,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_generates_binding
         ],
         tags = ["manual"],
     )
-    native.cc_library(
+    cc_library(
         name = "cc_lib_with_some_additional_rust_srcs",
         aspect_hints = [
             ":some_additional_rust_srcs",
@@ -106,7 +107,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
         deps = [":a_rust_lib_dep"],
         cc_deps = [":aspect_for_cc_dep_lib_with_crubit"],
     )
-    native.cc_library(
+    cc_library(
         name = "my_cc_lib_target",
         hdrs = ["my_cc_lib.h"],
         aspect_hints = [
@@ -126,7 +127,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
         ],
         tags = ["manual"],
     )
-    native.cc_library(
+    cc_library(
         name = "cc_dep_lib_with_crubit",
         hdrs = ["cc_dep_lib.h"],
         aspect_hints = [

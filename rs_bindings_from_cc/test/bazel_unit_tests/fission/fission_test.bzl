@@ -2,6 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
@@ -101,13 +102,13 @@ fission_test = crubit_make_analysis_test(
 
 def _test_fission():
     # Enables Crubit, but has no public headers.
-    native.cc_library(name = "has_no_public_headers", tags = ["manual"], srcs = ["has_no_public_headers.cc"], aspect_hints = ["//features:supported"])
+    cc_library(name = "has_no_public_headers", tags = ["manual"], srcs = ["has_no_public_headers.cc"], aspect_hints = ["//features:supported"])
 
     # Has public headers, but does not have Crubit enabled.
-    native.cc_library(name = "disabled_crubit", tags = ["manual"], hdrs = ["disabled_crubit.h"])
+    cc_library(name = "disabled_crubit", tags = ["manual"], hdrs = ["disabled_crubit.h"])
 
     # Has public headers, and enables Crubit.
-    native.cc_library(name = "enabled_crubit_has_public_headers", tags = ["manual"], srcs = ["enabled_crubit_has_public_headers.cc"], hdrs = ["enabled_crubit_has_public_headers.h"], deps = [":has_no_public_headers", ":disabled_crubit"], aspect_hints = ["//features:supported"])
+    cc_library(name = "enabled_crubit_has_public_headers", tags = ["manual"], srcs = ["enabled_crubit_has_public_headers.cc"], hdrs = ["enabled_crubit_has_public_headers.h"], deps = [":has_no_public_headers", ":disabled_crubit"], aspect_hints = ["//features:supported"])
     rust_library(name = "rust_library", tags = ["manual"], cc_deps = [":enabled_crubit_has_public_headers"], srcs = ["rust_library.rs"])
 
     fission_test(

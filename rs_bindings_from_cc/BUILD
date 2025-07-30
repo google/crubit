@@ -1,5 +1,6 @@
 """Generates Rust bindings from C++ headers."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",

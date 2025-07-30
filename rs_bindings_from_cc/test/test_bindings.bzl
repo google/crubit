@@ -4,6 +4,7 @@
 
 """Test-only bindings generation macros."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_flavor_transition",
@@ -23,7 +24,7 @@ def crubit_test_cc_library(name, **kwargs):
     This is equivalent to cc_library, but it sets the default aspect_hints to `:experimental`.
     """
     kwargs.setdefault("aspect_hints", ["//features:experimental"])
-    native.cc_library(
+    cc_library(
         name = name,
         **kwargs
     )
