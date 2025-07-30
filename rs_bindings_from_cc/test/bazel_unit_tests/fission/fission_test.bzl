@@ -34,9 +34,13 @@ def _fission_test_impl(ctx):
         "has_no_public_headers_rust_api_impl.pic.dwo",
         "disabled_crubit_rust_api_impl.pic.dwo",
     ]
+    if hasattr(target_under_test[CcInfo], "_debug_context"):
+        debug_context = target_under_test[CcInfo]._debug_context
+    else:
+        debug_context = target_under_test[CcInfo].debug_context()
     actual = sorted([
         _remove_trailing_hash(f.basename)
-        for f in target_under_test[CcInfo].debug_context().pic_files.to_list()
+        for f in debug_context.pic_files.to_list()
         # The full list is too large and fragile to test -- this would be a change-detector -- but
         # we can test representative examples of everything we expect in it.
         if _remove_trailing_hash(f.basename) in expected
@@ -44,7 +48,7 @@ def _fission_test_impl(ctx):
 
     actual_not_exist = [
         _remove_trailing_hash(f.basename)
-        for f in target_under_test[CcInfo].debug_context().pic_files.to_list()
+        for f in debug_context.pic_files.to_list()
         if _remove_trailing_hash(f.basename) in should_not_exist
     ]
 

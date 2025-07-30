@@ -22,6 +22,10 @@ def _fission_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
 
+    if hasattr(target_under_test[CcInfo], "_debug_context"):
+        debug_context = target_under_test[CcInfo]._debug_context
+    else:
+        debug_context = target_under_test[CcInfo].debug_context()
     expected = [
         "cc_library.pic.dwo",  # the C++ library
         "rust_library_1_fission",
@@ -31,7 +35,7 @@ def _fission_test_impl(ctx):
     ]
     actual = [
         _remove_trailing_hash(f.basename)
-        for f in target_under_test[CcInfo].debug_context().pic_files.to_list()
+        for f in debug_context.pic_files.to_list()
     ]
     for fname in expected:
         asserts.true(env, fname in actual, "expected pic file " + fname + " is missing")

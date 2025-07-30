@@ -58,7 +58,7 @@ def compile_cc(
     )
 
     debug_context = cc_common.merge_debug_context([
-        cc_info.debug_context(),
+        cc_info._debug_context if hasattr(cc_info, "_debug_context") else cc_info.debug_context(),
         cc_common.create_debug_context(compilation_outputs),
     ])
 
