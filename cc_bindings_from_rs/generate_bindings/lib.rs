@@ -58,6 +58,7 @@ use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Ident, Symbol};
+use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -1267,6 +1268,15 @@ pub fn format_namespace_bound_cc_tokens(
     iter.collect()
 }
 
+fn stable_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: &DefId, rhs_id: &DefId) -> Ordering {
+    if tcx.def_span(*lhs_id).source_equal(tcx.def_span(*rhs_id)) {
+        let lhs_def_path_hash = tcx.def_path_hash(*lhs_id);
+        let rhs_def_path_hash = tcx.def_path_hash(*rhs_id);
+        lhs_def_path_hash.cmp(&rhs_def_path_hash)
+    } else {
+        tcx.def_span(*lhs_id).cmp(&tcx.def_span(*rhs_id))
+    }
+}
 /// Formats all public items from the Rust crate being compiled.
 fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let tcx = db.tcx();
@@ -1284,7 +1294,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
                 .unwrap_or_else(|err| Some(generate_unsupported_def(db, def_id, err)))
                 .map(|api_snippets| (local_def_id, api_snippets))
         })
-        .sorted_by_key(|(def_id, _)| tcx.def_span(*def_id));
+        .sorted_by(|lhs, rhs| stable_cmp(tcx, &lhs.0.into(), &rhs.0.into()));
     for (local_def_id, api_snippets) in formatted_items {
         let def_id = local_def_id.to_def_id();
         let old_item = main_apis.insert(def_id, api_snippets.main_api);
@@ -1310,9 +1320,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
                         main_apis.contains_key(pre));
                 predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
             });
-            toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
-                tcx.def_span(*lhs_id).cmp(&tcx.def_span(*rhs_id))
-            })
+            toposort::toposort(nodes, deps, move |lhs_id, rhs_id| stable_cmp(tcx, lhs_id, rhs_id))
         };
         assert_eq!(
             0,

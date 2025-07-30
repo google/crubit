@@ -73,6 +73,47 @@ fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
     });
 }
 
+/// Tests that item bindings have a stable order.
+//  Because the source location of both calls to the proc macro are the same,
+//  "span" will be the same, which means that without a stable sort for items
+//  where the span is equivalent, the output will be non-deterministic.
+#[test]
+fn test_generated_bindings_have_stable_order() {
+    let test_src = r#"
+            #![allow(dead_code)]
+
+            macro_rules! make_struct {
+            ($ty: ty, $name:ident) => {
+            pub struct $name {
+                value: $ty
+                }
+            }
+            }
+
+            make_struct!(i32, HelloF32);
+            make_struct!(f32, HelloI32);
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out {
+                ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] HelloI32 final {
+                        ...
+                    };
+                ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] HelloF32 final {
+                        ...
+                    };
+                ...
+                }  // namespace rust_out
+            }
+        );
+    });
+}
+
 /// Tests that a forward declaration is present when it is required to
 /// preserve the original source order.  In this test the
 /// `CcPrerequisites::fwd_decls` dependency comes from a pointer parameter.
