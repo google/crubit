@@ -2,6 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
@@ -57,7 +58,7 @@ def _test_fission():
         tags = ["manual"],
         crate = ":rust_library_2",
     )
-    native.cc_library(name = "cc_library", tags = ["manual"], deps = [":rust_library_2_cc_api"], srcs = ["cc_library.cc"])
+    cc_library(name = "cc_library", tags = ["manual"], deps = [":rust_library_2_cc_api"], srcs = ["cc_library.cc"])
 
     fission_test(
         name = "fission_test",
