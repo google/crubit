@@ -269,16 +269,89 @@ pub enum TypeLocation {
     Other,
 }
 
-// A generic monomorphization from a known and manually supported C++ template
-// specialization.
+/// A type with template type arguments that has a uniform representation regardless of `T` and
+/// should be mapped to a handwritten Rust type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct GenericMonomorphization {
-    /// The name of the C++ template.
-    template_name: Rc<str>,
-    /// The name of the corresponding Rust generic type.
-    rust_generic_name: Rc<str>,
-    /// The type arguments of the generic translated from C++.
-    type_args: Vec<RsTypeKind>,
+pub enum UniformReprTemplateType {
+    /// std::vector<T, std::allocator<T>>
+    StdVector { element_type: RsTypeKind },
+    /// std::unique_ptr<T, std::default_delete<T>>
+    StdUniquePtr { element_type: RsTypeKind },
+}
+
+impl UniformReprTemplateType {
+    /// Returns the `UniformReprTemplateType` for a `TemplateSpecialization`.
+    /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
+    /// Returns none if the template specialization is not for a known type corresponding with
+    /// one of `UniformReprTemplateType`s variants.
+    fn new(
+        db: &dyn BindingsGenerator,
+        template_specialization: Option<&TemplateSpecialization>,
+    ) -> Result<Option<Rc<Self>>> {
+        let Some(template_specialization) = template_specialization else {
+            return Ok(None);
+        };
+
+        let mut type_args = template_specialization
+            .template_args
+            .iter()
+            .map(|arg| {
+                let arg_type = match &arg.type_ {
+                    Ok(arg_type) => arg_type.clone(),
+                    Err(e) => bail!("{e}"),
+                };
+                let arg_type_kind = db.rs_type_kind(arg_type)?;
+                ensure!(
+                    !arg_type_kind.is_bridge_type(),
+                    "Bridge types cannot be used as template arguments"
+                );
+                Ok(arg_type_kind)
+            })
+            .collect::<Result<Vec<RsTypeKind>>>()?;
+
+        let this = match (template_specialization.template_name.as_ref(), &type_args[..]) {
+            ("std::unique_ptr", [_t, RsTypeKind::Record { record, .. }]) => {
+                let has_std_deleter =
+                    record.template_specialization.as_ref().is_some_and(|deleter| {
+                        deleter.template_name.as_ref() == "std::default_delete"
+                            && deleter.template_args.len() == 1
+                            && deleter.template_args[0] == template_specialization.template_args[0]
+                    });
+                if !has_std_deleter {
+                    return Ok(None);
+                }
+                Self::StdUniquePtr { element_type: type_args.remove(0) }
+            }
+            ("std::vector", [_t, RsTypeKind::Record { record, .. }]) => {
+                let has_std_allocator =
+                    record.template_specialization.as_ref().is_some_and(|allocator| {
+                        allocator.template_name.as_ref() == "std::allocator"
+                            && allocator.template_args.len() == 1
+                            && allocator.template_args[0]
+                                == template_specialization.template_args[0]
+                    });
+                if !has_std_allocator {
+                    return Ok(None);
+                }
+                Self::StdVector { element_type: type_args.remove(0) }
+            }
+            _ => return Ok(None),
+        };
+        Ok(Some(Rc::new(this)))
+    }
+
+    fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
+        match self {
+            Self::StdVector { element_type } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                quote! { ::cc_std::std::Vector::<#element_type_tokens> }
+            }
+            Self::StdUniquePtr { element_type } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -324,7 +397,7 @@ pub enum RsTypeKind {
         record: Rc<Record>,
         crate_path: Rc<CratePath>,
         /// The template type arguments of the generic translated from C++.
-        known_generic_monomorphization: Option<Rc<GenericMonomorphization>>,
+        known_generic_monomorphization: Option<Rc<UniformReprTemplateType>>,
     },
     Enum {
         enum_: Rc<Enum>,
@@ -540,10 +613,14 @@ impl RsTypeKind {
             ir.namespace_qualifier(&record),
             rs_imported_crate_name(&record.owning_target, ir),
         ));
-        let type_args = get_template_args(db, &record.template_specialization)?;
-        let known_generic_monomorphization =
-            map_to_supported_generic(type_args, &record.template_specialization).map(Rc::new);
-        Ok(RsTypeKind::Record { record, crate_path, known_generic_monomorphization })
+        Ok(RsTypeKind::Record {
+            known_generic_monomorphization: UniformReprTemplateType::new(
+                db,
+                record.template_specialization.as_ref(),
+            )?,
+            record,
+            crate_path,
+        })
     }
 
     fn new_incomplete_record(
@@ -1104,75 +1181,6 @@ impl std::fmt::Display for DisplayRsTypeKind<'_, '_> {
     }
 }
 
-/// Returns the type arguments for a template (if this is a template).
-fn get_template_args(
-    db: &dyn BindingsGenerator,
-    template_specialization: &Option<ir::TemplateSpecialization>,
-) -> Result<Vec<RsTypeKind>> {
-    let Some(template_specialization) = template_specialization.as_ref() else {
-        return Ok(vec![]);
-    };
-    template_specialization
-        .template_args
-        .iter()
-        .map(|arg| {
-            let arg_type = match &arg.type_ {
-                Ok(arg_type) => arg_type.clone(),
-                Err(e) => bail!("{e}"),
-            };
-            let arg_type_kind = db.rs_type_kind(arg_type)?;
-            ensure!(
-                !arg_type_kind.is_bridge_type(),
-                "Bridge types cannot be used as template arguments"
-            );
-            Ok(arg_type_kind)
-        })
-        .collect()
-}
-
-/// Returns the Rust generic information if:
-/// - it is a known and supported template specialization.
-/// - all of the template argument types are supported.
-pub fn map_to_supported_generic(
-    type_args: Vec<RsTypeKind>,
-    template_specialization: &Option<ir::TemplateSpecialization>,
-) -> Option<GenericMonomorphization> {
-    let template_specialization = template_specialization.as_ref()?;
-    let template_name = template_specialization.template_name.to_string();
-
-    let rust_generic_name = match (template_name.as_str(), &type_args[..]) {
-        ("std::unique_ptr", [_t, RsTypeKind::Record { record, .. }]) => {
-            let deleter = record.template_specialization.as_ref()?;
-            let template_name = deleter.template_name.to_string();
-            if template_name != "std::default_delete"
-                || deleter.template_args.len() != 1
-                || deleter.template_args[0] != template_specialization.template_args[0]
-            {
-                return None;
-            }
-            "::cc_std::std::unique_ptr"
-        }
-        ("std::vector", [_t, RsTypeKind::Record { record, .. }]) => {
-            let allocator = record.template_specialization.as_ref()?;
-            let template_name = allocator.template_name.to_string();
-            if template_name != "std::allocator"
-                || allocator.template_args.len() != 1
-                || allocator.template_args[0] != template_specialization.template_args[0]
-            {
-                return None;
-            }
-            "::cc_std::std::Vector"
-        }
-        _ => return None,
-    };
-
-    Some(GenericMonomorphization {
-        template_name: template_name.into(),
-        rust_generic_name: rust_generic_name.into(),
-        type_args,
-    })
-}
-
 impl RsTypeKind {
     pub fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
         match self {
@@ -1236,29 +1244,8 @@ impl RsTypeKind {
                 quote! { #crate_path #record_ident }
             }
             RsTypeKind::Record { record, crate_path, known_generic_monomorphization } => {
-                if let Some(known_generic_monomorphization) = known_generic_monomorphization {
-                    let inner_types_str = known_generic_monomorphization
-                        .type_args
-                        .iter()
-                        .map(|t| t.to_token_stream(db))
-                        .take(1);
-                    let rust_generic_name =
-                        known_generic_monomorphization.rust_generic_name.as_ref();
-                    // Better to panic here than to silently generate invalid code.
-                    assert!(
-                        !rust_generic_name.is_empty(),
-                        "Empty rust generic name for known generic monomorphization"
-                    );
-                    let rust_generic_name_parts =
-                        rust_generic_name.split("::").enumerate().map(|(i, part)| {
-                            if i == 0 && part.is_empty() {
-                                // Path has a leading "::", e.g., "::cc_std::std::string".
-                                quote! {}
-                            } else {
-                                make_rs_ident(part).to_token_stream()
-                            }
-                        });
-                    return quote! { #(#rust_generic_name_parts)::* <#(#inner_types_str),*>};
+                if let Some(generic_monomorphization) = known_generic_monomorphization {
+                    return generic_monomorphization.to_token_stream(db);
                 }
                 let ident = make_rs_ident(record.rs_name.identifier.as_ref());
                 quote! { #crate_path #ident }
