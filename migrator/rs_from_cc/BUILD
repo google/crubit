@@ -1,5 +1,9 @@
 """Generates equivalent Rust code from C++ code."""
 
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 package(default_applicable_licenses = ["//:license"])
 
 cc_binary(

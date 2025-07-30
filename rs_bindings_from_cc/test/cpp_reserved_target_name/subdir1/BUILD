@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(default_applicable_licenses = ["//:license"])
 
 # Intentionally not use crubit_cc_library, which enables Crubit on the target, as a regression test

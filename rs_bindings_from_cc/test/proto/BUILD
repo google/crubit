@@ -1,6 +1,7 @@
 load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@protobuf//rust:defs.bzl", "rust_proto_library")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",

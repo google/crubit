@@ -1,5 +1,6 @@
 """Support libraries that the generated Rust/C++ bindings depend upon."""
 
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 

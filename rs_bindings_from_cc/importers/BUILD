@@ -1,5 +1,6 @@
 """Importers for various types of `Decl`s"""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(

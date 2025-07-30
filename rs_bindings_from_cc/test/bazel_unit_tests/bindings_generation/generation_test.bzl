@@ -4,6 +4,7 @@
 
 """A test that the dependencies needed for our generated bindings files are built in target cfg."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_make_analysis_test")
 load("//rs_bindings_from_cc/bazel_support:providers.bzl", "RustBindingsFromCcInfo")
@@ -29,7 +30,7 @@ bindings_generated_when_public_headers_test = crubit_make_analysis_test(
 )
 
 def _bindings_generated_when_public_headers():
-    native.cc_library(name = "has_pub_headers", hdrs = ["lib.h"], aspect_hints = ["//features:supported"])
+    cc_library(name = "has_pub_headers", hdrs = ["lib.h"], aspect_hints = ["//features:supported"])
     attach_aspect(name = "has_pub_headers_with_aspect", dep = ":has_pub_headers")
     bindings_generated_when_public_headers_test(
         name = "bindings_generated_when_public_headers_test",
@@ -51,7 +52,7 @@ bindings_not_generated_when_no_public_headers_test = crubit_make_analysis_test(
 )
 
 def _bindings_not_generated_when_no_public_headers():
-    native.cc_library(name = "no_pub_headers", srcs = ["no_pub_headers.cc"], alwayslink = 1, aspect_hints = ["//features:supported"])
+    cc_library(name = "no_pub_headers", srcs = ["no_pub_headers.cc"], alwayslink = 1, aspect_hints = ["//features:supported"])
     attach_aspect(name = "no_pub_headers_with_aspect", dep = ":no_pub_headers")
     bindings_not_generated_when_no_public_headers_test(
         name = "bindings_not_generated_when_no_public_headers_test",

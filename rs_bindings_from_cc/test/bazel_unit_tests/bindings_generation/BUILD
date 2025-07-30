@@ -10,8 +10,12 @@ bzl_library(
     srcs = ["generation_test.bzl"],
     visibility = ["//visibility:private"],
     deps = [
+        "//rs_bindings_from_cc/bazel_support:providers_bzl",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
         "@bazel_skylib//lib:unittest",
+        "@protobuf//bazel:cc_proto_library_bzl",
+        "@protobuf//bazel:proto_library_bzl",
+        "@rules_cc//cc:core_rules",
     ],
 )

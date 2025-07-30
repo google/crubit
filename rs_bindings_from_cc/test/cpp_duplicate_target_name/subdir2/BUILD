@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(default_applicable_licenses = ["//:license"])
 
 # Intentionally not using crubit_test_cc_library for `A` and `B`, which would enable Crubit.

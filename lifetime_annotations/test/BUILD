@@ -1,5 +1,7 @@
 """Test utilities for lifetime_analysis."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(
     default_applicable_licenses = ["//:license"],
     default_visibility = ["//:__subpackages__"],

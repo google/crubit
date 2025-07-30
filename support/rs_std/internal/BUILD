@@ -1,5 +1,7 @@
 """Internal C++ libraries that help work with Rust types."""
 
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
