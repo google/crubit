@@ -181,5 +181,24 @@ TEST(PointerNullabilityTest, InitListInsteadOfConstructorWithBaseClass) {
       TestLanguage::Lang_CXX20));
 }
 
+TEST(PointerNullabilityTest, MakeUniqueUserDefConversionNothingToForward) {
+  EXPECT_TRUE(checkDiagnostics(
+      R"cc(
+#include <memory>
+        struct Foo {
+          int *_Nonnull p;
+        };
+
+        struct Bar {
+          int *_Nonnull q;
+          operator Foo() { return Foo{q}; }
+        };
+
+        // Nothing to forward and diagnose -- the make_unique just calls the
+        // user-defined-conversion operator Foo() with no arguments.
+        void target(Bar b) { std::make_unique<Foo>(b); }
+      )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

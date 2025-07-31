@@ -1011,10 +1011,17 @@ class DefinitionEvidenceCollector {
             fromMakeUniqueFieldInits(RecordInitListHelper(PLI), *CallExpr);
             return;
           }
-          llvm::errs() << "Nullability: Unexpected initializer expression in "
-                          "make_unique: "
-                       << Initializer->getStmtClassName() << "\n";
-          assert(false);
+          if (const auto *ImpCast = dyn_cast<ImplicitCastExpr>(Initializer);
+              ImpCast && ImpCast->getCastKind() == CK_UserDefinedConversion) {
+            // Just a user-defined-conversion operator, with no arguments being
+            // forwarded. No need to log a warning of the unhandled case. Fall
+            // through to the generic handling of calls below.
+          } else {
+            llvm::errs() << "Nullability: Unexpected initializer expression in "
+                            "make_unique: "
+                         << Initializer->getStmtClassName() << "\n";
+            assert(false);
+          }
         }
       }
       fromArgsAndParams(*CalleeFunctionDecl, *CallExpr,

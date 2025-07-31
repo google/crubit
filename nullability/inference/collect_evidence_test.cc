@@ -1455,6 +1455,28 @@ TEST(CollectEvidenceFromDefinitionTest,
                                     functionNamed("ConvertibleToIntPtr"))));
 }
 
+TEST(CollectEvidenceFromDefinitionTest,
+     MakeUniqueImplicitCastNothingToForward) {
+  static constexpr llvm::StringRef Src =
+      R"cc(
+#include <memory>
+    struct Foo {
+      int *_Nonnull p;
+    };
+
+    struct Bar {
+      int *_Nonnull q;
+      operator Foo() { return Foo{q}; }
+    };
+
+    // No evidence to collect -- the make_unique just calls the user-defined
+    // conversion operator Foo() with no arguments.
+    void target(Bar b) { std::make_unique<Foo>(b); }
+      )cc";
+
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
+}
+
 TEST(CollectEvidenceFromDefinitionTest, FieldInitializerFromAssignmentToType) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {

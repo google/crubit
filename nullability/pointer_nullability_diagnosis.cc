@@ -25,6 +25,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
@@ -528,12 +529,20 @@ SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
         return diagnoseMakeUniqueParenInitListExpr(CE, ParenInitList, Result,
                                                    State);
       }
-      llvm::errs()
-          << "Nullability: Unexpected initializer expression in make_unique: "
-          << Initializer->getStmtClassName() << " in "
-          << CE->getBeginLoc().printToString(Result.Context->getSourceManager())
-          << "\n";
-      assert(false);
+      if (const auto *ImpCast = dyn_cast<ImplicitCastExpr>(Initializer);
+          ImpCast && ImpCast->getCastKind() == CK_UserDefinedConversion) {
+        // Just a user-defined-conversion operator with no arguments being
+        // forwarded. No need to log a warning of the unhandled case. Fall
+        // through to the generic diagnosis of the call expression.
+      } else {
+        llvm::errs()
+            << "Nullability: Unexpected initializer expression in make_unique: "
+            << Initializer->getStmtClassName() << " in "
+            << CE->getBeginLoc().printToString(
+                   Result.Context->getSourceManager())
+            << "\n";
+        assert(false);
+      }
     }
   }
 
