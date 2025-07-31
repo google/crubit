@@ -413,6 +413,33 @@ fn test_format_item_struct_with_reordered_field_offsets() {
     });
 }
 
+/// Tuple fields must not be bridged to std::tuple, because that is not layout-compatible.
+#[test]
+fn test_format_item_struct_with_tuple_fields() {
+    let test_src = r#"
+            pub struct SomeStruct {
+                pub tuple_field: (i32,),
+                pub empty_tuple_field: (),
+            }
+        "#;
+    test_format_item(test_src, "SomeStruct", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert!(!main_api.prereqs.is_empty());
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                {
+                    ...
+                    unsigned char tuple_field[4];
+                    __COMMENT__ "Skipped bindings for field `empty_tuple_field`: ZST fields are not supported (b/258259459)"
+                    ...
+                }
+            }
+        );
+    });
+}
+
 #[test]
 fn test_format_item_struct_with_packed_layout() {
     let test_src = r#"

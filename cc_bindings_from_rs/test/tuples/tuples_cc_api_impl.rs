@@ -230,3 +230,8 @@ unsafe extern "C" fn __crubit_thunk_return_uffi_ualias_uin_utuple(
         (__ret_ptr_0 as *mut i8).write(__rs_return_value_0);
     }
 }
+const _: () = assert!(::std::mem::size_of::<::tuples_golden::TupleStruct>() == 4);
+const _: () = assert!(::std::mem::align_of::<::tuples_golden::TupleStruct>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::tuples_golden::TupleStruct, tuple_field) == 0);
+const _: () =
+    assert!(::core::mem::offset_of!(::tuples_golden::TupleStruct, empty_tuple_field) == 4);

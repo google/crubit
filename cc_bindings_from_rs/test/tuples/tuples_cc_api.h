@@ -196,6 +196,48 @@ void param_ffi_alias_in_tuple(std::tuple<char> five);
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=90
 std::tuple<char> return_ffi_alias_in_tuple();
 
+// Generated from:
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=94
+struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
+    [[clang::trivial_abi]] TupleStruct final {
+ public:
+  // `TupleStruct` doesn't implement the `Default` trait
+  TupleStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~TupleStruct() = default;
+  TupleStruct(TupleStruct&&) = default;
+  TupleStruct& operator=(TupleStruct&&) = default;
+
+  // `TupleStruct` doesn't implement the `Clone` trait
+  TupleStruct(const TupleStruct&) = delete;
+  TupleStruct& operator=(const TupleStruct&) = delete;
+  TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+  // Error generating bindings for `TupleStruct::tuple_not_by_value` defined at
+  // cc_bindings_from_rs/test/tuples/tuples.rs;l=101:
+  // Error formatting function return type `*const ()`: Failed to format the
+  // pointee of the pointer type `*const ()`: Tuple types cannot be used inside
+  // of compound data types, because std::tuple is not layout-compatible with a
+  // Rust tuple.
+
+ private:
+  // Field type has been replaced with a blob of bytes: Tuple types cannot be
+  // used inside of compound data types, because std::tuple is not
+  // layout-compatible with a Rust tuple.
+  unsigned char tuple_field[4];
+  // Skipped bindings for field `empty_tuple_field`: ZST fields are not
+  // supported (b/258259459)
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Error generating bindings for `TUPLE_CONSTANT` defined at
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=106:
+// Unsupported constant type: (i32,)
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uunit_uis_unot_utuple();
 }
@@ -442,5 +484,17 @@ inline std::tuple<char> return_ffi_alias_in_tuple() {
   return std::make_tuple(*__return_value_0_storage);
 }
 
+static_assert(
+    sizeof(TupleStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(TupleStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<TupleStruct>);
+static_assert(std::is_trivially_move_constructible_v<TupleStruct>);
+static_assert(std::is_trivially_move_assignable_v<TupleStruct>);
+inline void TupleStruct::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(TupleStruct, tuple_field));
+}
 }  // namespace tuples
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN

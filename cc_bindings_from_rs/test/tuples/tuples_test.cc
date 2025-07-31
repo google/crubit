@@ -4,6 +4,7 @@
 
 #include "cc_bindings_from_rs/test/tuples/tuples.h"
 
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -88,6 +89,17 @@ TEST(TuplesTest, FfiAliasInTuple) {
   std::tuple<char> v = tuples::return_ffi_alias_in_tuple();
   EXPECT_EQ(std::get<0>(v), 5);
   tuples::param_ffi_alias_in_tuple(std::make_tuple<char>(5));
+}
+
+template <typename T>
+concept HasBadTupleMethod = requires(T t) { t.tuple_not_by_value(); };
+
+TEST(TuplesTest, TupleStruct) {
+  // Can't directly test the tuple fields, because binary blob fields are
+  // private, and ZST fields don't exist at all.
+
+  EXPECT_FALSE(HasBadTupleMethod<tuples::TupleStruct>)
+      << "Tuples cannot be bridged to std::tuple except when used by value";
 }
 
 }  // namespace

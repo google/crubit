@@ -225,6 +225,8 @@ pub fn format_ty_for_cc<'tcx>(
             let types = ty.as_tuple(db).unwrap();
             if types.is_empty() && matches!(location, TypeLocation::FnReturn) {
                 keyword(quote! { void })
+            } else if !location.is_bridgeable() {
+                bail!("Tuple types cannot be used inside of compound data types, because std::tuple is not layout-compatible with a Rust tuple.");
             } else {
                 let mut prereqs = CcPrerequisites::default();
                 prereqs.includes.insert(CcInclude::tuple());
@@ -232,7 +234,7 @@ pub fn format_ty_for_cc<'tcx>(
                 let mut cc_types = Vec::with_capacity(types.len());
                 for element_type in types {
                     cc_types.push(
-                        db.format_ty_for_cc(element_type, TypeLocation::Other)?
+                        db.format_ty_for_cc(element_type, TypeLocation::NestedBridgeable)?
                             .into_tokens(&mut prereqs),
                     );
                 }
@@ -411,7 +413,7 @@ pub fn format_ty_for_cc<'tcx>(
         ty::TyKind::Ref(region, referent_mid, mutability) => {
             match location {
                 TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::Const => (),
-                TypeLocation::Other => bail!(
+                TypeLocation::NestedBridgeable | TypeLocation::Other => bail!(
                     "Can't format `{ty}`, because references are only supported in \
                      function parameter types, return types, and consts (b/286256327)",
                 ),
@@ -521,7 +523,7 @@ pub fn format_ty_for_cc<'tcx>(
                 TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::Const => {
                     quote! { & }
                 }
-                TypeLocation::Other => quote! { * },
+                TypeLocation::NestedBridgeable | TypeLocation::Other => quote! { * },
             };
 
             let mut prereqs = CcPrerequisites::default();

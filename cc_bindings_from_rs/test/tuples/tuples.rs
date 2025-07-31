@@ -90,3 +90,17 @@ pub fn param_ffi_alias_in_tuple(five: (std::ffi::c_char,)) {
 pub fn return_ffi_alias_in_tuple() -> (std::ffi::c_char,) {
     (5,)
 }
+
+pub struct TupleStruct {
+    pub tuple_field: (i32,),
+    pub empty_tuple_field: (),
+}
+
+impl TupleStruct {
+    // making this a method so we can check for it in a requires block
+    pub fn tuple_not_by_value(&self) -> *const () {
+        std::ptr::null()
+    }
+}
+
+pub const TUPLE_CONSTANT: (i32,) = (42,);

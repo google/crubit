@@ -36,6 +36,22 @@ pub enum TypeLocation {
     /// The type of a constant item.
     Const,
 
+    /// Inside of a compound data type, but still bridgeable: e.g. a tuple field, where the tuple
+    /// itself is in a function parameter or return value.
+    NestedBridgeable,
+
     /// Other location (e.g. pointee type, field type, etc.).
     Other,
+}
+
+impl TypeLocation {
+    pub fn is_bridgeable(self) -> bool {
+        // This match is exhaustive to force us to think about new variants when adding them.
+        match self {
+            TypeLocation::FnReturn | TypeLocation::FnParam { .. } => true,
+            TypeLocation::Const => true,
+            TypeLocation::NestedBridgeable => true,
+            TypeLocation::Other => false,
+        }
+    }
 }

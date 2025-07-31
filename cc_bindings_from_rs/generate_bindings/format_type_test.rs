@@ -41,7 +41,7 @@ fn test_ty<TestFn, Expectation>(
                 #preamble
                 pub fn test_function(_arg: #ty_tokens) { unimplemented!() }
             },
-            TypeLocation::Const | TypeLocation::Other => unimplemented!(),
+            _ => unimplemented!(),
         };
         input.to_string()
     }
@@ -66,7 +66,7 @@ fn test_ty<TestFn, Expectation>(
             TypeLocation::FnParam { .. } => {
                 SugaredTy::new(sig_mid.inputs()[0], Some(&sig_hir.inputs[0]))
             }
-            TypeLocation::Const | TypeLocation::Other => unimplemented!(),
+            _ => unimplemented!(),
         }
     }
 
