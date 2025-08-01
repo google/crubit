@@ -18,6 +18,7 @@ use core::ptr;
 #[repr(transparent)]
 #[doc = "CRUBIT_ANNOTATE: cpp_type=std::string_view"]
 #[doc = "CRUBIT_ANNOTATE: include_path=<string_view>"]
+#[derive(Debug)]
 pub struct string_view<'a> {
     raw: raw_string_view,
     phantom_data: core::marker::PhantomData<&'a ()>,
@@ -261,5 +262,11 @@ impl From<*const [u8]> for raw_string_view {
         // representations as `size : usize`.
         sv.__size_ = unsafe { core::mem::transmute(size) };
         sv
+    }
+}
+
+impl core::fmt::Debug for raw_string_view {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "<raw_string_view>")
     }
 }
