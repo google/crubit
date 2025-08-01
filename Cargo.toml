@@ -27,6 +27,8 @@ unicode-ident = "1"
 either = "1"
 clap = { version = "4", features = [ "derive" ] }
 rustversion = "1"
+heck = "0.5"
+phf = { version = "0.11", features = [ "macros" ] }
 
 [workspace.package]
 
