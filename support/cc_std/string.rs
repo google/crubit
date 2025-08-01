@@ -29,6 +29,7 @@ use core::ptr::NonNull;
 #[doc = "CRUBIT_ANNOTATE: cpp_to_rust_converter=cpp_string_to_rust_string"]
 #[doc = "CRUBIT_ANNOTATE: rust_to_cpp_converter=rust_string_to_cpp_string"]
 #[allow(non_snake_case)]
+#[repr(C)]
 pub struct string {
     owned_cpp_string: NonNull<c_void>,
 }
