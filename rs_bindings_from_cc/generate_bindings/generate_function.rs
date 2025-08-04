@@ -172,7 +172,7 @@ static OPERATOR_METADATA: LazyLock<OperatorMetadata> = LazyLock::new(|| {
         OperatorMetadataEntry::assign("^=", "BitXorAssign", "bitxor_assign"),
         OperatorMetadataEntry::assign("<<=", "ShlAssign", "shl_assign"),
         OperatorMetadataEntry::assign(">>=", "ShrAssign", "shr_assign"),
-        // NOTE: if adding an entry here, consider whether `should_infer_lifetimes_for_func`
+        // NOTE: if adding an entry here, consider whether `func_should_infer_lifetimes_of_references`
         // is appropriate. If not, amend this structure to include an `infer_lifetimes` field.
     ];
     OperatorMetadata {
@@ -1162,15 +1162,15 @@ fn errors_as_unsatisfied_trait_bound(
     }
 }
 
-/// Returns whether or not the given function should treat parameters with unannotated lifetimes
-/// as having default/elision-provided lifetimes.
+/// Returns whether or not the given function should treat reference parameters with unannotated
+/// lifetimes as having default/elision-provided lifetimes.
 ///
 /// This is enabled for:
 /// - Default constructors
 /// - Copy constructors
 /// - Move constructors
 /// - Operators with default / basic lifetime behavior.
-fn should_infer_lifetimes_for_func(func: &Func) -> bool {
+fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
     use ir::UnqualifiedIdentifier::*;
     match &func.rs_name {
         Destructor | Identifier(_) => return false,
@@ -1229,7 +1229,7 @@ fn rs_type_kinds_for_func(
         .ir()
         .target_crubit_features(&func.owning_target)
         .contains(crubit_feature::CrubitFeature::InferOperatorLifetimes)
-        && should_infer_lifetimes_for_func(func);
+        && func_should_infer_lifetimes_of_references(func);
     let param_types: Vec<RsTypeKind> = func
         .params
         .iter()
