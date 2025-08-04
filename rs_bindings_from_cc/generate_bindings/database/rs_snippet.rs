@@ -269,14 +269,33 @@ pub enum TypeLocation {
     Other,
 }
 
+/// Options for how lifetimes can be elided in function parameters.
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct ElisionOptions {
+    /// If true, references will be elided. This option is only set for select function parameters
+    /// and return types.
+    pub elide_references: bool,
+    /// If true, span lifetimes will be elided. This option is set for all function inputs.
+    pub elide_span_lifetimes: bool,
+}
+
 /// A type with template type arguments that has a uniform representation regardless of `T` and
 /// should be mapped to a handwritten Rust type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum UniformReprTemplateType {
     /// std::vector<T, std::allocator<T>>
-    StdVector { element_type: RsTypeKind },
+    StdVector {
+        element_type: RsTypeKind,
+    },
     /// std::unique_ptr<T, std::default_delete<T>>
-    StdUniquePtr { element_type: RsTypeKind },
+    StdUniquePtr {
+        element_type: RsTypeKind,
+    },
+    AbslSpan {
+        is_const: bool,
+        has_lifetime: bool,
+        element_type: RsTypeKind,
+    },
 }
 
 impl UniformReprTemplateType {
@@ -287,6 +306,7 @@ impl UniformReprTemplateType {
     fn new(
         db: &dyn BindingsGenerator,
         template_specialization: Option<&TemplateSpecialization>,
+        elide_missing_lifetimes: bool,
     ) -> Result<Option<Rc<Self>>> {
         let Some(template_specialization) = template_specialization else {
             return Ok(None);
@@ -300,6 +320,7 @@ impl UniformReprTemplateType {
                     Ok(arg_type) => arg_type.clone(),
                     Err(e) => bail!("{e}"),
                 };
+                // Importantly, `elide_missing_lifetimes` is not propagated through inner types.
                 let arg_type_kind = db.rs_type_kind(arg_type)?;
                 ensure!(
                     !arg_type_kind.is_bridge_type(),
@@ -335,6 +356,15 @@ impl UniformReprTemplateType {
                 }
                 Self::StdVector { element_type: type_args.remove(0) }
             }
+            ("absl::Span", [_t]) => {
+                // Revisit the CcType of _t to see if it is const.
+                let is_const = template_specialization.template_args[0].type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
+                Self::AbslSpan {
+                    is_const,
+                    has_lifetime: elide_missing_lifetimes,
+                    element_type: type_args.remove(0),
+                }
+            }
             _ => return Ok(None),
         };
         Ok(Some(Rc::new(this)))
@@ -349,6 +379,15 @@ impl UniformReprTemplateType {
             Self::StdUniquePtr { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
+            }
+            Self::AbslSpan { is_const, has_lifetime, element_type } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                match (*is_const, *has_lifetime) {
+                    (true, true) => quote! { ::span::absl::Span<'_, #element_type_tokens> },
+                    (false, true) => quote! { ::span::absl::SpanMut<'_, #element_type_tokens> },
+                    (true, false) => quote! { ::span::absl::RawSpan<#element_type_tokens> },
+                    (false, false) => quote! { ::span::absl::RawSpanMut<#element_type_tokens> },
+                }
             }
         }
     }
@@ -396,8 +435,8 @@ pub enum RsTypeKind {
     Record {
         record: Rc<Record>,
         crate_path: Rc<CratePath>,
-        /// The template type arguments of the generic translated from C++.
-        known_generic_monomorphization: Option<Rc<UniformReprTemplateType>>,
+        /// If this record is an instantiation of a `UniformReprTemplateType`, this will be set.
+        uniform_repr_template_type: Option<Rc<UniformReprTemplateType>>,
     },
     Enum {
         enum_: Rc<Enum>,
@@ -554,12 +593,16 @@ impl RsTypeKind {
     /// Returns an error if the item does not define a type (e.g. it is a function declaration),
     /// or if the `RsTypeKind` cannot be created (e.g. a type alias which points to a type that
     /// cannot receive an `RsTypeKind`).
-    pub fn from_item_raw(db: &dyn BindingsGenerator, item: Item) -> Result<Self> {
+    pub fn from_item_raw(
+        db: &dyn BindingsGenerator,
+        item: Item,
+        elide_missing_lifetimes: bool,
+    ) -> Result<Self> {
         match item {
             Item::IncompleteRecord(incomplete_record) => {
                 RsTypeKind::new_incomplete_record(db, incomplete_record)
             }
-            Item::Record(record) => RsTypeKind::new_record(db, record),
+            Item::Record(record) => RsTypeKind::new_record(db, record, elide_missing_lifetimes),
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
             Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias),
             Item::TypeMapOverride(type_map_override) => {
@@ -603,7 +646,11 @@ impl RsTypeKind {
         })
     }
 
-    fn new_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<Self> {
+    fn new_record(
+        db: &dyn BindingsGenerator,
+        record: Rc<Record>,
+        elide_missing_lifetimes: bool,
+    ) -> Result<Self> {
         let ir = db.ir();
         if let Some(bridge_type) = BridgeRsTypeKind::new(&record, db)? {
             return Ok(RsTypeKind::BridgeType { bridge_type, original_type: record });
@@ -614,9 +661,10 @@ impl RsTypeKind {
             rs_imported_crate_name(&record.owning_target, ir),
         ));
         Ok(RsTypeKind::Record {
-            known_generic_monomorphization: UniformReprTemplateType::new(
+            uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
                 record.template_specialization.as_ref(),
+                elide_missing_lifetimes,
             )?,
             record,
             crate_path,
@@ -679,8 +727,8 @@ impl RsTypeKind {
     pub fn is_unpin(&self) -> bool {
         match self.unalias() {
             RsTypeKind::Error { .. } | RsTypeKind::IncompleteRecord { .. } => false,
-            RsTypeKind::Record { record, known_generic_monomorphization, .. } => {
-                known_generic_monomorphization.is_some() || record.is_unpin()
+            RsTypeKind::Record { record, uniform_repr_template_type, .. } => {
+                uniform_repr_template_type.is_some() || record.is_unpin()
             }
             RsTypeKind::BridgeType { .. } => true,
             _ => true,
@@ -1243,8 +1291,8 @@ impl RsTypeKind {
                 let record_ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
                 quote! { #crate_path #record_ident }
             }
-            RsTypeKind::Record { record, crate_path, known_generic_monomorphization } => {
-                if let Some(generic_monomorphization) = known_generic_monomorphization {
+            RsTypeKind::Record { record, crate_path, uniform_repr_template_type } => {
+                if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(db);
                 }
                 let ident = make_rs_ident(record.rs_name.identifier.as_ref());

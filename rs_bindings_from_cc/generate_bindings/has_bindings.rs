@@ -141,7 +141,11 @@ pub fn has_bindings(
         | Item::TypeMapOverride(_) => {
             // has_bindings is called from `rs_type_kind()`, so we can't use
             // `BindingsGenerator::rs_type_kind()` here.
-            match RsTypeKind::from_item_raw(db, item.clone()) {
+            match RsTypeKind::from_item_raw(
+                db,
+                item.clone(),
+                /*elide_missing_lifetimes=*/ false,
+            ) {
                 Ok(rs_type_kind) => {
                     let visibility = type_visibility(db, &item, rs_type_kind)?;
                     Ok(BindingsInfo { visibility })
@@ -356,7 +360,7 @@ fn type_target_restriction_shallow(
     db: &dyn BindingsGenerator,
     rs_type_kind: RsTypeKind,
 ) -> TargetRestriction {
-    let mut target = match &rs_type_kind {
+    let mut target = match rs_type_kind.unalias() {
         // Template types (except for the special-cased ones like `string_view`).
         RsTypeKind::Record { record, .. }
             if record.defining_target.is_some() && !record.is_allowed_template_instantiation() =>
@@ -366,6 +370,11 @@ fn type_target_restriction_shallow(
         // All other types are `pub` if they receive bindings.
         _ => None,
     };
+
+    // Instantiations of UniformReprTemplateTypes are unrestricted.
+    if matches!(&rs_type_kind, RsTypeKind::Record { uniform_repr_template_type: Some(_), .. }) {
+        target = None;
+    }
 
     // Targets with experimental features generate `pub` bindings (for now?), no matter what.
     if let Some(some_target) = target {

@@ -4,7 +4,7 @@
 
 use arc_anyhow::{anyhow, ensure, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
-use database::rs_snippet::{Lifetime, Mutability, RsTypeKind};
+use database::rs_snippet::{ElisionOptions, Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
 use ir::{CcCallingConv, CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
@@ -13,7 +13,7 @@ use std::rc::Rc;
 pub fn rs_type_kind_with_lifetime_elision(
     db: &dyn BindingsGenerator,
     ty: CcType,
-    elide_missing_lifetimes: bool,
+    elision_options: ElisionOptions,
 ) -> Result<RsTypeKind> {
     ensure!(ty.unknown_attr.is_empty(), "unknown attribute(s): {}", ty.unknown_attr);
     match &ty.variant {
@@ -58,7 +58,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                     .get_lifetime(lifetime_id)
                     .map(Lifetime::from)
                     .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
-                None if elide_missing_lifetimes => Lifetime::elided(),
+                None if elision_options.elide_references => Lifetime::elided(),
                 None => return Ok(RsTypeKind::Pointer { pointee, is_slice: false, mutability }),
             };
             if let PointerTypeKind::RValueRef = pointer.kind {
@@ -78,14 +78,14 @@ pub fn rs_type_kind_with_lifetime_elision(
                 .expect("In well-formed IR function pointers include at least the return type");
             let return_type = Rc::new(db.rs_type_kind_with_lifetime_elision(
                 return_type.clone(),
-                elide_missing_lifetimes,
+                ElisionOptions::default(),
             )?);
             let param_types = param_types
                 .iter()
                 .map(|param_type| {
                     db.rs_type_kind_with_lifetime_elision(
                         param_type.clone(),
-                        elide_missing_lifetimes,
+                        ElisionOptions::default(),
                     )
                 })
                 .collect::<Result<Rc<[_]>>>()?;
@@ -118,7 +118,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                     if !matches!(error, NoBindingsReason::MissingRequiredFeatures { .. }) {
                         return db.rs_type_kind_with_lifetime_elision(
                             alias.underlying_type.clone(),
-                            elide_missing_lifetimes,
+                            elision_options,
                         );
                     }
                 }
@@ -136,7 +136,7 @@ pub fn rs_type_kind_with_lifetime_elision(
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
             // course we can't call `rs_type_kind` here, and instead reuse the raw construction
             // logic.
-            RsTypeKind::from_item_raw(db, item.clone())
+            RsTypeKind::from_item_raw(db, item.clone(), elision_options.elide_span_lifetimes)
         }
     }
 }

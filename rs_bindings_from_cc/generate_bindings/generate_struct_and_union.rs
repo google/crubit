@@ -348,8 +348,10 @@ fn field_definition(
 /// Implementation of `BindingsGenerator::generate_record`.
 pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
     let record_rs_type_kind = db.rs_type_kind(record.as_ref().into())?;
-    if let RsTypeKind::Record { known_generic_monomorphization: Some(_), .. } = &record_rs_type_kind
-    {
+    if matches!(
+        &record_rs_type_kind,
+        RsTypeKind::Record { uniform_repr_template_type: Some(_), .. }
+    ) {
         return Ok(ApiSnippets::default());
     }
     if record_rs_type_kind.is_bridge_type() {

@@ -9,7 +9,8 @@ use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibil
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
-    should_derive_clone, should_derive_copy, unique_lifetimes, Lifetime, Mutability, RsTypeKind,
+    should_derive_clone, should_derive_copy, unique_lifetimes, ElisionOptions, Lifetime,
+    Mutability, RsTypeKind,
 };
 use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
@@ -1225,7 +1226,7 @@ fn rs_type_kinds_for_func(
     func: &Func,
 ) -> Result<(Vec<RsTypeKind>, RsTypeKind)> {
     let errors = Errors::new();
-    let elide_missing_lifetimes = db
+    let elide_references = db
         .ir()
         .target_crubit_features(&func.owning_target)
         .contains(crubit_feature::CrubitFeature::InferOperatorLifetimes)
@@ -1235,13 +1236,19 @@ fn rs_type_kinds_for_func(
         .iter()
         .enumerate()
         .filter_map(|(i, p)| {
-            db.rs_type_kind_with_lifetime_elision(p.type_.clone(), elide_missing_lifetimes)
-                .map_err(|err| errors.add(anyhow!("Failed to format type of parameter {i}: {err}")))
-                .ok()
+            db.rs_type_kind_with_lifetime_elision(
+                p.type_.clone(),
+                ElisionOptions { elide_references, elide_span_lifetimes: true },
+            )
+            .map_err(|err| errors.add(anyhow!("Failed to format type of parameter {i}: {err}")))
+            .ok()
         })
         .collect();
     let return_type = db
-        .rs_type_kind_with_lifetime_elision(func.return_type.clone(), elide_missing_lifetimes)
+        .rs_type_kind_with_lifetime_elision(
+            func.return_type.clone(),
+            ElisionOptions { elide_references, elide_span_lifetimes: false },
+        )
         .map_err(|err| errors.add(anyhow!("Failed to format return type: {err}")))
         .ok();
     errors.consolidate()?;
