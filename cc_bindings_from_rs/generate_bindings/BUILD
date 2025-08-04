@@ -71,6 +71,8 @@ crubit_rust_test(
         "//cc_bindings_from_rs:run_compiler_test_support",
         "//common:code_gen_utils",
         "//common:token_stream_matchers",
+        "//common:token_stream_printer",
+        "@crate_index//:proc-macro2",
         "@crate_index//:quote",
     ],
 )

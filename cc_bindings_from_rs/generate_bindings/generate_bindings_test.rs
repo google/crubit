@@ -6,6 +6,7 @@
 
 use code_gen_utils::{CcInclude, NamespaceQualifier};
 use generate_bindings::format_namespace_bound_cc_tokens;
+use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::quote;
 use run_compiler_test_support::run_compiler_for_testing;
 use rustc_span::symbol::Symbol;
@@ -13,6 +14,7 @@ use test_helpers::{bindings_db_for_tests, test_format_item, test_generated_bindi
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
+use token_stream_printer::cc_tokens_to_formatted_string_for_tests;
 
 /// This test covers only a single example of a function that should get a
 /// C++ binding. The test focuses on verification that the output from
@@ -79,6 +81,27 @@ fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
 //  where the span is equivalent, the output will be non-deterministic.
 #[test]
 fn test_generated_bindings_have_stable_order() {
+    fn idents_in_stream(stream: TokenStream, idents: &mut Vec<Ident>) {
+        for tree in stream {
+            match tree {
+                TokenTree::Group(group) => idents_in_stream(group.stream(), idents),
+                TokenTree::Ident(ident) => idents.push(ident),
+                TokenTree::Punct(_) | TokenTree::Literal(_) => {}
+            }
+        }
+    }
+
+    /// Returns the index in `idents` of `{name} final`.
+    #[track_caller]
+    fn get_final_decl_position(idents: &[Ident], name: &str, debug_string: &str) -> usize {
+        let Some((i, _ident)) = idents.iter().enumerate().find(|(i, ident)| {
+            *ident == name && idents.get(i + 1).map(|next| next == "final").unwrap_or(false)
+        }) else {
+            panic!("`{name} final` declaration not found in input:\n{debug_string}")
+        };
+        i
+    }
+
     let test_src = r#"
             #![allow(dead_code)]
 
@@ -93,25 +116,35 @@ fn test_generated_bindings_have_stable_order() {
             make_struct!(i32, HelloF32);
             make_struct!(f32, HelloI32);
         "#;
-    test_generated_bindings(test_src, |bindings| {
-        let bindings = bindings.unwrap();
-        assert_cc_matches!(
-            bindings.cc_api,
-            quote! {
-                namespace rust_out {
-                ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] HelloI32 final {
-                        ...
-                    };
-                ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] HelloF32 final {
-                        ...
-                    };
-                ...
-                }  // namespace rust_out
+
+    const NUM_ITERATIONS: u8 = 5;
+    // Check that the ordering of `HelloI32` and `HelloF32` is consistent across
+    // all iterations.
+    let mut i32_was_first: Option<bool> = None;
+    for _ in 0..NUM_ITERATIONS {
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+            let cc_api: TokenStream = bindings.cc_api;
+            let cc_api_debug_string =
+                cc_tokens_to_formatted_string_for_tests(cc_api.clone()).unwrap();
+
+            let mut idents = Vec::new();
+            idents_in_stream(cc_api, &mut idents);
+
+            let i32_decl_position =
+                get_final_decl_position(&idents, "HelloI32", &cc_api_debug_string);
+            let f32_decl_position =
+                get_final_decl_position(&idents, "HelloF32", &cc_api_debug_string);
+            let i32_is_first = i32_decl_position < f32_decl_position;
+            if let Some(i32_was_first) = i32_was_first {
+                if i32_is_first != i32_was_first {
+                    panic!("`HelloI32` declaration ordering is inconsistent.");
+                }
+            } else {
+                i32_was_first = Some(i32_is_first);
             }
-        );
-    });
+        });
+    }
 }
 
 /// Tests that a forward declaration is present when it is required to
