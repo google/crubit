@@ -440,14 +440,6 @@ fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
         return true;
     }
 
-    if !db
-        .ir()
-        .target_crubit_features(&record.owning_target)
-        .contains(crubit_feature::CrubitFeature::UnsafeTypes)
-    {
-        return false;
-    }
-
     if record.record_type == RecordType::Union {
         return true;
     }
