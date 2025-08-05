@@ -26,7 +26,7 @@ inline void* cpp_new_with_alignment(size_t n, size_t align) {
   return operator new(n, static_cast<std::align_val_t>(align));
 }
 
-inline void cpp_delete(void* ptr, size_t n) { operator delete(ptr); }
+inline void cpp_delete(void* ptr, size_t n) { operator delete(ptr, n); }
 
 inline void cpp_delete_with_alignment(void* ptr, size_t n, size_t align) {
   operator delete(ptr, static_cast<std::align_val_t>(align));
