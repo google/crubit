@@ -44,7 +44,11 @@ impl<T> Drop for unique_ptr<T> {
                 // SAFETY: a non-null `self.ptr` is a pointer to a `T` allocated with C++ `new`,
                 // which should be satisfied by the constructor.
                 core::ptr::drop_in_place(self.ptr);
-                std_allocator::cpp_delete(self.ptr as _, core::mem::size_of::<T>());
+                std_allocator::cpp_delete(
+                    self.ptr as _,
+                    core::mem::size_of::<T>(),
+                    core::mem::align_of::<T>(),
+                );
             }
         }
     }
