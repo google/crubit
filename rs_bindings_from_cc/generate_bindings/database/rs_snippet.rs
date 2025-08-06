@@ -459,7 +459,7 @@ pub enum RsTypeKind {
     /// types by cc_bindings_from_rs.
     TypeMapOverride {
         name: Rc<str>,
-        is_same_abi: bool,
+        is_same_layout: bool,
     },
 }
 
@@ -719,7 +719,7 @@ impl RsTypeKind {
 
         Ok(RsTypeKind::TypeMapOverride {
             name: type_map_override.rs_name.clone(),
-            is_same_abi: type_map_override.is_same_abi,
+            is_same_layout: type_map_override.is_same_layout,
         })
     }
 
@@ -926,7 +926,7 @@ impl RsTypeKind {
             // all the fields.
             RsTypeKind::Record { .. } => false,
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::TypeMapOverride { is_same_abi, .. } => *is_same_abi,
+            RsTypeKind::TypeMapOverride { is_same_layout, .. } => *is_same_layout,
             _ => true,
         }
     }
@@ -1475,9 +1475,9 @@ mod tests {
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = RsTypeKind::TypeMapOverride { name: "A".into(), is_same_abi: true };
-            let b = RsTypeKind::TypeMapOverride { name: "B".into(), is_same_abi: true };
-            let c = RsTypeKind::TypeMapOverride { name: "C".into(), is_same_abi: true };
+            let a = RsTypeKind::TypeMapOverride { name: "A".into(), is_same_layout: true };
+            let b = RsTypeKind::TypeMapOverride { name: "B".into(), is_same_layout: true };
+            let c = RsTypeKind::TypeMapOverride { name: "C".into(), is_same_layout: true };
             RsTypeKind::FuncPtr {
                 option: false,
                 abi: "blah".into(),
@@ -1501,7 +1501,8 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
+        let referent =
+            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
         let reference = RsTypeKind::Reference {
             option: false,
             referent,
@@ -1513,7 +1514,8 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
+        let referent =
+            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1527,7 +1529,8 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
+        let referent =
+            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1541,7 +1544,8 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_abi: true });
+        let referent =
+            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,

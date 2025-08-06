@@ -277,7 +277,7 @@ llvm::json::Value TypeMapOverride::ToJson() const {
       {"cc_name", cc_name},
       {"type_parameters", type_parameters},
       {"owning_target", owning_target},
-      {"is_same_abi", is_same_abi},
+      {"is_same_layout", is_same_layout},
       {"id", id},
       {"must_bind", must_bind},
   };
