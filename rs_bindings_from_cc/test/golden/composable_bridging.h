@@ -41,4 +41,13 @@ MyOption<Vec3> MakeOptionalVec3(float x, float y, float z, bool is_present);
 
 MyOption<Vec3> MapMultiply(MyOption<Vec3> v, float factor);
 
+struct [[clang::annotate("crubit_internal_rust_type", "i8")]] [[clang::annotate(
+    "crubit_internal_same_abi")]] MyI8Struct final {
+  signed char x;
+
+  void Method();
+};
+
+MyOption<MyI8Struct> MakeMyI8Struct();
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMPOSABLE_BRIDGING_H_

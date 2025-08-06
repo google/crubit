@@ -103,6 +103,20 @@ pub fn MapMultiply(v: crate::MyOption<crate::Vec3>, factor: f32) -> crate::MyOpt
     }
 }
 
+// Type bindings for MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
+
+#[inline(always)]
+pub fn MakeMyI8Struct() -> crate::MyOption<i8> {
+    unsafe {
+        ::bridge_rust::unstable_return!(
+            crate::MyOptionAbi<::bridge_rust::TransmuteAbi<i8>>,
+            |__return_abi_buffer| {
+                crate::detail::__rust_thunk___Z14MakeMyI8Structv(__return_abi_buffer);
+            }
+        )
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -126,6 +140,9 @@ mod detail {
             v: *const ::core::ffi::c_uchar,
             factor: f32,
         );
+        pub(crate) unsafe fn __rust_thunk___Z14MakeMyI8Structv(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
     }
 }
 
@@ -137,4 +154,6 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::Vec3, x) == 0);
     assert!(::core::mem::offset_of!(crate::Vec3, y) == 4);
     assert!(::core::mem::offset_of!(crate::Vec3, z) == 8);
+    assert!(::core::mem::size_of::<i8>() == 1);
+    assert!(::core::mem::align_of::<i8>() == 1);
 };

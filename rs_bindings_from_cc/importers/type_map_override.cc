@@ -118,7 +118,11 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
   clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
   const clang::Type* cpp_type = cc_qualtype.getTypePtr();
   if (cpp_type == nullptr) return std::nullopt;
-  std::string cc_name = cc_qualtype.getAsString();
+  // Tag keywords (e.g. `struct`, `class`, `union`) are suppressed so we get
+  // `Foo` instead of `struct Foo`.
+  clang::PrintingPolicy policy(context.getLangOpts());
+  policy.SuppressTagKeyword = true;
+  std::string cc_name = cc_qualtype.getAsString(policy);
 
   absl::StatusOr<std::optional<std::vector<CcType>>> type_parameters =
       GetTemplateParameters(ictx_, type_decl);

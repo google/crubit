@@ -14,14 +14,14 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-// Type bindings for struct MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
+// Type bindings for MyI8Struct suppressed due to being mapped to an existing Rust type (i8)
 
 // Note that this is potentially visited, even if the original declaration is
 // skipped due to crubit_internal_rust_type.
 
-// Type bindings for struct MyI8Class suppressed due to being mapped to an existing Rust type (i8)
+// Type bindings for MyI8Class suppressed due to being mapped to an existing Rust type (i8)
 
-// Type bindings for enum MyI8Enum suppressed due to being mapped to an existing Rust type (i8)
+// Type bindings for MyI8Enum suppressed due to being mapped to an existing Rust type (i8)
 
 // Type bindings for MyI8Alias suppressed due to being mapped to an existing Rust type (i8)
 

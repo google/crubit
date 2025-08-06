@@ -58,4 +58,11 @@ extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
                   factor));
 }
 
+extern "C" void __rust_thunk___Z14MakeMyI8Structv(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::internal::Encode<
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>>(
+      __return_abi_buffer, MakeMyI8Struct());
+}
+
 #pragma clang diagnostic pop

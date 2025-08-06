@@ -550,8 +550,50 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             bail!("Slices are not supported yet")
         }
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
-        RsTypeKind::TypeMapOverride { .. } => {
-            bail!("RsTypeKind::TypeMapOverride is not supported yet")
+        RsTypeKind::TypeMapOverride(type_map_override) => {
+            ensure!(
+                type_map_override.is_same_layout,
+                "RsTypeKind::TypeMapOverride with is_same_layout=false is not supported yet"
+            );
+
+            // Rust names are of the form ":: tuples_golden :: NontrivialDrop"
+            let mut rust_path = type_map_override.rs_name.as_ref();
+            let mut start_with_colon2 = false;
+            if let Some(strip_universal_qualifier) = rust_path.strip_prefix(":: ") {
+                start_with_colon2 = true;
+                rust_path = strip_universal_qualifier;
+            }
+            let rust_abi_path = FullyQualifiedPath {
+                start_with_colon2,
+                parts: rust_path
+                    .split(" :: ")
+                    .map(|ident| {
+                        syn::parse_str::<Ident>(ident).map_err(|_| {
+                            anyhow!(
+                                "The type `{ident}` does not parse as an identifier. \
+                        This may be because it contains template parameters, and \
+                        bridging such types by value is not yet supported."
+                            )
+                        })
+                    })
+                    .collect::<Result<Rc<[Ident]>>>()?,
+            };
+
+            let cpp_abi_path = make_cpp_abi_path_from_item(
+                type_map_override.as_ref(),
+                &type_map_override.cc_name,
+                db,
+            )?;
+
+            Ok(CrubitAbiType::Type {
+                rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
+                cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
+                type_args: Rc::from([CrubitAbiType::Type {
+                    rust_abi_path,
+                    cpp_abi_path,
+                    type_args: Rc::default(),
+                }]),
+            })
         }
         RsTypeKind::Primitive(primitive) => {
             let inner = match primitive {
@@ -611,8 +653,8 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             BridgeRsTypeKind::ProtoMessageBridge { abi_rust, abi_cpp, .. } => {
                 let target =
                     original_type.defining_target.as_ref().unwrap_or(&original_type.owning_target);
-                let rust_abi_path = make_rust_abi_path(&abi_rust, db.ir(), target);
-                let cpp_abi_path = make_cpp_abi_path(&abi_cpp)?;
+                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, db.ir(), target);
+                let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
 
                 let cpp_namespace_qualifier = db.ir().namespace_qualifier(original_type.as_ref());
 
@@ -622,12 +664,12 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                     + original_type.cc_name.identifier.as_ref();
 
                 let type_args = Rc::from([CrubitAbiType::Type {
-                    rust_abi_path: make_rust_abi_path(
+                    rust_abi_path: make_rust_abi_path_from_str(
                         original_type.rs_name.identifier.as_ref(),
                         db.ir(),
                         target,
                     ),
-                    cpp_abi_path: make_cpp_abi_path(&merged_cpp_abi_path)?,
+                    cpp_abi_path: make_cpp_abi_path_from_str(&merged_cpp_abi_path)?,
                     type_args: Rc::default(),
                 }]);
 
@@ -636,9 +678,9 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
                 let target =
                     original_type.defining_target.as_ref().unwrap_or(&original_type.owning_target);
-                let rust_abi_path = make_rust_abi_path(&abi_rust, db.ir(), target);
+                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, db.ir(), target);
 
-                let cpp_abi_path = make_cpp_abi_path(&abi_cpp)?;
+                let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
 
                 let type_args = generic_types
                     .iter()
@@ -687,28 +729,11 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
 
             // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
             // except that it creates an Ident instead of a TokenStream.
-            let cc_name = &record.cc_name.identifier;
-
-            code_gen_utils::check_valid_cc_name(cc_name)
+            code_gen_utils::check_valid_cc_name(&record.cc_name.identifier)
                 .expect("IR should only contain valid C++ types");
 
-            let namespace_qualifier = db.ir().namespace_qualifier(record.as_ref());
-            let idents = namespace_qualifier
-                .parts()
-                .chain([cc_name])
-                .map(|ident| {
-                    syn::parse_str::<Ident>(ident).map_err(|_| {
-                        anyhow!(
-                            "The type `{ident}` does not parse as an identifier. \
-                    This may be because it contains template parameters, and \
-                    bridging such types by value is not yet supported."
-                        )
-                    })
-                })
-                .collect::<Result<Vec<Ident>>>()?;
-
             let cpp_abi_path =
-                FullyQualifiedPath { start_with_colon2: true, parts: Rc::from(idents) };
+                make_cpp_abi_path_from_item(record.as_ref(), &record.cc_name.identifier, db)?;
 
             Ok(CrubitAbiType::Type {
                 rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
@@ -728,7 +753,11 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
 /// * if the path is fully qualified, it stays unchanged.
 /// * else, if it is the current target, it is prepended with "crate".
 /// * else, it is prepended with the "::" and the crate name.
-fn make_rust_abi_path(mut rust_path: &str, ir: &IR, target: &BazelLabel) -> FullyQualifiedPath {
+fn make_rust_abi_path_from_str(
+    mut rust_path: &str,
+    ir: &IR,
+    target: &BazelLabel,
+) -> FullyQualifiedPath {
     let mut start_with_colon2 = strip_leading_colon2(&mut rust_path);
 
     let prefix = if start_with_colon2 {
@@ -750,7 +779,7 @@ fn make_rust_abi_path(mut rust_path: &str, ir: &IR, target: &BazelLabel) -> Full
 }
 
 /// Parses the given C++ path into a [`FullyQualifiedPath`].
-fn make_cpp_abi_path(mut cpp_path: &str) -> Result<FullyQualifiedPath> {
+fn make_cpp_abi_path_from_str(mut cpp_path: &str) -> Result<FullyQualifiedPath> {
     let start_with_colon2 = strip_leading_colon2(&mut cpp_path);
     Ok(FullyQualifiedPath {
         start_with_colon2,
@@ -781,4 +810,28 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
     } else {
         false
     }
+}
+
+fn make_cpp_abi_path_from_item(
+    item: &impl GenericItem,
+    cc_name: &str,
+    db: &dyn BindingsGenerator,
+) -> Result<FullyQualifiedPath> {
+    let namespace_qualifier = db.ir().namespace_qualifier(item);
+    let parts = namespace_qualifier
+        .parts()
+        .map(AsRef::as_ref)
+        .chain([cc_name])
+        .map(|ident| {
+            syn::parse_str::<Ident>(ident).map_err(|_| {
+                anyhow!(
+                    "The type `{ident}` does not parse as an identifier. \
+            This may be because it contains template parameters, and \
+            bridging such types by value is not yet supported."
+                )
+            })
+        })
+        .collect::<Result<Rc<[Ident]>>>()?;
+
+    Ok(FullyQualifiedPath { start_with_colon2: true, parts })
 }

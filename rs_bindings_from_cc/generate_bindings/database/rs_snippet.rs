@@ -457,10 +457,7 @@ pub enum RsTypeKind {
     /// This variant comes from the `CRUBIT_INTERNAL_RUST_TYPE` attribute macro in C++,
     /// which is used on types like `SliceRef`, `StrRef`, and C++ types generated from Rust
     /// types by cc_bindings_from_rs.
-    TypeMapOverride {
-        name: Rc<str>,
-        is_same_layout: bool,
-    },
+    TypeMapOverride(Rc<TypeMapOverride>),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -717,10 +714,7 @@ impl RsTypeKind {
             });
         }
 
-        Ok(RsTypeKind::TypeMapOverride {
-            name: type_map_override.rs_name.clone(),
-            is_same_layout: type_map_override.is_same_layout,
-        })
+        Ok(RsTypeKind::TypeMapOverride(type_map_override))
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -897,7 +891,7 @@ impl RsTypeKind {
                         )
                     }
                 }
-                RsTypeKind::TypeMapOverride { .. } => {
+                RsTypeKind::TypeMapOverride(_) => {
                     require_feature(CrubitFeature::Experimental, None)
                 }
             }
@@ -926,7 +920,7 @@ impl RsTypeKind {
             // all the fields.
             RsTypeKind::Record { .. } => false,
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::TypeMapOverride { is_same_layout, .. } => *is_same_layout,
+            RsTypeKind::TypeMapOverride(type_map_override) => type_map_override.is_same_layout,
             _ => true,
         }
     }
@@ -1050,7 +1044,7 @@ impl RsTypeKind {
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
                 BridgeRsTypeKind::StdString { .. } => false,
             },
-            RsTypeKind::TypeMapOverride { .. } => true,
+            RsTypeKind::TypeMapOverride(_) => true,
         }
     }
 
@@ -1193,7 +1187,7 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::BridgeType { .. } => self.to_token_stream(db),
-            RsTypeKind::TypeMapOverride { .. } => self.to_token_stream(db),
+            RsTypeKind::TypeMapOverride(_) => self.to_token_stream(db),
             _ => self.to_token_stream(db),
         }
     }
@@ -1406,8 +1400,8 @@ impl RsTypeKind {
                     }
                 }
             }
-            RsTypeKind::TypeMapOverride { name, .. } => {
-                name.parse().expect("Invalid RsType::name in the IR")
+            RsTypeKind::TypeMapOverride(type_map_override) => {
+                type_map_override.rs_name.parse().expect("Invalid RsType::name in the IR")
             }
         }
     }
@@ -1456,7 +1450,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         }
                         BridgeRsTypeKind::StdString { .. } => {}
                     },
-                    RsTypeKind::TypeMapOverride { .. } => {}
+                    RsTypeKind::TypeMapOverride(_) => {}
                 };
                 Some(curr)
             }
@@ -1471,13 +1465,26 @@ mod tests {
     use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;
 
+    fn make_type_map_override(name: Rc<str>, is_same_layout: bool) -> RsTypeKind {
+        RsTypeKind::TypeMapOverride(Rc::new(TypeMapOverride {
+            rs_name: name,
+            cc_name: "".into(),
+            type_parameters: Vec::new(),
+            owning_target: BazelLabel("//new/for/testing".into()),
+            size_align: None,
+            is_same_layout,
+            id: ItemId::new_for_testing(0),
+            must_bind: false,
+        }))
+    }
+
     #[gtest]
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = RsTypeKind::TypeMapOverride { name: "A".into(), is_same_layout: true };
-            let b = RsTypeKind::TypeMapOverride { name: "B".into(), is_same_layout: true };
-            let c = RsTypeKind::TypeMapOverride { name: "C".into(), is_same_layout: true };
+            let a = make_type_map_override("A".into(), true);
+            let b = make_type_map_override("B".into(), true);
+            let c = make_type_map_override("C".into(), true);
             RsTypeKind::FuncPtr {
                 option: false,
                 abi: "blah".into(),
@@ -1489,7 +1496,9 @@ mod tests {
             .dfs_iter()
             .map(|t| match t {
                 RsTypeKind::FuncPtr { .. } => "fn".to_string(),
-                RsTypeKind::TypeMapOverride { name, .. } => name.to_string(),
+                RsTypeKind::TypeMapOverride(type_map_override) => {
+                    type_map_override.rs_name.to_string()
+                }
                 _ => unreachable!("Only FuncPtr and TypeMapOverride kinds are used in this test"),
             })
             .collect_vec();
@@ -1501,8 +1510,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let referent =
-            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
+        let referent = Rc::new(make_type_map_override("T".into(), true));
         let reference = RsTypeKind::Reference {
             option: false,
             referent,
@@ -1514,8 +1522,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let referent =
-            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
+        let referent = Rc::new(make_type_map_override("T".into(), true));
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1529,8 +1536,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let referent =
-            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
+        let referent = Rc::new(make_type_map_override("T".into(), true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1544,8 +1550,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let referent =
-            Rc::new(RsTypeKind::TypeMapOverride { name: "T".into(), is_same_layout: true });
+        let referent = Rc::new(make_type_map_override("T".into(), true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,

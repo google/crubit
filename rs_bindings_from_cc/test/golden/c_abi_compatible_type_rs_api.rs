@@ -14,7 +14,7 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-// Type bindings for struct MyI8 suppressed due to being mapped to an existing Rust type (i8)
+// Type bindings for MyI8 suppressed due to being mapped to an existing Rust type (i8)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
