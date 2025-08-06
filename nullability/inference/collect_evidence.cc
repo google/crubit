@@ -17,7 +17,6 @@
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
-#include "absl/strings/string_view.h"
 #include "nullability/ast_helpers.h"
 #include "nullability/forwarding_functions.h"
 #include "nullability/inference/inferable.h"
@@ -64,6 +63,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
@@ -84,20 +84,6 @@ using ConcreteNullabilityCache =
     absl::flat_hash_map<const Decl *,
                         std::optional<const PointerTypeNullability>>;
 
-static llvm::DenseSet<const CXXMethodDecl *absl_nonnull> getOverridden(
-    const CXXMethodDecl *absl_nonnull Derived) {
-  llvm::DenseSet<const CXXMethodDecl *absl_nonnull> Overridden;
-  for (const CXXMethodDecl *Base : Derived->overridden_methods()) {
-    if (Base == nullptr) continue;
-    Overridden.insert(Base);
-    for (const CXXMethodDecl *BaseOverridden : getOverridden(Base)) {
-      if (BaseOverridden == nullptr) continue;
-      Overridden.insert(BaseOverridden);
-    }
-  }
-  return Overridden;
-}
-
 namespace {
 /// Shared base class for visitors that walk the AST for evidence collection
 /// purposes, to ensure they see the same nodes.
@@ -115,15 +101,37 @@ struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
 };
 }  // namespace
 
-VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
+VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
-    VirtualMethodOverridesMap Out;
+    VirtualMethodIndex Index;
+
+    // Note: the correctness of this function relies on the pre-order traversal
+    // order of `Walker` (which is the default for RecursiveASTVisitor), because
+    // `Derived` must be visited *after* any methods it overrides, so that they
+    // are in `OverriddenMap`.
+    llvm::DenseSet<const CXXMethodDecl *absl_nonnull> getOverridden(
+        const CXXMethodDecl *absl_nonnull Derived) {
+      llvm::DenseSet<const CXXMethodDecl *absl_nonnull> Overridden;
+      for (const CXXMethodDecl *Base : Derived->overridden_methods()) {
+        if (Base == nullptr) continue;
+        Overridden.insert(Base);
+        auto It = Index.Bases.find(Base);
+        if (It != Index.Bases.end()) {
+          auto &BaseOverrides = It->second;
+          Overridden.insert(BaseOverrides.begin(), BaseOverrides.end());
+        }
+      }
+      return Overridden;
+    }
 
     bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
       if (MD && MD->isVirtual()) {
-        for (const auto *O : getOverridden(MD)) {
-          Out[O].insert(MD);
+        auto Overridden = getOverridden(MD);
+        if (Overridden.empty()) return true;
+        for (const auto *O : Overridden) {
+          Index.Overrides[O].insert(MD);
         }
+        Index.Bases[MD] = std::move(Overridden);
       }
       return true;
     }
@@ -134,7 +142,7 @@ VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx) {
   // no matter where they are each defined.
   Walker W;
   W.TraverseAST(Ctx);
-  return std::move(W.Out);
+  return std::move(W.Index);
 }
 
 VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
@@ -189,23 +197,37 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
   }
 }
 
-static llvm::DenseSet<const CXXMethodDecl *>
-getAdditionalTargetsForVirtualMethod(
+template <typename Container>
+static void appendUSRs(const Container &C, USRCache &USRCache,
+                       std::vector<std::string_view> &USRs) {
+  for (const auto *absl_nonnull D : C) {
+    std::string_view USR = getOrGenerateUSR(USRCache, *D);
+    if (!USR.empty()) USRs.push_back(USR);
+  }
+}
+
+static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
     const CXXMethodDecl *MD, Evidence::Kind Kind, bool ForReturnSlot,
-    const VirtualMethodOverridesMap &OverridesMap) {
+    const VirtualMethodIndex &Index, USRCache &USRCache) {
   VirtualMethodEvidenceFlowDirection FlowDirection =
       getFlowDirection(Kind, ForReturnSlot);
+  std::vector<std::string_view> Results;
   switch (FlowDirection) {
     case VirtualMethodEvidenceFlowDirection::kFromBaseToDerived:
-      if (auto It = OverridesMap.find(MD); It != OverridesMap.end())
-        return It->second;
-      return {};
+      if (auto It = Index.Overrides.find(MD); It != Index.Overrides.end())
+        appendUSRs(It->second, USRCache, Results);
+      return Results;
     case VirtualMethodEvidenceFlowDirection::kFromDerivedToBase:
-      return getOverridden(MD);
+      if (auto It = Index.Bases.find(MD); It != Index.Bases.end())
+        appendUSRs(It->second, USRCache, Results);
+      return Results;
     case VirtualMethodEvidenceFlowDirection::kBoth:
-      llvm::DenseSet<const CXXMethodDecl *> Results = getOverridden(MD);
-      if (auto It = OverridesMap.find(MD); It != OverridesMap.end())
-        Results.insert(It->second.begin(), It->second.end());
+      // Simply concatenate the two sets -- given the acyclic nature of the AST,
+      // they must be exclusive.
+      if (auto It = Index.Bases.find(MD); It != Index.Bases.end())
+        appendUSRs(It->second, USRCache, Results);
+      if (auto It = Index.Overrides.find(MD); It != Index.Overrides.end())
+        appendUSRs(It->second, USRCache, Results);
       return Results;
   }
 }
@@ -213,73 +235,74 @@ getAdditionalTargetsForVirtualMethod(
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const> Emit,
     USRCache &USRCache, ASTContext &Ctx) {
-  return evidenceEmitter(std::move(Emit), USRCache, Ctx,
-                         getVirtualMethodOverrides(Ctx));
+  return evidenceEmitter(std::move(Emit), USRCache, getVirtualMethodIndex(Ctx));
+}
+
+// Helper functions which do not depend on the AST. We split out the singleton
+// case for efficiency, because we expect this function is called very often.
+static void emitEvidence(std::string_view USR, Slot S, Evidence::Kind Kind,
+                         std::optional<std::string_view> LocAsString,
+                         llvm::function_ref<void(const Evidence &)> Emit) {
+  Evidence E;
+  E.set_slot(S);
+  E.set_kind(Kind);
+  if (LocAsString) E.set_location(*LocAsString);
+  E.mutable_symbol()->set_usr(USR);
+  Emit(E);
+}
+
+static void emitEvidence(llvm::ArrayRef<std::string_view> USRs, Slot S,
+                         Evidence::Kind Kind,
+                         std::optional<std::string_view> LocAsString,
+                         llvm::function_ref<void(const Evidence &)> Emit) {
+  Evidence E;
+  E.set_slot(S);
+  E.set_kind(Kind);
+  if (LocAsString) E.set_location(*LocAsString);
+  for (std::string_view USR : USRs) {
+    E.mutable_symbol()->set_usr(USR);
+    Emit(E);
+  }
 }
 
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const> Emit,
-    USRCache &USRCache, ASTContext &Ctx,
-    const VirtualMethodOverridesMap &&OverridesMap) {
-  class EvidenceEmitterImpl {
-   public:
-    EvidenceEmitterImpl(
-        llvm::unique_function<void(const Evidence &) const> Emit,
-        nullability::USRCache &USRCache, ASTContext &Ctx,
-        const VirtualMethodOverridesMap &&OverridesMap)
-        : Emit(std::move(Emit)),
-          USRCache(USRCache),
-          OverridesMap(std::move(OverridesMap)) {}
+    USRCache &USRCache, VirtualMethodIndex Index) {
+  return [Emit = std::move(Emit), &USRCache, Index = std::move(Index)](
+             const Decl &Target, Slot S, Evidence::Kind Kind,
+             SourceLocation Loc) {
+    CHECK(isInferenceTarget(Target))
+        << "Evidence emitted for a Target which is not an inference target: "
+        << (dyn_cast<NamedDecl>(&Target)
+                ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
+                : "not a named decl");
+    // TODO: make collecting and propagating location information optional?
+    auto &SM =
+        Target.getDeclContext()->getParentASTContext().getSourceManager();
+    // TODO: are macro locations actually useful enough for debugging?
+    //       we could leave them out, and make room for non-macro samples.
+    std::optional<std::string> LocAsString;
+    if (Loc = SM.getFileLoc(Loc); Loc.isValid())
+      LocAsString = Loc.printToString(SM);
 
-    void operator()(const Decl &Target, Slot S, Evidence::Kind Kind,
-                    SourceLocation Loc) const {
-      CHECK(isInferenceTarget(Target))
-          << "Evidence emitted for a Target which is not an inference target: "
-          << (dyn_cast<NamedDecl>(&Target)
-                  ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
-                  : "not a named decl");
+    std::string_view USR = getOrGenerateUSR(USRCache, Target);
+    if (USR.empty()) return;
 
-      Evidence E;
-      E.set_slot(S);
-      E.set_kind(Kind);
-
-      std::string_view USR = getOrGenerateUSR(USRCache, Target);
-      if (USR.empty()) return;  // Can't emit without a USR
-      E.mutable_symbol()->set_usr(USR);
-
-      // TODO: make collecting and propagating location information optional?
-      auto &SM =
-          Target.getDeclContext()->getParentASTContext().getSourceManager();
-      // TODO: are macro locations actually useful enough for debugging?
-      //       we could leave them out, and make room for non-macro samples.
-      if (Loc = SM.getFileLoc(Loc); Loc.isValid())
-        E.set_location(Loc.printToString(SM));
-
-      Emit(E);
-
-      // Virtual methods and their overrides constrain each other's
-      // nullabilities, so propagate evidence in the appropriate direction based
-      // on the evidence kind and whether the evidence is for the return type or
-      // a parameter type.
-      if (auto *MD = dyn_cast<CXXMethodDecl>(&Target); MD && MD->isVirtual()) {
-        for (const auto *O : getAdditionalTargetsForVirtualMethod(
-                 MD, Kind, S == SLOT_RETURN_TYPE, OverridesMap)) {
-          USR = getOrGenerateUSR(USRCache, *O);
-          if (USR.empty()) return;  // Can't emit without a USR
-          E.mutable_symbol()->set_usr(USR);
-          Emit(E);
-        }
-      }
+    // Virtual methods and their overrides constrain each other's
+    // nullabilities, so propagate evidence in the appropriate direction based
+    // on the evidence kind and whether the evidence is for the return type or
+    // a parameter type.
+    if (auto *MD = dyn_cast<CXXMethodDecl>(&Target); MD && MD->isVirtual()) {
+      std::vector<std::string_view> Targets =
+          getAdditionalTargetsForVirtualMethod(MD, Kind, S == SLOT_RETURN_TYPE,
+                                               Index, USRCache);
+      Targets.push_back(USR);
+      emitEvidence(Targets, S, Kind, LocAsString, Emit);
+    } else {
+      // Otherwise, just emit evidence for the single target.
+      emitEvidence(USR, S, Kind, LocAsString, Emit);
     }
-
-   private:
-    llvm::unique_function<void(const Evidence &) const> Emit;
-    // Must outlive the EvidenceEmitterImpl.
-    nullability::USRCache &USRCache;
-    const VirtualMethodOverridesMap OverridesMap;
   };
-  return EvidenceEmitterImpl(std::move(Emit), USRCache, Ctx,
-                             std::move(OverridesMap));
 }
 
 namespace {

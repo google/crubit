@@ -69,6 +69,7 @@ using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::IsSupersetOf;
 using ::testing::Not;
+using ::testing::Pair;
 using ::testing::ResultOf;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
@@ -201,6 +202,41 @@ auto collectFromTargetVarDecl(llvm::StringRef Source) {
 
 auto collectFromTargetFuncDecl(llvm::StringRef Source) {
   return collectFromDecl(Source, "target");
+}
+
+TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
+  static constexpr llvm::StringRef Src = R"cc(
+    struct Base {
+      virtual int* foo() { return nullptr; }
+    };
+
+    struct Derived : public Base {
+      int* foo() override;
+    };
+
+    struct DerivedDerived : public Derived {
+      int* foo() override { return nullptr; };
+    };
+  )cc";
+
+  clang::TestAST AST(Src);
+  const Decl* BaseFoo =
+      dataflow::test::findValueDecl(AST.context(), "Base::foo");
+  const Decl* DFoo =
+      dataflow::test::findValueDecl(AST.context(), "Derived::foo");
+  const Decl* DDFoo =
+      dataflow::test::findValueDecl(AST.context(), "DerivedDerived::foo");
+  auto Index = getVirtualMethodIndex(AST.context());
+
+  EXPECT_THAT(
+      Index.Bases,
+      UnorderedElementsAre(Pair(DFoo, UnorderedElementsAre(BaseFoo)),
+                           Pair(DDFoo, UnorderedElementsAre(DFoo, BaseFoo))));
+
+  EXPECT_THAT(
+      Index.Overrides,
+      UnorderedElementsAre(Pair(BaseFoo, UnorderedElementsAre(DFoo, DDFoo)),
+                           Pair(DFoo, UnorderedElementsAre(DDFoo))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, Location) {

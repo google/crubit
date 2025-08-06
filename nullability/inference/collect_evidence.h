@@ -47,13 +47,27 @@ enum class VirtualMethodEvidenceFlowDirection {
 VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
                                                     bool ForReturnSlot);
 
-// Map from virtual methods in a TU to the set of methods that override them in
-// that TU.
-using VirtualMethodOverridesMap =
+using RelatedVirtualMethodsMap =
     absl::flat_hash_map<const CXXMethodDecl *absl_nonnull,
                         llvm::DenseSet<const CXXMethodDecl *absl_nonnull>>;
-/// Collect a map from virtual methods to a set of their overrides.
-VirtualMethodOverridesMap getVirtualMethodOverrides(ASTContext &Ctx);
+struct VirtualMethodIndex {
+  VirtualMethodIndex() = default;
+  // These are expected to often be very large containers, so disallow copying.
+  VirtualMethodIndex(const VirtualMethodIndex &) = delete;
+  VirtualMethodIndex &operator=(const VirtualMethodIndex &) = delete;
+  VirtualMethodIndex(VirtualMethodIndex &&) = default;
+  VirtualMethodIndex &operator=(VirtualMethodIndex &&) = default;
+
+  // Map from virtual methods in a TU to the set of methods that are overridden
+  // by them in that TU.
+  RelatedVirtualMethodsMap Bases;
+  // Map from virtual methods in a TU to the set of methods that override them
+  // in that TU.
+  RelatedVirtualMethodsMap Overrides;
+};
+
+/// Index the relationships between virtual methods in the TU.
+VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx);
 
 /// Callback used to report collected nullability evidence.
 using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind,
@@ -69,7 +83,7 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
 /// VirtualMethodOverridesMap if one has already been computed.
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache,
-    ASTContext &Ctx, const VirtualMethodOverridesMap &&OverridesMap);
+    VirtualMethodIndex Index);
 
 class SortedFingerprintVector {
  public:
