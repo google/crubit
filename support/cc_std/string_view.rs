@@ -159,10 +159,10 @@ impl raw_string_view {
     ///
     /// # Safety
     ///
-    /// The data referred to to by `self` must be valid for at least as long as `'s`.
-    /// For example, it is not sound to call `as_live<'static>` on a `string_view`
-    /// bound to a temporary, because the `string_view<'static>` would
-    /// outlive the temporary.
+    /// The data referred to by `self` must be valid, and the resulting `string_view` is subject to
+    /// the same rules as a reference constructed from a raw pointer: it must not be accessed after
+    /// the underlying memory becomes invalid or aliased by a unique reference. Careful choice of
+    /// lifetime can enforce this.
     pub unsafe fn as_live<'s>(&'s self) -> string_view<'s> {
         string_view { raw: *self, phantom_data: core::marker::PhantomData }
     }
@@ -171,10 +171,9 @@ impl raw_string_view {
     ///
     /// # Safety
     ///
-    /// The data referred to to by `self` must be valid for the life of the program.
-    /// For example, it is not sound to call `as_static_live()` on a `string_view`
-    /// bound to a temporary, because the `string_view<'static>` would
-    /// outlive the temporary.
+    /// The data referred to by `self` must be valid, and the resulting `string_view` is subject to
+    /// the same rules as a reference constructed from a raw pointer: it must not be accessed after
+    /// the underlying memory becomes invalid or aliased by a unique reference.
     pub unsafe fn as_static_live(&'static self) -> string_view<'static> {
         self.as_live()
     }
