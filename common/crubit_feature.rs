@@ -24,6 +24,9 @@ flagset::flags! {
         /// operators.
         InferOperatorLifetimes,
 
+        /// Temporary migration flag, see b/436862191.
+        DoNotHardcodeStatusBridge,
+
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -42,6 +45,7 @@ impl CrubitFeature {
             Self::Wrapper => "wrapper",
             Self::InferOperatorLifetimes => "infer_operator_lifetimes",
             Self::UnsafeTypes => "unsafe_types",
+            Self::DoNotHardcodeStatusBridge => "do_not_hardcode_status_bridge",
             Self::Experimental => "experimental",
         }
     }
@@ -57,6 +61,9 @@ impl CrubitFeature {
                 "//features:infer_operator_lifetimes"
             }
             Self::UnsafeTypes => "//features:unsafe_types",
+            Self::DoNotHardcodeStatusBridge => {
+                "//features:do_not_hardcode_status_bridge"
+            }
             Self::Experimental => "//features:experimental",
         }
     }
@@ -70,6 +77,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"wrapper" => CrubitFeature::Wrapper.into(),
         b"infer_operator_lifetimes" => CrubitFeature::InferOperatorLifetimes.into(),
         b"unsafe_types" => CrubitFeature::UnsafeTypes.into(),
+        b"do_not_hardcode_status_bridge" => CrubitFeature::DoNotHardcodeStatusBridge.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         _ => return None,
     };
@@ -175,6 +183,7 @@ mod tests {
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::UnsafeTypes
+                | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::Experimental
         );
     }
@@ -201,6 +210,7 @@ mod tests {
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::UnsafeTypes
+                | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::Experimental
         );
     }
@@ -215,6 +225,7 @@ mod tests {
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::UnsafeTypes
+                | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::Experimental
         );
     }

@@ -484,8 +484,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       bridge_type = *std::move(builtin_bridge_type);
     }
 
-    // TODO(b/420696505): Remove this once StatusOr doesn't need to be
-    // hardcoded.
+    // TODO(b/436862191): Remove this once the migration is complete.
     if (!bridge_type.has_value()) {
       const clang::CXXRecordDecl* cxx_record_decl =
           specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
@@ -526,7 +525,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
   }
 
-  // TODO(b/420696505): Remove this once Status doesn't need to be hardcoded.
+  // TODO(b/436862191): Remove this once the migration is complete.
   if (!bridge_type.has_value()) {
     if (ictx_.GetOwningTarget(record_decl) ==
             BazelLabel("@abseil-cpp//absl/status:status") &&
