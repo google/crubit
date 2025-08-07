@@ -10,14 +10,14 @@ use core::ptr::null_mut;
 /// C++.
 #[allow(non_snake_case)]
 #[repr(C)]
-pub struct unique_ptr<T> {
+pub struct unique_ptr<T: Sized> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
     // 2. If `ptr` is not null, it is owned by this `unique_ptr`.
     ptr: *mut T,
 }
 
-impl<T> unique_ptr<T> {
+impl<T: Sized> unique_ptr<T> {
     /// Takes ownership of the provided raw pointer.
     ///
     /// # Safety
