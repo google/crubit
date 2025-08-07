@@ -332,8 +332,8 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
 
   clang::SourceManager& source_manager =
       func->getASTContext().getSourceManager();
-  clang::FileID file_id =
-      source_manager.getFileID(func->getSourceRange().getBegin());
+  clang::FileID file_id = source_manager.getFileID(
+      source_manager.getExpansionLoc(func->getSourceRange().getBegin()));
   bool elision_enabled = context.lifetime_elision_files.contains(file_id);
 
   LifetimeSymbolTable throw_away_symbol_table;

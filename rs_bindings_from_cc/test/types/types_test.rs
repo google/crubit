@@ -209,34 +209,34 @@ struct_field_type_is!(
     ConstStructRef => *const types_inferred_lifetimes::ExampleStruct,
 );
 
-// TODO(jeanpierreda): Why are these pointers?
+// TODO: b/436971180 - Why are these pointers?
 function_return_type_is!(types_inferred_lifetimes,
-    IntP => *mut i32,
-    ConstIntP => *const i32,
+    IntP => Option<&mut i32>,
+    ConstIntP => Option<&i32>,
     IntRef => *mut i32,
     ConstIntRef => *const i32,
-    VoidP => *mut c_void,
-    ConstVoidP => *const c_void,
+    VoidP => Option<&mut c_void>,
+    ConstVoidP => Option<&c_void>,
     VoidPP => *mut *mut c_void,
 
-    StructPtr => *mut types_inferred_lifetimes::ExampleStruct,
-    ConstStructPtr => *const types_inferred_lifetimes::ExampleStruct,
+    StructPtr => Option<&mut types_inferred_lifetimes::ExampleStruct>,
+    ConstStructPtr => Option<&types_inferred_lifetimes::ExampleStruct>,
     StructRef => *mut types_inferred_lifetimes::ExampleStruct,
     ConstStructRef => *const types_inferred_lifetimes::ExampleStruct,
 );
 
 function_parameter_type_is!(types_inferred_lifetimes,
-    IntP => &mut i32,
-    ConstIntP => &i32,
+    IntP => Option<&mut i32>,
+    ConstIntP => Option<&i32>,
     IntRef => &mut i32,
     ConstIntRef => &i32,
-    VoidP => &mut c_void,
-    ConstVoidP => &c_void,
-    // TODO(jeanpierreda): Why is this a pointer?
+    VoidP => Option<&mut c_void>,
+    ConstVoidP => Option<&c_void>,
+    // TODO: b/436971180 - Why is this a pointer?
     VoidPP => *mut *mut c_void,
 
-    StructPtr => &mut types_inferred_lifetimes::ExampleStruct,
-    ConstStructPtr => &types_inferred_lifetimes::ExampleStruct,
+    StructPtr => Option<&mut types_inferred_lifetimes::ExampleStruct>,
+    ConstStructPtr => Option<&types_inferred_lifetimes::ExampleStruct>,
     StructRef => &mut types_inferred_lifetimes::ExampleStruct,
     ConstStructRef => &types_inferred_lifetimes::ExampleStruct,
 );
