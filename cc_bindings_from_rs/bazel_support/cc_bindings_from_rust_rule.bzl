@@ -457,7 +457,24 @@ def _cc_bindings_from_rust_rule_impl(ctx):
                 cc_info = crate[CcInfo] if CcInfo in crate else None,
             ),
             pass_through_dep_variant_infos = depset(),
-            target_args = depset([]),
+            target_args = depset([
+                # Mark the headers as being owned by the (bindings for the) crate, so that
+                # rs_bindings_from_cc doesn't assume that they're owned by the current target or
+                # that they don't have bindings.
+                json.encode(
+                    {
+                        "t": str(crate.label),
+                        "h": [h.path for h in crate[CcBindingsFromRustInfo].headers],
+                        # Note: the feature set is a lie, crubit won't run on this target.
+                        # The "pun" we're relying on is that Crubit will think that
+                        # "everything will get bindings if I run rs_bindings_from_cc on it".
+                        # In fact, we _won't_ run rs_bindings_from_cc on it, but everything "will
+                        # get bindings" because it was originally defined in Rust to begin with.
+                        # TODO(jeanpierreda): Maybe define an assume_bindings/round_trip feature?
+                        "f": ["all"],
+                    },
+                ),
+            ]),
             namespaces = None,
         ),
     ]
