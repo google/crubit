@@ -438,30 +438,30 @@ pub fn format_ty_for_cc<'tcx>(
                 }
             }
 
-            let treat_ref_as_ptr: bool = (|| {
+            let treat_ref_as_ptr: bool = 'blk: {
                 // Parameter type references are only converted to C++ references if they are
                 // valid exclusively for the lifetime of the function.
                 //
                 // References with a more complex lifetime are converted to pointers.
                 // See <internal link> for more details on the motivation.
                 let TypeLocation::FnParam { is_self_param, elided_is_output } = location else {
-                    return false;
+                    break 'blk false;
                 };
                 // `self` parameters are always passed by-ref, never by pointer.
                 if is_self_param {
-                    return false;
+                    break 'blk false;
                 }
                 // Explicit lifetimes are always converted to pointers.
                 if !region_is_elided(tcx, *region) {
-                    return true;
+                    break 'blk true;
                 }
                 // Elided lifetimes are converted to pointers if the elided lifetime is captured by
                 // the output of the function.
                 if elided_is_output {
-                    return true;
+                    break 'blk true;
                 }
                 false
-            })();
+            };
 
             let ptr_or_ref_prefix = if treat_ref_as_ptr {
                 let lifetime = format_region_as_cc_lifetime(tcx, region);
