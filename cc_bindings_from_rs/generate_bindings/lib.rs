@@ -775,7 +775,7 @@ fn create_type_alias<'tcx>(
     let fully_qualified_name = database::FullyQualifiedName::new(db, def_id);
     let rs_type = format!("{}", fully_qualified_name.format_for_rs());
 
-    main_api_prereqs.includes.insert(db.support_header("internal/attribute_macros.h"));
+    main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
     if let Some(cc_deprecated_tag) = generate_deprecated_tag(db.tcx(), def_id) {
         attributes.push(cc_deprecated_tag);

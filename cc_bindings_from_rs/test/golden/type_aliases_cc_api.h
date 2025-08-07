@@ -11,7 +11,7 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
 
-#include "support/internal/attribute_macros.h"
+#include "support/annotations_internal.h"
 
 #include <cstdint>
 

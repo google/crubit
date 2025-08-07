@@ -45,7 +45,20 @@ cc_library(
         "//:__subpackages__",
     ],
     deps = [
-        "//support/internal:bindings_support",
+        ":annotations_internal",
+    ],
+)
+
+cc_library(
+    name = "annotations_internal",
+    hdrs = ["annotations_internal.h"],
+    visibility = [
+        # INTERNAL VISIBILITY ONLY.
+        # Use annotations.h instead.
+        "//:__subpackages__",
+    ],
+    deps = [
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 

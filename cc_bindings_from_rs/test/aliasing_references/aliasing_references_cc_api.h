@@ -10,7 +10,7 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ALIASING_REFERENCES_ALIASING_REFERENCES_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ALIASING_REFERENCES_ALIASING_REFERENCES_GOLDEN
 
-#include "support/internal/attribute_macros.h"
+#include "support/annotations_internal.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/slot.h"
 

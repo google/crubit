@@ -5,7 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_
 
-#include "support/internal/attribute_macros.h"
+#include "support/annotations_internal.h"
 
 // Marks a function or type as requiring Rust binding.
 //

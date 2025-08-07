@@ -12,10 +12,10 @@
 #include <cstdint>
 #include <optional>
 
+#include "crubit/support/annotations_internal.h"
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
-#include "support/internal/attribute_macros.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/rs_std/internal/is_utf8.h"
 #include "support/rs_std/slice_ref.h"

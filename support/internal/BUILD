@@ -6,7 +6,6 @@ cc_library(
     name = "bindings_support",
     srcs = ["check_no_mutable_aliasing.cc"],
     hdrs = [
-        "attribute_macros.h",
         "check_no_mutable_aliasing.h",
         "cxx20_backports.h",
         "lazy_init.h",

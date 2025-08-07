@@ -11,9 +11,9 @@
 #include <span>  // NOLINT(build/c++20); <internal link>
 #include <type_traits>
 
+#include "crubit/support/annotations_internal.h"
 #include "absl/base/attributes.h"
 #include "absl/types/span.h"
-#include "support/internal/attribute_macros.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 
 namespace rs_std {

@@ -8,8 +8,8 @@
 #include <cstdint>
 #include <optional>
 
+#include "crubit/support/annotations_internal.h"
 #include "absl/base/optimization.h"
-#include "support/internal/attribute_macros.h"
 
 namespace rs_std {
 

@@ -160,7 +160,7 @@ fn generate_cpp_enum<'tcx>(
     let enumeration_cc_name = &core.cc_short_name;
 
     let mut main_api_prereqs = CcPrerequisites::default();
-    main_api_prereqs.includes.insert(db.support_header("internal/attribute_macros.h"));
+    main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
 
     // Generate relevant attributes.
     let rs_type = core.rs_fully_qualified_name.to_string();
@@ -430,7 +430,7 @@ pub fn generate_adt<'tcx>(
         let keyword = &core.keyword;
 
         let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(db.support_header("internal/attribute_macros.h"));
+        prereqs.includes.insert(db.support_header("annotations_internal.h"));
         let public_functions_main_api = public_functions_main_api.into_tokens(&mut prereqs);
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
         prereqs.fwd_decls.remove(&core.def_id);

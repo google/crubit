@@ -10,7 +10,7 @@
 #ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN
 #define THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN
 
-#include "support/internal/attribute_macros.h"
+#include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
 #include <cstddef>
