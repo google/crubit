@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // struct_with_conflicting_fields_and_member_functions_rust_golden
-// Features: experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
+// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
 
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:do_not_bind
-// Features: experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
+// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
