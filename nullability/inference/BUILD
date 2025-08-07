@@ -57,6 +57,7 @@ cc_test(
         "@llvm-project//clang:testing",
         "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
+        "@llvm-project//llvm:TestingADT",
         "@llvm-project//llvm:TestingSupport",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",

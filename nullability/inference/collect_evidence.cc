@@ -68,6 +68,7 @@
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -101,21 +102,24 @@ struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
 };
 }  // namespace
 
-VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx) {
+VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
+    explicit Walker(USRCache &UC) : USRCache(UC) {}
     VirtualMethodIndex Index;
+    USRCache &USRCache;
 
     // Note: the correctness of this function relies on the pre-order traversal
     // order of `Walker` (which is the default for RecursiveASTVisitor), because
     // `Derived` must be visited *after* any methods it overrides, so that they
     // are in `OverriddenMap`.
-    llvm::DenseSet<const CXXMethodDecl *absl_nonnull> getOverridden(
-        const CXXMethodDecl *absl_nonnull Derived) {
-      llvm::DenseSet<const CXXMethodDecl *absl_nonnull> Overridden;
+    llvm::StringSet<> getOverridden(const CXXMethodDecl *absl_nonnull Derived) {
+      llvm::StringSet<> Overridden;
       for (const CXXMethodDecl *Base : Derived->overridden_methods()) {
         if (Base == nullptr) continue;
-        Overridden.insert(Base);
-        auto It = Index.Bases.find(Base);
+        std::string_view BaseUSR = getOrGenerateUSR(USRCache, *Base);
+        if (BaseUSR.empty()) continue;
+        Overridden.insert(BaseUSR);
+        auto It = Index.Bases.find(BaseUSR);
         if (It != Index.Bases.end()) {
           auto &BaseOverrides = It->second;
           Overridden.insert(BaseOverrides.begin(), BaseOverrides.end());
@@ -126,12 +130,28 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx) {
 
     bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
       if (MD && MD->isVirtual()) {
-        auto Overridden = getOverridden(MD);
+        llvm::StringSet<> Overridden = getOverridden(MD);
         if (Overridden.empty()) return true;
-        for (const auto *O : Overridden) {
-          Index.Overrides[O].insert(MD);
+
+        // Filter for Nullability relevance. Optimization note: we filter
+        // *after* calling getOverridden on the assumption that, for irrelevant
+        // methods, it is cheaper, on average, to call `getOverridden` than
+        // `countInferableSlots`. But, no data informed this choice.
+        int SlotCount = countInferableSlots(*MD);
+        // No slots -> irrelevant method.
+        if (SlotCount == 0) return true;
+
+        std::string_view USR = getOrGenerateUSR(USRCache, *MD);
+        if (USR.empty()) return true;
+
+        for (auto &O : Overridden) {
+          auto &S = Index.Overrides[O.getKey()];
+          // SlotCount of MD must equal that of any methods it overrides, so we
+          // can use it set their SlotCount.
+          S.SlotCount = SlotCount;
+          S.OverridingUSRs.insert(USR);
         }
-        Index.Bases[MD] = std::move(Overridden);
+        Index.Bases[USR] = std::move(Overridden);
       }
       return true;
     }
@@ -140,7 +160,7 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx) {
   // Don't use a LocFilter here to restrict to the main file or header, because
   // we want to propagate evidence from virtual methods to/from their overrides,
   // no matter where they are each defined.
-  Walker W;
+  Walker W(UC);
   W.TraverseAST(Ctx);
   return std::move(W.Index);
 }
@@ -197,37 +217,33 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
   }
 }
 
-template <typename Container>
-static void appendUSRs(const Container &C, USRCache &USRCache,
+static void appendUSRs(const llvm::StringSet<> &Strings,
                        std::vector<std::string_view> &USRs) {
-  for (const auto *absl_nonnull D : C) {
-    std::string_view USR = getOrGenerateUSR(USRCache, *D);
-    if (!USR.empty()) USRs.push_back(USR);
-  }
+  for (auto &Entry : Strings) USRs.push_back(Entry.getKey());
 }
 
 static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
-    const CXXMethodDecl *MD, Evidence::Kind Kind, bool ForReturnSlot,
-    const VirtualMethodIndex &Index, USRCache &USRCache) {
+    std::string_view USR, Evidence::Kind Kind, bool ForReturnSlot,
+    const VirtualMethodIndex &Index) {
   VirtualMethodEvidenceFlowDirection FlowDirection =
       getFlowDirection(Kind, ForReturnSlot);
   std::vector<std::string_view> Results;
   switch (FlowDirection) {
     case VirtualMethodEvidenceFlowDirection::kFromBaseToDerived:
-      if (auto It = Index.Overrides.find(MD); It != Index.Overrides.end())
-        appendUSRs(It->second, USRCache, Results);
+      if (auto It = Index.Overrides.find(USR); It != Index.Overrides.end())
+        appendUSRs(It->second.OverridingUSRs, Results);
       return Results;
     case VirtualMethodEvidenceFlowDirection::kFromDerivedToBase:
-      if (auto It = Index.Bases.find(MD); It != Index.Bases.end())
-        appendUSRs(It->second, USRCache, Results);
+      if (auto It = Index.Bases.find(USR); It != Index.Bases.end())
+        appendUSRs(It->second, Results);
       return Results;
     case VirtualMethodEvidenceFlowDirection::kBoth:
       // Simply concatenate the two sets -- given the acyclic nature of the AST,
       // they must be exclusive.
-      if (auto It = Index.Bases.find(MD); It != Index.Bases.end())
-        appendUSRs(It->second, USRCache, Results);
-      if (auto It = Index.Overrides.find(MD); It != Index.Overrides.end())
-        appendUSRs(It->second, USRCache, Results);
+      if (auto It = Index.Bases.find(USR); It != Index.Bases.end())
+        appendUSRs(It->second, Results);
+      if (auto It = Index.Overrides.find(USR); It != Index.Overrides.end())
+        appendUSRs(It->second.OverridingUSRs, Results);
       return Results;
   }
 }
@@ -235,7 +251,8 @@ static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
 llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     llvm::unique_function<void(const Evidence &) const> Emit,
     USRCache &USRCache, ASTContext &Ctx) {
-  return evidenceEmitter(std::move(Emit), USRCache, getVirtualMethodIndex(Ctx));
+  return evidenceEmitter(std::move(Emit), USRCache,
+                         getVirtualMethodIndex(Ctx, USRCache));
 }
 
 // Helper functions which do not depend on the AST. We split out the singleton
@@ -294,8 +311,8 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitter(
     // a parameter type.
     if (auto *MD = dyn_cast<CXXMethodDecl>(&Target); MD && MD->isVirtual()) {
       std::vector<std::string_view> Targets =
-          getAdditionalTargetsForVirtualMethod(MD, Kind, S == SLOT_RETURN_TYPE,
-                                               Index, USRCache);
+          getAdditionalTargetsForVirtualMethod(USR, Kind, S == SLOT_RETURN_TYPE,
+                                               Index);
       Targets.push_back(USR);
       emitEvidence(Targets, S, Kind, LocAsString, Emit);
     } else {

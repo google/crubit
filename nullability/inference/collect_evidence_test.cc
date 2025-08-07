@@ -7,9 +7,9 @@
 #include <cassert>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
-#include "gmock/gmock.h"
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
@@ -30,22 +30,22 @@
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Testing/ADT/StringMapEntry.h"
 #include "llvm/Testing/Support/Error.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
-using ::clang::ast_matchers::anything;
 using ::clang::ast_matchers::asString;
 using ::clang::ast_matchers::booleanType;
 using ::clang::ast_matchers::cxxConstructorDecl;
 using ::clang::ast_matchers::cxxMethodDecl;
 using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasAncestor;
-using ::clang::ast_matchers::hasBody;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::hasParameter;
 using ::clang::ast_matchers::hasTemplateArgument;
@@ -61,6 +61,7 @@ using ::clang::ast_matchers::refersToType;
 using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::unless;
 using ::clang::ast_matchers::varDecl;
+using ::llvm::IsStringMapEntry;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Contains;
@@ -69,7 +70,6 @@ using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::IsSupersetOf;
 using ::testing::Not;
-using ::testing::Pair;
 using ::testing::ResultOf;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
@@ -204,14 +204,27 @@ auto collectFromTargetFuncDecl(llvm::StringRef Source) {
   return collectFromDecl(Source, "target");
 }
 
+MATCHER_P2(methodSummary, SlotCount, USRs, "") {
+  return arg.SlotCount == SlotCount && arg.OverridingUSRs == USRs;
+}
+
 TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
+  using USRSet = llvm::StringSet<>;
+
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual int* foo() { return nullptr; }
+
+      // A Nullability-irrelevant method - verify omitted.
+      virtual int irrelevant() { return 4; }
+
+      // Method without overrides -- verify omitted.
+      virtual int* noOverrides() { return nullptr; }
     };
 
     struct Derived : public Base {
       int* foo() override;
+      int irrelevant() override { return 5; }
     };
 
     struct DerivedDerived : public Derived {
@@ -226,17 +239,25 @@ TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
       dataflow::test::findValueDecl(AST.context(), "Derived::foo");
   const Decl* DDFoo =
       dataflow::test::findValueDecl(AST.context(), "DerivedDerived::foo");
-  auto Index = getVirtualMethodIndex(AST.context());
 
-  EXPECT_THAT(
-      Index.Bases,
-      UnorderedElementsAre(Pair(DFoo, UnorderedElementsAre(BaseFoo)),
-                           Pair(DDFoo, UnorderedElementsAre(DFoo, BaseFoo))));
+  USRCache UC;
+  std::string_view BaseFooUSR = getOrGenerateUSR(UC, *BaseFoo);
+  std::string_view DFooUSR = getOrGenerateUSR(UC, *DFoo);
+  std::string_view DDFooUSR = getOrGenerateUSR(UC, *DDFoo);
+
+  auto Index = getVirtualMethodIndex(AST.context(), UC);
+
+  EXPECT_THAT(Index.Bases,
+              UnorderedElementsAre(
+                  IsStringMapEntry(DFooUSR, USRSet({BaseFooUSR})),
+                  IsStringMapEntry(DDFooUSR, USRSet({DFooUSR, BaseFooUSR}))));
 
   EXPECT_THAT(
       Index.Overrides,
-      UnorderedElementsAre(Pair(BaseFoo, UnorderedElementsAre(DFoo, DDFoo)),
-                           Pair(DFoo, UnorderedElementsAre(DDFoo))));
+      UnorderedElementsAre(
+          IsStringMapEntry(BaseFooUSR,
+                           methodSummary(1, USRSet({DFooUSR, DDFooUSR}))),
+          IsStringMapEntry(DFooUSR, methodSummary(1, USRSet({DDFooUSR})))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, Location) {
