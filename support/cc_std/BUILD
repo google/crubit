@@ -49,7 +49,8 @@ LIBCXX_HEADERS = [
     "cinttypes",
     "climits",
     "cmath",
-    "condition_variable",
+    # TODO(b/437061002): Re-enable once the bug is fixed.
+    # "condition_variable",
     "coroutine",
     "csetjmp",
     "csignal",
