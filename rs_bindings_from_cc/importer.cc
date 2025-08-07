@@ -799,8 +799,8 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   clang::SourceManager& source_manager = ctx_.getSourceManager();
   auto source_location = decl->getLocation();
 
-  // If the header this decl comes from is not associated with a target we
-  // consider it a textual header. In that case we go up the include stack
+  // If the header this decl comes from is not associated with a target,
+  // and appears to be a textual header, then we go up the include stack
   // until we find a header that has an owning target.
 
   while (source_location.isValid()) {
@@ -820,6 +820,12 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     if (auto target = invocation_.header_target(HeaderName(filename->str()))) {
       return *target;
     }
+
+    if (!filename->ends_with(".inc")) {
+      // Assumed not to be a textual header.
+      break;
+    }
+
     source_location = source_manager.getIncludeLoc(id);
   }
 
