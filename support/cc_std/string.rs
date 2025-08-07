@@ -71,6 +71,12 @@ impl string {
     pub fn as_mut_void_ptr(&mut self) -> *mut c_void {
         self.owned_cpp_string.as_ptr()
     }
+
+    /// Returns an object that implements `Display` for safely printing paths that may contain
+    /// non-Unicode data. This may perform lossy conversion, depending on the underlying data.
+    pub fn display(&self) -> Display {
+        Display(self.as_slice())
+    }
 }
 
 impl PartialEq for string {
@@ -197,7 +203,7 @@ impl core::fmt::Debug for string {
 
 impl core::fmt::Display for string {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        String::from_utf8_lossy(self.as_slice()).fmt(f)
+        self.display().fmt(f)
     }
 }
 
@@ -220,6 +226,26 @@ impl<'a, Crate> forward_declare::CppCast<*mut forward_declare::Incomplete<String
 {
     fn cpp_cast(self) -> *mut forward_declare::Incomplete<StringSymbol, Crate> {
         self.owned_cpp_string.as_ptr() as *mut _
+    }
+}
+
+/// Helper struct for safely printing C++ string data with `format!` and `{}`.
+///
+/// A string from C++ might contain non-Unicode data. This struct implements the Display trait in a
+/// way that mitigates that. It is created by the display method on `string`. This may perform lossy
+/// conversion, depending on the underlying data.
+pub struct Display<'a>(&'a [u8]);
+
+impl<'a> core::fmt::Display for Display<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use core::fmt::Write;
+        for chunk in self.0.utf8_chunks() {
+            f.write_str(chunk.valid())?;
+            if !chunk.invalid().is_empty() {
+                f.write_char(core::char::REPLACEMENT_CHARACTER)?;
+            }
+        }
+        Ok(())
     }
 }
 

@@ -59,14 +59,17 @@ fn test_as_ref() {
 }
 
 #[gtest]
-fn test_display() {
+fn test_display_success() {
     let utf8_str: cc_std::std::string = "array".into();
-    let utf8_str_formatted = format!("{}", utf8_str);
+    let utf8_str_formatted = format!("{}", utf8_str.display());
     expect_that!(utf8_str_formatted, eq("array"));
+}
 
-    let non_utf8_str: &[u8] = b"Hello \xF0World";
+#[gtest]
+fn test_display_error() {
+    let non_utf8_str: &[u8] = b"Hello \xF0\xF0World";
     let non_utf8_str_formatted = cc_std::std::string::from(non_utf8_str);
-    expect_eq!(format!("{}", non_utf8_str_formatted).as_bytes(), b"Hello \xEF\xBF\xBDWorld");
+    expect_that!(format!("{}", non_utf8_str_formatted.display()), eq("Hello ��World"));
 }
 
 #[gtest]
