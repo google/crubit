@@ -100,6 +100,7 @@ cc_library(
         "//nullability:type_nullability",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
     ],
 )
 

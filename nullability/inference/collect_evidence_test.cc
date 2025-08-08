@@ -860,8 +860,7 @@ TEST(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <utility>
 
-    template <typename T>
-    void universalRef(T&& p);
+    void universalRef(int*&& p);
 
     void target(int* q) {
       if (!q) {
@@ -878,9 +877,9 @@ TEST(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
                   // through the original variable can't be interleaved. So, we
                   // treat them like non-reference arguments.
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                           functionNamed("universalRef<#*I>")),
+                           functionNamed("universalRef")),
                   evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                           functionNamed("universalRef<#*I>"))));
+                           functionNamed("universalRef"))));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, NoEvidenceForFullyAnnotatedFunctions) {

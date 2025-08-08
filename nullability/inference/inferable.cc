@@ -4,16 +4,120 @@
 
 #include "nullability/inference/inferable.h"
 
+#include <cassert>
+
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"  // IWYU pragma: keep, to work around forward decl usage in clang
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeVisitor.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
 
+static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
+    QualType T) {
+  class Walker : public TypeVisitor<Walker, bool> {
+   public:
+    bool VisitType(const Type* T) {
+      // Walk through sugar other than the types handled specifically below.
+      if (const Type* Next =
+              T->getLocallyUnqualifiedSingleStepDesugaredType().getTypePtr();
+          Next != T) {
+        return Visit(Next);
+      }
+      // But if there's no more sugar, we're done and this is not a supported
+      // pointer type. We don't generally expect this to happen if
+      // `isSupportedPointerType` already returned true for the starting type.
+      llvm::errs()
+          << "If `isSupportedPointerType` returned true for the starting type, "
+             "we should have seen a pointer type and never reached this point. "
+             "It is a waste to use this walker if the starting type is not a "
+             "supported pointer type.\n";
+      assert(false);
+      return false;
+    }
+    bool VisitPointerType(const PointerType* T) { return true; }
+    bool VisitRecordType(const RecordType* T) {
+      bool IsSupported = isSupportedSmartPointerType(QualType(T, 0));
+      if (!IsSupported) {
+        llvm::errs() << "If `isSupportedPointerType` returned true for the "
+                        "starting type, then `IsSupported` should also be "
+                        "true. It is a waste to use this walker if the "
+                        "starting type is not a supported pointer type.\n";
+        assert(false);
+      }
+      return IsSupported;
+    }
+    bool VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* T) {
+      // If the replaced template parameter is not a parameter of a template
+      // that we've seen while walking the type, then it is a template parameter
+      // of the current context and the type is only a pointer by way of the
+      // replacement type. We no longer consider it to be a supported pointer
+      // type.
+      //
+      // This avoids inferring the nullability for declarations in a template
+      // that may only sometimes be pointers, e.g. a field holding the
+      // underlying data in a generic wrapper type, for which we will never
+      // write an annotation in the template and for which the nullability
+      // should instead be specified as part of the template argument.
+      if (!TemplateDeclsSeen.contains(T->getAssociatedDecl())) {
+        if (const auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(
+                T->getAssociatedDecl());
+            !CTSD ||
+            !TemplateDeclsSeen.contains(CTSD->getSpecializedTemplate())) {
+          return false;
+        }
+      }
+
+      // If the template parameter being replaced is a parameter of a template
+      // decl referenced in the type being walked, we allow for the pointer type
+      // to be inside the replacement type.
+      // This allows for the template parameters of type aliases and name
+      // specifiers to make the type a pointer and still consider the type
+      // inferable.
+      return Visit(T->getReplacementType().getTypePtr());
+    }
+    bool VisitTemplateSpecializationType(const TemplateSpecializationType* T) {
+      if (T->isTypeAlias()) {
+        TemplateDeclsSeen.insert(T->getTemplateName().getAsTemplateDecl());
+        return Visit(T->getAliasedType().getTypePtr());
+      }
+      bool IsSupported = isSupportedSmartPointerType(QualType(T, 0));
+      if (!IsSupported) {
+        llvm::errs() << "If `isSupportedPointerType` returned true for the "
+                        "starting type, then `IsSupported` should also be "
+                        "true. It is a waste to use this walker if the "
+                        "starting type is not a supported pointer type.\n";
+        assert(false);
+      }
+      return IsSupported;
+    }
+    bool VisitElaboratedType(const ElaboratedType* T) {
+      for (auto* NNS = T->getQualifier(); NNS; NNS = NNS->getPrefix()) {
+        if (const auto* TST = dyn_cast_or_null<TemplateSpecializationType>(
+                NNS->getAsType())) {
+          TemplateDeclsSeen.insert(TST->getTemplateName().getAsTemplateDecl());
+        }
+      }
+      return Visit(T->desugar().getTypePtr());
+    }
+
+   private:
+    llvm::DenseSet<const Decl*> TemplateDeclsSeen;
+  };
+
+  return Walker().Visit(T.getTypePtr());
+}
+
 bool hasInferable(QualType T) {
-  return isSupportedPointerType(T.getNonReferenceType());
+  QualType NonReferenceType = T.getNonReferenceType();
+  return isSupportedPointerType(NonReferenceType) &&
+         isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
+             NonReferenceType);
 }
 
 int countInferableSlots(const Decl& D) {
@@ -59,14 +163,14 @@ bool isInferenceTarget(const Decl& D) {
         // Implicit functions cannot be annotated.
         !Func->isImplicit() &&
         // Do the most expensive check last.
-        countPointersInType(Func->getType()) > 0;
+        countInferableSlots(*Func) > 0;
   }
   if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
     return
         // See comments above regarding templates.
         !Field->getDeclContext()->isDependentContext() &&
         // Do the most expensive check last.
-        countPointersInType(Field->getType()) > 0;
+        countInferableSlots(*Field) > 0;
   }
   if (const auto* Var = dyn_cast<VarDecl>(&D)) {
     // Include static member variables, global variables, and local variables,
@@ -83,7 +187,7 @@ bool isInferenceTarget(const Decl& D) {
         // template instantiations are not excluded.
         !Var->getDeclContext()->isDependentContext() && !Var->isTemplated() &&
         // Do the most expensive check last.
-        countPointersInType(Var->getType()) > 0;
+        countInferableSlots(*Var) > 0;
   }
   return false;
 }

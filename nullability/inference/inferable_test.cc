@@ -61,6 +61,8 @@ constexpr llvm::StringRef SmartPointerHeader = R"cc(
   struct _Nullable custom_smart_ptr {
     using pointer = T*;
   };
+
+  class _Nullable custom_smart_int_ptr { using pointer = int*; };
 )cc";
 
 TEST(IsInferenceTargetTest, GlobalVariables) {
@@ -68,6 +70,7 @@ TEST(IsInferenceTargetTest, GlobalVariables) {
                 int* Pointer;
                 std::unique_ptr<int> StdSmartPointer;
                 custom_smart_ptr<int> CustomSmartPointer;
+                custom_smart_int_ptr CustomSmartIntPointer;
                 int NotPointer;
               )cc")
                   .str());
@@ -76,6 +79,7 @@ TEST(IsInferenceTargetTest, GlobalVariables) {
   EXPECT_TRUE(isInferenceTarget(lookup("Pointer", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("StdSmartPointer", Ctx)));
   EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartPointer", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartIntPointer", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", Ctx)));
 }
 
@@ -212,14 +216,23 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
       Nested NestedStruct;
     };
 
-    ClassTemplate<int> I;
-    int A = I.NonPtrField;
-    int* B = I.PtrField;
-    int* C = I.StaticField;
-    int D = I.method();
-    int* E = I.methodWithPtr();
-    int* F = I.NestedStruct.NestedStructTwo.NestedStructPtrField;
-    bool* G = I.NestedStruct.NestedStructTwo.nestedStructMethod();
+    ClassTemplate<int> IntClass;
+    int IntA = IntClass.NonPtrField;
+    int* IntB = IntClass.PtrField;
+    int* IntC = IntClass.StaticField;
+    int IntD = IntClass.method();
+    int* IntE = IntClass.methodWithPtr();
+    int* IntF = IntClass.NestedStruct.NestedStructTwo.NestedStructPtrField;
+    bool* IntG = IntClass.NestedStruct.NestedStructTwo.nestedStructMethod();
+
+    ClassTemplate<int*> IntStarClass;
+    int* IntStarA = IntStarClass.NonPtrField;
+    int** IntStarB = IntStarClass.PtrField;
+    int** IntStarC = IntStarClass.StaticField;
+    int* IntStarD = IntStarClass.method();
+    int** IntStarE = IntStarClass.methodWithPtr();
+    int** IntStarF = IntStarClass.NestedStruct.NestedStructTwo.NestedStructPtrField;
+    bool* IntStarG = IntStarClass.NestedStruct.NestedStructTwo.nestedStructMethod();
   )cc");
 
   auto &Ctx = AST.context();
@@ -247,32 +260,71 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
       lookup("nestedStructMethod", Ctx, NestedTwoInClassTemplate)));
 
   // Class template instantiations are inference targets, as are fields
-  // and functions inside, if they contain pointers.
+  // and functions inside, if they have inferable types, i.e. they are pointers
+  // and the pointer-ness is specified by the template.
+  // For the int template argument:
   EXPECT_FALSE(isInferenceTarget(
-      *lookup<VarDecl>("I", Ctx).getType()->getAsRecordDecl()));
+      *lookup<VarDecl>("IntClass", Ctx).getType()->getAsRecordDecl()));
   EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("A", Ctx).getInit()->IgnoreImplicit())
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntA", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
   EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("B", Ctx).getInit()->IgnoreImplicit())
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntB", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
   EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("C", Ctx).getInit()->IgnoreImplicit())
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntC", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
   EXPECT_FALSE(isInferenceTarget(
       *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("D", Ctx).getInit()->IgnoreImplicit())
+           lookup<VarDecl>("IntD", Ctx).getInit()->IgnoreImplicit())
            ->getMethodDecl()));
   EXPECT_TRUE(isInferenceTarget(
       *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("E", Ctx).getInit()->IgnoreImplicit())
+           lookup<VarDecl>("IntE", Ctx).getInit()->IgnoreImplicit())
            ->getMethodDecl()));
   EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("F", Ctx).getInit()->IgnoreImplicit())
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntF", Ctx).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
   EXPECT_TRUE(isInferenceTarget(
       *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("G", Ctx).getInit()->IgnoreImplicit())
+           lookup<VarDecl>("IntG", Ctx).getInit()->IgnoreImplicit())
+           ->getMethodDecl()));
+
+  // For the int* template argument, notably, we get the same results, even
+  // though the canonical types of more fields are pointers:
+  EXPECT_FALSE(isInferenceTarget(
+      *lookup<VarDecl>("IntStarClass", Ctx).getType()->getAsRecordDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntStarA", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntStarB", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntStarC", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<CXXMemberCallExpr>(
+           lookup<VarDecl>("IntStarD", Ctx).getInit()->IgnoreImplicit())
+           ->getMethodDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<CXXMemberCallExpr>(
+           lookup<VarDecl>("IntStarE", Ctx).getInit()->IgnoreImplicit())
+           ->getMethodDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("IntStarF", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<CXXMemberCallExpr>(
+           lookup<VarDecl>("IntStarG", Ctx).getInit()->IgnoreImplicit())
            ->getMethodDecl()));
 }
 
@@ -324,6 +376,152 @@ TEST(InferableTest, CountInferableSlots) {
   EXPECT_EQ(0, countInferableSlots(lookup("h1", Ctx)));
   EXPECT_EQ(0, countInferableSlots(lookup("h2", Ctx)));
   EXPECT_EQ(0, countInferableSlots(lookup("h3", Ctx)));
+}
+
+TEST(InferableTest, InnerPointersNotInferable) {
+  TestAST AST(R"cc(
+    int*** ThreePointersOneInferable;
+  )cc");
+  auto &Ctx = AST.context();
+  EXPECT_EQ(1, countInferableSlots(lookup("ThreePointersOneInferable", Ctx)));
+}
+
+TEST(InferableTest, TemplateArgumentPointersNotInferable) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct S {};
+
+    S<int*> NotInferable;
+  )cc");
+  auto &Ctx = AST.context();
+  EXPECT_EQ(0, countInferableSlots(lookup("NotInferable", Ctx)));
+  EXPECT_FALSE(isInferenceTarget(lookup("NotInferable", Ctx)));
+}
+
+TEST(InferableTest, TemplateInstantiationOnlyArgWithStarIsInferable) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                template <typename T>
+                struct S {
+                  T* Inferable;
+                  T NotInferable;
+                  using U = T;
+                  U NotInferableThroughAlias;
+                };
+
+                S<int*> AnS;
+                int** FromTStarField = AnS.Inferable;
+                int* FromTField = AnS.NotInferable;
+                int* FromTFieldAlias = AnS.NotInferableThroughAlias;
+
+                S<std::unique_ptr<int>> AnSSmart;
+                std::unique_ptr<int>* FromTStarFieldSmart = AnSSmart.Inferable;
+                std::unique_ptr<int>& FromTFieldSmart = AnSSmart.NotInferable;
+                std::unique_ptr<int>& FromTFieldAliasSmart = AnSSmart.NotInferableThroughAlias;
+              )cc")
+                  .str());
+  auto &Ctx = AST.context();
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromTStarField", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromTField", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromTFieldAlias", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("FromTStarFieldSmart", Ctx)
+                            .getInit()
+                            ->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromTFieldSmart", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("FromTFieldAliasSmart", Ctx)
+                            .getInit()
+                            ->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(InferableTest, TypeAliasTemplate) {
+  TestAST AST(R"cc(
+    template <typename T>
+    using PtrAlias = T*;
+    template <typename T>
+    using Alias = T;
+
+    template <typename U>
+    struct S {
+      Alias<U*> inferable;
+      Alias<U> not_inferable;
+      PtrAlias<U> inferable_pointer_in_alias;
+    };
+
+    S<int*> AnS;
+    int** FromInferable = AnS.inferable;
+    int* FromNotInferable = AnS.not_inferable;
+    int** FromInferablePointerInAlias = AnS.inferable_pointer_in_alias;
+  )cc");
+  auto &Ctx = AST.context();
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromInferable", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromNotInferable", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("FromInferablePointerInAlias", Ctx)
+                            .getInit()
+                            ->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(InferableTest, NestedTemplates) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct S {
+      template <typename U>
+      struct Nested {
+        U* inferable_u;
+        U not_inferable_u;
+        T* inferable_t;
+        T not_inferable_t;
+      };
+      Nested<bool*> ANested;
+    };
+
+    S<int*> AnS;
+    bool** FromInferableU = AnS.ANested.inferable_u;
+    bool* FromNotInferableU = AnS.ANested.not_inferable_u;
+    int** FromInferableT = AnS.ANested.inferable_t;
+    int* FromNotInferableT = AnS.ANested.not_inferable_t;
+  )cc");
+  auto &Ctx = AST.context();
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromInferableU", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("FromNotInferableU", Ctx)
+                            .getInit()
+                            ->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("FromInferableT", Ctx).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(lookup<VarDecl>("FromNotInferableT", Ctx)
+                            .getInit()
+                            ->IgnoreImplicit())
+           ->getMemberDecl()));
 }
 
 }  // namespace
