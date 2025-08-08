@@ -7,6 +7,7 @@
     *   [Overview](/docs/types/)
     *   [Primitive Types](/docs/types/primitive.md)
     *   [Pointer Types](/docs/types/pointer.md)
+    *   [`absl::Status`](/docs/types/absl_status.md)
     *   <hr>
     *   [Visibility](/docs/types/visibility.md)
 
