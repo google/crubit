@@ -45,7 +45,7 @@ cc_library(
         "//:__subpackages__",
     ],
     deps = [
-        ":annotations_internal",
+        "//support/public:annotations_internal",
     ],
 )
 
