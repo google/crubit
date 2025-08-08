@@ -8,6 +8,12 @@ use core::cell::Cell;
 use core::ffi::c_void;
 use googletest::prelude::*;
 
+trait ParameterIs<P> {}
+
+impl<P, R> ParameterIs<P> for unsafe fn(P) -> R {}
+
+fn test_parameter_is<P, F: ParameterIs<P>>(_: F) {}
+
 macro_rules! struct_field_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {
     $(
@@ -36,8 +42,9 @@ macro_rules! function_parameter_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {
     $(
     const _ : () = {
-      unsafe fn test_param_type(rs_value: $rs_type) {
-        $mod::$cc_name::Function(rs_value);
+      unsafe fn test_param_type() {
+        let f: unsafe fn(_) -> _ = $mod::$cc_name::Function;
+        test_parameter_is::<$rs_type, _>(f);
       }
     };
   )*
