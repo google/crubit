@@ -39,6 +39,22 @@ crubit_rust_test(
 )
 
 crubit_test_cc_library(
+    name = "rename",
+    hdrs = ["rename.h"],
+    deps = ["//support:annotations"],
+)
+
+crubit_rust_test(
+    name = "rename_test",
+    srcs = ["rename_test.rs"],
+    cc_deps = [":rename"],
+    deps = [
+        "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
     name = "operators",
     srcs = ["operators.cc"],
     hdrs = ["operators.h"],

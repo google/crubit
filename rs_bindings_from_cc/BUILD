@@ -180,6 +180,8 @@ cc_library(
     deps = [
         ":cc_ir",
         "//common:annotation_reader",
+        "@abseil-cpp//absl/base:no_destructor",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",

@@ -1427,7 +1427,8 @@ std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {
 
 absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
-  std::optional<Identifier> crubit_rust_name = CrubitRustName(*named_decl);
+  std::optional<UnqualifiedIdentifier> crubit_rust_name =
+      CrubitRustName(*named_decl);
   switch (named_decl->getDeclName().getNameKind()) {
     case clang::DeclarationName::Identifier: {
       auto name = std::string(named_decl->getName());

@@ -69,7 +69,7 @@
 // For example, this C++ header:
 //
 // ```c++
-// CRUBIT_RUST_NAME(foo)
+// CRUBIT_RUST_NAME("foo")
 // int bar() { return 42; }
 // ```
 //
@@ -77,6 +77,23 @@
 //
 // ```rust
 // pub fn foo() -> i32;  // returns 42
+// ```
+//
+// There's a special case for operators: when an operator symbol is given, for
+// example `CRUBIT_RUST_NAME("!")`, the function is mapped to the corresponding
+// Rust operator trait, in this case `core::ops::Not`.
+//
+// ```c++
+// CRUBIT_RUST_NAME("!")
+// MyInt operator~(MyInt x);
+// ```
+//
+// ```rust
+// impl core::ops::Not for MyInt {
+//   type Output = Self;
+//
+//   fn not(self) -> Self::Output { /* calls operator~ */ }
+// }
 // ```
 #define CRUBIT_RUST_NAME(crubit_rust_name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_rust_name", crubit_rust_name)

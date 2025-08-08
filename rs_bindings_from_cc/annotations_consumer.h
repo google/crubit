@@ -16,9 +16,9 @@
 
 namespace crubit {
 
-// Returns the `crubit_rust_name` annotation as an identifier for the given
-// declaration, if present.
-std::optional<Identifier> CrubitRustName(const clang::Decl& decl);
+// Returns the `crubit_rust_name` annotation as an unqualified identifier for
+// the given declaration, if present.
+std::optional<UnqualifiedIdentifier> CrubitRustName(const clang::Decl& decl);
 
 }  // namespace crubit
 
