@@ -32,6 +32,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]")
   // To mirror slices in Rust, the data pointer is not null.
   constexpr SliceRef() noexcept : dangling_ptr_(alignof(T)), size_(0) {}
 
+  // Style waiver for implicit conversions granted in cl/662479273.
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(absl::Span<T> span) noexcept
       // Store a dangling pointer assuming `span` is empty-- we have to

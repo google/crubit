@@ -947,6 +947,8 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   // Spelling location: where the macro is originally defined.
   // Expansion location: where the macro is expanded.
   const clang::SourceLocation& spelling_loc = sm.getSpellingLoc(loc);
+  // TODO(b/261185414): The path format should probably come from a command
+  // line argument.
   // TODO(b/261185414): Consider linking to the symbol instead of to the line
   // number to avoid wrong links while generated files have not caught up.
   constexpr absl::string_view kGeneratedFrom = "Generated from";

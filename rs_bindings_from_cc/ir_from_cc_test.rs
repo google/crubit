@@ -869,6 +869,7 @@ fn test_doc_comment() -> Result<()> {
 fn test_doc_comment_vs_tooling_directives() -> Result<()> {
     let ir = ir_from_cc(concat!(
         " // Doc comment for `f1`\n",
+        " // NOLINTNEXTLINE(directive-name)\n",
         r#" void f1();
 
             // Doc comment for `f2`
@@ -883,6 +884,7 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
 
             // No closing paren still suppresses
         "#,
+        " // NOLINTNEXTLINE(directive-name]\n",
         r#" void f5();
 
             // Multiple, comma-separated directives listed in parens

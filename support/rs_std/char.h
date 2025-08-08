@@ -13,6 +13,10 @@
 
 namespace rs_std {
 
+// The names like `from_u32` and `from_u32_unchecked` mimic Rust names and
+// therefore don't need to be named the same as ordinary C++ names. See:
+// https://google.github.io/styleguide/cppguide.html#Exceptions_to_Naming_Rules
+
 // `rs_std::char_` is a C++ representation of the `char` type from Rust.
 // `rust_builtin_type_abi_assumptions.md` documents the ABI compatibility of
 // these types.
