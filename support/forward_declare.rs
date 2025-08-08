@@ -604,3 +604,26 @@ where
         unsafe { Vec::from_raw_parts(p as *mut &'a U, len, capacity) }
     }
 }
+
+/// Like `CppCast<T>`, but allows for lifetime transmutes.
+///
+/// `UnsafeCppCast` can be used to cast from, for example, a C++ type that has no lifetime
+/// information, to an idiomatic Rust type that does contain lifetime information.
+///
+/// # Safety
+///
+/// `UnsafeCppCast` is unsafe, because it allows to cast from a C++
+/// type with unclear lifetime provenance into a Rust type.
+/// TODO(jeanpierreda): create more & blanket impls for this.
+pub unsafe trait UnsafeCppCast<'a, T>
+where
+    Self: 'a,
+    T: 'a + Sized,
+{
+    /// Cast between types.
+    ///
+    /// # Safety
+    ///
+    /// `self` must be alive for at least 'a.
+    unsafe fn unsafe_cpp_cast(self) -> T;
+}
