@@ -18,6 +18,7 @@ load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 rust_library(
     name = "leaf_rs_lib",
     srcs = ["leaf_rs_lib.rs"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_golden_test(
@@ -35,6 +36,7 @@ cc_bindings_from_rust(
 crubit_test_cc_library(
     name = "middle_cc_lib",
     hdrs = ["middle_cc_lib.h"],
+    aspect_hints = ["//features:supported"],
     deps = [
         ":leaf_rs_lib_cc_api",
     ],
@@ -65,11 +67,13 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "leaf_cc_lib",
     hdrs = ["leaf_cc_lib.h"],
+    aspect_hints = ["//features:supported"],
 )
 
 rust_library(
     name = "middle_rs_lib",
     srcs = ["middle_rs_lib.rs"],
+    aspect_hints = ["//features:supported"],
     cc_deps = [":leaf_cc_lib"],
 )
 

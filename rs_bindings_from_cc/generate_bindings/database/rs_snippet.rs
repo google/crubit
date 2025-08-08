@@ -891,9 +891,7 @@ impl RsTypeKind {
                         )
                     }
                 }
-                RsTypeKind::TypeMapOverride(_) => {
-                    require_feature(CrubitFeature::Experimental, None)
-                }
+                RsTypeKind::TypeMapOverride(_) => require_feature(CrubitFeature::Supported, None),
             }
         }
         (missing_features, reasons.into_iter().join(", "))
