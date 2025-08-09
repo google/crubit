@@ -128,7 +128,7 @@ pub fn generate_thunk_decl<'tcx>(
 fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
-    BridgedType { conversion_info, .. }: &BridgedType,
+    bridged_type: &BridgedType,
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
@@ -141,20 +141,22 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
             ::core::mem::MaybeUninit::<#rs_type>::uninit();
     };
 
-    let convert = match conversion_info {
-        BridgedTypeConversionInfo::PointerLikeTransmute => quote! {
-            #temp_name.write(::core::mem::transmute(#local_name));
-        },
-        BridgedTypeConversionInfo::ExternCFuncConverters { cpp_to_rust_converter, .. } => {
-            let cpp_to_rust_converter_ident = add_extern_c_decl(
-                extern_c_decls,
-                ExternCDeclKind::CppToRustConverter,
-                *cpp_to_rust_converter,
-            );
-            quote! {
-                #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
+    let convert = match bridged_type {
+        BridgedType::Legacy { conversion_info, .. } => match conversion_info {
+            BridgedTypeConversionInfo::PointerLikeTransmute => quote! {
+                #temp_name.write(::core::mem::transmute(#local_name));
+            },
+            BridgedTypeConversionInfo::ExternCFuncConverters { cpp_to_rust_converter, .. } => {
+                let cpp_to_rust_converter_ident = add_extern_c_decl(
+                    extern_c_decls,
+                    ExternCDeclKind::CppToRustConverter,
+                    *cpp_to_rust_converter,
+                );
+                quote! {
+                    #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
+                }
             }
-        }
+        },
     };
 
     Ok(quote! {
@@ -318,24 +320,28 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
         let rs_type_tokens = format_ty_for_rs(db, rs_type)?;
         Ok(quote! { (#c_ptr as *mut #rs_type_tokens).write(#rs_value); })
     };
-    Ok(if let Some(BridgedType { conversion_info, .. }) = is_bridged_type(db, rs_type)? {
-        match conversion_info {
-            BridgedTypeConversionInfo::PointerLikeTransmute => {
-                ensure_ty_is_pointer_like(db, rs_type)?;
-                write_directly()?
-            }
-            BridgedTypeConversionInfo::ExternCFuncConverters { rust_to_cpp_converter, .. } => {
-                let rust_to_cpp_converter_ident = add_extern_c_decl(
-                    extern_c_decls,
-                    ExternCDeclKind::RustToCppConverter,
-                    rust_to_cpp_converter,
-                );
-                quote! {
-                    #rust_to_cpp_converter_ident(
-                        std::ptr::from_ref(&#rs_value) as *const core::ffi::c_void,
-                        #c_ptr);
+    Ok(if let Some(bridged_type) = is_bridged_type(db, rs_type)? {
+        match bridged_type {
+            BridgedType::Legacy { conversion_info, .. } => match conversion_info {
+                BridgedTypeConversionInfo::PointerLikeTransmute => {
+                    ensure_ty_is_pointer_like(db, rs_type)?;
+                    write_directly()?
                 }
-            }
+                BridgedTypeConversionInfo::ExternCFuncConverters {
+                    rust_to_cpp_converter, ..
+                } => {
+                    let rust_to_cpp_converter_ident = add_extern_c_decl(
+                        extern_c_decls,
+                        ExternCDeclKind::RustToCppConverter,
+                        rust_to_cpp_converter,
+                    );
+                    quote! {
+                        #rust_to_cpp_converter_ident(
+                            std::ptr::from_ref(&#rs_value) as *const core::ffi::c_void,
+                            #c_ptr);
+                    }
+                }
+            },
         }
     } else if is_c_abi_compatible_by_value(rs_type) {
         write_directly()?

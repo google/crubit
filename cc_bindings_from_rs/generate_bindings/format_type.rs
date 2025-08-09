@@ -25,6 +25,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 use rustc_hir::def::Res;
+use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
@@ -331,8 +332,12 @@ pub fn format_ty_for_cc<'tcx>(
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
-            if let Some(BridgedType { include_path, .. }) = is_bridged_type(db, ty.mid())? {
-                prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
+            if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+                match bridged_type {
+                    BridgedType::Legacy { include_path, .. } => {
+                        prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
+                    }
+                }
             } else {
                 let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
                 ensure!(
@@ -844,12 +849,14 @@ pub fn format_region_as_rs_lifetime<'tcx>(
 /// Bridged types may be representation-equivalent such that pointers to one may be treated as
 /// pointers to the other, or they may require conversion functions (in which case they can only
 /// be passed by-value).
-pub struct BridgedType {
-    /// The spelling of the C++ type of the item.
-    pub cpp_type: CcType,
-    /// Path to the header file that declares the type specified in `cpp_type`.
-    pub include_path: Symbol,
-    pub conversion_info: BridgedTypeConversionInfo,
+pub enum BridgedType {
+    Legacy {
+        /// The spelling of the C++ type of the item.
+        cpp_type: CcType,
+        /// Path to the header file that declares the type specified in `cpp_type`.
+        include_path: Symbol,
+        conversion_info: BridgedTypeConversionInfo,
+    },
 }
 
 /// A description of what method is used to convert between values of the Rust and C++ types.
@@ -934,7 +941,7 @@ pub fn requires_type_bridging<'tcx>(
                 Some(cv) => {
                     ensure_ty_is_pointer_like(db, ty)?;
 
-                    Ok(Some(BridgedType {
+                    Ok(Some(BridgedType::Legacy {
                         cpp_type: CcType::Pointer { cpp_type, cv },
                         include_path,
                         conversion_info: BridgedTypeConversionInfo::PointerLikeTransmute,
@@ -959,7 +966,7 @@ pub fn requires_type_bridging<'tcx>(
             });
 
             match code_gen_utils::is_cpp_pointer_type(ts) {
-                Some(cv) => Ok(Some(BridgedType {
+                Some(cv) => Ok(Some(BridgedType::Legacy {
                     cpp_type: CcType::Pointer { cpp_type, cv },
                     include_path,
                     conversion_info: BridgedTypeConversionInfo::ExternCFuncConverters {
@@ -967,7 +974,7 @@ pub fn requires_type_bridging<'tcx>(
                         rust_to_cpp_converter,
                     },
                 })),
-                None => Ok(Some(BridgedType {
+                None => Ok(Some(BridgedType::Legacy {
                     cpp_type: CcType::Other(cpp_type),
                     include_path,
                     conversion_info: BridgedTypeConversionInfo::ExternCFuncConverters {
@@ -1013,6 +1020,19 @@ pub fn is_bridged_adt<'tcx>(
     if let Some(attrs) = requires_type_bridging(db, ty, attrs)? {
         return Ok(Some(attrs));
     };
+
+    // Detect built in bridge types
+    if let Some(variant) = adt.variants().iter().next() {
+        match db.tcx().lang_items().from_def_id(variant.def_id) {
+            Some(LangItem::ResultOk | LangItem::ResultErr) => {
+                // TODO(okabayashi): Make Result a bridge type
+            }
+            Some(LangItem::OptionSome | LangItem::OptionNone) => {
+                // TODO(okabayashi): Make Option a bridge type
+            }
+            _ => {}
+        }
+    }
 
     // The ADT does not need to be bridged, but check if it has generic types that
     // need to be bridged e.g. Box<BridgedType> cannot be formated at

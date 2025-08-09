@@ -120,11 +120,15 @@ fn cc_param_to_c_abi<'tcx>(
     includes: &mut BTreeSet<CcInclude>,
     statements: &mut TokenStream,
 ) -> Result<TokenStream> {
-    Ok(if let Some(BridgedType { cpp_type, .. }) = is_bridged_type(db, ty.mid())? {
-        if let CcType::Pointer { .. } = cpp_type {
-            cc_ident
-        } else {
-            quote! { & #cc_ident }
+    Ok(if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+        match bridged_type {
+            BridgedType::Legacy { cpp_type, .. } => {
+                if let CcType::Pointer { .. } = cpp_type {
+                    cc_ident
+                } else {
+                    quote! { & #cc_ident }
+                }
+            }
         }
     } else if is_c_abi_compatible_by_value(ty.mid()) {
         cc_ident
@@ -224,29 +228,33 @@ fn cc_return_value_from_c_abi<'tcx>(
     recursive: bool,
 ) -> Result<ReturnConversion> {
     let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
-    if let Some(attrs) = is_bridged_type(db, ty.mid())? {
-        let cpp_type = format_cc_ident(db, attrs.cpp_type.as_ref())?;
-        // Below, we use a union to allocate uninitialized memory that fits cpp_type.
-        // The union prevents the type from being default constructed. It's
-        // the responsibility of the thunk to properly initialize the
-        // memory. In the union's destructor we use std::destroy_at to call
-        // the cpp_type's destructor after the value has been moved on return.
-        let union_type = expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
-        let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-        storage_statements.extend(quote! {
-            union #union_type {
-                constexpr #union_type() {}
-                ~#union_type() { std::destroy_at(&this->val); }
-                #cpp_type val;
-            } #local_name;
-            auto* #storage_name = &#local_name.val;
-        });
-        Ok(ReturnConversion {
-            storage_name: storage_name.clone(),
-            unpack_expr: quote! {
-                std::move(#local_name.val)
-            },
-        })
+    if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+        match bridged_type {
+            BridgedType::Legacy { cpp_type, .. } => {
+                let cpp_type = format_cc_ident(db, cpp_type.as_ref())?;
+                // Below, we use a union to allocate uninitialized memory that fits cpp_type.
+                // The union prevents the type from being default constructed. It's
+                // the responsibility of the thunk to properly initialize the
+                // memory. In the union's destructor we use std::destroy_at to call
+                // the cpp_type's destructor after the value has been moved on return.
+                let union_type = expect_format_cc_ident(&format!("__{ident}_crubit_return_union"));
+                let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+                storage_statements.extend(quote! {
+                    union #union_type {
+                        constexpr #union_type() {}
+                        ~#union_type() { std::destroy_at(&this->val); }
+                        #cpp_type val;
+                    } #local_name;
+                    auto* #storage_name = &#local_name.val;
+                });
+                Ok(ReturnConversion {
+                    storage_name: storage_name.clone(),
+                    unpack_expr: quote! {
+                        std::move(#local_name.val)
+                    },
+                })
+            }
+        }
     } else if is_c_abi_compatible_by_value(ty.mid()) {
         let cc_type = &format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
         let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
