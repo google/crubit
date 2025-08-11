@@ -54,6 +54,9 @@ targets_to_remove = [
 #
 # This is mainly for if the same header is in two different targets, only one of which is canonical.
 public_headers_to_remove = {
+    "//rs_bindings_from_cc/test/disable/disable_header:test_lib": [
+        "rs_bindings_from_cc/test/disable/disable_header/disabled_header.h",
+    ],
 }
 private_headers_to_remove = {
 }
