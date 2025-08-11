@@ -8,7 +8,7 @@
 
 extern crate rustc_abi;
 extern crate rustc_ast;
-extern crate rustc_attr_data_structures;
+extern crate rustc_hir;
 extern crate rustc_infer;
 extern crate rustc_middle;
 extern crate rustc_span;
@@ -19,7 +19,7 @@ use error_report::anyhow;
 use rustc_abi::IntegerType;
 use rustc_abi::{FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
-use rustc_attr_data_structures::IntType;
+use rustc_hir::attrs::IntType;
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::ty::{self, IntTy, Region, Ty, TyCtxt, UintTy};
 use rustc_span::def_id::DefId;
@@ -215,34 +215,34 @@ fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
 }
 
 /// Implementation of `BindingsGenerator::repr_attrs`.
-pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_attr_data_structures::ReprAttr]> {
+pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]> {
     let mut result = Vec::new();
     let ty = tcx.type_of(def_id).instantiate_identity();
     match ty.kind() {
         ty::TyKind::Adt(adt_def, _) => {
             let repr = adt_def.repr();
             if repr.transparent() {
-                result.push(rustc_attr_data_structures::ReprAttr::ReprTransparent);
+                result.push(rustc_hir::attrs::ReprAttr::ReprTransparent);
             }
             if repr.c() {
-                result.push(rustc_attr_data_structures::ReprAttr::ReprC);
+                result.push(rustc_hir::attrs::ReprAttr::ReprC);
             }
             if repr.simd() {
-                result.push(rustc_attr_data_structures::ReprAttr::ReprSimd);
+                result.push(rustc_hir::attrs::ReprAttr::ReprSimd);
             }
             if let Some(alignment) = repr.align {
-                result.push(rustc_attr_data_structures::ReprAttr::ReprAlign(alignment));
+                result.push(rustc_hir::attrs::ReprAttr::ReprAlign(alignment));
             }
             if let Some(alignment) = repr.pack {
-                result.push(rustc_attr_data_structures::ReprAttr::ReprPacked(alignment));
+                result.push(rustc_hir::attrs::ReprAttr::ReprPacked(alignment));
             }
             if let Some(integer) = repr.int {
-                result.push(rustc_attr_data_structures::ReprAttr::ReprInt(
+                result.push(rustc_hir::attrs::ReprAttr::ReprInt(
                     convert_interger_type_to_int_type(integer),
                 ));
             }
             if result.is_empty() {
-                result.push(rustc_attr_data_structures::ReprAttr::ReprRust);
+                result.push(rustc_hir::attrs::ReprAttr::ReprRust);
             }
             result.into()
         }

@@ -25,7 +25,7 @@ use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use query_compiler::{is_copy, post_analysis_typing_env};
 use quote::quote;
-use rustc_attr_data_structures::AttributeKind;
+use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt};

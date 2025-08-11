@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-extern crate rustc_attr_data_structures;
+extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
 
@@ -91,7 +91,7 @@ memoized::query_group! {
       /// and `repr.c()` etc.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/query_compiler.rs?q=function:repr_attrs
-      fn repr_attrs(&self, did: DefId) -> Rc<[rustc_attr_data_structures::ReprAttr]>;
+      fn repr_attrs(&self, did: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]>;
 
       /// Computes a mapping from a `DefId` to a `FullyQualifiedName` for all
       /// not-directly-public symbols that are reexported by a `use` statement.

@@ -9,7 +9,6 @@
 
 extern crate rustc_abi;
 extern crate rustc_ast;
-extern crate rustc_attr_data_structures;
 extern crate rustc_attr_parsing;
 extern crate rustc_hir;
 extern crate rustc_infer;
@@ -100,7 +99,7 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Res
 fn repr_attrs_from_db(
     db: &dyn BindingsGenerator<'_>,
     def_id: DefId,
-) -> Rc<[rustc_attr_data_structures::ReprAttr]> {
+) -> Rc<[rustc_hir::attrs::ReprAttr]> {
     repr_attrs(db.tcx(), def_id)
 }
 
@@ -488,10 +487,8 @@ fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
 /// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
 /// deprecated. Otherwise, returns None.
 fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
-    #[cfg_accessible(rustc_attr_data_structures::find_attr)]
-    use rustc_attr_data_structures::{find_attr, AttributeKind};
-    #[cfg_accessible(rustc_attr_parsing::find_attr)]
-    use rustc_attr_parsing::{find_attr, AttributeKind};
+    use rustc_hir::attrs::AttributeKind;
+    use rustc_hir::find_attr;
 
     if let Some((deprecation, _span)) = find_attr!(tcx.get_all_attrs(def_id), AttributeKind::Deprecation{deprecation, span} => (*deprecation, *span))
     {

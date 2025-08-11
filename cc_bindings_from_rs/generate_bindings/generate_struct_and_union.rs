@@ -413,7 +413,7 @@ pub fn generate_adt<'tcx>(
         if db
             .repr_attrs(core.def_id)
             .iter()
-            .any(|repr| matches!(repr, rustc_attr_data_structures::ReprPacked { .. }))
+            .any(|repr| matches!(repr, rustc_hir::attrs::ReprPacked { .. }))
         {
             attributes.push(quote! { __attribute__((packed)) })
         }
@@ -637,7 +637,7 @@ fn generate_fields<'tcx>(
 
     // Used for generating enum bindings.
     let is_supported_enum = adt_def.is_enum()
-        && repr_attrs.contains(&rustc_attr_data_structures::ReprC)
+        && repr_attrs.contains(&rustc_hir::attrs::ReprC)
         && crate_features(db, core.def_id.krate)
             .contains(crubit_feature::CrubitFeature::Experimental);
 
@@ -664,7 +664,7 @@ fn generate_fields<'tcx>(
     };
     let variants_fields: Vec<Vec<Field>> = match adt_def.adt_kind() {
         // Handle cases of unsupported ADTs.
-        ty::AdtKind::Enum if (!repr_attrs.contains(&rustc_attr_data_structures::ReprC)) => {
+        ty::AdtKind::Enum if (!repr_attrs.contains(&rustc_hir::attrs::ReprC)) => {
             vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
         }
         ty::AdtKind::Enum if !is_supported_enum => {
@@ -673,7 +673,7 @@ fn generate_fields<'tcx>(
             ))]
         }
         ty::AdtKind::Union
-            if !repr_attrs.contains(&rustc_attr_data_structures::ReprC)
+            if !repr_attrs.contains(&rustc_hir::attrs::ReprC)
                 && !crate_features(db, core.def_id.krate)
                     .contains(crubit_feature::CrubitFeature::Experimental) =>
         {
@@ -1002,7 +1002,7 @@ fn generate_fields<'tcx>(
         // Foo(i8);` there are four different places the `i8` could be.
         // If it was placed in the second byte, for any reason, then we would need
         // explicit padding bytes.
-        let always_omit_padding = repr_attrs.contains(&rustc_attr_data_structures::ReprC)
+        let always_omit_padding = repr_attrs.contains(&rustc_hir::attrs::ReprC)
             && variants_fields.iter().flatten().all(|field| field.type_info.is_ok());
 
         let mut prereqs = CcPrerequisites::default();
@@ -1109,7 +1109,7 @@ fn generate_fields<'tcx>(
                             }
                         }
                         ty::AdtKind::Union => {
-                            if repr_attrs.contains(&rustc_attr_data_structures::ReprC) {
+                            if repr_attrs.contains(&rustc_hir::attrs::ReprC) {
                                 quote! {
                                     #visibility __NEWLINE__
                                     #doc_comment
