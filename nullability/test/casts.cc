@@ -171,15 +171,19 @@ TEST(PointerNullabilityTest, Inheritance) {
     template <class X>
     struct base {
       virtual void ensure_polymorphic();
+      X getX();
     };
     template <class X>
     struct derived : base<X> {};
 
     void target() {
-      // CK_BaseToDerived: preserves outer nullability only.
-      // TODO: determine that derived's type param is actually nullable here.
+      // CK_BaseToDerived: preserves only outer nullability for explicit casts
+      // and for implicit casts generated as part of an explicit cast.
       __assert_nullability<NK_nullable, NK_unspecified>(
           (derived<int *> *)value<base<int *_Nullable> *_Nullable>());
+      // CK_DerivedToBase: resugars from the argument's template parameters for
+      // implicit casts
+      __assert_nullability<NK_nullable>(value<derived<int *_Nullable>>().getX());
       // CK_Dynamic: dynamic_cast returns a nullable pointer.
       auto b = value<base<int *_Nonnull> *_Nonnull>();
       __assert_nullability  // [[unsafe]] TODO: fix false positive
@@ -209,7 +213,7 @@ TEST(PointerNullabilityTest, UserDefinedConversions) {
 }
 
 TEST(PointerNullabilityTest, CastToNonPointer) {
-  // Casting to non-pointer types destroyes nullability.
+  // Casting to non-pointer types destroys nullability.
   EXPECT_TRUE(checkDiagnostics(R"cc(
     using I = __INTPTR_TYPE__;
 

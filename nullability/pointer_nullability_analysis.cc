@@ -22,6 +22,7 @@
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
@@ -1471,9 +1472,12 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
                            TransferState<PointerNullabilityLattice> &State) {
   computeNullability(CE, State, [&]() -> TypeNullability {
     // Most casts that can convert ~unrelated types drop nullability in general.
-    // As a special case, preserve nullability of outer pointer types.
+    // As a special case, preserve nullability of outer raw pointer types.
     // For example, int* p; (void*)p; is a BitCast, but preserves nullability.
-    auto PreserveTopLevelPointers = [&](TypeNullability V) {
+    // TODO: b/396242014 - Consider applying the target type's nullability
+    // annotations for explicit casts rather than preserving the argument's
+    // nullability.
+    auto PreserveOuterRawPointers = [&](TypeNullability V) {
       auto ArgNullability = getNullabilityForChild(CE->getSubExpr(), State);
       const PointerType *ArgType = dyn_cast<PointerType>(
           CE->getSubExpr()->getType().getCanonicalType().getTypePtr());
@@ -1488,12 +1492,86 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
       return V;
     };
 
+    // We can't assume that all nullability information is identical between
+    // base and derived types, such as when a derived type has fewer entries
+    // because it always supplies the same template argument(s) to the base
+    // type.
+    //
+    // We preserve the nullability of outer raw pointers, but for implicit
+    // casts, for the record type with the inheritance relationship, we attempt
+    // some resugaring of the result type nullability from the argument's
+    // template arguments.
+    auto PreserveAndResugarFromBaseOrDerived = [&](TypeNullability V) {
+      V = PreserveOuterRawPointers(V);
+      if (auto *ECE = dyn_cast<ExplicitCastExpr>(CE)) {
+        // TODO: b/396242014 - Apply the nullability annotations from the target
+        // type rather than preserving the argument's nullability. Do this both
+        // for outer pointers and for template arguments.
+        return V;
+      }
+      if (auto *ICE = dyn_cast<ImplicitCastExpr>(CE);
+          ICE && ICE->isPartOfExplicitCast()) {
+        // Let the nullability be picked up from the explicit cast; no need to
+        // do work here.
+        return V;
+      }
+      if (CE->path_empty()) {
+        llvm::errs() << "Empty path for cast between base and derived types.\n";
+        assert(false);
+        return V;
+      }
+
+      int NumOuterRawPointers = 0;
+      const Type *UnderPointers =
+          CE->getSubExpr()->getType().getCanonicalType().getTypePtr();
+      while (auto *PT = dyn_cast<PointerType>(UnderPointers)) {
+        UnderPointers = PT->getPointeeType().getTypePtr();
+        ++NumOuterRawPointers;
+      }
+      if (NumOuterRawPointers < V.size()) {
+        // For the elements of V after the nullability for any outer raw
+        // pointers, resugar the result type from the argument's template
+        // arguments.
+        const TypeNullability &ArgNullability =
+            getNullabilityForChild(CE->getSubExpr(), State);
+        TypeNullability UnderPointersNullability;
+        for (int J = NumOuterRawPointers; J < ArgNullability.size(); ++J) {
+          UnderPointersNullability.push_back(ArgNullability[J]);
+        }
+        Resugarer Resugar(State.Lattice.defaults());
+        // Resugar from class template arguments, if any.
+        if (const auto *RT = UnderPointers->getAs<RecordType>()) {
+          if (auto *CTSpec =
+                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+            Resugar.Enclosing.push_back({CTSpec, UnderPointersNullability});
+          }
+        }
+        auto CastNullability = getTypeNullability(
+            (*(CE->path_end() - 1))->getTypeSourceInfo()->getTypeLoc(),
+            State.Lattice.defaults(), Resugar);
+        if (CastNullability.size() + NumOuterRawPointers != V.size()) {
+          llvm::errs()
+              << "CastNullability.size() + NumOuterRawPointers != V.size(): "
+              << (CastNullability.size() + NumOuterRawPointers) << " vs "
+              << V.size() << "\n";
+          CE->dump();
+          assert(false);
+        }
+        for (int I = 0;
+             I + NumOuterRawPointers < V.size() && I < CastNullability.size();
+             ++I) {
+          V[I + NumOuterRawPointers] = CastNullability[I];
+        }
+      }
+      return V;
+    };
+
     switch (CE->getCastKind()) {
       // Casts between unrelated types: we can't say anything about nullability.
       case CK_LValueBitCast:
       case CK_BitCast:
       case CK_LValueToRValueBitCast:
-        return PreserveTopLevelPointers(unspecifiedNullability(CE));
+        return PreserveOuterRawPointers(unspecifiedNullability(CE));
 
       // Casts between equivalent types.
       case CK_LValueToRValue:
@@ -1504,11 +1582,10 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
         return getNullabilityForChild(CE->getSubExpr(), State);
 
       // Controlled conversions between types
-      // TODO: these should be doable somehow
       case CK_BaseToDerived:
       case CK_DerivedToBase:
       case CK_UncheckedDerivedToBase:
-        return PreserveTopLevelPointers(unspecifiedNullability(CE));
+        return PreserveAndResugarFromBaseOrDerived(unspecifiedNullability(CE));
       case CK_UserDefinedConversion:
         return unspecifiedNullability(CE);
       case CK_ConstructorConversion:
