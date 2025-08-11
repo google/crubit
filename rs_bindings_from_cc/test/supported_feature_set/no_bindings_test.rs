@@ -95,3 +95,13 @@ fn test_std_vector() {
     assert!(!value_exists!(no_bindings::UseVectorByReference));
     assert!(!value_exists!(no_bindings::UseVectorByPointer));
 }
+
+#[gtest]
+fn test_consteval() {
+    assert!(!value_exists!(no_bindings::consteval_add));
+}
+
+#[gtest]
+fn test_variadic() {
+    assert!(!value_exists!(no_bindings::variadic_function));
+}

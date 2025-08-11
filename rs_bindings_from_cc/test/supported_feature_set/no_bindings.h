@@ -73,6 +73,12 @@ inline void UseVectorByValue(std::vector<int> v) {}
 inline void UseVectorByReference(const std::vector<int>& v) {}
 inline void UseVectorByPointer(std::vector<int>* v) {}
 
+// It is an error for consteval to NOT be evaluated at compile time, so its not
+// possible to expose these to Rust.
+consteval int consteval_add(int a, int b) { return a + b; }
+
+int variadic_function(const char* format, ...);
+
 }  // namespace crubit::no_bindings
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_NO_BINDINGS_H_

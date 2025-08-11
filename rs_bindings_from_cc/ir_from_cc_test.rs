@@ -61,6 +61,8 @@ fn test_function() {
                 member_func_metadata: None,
                 is_extern_c: false,
                 is_noreturn: false,
+                is_variadic: false,
+                is_consteval: false,
                 nodiscard: None,
                 deprecated: None,
                 unknown_attr: None,
@@ -278,6 +280,34 @@ fn test_function_with_custom_calling_convention() {
                 mangled_name: "_Z12f_vectorcallii", ...
                 has_c_calling_convention: false, ...
             }
+        }
+    );
+}
+
+#[gtest]
+fn test_consteval_function() {
+    let ir = ir_from_cc("consteval int add(int, int);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+            cc_name: "add", ...
+            is_consteval: true, ...
+          }
+        }
+    );
+}
+
+#[gtest]
+fn test_variadic_function() {
+    let ir = ir_from_cc("int sprintf(char* str, const char* format, ...);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+            cc_name: "sprintf", ...
+            is_variadic: true, ...
+          }
         }
     );
 }

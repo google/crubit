@@ -383,6 +383,8 @@ struct Func {
   std::optional<MemberFuncMetadata> member_func_metadata;
   bool is_extern_c = false;
   bool is_noreturn = false;
+  bool is_variadic = false;
+  bool is_consteval = false;
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
   std::optional<std::string> unknown_attr;

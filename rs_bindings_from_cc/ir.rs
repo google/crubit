@@ -760,6 +760,8 @@ pub struct Func {
     pub member_func_metadata: Option<MemberFuncMetadata>,
     pub is_extern_c: bool,
     pub is_noreturn: bool,
+    pub is_variadic: bool,
+    pub is_consteval: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
     pub nodiscard: Option<Rc<str>>,

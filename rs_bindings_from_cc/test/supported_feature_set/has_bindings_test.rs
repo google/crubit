@@ -180,3 +180,8 @@ fn test_returns_nontrivial_ptr() {
 fn test_accepts_nontrivial_ptr() {
     assert!(value_exists!(has_bindings::crubit_accepts_nontrivial_ptr));
 }
+
+#[gtest]
+fn test_consteval() {
+    assert!(value_exists!(has_bindings::consteval_add));
+}

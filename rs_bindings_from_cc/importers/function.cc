@@ -569,6 +569,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .member_func_metadata = std::move(member_func_metadata),
       .is_extern_c = function_decl->isExternC(),
       .is_noreturn = function_decl->isNoReturn(),
+      .is_variadic = function_decl->isVariadic(),
+      .is_consteval = function_decl->isConsteval(),
       .nodiscard = std::move(nodiscard),
       .deprecated = std::move(deprecated),
       .unknown_attr = std::move(unknown_attr),

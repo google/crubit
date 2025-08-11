@@ -234,6 +234,13 @@ pub fn required_crubit_features(
                         &|| "non-C calling convention".into(),
                     );
                 }
+                if func.is_variadic {
+                    require_any_feature(
+                        &mut missing_features,
+                        crubit_feature::CrubitFeature::Experimental.into(),
+                        &|| "variadic function".into(),
+                    );
+                }
                 if func.is_noreturn {
                     require_any_feature(
                         &mut missing_features,

@@ -1256,6 +1256,21 @@ fn test_default_crubit_features_disabled_template_explicit_specialization() -> R
 }
 
 #[gtest]
+fn test_default_crubit_features_disabled_variadic_function() -> Result<()> {
+    let mut ir = ir_from_cc(
+        r#"
+        int sprintf(char* str, const char* format, ...);
+        "#,
+    )?;
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Supported.into();
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! {sprintf});
+    assert_cc_not_matches!(rs_api_impl, quote! {sprintf});
+    Ok(())
+}
+
+#[gtest]
 fn test_type_map_override_assert() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
         r#" #pragma clang lifetime_elision

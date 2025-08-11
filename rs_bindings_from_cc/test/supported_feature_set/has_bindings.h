@@ -75,5 +75,8 @@ using NontrivialAlias = Nontrivial;
 inline void crubit_accepts_nontrivial_ptr(Nontrivial*) {}
 inline Nontrivial* crubit_returns_nontrivial_ptr() { return nullptr; }
 
+// constexpr functions may or may not be evaluated at compile time.
+constexpr int consteval_add(int a, int b) { return a + b; }
+
 }  // namespace crubit::has_bindings
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_

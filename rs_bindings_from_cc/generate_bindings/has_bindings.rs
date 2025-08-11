@@ -186,6 +186,13 @@ fn func_has_bindings(
     let mut missing_features = vec![];
     let mut has_nonunpin = false;
 
+    if func.is_consteval {
+        return Err(NoBindingsReason::Unsupported {
+            context: func.debug_name(db.ir()),
+            error: anyhow!("consteval functions are not supported"),
+        });
+    }
+
     if func.is_member_or_descendant_of_class_template
         && func.rs_name != ir::UnqualifiedIdentifier::Destructor
         && !enabled_features.contains(crubit_feature::CrubitFeature::Experimental)
