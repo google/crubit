@@ -25,6 +25,8 @@ static_assert(CRUBIT_OFFSET_OF(j, struct Foo) == 4);
 
 extern "C" void __rust_thunk___Z3foov() { foo(); }
 
+static_assert((void (*)())&foo);
+
 static_assert(CRUBIT_SIZEOF(struct Bar) == 4);
 static_assert(alignof(struct Bar) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct Bar) == 0);

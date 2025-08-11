@@ -1280,7 +1280,11 @@ impl ToTokens for Thunk {
 #[derive(Clone, Debug)]
 pub enum ThunkImpl {
     /// A function that upcasts from a derived type to a base type.
-    Upcast { base_cc_name: TokenStream, cast_fn_name: Ident, derived_cc_name: TokenStream },
+    Upcast {
+        base_cc_name: TokenStream,
+        cast_fn_name: Ident,
+        derived_cc_name: TokenStream,
+    },
     /// A function that implements a Rust function thunk.
     Function {
         conversion_externs: TokenStream,
@@ -1300,6 +1304,10 @@ pub enum ThunkImpl {
         size: usize,
         alignment: usize,
         fields_and_expected_offsets: Vec<(TokenStream, usize)>,
+    },
+    FuntionTypeAssertation {
+        implementation_function: TokenStream,
+        cc_function_type: TokenStream,
     },
 }
 
@@ -1358,6 +1366,12 @@ impl ToTokens for ThunkImpl {
                         static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident) == #expected_offset);
                     }.to_tokens(tokens);
                 }
+            }
+            ThunkImpl::FuntionTypeAssertation { implementation_function, cc_function_type } => {
+                quote! {
+                    static_assert( ( #cc_function_type ) & #implementation_function);
+                }
+                .to_tokens(tokens);
             }
         }
     }

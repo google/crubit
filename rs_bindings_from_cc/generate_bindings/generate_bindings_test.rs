@@ -334,7 +334,7 @@ mod custom_abi_tests {
             }
         );
         // No C++ thunk expected for `f_c_calling_convention`.
-        assert_cc_not_matches!(rs_api_impl, quote! { f_c_calling_convention });
+        assert_cc_not_matches!(rs_api_impl, quote! { f_c_calling_convention ( ... ) });
         Ok(())
     }
 }

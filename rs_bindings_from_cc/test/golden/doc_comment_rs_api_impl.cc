@@ -22,6 +22,8 @@ static_assert(CRUBIT_SIZEOF(struct DocCommentSlashes) == 4);
 static_assert(alignof(struct DocCommentSlashes) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct DocCommentSlashes) == 0);
 
+static_assert((int (*)())&DocCommentSlashes::static_method);
+
 static_assert(CRUBIT_SIZEOF(struct DocCommentBang) == 4);
 static_assert(alignof(struct DocCommentBang) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct DocCommentBang) == 0);
@@ -39,5 +41,7 @@ static_assert(alignof(struct MultilineOneStar) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct MultilineOneStar) == 0);
 
 extern "C" int __rust_thunk___Z3foov() { return foo(); }
+
+static_assert((int (*)())&foo);
 
 #pragma clang diagnostic pop

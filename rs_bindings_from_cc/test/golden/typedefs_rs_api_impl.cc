@@ -30,4 +30,6 @@ static_assert(alignof(union SomeUnion) == 1);
 static_assert(sizeof(SomeOtherUnion) == 1);
 static_assert(alignof(SomeOtherUnion) == 1);
 
+static_assert((SomeStruct::nested_type (*)())&FunctionUsingNestedType);
+
 #pragma clang diagnostic pop

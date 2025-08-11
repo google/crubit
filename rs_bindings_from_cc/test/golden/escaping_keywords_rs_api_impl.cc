@@ -22,4 +22,6 @@ static_assert(CRUBIT_SIZEOF(struct type) == 4);
 static_assert(alignof(struct type) == 4);
 static_assert(CRUBIT_OFFSET_OF(dyn, struct type) == 0);
 
+static_assert((void (*)(int))&impl);
+
 #pragma clang diagnostic pop

@@ -18,12 +18,18 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+static_assert((int& (*)(int&)) & free_function);
+
 static_assert(sizeof(struct S) == 1);
 static_assert(alignof(struct S) == 1);
 
 extern "C" void __rust_thunk___ZN1SC1Ev(struct S* __this) {
   crubit::construct_at(__this);
 }
+
+static_assert((int& (::S::*)(int&, int&) const) & S::const_method);
+
+static_assert((int& (::S::*)(int&, int&)) & S::method);
 
 static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
 static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
@@ -42,6 +48,8 @@ __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
     const struct TriviallyCopyableButNontriviallyDestructible* __param_0) {
   crubit::construct_at(__this, *__param_0);
 }
+
+static_assert((void (*)(int*))&take_pointer);
 
 static_assert(CRUBIT_SIZEOF(class WrappedValue) == 4);
 static_assert(alignof(class WrappedValue) == 4);

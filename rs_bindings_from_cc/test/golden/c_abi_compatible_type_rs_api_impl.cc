@@ -30,8 +30,12 @@ extern "C" MyI8 __rust_thunk___Z3ffi4MyI81X(MyI8 a, struct X* b) {
   return ffi(std::move(a), std::move(*b));
 }
 
+static_assert((MyI8 (*)(MyI8, struct X))&ffi);
+
 extern "C" void __rust_thunk___Z1fiPvi(MyTypedefDecl a, void* b, int c) {
   f(a, b, c);
 }
+
+static_assert((void (*)(MyTypedefDecl, void*, int))&f);
 
 #pragma clang diagnostic pop

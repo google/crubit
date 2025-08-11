@@ -1076,7 +1076,7 @@ fn test_overloaded_functions() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! {pub fn f(... S1 ...)});
 
     // And thunks aren't generated for either.
-    assert_cc_not_matches!(rs_api_impl, quote! {f});
+    assert_cc_not_matches!(rs_api_impl, quote! {f ( ... )});
 
     // But we can import member functions that have the same name as a free
     // function.

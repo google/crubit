@@ -25,10 +25,14 @@ extern "C" void __rust_thunk___Z15ReturnCppStructv(
                                                      ReturnCppStruct());
 }
 
+static_assert((struct CppStruct (*)())&ReturnCppStruct);
+
 extern "C" void __rust_thunk___Z13TakeCppStruct9CppStruct(
     const unsigned char* __param_0) {
   TakeCppStruct(::crubit::internal::Decode<::crubit::CppStructAbi>(__param_0));
 }
+
+static_assert((void (*)(struct CppStruct))&TakeCppStruct);
 
 static_assert(CRUBIT_SIZEOF(struct Vec3) == 12);
 static_assert(alignof(struct Vec3) == 4);
@@ -48,6 +52,9 @@ extern "C" void __rust_thunk___Z16MakeOptionalVec3fffb(
       __return_abi_buffer, MakeOptionalVec3(x, y, z, is_present));
 }
 
+static_assert((struct MyOption<Vec3> (*)(float, float, float,
+                                         bool))&MakeOptionalVec3);
+
 extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
     unsigned char* __return_abi_buffer, const unsigned char* v, float factor) {
   ::crubit::internal::Encode<
@@ -58,11 +65,16 @@ extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
                   factor));
 }
 
+static_assert((struct MyOption<Vec3> (*)(struct MyOption<Vec3>,
+                                         float))&MapMultiply);
+
 extern "C" void __rust_thunk___Z14MakeMyI8Structv(
     unsigned char* __return_abi_buffer) {
   ::crubit::internal::Encode<
       ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>>(
       __return_abi_buffer, MakeMyI8Struct());
 }
+
+static_assert((struct MyOption<MyI8Struct> (*)())&MakeMyI8Struct);
 
 #pragma clang diagnostic pop

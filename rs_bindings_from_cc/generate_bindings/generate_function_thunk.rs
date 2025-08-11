@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
+use code_gen_utils::{expect_format_cc_ident, expect_format_cc_type_name, make_rs_ident};
 use crubit_abi_type::CrubitAbiTypeToCppTokens;
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
@@ -245,6 +245,96 @@ pub fn thunk_ident(func: &Func) -> Ident {
         "__rust_thunk__{}{odr_suffix}",
         ident_fragment_from_mangled_name(func.mangled_name.as_ref())
     )
+}
+
+fn generate_function_assertation_for_identifier(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    id: &Identifier,
+) -> Result<ThunkImpl> {
+    let ir = db.ir();
+
+    let fn_ident = expect_format_cc_ident(&id.identifier);
+    let method_qualification;
+    let implementation_function;
+    let member_function_prefix;
+    let func_params;
+    if let Some(meta) = func.member_func_metadata.as_ref() {
+        let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
+        let record_ident = expect_format_cc_type_name(record.cc_name.identifier.as_ref());
+        let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
+        if let Some(instance_method_metadata) = meta.instance_method_metadata.as_ref() {
+            let const_qualifier = if instance_method_metadata.is_const {
+                quote! {const}
+            } else {
+                quote! {}
+            };
+
+            method_qualification = match instance_method_metadata.reference {
+                ir::ReferenceQualification::Unqualified => const_qualifier,
+                ir::ReferenceQualification::LValue => {
+                    quote! { #const_qualifier & }
+                }
+                ir::ReferenceQualification::RValue => {
+                    quote! { #const_qualifier && }
+                }
+            };
+            implementation_function = quote! { #namespace_qualifier #record_ident :: #fn_ident };
+            member_function_prefix = quote! { :: #namespace_qualifier #record_ident :: };
+            // The first parameter of instance methods is `this`.
+            func_params = func.params.iter().skip(1).cloned().collect_vec();
+        } else {
+            method_qualification = quote! {};
+            implementation_function = quote! { #namespace_qualifier #record_ident :: #fn_ident };
+            member_function_prefix = quote! {};
+            func_params = func.params.clone();
+        }
+    } else {
+        let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
+        method_qualification = quote! {};
+        implementation_function = quote! { #namespace_qualifier #fn_ident };
+        member_function_prefix = quote! {};
+        func_params = func.params.clone();
+    }
+
+    let mut cc_param_types = func_params
+        .iter()
+        .map(|p| cpp_type_name::format_cpp_type_with_references(&p.type_, ir))
+        .collect::<Result<Vec<_>>>()?;
+    if func.is_variadic {
+        cc_param_types.push(quote! { ... });
+    }
+
+    let return_type_name = cpp_type_name::format_cpp_type_with_references(&func.return_type, ir)?;
+
+    let cc_function_type = quote! { #return_type_name ( #member_function_prefix *) ( #( #cc_param_types ),* ) #method_qualification };
+
+    Ok(ThunkImpl::FuntionTypeAssertation { cc_function_type, implementation_function })
+}
+
+pub fn generate_function_assertation(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+) -> Result<Option<ThunkImpl>> {
+    if func.adl_enclosing_record.is_some() {
+        // This is a friend function that is only reachable with ADL. We can't take the address.
+        return Ok(None);
+    }
+
+    // TODO: b/393169953 - support functions with non-standard calling conventions
+    if !func.has_c_calling_convention {
+        return Ok(None);
+    }
+
+    match &func.cc_name {
+        UnqualifiedIdentifier::Identifier(id) => {
+            Ok(Some(generate_function_assertation_for_identifier(db, func, id)?))
+        }
+        // TODO: b/393169953 - support operators
+        UnqualifiedIdentifier::Operator(_op) => Ok(None),
+        UnqualifiedIdentifier::Constructor => Ok(None),
+        UnqualifiedIdentifier::Destructor => Ok(None),
+    }
 }
 
 pub fn generate_function_thunk_impl(

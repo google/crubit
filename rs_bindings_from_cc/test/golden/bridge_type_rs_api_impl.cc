@@ -25,11 +25,15 @@ extern "C" void __rust_thunk___Z15ReturnCppStructv(void* __return) {
   cpp_to_rust_converter(&__original_cpp_struct, __return);
 }
 
+static_assert((struct CppStruct (*)())&ReturnCppStruct);
+
 extern "C" void rust_to_cpp_converter(void* rust_struct, void* cpp_struct);
 extern "C" void __rust_thunk___Z13TakeCppStruct9CppStruct(void* __param_0) {
   ::crubit::LazyInit<struct CppStruct> __converted___param_0;
   rust_to_cpp_converter(__param_0, &__converted___param_0.val);
   TakeCppStruct(std::move(*&(__converted___param_0.val)));
 }
+
+static_assert((void (*)(struct CppStruct))&TakeCppStruct);
 
 #pragma clang diagnostic pop

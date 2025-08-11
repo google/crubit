@@ -50,6 +50,9 @@ extern "C" void __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
   new (__return) auto(TakesByValueUnpin(std::move(*nontrivial)));
 }
 
+static_assert(
+    (struct NontrivialUnpin (*)(struct NontrivialUnpin))&TakesByValueUnpin);
+
 static_assert(sizeof(struct NontrivialByValue) == 1);
 static_assert(alignof(struct NontrivialByValue) == 1);
 

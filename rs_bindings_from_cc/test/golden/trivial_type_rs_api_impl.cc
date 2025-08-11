@@ -27,4 +27,6 @@ extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
   new (__return) auto(ns::TakesByValue(std::move(*trivial)));
 }
 
+static_assert((struct ns::Trivial (*)(struct ns::Trivial))&ns::TakesByValue);
+
 #pragma clang diagnostic pop

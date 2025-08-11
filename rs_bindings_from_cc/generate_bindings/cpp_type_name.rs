@@ -17,6 +17,10 @@ pub fn format_cpp_type(ty: &CcType, ir: &IR) -> Result<TokenStream> {
     format_cpp_type_inner(ty, ir, /* references_ok= */ false)
 }
 
+pub fn format_cpp_type_with_references(ty: &CcType, ir: &IR) -> Result<TokenStream> {
+    format_cpp_type_inner(ty, ir, /* references_ok= */ true)
+}
+
 pub fn cpp_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
     let tagless = cpp_tagless_type_name_for_record(record, ir)?;
     let tag_kind = record.cc_tag_kind();

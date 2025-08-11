@@ -18,4 +18,6 @@
 
 extern "C" void __rust_thunk___Z8Overloadv() { Overload(); }
 
+static_assert((void (*)())&Overload);
+
 #pragma clang diagnostic pop

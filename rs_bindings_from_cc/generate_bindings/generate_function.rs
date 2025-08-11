@@ -17,7 +17,10 @@ use error_report::{anyhow, bail, ErrorList};
 use errors::{bail_to_errors, Errors, ErrorsOr};
 use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
-use generate_function_thunk::{generate_function_thunk, generate_function_thunk_impl, thunk_ident};
+use generate_function_thunk::{
+    generate_function_assertation, generate_function_thunk, generate_function_thunk_impl,
+    thunk_ident,
+};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -1652,11 +1655,16 @@ pub fn generate_function(
 
     // If we are generating bindings for a derived record, we reuse the base
     // record's thunks, so we don't need to generate thunks.
-    let cc_details = if derived_record.is_some() || failed {
+    let thunk_impl = if derived_record.is_some() || failed {
         None
     } else {
         generate_function_thunk_impl(db, &func)?
     };
+
+    let function_assertation =
+        if failed { None } else { generate_function_assertation(db, &func)? };
+
+    let cc_details = [thunk_impl, function_assertation].into_iter().flatten().collect();
 
     let generated_item = ApiSnippets {
         generated_items: HashMap::from([(func.id, GeneratedItem::Func(api_func))]),
@@ -1665,7 +1673,7 @@ pub fn generate_function(
             _ => vec![],
         },
         features,
-        cc_details: cc_details.into_iter().collect(),
+        cc_details,
         ..Default::default()
     };
     Ok(Some(GeneratedFunction {

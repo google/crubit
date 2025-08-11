@@ -23,6 +23,8 @@ extern "C" void __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
   new (__return) auto(UsesImportedType(std::move(*t)));
 }
 
+static_assert((struct ns::Trivial (*)(struct ns::Trivial))&UsesImportedType);
+
 static_assert(CRUBIT_SIZEOF(struct UserOfImportedType) == 8);
 static_assert(alignof(struct UserOfImportedType) == 8);
 static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);
