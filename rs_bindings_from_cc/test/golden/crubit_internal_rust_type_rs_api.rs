@@ -42,18 +42,10 @@ pub type BadSameAbiAttr = ::core::ffi::c_uchar;
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypeMapOverrideFieldTypes
 pub struct TypeMapOverrideFieldTypes {
-    /// Reason for representing this field as a blob of bytes:
-    /// missing features: [//features:experimental]:
-    pub(crate) my_i8_struct: [::core::mem::MaybeUninit<u8>; 1],
-    /// Reason for representing this field as a blob of bytes:
-    /// missing features: [//features:experimental]:
-    pub(crate) my_i8_class: [::core::mem::MaybeUninit<u8>; 1],
-    /// Reason for representing this field as a blob of bytes:
-    /// missing features: [//features:experimental]:
-    pub(crate) my_i8_enum: [::core::mem::MaybeUninit<u8>; 1],
-    /// Reason for representing this field as a blob of bytes:
-    /// missing features: [//features:experimental]:
-    pub(crate) my_i8_alias: [::core::mem::MaybeUninit<u8>; 1],
+    pub my_i8_struct: i8,
+    pub my_i8_class: i8,
+    pub my_i8_enum: i8,
+    pub my_i8_alias: i8,
     pub error: crate::TooFewArgs,
 }
 impl !Send for TypeMapOverrideFieldTypes {}
