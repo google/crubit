@@ -18,10 +18,7 @@ cc_library(
     hdrs = ["char.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
-    visibility = [
-        "//visibility:public",
-        h,
-    ],
+    visibility = ["//visibility:public"],
 
     # It is important to be thoughtful when adding new dependencies for `char`
     # (and possibly other targets in this BUILD file).  Using mature Abseil APIs
