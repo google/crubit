@@ -200,3 +200,25 @@ inline void FooInt(int x) {return Foo(x);}
 // For Rust callers: <internal link>/cpp/cookbook#renaming
 inline void FooFloat(float x) {return FooFloat(x);}
 ```
+
+## Working around blocking bugs in Crubit {#blockers}
+
+Crubit is still in development, and has bugs which can completely stop your work
+if Crubit was in the critical path. These can take the form of parsing errors or
+crashes when Crubit runs, or else generated bindings which do not compile.
+
+The following workarounds can help get you moving again:
+
+### Disable Crubit on a declaration {#disable-declaration}
+
+If a declaration causes hard failures within Crubit, that declaration alone can
+be disabled using the CRUBIT_DO_NOT_BIND attribute macro, defined in
+support/annotations.h. This must be paired with an additional entry in
+rs_bindings_from_cc/bazel_support/generate_bindings.bzl, recording the name of the item.
+
+To mail the CL performing this change, use <internal link>_manage: add
+`AUTO_MANAGE=testing:TGP` to the CL description.
+
+NOTE: By disabling Crubit on this declaration, items which depend on it may
+also, in turn, not receive bindings. For example, if it declares a type, then
+functions which accept or return that type will also not receive bindings.
