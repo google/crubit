@@ -82,13 +82,12 @@ impl<T> vector<T> {
         }
         #[cfg(not(len_capacity_encoding))]
         {
-            // TODO(b/356221873): delete the `if` once a stable Rust release allows
-            //offset_from for "the same address"
-            if self.begin.is_null() {
-                0
-            } else {
-                unsafe { self._end.offset_from(self.begin).try_into().unwrap() }
-            }
+            // SAFETY:
+            // 1: self.begin - self._end are either both null (for the empty vector),
+            //    or point to the beginning and ending of the vector inside the allocation
+            //    for the vector.
+            // 2: The vector is aligned for `T`.
+            unsafe { self._end.offset_from(self.begin).try_into().unwrap() }
         }
     }
 
@@ -103,13 +102,11 @@ impl<T> vector<T> {
         }
         #[cfg(not(len_capacity_encoding))]
         {
-            // TODO(b/356221873): delete the `if` once a stable Rust release allows
-            // offset_from for "the same address"
-            if self.begin.is_null() {
-                0
-            } else {
-                unsafe { self._capacity_end.offset_from(self.begin).try_into().unwrap() }
-            }
+            // SAFETY:
+            // 1: self.begin - self._capacity_end are either both null (for the empty vector),
+            //    or point to the beginning and ending of the whole allocation for the vector.
+            // 2: The vector is aligned for `T`.
+            unsafe { self._capacity_end.offset_from(self.begin).try_into().unwrap() }
         }
     }
 
