@@ -992,6 +992,17 @@ fn test_vector_from_array_mut_ref() {
     expect_eq!(v, [0, 1])
 }
 
+#[gtest]
+fn test_vector_covariant() {
+    // If this compiles, the test passes.
+    fn _compile_test<'a>(
+        mut _v1: cc_std::std::vector<&'a i32>,
+        v2: cc_std::std::vector<&'static i32>,
+    ) {
+        _v1 = v2;
+    }
+}
+
 fn to_void_ptr<T>(t: &T) -> *mut c_void {
     t as *const _ as *mut c_void
 }

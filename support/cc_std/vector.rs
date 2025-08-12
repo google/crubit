@@ -37,7 +37,6 @@ extern "C" {
 
 /// A mutable, contiguous, dynamically-sized container of elements
 /// of type `T`, ABI-compatible with `std::vector` from C++.
-// TODO(b/356221873): Ensure vector<T> is covariant.
 /// 2 layouts are supported.
 /// 1. This layout was found empirically on Linux with modern g++ and libc++. If
 /// for some version of libc++ it is different, we will need to update it with
@@ -45,16 +44,20 @@ extern "C" {
 #[cfg(not(len_capacity_encoding))]
 #[repr(C)]
 pub struct vector<T> {
-    begin: *mut T,
-    _end: *mut T,
-    _capacity_end: *mut T,
+    // Note: the pointers are mutable, but `const` for covariance.
+    begin: *const T,
+    _end: *const T,
+    _capacity_end: *const T,
 }
 
 /// 2. This layout is experimental.
 #[cfg(len_capacity_encoding)]
 #[repr(C)]
 pub struct vector<T> {
-    begin: *mut T,
+    /// The pointer to the first element of the vector.
+    ///
+    /// This pointer is mutable, but `const` for covariance.
+    begin: *const T,
     len: usize,
     capacity: usize,
 }
@@ -113,22 +116,22 @@ impl<T> vector<T> {
     fn end(&self) -> *mut T {
         #[cfg(len_capacity_encoding)]
         {
-            unsafe { self.begin.add(self.len) }
+            unsafe { self.begin.add(self.len) as *mut _ }
         }
         #[cfg(not(len_capacity_encoding))]
         {
-            self._end
+            self._end as *mut _
         }
     }
 
     fn capacity_end(&self) -> *mut T {
         #[cfg(len_capacity_encoding)]
         {
-            unsafe { self.begin.add(self.capacity) }
+            unsafe { self.begin.add(self.capacity) as *mut _ }
         }
         #[cfg(not(len_capacity_encoding))]
         {
-            self._capacity_end
+            self._capacity_end as *mut _
         }
     }
 
@@ -161,15 +164,15 @@ impl<T> vector<T> {
     unsafe fn set_begin_len_capacity(&mut self, begin: *mut T, len: usize, capacity: usize) {
         #[cfg(len_capacity_encoding)]
         {
-            self.begin = begin;
+            self.begin = begin as *const _;
             self.len = len;
             self.capacity = capacity;
         }
         #[cfg(not(len_capacity_encoding))]
         {
-            self.begin = begin;
-            self._end = begin.add(len);
-            self._capacity_end = begin.add(capacity);
+            self.begin = begin as *const _;
+            self._end = self.begin.add(len);
+            self._capacity_end = self.begin.add(capacity);
         }
     }
 
@@ -284,7 +287,7 @@ impl<T: Unpin> vector<T> {
         unsafe {
             self.asan_unpoison_tail();
             let mut v = ManuallyDrop::new(create_vec_from_raw_parts(
-                self.begin,
+                self.begin as *mut _,
                 self.len(),
                 self.capacity(),
             ));
@@ -414,7 +417,7 @@ impl<T: Unpin> vector<T> {
     }
 
     pub fn as_mut_ptr(&mut self) -> *mut T {
-        self.begin
+        self.begin as *mut _
     }
 
     pub fn as_slice(&self) -> &[T] {
@@ -432,7 +435,7 @@ impl<T: Unpin> vector<T> {
             if self.begin.is_null() {
                 &mut []
             } else {
-                core::slice::from_raw_parts_mut(self.begin, self.len())
+                core::slice::from_raw_parts_mut(self.begin as *mut _, self.len())
             }
         }
     }
@@ -522,7 +525,7 @@ impl<T> Drop for vector<T> {
             unsafe {
                 self.asan_unpoison_tail();
                 _ = Vec::from_raw_parts_in(
-                    self.begin,
+                    self.begin as *mut T,
                     self.len(),
                     self.capacity(),
                     cpp_std_allocator::StdAllocator {},
@@ -561,7 +564,7 @@ impl<T: Unpin> DerefMut for vector<T> {
         if self.is_empty() {
             &mut []
         } else {
-            unsafe { core::slice::from_raw_parts_mut(self.begin, self.len()) }
+            unsafe { core::slice::from_raw_parts_mut(self.begin as *mut _, self.len()) }
         }
     }
 }
@@ -581,7 +584,7 @@ impl<T: Unpin + Clone> Clone for vector<T> {
     fn clone(&self) -> Self {
         unsafe {
             let vec = ManuallyDrop::new(create_vec_from_raw_parts(
-                self.begin,
+                self.begin as *mut _,
                 self.len(),
                 self.capacity(),
             ));
@@ -764,7 +767,7 @@ impl<T: Unpin> IntoIterator for vector<T> {
         #[allow(unused_unsafe)]
         unsafe {
             self.asan_unpoison_tail();
-            let v = create_vec_from_raw_parts(self.begin, self.len(), self.capacity());
+            let v = create_vec_from_raw_parts(self.begin as *mut _, self.len(), self.capacity());
             core::mem::forget(self);
             VectorIntoIter::new(v.into_iter())
         }
