@@ -37,14 +37,14 @@ extern "C" {
 
 /// A mutable, contiguous, dynamically-sized container of elements
 /// of type `T`, ABI-compatible with `std::vector` from C++.
-// TODO(b/356221873): Ensure Vector<T> is covariant.
+// TODO(b/356221873): Ensure vector<T> is covariant.
 /// 2 layouts are supported.
 /// 1. This layout was found empirically on Linux with modern g++ and libc++. If
 /// for some version of libc++ it is different, we will need to update it with
 /// conditional compilation.
 #[cfg(not(len_capacity_encoding))]
 #[repr(C)]
-pub struct Vector<T> {
+pub struct vector<T> {
     begin: *mut T,
     _end: *mut T,
     _capacity_end: *mut T,
@@ -53,21 +53,21 @@ pub struct Vector<T> {
 /// 2. This layout is experimental.
 #[cfg(len_capacity_encoding)]
 #[repr(C)]
-pub struct Vector<T> {
+pub struct vector<T> {
     begin: *mut T,
     len: usize,
     capacity: usize,
 }
 
-impl<T> Vector<T> {
-    pub fn new() -> Vector<T> {
+impl<T> vector<T> {
+    pub fn new() -> vector<T> {
         #[cfg(len_capacity_encoding)]
         {
-            Vector { begin: core::ptr::null_mut(), len: 0, capacity: 0 }
+            vector { begin: core::ptr::null_mut(), len: 0, capacity: 0 }
         }
         #[cfg(not(len_capacity_encoding))]
         {
-            Vector {
+            vector {
                 begin: core::ptr::null_mut(),
                 _end: core::ptr::null_mut(),
                 _capacity_end: core::ptr::null_mut(),
@@ -177,7 +177,7 @@ impl<T> Vector<T> {
     }
 
     /// Prepares the vector to write into the tail.
-    /// See docstring of [`Vector::set_len`] for more details.
+    /// See docstring of [`vector::set_len`] for more details.
     pub fn prepare_to_write_into_tail(&mut self) {
         self.asan_unpoison_tail();
     }
@@ -192,8 +192,8 @@ impl<T> Vector<T> {
     /// See [`alloc::vec::Vec::set_len`] for more details.
     ///
     /// The difference with `alloc::vec::Vec::set_len` is that the tail of the
-    /// Vector is poisoned with ASan, so when writing to the tail for
-    /// avoiding ASan errors [`Vector::prepare_to_write_into_tail`] must be
+    /// vector is poisoned with ASan, so when writing to the tail for
+    /// avoiding ASan errors [`vector::prepare_to_write_into_tail`] must be
     /// called first:
     /// ```
     /// v.prepare_to_write_into_tail()
@@ -278,7 +278,7 @@ impl<T> Vector<T> {
     }
 }
 
-impl<T: Unpin> Vector<T> {
+impl<T: Unpin> vector<T> {
     /// Mutates `self` as if it were a `Vec<T>`.
     fn mutate_self_as_vec<F, R>(&mut self, mutate_self: F) -> R
     where
@@ -323,8 +323,8 @@ impl<T: Unpin> Vector<T> {
         self.mutate_self_as_vec(|v| v.shrink_to(min_capacity));
     }
 
-    pub fn with_capacity(capacity: usize) -> Vector<T> {
-        let mut result = Vector::new();
+    pub fn with_capacity(capacity: usize) -> vector<T> {
+        let mut result = vector::new();
         result.reserve(capacity);
         result
     }
@@ -363,7 +363,7 @@ impl<T: Unpin> Vector<T> {
         self.mutate_self_as_vec(|v| v.truncate(len));
     }
 
-    // Different Vector transformations.
+    // Different vector transformations.
     pub fn dedup_by<F>(&mut self, same_bucket: F)
     where
         F: FnMut(&mut T, &mut T) -> bool,
@@ -394,7 +394,7 @@ impl<T: Unpin> Vector<T> {
     }
 
     pub fn split_off(&mut self, at: usize) -> Self {
-        Vector::from(self.mutate_self_as_vec(|v| v.split_off(at)))
+        vector::from(self.mutate_self_as_vec(|v| v.split_off(at)))
     }
 
     // Methods returning different vector representations.
@@ -441,7 +441,7 @@ impl<T: Unpin> Vector<T> {
     }
 }
 
-impl<T: Unpin + Clone> Vector<T> {
+impl<T: Unpin + Clone> vector<T> {
     pub fn extend_from_slice(&mut self, src: &[T]) {
         self.mutate_self_as_vec(|v| v.extend_from_slice(src));
     }
@@ -465,61 +465,61 @@ impl<T: Unpin + Clone> Vector<T> {
     }
 }
 
-impl<T: Unpin + PartialEq> Vector<T> {
+impl<T: Unpin + PartialEq> vector<T> {
     pub fn dedup(&mut self) {
         self.mutate_self_as_vec(|v| v.dedup());
     }
 }
 
-impl<T> AsRef<Vector<T>> for Vector<T> {
-    fn as_ref(&self) -> &Vector<T> {
+impl<T> AsRef<vector<T>> for vector<T> {
+    fn as_ref(&self) -> &vector<T> {
         self
     }
 }
 
-impl<T> AsMut<Vector<T>> for Vector<T> {
-    fn as_mut(&mut self) -> &mut Vector<T> {
+impl<T> AsMut<vector<T>> for vector<T> {
+    fn as_mut(&mut self) -> &mut vector<T> {
         self
     }
 }
 
-impl<T: Unpin> AsRef<[T]> for Vector<T> {
+impl<T: Unpin> AsRef<[T]> for vector<T> {
     fn as_ref(&self) -> &[T] {
         self.as_slice()
     }
 }
 
-impl<T: Unpin> AsMut<[T]> for Vector<T> {
+impl<T: Unpin> AsMut<[T]> for vector<T> {
     fn as_mut(&mut self) -> &mut [T] {
         self.as_mut_slice()
     }
 }
 
-impl<T: Unpin> Borrow<[T]> for Vector<T> {
+impl<T: Unpin> Borrow<[T]> for vector<T> {
     fn borrow(&self) -> &[T] {
         self.as_slice()
     }
 }
 
-impl<T: Unpin> BorrowMut<[T]> for Vector<T> {
+impl<T: Unpin> BorrowMut<[T]> for vector<T> {
     fn borrow_mut(&mut self) -> &mut [T] {
         self.as_mut_slice()
     }
 }
 
-impl<T: Unpin + Debug> Debug for Vector<T> {
+impl<T: Unpin + Debug> Debug for vector<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_list().entries(self.as_slice()).finish()
     }
 }
 
-impl<T> Default for Vector<T> {
+impl<T> Default for vector<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> Drop for Vector<T> {
+impl<T> Drop for vector<T> {
     fn drop(&mut self) {
         if !self.begin.is_null() {
             unsafe {
@@ -535,20 +535,20 @@ impl<T> Drop for Vector<T> {
     }
 }
 
-impl<T: Unpin, I: SliceIndex<[T]>> Index<I> for Vector<T> {
+impl<T: Unpin, I: SliceIndex<[T]>> Index<I> for vector<T> {
     type Output = I::Output;
     fn index(&self, index: I) -> &Self::Output {
         self.as_slice().index(index)
     }
 }
 
-impl<T: Unpin, I: SliceIndex<[T]>> IndexMut<I> for Vector<T> {
+impl<T: Unpin, I: SliceIndex<[T]>> IndexMut<I> for vector<T> {
     fn index_mut(&mut self, index: I) -> &mut Self::Output {
         self.as_mut_slice().index_mut(index)
     }
 }
 
-impl<T> Deref for Vector<T> {
+impl<T> Deref for vector<T> {
     type Target = [T];
     fn deref(&self) -> &Self::Target {
         if self.is_empty() {
@@ -559,7 +559,7 @@ impl<T> Deref for Vector<T> {
     }
 }
 
-impl<T: Unpin> DerefMut for Vector<T> {
+impl<T: Unpin> DerefMut for vector<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         if self.is_empty() {
             &mut []
@@ -569,7 +569,7 @@ impl<T: Unpin> DerefMut for Vector<T> {
     }
 }
 
-impl<T: Clone> Vector<T> {
+impl<T: Clone> vector<T> {
     /// Clone elements from `self` to `Vec<T>`.
     pub fn to_vec(&self) -> Vec<T> {
         let mut v = Vec::<T>::with_capacity(self.len());
@@ -580,7 +580,7 @@ impl<T: Clone> Vector<T> {
     }
 }
 
-impl<T: Unpin + Clone> Clone for Vector<T> {
+impl<T: Unpin + Clone> Clone for vector<T> {
     fn clone(&self) -> Self {
         unsafe {
             let vec = ManuallyDrop::new(create_vec_from_raw_parts(
@@ -588,12 +588,12 @@ impl<T: Unpin + Clone> Clone for Vector<T> {
                 self.len(),
                 self.capacity(),
             ));
-            Vector::from((*vec).clone())
+            vector::from((*vec).clone())
         }
     }
 }
 
-impl<T: Unpin> Extend<T> for Vector<T> {
+impl<T: Unpin> Extend<T> for vector<T> {
     fn extend<I>(&mut self, iter: I)
     where
         I: IntoIterator<Item = T>,
@@ -602,29 +602,29 @@ impl<T: Unpin> Extend<T> for Vector<T> {
     }
 }
 
-impl<T: Hash + Unpin> Hash for Vector<T> {
+impl<T: Hash + Unpin> Hash for vector<T> {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_slice().hash(state);
     }
 }
 
-/// `Vector` is `Send` if `T` is `Send` because it uniquely owns its contents.
-unsafe impl<T: Send> Send for Vector<T> {}
+/// `vector` is `Send` if `T` is `Send` because it uniquely owns its contents.
+unsafe impl<T: Send> Send for vector<T> {}
 
-/// `Vector` is `Sync` if `T` is `Sync` because it uniquely owns its contents.
-unsafe impl<T: Sync> Sync for Vector<T> {}
+/// `vector` is `Sync` if `T` is `Sync` because it uniquely owns its contents.
+unsafe impl<T: Sync> Sync for vector<T> {}
 
-impl<T: PartialOrd + Unpin> PartialOrd<Vector<T>> for Vector<T> {
+impl<T: PartialOrd + Unpin> PartialOrd<vector<T>> for vector<T> {
     #[inline]
-    fn partial_cmp(&self, other: &Vector<T>) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &vector<T>) -> Option<Ordering> {
         PartialOrd::partial_cmp(self.as_slice(), other.as_slice())
     }
 }
 
-impl<T: Eq> Eq for Vector<T> {}
+impl<T: Eq> Eq for vector<T> {}
 
-impl<T: Ord + Unpin> Ord for Vector<T> {
+impl<T: Ord + Unpin> Ord for vector<T> {
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         Ord::cmp(self.as_slice(), other.as_slice())
@@ -660,7 +660,7 @@ unsafe fn create_vec_from_raw_parts<T>(
 mod iter {
     use super::alloc;
     use super::cpp_std_allocator;
-    use super::Vector;
+    use super::vector;
     use core::fmt;
     use core::fmt::Debug;
     use core::iter::FusedIterator;
@@ -728,7 +728,7 @@ mod iter {
 
     impl<T: Unpin> Default for VectorIntoIter<T> {
         fn default() -> Self {
-            Vector::<T>::default().into_iter()
+            vector::<T>::default().into_iter()
         }
     }
 
@@ -760,7 +760,7 @@ mod iter {
 
 use iter::*;
 
-impl<T: Unpin> IntoIterator for Vector<T> {
+impl<T: Unpin> IntoIterator for vector<T> {
     type Item = T;
     type IntoIter = VectorIntoIter<T>;
     fn into_iter(self) -> Self::IntoIter {
@@ -774,7 +774,7 @@ impl<T: Unpin> IntoIterator for Vector<T> {
     }
 }
 
-impl<'a, T: Unpin> IntoIterator for &'a Vector<T> {
+impl<'a, T: Unpin> IntoIterator for &'a vector<T> {
     type Item = &'a T;
     type IntoIter = slice::Iter<'a, T>;
 
@@ -783,7 +783,7 @@ impl<'a, T: Unpin> IntoIterator for &'a Vector<T> {
     }
 }
 
-impl<'a, T: Unpin> IntoIterator for &'a mut Vector<T> {
+impl<'a, T: Unpin> IntoIterator for &'a mut vector<T> {
     type Item = &'a mut T;
     type IntoIter = slice::IterMut<'a, T>;
 
@@ -792,7 +792,7 @@ impl<'a, T: Unpin> IntoIterator for &'a mut Vector<T> {
     }
 }
 
-impl<T: Unpin> FromIterator<T> for Vector<T> {
+impl<T: Unpin> FromIterator<T> for vector<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut v = Self::new();
         v.mutate_self_as_vec(|u| {
@@ -802,19 +802,19 @@ impl<T: Unpin> FromIterator<T> for Vector<T> {
     }
 }
 
-impl<T: Unpin> From<Vector<T>> for alloc::vec::Vec<T> {
-    fn from(v: Vector<T>) -> alloc::vec::Vec<T> {
+impl<T: Unpin> From<vector<T>> for alloc::vec::Vec<T> {
+    fn from(v: vector<T>) -> alloc::vec::Vec<T> {
         v.into_vec()
     }
 }
 
-impl<T: Unpin> From<Vec<T>> for Vector<T> {
+impl<T: Unpin> From<Vec<T>> for vector<T> {
     fn from(v: Vec<T>) -> Self {
         // Elements from `v` are moved. It would be more efficient to steal a buffer
-        // from `v`. But `v` might have different allocator than Vector.
+        // from `v`. But `v` might have different allocator than vector.
         // TODO(b/356221873): Figure out conditions when it is possible to steal buffer
         // from `v`.
-        let mut result = Vector::<T>::with_capacity(v.len());
+        let mut result = vector::<T>::with_capacity(v.len());
         result.mutate_self_as_vec(|u| {
             u.extend(v);
         });
@@ -822,12 +822,12 @@ impl<T: Unpin> From<Vec<T>> for Vector<T> {
     }
 }
 
-impl<T: Unpin> From<Vec<T, cpp_std_allocator::StdAllocator>> for Vector<T> {
-    /// Creates a `Vector<T>` from a `Vec<T, StdAllocator>`.
+impl<T: Unpin> From<Vec<T, cpp_std_allocator::StdAllocator>> for vector<T> {
+    /// Creates a `vector<T>` from a `Vec<T, StdAllocator>`.
     ///
-    /// Ownership of elements from `v` are taken by the returned `Vector<T>`.
+    /// Ownership of elements from `v` are taken by the returned `vector<T>`.
     fn from(mut v: Vec<T, cpp_std_allocator::StdAllocator>) -> Self {
-        let mut result = Vector::new();
+        let mut result = vector::new();
         // Safety:
         //
         // It is safe since the memory is allocated with `Vec<T, StdAllocator>`.
@@ -841,9 +841,9 @@ impl<T: Unpin> From<Vec<T, cpp_std_allocator::StdAllocator>> for Vector<T> {
     }
 }
 
-impl<T: Unpin + Clone> From<&[T]> for Vector<T> {
+impl<T: Unpin + Clone> From<&[T]> for vector<T> {
     fn from(s: &[T]) -> Self {
-        let mut result = Vector::<T>::with_capacity(s.len());
+        let mut result = vector::<T>::with_capacity(s.len());
         result.mutate_self_as_vec(|u| {
             u.extend_from_slice(s);
         });
@@ -851,9 +851,9 @@ impl<T: Unpin + Clone> From<&[T]> for Vector<T> {
     }
 }
 
-impl<T: Unpin + Clone> From<&mut [T]> for Vector<T> {
+impl<T: Unpin + Clone> From<&mut [T]> for vector<T> {
     fn from(slice: &mut [T]) -> Self {
-        let mut result = Vector::with_capacity(slice.len());
+        let mut result = vector::with_capacity(slice.len());
         result.mutate_self_as_vec(|u| {
             u.extend_from_slice(slice);
         });
@@ -861,18 +861,18 @@ impl<T: Unpin + Clone> From<&mut [T]> for Vector<T> {
     }
 }
 
-impl<T: Unpin + Clone, const N: usize> From<&[T; N]> for Vector<T> {
+impl<T: Unpin + Clone, const N: usize> From<&[T; N]> for vector<T> {
     fn from(s: &[T; N]) -> Self {
         Self::from(s.as_slice())
     }
 }
-impl<T: Unpin + Clone, const N: usize> From<&mut [T; N]> for Vector<T> {
+impl<T: Unpin + Clone, const N: usize> From<&mut [T; N]> for vector<T> {
     fn from(s: &mut [T; N]) -> Self {
         Self::from(s.as_mut_slice())
     }
 }
 
-impl<T: Unpin + Clone, const N: usize> From<[T; N]> for Vector<T> {
+impl<T: Unpin + Clone, const N: usize> From<[T; N]> for vector<T> {
     fn from(s: [T; N]) -> Self {
         Self::from(s.as_slice())
     }

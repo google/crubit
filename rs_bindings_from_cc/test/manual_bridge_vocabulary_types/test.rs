@@ -36,7 +36,7 @@ fn test_unique_ptr_string() {
 
 #[gtest]
 fn test_vector_wrapped_by_value_as_function_arg_and_return_value() {
-    let mut v: cc_std::std::Vector<i32> = MakeVector(1);
+    let mut v: cc_std::std::vector<i32> = MakeVector(1);
     let r = unsafe { UseVectorByRef(&mut v) };
     let v = UseVectorByValue(v);
     assert_eq!(v, 1);

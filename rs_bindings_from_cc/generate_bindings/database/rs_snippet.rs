@@ -374,7 +374,7 @@ impl UniformReprTemplateType {
         match self {
             Self::StdVector { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
-                quote! { ::cc_std::std::Vector::<#element_type_tokens> }
+                quote! { ::cc_std::std::vector::<#element_type_tokens> }
             }
             Self::StdUniquePtr { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
