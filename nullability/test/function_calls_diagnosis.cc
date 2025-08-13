@@ -93,26 +93,15 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )cc"));
 
   // passing a reference to a nonnull pointer
-  //
-  // TODO(b/233582219): Fix false negative. When the nonnull pointer is passed
-  // by reference into the callee which takes a nullable parameter, its value
-  // may be changed to null, making it unsafe to dereference when we return from
-  // the function call. Some possible approaches for handling this case:
-  // (1) Disallow passing a nonnull pointer as a nullable reference - and warn
-  // at the function call.
-  // (2) Assume in worst case the nonnull pointer becomes nullable after the
-  // call - and warn at the dereference.
-  // (3) Sacrifice soundness for reduction in noise, and skip the warning.
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void takeNonnullRef(int *_Nonnull &);
-    void takeNullableRef(int *_Nullable &);
-    void takeUnannotatedRef(int *&);
-    void target(int *_Nonnull ptr_nonnull) {
+    void takeNonnullRef(int* _Nonnull&);
+    void takeNullableRef(int* _Nullable&);
+    void takeUnannotatedRef(int*&);
+    void target(int* _Nonnull ptr_nonnull) {
       takeNonnullRef(ptr_nonnull);
       *ptr_nonnull;
 
-      // false-negative
-      takeNullableRef(ptr_nonnull);
+      takeNullableRef(ptr_nonnull);  // [[unsafe]]
       *ptr_nonnull;
 
       takeUnannotatedRef(ptr_nonnull);

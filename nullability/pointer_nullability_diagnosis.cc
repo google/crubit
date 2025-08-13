@@ -156,23 +156,55 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
 // LHS can be a variable, the return value of a function, a param etc.
 static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     QualType LHSType, ArrayRef<PointerTypeNullability> LHSNullability,
-    const Expr *absl_nonnull RHS, const Environment &Env, ASTContext &Ctx,
-    PointerNullabilityDiagnostic::Context DiagCtx,
-    const clang::NamedDecl *absl_nullable Callee = nullptr,
-    const clang::IdentifierInfo *absl_nullable ParamName = nullptr,
+    const Expr* absl_nonnull RHS, const DiagTransferState& State,
+    ASTContext& Ctx, PointerNullabilityDiagnostic::Context DiagCtx,
+    const clang::NamedDecl* absl_nullable Callee = nullptr,
+    const clang::IdentifierInfo* absl_nullable ParamName = nullptr,
     CharSourceRange LHSRange = {}) {
-  LHSType = LHSType.getNonReferenceType();
-  // For now, we just check whether the top-level pointer type is compatible.
-  // TODO: examine inner nullability too, considering variance.
-  if (!isSupportedPointerType(LHSType)) return {};
+  if (!LHSType->isReferenceType() ||
+      LHSType.getNonReferenceType().isConstQualified()) {
+    LHSType = LHSType.getNonReferenceType();
+    // For now, we just check whether the top-level pointer type is compatible.
+    // TODO: examine inner nullability too, considering variance.
+    if (!isSupportedPointerType(LHSType)) return {};
 
-  QualType RHSType = RHS->getType().getNonReferenceType();
-  if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) return {};
+    QualType RHSType = RHS->getType().getNonReferenceType();
+    if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType))
+      return {};
 
-  return LHSNullability.front().concrete() == NullabilityKind::NonNull
-             ? diagnoseNonnullExpected(RHS, Env, Ctx, DiagCtx, Callee,
-                                       ParamName, LHSRange)
-             : SmallVector<PointerNullabilityDiagnostic>{};
+    return LHSNullability.front().concrete() == NullabilityKind::NonNull
+               ? diagnoseNonnullExpected(RHS, State.Env, Ctx, DiagCtx, Callee,
+                                         ParamName, LHSRange)
+               : SmallVector<PointerNullabilityDiagnostic>{};
+  }
+
+  // Mutable references require invariant type nullability between RHS and LHS.
+  const TypeNullability* RHSNullability = State.Lattice.getTypeNullability(RHS);
+  if (!RHSNullability) return untrackedError(RHS, Ctx, DiagCtx);
+  if (LHSNullability.size() != RHSNullability->size()) {
+    llvm::dbgs() << "LHSNullability should be the same size as RHSNullability "
+                    "during an assignment-like operation, but they were not: "
+                 << LHSNullability.size() << " vs. " << RHSNullability->size()
+                 << "\nLHSType:\n";
+    LHSType.dump();
+    llvm::dbgs() << "RHS:\n";
+    RHS->dump();
+    return {};
+  }
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+  if (LHSRange.isInvalid())
+    LHSRange = CharSourceRange::getTokenRange(RHS->getSourceRange());
+  for (int I = 0; I < LHSNullability.size(); ++I) {
+    NullabilityKind L = LHSNullability[I].concrete();
+    NullabilityKind R = (*RHSNullability)[I].concrete();
+    if (L != R && L != NullabilityKind::Unspecified &&
+        R != NullabilityKind::Unspecified) {
+      Diagnostics.push_back(
+          {PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull, DiagCtx,
+           getRangeModuloMacros(LHSRange, Ctx), Callee, ParamName});
+    }
+  }
+  return Diagnostics;
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
@@ -217,7 +249,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignment(
   if (!LHSNullability) return {};
 
   return diagnoseAssignmentLike(
-      Op->getLHS()->getType(), *LHSNullability, Op->getRHS(), State.Env,
+      Op->getLHS()->getType(), *LHSNullability, Op->getRHS(), State,
       *Result.Context, PointerNullabilityDiagnostic::Context::Assignment);
 }
 
@@ -229,7 +261,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerAssignment(
   if (!LHSNullability) return {};
 
   return diagnoseAssignmentLike(
-      Op->getArg(0)->getType(), *LHSNullability, Op->getArg(1), State.Env,
+      Op->getArg(0)->getType(), *LHSNullability, Op->getArg(1), State,
       *Result.Context, PointerNullabilityDiagnostic::Context::Assignment);
 }
 
@@ -257,7 +289,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
   }
 
   return diagnoseAssignmentLike(
-      MCE->getObjectType(), ReceiverNullability, MCE->getArg(0), State.Env,
+      MCE->getObjectType(), ReceiverNullability, MCE->getArg(0), State,
       *Result.Context, PointerNullabilityDiagnostic::Context::Assignment);
 }
 
@@ -265,11 +297,11 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
 // corresponding type in the function prototype.
 // ParmDecls is best-effort and used only for param names in diagnostics.
 static SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
-    const FunctionProtoType &CalleeFPT,
+    const FunctionProtoType& CalleeFPT,
     ArrayRef<PointerTypeNullability> ParamsNullability,
-    ArrayRef<const ParmVarDecl *> ParmDecls, ArrayRef<const Expr *> Args,
-    const clang::NamedDecl *absl_nullable Callee, const Environment &Env,
-    ASTContext &Ctx) {
+    ArrayRef<const ParmVarDecl*> ParmDecls, ArrayRef<const Expr*> Args,
+    const clang::NamedDecl* absl_nullable Callee,
+    const DiagTransferState& State, ASTContext& Ctx) {
   auto ParamTypes = CalleeFPT.getParamTypes();
   // C-style varargs cannot be annotated and therefore are unchecked.
   if (CalleeFPT.isVariadic()) {
@@ -286,7 +318,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseArgumentCompatibility(
     const clang::IdentifierInfo *ParamName =
         (I < ParmDecls.size()) ? ParmDecls[I]->getIdentifier() : nullptr;
     Diagnostics.append(diagnoseAssignmentLike(
-        ParamTypes[I], ParamNullability, Args[I], Env, Ctx,
+        ParamTypes[I], ParamNullability, Args[I], State, Ctx,
         PointerNullabilityDiagnostic::Context::FunctionArgument, Callee,
         ParamName));
   }
@@ -436,7 +468,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseConstructorCall(
       getTypeNullability(*CtorDecl, State.Lattice.defaults());
   return diagnoseArgumentCompatibility(
       *CalleeFPT, CtorNullability, CtorDecl->getAsFunction()->parameters(),
-      ConstructorArgs, CtorDecl, State.Env, *Result.Context);
+      ConstructorArgs, CtorDecl, State, *Result.Context);
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
@@ -505,7 +537,7 @@ diagnoseMakeUniqueParenInitListExpr(
     }
     Diagnostics.append(diagnoseAssignmentLike(
         Field->getType(), getTypeNullability(*Field, State.Lattice.defaults()),
-        Arg, State.Env, *Result.Context,
+        Arg, State, *Result.Context,
         PointerNullabilityDiagnostic::Context::Initializer));
     ++I;
   }
@@ -598,7 +630,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
 
   return diagnoseArgumentCompatibility(
       *CalleeType, ParamNullability, Params, Args,
-      dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl()), State.Env,
+      dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl()), State,
       *Result.Context);
 }
 
@@ -617,7 +649,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
 
   return diagnoseAssignmentLike(
       Function->getReturnType(), ReturnTypeNullability, RS->getRetValue(),
-      State.Env, *Result.Context,
+      State, *Result.Context,
       PointerNullabilityDiagnostic::Context::ReturnValue);
 }
 
@@ -636,14 +668,14 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
     // explicitly initializes it to null.
     return diagnoseAssignmentLike(
         Member->getType(),
-        getTypeNullability(*Member, State.Lattice.defaults()), InitExpr,
-        State.Env, *Result.Context,
-        PointerNullabilityDiagnostic::Context::Initializer, nullptr, nullptr,
+        getTypeNullability(*Member, State.Lattice.defaults()), InitExpr, State,
+        *Result.Context, PointerNullabilityDiagnostic::Context::Initializer,
+        nullptr, nullptr,
         CharSourceRange::getTokenRange(Member->getSourceRange()));
   }
   return diagnoseAssignmentLike(
       Member->getType(), getTypeNullability(*Member, State.Lattice.defaults()),
-      InitExpr, State.Env, *Result.Context,
+      InitExpr, State, *Result.Context,
       PointerNullabilityDiagnostic::Context::Initializer);
 }
 
@@ -666,7 +698,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseInitListExpr(
     }
     Diagnostics.append(diagnoseAssignmentLike(
         Field->getType(), getTypeNullability(*Field, State.Lattice.defaults()),
-        Init, State.Env, *Result.Context,
+        Init, State, *Result.Context,
         PointerNullabilityDiagnostic::Context::Initializer, nullptr, nullptr,
         CharSourceRange::getTokenRange(Range)));
   }
@@ -682,7 +714,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseDeclStmt(
     if (auto *VD = dyn_cast<VarDecl>(D); VD && VD->hasInit()) {
       Diagnostics.append(diagnoseAssignmentLike(
           VD->getType(), getTypeNullability(*VD, State.Lattice.defaults()),
-          VD->getInit(), State.Env, *Result.Context,
+          VD->getInit(), State, *Result.Context,
           PointerNullabilityDiagnostic::Context::Initializer));
     }
   }
