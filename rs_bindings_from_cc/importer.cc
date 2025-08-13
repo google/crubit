@@ -821,8 +821,12 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
       return *target;
     }
 
-    if (!filename->ends_with(".inc")) {
-      // Assumed not to be a textual header.
+    if (!filename->ends_with(".inc") && !filename->ends_with(".rs.h")) {
+      // .inc files and (cxx-generated) .rs.h files are textual headers.
+      // Otherwise, we assume it is not a textual header.
+      // TODO(b/438538035): Instead, mark .rs.h files as textual headers in
+      // the C++ library.
+      // TODO(b/438560038): Make this configurable by flag.
       break;
     }
 
