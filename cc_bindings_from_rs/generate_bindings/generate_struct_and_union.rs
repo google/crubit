@@ -14,7 +14,7 @@ use crate::{
     crate_features, format_ty_for_cc, generate_const, generate_deprecated_tag,
     generate_must_use_tag, generate_trait_thunks, generate_unsupported_def, get_layout,
     get_scalar_int_type, get_tag_size_with_padding, is_bridged_type, is_exported,
-    is_public_or_supported_export, RsSnippet, TraitThunks,
+    is_public_or_supported_export, RsSnippet, SortedByDef, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
@@ -33,7 +33,7 @@ use rustc_hir::{self as hir, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
-use rustc_span::def_id::{DefId, LOCAL_CRATE};
+use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use std::collections::{BTreeSet, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -173,48 +173,37 @@ fn generate_cpp_enum<'tcx>(
     }
 
     // Generate the enumerator list.
-    let enumerator_lines: Vec<TokenStream> = (tcx.inherent_impls(core.def_id).iter())
-        // Convert to `Item`s.
-        .map(|impl_id| tcx.hir_expect_item(impl_id.expect_local()))
-        // Unpack and flatten all impl items (since Rust allows multiple impl blocks for a type).
-        .flat_map(|item| match &item.kind {
-            ItemKind::Impl(impl_) => impl_.items,
-            other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
-        })
+    let enumerator_lines: Vec<TokenStream> = tcx
+        .inherent_impls(core.def_id)
+        .iter()
         .copied()
-        .sorted_by_key(|impl_item_id| {
-            let local_def_id = impl_item_id.owner_id.def_id;
-            tcx.def_span(local_def_id)
-        })
-        // Generate the code for each enumerator item.
-        .filter_map(|impl_item_id| {
-            let local_def_id = impl_item_id.owner_id.def_id;
-            let def_id = local_def_id.to_def_id();
-            if !is_exported(db.tcx(), def_id) {
+        .sorted_by_def(tcx)
+        .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
+        .filter_map(|assoc_item| {
+            if !is_exported(tcx, assoc_item.def_id) {
                 return None;
             }
-            match tcx.hir_impl_item(impl_item_id).kind {
-                // Every item in an enumeration should be a const.
-                hir::ImplItemKind::Const(..) => {
-                    let enumerator_name =
-                        format_cc_ident(db, tcx.item_name(def_id).as_str()).unwrap();
-                    let value_kind =
-                        *cpp_enum_rust_underlying_type(tcx, core.def_id).unwrap().kind();
-                    let enumerator_value = match tcx.const_eval_poly(def_id).unwrap() {
-                        ConstValue::Scalar(scalar) => {
-                            scalar_value_to_string(tcx, scalar, value_kind).unwrap()
-                        }
-                        other => {
-                            panic!("Unexpected non-scalar ConstValue type in cpp_enum: {other:?}")
-                        }
-                    }
-                    .parse::<TokenStream>()
-                    .unwrap();
-
-                    Some(quote! { #enumerator_name = #enumerator_value, })
+            let ty::AssocKind::Const { name } = assoc_item.kind else {
+                db.fatal_errors().report(&format!(
+                    "C++ enums can only have `const`s as public items, found: {:?}",
+                    assoc_item.kind
+                ));
+                return None;
+            };
+            let enumerator_name = format_cc_ident(db, name.as_str()).unwrap();
+            let value_kind = *cpp_enum_rust_underlying_type(tcx, core.def_id).unwrap().kind();
+            let scalar = match tcx.const_eval_poly(assoc_item.def_id).unwrap() {
+                ConstValue::Scalar(scalar) => scalar,
+                other => {
+                    panic!("Unexpected non-scalar ConstValue type in cpp_enum: {other:?}")
                 }
-                other => panic!("Unexpected (non-const) item in C++ enum: {other:?}"),
-            }
+            };
+            let enumerator_value = scalar_value_to_string(tcx, scalar, value_kind)
+                .unwrap()
+                .parse::<TokenStream>()
+                .unwrap();
+
+            Some(quote! { #enumerator_name = #enumerator_value, })
         })
         .collect();
 
@@ -242,18 +231,16 @@ fn generate_cpp_enum<'tcx>(
 
 fn generate_associated_item<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    self_id: DefId,
-    impl_item_id: hir::ImplItemId,
+    assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
 ) -> Option<ApiSnippets> {
     let tcx = db.tcx();
-    let def_id = impl_item_id.owner_id.def_id.to_def_id();
+    let def_id = assoc_item.def_id;
     if !is_exported(tcx, def_id) {
         return None;
     }
-    let impl_item = tcx.hir_impl_item(impl_item_id);
-    let result = match impl_item.kind {
-        hir::ImplItemKind::Fn(..) => {
+    let result = match assoc_item.kind {
+        ty::AssocKind::Fn { .. } => {
             let result = db.generate_function(def_id);
             if result.is_ok() {
                 let cpp_name = FullyQualifiedName::new(db, def_id).cpp_name.unwrap().to_string();
@@ -261,16 +248,21 @@ fn generate_associated_item<'tcx>(
             }
             result
         }
-        hir::ImplItemKind::Const(..) => generate_const(db, def_id),
-        other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
+        ty::AssocKind::Const { .. } => generate_const(db, def_id),
+        // TODO: b/405132277 - Rust does not support inherent associated types, but should support
+        // associated types when adding traits.
+        ty::AssocKind::Type { .. } => Err(anyhow!(
+            "Associated types are not yet supported, found {:?}. See b/405132277.",
+            assoc_item.opt_name()
+        )),
     };
     let result = result
         .and_then(|snippet| snippet.resolve_feature_requirements(crate_features(db, LOCAL_CRATE)));
     match result {
         Err(err) => {
             if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
-                let self_name = crate::item_name(db, self_id);
-                let item_name = impl_item.ident.as_str();
+                let self_name = crate::item_name(db, tcx.parent(def_id));
+                let item_name = crate::item_name(db, def_id);
                 let must_bind_message = format!(
                     "Failed to generate bindings for `{self_name}::{item_name}`:\n\
                     {err:?}\n\
@@ -293,10 +285,6 @@ pub fn generate_adt<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets {
-    if !core.def_id.is_local() {
-        panic!("`generate_adt` should only be called for local ADTS, got {:?}", core.def_id);
-    }
-
     let tcx = db.tcx();
     let adt_cc_name = &core.cc_short_name;
 
@@ -365,19 +353,10 @@ pub fn generate_adt<'tcx>(
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
         .iter()
-        .map(|impl_id| tcx.hir_expect_item(impl_id.expect_local()))
-        .flat_map(|item| match &item.kind {
-            ItemKind::Impl(impl_) => impl_.items,
-            other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
-        })
         .copied()
-        .sorted_by_key(|impl_item_id| {
-            let def_id = impl_item_id.owner_id.def_id;
-            tcx.def_span(def_id)
-        })
-        .filter_map(|impl_item_ref| {
-            generate_associated_item(db, core.def_id, impl_item_ref, &mut member_function_names)
-        })
+        .sorted_by_def(tcx)
+        .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
+        .flat_map(|assoc_item| generate_associated_item(db, assoc_item, &mut member_function_names))
         .collect();
 
     let ApiSnippets {
@@ -570,6 +549,27 @@ pub fn generate_adt_core<'tcx>(
     }))
 }
 
+fn hir_fields_per_variant<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    local_def_id: LocalDefId,
+) -> Vec<&'tcx [hir::FieldDef<'tcx>]> {
+    let hir::Node::Item(item) = tcx.hir_node_by_def_id(local_def_id) else {
+        panic!("internal error: def_id referring to an ADT was not a HIR Item.");
+    };
+
+    match &item.kind {
+        hir::ItemKind::Struct(_, _, variant) | hir::ItemKind::Union(_, _, variant) => {
+            vec![variant.fields()]
+        }
+        hir::ItemKind::Enum(_, _, enum_info) => {
+            enum_info.variants.iter().map(|variant| variant.data.fields()).collect()
+        }
+        _ => {
+            panic!("internal error: def_id referring to a non-enum ADT was not a struct or union.")
+        }
+    }
+}
+
 /// Returns the body of the C++ struct that represents the given ADT.
 fn generate_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
@@ -684,25 +684,10 @@ fn generate_fields<'tcx>(
 
         // Otherwise, get the fields and determine the memory layout.
         _ => {
-            let rustc_hir::Node::Item(item) = tcx.hir_node_by_def_id(core.def_id.expect_local())
-            else {
-                panic!("internal error: def_id referring to an ADT was not a HIR Item.");
-            };
-            let variants = match item.kind {
-                rustc_hir::ItemKind::Struct(_, _, variant) => vec![variant],
-                rustc_hir::ItemKind::Union(_, _, variant) => vec![variant],
-                rustc_hir::ItemKind::Enum(_, _, enum_info) => {
-                    enum_info.variants.iter().map(|variant| variant.data).collect()
-                }
-                _ => panic!(
-                    "internal error: def_id referring to a non-enum ADT was not a struct or union."
-                ),
-            };
-            let hir_fields: Vec<Vec<_>> = variants
-                .iter()
-                .map(|variant| variant.fields().iter().sorted_by_key(|f| f.span).collect())
-                .collect();
-
+            let hir_fields = core
+                .def_id
+                .as_local()
+                .map(|local_def_id| hir_fields_per_variant(tcx, local_def_id));
             let mut variants_fields = core
                 .self_ty
                 .ty_adt_def()
@@ -713,21 +698,22 @@ fn generate_fields<'tcx>(
                     variant
                         .fields
                         .iter()
-                        .sorted_by_key(|f| tcx.def_span(f.did))
                         .enumerate()
                         .map(|(index, field_def)| {
-                            // *Not* using zip, in order to crash on length mismatch.
-                            let hir_field = hir_fields
-                                .get(variant_index.index())
-                                .expect("HIR ADT had fewer variants than rustc_middle")
-                                .get(index)
-                                .expect(
-                                    "HIR ADT had fewer fields than rustc_middle for this variant",
-                                );
-                            assert!(field_def.did == hir_field.def_id.to_def_id());
+                            let hir_field_ty = hir_fields.as_ref().map(|hir_fields| {
+                                let hir_field = hir_fields
+                                    .get(variant_index.index())
+                                    .expect("HIR ADT had fewer variants than rustc_middle")
+                                    .get(index)
+                                    .expect(
+                                        "HIR ADT had fewer fields than rustc_middle for this variant",
+                                    );
+                                assert!(field_def.did == hir_field.def_id.to_def_id());
+                                hir_field.ty
+                            });
                             let ty = SugaredTy::new(
                                 field_def.ty(tcx, adt_generic_args),
-                                Some(hir_field.ty),
+                                hir_field_ty,
                             );
                             let size =
                                 get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());

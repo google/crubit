@@ -1265,15 +1265,39 @@ pub fn format_namespace_bound_cc_tokens(
     iter.collect()
 }
 
-fn stable_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: &DefId, rhs_id: &DefId) -> Ordering {
-    if tcx.def_span(*lhs_id).source_equal(tcx.def_span(*rhs_id)) {
-        let lhs_def_path_hash = tcx.def_path_hash(*lhs_id);
-        let rhs_def_path_hash = tcx.def_path_hash(*rhs_id);
+/// Compares two `DefId` s
+pub(crate) fn stable_def_id_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: DefId, rhs_id: DefId) -> Ordering {
+    let lhs_span = tcx.def_span(lhs_id);
+    let rhs_span = tcx.def_span(rhs_id);
+    if lhs_span.source_equal(rhs_span) {
+        let lhs_def_path_hash = tcx.def_path_hash(lhs_id);
+        let rhs_def_path_hash = tcx.def_path_hash(rhs_id);
         lhs_def_path_hash.cmp(&rhs_def_path_hash)
     } else {
-        tcx.def_span(*lhs_id).cmp(&tcx.def_span(*rhs_id))
+        lhs_span.cmp(&rhs_span)
     }
 }
+
+pub(crate) trait SortedByDef: Iterator + Sized {
+    fn sorted_by_def<'tcx>(self, tcx: TyCtxt<'tcx>) -> std::vec::IntoIter<Self::Item>
+    where
+        Self::Item: Copy + Into<DefId>,
+    {
+        self.sorted_by_def_with(tcx, |item| (*item).into())
+    }
+
+    fn sorted_by_def_with<'tcx>(
+        self,
+        tcx: TyCtxt<'tcx>,
+        mut item_to_def_id: impl FnMut(&Self::Item) -> DefId,
+    ) -> std::vec::IntoIter<Self::Item> {
+        self.sorted_unstable_by(|lhs, rhs| {
+            stable_def_id_cmp(tcx, item_to_def_id(lhs), item_to_def_id(rhs))
+        })
+    }
+}
+impl<T: Iterator + Sized> SortedByDef for T {}
+
 /// Formats all public items from the Rust crate being compiled.
 fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let tcx = db.tcx();
@@ -1291,7 +1315,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
                 .unwrap_or_else(|err| Some(generate_unsupported_def(db, def_id, err)))
                 .map(|api_snippets| (local_def_id, api_snippets))
         })
-        .sorted_by(|lhs, rhs| stable_cmp(tcx, &lhs.0.into(), &rhs.0.into()));
+        .sorted_by_def_with(tcx, |&(id, _)| id.into());
     for (local_def_id, api_snippets) in formatted_items {
         let def_id = local_def_id.to_def_id();
         let old_item = main_apis.insert(def_id, api_snippets.main_api);
@@ -1317,7 +1341,9 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
                         main_apis.contains_key(pre));
                 predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
             });
-            toposort::toposort(nodes, deps, move |lhs_id, rhs_id| stable_cmp(tcx, lhs_id, rhs_id))
+            toposort::toposort(nodes, deps, move |&lhs_id, &rhs_id| {
+                stable_def_id_cmp(tcx, lhs_id, rhs_id)
+            })
         };
         assert_eq!(
             0,
@@ -1356,7 +1382,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
 
         let fwd_decls = fwd_decls
             .into_iter()
-            .sorted_by_key(|def_id| tcx.def_span(*def_id))
+            .sorted_by_def(tcx)
             .map(|local_def_id| (local_def_id, generate_fwd_decl(db, local_def_id)));
 
         // The first item of the tuple here is the DefId of the namespace.
