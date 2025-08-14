@@ -1,4 +1,4 @@
-"""End-to-end tests of `cc_bindings_from_rs`, focusing on struct-related
+"""End-to-end tests of `cc_bindings_from_rs`, focusing on unit-struct-related
 bindings."""
 
 load(
@@ -18,9 +18,9 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 rust_library(
-    name = "structs",
+    name = "unit_structs",
     testonly = 1,
-    srcs = ["structs.rs"],
+    srcs = ["unit_structs.rs"],
 
     # TODO(b/262878759): Remove this once `all` is not automatically added anymore.
     aspect_hints = [
@@ -29,24 +29,24 @@ rust_library(
 )
 
 golden_test(
-    name = "structs_golden_test",
-    basename = "structs",
-    golden_h = "structs_cc_api.h",
-    golden_rs = "structs_cc_api_impl.rs",
-    rust_library = "structs",
+    name = "unit_structs_golden_test",
+    basename = "unit_structs",
+    golden_h = "unit_structs_cc_api.h",
+    golden_rs = "unit_structs_cc_api_impl.rs",
+    rust_library = "unit_structs",
 )
 
 cc_bindings_from_rust(
-    name = "structs_cc_api",
+    name = "unit_structs_cc_api",
     testonly = 1,
-    crate = ":structs",
+    crate = ":unit_structs",
 )
 
 crubit_cc_test(
-    name = "structs_test",
-    srcs = ["structs_test.cc"],
+    name = "unit_structs_test",
+    srcs = ["unit_structs_test.cc"],
     deps = [
-        ":structs_cc_api",
+        ":unit_structs_cc_api",
         "@googletest//:gtest_main",
     ],
 )
