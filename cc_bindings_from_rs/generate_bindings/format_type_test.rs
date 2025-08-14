@@ -5,8 +5,7 @@
 #![feature(rustc_private)]
 
 use code_gen_utils::format_cc_includes;
-use database::{SugaredTy, TypeLocation};
-use generate_bindings::format_type::{format_ty_for_cc, format_ty_for_rs};
+use database::{BindingsGenerator, SugaredTy, TypeLocation};
 use generate_bindings::generate_function::get_fn_sig;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -101,7 +100,7 @@ fn test_format_ret_ty_for_cc_successes() {
     test_ty(TypeLocation::FnReturn, &testcases, quote! {}, |desc, tcx, ty, expected| {
         let actual = {
             let db = bindings_db_for_tests(tcx);
-            let cc_snippet = format_ty_for_cc(&db, ty, TypeLocation::FnReturn).unwrap();
+            let cc_snippet = db.format_ty_for_cc(ty, TypeLocation::FnReturn).unwrap();
             cc_snippet.tokens.to_string()
         };
         let expected = expected.parse::<TokenStream>().unwrap().to_string();
@@ -338,12 +337,12 @@ fn test_format_ty_for_cc_successes() {
          }| {
             let (actual_tokens, actual_prereqs) = {
                 let db = bindings_db_for_tests(tcx);
-                let s = format_ty_for_cc(
-                    &db,
-                    ty,
-                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-                )
-                .unwrap();
+                let s = db
+                    .format_ty_for_cc(
+                        ty,
+                        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                    )
+                    .unwrap();
                 (s.tokens.to_string(), s.prereqs)
             };
             let (actual_includes, actual_prereq_defs, actual_prereq_fwd_decls) =
@@ -518,12 +517,12 @@ fn test_format_ty_for_cc_failures() {
         preamble,
         |desc, tcx, ty, expected_msg| {
             let db = bindings_db_for_tests(tcx);
-            let anyhow_err = format_ty_for_cc(
-                &db,
-                ty,
-                TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-            )
-            .expect_err(&format!("Expecting error for: {desc}"));
+            let anyhow_err = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .expect_err(&format!("Expecting error for: {desc}"));
             let actual_msg = format!("{anyhow_err:#}");
             assert_eq!(&actual_msg, *expected_msg, "{desc}");
         },
@@ -609,7 +608,7 @@ fn test_format_ty_for_rs_successes() {
         preamble,
         |desc, tcx, ty, expected_tokens| {
             let db = bindings_db_for_tests(tcx);
-            let actual_tokens = format_ty_for_rs(&db, ty.mid()).unwrap().to_string();
+            let actual_tokens = db.format_ty_for_rs(ty.mid()).unwrap().to_string();
             let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual_tokens, expected_tokens, "{desc}");
         },
@@ -643,7 +642,7 @@ fn test_format_ty_for_rs_failures() {
         |desc, tcx, ty, expected_err| {
             let db = bindings_db_for_tests(tcx);
             let anyhow_err =
-                format_ty_for_rs(&db, ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
+                db.format_ty_for_rs(ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         },

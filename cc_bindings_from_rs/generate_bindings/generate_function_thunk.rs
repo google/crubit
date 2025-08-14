@@ -4,9 +4,9 @@
 
 use crate::{
     does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
-    format_param_types_for_cc, format_ret_ty_for_cc, format_ty_for_rs, is_bridged_type,
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType,
-    BridgedTypeConversionInfo, FullyQualifiedName, RsSnippet,
+    format_param_types_for_cc, format_ret_ty_for_cc, is_bridged_type, is_c_abi_compatible_by_value,
+    liberate_and_deanonymize_late_bound_regions, BridgedType, BridgedTypeConversionInfo,
+    FullyQualifiedName, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -132,7 +132,8 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
-    let rs_type = format_ty_for_rs(db, ty)
+    let rs_type = db
+        .format_ty_for_rs(ty)
         .with_context(|| format!("Error handling parameter `{local_name}`"))?;
 
     let temp_name = format_ident!("__crubit_temp");
@@ -232,12 +233,12 @@ fn c_abi_for_param_type<'tcx>(
     if is_bridged_type(db, ty)?.is_some() {
         Ok(quote! { *const core::ffi::c_void })
     } else if is_c_abi_compatible_by_value(ty) {
-        let rs_type = format_ty_for_rs(db, ty)?;
+        let rs_type = db.format_ty_for_rs(ty)?;
         Ok(quote! { #rs_type })
     } else if let Some(tuple_abi) = tuple_c_abi_rs_type(ty) {
         Ok(quote! { #tuple_abi })
     } else {
-        let rs_type = format_ty_for_rs(db, ty)?;
+        let rs_type = db.format_ty_for_rs(ty)?;
         // `'static` is used to erase all lifetime parameters since C++ doesn't understand
         // lifetime constraints.
         Ok(quote! { &'static mut ::core::mem::MaybeUninit<#rs_type> })
@@ -317,7 +318,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
     let write_directly = || -> Result<TokenStream> {
-        let rs_type_tokens = format_ty_for_rs(db, rs_type)?;
+        let rs_type_tokens = db.format_ty_for_rs(rs_type)?;
         Ok(quote! { (#c_ptr as *mut #rs_type_tokens).write(#rs_value); })
     };
     Ok(if let Some(bridged_type) = is_bridged_type(db, rs_type)? {
@@ -457,7 +458,7 @@ pub fn generate_thunk_impl<'tcx>(
     if output_is_bridged.is_none() && is_c_abi_compatible_by_value(sig.output()) {
         // The output is not bridged and is C ABI compatible by-value, so we can just return
         // the result directly, and no out-param is needed.
-        thunk_return_type = format_ty_for_rs(db, sig.output())?;
+        thunk_return_type = db.format_ty_for_rs(sig.output())?;
         thunk_return_expression = quote! {
             #fully_qualified_fn_name( #( #fn_args ),* )
         };

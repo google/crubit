@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::{format_cc_ident, format_ty_for_cc, has_elided_region, region_is_elided};
+use crate::format_type::{format_cc_ident, has_elided_region, region_is_elided};
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, ident_or_opt_ident, is_thunk_required,
@@ -214,7 +214,7 @@ fn format_ty_for_cc_amending_prereqs<'tcx>(
     prereqs: &mut CcPrerequisites,
 ) -> Result<TokenStream> {
     let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
-        format_ty_for_cc(db, ty, TypeLocation::Other)?;
+        db.format_ty_for_cc(ty, TypeLocation::Other)?;
     *prereqs += ty_prereqs;
     Ok(cc_type)
 }

@@ -16,7 +16,7 @@ use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReporting, ReportFatalError};
 use proc_macro2::TokenStream;
-use rustc_middle::ty::TyCtxt;
+use rustc_middle::ty::{Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::Symbol;
 use std::collections::HashMap;
@@ -119,6 +119,15 @@ memoized::query_group! {
           ty: SugaredTy<'tcx>,
           location: TypeLocation,
       ) -> Result<CcSnippet>;
+
+      /// Formats `ty` into a `CcSnippet` that represents how the type should be
+      /// spelled in a C++ declaration of a function parameter or field.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_ty_for_rs
+      fn format_ty_for_rs(
+          &self,
+          ty: Ty<'tcx>
+      ) -> Result<TokenStream>;
 
       /// Generates a default constructor for an ADT if possible (i.e. if the `Default`
       /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if

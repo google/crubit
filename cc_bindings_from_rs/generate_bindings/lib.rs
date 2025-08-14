@@ -26,8 +26,8 @@ mod generate_struct_and_union;
 use crate::format_type::{
     create_canonical_name_from_foreign_path, ensure_ty_is_pointer_like, format_cc_ident,
     format_cc_ident_symbol, format_param_types_for_cc, format_region_as_cc_lifetime,
-    format_ret_ty_for_cc, format_top_level_ns_for_crate, format_ty_for_cc, format_ty_for_rs,
-    is_bridged_type, BridgedType, BridgedTypeConversionInfo,
+    format_ret_ty_for_cc, format_top_level_ns_for_crate, is_bridged_type, BridgedType,
+    BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
@@ -133,7 +133,8 @@ pub fn new_database<'db>(
         reexported_symbol_canonical_name_mapping,
         format_cc_ident_symbol,
         format_top_level_ns_for_crate,
-        format_ty_for_cc,
+        format_type::format_ty_for_cc,
+        format_type::format_ty_for_rs,
         generate_default_ctor,
         generate_copy_ctor_and_assignment_operator,
         generate_move_ctor_and_assignment_operator,
@@ -693,7 +694,7 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSn
         }
     });
     let rust_type = SugaredTy::new(ty, hir_ty);
-    let cc_type_snippet = format_ty_for_cc(db, rust_type, TypeLocation::Const)?;
+    let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
 
     let cc_type = cc_type_snippet.tokens;
     let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
@@ -763,7 +764,7 @@ fn create_type_alias<'tcx>(
     alias_name: &str,
     alias_type: SugaredTy<'tcx>,
 ) -> Result<ApiSnippets> {
-    let cc_bindings = format_ty_for_cc(db, alias_type, TypeLocation::Other)?;
+    let cc_bindings = db.format_ty_for_cc(alias_type, TypeLocation::Other)?;
     let mut main_api_prereqs = CcPrerequisites::default();
     let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
 

@@ -11,10 +11,10 @@ extern crate rustc_span;
 use crate::format_cc_ident;
 use crate::generate_doc_comment;
 use crate::{
-    crate_features, format_ty_for_cc, generate_const, generate_deprecated_tag,
-    generate_must_use_tag, generate_trait_thunks, generate_unsupported_def, get_layout,
-    get_scalar_int_type, get_tag_size_with_padding, is_bridged_type, is_exported,
-    is_public_or_supported_export, RsSnippet, SortedByDef, TraitThunks,
+    crate_features, generate_const, generate_deprecated_tag, generate_must_use_tag,
+    generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
+    get_tag_size_with_padding, is_bridged_type, is_exported, is_public_or_supported_export,
+    RsSnippet, SortedByDef, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::make_rs_ident;
@@ -89,7 +89,7 @@ fn cpp_enum_cpp_underlying_type(db: &dyn BindingsGenerator, def_id: DefId) -> Re
         _ => None, // HIR node is not an Item.
     };
 
-    format_ty_for_cc(db, SugaredTy::new(field_middle_ty, field_hir_ty), TypeLocation::Other)
+    db.format_ty_for_cc(SugaredTy::new(field_middle_ty, field_hir_ty), TypeLocation::Other)
 }
 
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
@@ -1162,15 +1162,15 @@ fn generate_fields<'tcx>(
                     Variants::Multiple { tag, .. } => {
                         let tag_ty = get_scalar_int_type(db.tcx(), *tag);
 
-                        let tag_tokens = format_ty_for_cc(
-                            db,
-                            // An enum cannot have repr(c_char), or any other alias, so there's
-                            // never sugar.
-                            SugaredTy::new(tag_ty, None),
-                            TypeLocation::Other,
-                        )
-                        .expect("discriminant should be a integer type.")
-                        .into_tokens(&mut prereqs);
+                        let tag_tokens = db
+                            .format_ty_for_cc(
+                                // An enum cannot have repr(c_char), or any other alias, so there's
+                                // never sugar.
+                                SugaredTy::new(tag_ty, None),
+                                TypeLocation::Other,
+                            )
+                            .expect("discriminant should be a integer type.")
+                            .into_tokens(&mut prereqs);
 
                         let variant_enum_fields: TokenStream = adt_def
                             .variants()
