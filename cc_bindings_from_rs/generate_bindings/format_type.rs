@@ -8,6 +8,7 @@ extern crate rustc_abi;
 extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
+extern crate rustc_type_ir;
 
 use crate::generate_function::check_fn_sig;
 use crate::generate_function_thunk::is_thunk_required;
@@ -716,6 +717,56 @@ fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
     substs.iter().any(|subst| subst.as_region().is_none())
 }
 
+fn format_fn_ptr_for_rs<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    binder_with_fn_sig_tys: ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>,
+    fn_header: ty::FnHeader<TyCtxt<'tcx>>,
+) -> Result<TokenStream> {
+    let tcx = db.tcx();
+    let ty::FnHeader { c_variadic, safety, abi } = fn_header;
+    if c_variadic {
+        bail!("Variadic functions are not yet supported.");
+    }
+    let maybe_unsafe = if safety.is_unsafe() {
+        quote! { unsafe }
+    } else {
+        TokenStream::new()
+    };
+    let maybe_extern = if matches!(abi, rustc_abi::ExternAbi::Rust) {
+        TokenStream::new()
+    } else {
+        let abi_string = abi.as_str();
+        quote! { extern #abi_string }
+    };
+    let fn_sig_tys = binder_with_fn_sig_tys.skip_binder();
+    let bound_vars = binder_with_fn_sig_tys.bound_vars();
+    for bound_var in bound_vars {
+        let bound_region_kind = match bound_var {
+            ty::BoundVariableKind::Ty(_) | ty::BoundVariableKind::Const => {
+                bail!("Expected fn pointer bound variable to be a region, but was: {bound_var:?}")
+            }
+            ty::BoundVariableKind::Region(bound_region_kind) => bound_region_kind,
+        };
+        if let Some(name) = bound_region_kind.get_name(tcx) {
+            bail!("Function pointers with explicit HRTBs are not yet supported, found bound var: {name}")
+        }
+    }
+    let inputs = fn_sig_tys
+        .inputs()
+        .iter()
+        .map(|&ty| db.format_ty_for_rs(ty))
+        .collect::<Result<Vec<TokenStream>>>()?;
+    let maybe_output = if fn_sig_tys.output().is_unit() {
+        TokenStream::new()
+    } else {
+        let output_ty = db.format_ty_for_rs(fn_sig_tys.output())?;
+        quote! { -> #output_ty }
+    };
+    Ok(quote! {
+        #maybe_unsafe #maybe_extern fn(#(#inputs),*) #maybe_output
+    })
+}
+
 /// Formats `ty` for Rust - to be used in `..._cc_api_impl.rs` (e.g. as a type
 /// of a parameter in a Rust thunk).  Because `..._cc_api_impl.rs` is a
 /// distinct, separate crate, the returned `TokenStream` uses crate-qualified
@@ -733,11 +784,13 @@ pub fn format_ty_for_rs<'tcx>(
         | ty::TyKind::Char
         | ty::TyKind::Int(_)
         | ty::TyKind::Uint(_)
-        | ty::TyKind::FnPtr { .. }
         | ty::TyKind::Never => ty
             .to_string()
             .parse()
             .expect("rustc_middle::ty::Ty::to_string() should produce no parsing errors"),
+        ty::TyKind::FnPtr(binder_with_fn_sig_tys, fn_header) => {
+            format_fn_ptr_for_rs(db, *binder_with_fn_sig_tys, *fn_header)?
+        }
         ty::TyKind::Tuple(types) => {
             let rs_types = types
                 .iter()
