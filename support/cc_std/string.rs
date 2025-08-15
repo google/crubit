@@ -74,7 +74,7 @@ impl string {
 
     /// Returns an object that implements `Display` for safely printing paths that may contain
     /// non-Unicode data. This may perform lossy conversion, depending on the underlying data.
-    pub fn display(&self) -> Display {
+    pub fn display(&self) -> Display<'_> {
         Display(self.as_slice())
     }
 }

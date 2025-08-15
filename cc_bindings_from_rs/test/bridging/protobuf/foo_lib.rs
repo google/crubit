@@ -17,7 +17,7 @@ impl FooService {
         true
     }
 
-    pub fn request_stats(&self) -> FooRequestStatsView {
+    pub fn request_stats(&self) -> FooRequestStatsView<'_> {
         self.stats.as_view()
     }
 

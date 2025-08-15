@@ -779,7 +779,7 @@ pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
 pub fn get_fn_sig<'tcx>(
     tcx: TyCtxt<'tcx>,
     def_id: DefId,
-) -> (ty::FnSig, Option<&rustc_hir::FnDecl>) {
+) -> (ty::FnSig<'tcx>, Option<&'tcx rustc_hir::FnDecl<'tcx>>) {
     let sig_mid = liberate_and_deanonymize_late_bound_regions(
         tcx,
         tcx.fn_sig(def_id).instantiate_identity(),
