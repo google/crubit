@@ -277,6 +277,8 @@ fn symbols_from_extern_crate(db: &dyn BindingsGenerator<'_>) -> Vec<(DefId, Full
     }
 
     let mut visitor = ForeignSymbols { symbols: Vec::new(), db };
+    // TODO: b/433286909 - Support adding aliases to the name map even if they aren't used by the
+    // local crate.
     tcx.hir_visit_all_item_likes_in_crate(&mut visitor);
 
     visitor.symbols
@@ -592,28 +594,80 @@ fn use_path_as_single_res(use_path: &UsePath) -> Result<Res> {
     Ok(present_items.into_iter().next().unwrap())
 }
 
-fn public_items_in_mod(tcx: TyCtxt, def_id: DefId) -> Vec<(Ident, DefId, DefKind)> {
-    let mut items = vec![];
+struct DefInfo {
+    ident: Ident,
+    def_id: DefId,
+    def_kind: DefKind,
+}
+
+enum PublicOnly {
+    Yes,
+    No,
+}
+
+/// Returns all public definitions in the given module.
+fn defs_in_mod<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    def_id: DefId,
+    public_only: PublicOnly,
+) -> impl Iterator<Item = DefInfo> + use<'tcx> {
     let module_children = match def_id.as_local() {
         None => tcx.module_children(def_id),
         // Local `module_children` does not use the query due to perf impacts.
         Some(local_def_id) => tcx.module_children_local(local_def_id),
     };
-    for mod_child in module_children {
-        if !mod_child.vis.is_public() {
-            continue;
+    module_children.iter().filter_map(move |mod_child| {
+        if matches!(public_only, PublicOnly::Yes) && !mod_child.vis.is_public() {
+            return None;
         }
 
-        let hir::def::Res::Def(item_def_kind, item_def_id) = mod_child.res else {
-            continue;
+        let hir::def::Res::Def(mut item_def_kind, mut item_def_id) = mod_child.res else {
+            // TODO(b/350772554): Support PrimTy.
+            return None;
         };
 
-        match item_def_kind {
-            DefKind::Fn | DefKind::Struct | DefKind::Enum => {
-                items.push((mod_child.ident, item_def_id, item_def_kind));
+        // For re-exported items, we want to return the ID of the re-export itself, not the ID of
+        // the re-export target.
+        if let Some(&reexport) = mod_child.reexport_chain.first() {
+            if let Some(reexport_id) = reexport.id() {
+                item_def_id = reexport_id;
+                item_def_kind = tcx.def_kind(reexport_id);
             }
-            _ => {}
         }
+
+        if let Some(stability) = tcx.lookup_stability(item_def_id) {
+            if stability.is_unstable() {
+                return None;
+            }
+        }
+
+        // Omit tuple Ctors functions as top-level C++ items. They are instead emitted only as part
+        // of the type with the same name.
+        if matches!(item_def_kind, DefKind::Ctor(..)) {
+            return None;
+        }
+
+        Some(DefInfo { ident: mod_child.ident, def_id: item_def_id, def_kind: item_def_kind })
+    })
+}
+
+/// Returns all public items of a bindable kind (fns, structs, enums, using statements) in the given
+/// module and its nested modules.
+fn defs_in_mod_recursive(tcx: TyCtxt, def_id: DefId) -> Vec<DefInfo> {
+    let mut items = vec![];
+    // List of child modules to visit.
+    let mut mods_to_visit = vec![def_id];
+    let mut visited = HashSet::new();
+    while let Some(mod_id) = mods_to_visit.pop() {
+        items.extend(
+            defs_in_mod(tcx, mod_id, PublicOnly::No)
+                .filter(|info| visited.insert(info.def_id))
+                .inspect(|def_info| {
+                    if matches!(def_info.def_kind, DefKind::Mod) {
+                        mods_to_visit.push(def_info.def_id);
+                    }
+                }),
+        );
     }
     items
 }
@@ -643,7 +697,9 @@ fn collect_alias_from_use(
 
     let mut aliases = vec![];
     if def_kind == DefKind::Mod {
-        for (ident, item_def_id, item_def_kind) in public_items_in_mod(db.tcx(), def_id) {
+        for DefInfo { ident, def_id: item_def_id, def_kind: item_def_kind } in
+            defs_in_mod(db.tcx(), def_id, PublicOnly::Yes)
+        {
             // TODO(b/350772554): Support export Enum fields.
             if !ident.name.is_empty() {
                 aliases.push((ident.name.to_string(), item_def_id, item_def_kind));
@@ -1307,18 +1363,19 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let mut cc_api_impl = TokenStream::default();
     let mut extern_c_decls = BTreeSet::new();
     let mut main_apis = HashMap::<DefId, CcSnippet>::new();
-    let formatted_items = tcx
-        .hir_free_items()
-        .filter_map(|item_id| {
-            let local_def_id = item_id.owner_id.def_id;
-            let def_id = local_def_id.to_def_id();
+
+    let defs_in_crate = defs_in_mod_recursive(tcx, LOCAL_CRATE.as_def_id());
+    let formatted_items = defs_in_crate
+        .into_iter()
+        .filter_map(|def_info| {
+            let def_id = def_info.def_id;
             db.generate_item(def_id)
                 .unwrap_or_else(|err| Some(generate_unsupported_def(db, def_id, err)))
-                .map(|api_snippets| (local_def_id, api_snippets))
+                .map(|api_snippets| (def_id, api_snippets))
         })
         .sorted_by_def_with(tcx, |&(id, _)| id.into());
-    for (local_def_id, api_snippets) in formatted_items {
-        let def_id = local_def_id.to_def_id();
+
+    for (def_id, api_snippets) in formatted_items {
         let old_item = main_apis.insert(def_id, api_snippets.main_api);
         assert!(old_item.is_none(), "Duplicated key: {def_id:?}");
 

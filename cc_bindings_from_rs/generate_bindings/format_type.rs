@@ -1090,7 +1090,7 @@ pub fn is_bridged_adt<'tcx>(
     // The ADT does not need to be bridged, but check if it has generic types that
     // need to be bridged e.g. Box<BridgedType> cannot be formated at
     // the moment. If we encounter a type like this we return an error.
-    substs.iter().flat_map(|a| a.walk()).try_for_each(|a| {
+    substs.iter().try_for_each(|a| {
         let Some(ty) = a.as_type() else {
             return Ok(());
         };
