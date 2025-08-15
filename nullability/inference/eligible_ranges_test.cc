@@ -903,6 +903,15 @@ TEST(EligibleRangesTest, Lambda) {
                                  eligibleRange(1, Input.point("one")))));
 }
 
+TEST(EligibleRangesTest, LambdaCaptureWithInit) {
+  std::string Input = R"cc(
+    void foo(int* p) {
+      [capture_with_init = p]() {};
+    }
+  )cc";
+  EXPECT_THAT(getVarRanges(Input, "capture_with_init"), IsEmpty());
+}
+
 TEST(EligibleRangesTest, LambdaCaptureWithFunctionTypeInTemplateArg) {
   std::string Input = R"cc(
     template <typename T>

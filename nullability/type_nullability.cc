@@ -366,9 +366,11 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       BestLocSoFar = std::nullopt;
     }
     // In most cases we want to keep the most Elaborated Loc for the type, but
-    // template arguments supersede that preference.
-    if (!BestLocSoFar || OverrideElaborated ||
-        BestLocSoFar->getTypeLocClass() != TypeLoc::Elaborated) {
+    // template arguments supersede that preference. And don't keep any bare
+    // `auto` TypeLocs, because bare `auto` cannot be annotated.
+    if ((!BestLocSoFar || OverrideElaborated ||
+         BestLocSoFar->getTypeLocClass() != TypeLoc::Elaborated) &&
+        Loc.getTypeLocClass() != TypeLoc::Auto) {
       BestLocSoFar = Loc;
     }
   }
@@ -897,6 +899,14 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
                       std::optional<ParenTypeLoc> L) {
     visit(PT->getInnerType(),
           L ? std::optional<TypeLoc>(L->getInnerLoc()) : std::nullopt);
+  }
+
+  void visitAutoType(const AutoType* absl_nonnull AT,
+                     std::optional<AutoTypeLoc> L) {
+    // Intentionally lose track of location info inside a bare `auto` type.
+    // There's no location inside of `auto` (explicit or implicit, as in a
+    // lambda capture with init) that's eligible for an annotation.
+    visitType(AT, std::nullopt);
   }
 };
 
