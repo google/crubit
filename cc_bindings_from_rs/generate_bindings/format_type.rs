@@ -794,7 +794,7 @@ pub fn format_ty_for_rs<'tcx>(
         ty::TyKind::Tuple(types) => {
             let rs_types = types
                 .iter()
-                .map(|ty| format_ty_for_rs(db, ty))
+                .map(|ty| db.format_ty_for_rs(ty))
                 .collect::<Result<Vec<TokenStream>>>()?;
             quote! { (#(#rs_types,)*) }
         }
@@ -811,7 +811,7 @@ pub fn format_ty_for_rs<'tcx>(
                 let generic_params = substs
                     .iter()
                     .map(|subst| match subst.kind() {
-                        ty::GenericArgKind::Type(ty) => format_ty_for_rs(db, ty),
+                        ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty),
                         ty::GenericArgKind::Lifetime(region) => {
                             assert_eq!(
                                 region.kind(),
@@ -837,7 +837,7 @@ pub fn format_ty_for_rs<'tcx>(
             };
             let ty = match format_transparent_pointee(db, pointee_ty) {
                 Ok(generic_ty) => generic_ty,
-                Err(_) => format_ty_for_rs(db, *pointee_ty).with_context(|| {
+                Err(_) => db.format_ty_for_rs(*pointee_ty).with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
                 })?,
             };
@@ -854,14 +854,14 @@ pub fn format_ty_for_rs<'tcx>(
             };
             let ty = match format_transparent_pointee(db, referent_ty) {
                 Ok(generic_ty) => generic_ty,
-                Err(_) => format_ty_for_rs(db, *referent_ty).with_context(|| {
+                Err(_) => db.format_ty_for_rs(*referent_ty).with_context(|| {
                     format!("Failed to format the referent of the reference type `{ty}`")
                 })?,
             };
             quote! { & #lifetime #mutability #ty }
         }
         ty::TyKind::Slice(slice_ty) => {
-            let ty = format_ty_for_rs(db, *slice_ty).with_context(|| {
+            let ty = db.format_ty_for_rs(*slice_ty).with_context(|| {
                 format!("Failed to format the element type of the slice type `{ty}`")
             })?;
             quote! { [#ty] }
