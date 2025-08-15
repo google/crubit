@@ -22,7 +22,9 @@ rust_library(
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=allow_internal_unstable,negative_impls,super_let"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
-    visibility = ["//:__subpackages__"],
+    visibility = [
+        "//visibility:public",
+    ],
 )
 
 rust_proc_macro(
@@ -132,8 +134,7 @@ rust_library(
     rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts,unsized_const_params"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
-        "//:__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
+        "//visibility:public",
     ],
 )
 
@@ -176,9 +177,7 @@ rust_library(
     rustc_flags = ["-Zallow-features=negative_impls"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
-        # INTERNAL VISIBILITY ONLY.
-        # FOR USAGE ADD TO //support:oops
-        "//:__subpackages__",
+        "//visibility:public",
     ],
 )
 
@@ -197,9 +196,7 @@ rust_library(
     name = "bridge_rust",
     srcs = ["bridge.rs"],
     visibility = [
-        # INTERNAL VISIBILITY ONLY.
-        # FOR USAGE ADD TO //support/public:bridge_rust
-        "//:__subpackages__",
+        "//visibility:public",
     ],
 )
 
