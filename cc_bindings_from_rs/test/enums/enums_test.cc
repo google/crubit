@@ -8,7 +8,6 @@
 
 #include "gtest/gtest.h"
 
-namespace crubit {
 namespace {
 
 using enums::cpp_enum::Color;
@@ -110,4 +109,3 @@ TEST(CppEnumTest, BasicTest) {
 }
 
 }  // namespace
-}  // namespace crubit

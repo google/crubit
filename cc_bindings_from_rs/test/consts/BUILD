@@ -1,4 +1,4 @@
-"""End-to-end tests of `cc_bindings_from_rs`, focusing on enums-related
+"""End-to-end tests of `cc_bindings_from_rs`, focusing on consts-related
 bindings."""
 
 load(
@@ -18,9 +18,9 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 rust_library(
-    name = "enums",
+    name = "consts",
     testonly = 1,
-    srcs = ["enums.rs"],
+    srcs = ["consts.rs"],
     aspect_hints = [
         "//features:experimental",
     ],
@@ -30,24 +30,24 @@ rust_library(
 )
 
 golden_test(
-    name = "enums_golden_test",
-    basename = "enums",
-    golden_h = "enums_cc_api.h",
-    golden_rs = "enums_cc_api_impl.rs",
-    rust_library = "enums",
+    name = "consts_golden_test",
+    basename = "consts",
+    golden_h = "consts_cc_api.h",
+    golden_rs = "consts_cc_api_impl.rs",
+    rust_library = "consts",
 )
 
 cc_bindings_from_rust(
-    name = "enums_cc_api",
+    name = "consts_cc_api",
     testonly = 1,
-    crate = ":enums",
+    crate = ":consts",
 )
 
 crubit_cc_test(
-    name = "enums_test",
-    srcs = ["enums_test.cc"],
+    name = "consts_test",
+    srcs = ["consts_test.cc"],
     deps = [
-        ":enums_cc_api",
+        ":consts_cc_api",
         "@googletest//:gtest_main",
     ],
 )

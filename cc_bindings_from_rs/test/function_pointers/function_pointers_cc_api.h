@@ -68,8 +68,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // Error generating bindings for `CONST_C_FN_PTR_ADD_TEN` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=27:
-// Unsupported constant type: Binder { value: extern "C { unwind: false }"
-// fn(i32) -> i32, bound_vars: [] }
+// Pointer values cannot be used as scalar constants.
 
 // CRUBIT_ANNOTATE: must_bind=
 //

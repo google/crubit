@@ -1,0 +1,13 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// consts_golden
+// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
+
+#![allow(unused_unsafe)]
+#![allow(improper_ctypes_definitions)]
+
+const _: () = assert!(::std::mem::size_of::<::consts_golden::TyWithAssocConsts>() == 1);
+const _: () = assert!(::std::mem::align_of::<::consts_golden::TyWithAssocConsts>() == 1);

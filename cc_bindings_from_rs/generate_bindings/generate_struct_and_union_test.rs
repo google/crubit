@@ -1230,109 +1230,9 @@ fn test_format_item_doc_comments_tuple_struct() {
 }
 
 #[test]
-fn test_cpp_enum_plain() {
-    let test_src = r#"
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum"]
-    #[repr(transparent)]
-    pub struct Color(i32);
-
-    impl Color {
-        pub const RED: Color = Color(0);
-        pub const BLUE: Color = Color(2);
-    }
-    "#;
-
-    test_format_item(test_src, "Color", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert!(!main_api.prereqs.is_empty());
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                enum ... Color : std::int32_t {
-                    RED = 0,
-                    BLUE = 2,
-                };
-            }
-        );
-    });
-}
-
-#[test]
-fn test_cpp_enum_class() {
-    let test_src = r#"
-    #![feature(register_tool)]
-    #![register_tool(__crubit)]
-
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
-    #[repr(transparent)]
-    pub struct Color(u8);
-
-    impl Color {
-        pub const RED: Color = Color(0);
-        pub const BLUE: Color = Color(2);
-    }
-    "#;
-
-    test_format_item(test_src, "Color", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert!(!main_api.prereqs.is_empty());
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                enum class ... Color : std::uint8_t {
-                    RED = 0,
-                    BLUE = 2,
-                };
-            }
-        );
-    });
-}
-
-#[test]
-fn test_cpp_enum_with_attributes() {
-    let test_src = r#"
-    #![feature(register_tool)]
-    #![register_tool(__crubit)]
-    #![allow(deprecated)]
-    #![allow(unused)]
-
-    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
-    #[repr(transparent)]
-    #[deprecated(note="Use NewColor")]
-    #[must_use]
-    pub struct Color(i32);
-
-    impl Color {
-        pub const RED: Color = Color(0);
-        pub const BLUE: Color = Color(2);
-    }
-    "#;
-
-    test_format_item(test_src, "Color", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert!(!main_api.prereqs.is_empty());
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                enum class ... [[nodiscard]] [[deprecated("Use NewColor")]] ... Color : std::int32_t {
-                    RED = 0,
-                    BLUE = 2,
-                };
-            }
-        );
-    });
-}
-
-#[test]
 #[should_panic]
 fn test_cpp_enum_fails_if_not_repr_transparent() {
     let test_src = r#"
-    #![feature(register_tool)]
-    #![register_tool(__crubit)]
-
     #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
     pub struct Color(i32);
 
@@ -1349,9 +1249,6 @@ fn test_cpp_enum_fails_if_not_repr_transparent() {
 #[should_panic]
 fn test_cpp_enum_fails_if_implements_method() {
     let test_src = r#"
-    #![feature(register_tool)]
-    #![register_tool(__crubit)]
-
     #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
     #[repr(transparent)]
     pub struct Color(i32);

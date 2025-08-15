@@ -94,36 +94,58 @@ fn cpp_enum_cpp_underlying_type(db: &dyn BindingsGenerator, def_id: DefId) -> Re
 
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
 pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<String> {
-    // Convenience macro to convert a scalar to a particular numeric type and then to a String.
-    //
-    // Examples:
-    //  `eval!(scalar, to_i32)`
-    //     → `scalar.to_i32().unwrap().to_string()`
-    //
-    //  `eval!(scalar, to_target_usize, &tcx)`
-    //     → `scalar.to_target_usize(&tcx).unwrap().to_string()`
-    macro_rules! eval {
-        ( $name: ident, $method:ident $(, $arg:expr)? ) => {
-            $name.$method($($arg)?).unwrap().to_string()
-        };
+    let scalar = match scalar {
+        Scalar::Int(i) => i,
+        Scalar::Ptr(..) => bail!("Pointer values cannot be used as scalar constants."),
+    };
+
+    // Print positive integers directly if they fit in an i64, since `int` is guaranteed to be at
+    // least 16 bits wide.
+    if matches!(kind, TyKind::Uint(_)) {
+        let value: u128 = scalar.to_bits_unchecked();
+        if value < (i16::MAX as u128) {
+            return Ok((value as i16).to_string());
+        }
     }
 
-    match kind {
-        ty::TyKind::Bool => Ok(eval!(scalar, to_bool)),
-        ty::TyKind::Int(ty::IntTy::I8) => Ok(eval!(scalar, to_i8)),
-        ty::TyKind::Int(ty::IntTy::I16) => Ok(eval!(scalar, to_i16)),
-        ty::TyKind::Int(ty::IntTy::I32) => Ok(eval!(scalar, to_i32)),
-        ty::TyKind::Int(ty::IntTy::I64) => Ok(eval!(scalar, to_i64)),
-        ty::TyKind::Uint(ty::UintTy::U8) => Ok(eval!(scalar, to_u8)),
-        ty::TyKind::Uint(ty::UintTy::U16) => Ok(eval!(scalar, to_u16)),
-        ty::TyKind::Uint(ty::UintTy::U32) => Ok(eval!(scalar, to_u32)),
-        ty::TyKind::Uint(ty::UintTy::U64) => Ok(eval!(scalar, to_u64)),
-        ty::TyKind::Float(ty::FloatTy::F32) => Ok(eval!(scalar, to_f32)),
-        ty::TyKind::Float(ty::FloatTy::F64) => Ok(eval!(scalar, to_f64)),
-        ty::TyKind::Uint(ty::UintTy::Usize) => Ok(eval!(scalar, to_target_usize, &tcx)),
-        ty::TyKind::Int(ty::IntTy::Isize) => Ok(eval!(scalar, to_target_isize, &tcx)),
-        _ => Err(anyhow!("Unsupported constant type: {:?}", kind)),
-    }
+    use ty::FloatTy::*;
+    use ty::IntTy::*;
+    use ty::TyKind;
+    use ty::UintTy::*;
+
+    Ok(match kind {
+        TyKind::Bool => scalar.try_to_bool().unwrap().to_string(),
+        TyKind::Int(I8) => scalar.to_i8().to_string(),
+        TyKind::Int(I16) => scalar.to_i16().to_string(),
+        TyKind::Int(I32) => format!("INT32_C({})", scalar.to_i32()),
+        TyKind::Uint(U8) => scalar.to_u8().to_string(),
+        TyKind::Uint(U16) => format!("UINT16_C({})", scalar.to_u16()),
+        TyKind::Uint(U32) => format!("UINT32_C({})", scalar.to_u32()),
+        TyKind::Uint(U64) => format!("UINT64_C({})", scalar.to_u64()),
+        TyKind::Float(F32) => format!("{}f", scalar.to_f32()),
+        TyKind::Float(F64) => format!("{}L", scalar.to_f64()),
+        TyKind::Uint(Usize) => format!("UINT64_C({})", scalar.to_target_usize(tcx)),
+
+        // Signed integer minimums cannot be expressed with literals, as `-<int>` parses as a unary
+        // minus operator applied to an out-of-range (for signed types) integer literal.
+        TyKind::Int(I64) => {
+            let value = scalar.to_i64();
+            if value == i64::MIN {
+                "INT64_MIN".to_string()
+            } else {
+                format!("INT64_C({value})")
+            }
+        }
+        TyKind::Int(ty::IntTy::Isize) => {
+            let value = scalar.to_target_isize(tcx);
+            if value == i64::MIN {
+                "INT64_MIN".to_string()
+            } else {
+                format!("INT64_C({value})")
+            }
+        }
+        _ => bail!("Unsupported constant type: {:?}", kind),
+    })
 }
 
 /// Formats a struct that is annotated with the `cpp_enum` attribute.
