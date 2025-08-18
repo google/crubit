@@ -56,6 +56,11 @@ std::optional<std::string> CollectUnknownAttrs(
         clang::isa<clang::AnnotateTypeAttr>(attr)) {
       continue;
     }
+    // The available attribute is handled centrally by importer.cc,
+    // by checking Decl::isUnavailable.
+    if (clang::isa<clang::UnavailableAttr>(attr)) {
+      continue;
+    }
     if (unknown_attr.has_value()) {
       absl::StrAppend(&*unknown_attr, ", ");
     } else {

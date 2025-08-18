@@ -750,6 +750,15 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
     return std::nullopt;
   }
 
+  std::string unavailable_error;
+  if (decl->isUnavailable(&unavailable_error)) {
+    return ImportUnsupportedItem(
+        *decl, std::nullopt,
+        {FormattedError::PrefixedStrCat("Decl is unavailable: ",
+                                        std::move(unavailable_error))},
+        /*is_hard_error=*/*must_bind);
+  }
+
   for (auto& importer : decl_importers_) {
     std::optional<IR::Item> result = importer->ImportDecl(decl);
     if (result.has_value()) {
