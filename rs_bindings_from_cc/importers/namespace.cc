@@ -19,7 +19,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl, UnsupportedItem::Kind::kNamespace, std::nullopt,
+        *namespace_decl, std::nullopt,
         FormattedError::Static("Anonymous namespaces are not supported yet"));
   }
 
@@ -27,7 +27,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
       ictx_.GetTranslatedIdentifier(namespace_decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl, UnsupportedItem::Kind::kNamespace, std::nullopt,
+        *namespace_decl, std::nullopt,
         FormattedError::PrefixedStrCat("Namespace name is not supported",
                                        identifier.status().message()));
   }
@@ -43,14 +43,14 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        namespace_decl, UnsupportedItem::Kind::kNamespace, std::nullopt,
+        *namespace_decl, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
   // Renames are not currently supported for namespaces.
   // TODO - b/399487279: Support namespace renames using CRUBIT_RUST_NAME.
   // if (identifier->crubit_rust_name.has_value()) {
   //   return ictx_.ImportUnsupportedItem(
-  //       namespace_decl, UnsupportedItem::Kind::kType, std::nullopt,
+  //       namespace_decl, std::nullopt,
   //       FormattedError::Static("Namespace renames are not supported yet"));
   // }
 

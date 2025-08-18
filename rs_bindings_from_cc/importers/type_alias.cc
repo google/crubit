@@ -37,7 +37,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         tag_decl && tag_decl->getDeclContext() == decl_context &&
         tag_decl->getName() == decl->getName()) {
       return ictx_.ImportUnsupportedItem(
-          decl, UnsupportedItem::Kind::kTypeAlias, std::nullopt,
+          *decl, std::nullopt,
           FormattedError::Static(
               "Typedef only used to introduce a name in C. Not importing."));
     }
@@ -60,7 +60,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       ictx_.GetTranslatedIdentifier(decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, UnsupportedItem::Kind::kTypeAlias, std::nullopt,
+        *decl, std::nullopt,
         FormattedError::PrefixedStrCat("Type alias name is not supported",
                                        identifier.status().message()));
   }
@@ -68,7 +68,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, UnsupportedItem::Kind::kTypeAlias, std::nullopt,
+        *decl, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
@@ -80,7 +80,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
 
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(
-        decl, UnsupportedItem::Kind::kTypeAlias,
+        *decl,
         UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         FormattedError::FromStatus(std::move(underlying_type.status())));

@@ -23,7 +23,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   clang::DeclContext* decl_context = var_decl->getDeclContext();
   if (!decl_context) {
     return ictx_.ImportUnsupportedItem(
-        var_decl, UnsupportedItem::Kind::kGlobalVar, std::nullopt,
+        *var_decl, std::nullopt,
         FormattedError::Static("DeclContext was unexpectedly null"));
   }
   if (!decl_context->isTranslationUnit() && !decl_context->isExternCContext() &&
@@ -34,7 +34,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
 
   if (var_decl->isStaticDataMember()) {
     return ictx_.ImportUnsupportedItem(
-        var_decl, UnsupportedItem::Kind::kGlobalVar, std::nullopt,
+        *var_decl, std::nullopt,
         FormattedError::Static("static data members are not supported"));
   }
 
@@ -50,7 +50,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   // TODO(b/208945197): We don't support compile-time constants yet.
   if (might_not_export) {
     return ictx_.ImportUnsupportedItem(
-        var_decl, UnsupportedItem::Kind::kGlobalVar, std::nullopt,
+        *var_decl, std::nullopt,
         FormattedError::Static(
             "compile-time and inline constants are not supported"));
   }
@@ -61,7 +61,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
 
   if (llvm::isa<clang::VarTemplateSpecializationDecl>(var_decl)) {
     return ictx_.ImportUnsupportedItem(
-        var_decl, UnsupportedItem::Kind::kGlobalVar, std::nullopt,
+        *var_decl, std::nullopt,
         FormattedError::Static("templated variables are not supported"));
   }
 
@@ -69,7 +69,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
       ictx_.GetTranslatedIdentifier(var_decl);
   if (!var_name.ok()) {
     return ictx_.ImportUnsupportedItem(
-        var_decl, UnsupportedItem::Kind::kGlobalVar, std::nullopt,
+        *var_decl, std::nullopt,
         FormattedError::PrefixedStrCat("variable name is not supported",
                                        var_name.status().message()));
   }
@@ -77,14 +77,14 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   auto enclosing_item_id = ictx_.GetEnclosingItemId(var_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
-        var_decl, UnsupportedItem::Kind::kGlobalVar, std::nullopt,
+        *var_decl, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   auto type = ictx_.ConvertQualType(var_decl->getType(), nullptr);
   if (!type.ok()) {
     return ictx_.ImportUnsupportedItem(
-        var_decl, UnsupportedItem::Kind::kGlobalVar, std::nullopt,
+        *var_decl, std::nullopt,
         FormattedError::FromStatus(std::move(type.status())));
   }
 

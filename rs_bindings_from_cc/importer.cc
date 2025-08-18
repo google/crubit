@@ -841,76 +841,76 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
 }
 
 IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
-  return ImportUnsupportedItem(&decl, UnsupportedItem::Kind::kOther,
-                               std::nullopt, {error}, /*is_hard_error=*/true);
+  return ImportUnsupportedItem(decl, std::nullopt, {error},
+                               /*is_hard_error=*/true);
 }
 
-IR::Item Importer::ImportUnsupportedRecord(
-    const clang::TagDecl& decl, std::optional<UnsupportedItem::Path> path,
-    FormattedError error) {
-  auto kind = UnsupportedItem::Kind::kOther;
-  switch (decl.getTagKind()) {
-    case clang::TagTypeKind::Struct:
-      kind = UnsupportedItem::Kind::kStruct;
-      break;
-    case clang::TagTypeKind::Class:
-      kind = UnsupportedItem::Kind::kClass;
-      break;
-    case clang::TagTypeKind::Enum:
-      kind = UnsupportedItem::Kind::kEnum;
-      break;
-    case clang::TagTypeKind::Union:
-      kind = UnsupportedItem::Kind::kUnion;
-      break;
-    default:
-      break;
-  }
-  return ImportUnsupportedItem(&decl, kind, std::move(path),
-                               std::vector<FormattedError>({std::move(error)}),
-                               /*is_hard_error=*/false);
-}
-
-IR::Item Importer::ImportUnsupportedFunc(
-    const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
-    FormattedError error) {
-  return ImportUnsupportedFunc(decl, std::move(path),
-                               std::vector<FormattedError>({std::move(error)}));
-}
-
-IR::Item Importer::ImportUnsupportedFunc(
-    const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
+IR::Item Importer::ImportUnsupportedItem(
+    const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
     std::vector<FormattedError> errors) {
-  const auto kind = decl.getKind() == clang::NamedDecl::Kind::CXXConstructor
-                        ? UnsupportedItem::Kind::kConstructor
-                        : UnsupportedItem::Kind::kFunc;
-  return ImportUnsupportedItem(&decl, kind, std::move(path), std::move(errors),
+  return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
                                /*is_hard_error=*/false);
 }
 
 IR::Item Importer::ImportUnsupportedItem(
-    const clang::Decl* decl, UnsupportedItem::Kind kind,
-    std::optional<UnsupportedItem::Path> path, FormattedError error) {
-  return ImportUnsupportedItem(decl, kind, std::move(path),
+    const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+    FormattedError error) {
+  return ImportUnsupportedItem(decl, std::move(path),
                                std::vector<FormattedError>({std::move(error)}),
                                /*is_hard_error=*/false);
 }
 
 IR::Item Importer::ImportUnsupportedItem(
-    const clang::Decl* decl, UnsupportedItem::Kind kind,
-    std::optional<UnsupportedItem::Path> path,
+    const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
     std::vector<FormattedError> errors, bool is_hard_error) {
+  auto kind = UnsupportedItem::Kind::kOther;
+  if (const clang::TagDecl* named_decl =
+          clang::dyn_cast<clang::TagDecl>(&decl)) {
+    switch (named_decl->getTagKind()) {
+      case clang::TagTypeKind::Struct:
+        kind = UnsupportedItem::Kind::kStruct;
+        break;
+      case clang::TagTypeKind::Class:
+        kind = UnsupportedItem::Kind::kClass;
+        break;
+      case clang::TagTypeKind::Enum:
+        kind = UnsupportedItem::Kind::kEnum;
+        break;
+      case clang::TagTypeKind::Union:
+        kind = UnsupportedItem::Kind::kUnion;
+        break;
+      default:
+        break;
+    }
+  } else if (const clang::FunctionDecl* func_decl =
+                 clang::dyn_cast<clang::FunctionDecl>(&decl)) {
+    kind = func_decl->getKind() == clang::NamedDecl::Kind::CXXConstructor
+               ? UnsupportedItem::Kind::kConstructor
+               : UnsupportedItem::Kind::kFunc;
+  } else if (clang::isa<clang::NamespaceDecl>(decl)) {
+    kind = UnsupportedItem::Kind::kNamespace;
+  } else if (clang::isa<clang::VarDecl>(decl)) {
+    kind = UnsupportedItem::Kind::kGlobalVar;
+  } else if (clang::isa<clang::FunctionTemplateDecl>(decl)) {
+    kind = UnsupportedItem::Kind::kFunc;
+  } else if (clang::isa<clang::ClassTemplateDecl>(decl)) {
+    kind = UnsupportedItem::Kind::kClass;
+  } else if (clang::isa<clang::TypeAliasDecl>(decl) ||
+             clang::isa<clang::TypedefNameDecl>(decl)) {
+    kind = UnsupportedItem::Kind::kTypeAlias;
+  }
   std::string name = "unnamed";
-  if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
+  if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(&decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
-  std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
+  std::string source_loc = ConvertSourceLocation(decl.getBeginLoc());
   return UnsupportedItem{
       .name = name,
       .kind = kind,
       .path = std::move(path),
       .errors = std::move(errors),
       .source_loc = source_loc,
-      .id = GenerateItemId(decl),
+      .id = GenerateItemId(&decl),
       .must_bind = is_hard_error,
   };
 }

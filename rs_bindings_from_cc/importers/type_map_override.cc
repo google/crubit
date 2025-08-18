@@ -128,7 +128,7 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
       GetTemplateParameters(ictx_, type_decl);
   if (!type_parameters.ok()) {
     return ictx_.ImportUnsupportedItem(
-        type_decl, UnsupportedItem::Kind::kOther, std::nullopt,
+        *type_decl, std::nullopt,
         FormattedError::PrefixedStrCat("Error fetching template parameters",
                                        type_parameters.status().message()));
   }

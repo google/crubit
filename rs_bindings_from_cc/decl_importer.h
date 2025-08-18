@@ -94,26 +94,15 @@ class ImportContext {
   // generation time.
   virtual IR::Item HardError(const clang::Decl& decl, FormattedError error) = 0;
 
-  // Imports an unsupported struct/union/enum/class with a single formatted
-  // error message. Delegates to ImportUnsupportedItem with inferred
-  // UnsupportedItem::Kind from the decl parameter.
-  virtual IR::Item ImportUnsupportedRecord(
-      const clang::TagDecl& decl, std::optional<UnsupportedItem::Path> path,
-      FormattedError error) = 0;
-
-  virtual IR::Item ImportUnsupportedFunc(
-      const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
-      FormattedError error) = 0;
-
   // Imports an unsupported function with a vector of formatted error messages.
-  virtual IR::Item ImportUnsupportedFunc(
-      const clang::NamedDecl& decl, std::optional<UnsupportedItem::Path> path,
+  virtual IR::Item ImportUnsupportedItem(
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
       std::vector<FormattedError> error) = 0;
 
   // Imports an unsupported item with a single formatted error message.
   virtual IR::Item ImportUnsupportedItem(
-      const clang::Decl* decl, UnsupportedItem::Kind kind,
-      std::optional<UnsupportedItem::Path> path, FormattedError error) = 0;
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      FormattedError error) = 0;
 
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.

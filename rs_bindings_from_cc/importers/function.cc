@@ -189,7 +189,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (IsInStdNamespace(function_decl)) {
     if (clang::IdentifierInfo* id = function_decl->getIdentifier();
         id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
-      return ictx_.ImportUnsupportedFunc(
+      return ictx_.ImportUnsupportedItem(
           *function_decl, std::nullopt,
           FormattedError::Static("Internal functions from the standard "
                                  "library are not supported"));
@@ -213,7 +213,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   absl::StatusOr<TranslatedUnqualifiedIdentifier> translated_name =
       ictx_.GetTranslatedName(function_decl);
   if (!translated_name.ok()) {
-    return ictx_.ImportUnsupportedFunc(
+    return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
         FormattedError::PrefixedStrCat("Function name is not supported",
                                        translated_name.status().message()));
@@ -221,19 +221,19 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(function_decl);
   if (!enclosing_item_id.ok()) {
-    return ictx_.ImportUnsupportedFunc(
+    return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
   // Reports an unsupported function with the given error.
   //
-  // This is preferred to invoking `ImportUnsupportedFunc` directly because it
+  // This is preferred to invoking `ImportUnsupportedItem` directly because it
   // ensures that the path is set correctly. Note that this cannot be used above
   // because the enclosing item ID and translated name are not yet available.
   auto unsupported = [this, &translated_name, &enclosing_item_id,
                       function_decl](FormattedError error) {
-    return ictx_.ImportUnsupportedFunc(
+    return ictx_.ImportUnsupportedItem(
         *function_decl,
         UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
@@ -503,7 +503,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   }
 
   if (!errors.error_set.empty()) {
-    return ictx_.ImportUnsupportedFunc(
+    return ictx_.ImportUnsupportedItem(
         *function_decl,
         UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
