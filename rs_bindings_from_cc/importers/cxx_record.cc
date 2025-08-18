@@ -359,11 +359,11 @@ std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
 bool IsKnownAttr(const clang::Attr& attr) {
   return clang::isa<clang::AlignedAttr>(attr) ||
          clang::isa<clang::FinalAttr>(attr) ||
-         clang::isa<clang::TrivialABIAttr>(attr) ||
-         clang::isa<clang::PreferredNameAttr>(attr) ||
          clang::isa<clang::OwnerAttr>(attr) ||
-         clang::isa<clang::WarnUnusedResultAttr>(attr) ||
-         clang::isa<clang::PointerAttr>(attr);
+         clang::isa<clang::PointerAttr>(attr) ||
+         clang::isa<clang::PreferredNameAttr>(attr) ||
+         clang::isa<clang::TrivialABIAttr>(attr) ||
+         clang::isa<clang::WarnUnusedResultAttr>(attr);
 }
 
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
