@@ -40,6 +40,9 @@ Unless otherwise specified, the types below are supported and ABI-compatible
 *   Bridged: `std::string`
 *   Bridged: `&str`
 *   Bridged: Rust tuples (e.g. `(i32, i64)`)
+*   Bridged: `std::optional<T>`
+*   Bridged: (allowlisted) protocol buffers
+*   Bridged: `absl::Status`
 *   raw pointers to any ABI-compatible or layout-compatible item in this list
 
 We have *experimental* unreleased support for the following types:
@@ -49,11 +52,10 @@ We have *experimental* unreleased support for the following types:
 
 We have planned support for the following types:
 
-*   (2025H1) b/308406733: bridged protocol buffers
-*   (2025H1) b/356221625: bridged `absl::Status`, `absl::StatusOr`
 *   (2025H2) b/271016831: layout-compatible `*const [T]`, `*mut [T]`
-*   (2025) `Option<T>` and `std::optional<T>`.
-*   (2025) b/356221873: bridged `std::vector`
+*   (2025H2) bridged `Option<T>`
+*   (2025) b/356638830: layout-compatible `std::vector`
+*   (2025) b/369994952: layout-compatible `std::unique_ptr`
 
 The following types are **not** yet supported, among many others:
 
@@ -123,7 +125,7 @@ features, used in public interfaces:
     *   non-repr(C) unions
 *   aliases (via `use`, `type`)
 *   functions and methods
-*   references in functions, provided that mutable aliasing is impossible
+*   references
 *   specific known traits with equivalents in C++:
     *   `Clone`
     *   `Default`
@@ -134,7 +136,6 @@ features, used in public interfaces:
 
 We have *experimental* unreleased support for the following language features:
 
-*   unsafe use of references, such as two `&mut` references in the same function
 *   non-opaque enums
 *   non-opaque non-`repr(C)` unions
 
