@@ -6,6 +6,8 @@
 # (see WORKSPACE.bzlmod)
 bazel_dep(name = "rules_rust", version = "0.63.0")
 
+bazel_dep(name = "rules_cc", version = "0.2.0")
+
 bazel_dep(name = "abseil-cpp", version = "20250127.1")
 git_override(  # with nullability support
     module_name = "abseil-cpp",
