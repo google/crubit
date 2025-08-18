@@ -8,11 +8,9 @@ default_linux_targets: &default_linux_targets
   # Target below is only a rudimentary smoke test.
   - "//rs_bindings_from_cc:rs_bindings_from_cc_main"
   - "//rs_bindings_from_cc:importer_test"
-  - "//rs_bindings_from_cc:cc_collect_instantiations_test"
   - "//rs_bindings_from_cc:collect_instantiations_test"
   - "//rs_bindings_from_cc:cmdline_test"
   - "//rs_bindings_from_cc:rs_ir_test"
-  - "//support/cc_template/..."
   - "//lifetime_analysis/..."
   # This target currently builds but crashes due to not being able to find librustc_driver.
   # error while loading shared libraries: librustc_driver-9f7af4bb25b7b8ba.so: cannot open shared object file: No such file or directory
