@@ -148,13 +148,69 @@ The following features are **not** supported yet, among others:
 *   statics and more complex `const` constants
 *   macros
 
-## Build System
+## Usage outside of Google
+
+Crubit was initially written to take advantage of the superpowers that come with
+a centrally controlled monorepo using a Bazel build system. However, this
+presents a high barrier to entry: in order to use Crubit, you must satisfy all
+of the preconditions.
+
+In 2026, we are building Crubit up to be a tool shaped like OSS users
+expect: an IDL-based FFI tool with Cargo integration, with _options_ for a better
+experience in codebases with strong control over the build environment. (Though
+for calling Rust from C++, we might stop short of an IDL, and instead rely on
+compiler-synced binary releases, since there is only one compiler.)
+
+In particular, this involves decomposing Crubit into a collection of parts that
+can be used on their own, without needing to consume the whole:
+
+* Reusable libraries that implement C++ functionality (e.g., forward declarations,
+  nontrivial object semantics.)
+* An IDL-based core, with optional compiler integration at the front-end.
+* Support for building with Cargo, stable named versions of Clang or Rust, etc.
+
+### Decoupling from the toolchain
+
+By using an IDL as input, instead of a C++ compiler frontend, Crubit can be made
+compatible with arbitrary C++ compilers: a human can write the IDL in a way that
+is compatible with the compiler in question, even if Crubit does not integrate
+with that compiler yet.
+
+For the Rust compiler, however, there is only one. The main toolchain
+integration hazard is that the compiler and its arguments must be exactly
+matched with the version and arguments used to compile the Rust crate itself.
+This can be resolved by using rmeta files as inputs, instead of source code.
+
+> TODO:
+>
+> *   rs_bindings_from_idl and idl_from_cc exist, and Crubit can be used
+>     with IDL inputs
+> *   cc_bindings_from_rs can accept rmeta inputs
+
+### Crate Ecosystem
+
+> TODO:
+>
+> *   Crubit accepts pull requests and regularly reviews GitHub issues and PRs.
+> *   A C++ stdlib crate exists in crates.io
+> *   The Crubit `ctor` crate is either replaced with `pin-init`, the equivalent
+>     standard library module, or else has a crate in crates.io with
+>     documentation and an explanation of why to use it vs `pin-init`.
+> *   For all other support libraries: they exist in crates.io and are
+>     documented.
+
+### Build System
 
 We currently only support Bazel.
 
 > TODO:
-> 
-> *   (2025) Cargo support, build scripts, etc.
-> *   (2025) Stable command-line interface
+>
+> *   cc_bindings_from_rs builds using Cargo
+> *   rs_bindings_from_cc builds using Cargo
+> *   idl_bindings_from_cc, rs_bindings_from_idl build using Cargo
+> *   Crubit is usable as a Bazel dependency
+> *   Crubit is usable as a Bazel dependency
+> *   Crubit builds against public Rust and Clang releases
+> *   Crubit binary releases
 > *   (not planned) Buck2
 > *   (not planned) CMake
