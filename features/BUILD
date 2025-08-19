@@ -19,6 +19,8 @@ _EXPERIMENTAL_CLIENTS = [
 
 # A feature set containing all supported Crubit features.
 # Add this to the `aspect_hints` of a `cc_library` to generate Rust bindings for that library.
+#
+# See <internal link>
 crubit_feature_hint(
     name = "supported",
     crubit_features = SUPPORTED_FEATURES,
@@ -29,6 +31,8 @@ _WRAPPER_FEATURES = ["wrapper"]
 
 # A feature set containing wrapper-library Crubit features, in addition to the officially supported
 # features.
+#
+# See <internal link>
 crubit_feature_hint(
     name = "wrapper",
     crubit_features = SUPPORTED_FEATURES + _WRAPPER_FEATURES,
@@ -36,6 +40,8 @@ crubit_feature_hint(
 )
 
 # A feature set which specifically enables inferred operator lifetimes.
+#
+# See <internal link>
 crubit_feature_hint(
     name = "infer_operator_lifetimes",
     crubit_features = SUPPORTED_FEATURES + ["infer_operator_lifetimes"],
@@ -44,6 +50,8 @@ crubit_feature_hint(
 
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
+#
+# See <internal link>
 crubit_feature_hint(
     name = "experimental",
     # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
