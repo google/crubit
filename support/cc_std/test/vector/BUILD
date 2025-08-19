@@ -22,12 +22,6 @@ crubit_rust_test(
         ":cc_helper_functions",
         "//support/cc_std",
     ],
-    # TODO(b/381820646): Fix vector.
-    tags = [
-        "manual",
-        "nobuilder",
-        "notap",
-    ],
     deps = [
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",

@@ -8,7 +8,6 @@ use core::cmp::Ordering;
 
 use alloc::collections::TryReserveError;
 use alloc::vec::Vec;
-use core::convert::TryInto;
 #[cfg(sanitize = "address")]
 use core::ffi::c_void;
 use core::fmt::Debug;
@@ -41,7 +40,7 @@ extern "C" {
 /// 1. This layout was found empirically on Linux with modern g++ and libc++. If
 /// for some version of libc++ it is different, we will need to update it with
 /// conditional compilation.
-#[cfg(not(len_capacity_encoding))]
+#[cfg(not(feature = "len_capacity_encoding"))]
 #[repr(C)]
 pub struct vector<T> {
     // Note: the pointers are mutable, but `const` for covariance.
@@ -51,7 +50,7 @@ pub struct vector<T> {
 }
 
 /// 2. This layout is experimental.
-#[cfg(len_capacity_encoding)]
+#[cfg(feature = "len_capacity_encoding")]
 #[repr(C)]
 pub struct vector<T> {
     /// The pointer to the first element of the vector.
@@ -64,11 +63,11 @@ pub struct vector<T> {
 
 impl<T> vector<T> {
     pub fn new() -> vector<T> {
-        #[cfg(len_capacity_encoding)]
+        #[cfg(feature = "len_capacity_encoding")]
         {
             vector { begin: core::ptr::null_mut(), len: 0, capacity: 0 }
         }
-        #[cfg(not(len_capacity_encoding))]
+        #[cfg(not(feature = "len_capacity_encoding"))]
         {
             vector {
                 begin: core::ptr::null_mut(),
@@ -79,12 +78,13 @@ impl<T> vector<T> {
     }
 
     pub fn len(&self) -> usize {
-        #[cfg(len_capacity_encoding)]
+        #[cfg(feature = "len_capacity_encoding")]
         {
             self.len
         }
-        #[cfg(not(len_capacity_encoding))]
+        #[cfg(not(feature = "len_capacity_encoding"))]
         {
+            use core::convert::TryInto;
             // SAFETY:
             // 1: self.begin - self._end are either both null (for the empty vector),
             //    or point to the beginning and ending of the vector inside the allocation
@@ -99,12 +99,13 @@ impl<T> vector<T> {
     }
 
     pub fn capacity(&self) -> usize {
-        #[cfg(len_capacity_encoding)]
+        #[cfg(feature = "len_capacity_encoding")]
         {
             self.capacity
         }
-        #[cfg(not(len_capacity_encoding))]
+        #[cfg(not(feature = "len_capacity_encoding"))]
         {
+            use core::convert::TryInto;
             // SAFETY:
             // 1: self.begin - self._capacity_end are either both null (for the empty vector),
             //    or point to the beginning and ending of the whole allocation for the vector.
@@ -114,22 +115,22 @@ impl<T> vector<T> {
     }
 
     fn end(&self) -> *mut T {
-        #[cfg(len_capacity_encoding)]
+        #[cfg(feature = "len_capacity_encoding")]
         {
             unsafe { self.begin.add(self.len) as *mut _ }
         }
-        #[cfg(not(len_capacity_encoding))]
+        #[cfg(not(feature = "len_capacity_encoding"))]
         {
             self._end as *mut _
         }
     }
 
     fn capacity_end(&self) -> *mut T {
-        #[cfg(len_capacity_encoding)]
+        #[cfg(feature = "len_capacity_encoding")]
         {
             unsafe { self.begin.add(self.capacity) as *mut _ }
         }
-        #[cfg(not(len_capacity_encoding))]
+        #[cfg(not(feature = "len_capacity_encoding"))]
         {
             self._capacity_end as *mut _
         }
@@ -162,13 +163,13 @@ impl<T> vector<T> {
     /// forgotten after the call of this function. It follows by the properties
     /// of the `Vec`.
     unsafe fn set_begin_len_capacity(&mut self, begin: *mut T, len: usize, capacity: usize) {
-        #[cfg(len_capacity_encoding)]
+        #[cfg(feature = "len_capacity_encoding")]
         {
             self.begin = begin as *const _;
             self.len = len;
             self.capacity = capacity;
         }
-        #[cfg(not(len_capacity_encoding))]
+        #[cfg(not(feature = "len_capacity_encoding"))]
         {
             self.begin = begin as *const _;
             self._end = self.begin.add(len);
@@ -201,11 +202,11 @@ impl<T> vector<T> {
     /// v.set_len(len)
     /// ```
     pub unsafe fn set_len(&mut self, len: usize) {
-        #[cfg(len_capacity_encoding)]
+        #[cfg(feature = "len_capacity_encoding")]
         {
             self.len = len;
         }
-        #[cfg(not(len_capacity_encoding))]
+        #[cfg(not(feature = "len_capacity_encoding"))]
         {
             self._end = self.begin.add(len);
         }

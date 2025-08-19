@@ -108,6 +108,9 @@ bindings_for_toolchain_headers = rule(
         "public_libc_hdrs": attr.string_list(),
         "public_libcxx_hdrs": attr.string_list(),
         "extra_rs_srcs": attr.label_list(allow_files = True),
+        # This isn't read directly by _bindings_for_toolchain_headers_impl, but is read by
+        # rules_rust when compiling the generated and additional Rust source code.
+        "crate_features": attr.string_list(),
         "_stl": attr.label(default = "//third_party/stl:stl"),
         # TODO: b/421934470 - Fix uses of exec groups and re-enable AEG
         "_use_auto_exec_groups": attr.bool(default = False),
