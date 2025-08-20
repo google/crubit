@@ -589,15 +589,11 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 db,
             )?;
 
-            Ok(CrubitAbiType::Type {
-                rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
-                cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
-                type_args: Rc::from([CrubitAbiType::Type {
-                    rust_abi_path,
-                    cpp_abi_path,
-                    type_args: Rc::default(),
-                }]),
-            })
+            Ok(CrubitAbiType::transmute(CrubitAbiType::Type {
+                rust_abi_path,
+                cpp_abi_path,
+                type_args: Rc::default(),
+            }))
         }
         RsTypeKind::Primitive(primitive) => {
             let inner = match primitive {
@@ -644,11 +640,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 Primitive::StdUint64T => CrubitAbiType::new("u64", "std::uint64_t"),
             };
 
-            Ok(CrubitAbiType::Type {
-                rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
-                cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
-                type_args: Rc::from([inner]),
-            })
+            Ok(CrubitAbiType::transmute(inner))
         }
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             BridgeRsTypeKind::BridgeVoidConverters { .. } => {
@@ -711,12 +703,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             }
             BridgeRsTypeKind::StdOptional(inner) => {
                 let inner_abi = db.crubit_abi_type(inner.as_ref().clone())?;
-
-                Ok(CrubitAbiType::Type {
-                    rust_abi_path: FullyQualifiedPath::new("::bridge_rust::OptionAbi"),
-                    cpp_abi_path: FullyQualifiedPath::new("::crubit::OptionAbi"),
-                    type_args: Rc::from([inner_abi]),
-                })
+                Ok(CrubitAbiType::option(inner_abi))
             }
             BridgeRsTypeKind::StdPair(first, second) => {
                 let first_abi = db.crubit_abi_type(first.as_ref().clone())?;
@@ -739,15 +726,11 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             let cpp_abi_path =
                 make_cpp_abi_path_from_item(record.as_ref(), &record.cc_name.identifier, db)?;
 
-            Ok(CrubitAbiType::Type {
-                rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
-                cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
-                type_args: Rc::from([CrubitAbiType::Type {
-                    rust_abi_path,
-                    cpp_abi_path,
-                    type_args: Rc::default(),
-                }]),
-            })
+            Ok(CrubitAbiType::transmute(CrubitAbiType::Type {
+                rust_abi_path,
+                cpp_abi_path,
+                type_args: Rc::default(),
+            }))
         }
         _ => bail!("Unsupported RsTypeKind: {}", rs_type_kind.display(db)),
     }

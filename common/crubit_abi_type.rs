@@ -79,6 +79,22 @@ impl CrubitAbiType {
             type_args: Rc::from([]),
         }
     }
+
+    pub fn option(inner: Self) -> Self {
+        CrubitAbiType::Type {
+            rust_abi_path: FullyQualifiedPath::new("::bridge_rust::OptionAbi"),
+            cpp_abi_path: FullyQualifiedPath::new("::crubit::OptionAbi"),
+            type_args: Rc::from([inner]),
+        }
+    }
+
+    pub fn transmute(inner: Self) -> Self {
+        CrubitAbiType::Type {
+            rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
+            cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
+            type_args: Rc::from([inner]),
+        }
+    }
 }
 
 /// A [`ToTokens`] implementation for [`CrubitAbiType`] to format the schema as Rust
