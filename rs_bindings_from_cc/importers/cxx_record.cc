@@ -428,6 +428,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::optional<BazelLabel> defining_target;
   std::optional<TemplateSpecialization> template_specialization;
   std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(*record_decl);
+  BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -459,7 +460,24 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         decl = instantiation_source
                    .get<clang::ClassTemplatePartialSpecializationDecl*>();
       }
-      defining_target = ictx_.GetOwningTarget(decl);
+      BazelLabel target = ictx_.GetOwningTarget(decl);
+      // TODO(okabayashi): File a bug for generalizing "canonical insts".
+      // When a template like `std::string_view` is instantiated, it will be
+      // owned by whatever target it was instantiated in. The C++ compiler is
+      // then responsible for unifying identical instantiations. However, this
+      // is a pain for Crubit because we aren't able to generally unify these.
+      // In the case of `std::string_view`, however, we know that there's an
+      // instantiation in the `cc_std` target, so I've chosen that as the
+      // canonical instantiation, and am mapping all other instantiations to
+      // that instantiation.
+      // A problem with this is it's not _actually_ the same ItemId, and it
+      // really should be. This ensures that when we refer to this Item, it's
+      // spelled `cc_std::__CcTemplateInst...`. But a major downside is that we
+      // still generate this template inst struct...
+      if (preferred_cc_name == "std::string_view") {
+        owning_target = target;
+      }
+      defining_target = std::move(target);
     }
     template_specialization.emplace();
     template_specialization->template_name =
@@ -643,7 +661,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .cc_preferred_name = std::move(preferred_cc_name),
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
       .id = ictx_.GenerateItemId(record_decl),
-      .owning_target = ictx_.GetOwningTarget(record_decl),
+      .owning_target = std::move(owning_target),
       .defining_target = std::move(defining_target),
       .template_specialization = std::move(template_specialization),
       .unknown_attr = std::move(unknown_attr),

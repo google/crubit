@@ -600,7 +600,12 @@ struct Record {
   std::string mangled_cc_name;
 
   ItemId id;
+  // The target that owns this record. If this is a template instantiation, this
+  // is the target that instantiated this type (not the target that defined the
+  // template).
   BazelLabel owning_target;
+  // The target containing the template definition, if this is a templated
+  // record type.
   std::optional<BazelLabel> defining_target;
   std::optional<TemplateSpecialization> template_specialization;
   std::optional<std::string> unknown_attr;

@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 Vec3<float> MakeVec3(float x, float y, float z) {
@@ -55,4 +56,14 @@ bool IsProperGreeting(std::string greeting) {
 
 std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff) {
   return {"Hello, world!", stuff};
+}
+
+std::string_view StringViewByValue(std::string_view sv) { return sv; }
+
+std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
+                                                         std::string_view sv) {
+  if (!is_present) {
+    return std::nullopt;
+  }
+  return sv;
 }

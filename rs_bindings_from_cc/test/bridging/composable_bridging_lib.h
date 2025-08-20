@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "support/bridge.h"
@@ -81,5 +82,10 @@ std::string ReturnProperGreeting();
 bool IsProperGreeting(std::string greeting);
 
 std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff);
+
+std::string_view StringViewByValue(std::string_view sv);
+
+std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
+                                                         std::string_view sv);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

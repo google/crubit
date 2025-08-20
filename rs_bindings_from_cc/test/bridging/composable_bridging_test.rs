@@ -57,3 +57,20 @@ fn test_properly_greet_stuff() {
         (cc_std::std::string::from("Hello, world!"), Stuff { i: 1, f: 2.0 })
     );
 }
+
+#[gtest]
+fn test_string_view_by_value() {
+    fn live(value: cc_std::std::raw_string_view) -> &'static [u8] {
+        unsafe { &*value.as_raw_bytes() }
+    }
+    expect_eq!(live(StringViewByValue("Hello".into())), b"Hello");
+}
+
+#[gtest]
+fn test_return_optional_string_view() {
+    fn live(value: Option<cc_std::std::raw_string_view>) -> Option<&'static [u8]> {
+        value.map(|sv| unsafe { &*sv.as_raw_bytes() })
+    }
+    expect_eq!(live(ReturnOptionalStringView(true, "Hello".into())), live(Some("Hello".into())));
+    expect_eq!(live(ReturnOptionalStringView(false, "Hello".into())), live(None));
+}

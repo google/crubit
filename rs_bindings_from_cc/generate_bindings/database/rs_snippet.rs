@@ -149,6 +149,7 @@ impl CratePath {
         FullyQualifiedPath {
             start_with_colon2: self.crate_ident.is_some(),
             parts: std::iter::once(crate_ident)
+                .chain(self.crate_root_path.parts_with_snake_case_record_names())
                 .chain(self.namespace_qualifier.parts_with_snake_case_record_names())
                 .chain(std::iter::once(item))
                 .collect(),

@@ -583,9 +583,9 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                     .collect::<Result<Rc<[Ident]>>>()?,
             };
 
-            let cpp_abi_path = make_cpp_abi_path_from_item(
+            let cpp_abi_path = make_transmute_cpp_abi_path_from_item(
                 type_map_override.as_ref(),
-                &type_map_override.cc_name,
+                &[type_map_override.cc_name.as_ref()],
                 db,
             )?;
 
@@ -723,8 +723,22 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             code_gen_utils::check_valid_cc_name(&record.cc_name.identifier)
                 .expect("IR should only contain valid C++ types");
 
+            // TODO(okabayashi): File a bug for generalizing "canonical insts".
+            let cc_name = record.cc_name.identifier.as_ref();
+            let cc_name_parts = if cc_name == "std::basic_string_view<char, std::char_traits<char>>"
+            {
+                // In the C++ TransmuteAbi, we spell string_view as `std::string_view`.
+                // In theory we should let Crubit spell the C++ type as
+                // `std::basic_string_view<char, std::char_traits<char>>`, but `FullyQualifiedPath`
+                // does not support template arguments right now. It's also the case that since
+                // Crubit doesn't support templates in general right now, it doesn't make sense to
+                // support template arguments in `FullyQualifiedPath` yet.
+                &["std", "string_view"][..]
+            } else {
+                &[cc_name][..]
+            };
             let cpp_abi_path =
-                make_cpp_abi_path_from_item(record.as_ref(), &record.cc_name.identifier, db)?;
+                make_transmute_cpp_abi_path_from_item(record.as_ref(), cc_name_parts, db)?;
 
             Ok(CrubitAbiType::transmute(CrubitAbiType::Type {
                 rust_abi_path,
@@ -799,16 +813,17 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
     }
 }
 
-fn make_cpp_abi_path_from_item(
+/// Only to be used in a `CrubitAbiType::transmute(..)` context.
+fn make_transmute_cpp_abi_path_from_item(
     item: &impl GenericItem,
-    cc_name: &str,
+    cc_name_parts: &[&str],
     db: &dyn BindingsGenerator,
 ) -> Result<FullyQualifiedPath> {
     let namespace_qualifier = db.ir().namespace_qualifier(item);
     let parts = namespace_qualifier
         .parts()
         .map(AsRef::as_ref)
-        .chain([cc_name])
+        .chain(cc_name_parts.iter().copied())
         .map(|ident| {
             syn::parse_str::<Ident>(ident).map_err(|_| {
                 anyhow!(
