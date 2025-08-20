@@ -152,6 +152,27 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
   return untrackedError(E, Ctx, DiagCtx);
 }
 
+static bool invariantMatch(ArrayRef<PointerTypeNullability> A,
+                           ArrayRef<PointerTypeNullability> B) {
+  if (A.size() != B.size()) {
+    llvm::dbgs() << "Nullability vectors should be the same size "
+                    "when expected to be invariant, but they were not: "
+                 << nullabilityToString(A) << " vs. " << nullabilityToString(B)
+                 << "\n";
+    return false;
+  }
+
+  for (int I = 0; I < A.size(); ++I) {
+    NullabilityKind AN = A[I].concrete();
+    NullabilityKind BN = B[I].concrete();
+    if (AN != BN && AN != NullabilityKind::Unspecified &&
+        BN != NullabilityKind::Unspecified) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Diagnoses a conceptual assignment of LHS = RHS.
 // LHS can be a variable, the return value of a function, a param etc.
 static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
@@ -181,30 +202,13 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   // Mutable references require invariant type nullability between RHS and LHS.
   const TypeNullability* RHSNullability = State.Lattice.getTypeNullability(RHS);
   if (!RHSNullability) return untrackedError(RHS, Ctx, DiagCtx);
-  if (LHSNullability.size() != RHSNullability->size()) {
-    llvm::dbgs() << "LHSNullability should be the same size as RHSNullability "
-                    "during an assignment-like operation, but they were not: "
-                 << LHSNullability.size() << " vs. " << RHSNullability->size()
-                 << "\nLHSType:\n";
-    LHSType.dump();
-    llvm::dbgs() << "RHS:\n";
-    RHS->dump();
-    return {};
-  }
-  SmallVector<PointerNullabilityDiagnostic> Diagnostics;
   if (LHSRange.isInvalid())
     LHSRange = CharSourceRange::getTokenRange(RHS->getSourceRange());
-  for (int I = 0; I < LHSNullability.size(); ++I) {
-    NullabilityKind L = LHSNullability[I].concrete();
-    NullabilityKind R = (*RHSNullability)[I].concrete();
-    if (L != R && L != NullabilityKind::Unspecified &&
-        R != NullabilityKind::Unspecified) {
-      Diagnostics.push_back(
-          {PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull, DiagCtx,
-           getRangeModuloMacros(LHSRange, Ctx), Callee, ParamName});
-    }
-  }
-  return Diagnostics;
+  if (!invariantMatch(LHSNullability, *RHSNullability))
+    return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedEqualNullability,
+             DiagCtx, getRangeModuloMacros(LHSRange, Ctx), Callee, ParamName}};
+
+  return {};
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(

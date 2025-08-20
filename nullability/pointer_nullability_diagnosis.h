@@ -6,8 +6,6 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 
 #include <memory>
-#include <optional>
-#include <string>
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
@@ -17,6 +15,7 @@
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {
@@ -41,6 +40,8 @@ struct PointerNullabilityDiagnostic {
     Untracked,
     /// A nullability assertion was violated.
     AssertFailed,
+    /// Two types were expected to have the same nullability, but they did not.
+    ExpectedEqualNullability,
   };
   ErrorCode Code;
   /// Context in which the error occurred.
