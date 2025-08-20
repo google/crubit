@@ -286,7 +286,7 @@ fn test_function_with_custom_calling_convention() {
 
 #[gtest]
 fn test_consteval_function() {
-    let ir = ir_from_cc("consteval int add(int, int);").unwrap();
+    let ir = ir_from_cc("consteval int add(int a, int b) { return a + b; }").unwrap();
     assert_ir_matches!(
         ir,
         quote! {

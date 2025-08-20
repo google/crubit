@@ -345,6 +345,23 @@ TEST(ImporterTest, InlineFunc) {
                   VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
+TEST(ImporterTest, InlineUndefinedFunc) {
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"inline void Foo();"}));
+  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+              ElementsAre(Pointee(
+                  Field("errors", &UnsupportedItem::errors,
+                        ElementsAre(Property(
+                            "message", &FormattedError::message,
+                            HasSubstr("Inline function is not defined")))))));
+}
+
+TEST(ImporterTest, InlineDefinition) {
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo(); inline void Foo() {}"}));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              UnorderedElementsAre(
+                  VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
+}
+
 TEST(ImporterTest, FuncJustOnce) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo(); void Foo();"}));
   EXPECT_THAT(

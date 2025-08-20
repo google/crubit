@@ -232,7 +232,9 @@ mod custom_abi_tests {
         // `format_cc_call_conv_as_clang_attribute` and similar code).
         let ir = ir_from_cc(
             r#"
-            inline int (*inline_get_ptr_to_func())(float, double) [[clang::vectorcall]];
+            inline int (*inline_get_ptr_to_func())(float, double) [[clang::vectorcall]] {
+              return nullptr;
+            }
         "#,
         )?;
 

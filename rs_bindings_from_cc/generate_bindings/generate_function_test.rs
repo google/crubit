@@ -51,7 +51,7 @@ fn test_simple_function() -> Result<()> {
 
 #[gtest]
 fn test_inline_function() -> Result<()> {
-    let ir = ir_from_cc("inline int Add(int a, int b);")?;
+    let ir = ir_from_cc("inline int Add(int a, int b) { return a + b; }")?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -89,7 +89,7 @@ fn test_inline_function() -> Result<()> {
 #[gtest]
 fn test_simple_function_with_types_from_other_target() -> Result<()> {
     let ir = ir_from_cc_dependency(
-        "inline ReturnStruct DoSomething(ParamStruct param);",
+        "inline ReturnStruct DoSomething(ParamStruct param) { return ReturnStruct {}; }",
         "struct ReturnStruct final {}; struct ParamStruct final {};",
     )?;
 
@@ -225,7 +225,7 @@ fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
 
 #[gtest]
 fn test_ptr_func() -> Result<()> {
-    let ir = ir_from_cc(r#" inline int* Deref(int*const* p); "#)?;
+    let ir = ir_from_cc(r#" inline int* Deref(int*const* p) { return *p; } "#)?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
@@ -268,7 +268,7 @@ fn test_const_char_ptr_func() -> Result<()> {
     // ('"const char" is not a valid Ident').
     // It's therefore important that f() is inline so that we need to
     // generate a thunk for it (where we then process the CcType).
-    let ir = ir_from_cc(r#" inline void f(const signed char *str); "#)?;
+    let ir = ir_from_cc(r#" inline void f(const signed char *str) {} "#)?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
@@ -943,7 +943,7 @@ fn test_impl_lt_missing_eq_impl() -> Result<()> {
 
 #[gtest]
 fn test_thunk_ident_function() -> Result<()> {
-    let ir = ir_from_cc("inline int foo() {}")?;
+    let ir = ir_from_cc("inline int foo() { return 42; }")?;
     let func = retrieve_func(&ir, "foo");
     assert_eq!(thunk_ident(func), make_rs_ident("__rust_thunk___Z3foov"));
     Ok(())

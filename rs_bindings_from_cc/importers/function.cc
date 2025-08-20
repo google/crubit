@@ -473,6 +473,22 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                return l1.name < l2.name;
              });
 
+  bool is_inline = false;
+  bool is_defined = false;
+  for (auto* def : function_decl->redecls()) {
+    if (def->isInlined()) is_inline = true;
+    if (def->isThisDeclarationADefinition()) is_defined = true;
+  }
+  if (!is_defined)  // Template members may not be defined until instantiation.
+    if (auto* pat = function_decl->getTemplateInstantiationPattern()) {
+      if (pat->isThisDeclarationADefinition()) is_defined = true;
+    }
+  // It is valid to declare an inline function but not define it, as long as it
+  // is not odr-used. Our thunk can't call it, so it is not callable from Rust.
+  if (is_inline && !is_defined) {
+    errors.Add(FormattedError::Static("Inline function is not defined"));
+  }
+
   std::optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
@@ -565,7 +581,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .return_type = *return_type,
       .params = std::move(params),
       .lifetime_params = std::move(lifetime_params),
-      .is_inline = function_decl->isInlined(),
+      .is_inline = is_inline,
       .member_func_metadata = std::move(member_func_metadata),
       .is_extern_c = function_decl->isExternC(),
       .is_noreturn = function_decl->isNoReturn(),
