@@ -4,8 +4,11 @@
 
 """Wrapper macros needed for Google-internal purposes."""
 
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 crubit_rust_test = rust_test
 
@@ -15,9 +18,9 @@ def crubit_rust_binary(**kwargs):
     kwargs.pop("crubit_dep", default = False)
     rust_binary(**kwargs)
 
-crubit_cc_test = native.cc_test
-crubit_sh_test = native.sh_test
-crubit_cc_binary = native.cc_binary
+crubit_cc_test = cc_test
+crubit_sh_test = sh_test
+crubit_cc_binary = cc_binary
 crubit_flavor_transition = transition(
     implementation = lambda _settings, _attr: {},
     inputs = [],
