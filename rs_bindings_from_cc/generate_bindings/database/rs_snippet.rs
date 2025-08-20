@@ -293,7 +293,7 @@ pub enum UniformReprTemplateType {
     },
     AbslSpan {
         is_const: bool,
-        has_lifetime: bool,
+        include_lifetime: bool,
         element_type: RsTypeKind,
     },
 }
@@ -361,7 +361,11 @@ impl UniformReprTemplateType {
                 let is_const = template_specialization.template_args[0].type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
                 Self::AbslSpan {
                     is_const,
-                    has_lifetime: elide_missing_lifetimes,
+                    // TODO(b/434985642): the naming here doesn't make sense-"elide" means *not* to
+                    // include, but the code is arranged so that we *do* include lifetime
+                    // parameters when this option is set. Fix the parameter name to use the right
+                    // verb.
+                    include_lifetime: elide_missing_lifetimes,
                     element_type: type_args.remove(0),
                 }
             }
@@ -380,9 +384,9 @@ impl UniformReprTemplateType {
                 let element_type_tokens = element_type.to_token_stream(db);
                 quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
             }
-            Self::AbslSpan { is_const, has_lifetime, element_type } => {
+            Self::AbslSpan { is_const, include_lifetime, element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
-                match (*is_const, *has_lifetime) {
+                match (*is_const, *include_lifetime) {
                     (true, true) => quote! { ::span::absl::Span<'_, #element_type_tokens> },
                     (false, true) => quote! { ::span::absl::SpanMut<'_, #element_type_tokens> },
                     (true, false) => quote! { ::span::absl::RawSpan<#element_type_tokens> },
