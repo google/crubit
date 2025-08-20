@@ -141,11 +141,7 @@ pub fn has_bindings(
         | Item::TypeMapOverride(_) => {
             // has_bindings is called from `rs_type_kind()`, so we can't use
             // `BindingsGenerator::rs_type_kind()` here.
-            match RsTypeKind::from_item_raw(
-                db,
-                item.clone(),
-                /*elide_missing_lifetimes=*/ false,
-            ) {
+            match RsTypeKind::from_item_raw(db, item.clone(), /*is_return_type=*/ true) {
                 Ok(rs_type_kind) => {
                     let visibility = type_visibility(db, &item, rs_type_kind)?;
                     Ok(BindingsInfo { visibility })

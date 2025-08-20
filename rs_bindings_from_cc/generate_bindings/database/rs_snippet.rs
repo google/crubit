@@ -275,8 +275,8 @@ pub struct ElisionOptions {
     /// If true, references will be elided. This option is only set for select function parameters
     /// and return types.
     pub elide_references: bool,
-    /// If true, span lifetimes will be elided. This option is set for all function inputs.
-    pub elide_span_lifetimes: bool,
+
+    pub is_return_type: bool,
 }
 
 /// A type with template type arguments that has a uniform representation regardless of `T` and
@@ -306,7 +306,7 @@ impl UniformReprTemplateType {
     fn new(
         db: &dyn BindingsGenerator,
         template_specialization: Option<&TemplateSpecialization>,
-        elide_missing_lifetimes: bool,
+        is_return_type: bool,
     ) -> Result<Option<Rc<Self>>> {
         let Some(template_specialization) = template_specialization else {
             return Ok(None);
@@ -320,7 +320,7 @@ impl UniformReprTemplateType {
                     Ok(arg_type) => arg_type.clone(),
                     Err(e) => bail!("{e}"),
                 };
-                // Importantly, `elide_missing_lifetimes` is not propagated through inner types.
+                // Importantly, `is_return_type` is not propagated through inner types.
                 let arg_type_kind = db.rs_type_kind(arg_type)?;
                 ensure!(
                     !arg_type_kind.is_bridge_type(),
@@ -361,11 +361,14 @@ impl UniformReprTemplateType {
                 let is_const = template_specialization.template_args[0].type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
                 Self::AbslSpan {
                     is_const,
-                    // TODO(b/434985642): the naming here doesn't make sense-"elide" means *not* to
-                    // include, but the code is arranged so that we *do* include lifetime
-                    // parameters when this option is set. Fix the parameter name to use the right
-                    // verb.
-                    include_lifetime: elide_missing_lifetimes,
+
+                    // We always accept lifetime-bound spans as parameters. A C++ function
+                    // shouldn't be using an array referenced by a span after it returns.
+                    //
+                    // Spans returned by a C++ function have an unclear lifetime, and so must be
+                    // returned as a raw span.
+                    include_lifetime: !is_return_type,
+
                     element_type: type_args.remove(0),
                 }
             }
@@ -386,6 +389,10 @@ impl UniformReprTemplateType {
             }
             Self::AbslSpan { is_const, include_lifetime, element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
+
+                // Use Span when we have a lifetime parameter, and RawSpan otherwise.
+                //
+                // See http://<internal link>.
                 match (*is_const, *include_lifetime) {
                     (true, true) => quote! { ::span::absl::Span<'_, #element_type_tokens> },
                     (false, true) => quote! { ::span::absl::SpanMut<'_, #element_type_tokens> },
@@ -597,13 +604,13 @@ impl RsTypeKind {
     pub fn from_item_raw(
         db: &dyn BindingsGenerator,
         item: Item,
-        elide_missing_lifetimes: bool,
+        is_return_type: bool,
     ) -> Result<Self> {
         match item {
             Item::IncompleteRecord(incomplete_record) => {
                 RsTypeKind::new_incomplete_record(db, incomplete_record)
             }
-            Item::Record(record) => RsTypeKind::new_record(db, record, elide_missing_lifetimes),
+            Item::Record(record) => RsTypeKind::new_record(db, record, is_return_type),
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
             Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias),
             Item::TypeMapOverride(type_map_override) => {
@@ -650,7 +657,7 @@ impl RsTypeKind {
     fn new_record(
         db: &dyn BindingsGenerator,
         record: Rc<Record>,
-        elide_missing_lifetimes: bool,
+        is_return_type: bool,
     ) -> Result<Self> {
         let ir = db.ir();
         if let Some(bridge_type) = BridgeRsTypeKind::new(&record, db)? {
@@ -665,7 +672,7 @@ impl RsTypeKind {
             uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
                 record.template_specialization.as_ref(),
-                elide_missing_lifetimes,
+                is_return_type,
             )?,
             record,
             crate_path,
