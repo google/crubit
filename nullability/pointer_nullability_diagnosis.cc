@@ -182,33 +182,81 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     const clang::NamedDecl* absl_nullable Callee = nullptr,
     const clang::IdentifierInfo* absl_nullable ParamName = nullptr,
     CharSourceRange LHSRange = {}) {
+  // Nullability vectors start with any raw or smart pointer types that are
+  // not in template arguments and then continue further into (potentially
+  // nested) template arguments. Pointers outside template arguments have
+  // well-defined variance relationships that we can check for each slot,
+  // accumulating diagnostics along the way. Once we reach the first template
+  // argument slot, we require invariant nullability from that point on. The
+  // true relationship needed for safety may be different for different
+  // templates, but it is currently infeasible for us to determine the true
+  // relationship.
+  SmallVector<PointerNullabilityDiagnostic> Diagnostics;
+
+  // If LHS is a) a reference to a const supported pointer or b) directly a
+  // supported pointer type, then the outermost pointer slot has a covariant
+  // requirement, similar to subtype relationships, i.e. a Nullable LHS can
+  // accept Nullable or Nonnull values, but a Nonnull LHS can accept only
+  // Nonnull values.
   if (!LHSType->isReferenceType() ||
       LHSType.getNonReferenceType().isConstQualified()) {
-    LHSType = LHSType.getNonReferenceType();
-    // For now, we just check whether the top-level pointer type is compatible.
-    // TODO: examine inner nullability too, considering variance.
-    if (!isSupportedPointerType(LHSType)) return {};
-
-    QualType RHSType = RHS->getType().getNonReferenceType();
-    if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType))
+    if (!isSupportedPointerType(LHSType.getNonReferenceType())) {
+      // If LHS is a const reference to a non-pointer type, such as a template
+      // with type arguments that contain pointer types, check nothing yet.
+      // TODO: b/343960612 - decide on the checked conditions for these types
+      // and implement checking
       return {};
+    }
+    QualType RHSType = RHS->getType().getNonReferenceType();
+    if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) {
+      llvm::dbgs() << "LHS is a pointer, but RHS is not.\n";
+      return {};
+    }
 
-    return LHSNullability.front().concrete() == NullabilityKind::NonNull
-               ? diagnoseNonnullExpected(RHS, State.Env, Ctx, DiagCtx, Callee,
-                                         ParamName, LHSRange)
-               : SmallVector<PointerNullabilityDiagnostic>{};
+    if (LHSNullability.front().concrete() == NullabilityKind::NonNull) {
+      Diagnostics = diagnoseNonnullExpected(RHS, State.Env, Ctx, DiagCtx,
+                                            Callee, ParamName, LHSRange);
+    }
+
+    // Continue unwrapping pointer layers outside of template arguments. Each of
+    // these pointer layers is invariant if mutable, and covariant if const.
+    // TODO: b/343960612 - implement this unwrapping and checking, including for
+    // smart pointers, which are not as trivially unwrappable. For now, return
+    // early. Once additional pointer layers are unwrapped, we can fall through
+    // to checking function pointer types and then invariant nullability for any
+    // template argument pointers.
+    return Diagnostics;
+
+    // If the last pointer layer is a function pointer, we need to recurse into
+    // the function pointer with different relationship requirements.
+    // e.g. given the following
+    // ```cc
+    // int* _Nonnull (*_Nullable p)(bool* _Nullable b);
+    // int* _Nullable (*_Nullable q)(bool* _Nonnull b);
+    // ```
+    // it would safe to assign `q = p;` but not safe to assign `p = q;`.
+    //
+    // The return types have the same covariant requirement for const pointers
+    // as outside of function pointer types, but the parameter types have a
+    // contravariant requirement for const pointers. Mutable pointers remain
+    // invariant.
+    // TODO: b/343960612 - implement recursion into function pointer return and
+    // parameter types.
   }
 
-  // Mutable references require invariant type nullability between RHS and LHS.
+  // Now we have reached layers that require invariant nullability, references
+  // to mutable types with nullability.
   const TypeNullability* RHSNullability = State.Lattice.getTypeNullability(RHS);
   if (!RHSNullability) return untrackedError(RHS, Ctx, DiagCtx);
   if (LHSRange.isInvalid())
     LHSRange = CharSourceRange::getTokenRange(RHS->getSourceRange());
-  if (!invariantMatch(LHSNullability, *RHSNullability))
-    return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedEqualNullability,
-             DiagCtx, getRangeModuloMacros(LHSRange, Ctx), Callee, ParamName}};
+  if (!invariantMatch(LHSNullability, *RHSNullability)) {
+    Diagnostics.push_back(
+        {PointerNullabilityDiagnostic::ErrorCode::ExpectedEqualNullability,
+         DiagCtx, getRangeModuloMacros(LHSRange, Ctx), Callee, ParamName});
+  }
 
-  return {};
+  return Diagnostics;
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
