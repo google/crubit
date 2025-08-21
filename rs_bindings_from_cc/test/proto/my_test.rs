@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use forward_declare::CppCast;
+use forward_declare::{CppCast, UnsafeCppCast};
 use googletest::prelude::*;
 
 #[gtest]
@@ -41,4 +41,20 @@ fn test_extract_from_mutable_ptr_or_ref() {
         expect_that!(my_proto_api::test::ExtractFromMutablePtr(msg.as_mut().cpp_cast()), eq(543));
         expect_that!(my_proto_api::test::ExtractFromMutableRef(msg.as_mut().cpp_cast()), eq(543));
     }
+}
+
+#[gtest]
+fn test_get_const_msg_ptr() {
+    let ptr = my_proto_api::test::GetConstMsgPtr();
+    // SAFETY: Underlying C++ pointer is statically allocated and valid for the lifetime of this method.
+    let view: my_rust_proto::MyMessageView = unsafe { (&ptr).unsafe_cpp_cast() };
+    expect_that!(view.my_num(), eq(345));
+}
+
+#[gtest]
+fn test_get_mut_msg_ptr() {
+    let mut ptr = my_proto_api::test::GetMutMsgPtr();
+    // SAFETY: Underlying C++ pointer is statically allocated and valid for the lifetime of this method.
+    let view: my_rust_proto::MyMessageMut = unsafe { (&mut ptr).unsafe_cpp_cast() };
+    expect_that!(view.my_num(), eq(234));
 }

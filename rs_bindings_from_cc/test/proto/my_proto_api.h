@@ -36,6 +36,18 @@ inline int64_t ExtractFromMutableRef(my_package::MyMessage& msg) {
   return msg.my_num();
 };
 
+inline my_package::MyMessage* GetMutMsgPtr() {
+  static auto* msg = new my_package::MyMessage();
+  msg->set_my_num(234);
+  return msg;
+}
+
+inline const my_package::MyMessage* GetConstMsgPtr() {
+  static auto* msg = new my_package::MyMessage();
+  msg->set_my_num(345);
+  return msg;
+}
+
 }  // namespace test
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_PROTO_TEST_H_
