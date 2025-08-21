@@ -1242,7 +1242,13 @@ fn rs_type_kinds_for_func(
 
             db.rs_type_kind_with_lifetime_elision(
                 p.type_.clone(),
-                ElisionOptions { elide_references, is_return_type: false },
+                ElisionOptions {
+                    elide_references,
+                    is_return_type: false,
+
+                    // Only interesting for the return type.
+                    have_reference_param: false,
+                },
             )
             .map_err(|err| errors.add(anyhow!("Failed to format type of parameter {i}: {err}")))
             .ok()
@@ -1251,7 +1257,14 @@ fn rs_type_kinds_for_func(
     let return_type = db
         .rs_type_kind_with_lifetime_elision(
             func.return_type.clone(),
-            ElisionOptions { elide_references, is_return_type: true },
+            ElisionOptions {
+                elide_references,
+                is_return_type: true,
+
+                have_reference_param: param_types.iter().any(|pt| {
+                    matches!(pt, RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. })
+                }),
+            },
         )
         .map_err(|err| errors.add(anyhow!("Failed to format return type: {err}")))
         .ok();

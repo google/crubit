@@ -277,6 +277,9 @@ pub struct ElisionOptions {
     /// and return types.
     pub elide_references: bool,
 
+    /// Are there any reference parameters to the function whose return type we are interested in?
+    pub have_reference_param: bool,
+
     pub is_return_type: bool,
 }
 
@@ -307,6 +310,7 @@ impl UniformReprTemplateType {
     fn new(
         db: &dyn BindingsGenerator,
         template_specialization: Option<&TemplateSpecialization>,
+        have_reference_param: bool,
         is_return_type: bool,
     ) -> Result<Option<Rc<Self>>> {
         let Some(template_specialization) = template_specialization else {
@@ -605,13 +609,16 @@ impl RsTypeKind {
     pub fn from_item_raw(
         db: &dyn BindingsGenerator,
         item: Item,
+        have_reference_param: bool,
         is_return_type: bool,
     ) -> Result<Self> {
         match item {
             Item::IncompleteRecord(incomplete_record) => {
                 RsTypeKind::new_incomplete_record(db, incomplete_record)
             }
-            Item::Record(record) => RsTypeKind::new_record(db, record, is_return_type),
+            Item::Record(record) => {
+                RsTypeKind::new_record(db, record, have_reference_param, is_return_type)
+            }
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
             Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias),
             Item::TypeMapOverride(type_map_override) => {
@@ -658,6 +665,7 @@ impl RsTypeKind {
     fn new_record(
         db: &dyn BindingsGenerator,
         record: Rc<Record>,
+        have_reference_param: bool,
         is_return_type: bool,
     ) -> Result<Self> {
         let ir = db.ir();
@@ -673,6 +681,7 @@ impl RsTypeKind {
             uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
                 record.template_specialization.as_ref(),
+                have_reference_param,
                 is_return_type,
             )?,
             record,

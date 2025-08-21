@@ -136,7 +136,12 @@ pub fn rs_type_kind_with_lifetime_elision(
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
             // course we can't call `rs_type_kind` here, and instead reuse the raw construction
             // logic.
-            RsTypeKind::from_item_raw(db, item.clone(), elision_options.is_return_type)
+            RsTypeKind::from_item_raw(
+                db,
+                item.clone(),
+                elision_options.have_reference_param,
+                elision_options.is_return_type,
+            )
         }
     }
 }

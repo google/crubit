@@ -285,7 +285,12 @@ pub fn required_crubit_features(
                 // We use from_item_raw here because required_crubit_features is itself called
                 // by `BindingsGenerator::rs_type_kind()` in order to decide if it should return
                 // an error.
-                &RsTypeKind::from_item_raw(db, item.clone(), /*is_return_type=*/ true)?,
+                &RsTypeKind::from_item_raw(
+                    db,
+                    item.clone(),
+                    /*have_reference_param=*/ false,
+                    /*is_return_type=*/ true,
+                )?,
                 &|| "".into(),
             );
         }
