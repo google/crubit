@@ -146,8 +146,9 @@ std::vector<Evidence> collectFromDefinition(
   EXPECT_THAT_ERROR(
       collectEvidenceFromDefinition(
           Definition,
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache, AST.context()),
+          evidenceEmitterWithPropagation(
+              [&Results](Evidence E) { Results.push_back(std::move(E)); },
+              UsrCache, AST.context()),
           UsrCache, Pragmas, InputInferences),
       llvm::Succeeded());
   return Results;
@@ -190,9 +191,10 @@ std::vector<Evidence> collectFromDecl(llvm::StringRef Source,
   USRCache USRCache;
   collectEvidenceFromTargetDeclaration(
       *dataflow::test::findValueDecl(AST.context(), DeclName),
-      evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                      USRCache, AST.context()),
-      Pragmas);
+      evidenceEmitterWithPropagation(
+          [&Results](Evidence E) { Results.push_back(std::move(E)); }, USRCache,
+          AST.context()),
+      USRCache, Pragmas);
   return Results;
 }
 
@@ -4257,9 +4259,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
   EXPECT_THAT_ERROR(
       collectEvidenceFromDefinition(
-          Decl,
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache, AST.context()),
+          Decl, [&Results](Evidence E) { Results.push_back(std::move(E)); },
           UsrCache, Pragmas),
       llvm::FailedWithMessage(
           "Variable template specializations with InitListExprs in their "
@@ -4297,9 +4297,7 @@ TEST(CollectEvidenceFromDefinitionTest,
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
   EXPECT_THAT_ERROR(
       collectEvidenceFromDefinition(
-          Decl,
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache, AST.context()),
+          Decl, [&Results](Evidence E) { Results.push_back(std::move(E)); },
           UsrCache, Pragmas),
       llvm::FailedWithMessage(
           "Variable template specializations with InitListExprs in their "
@@ -4322,9 +4320,8 @@ TEST(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
       collectEvidenceFromDefinition(
           *cast<FunctionDecl>(
               dataflow::test::findValueDecl(AST.context(), "target")),
-          evidenceEmitter([&](const Evidence& E) { Results.push_back(E); },
-                          UsrCache, AST.context()),
-          UsrCache, Pragmas, /*PreviousInferences=*/{},
+          [&Results](Evidence E) { Results.push_back(std::move(E)); }, UsrCache,
+          Pragmas, /*PreviousInferences=*/{},
           // Enough iterations to collect one piece of evidence but not both.
           []() {
             return std::make_unique<dataflow::WatchedLiteralsSolver>(
@@ -4898,25 +4895,5 @@ TEST(EvidenceSitesTest, Templates) {
                                    declNamed("S::f<0>"), declNamed("T<0>::f"),
                                    declNamed("Unused")));
 }
-
-TEST(EvidenceEmitterTest, NotInferenceTarget) {
-  TestAST AST(R"cc(
-    template <int I>
-    int target() {
-      return I;
-    })cc");
-
-  const auto* TargetDecl =
-      dataflow::test::findValueDecl(AST.context(), "target");
-  ASSERT_NE(TargetDecl, nullptr);
-
-  USRCache USRCache;
-  EXPECT_DEATH(
-      evidenceEmitter([](const Evidence& E) {}, USRCache, AST.context())(
-          *TargetDecl, Slot{}, Evidence::ANNOTATED_UNKNOWN,
-          TargetDecl->getLocation()),
-      "not an inference target");
-}
-
 }  // namespace
 }  // namespace clang::tidy::nullability

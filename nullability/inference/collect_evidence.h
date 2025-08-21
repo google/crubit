@@ -77,22 +77,6 @@ struct VirtualMethodIndex {
 /// Index the relationships between virtual methods in the TU.
 VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC);
 
-/// Callback used to report collected nullability evidence.
-using EvidenceEmitter = void(const Decl &Target, Slot, Evidence::Kind,
-                             SourceLocation);
-/// Creates an EvidenceEmitter that serializes the evidence as Evidence protos.
-/// This emitter caches USR generation, and should be reused for the whole AST.
-/// All parameters must outlive the returned EvidenceEmitter.
-llvm::unique_function<EvidenceEmitter> evidenceEmitter(
-    llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache,
-    ASTContext &Ctx);
-
-/// Creates an EvidenceEmitter as above, but allows re-use of a
-/// VirtualMethodOverridesMap if one has already been computed.
-llvm::unique_function<EvidenceEmitter> evidenceEmitter(
-    llvm::unique_function<void(const Evidence &) const>, USRCache &USRCache,
-    VirtualMethodIndex Index);
-
 class SortedFingerprintVector {
  public:
   SortedFingerprintVector() = default;
@@ -154,6 +138,21 @@ struct PreviousInferences {
 /// `collectEvidenceFromDefinition()`.
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference();
 
+/// Callback used to report collected nullability evidence.
+using EvidenceEmitter = void(Evidence);
+
+/// Creates an EvidenceEmitter that handles propagation of evidence for virtual
+/// methods. This emitter caches USR generation, and should be reused for the
+/// whole AST. All parameters must outlive the returned EvidenceEmitter.
+llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
+    llvm::unique_function<EvidenceEmitter> Emit, USRCache &USRCache,
+    ASTContext &Ctx);
+
+/// Creates an EvidenceEmitter as above, but allows re-use of a
+/// VirtualMethodIndex.
+llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
+    llvm::unique_function<EvidenceEmitter> Emit, VirtualMethodIndex Index);
+
 /// Analyze code (such as a function body or variable initializer) to infer
 /// nullability.
 ///
@@ -178,18 +177,19 @@ llvm::Error collectEvidenceFromDefinition(
 /// It is the caller's responsibility to ensure that the symbol is inferable.
 void collectEvidenceFromTargetDeclaration(const clang::Decl &,
                                           llvm::function_ref<EvidenceEmitter>,
+                                          USRCache &USRCache,
                                           const NullabilityPragmas &Pragmas);
 
 /// Describes locations within an AST that provide evidence for use in
 /// inference.
 struct EvidenceSites {
   /// Declarations of inferable symbols.
-  llvm::DenseSet<const Decl * absl_nonnull> Declarations;
+  llvm::DenseSet<const Decl *absl_nonnull> Declarations;
   /// Definitions (e.g. function body, variable initializer) that can be
   /// analyzed.
   /// This will always be concrete code, not a template pattern. These may be
   /// passed to collectEvidenceFromDefinition().
-  llvm::DenseSet<const Decl * absl_nonnull> Definitions;
+  llvm::DenseSet<const Decl *absl_nonnull> Definitions;
 
   /// Find the evidence sites within the provided AST. If
   /// RestrictToMainFileOrHeader is true, only looks for evidence sites in the

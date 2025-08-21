@@ -248,80 +248,6 @@ static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
   }
 }
 
-llvm::unique_function<EvidenceEmitter> evidenceEmitter(
-    llvm::unique_function<void(const Evidence &) const> Emit,
-    USRCache &USRCache, ASTContext &Ctx) {
-  return evidenceEmitter(std::move(Emit), USRCache,
-                         getVirtualMethodIndex(Ctx, USRCache));
-}
-
-// Helper functions which do not depend on the AST. We split out the singleton
-// case for efficiency, because we expect this function is called very often.
-static void emitEvidence(std::string_view USR, Slot S, Evidence::Kind Kind,
-                         std::optional<std::string_view> LocAsString,
-                         llvm::function_ref<void(const Evidence &)> Emit) {
-  Evidence E;
-  E.set_slot(S);
-  E.set_kind(Kind);
-  if (LocAsString) E.set_location(*LocAsString);
-  E.mutable_symbol()->set_usr(USR);
-  Emit(E);
-}
-
-static void emitEvidence(llvm::ArrayRef<std::string_view> USRs, Slot S,
-                         Evidence::Kind Kind,
-                         std::optional<std::string_view> LocAsString,
-                         llvm::function_ref<void(const Evidence &)> Emit) {
-  Evidence E;
-  E.set_slot(S);
-  E.set_kind(Kind);
-  if (LocAsString) E.set_location(*LocAsString);
-  for (std::string_view USR : USRs) {
-    E.mutable_symbol()->set_usr(USR);
-    Emit(E);
-  }
-}
-
-llvm::unique_function<EvidenceEmitter> evidenceEmitter(
-    llvm::unique_function<void(const Evidence &) const> Emit,
-    USRCache &USRCache, VirtualMethodIndex Index) {
-  return [Emit = std::move(Emit), &USRCache, Index = std::move(Index)](
-             const Decl &Target, Slot S, Evidence::Kind Kind,
-             SourceLocation Loc) {
-    CHECK(isInferenceTarget(Target))
-        << "Evidence emitted for a Target which is not an inference target: "
-        << (dyn_cast<NamedDecl>(&Target)
-                ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
-                : "not a named decl");
-    // TODO: make collecting and propagating location information optional?
-    auto &SM =
-        Target.getDeclContext()->getParentASTContext().getSourceManager();
-    // TODO: are macro locations actually useful enough for debugging?
-    //       we could leave them out, and make room for non-macro samples.
-    std::optional<std::string> LocAsString;
-    if (Loc = SM.getFileLoc(Loc); Loc.isValid())
-      LocAsString = Loc.printToString(SM);
-
-    std::string_view USR = getOrGenerateUSR(USRCache, Target);
-    if (USR.empty()) return;
-
-    // Virtual methods and their overrides constrain each other's
-    // nullabilities, so propagate evidence in the appropriate direction based
-    // on the evidence kind and whether the evidence is for the return type or
-    // a parameter type.
-    if (auto *MD = dyn_cast<CXXMethodDecl>(&Target); MD && MD->isVirtual()) {
-      std::vector<std::string_view> Targets =
-          getAdditionalTargetsForVirtualMethod(USR, Kind, S == SLOT_RETURN_TYPE,
-                                               Index);
-      Targets.push_back(USR);
-      emitEvidence(Targets, S, Kind, LocAsString, Emit);
-    } else {
-      // Otherwise, just emit evidence for the single target.
-      emitEvidence(USR, S, Kind, LocAsString, Emit);
-    }
-  };
-}
-
 namespace {
 class InferableSlot {
  public:
@@ -517,6 +443,60 @@ static bool isOrIsConstructedFromNullPointerConstant(const Expr *absl_nonnull E,
              Ctx, Expr::NPC_ValueDependentIsNotNull) != Expr::NPCK_NotNull;
 }
 
+llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
+    llvm::unique_function<EvidenceEmitter> Emit, VirtualMethodIndex Index) {
+  return [Emit = std::move(Emit),
+          Index = std::move(Index)](Evidence E) mutable {
+    Emit(E);
+    // Virtual methods and their overrides constrain each other's nullabilities,
+    // so propagate evidence in the appropriate direction based on the evidence
+    // kind and whether the evidence is for the return type or a parameter type.
+    std::vector<std::string_view> Targets =
+        getAdditionalTargetsForVirtualMethod(
+            E.symbol().usr(), E.kind(), E.slot() == SLOT_RETURN_TYPE, Index);
+    for (std::string_view USR : Targets) {
+      E.mutable_symbol()->set_usr(USR);
+      Emit(E);
+    }
+  };
+}
+
+llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
+    llvm::unique_function<EvidenceEmitter> Emit, USRCache &USRCache,
+    ASTContext &Ctx) {
+  return evidenceEmitterWithPropagation(std::move(Emit),
+                                        getVirtualMethodIndex(Ctx, USRCache));
+}
+
+static Evidence makeEvidence(std::string_view USR, Slot S, Evidence::Kind Kind,
+                             std::string_view LocAsString) {
+  Evidence E;
+  E.set_slot(S);
+  E.set_kind(Kind);
+  if (!LocAsString.empty()) E.set_location(LocAsString);
+  E.mutable_symbol()->set_usr(USR);
+  return E;
+}
+
+static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
+                        USRCache &USRCache, const Decl &Target, Slot S,
+                        Evidence::Kind Kind, SourceLocation Loc) {
+  CHECK(isInferenceTarget(Target))
+      << "Evidence emitted for a Target which is not an inference target: "
+      << (dyn_cast<NamedDecl>(&Target)
+              ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
+              : "not a named decl");
+  // TODO: make collecting and propagating location information optional?
+  auto &SM = Target.getDeclContext()->getParentASTContext().getSourceManager();
+  // TODO: are macro locations actually useful enough for debugging?
+  //       we could leave them out, and make room for non-macro samples.
+  std::string LocAsString;
+  if (Loc = SM.getFileLoc(Loc); Loc.isValid())
+    LocAsString = Loc.printToString(SM);
+  std::string_view USR = getOrGenerateUSR(USRCache, Target);
+  if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, LocAsString));
+}
+
 namespace {
 class DefinitionEvidenceCollector {
  public:
@@ -525,11 +505,12 @@ class DefinitionEvidenceCollector {
   static void collect(std::vector<InferableSlot> &InferableSlots,
                       const Formula &InferableSlotsConstraint,
                       llvm::function_ref<EvidenceEmitter> Emit,
-                      const CFGElement &CFGElem,
+                      USRCache &USRCache, const CFGElement &CFGElem,
                       const PointerNullabilityLattice &Lattice,
                       const Environment &Env, const dataflow::Solver &Solver) {
-    DefinitionEvidenceCollector Collector(
-        InferableSlots, InferableSlotsConstraint, Emit, Lattice, Env, Solver);
+    DefinitionEvidenceCollector Collector(InferableSlots,
+                                          InferableSlotsConstraint, Emit,
+                                          USRCache, Lattice, Env, Solver);
     if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
       const Stmt *S = CFGStmt->getStmt();
       if (!S) return;
@@ -550,15 +531,22 @@ class DefinitionEvidenceCollector {
   DefinitionEvidenceCollector(std::vector<InferableSlot> &InferableSlots,
                               const Formula &InferableSlotsConstraint,
                               llvm::function_ref<EvidenceEmitter> Emit,
+                              USRCache &USRCache,
                               const PointerNullabilityLattice &Lattice,
                               const Environment &Env,
                               const dataflow::Solver &Solver)
       : InferableSlots(InferableSlots),
         InferableSlotsConstraint(InferableSlotsConstraint),
         Emit(Emit),
+        USRCache(USRCache),
         Lattice(Lattice),
         Env(Env),
         Solver(Solver) {}
+
+  void emit(const Decl &Target, Slot S, Evidence::Kind Kind,
+            SourceLocation Loc) {
+    wrappedEmit(Emit, USRCache, Target, S, Kind, Loc);
+  }
 
   /// Records evidence derived from the necessity that `Value` is nonnull.
   /// It may be dereferenced, passed as a nonnull param, etc, per
@@ -610,7 +598,7 @@ class DefinitionEvidenceCollector {
       // ```
       if (Env.allows(SlotNonnull) &&
           Env.proves(SlotNonnullImpliesFormulaTrue)) {
-        Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
+        emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
         return;
       }
     }
@@ -648,7 +636,7 @@ class DefinitionEvidenceCollector {
       // `SlotNullable` being false.
       if (Env.allows(SlotNullable) &&
           Env.proves(SlotNullableImpliesFormulaTrue)) {
-        Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
+        emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
         // Continue the loop, emitting evidence for all such slots.
       }
     }
@@ -808,7 +796,7 @@ class DefinitionEvidenceCollector {
           NullabilityKind ArgNullability =
               PV ? getNullability(*PV, Env, &InferableSlotsConstraint)
                  : getNullabilityForNullptrT(Env, &InferableSlotsConstraint);
-          Emit(CalleeDecl, paramSlot(Iter.paramIdx()),
+          emit(CalleeDecl, paramSlot(Iter.paramIdx()),
                getArgEvidenceKindFromNullability(ArgNullability,
                                                  Iter.param().getType()),
                ArgLoc);
@@ -1127,7 +1115,7 @@ class DefinitionEvidenceCollector {
                                    ? Evidence::UNKNOWN_REFERENCE_RETURN
                                    : Evidence::UNKNOWN_RETURN;
       }
-      Emit(*CurrentFunc, SLOT_RETURN_TYPE, ReturnEvidenceKind,
+      emit(*CurrentFunc, SLOT_RETURN_TYPE, ReturnEvidenceKind,
            ReturnExpr->getExprLoc());
     }
 
@@ -1192,7 +1180,7 @@ class DefinitionEvidenceCollector {
           default:
             EvidenceKind = Evidence::ASSIGNED_FROM_UNKNOWN;
         }
-        Emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind,
+        emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind,
              ValueLoc);
         return;
       }
@@ -1466,6 +1454,7 @@ class DefinitionEvidenceCollector {
   const std::vector<InferableSlot> &InferableSlots;
   const Formula &InferableSlotsConstraint;
   llvm::function_ref<EvidenceEmitter> Emit;
+  USRCache &USRCache;
   const PointerNullabilityLattice &Lattice;
   const Environment &Env;
   const dataflow::Solver &Solver;
@@ -1540,7 +1529,7 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
 static void collectEvidenceFromConstructorExitBlock(
     const clang::Decl &MaybeConstructor, const Environment &ExitEnv,
     const Formula &InferableSlotsConstraint,
-    llvm::function_ref<EvidenceEmitter> Emit) {
+    llvm::function_ref<EvidenceEmitter> Emit, USRCache &USRCache) {
   auto *Ctor = dyn_cast<CXXConstructorDecl>(&MaybeConstructor);
   if (!Ctor) return;
   for (auto *Initializer : Ctor->inits()) {
@@ -1586,8 +1575,10 @@ static void collectEvidenceFromConstructorExitBlock(
     if (!hasPointerNullState(*PV)) continue;
 
     if (isNullable(*PV, ExitEnv, &InferableSlotsConstraint)) {
-      Emit(*Field, Slot(0), Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
-           Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
+      wrappedEmit(
+          Emit, USRCache, *Field, Slot(0),
+          Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
+          Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
     }
   }
 }
@@ -1600,7 +1591,7 @@ static void collectEvidenceFromConstructorExitBlock(
 static void collectEvidenceFromSupportedLateInitializerExitBlock(
     const clang::Decl &MaybeLateInitializationMethod,
     const Environment &ExitEnv, const Formula &InferableSlotsConstraint,
-    llvm::function_ref<EvidenceEmitter> Emit) {
+    llvm::function_ref<EvidenceEmitter> Emit, USRCache &USRCache) {
   auto *Method = dyn_cast<CXXMethodDecl>(&MaybeLateInitializationMethod);
   if (!Method || !Method->isVirtual() || Method->getNumParams() != 0) return;
   if (IdentifierInfo *Identifier = Method->getIdentifier();
@@ -1632,8 +1623,9 @@ static void collectEvidenceFromSupportedLateInitializerExitBlock(
         cast<dataflow::RecordStorageLocation>(ChildLoc), ExitEnv);
     if (PV != nullptr && hasPointerNullState(*PV) &&
         !isNullable(*PV, ExitEnv, &InferableSlotsConstraint)) {
-      Emit(*ChildDecl, Slot(0), Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
-           Method->getBeginLoc());
+      wrappedEmit(Emit, USRCache, *ChildDecl, Slot(0),
+                  Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
+                  Method->getBeginLoc());
     }
   }
 }
@@ -1880,7 +1872,7 @@ llvm::Error collectEvidenceFromDefinition(
               &State) {
         if (Solver->reachedLimit()) return;
         DefinitionEvidenceCollector::collect(
-            InferableSlots, InferableSlotsConstraint, Emit, Element,
+            InferableSlots, InferableSlotsConstraint, Emit, USRCache, Element,
             State.Lattice, State.Env, *Solver);
       };
   if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
@@ -1897,9 +1889,11 @@ llvm::Error collectEvidenceFromDefinition(
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
     collectEvidenceFromConstructorExitBlock(Definition, ExitBlockResult->Env,
-                                            InferableSlotsConstraint, Emit);
+                                            InferableSlotsConstraint, Emit,
+                                            USRCache);
     collectEvidenceFromSupportedLateInitializerExitBlock(
-        Definition, ExitBlockResult->Env, InferableSlotsConstraint, Emit);
+        Definition, ExitBlockResult->Env, InferableSlotsConstraint, Emit,
+        USRCache);
   }
 
   return llvm::Error::success();
@@ -1907,7 +1901,8 @@ llvm::Error collectEvidenceFromDefinition(
 
 static void collectEvidenceFromDefaultArgument(
     const clang::FunctionDecl &Fn, const clang::ParmVarDecl &ParamDecl,
-    Slot ParamSlot, llvm::function_ref<EvidenceEmitter> Emit) {
+    Slot ParamSlot, llvm::function_ref<EvidenceEmitter> Emit,
+    USRCache &USRCache) {
   // We don't handle all cases of default arguments, because the expressions
   // used for the argument are not available in any CFG, because the AST nodes
   // are once-per-decl children of the ParmVarDecl, not once-per-call children
@@ -1921,7 +1916,8 @@ static void collectEvidenceFromDefaultArgument(
   if (!ParamDecl.hasDefaultArg()) return;
   if (ParamDecl.hasUnparsedDefaultArg() ||
       ParamDecl.hasUninstantiatedDefaultArg()) {
-    Emit(Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT, ParamDecl.getEndLoc());
+    wrappedEmit(Emit, USRCache, Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT,
+                ParamDecl.getEndLoc());
     return;
   }
   const Expr *DefaultArg = ParamDecl.getDefaultArg();
@@ -1929,35 +1925,39 @@ static void collectEvidenceFromDefaultArgument(
 
   if (isOrIsConstructedFromNullPointerConstant(DefaultArg,
                                                Fn.getASTContext())) {
-    Emit(Fn, ParamSlot, Evidence::NULLABLE_ARGUMENT, DefaultArg->getExprLoc());
+    wrappedEmit(Emit, USRCache, Fn, ParamSlot, Evidence::NULLABLE_ARGUMENT,
+                DefaultArg->getExprLoc());
   } else {
     auto Nullability = getNullabilityAnnotationsFromType(DefaultArg->getType());
     if (auto K = getArgEvidenceKindFromNullability(
             Nullability.front().concrete(), ParamDecl.getType())) {
-      Emit(Fn, ParamSlot, K, DefaultArg->getExprLoc());
+      wrappedEmit(Emit, USRCache, Fn, ParamSlot, K, DefaultArg->getExprLoc());
     } else {
-      Emit(Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT, DefaultArg->getExprLoc());
+      wrappedEmit(Emit, USRCache, Fn, ParamSlot, Evidence::UNKNOWN_ARGUMENT,
+                  DefaultArg->getExprLoc());
     }
   }
 }
 
 static void collectNonnullAttributeEvidence(
     const clang::FunctionDecl &Fn, unsigned ParamIndex, SourceLocation Loc,
-    llvm::function_ref<EvidenceEmitter> Emit) {
+    llvm::function_ref<EvidenceEmitter> Emit, USRCache &USRCache) {
   const ParmVarDecl *ParamDecl = Fn.getParamDecl(ParamIndex);
   // The attribute does not apply to references-to-pointers or nested pointers
   // or smart pointers.
   if (isSupportedRawPointerType(ParamDecl->getType())) {
-    Emit(Fn, paramSlot(ParamIndex), Evidence::GCC_NONNULL_ATTRIBUTE, Loc);
+    wrappedEmit(Emit, USRCache, Fn, paramSlot(ParamIndex),
+                Evidence::GCC_NONNULL_ATTRIBUTE, Loc);
   }
 }
 
 static void emitWellKnownNullability(const clang::FunctionDecl &Fn,
-                                     llvm::function_ref<EvidenceEmitter> Emit) {
+                                     llvm::function_ref<EvidenceEmitter> Emit,
+                                     USRCache &USRCache) {
   if (Fn.isMain() && Fn.getNumParams() > 1) {
     if (const auto *ArgvParam = Fn.getParamDecl(1)) {
-      Emit(Fn, paramSlot(1), Evidence::WELL_KNOWN_NONNULL,
-           ArgvParam->getBeginLoc());
+      wrappedEmit(Emit, USRCache, Fn, paramSlot(1),
+                  Evidence::WELL_KNOWN_NONNULL, ArgvParam->getBeginLoc());
       // When we infer for nested pointers, we can add here that the inner
       // pointer, if the type is declared as char**, is Nullable. We need to
       // check the type though, as in many cases it is defined as a pointer to
@@ -1968,20 +1968,20 @@ static void emitWellKnownNullability(const clang::FunctionDecl &Fn,
 
 void collectEvidenceFromTargetDeclaration(
     const clang::Decl &D, llvm::function_ref<EvidenceEmitter> Emit,
-    const NullabilityPragmas &Pragmas) {
+    USRCache &USRCache, const NullabilityPragmas &Pragmas) {
   TypeNullabilityDefaults Defaults(D.getASTContext(), Pragmas);
   if (const auto *Fn = dyn_cast<clang::FunctionDecl>(&D)) {
     if (auto K = evidenceKindFromDeclaredReturnType(*Fn, Defaults))
-      Emit(*Fn, SLOT_RETURN_TYPE, *K,
-           Fn->getReturnTypeSourceRange().getBegin());
-    emitWellKnownNullability(*Fn, Emit);
+      wrappedEmit(Emit, USRCache, *Fn, SLOT_RETURN_TYPE, *K,
+                  Fn->getReturnTypeSourceRange().getBegin());
+    emitWellKnownNullability(*Fn, Emit, USRCache);
 
     if (const auto *RNNA = Fn->getAttr<ReturnsNonNullAttr>()) {
       // The attribute does not apply to references-to-pointers or nested
       // pointers or smart pointers.
       if (isSupportedRawPointerType(Fn->getReturnType())) {
-        Emit(*Fn, SLOT_RETURN_TYPE, Evidence::GCC_NONNULL_ATTRIBUTE,
-             RNNA->getLocation());
+        wrappedEmit(Emit, USRCache, *Fn, SLOT_RETURN_TYPE,
+                    Evidence::GCC_NONNULL_ATTRIBUTE, RNNA->getLocation());
       }
     }
 
@@ -1989,13 +1989,16 @@ void collectEvidenceFromTargetDeclaration(
       const ParmVarDecl *ParamDecl = Fn->getParamDecl(I);
       if (auto K = evidenceKindFromDeclaredTypeLoc(
               ParamDecl->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
-        Emit(*Fn, paramSlot(I), *K, ParamDecl->getTypeSpecStartLoc());
+        wrappedEmit(Emit, USRCache, *Fn, paramSlot(I), *K,
+                    ParamDecl->getTypeSpecStartLoc());
       }
 
-      collectEvidenceFromDefaultArgument(*Fn, *ParamDecl, paramSlot(I), Emit);
+      collectEvidenceFromDefaultArgument(*Fn, *ParamDecl, paramSlot(I), Emit,
+                                         USRCache);
 
       if (const auto *NNA = ParamDecl->getAttr<NonNullAttr>())
-        collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit);
+        collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit,
+                                        USRCache);
     }
 
     if (const auto *NNA = Fn->getAttr<NonNullAttr>()) {
@@ -2008,23 +2011,27 @@ void collectEvidenceFromTargetDeclaration(
           // getASTIndex starts with 0 and does not count any implicit `this`
           // parameter, matching FunctionDecl::getParamDecl indexing.
           unsigned I = P.getASTIndex();
-          collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit);
+          collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit,
+                                          USRCache);
         }
       } else {
         for (unsigned I = 0; I < Fn->param_size(); ++I) {
-          collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit);
+          collectNonnullAttributeEvidence(*Fn, I, NNA->getLocation(), Emit,
+                                          USRCache);
         }
       }
     }
   } else if (const auto *Field = dyn_cast<clang::FieldDecl>(&D)) {
     if (auto K = evidenceKindFromDeclaredTypeLoc(
             Field->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
-      Emit(*Field, Slot(0), *K, Field->getTypeSpecStartLoc());
+      wrappedEmit(Emit, USRCache, *Field, Slot(0), *K,
+                  Field->getTypeSpecStartLoc());
     }
   } else if (const auto *Var = dyn_cast<clang::VarDecl>(&D)) {
     if (auto K = evidenceKindFromDeclaredTypeLoc(
             Var->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
-      Emit(*Var, Slot(0), *K, Var->getTypeSpecStartLoc());
+      wrappedEmit(Emit, USRCache, *Var, Slot(0), *K,
+                  Var->getTypeSpecStartLoc());
     }
   }
 }

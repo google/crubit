@@ -40,11 +40,12 @@ class InferenceManager {
     std::vector<Evidence> AllEvidence;
 
     // Collect all evidence.
-    auto Emitter = evidenceEmitter([&](auto& E) { AllEvidence.push_back(E); },
-                                   USRCache, Ctx);
+    auto Emitter = evidenceEmitterWithPropagation(
+        [&](Evidence E) { AllEvidence.push_back(std::move(E)); }, USRCache,
+        Ctx);
     for (const auto* Decl : Sites.Declarations) {
       if (Filter && !Filter(*Decl)) continue;
-      collectEvidenceFromTargetDeclaration(*Decl, Emitter, Pragmas);
+      collectEvidenceFromTargetDeclaration(*Decl, Emitter, USRCache, Pragmas);
     }
     for (const auto* Impl : Sites.Definitions) {
       if (Filter && !Filter(*Impl)) continue;
