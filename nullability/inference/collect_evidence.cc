@@ -251,21 +251,34 @@ static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
 namespace {
 class InferableSlot {
  public:
-  InferableSlot(PointerTypeNullability Nullability, Slot Slot, const Decl &Decl)
+  InferableSlot(PointerTypeNullability Nullability, Slot Slot,
+                std::string InferenceTargetUSR)
       : SymbolicNullability(Nullability),
         TargetSlot(Slot),
-        InferenceTarget(Decl) {}
+        InferenceTargetUSR(std::move(InferenceTargetUSR)) {}
+
+  InferableSlot(PointerTypeNullability Nullability, Slot Slot,
+                const Decl &Target, USRCache &USRCache)
+      : InferableSlot(Nullability, Slot,
+                      std::string(getOrGenerateUSR(USRCache, Target))) {
+    CHECK(isInferenceTarget(Target))
+        << "InferableSlot created for a Target which is not an inference "
+           "target: "
+        << (dyn_cast<NamedDecl>(&Target)
+                ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
+                : "not a named decl");
+  }
 
   const PointerTypeNullability &getSymbolicNullability() const {
     return SymbolicNullability;
   }
   Slot getTargetSlot() const { return TargetSlot; }
-  const Decl &getInferenceTarget() const { return InferenceTarget; }
+  std::string_view getInferenceTargetUSR() const { return InferenceTargetUSR; }
 
  private:
   const PointerTypeNullability SymbolicNullability;
   const Slot TargetSlot;
-  const Decl &InferenceTarget;
+  const std::string InferenceTargetUSR;
 };
 }  // namespace
 
@@ -302,12 +315,12 @@ static std::pair<const Expr *, SourceLocation> describeDereference(
 /// accumulates the constraints on all inferable slots and expresses them as a
 /// single formula.
 static const Formula &getConstraintsOnInferableSlots(
-    const std::vector<InferableSlot> &InferableSlots, USRCache &USRCache,
+    const std::vector<InferableSlot> &InferableSlots,
     const PreviousInferences &PreviousInferences, dataflow::Arena &A) {
   const Formula *Constraint = &A.makeLiteral(true);
   for (auto &IS : InferableSlots) {
-    std::string_view USR = getOrGenerateUSR(USRCache, IS.getInferenceTarget());
-    SlotFingerprint Fingerprint = fingerprint(USR, IS.getTargetSlot());
+    SlotFingerprint Fingerprint =
+        fingerprint(IS.getInferenceTargetUSR(), IS.getTargetSlot());
     auto Nullability = IS.getSymbolicNullability();
     const Formula &Nullable = PreviousInferences.Nullable->contains(Fingerprint)
                                   ? Nullability.isNullable(A)
@@ -507,10 +520,11 @@ class DefinitionEvidenceCollector {
                       llvm::function_ref<EvidenceEmitter> Emit,
                       USRCache &USRCache, const CFGElement &CFGElem,
                       const PointerNullabilityLattice &Lattice,
-                      const Environment &Env, const dataflow::Solver &Solver) {
+                      const Environment &Env, const dataflow::Solver &Solver,
+                      const SourceManager &SM) {
     DefinitionEvidenceCollector Collector(InferableSlots,
                                           InferableSlotsConstraint, Emit,
-                                          USRCache, Lattice, Env, Solver);
+                                          USRCache, Lattice, Env, Solver, SM);
     if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
       const Stmt *S = CFGStmt->getStmt();
       if (!S) return;
@@ -534,15 +548,26 @@ class DefinitionEvidenceCollector {
                               USRCache &USRCache,
                               const PointerNullabilityLattice &Lattice,
                               const Environment &Env,
-                              const dataflow::Solver &Solver)
+                              const dataflow::Solver &Solver,
+                              const SourceManager &SM)
       : InferableSlots(InferableSlots),
         InferableSlotsConstraint(InferableSlotsConstraint),
         Emit(Emit),
         USRCache(USRCache),
         Lattice(Lattice),
         Env(Env),
-        Solver(Solver) {}
+        Solver(Solver),
+        SM(SM) {}
 
+  void emit(std::string_view USR, Slot S, Evidence::Kind Kind,
+            SourceLocation Loc) {
+    std::string LocAsString;
+    if (Loc = SM.getFileLoc(Loc); Loc.isValid())
+      LocAsString = Loc.printToString(SM);
+    Emit(makeEvidence(USR, S, Kind, LocAsString));
+  }
+
+  // Legacy `emit`, for uses still dependent on an AST `Decl`.
   void emit(const Decl &Target, Slot S, Evidence::Kind Kind,
             SourceLocation Loc) {
     wrappedEmit(Emit, USRCache, Target, S, Kind, Loc);
@@ -598,7 +623,7 @@ class DefinitionEvidenceCollector {
       // ```
       if (Env.allows(SlotNonnull) &&
           Env.proves(SlotNonnullImpliesFormulaTrue)) {
-        emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
+        emit(IS.getInferenceTargetUSR(), IS.getTargetSlot(), EvidenceKind, Loc);
         return;
       }
     }
@@ -636,7 +661,7 @@ class DefinitionEvidenceCollector {
       // `SlotNullable` being false.
       if (Env.allows(SlotNullable) &&
           Env.proves(SlotNullableImpliesFormulaTrue)) {
-        emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind, Loc);
+        emit(IS.getInferenceTargetUSR(), IS.getTargetSlot(), EvidenceKind, Loc);
         // Continue the loop, emitting evidence for all such slots.
       }
     }
@@ -1180,7 +1205,7 @@ class DefinitionEvidenceCollector {
           default:
             EvidenceKind = Evidence::ASSIGNED_FROM_UNKNOWN;
         }
-        emit(IS.getInferenceTarget(), IS.getTargetSlot(), EvidenceKind,
+        emit(IS.getInferenceTargetUSR(), IS.getTargetSlot(), EvidenceKind,
              ValueLoc);
         return;
       }
@@ -1458,6 +1483,7 @@ class DefinitionEvidenceCollector {
   const PointerNullabilityLattice &Lattice;
   const Environment &Env;
   const dataflow::Solver &Solver;
+  const SourceManager &SM;
 };
 }  // namespace
 
@@ -1746,7 +1772,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
     TypeNullabilityDefaults Defaults,
     const FunctionDecl *absl_nullable TargetAsFunc,
     const dataflow::ReferencedDecls &ReferencedDecls,
-    PointerNullabilityAnalysis &Analysis, dataflow::Arena &Arena) {
+    PointerNullabilityAnalysis &Analysis, dataflow::Arena &Arena,
+    USRCache &USRCache) {
   std::vector<InferableSlot> InferableSlots;
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
@@ -1756,7 +1783,7 @@ static std::vector<InferableSlot> gatherInferableSlots(
               Parameters[I]->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
         InferableSlots.emplace_back(
             Analysis.assignNullabilityVariable(Parameters[I], Arena),
-            paramSlot(I), *TargetAsFunc);
+            paramSlot(I), *TargetAsFunc, USRCache);
       }
     }
   }
@@ -1766,7 +1793,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
         !evidenceKindFromDeclaredTypeLoc(
             Field->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Field, Arena), Slot(0), *Field);
+          Analysis.assignNullabilityVariable(Field, Arena), Slot(0), *Field,
+          USRCache);
     }
   }
   for (const VarDecl *Global : ReferencedDecls.Globals) {
@@ -1774,7 +1802,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
         !evidenceKindFromDeclaredTypeLoc(
             Global->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Global, Arena), Slot(0), *Global);
+          Analysis.assignNullabilityVariable(Global, Arena), Slot(0), *Global,
+          USRCache);
     }
   }
   for (const VarDecl *Local : ReferencedDecls.Locals) {
@@ -1782,7 +1811,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
         !evidenceKindFromDeclaredTypeLoc(
             Local->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
       InferableSlots.emplace_back(
-          Analysis.assignNullabilityVariable(Local, Arena), Slot(0), *Local);
+          Analysis.assignNullabilityVariable(Local, Arena), Slot(0), *Local,
+          USRCache);
     }
   }
   for (const FunctionDecl *Function : ReferencedDecls.Functions) {
@@ -1791,7 +1821,7 @@ static std::vector<InferableSlot> gatherInferableSlots(
         !evidenceKindFromDeclaredReturnType(*Function, Defaults)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Function, Arena), SLOT_RETURN_TYPE,
-          *Function);
+          *Function, USRCache);
     }
   }
   for (const ParmVarDecl *Param : ReferencedDecls.LambdaCapturedParams) {
@@ -1806,7 +1836,7 @@ static std::vector<InferableSlot> gatherInferableSlots(
       unsigned Index = Param->getFunctionScopeIndex();
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Param, Arena), paramSlot(Index),
-          *ContainingFunction);
+          *ContainingFunction, USRCache);
     }
   }
   return InferableSlots;
@@ -1847,15 +1877,15 @@ llvm::Error collectEvidenceFromDefinition(
                                : Environment(AnalysisContext, TargetStmt);
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
 
-  std::vector<InferableSlot> InferableSlots =
-      gatherInferableSlots(TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc,
-                           ReferencedDecls, Analysis, AnalysisContext.arena());
+  std::vector<InferableSlot> InferableSlots = gatherInferableSlots(
+      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, ReferencedDecls,
+      Analysis, AnalysisContext.arena(), USRCache);
 
   // Here, we overlay new knowledge from past iterations over the symbolic
   // entities for the InferableSlots (whose symbols are invariant across
   // inference iterations).
   const auto &InferableSlotsConstraint = getConstraintsOnInferableSlots(
-      InferableSlots, USRCache, PreviousInferences, AnalysisContext.arena());
+      InferableSlots, PreviousInferences, AnalysisContext.arena());
 
   ConcreteNullabilityCache ConcreteNullabilityCache;
   Analysis.assignNullabilityOverride(
@@ -1873,7 +1903,7 @@ llvm::Error collectEvidenceFromDefinition(
         if (Solver->reachedLimit()) return;
         DefinitionEvidenceCollector::collect(
             InferableSlots, InferableSlotsConstraint, Emit, USRCache, Element,
-            State.Lattice, State.Env, *Solver);
+            State.Lattice, State.Env, *Solver, Ctx.getSourceManager());
       };
   if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
                                                         PostAnalysisCallbacks)
