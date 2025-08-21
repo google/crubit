@@ -71,11 +71,18 @@ crates_repository(
         "googletest": crate.spec(
             version = ">0.0.0",
         ),
+        "heck": crate.spec(
+            version = "=0.5",
+        ),
         "itertools": crate.spec(
             version = ">0.0.0",
         ),
         "maplit": crate.spec(
             version = ">0.0.0",
+        ),
+        "phf": crate.spec(
+            version = "=0.11",
+            features = ["macros"],
         ),
         "pin-project": crate.spec(
             version = ">0.0.0",
