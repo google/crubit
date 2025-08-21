@@ -1032,6 +1032,10 @@ pub struct Record {
     pub rs_name: Identifier,
     pub cc_name: Identifier,
     pub cc_preferred_name: Rc<str>,
+
+    /// Mangled record names are used to 1) provide valid Rust identifiers for
+    /// C++ template specializations, and 2) help build unique names for virtual
+    /// upcast thunks.
     pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,

@@ -597,6 +597,9 @@ struct Record {
   Identifier rs_name;
   Identifier cc_name;
   std::string cc_preferred_name;
+  // Mangled record names are used to 1) provide valid Rust identifiers for
+  // C++ template specializations, and 2) help build unique names for virtual
+  // upcast thunks.
   std::string mangled_cc_name;
 
   ItemId id;
