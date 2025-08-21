@@ -1239,6 +1239,7 @@ fn rs_type_kinds_for_func(
         .iter()
         .enumerate()
         .filter_map(|(i, p)| {
+
             db.rs_type_kind_with_lifetime_elision(
                 p.type_.clone(),
                 ElisionOptions { elide_references, is_return_type: false },
