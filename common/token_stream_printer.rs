@@ -76,7 +76,12 @@ pub fn rs_tokens_to_formatted_string(
     tokens: TokenStream,
     config: &RustfmtConfig,
 ) -> Result<String> {
-    let tokens_string = tokens_to_string(tokens)?;
+    let tokens_string = tokens_to_string(tokens)?
+        // NOTE: This is a terrible hack. `rustfmt` became more strict about appearances of `...`
+        // (the `DotDotDot` token) at some point in the past. This is not a precise or general
+        // solution, but rewriting this token to a comment produces formattable code in some cases,
+        // making test failure messages better.
+        .replace("...", "/*...*/");
     let err = format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}");
     rustfmt(tokens_string, config).context(err)
 }
