@@ -22,38 +22,10 @@
 
 namespace enums {
 
-namespace classless_enum {
-
-// CRUBIT_ANNOTATE: cpp_enum=enum
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=11
-enum CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: classless_enum :: Color") Color : std::int32_t {
-  RED = INT32_C(0),
-  BLUE = INT32_C(2),
-};
-
-}  // namespace classless_enum
-
-namespace cpp_enum {
-
-// CRUBIT_ANNOTATE: cpp_enum=enum class
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=22
-enum class CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: cpp_enum :: Color") Color : std::int32_t {
-  RED = INT32_C(0),
-  BLUE = INT32_C(2),
-};
-
-}  // namespace cpp_enum
-
 namespace repr_c {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=33
+// cc_bindings_from_rs/test/enums/enums.rs;l=11
 struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
     8) [[clang::trivial_abi]] MyEnum final {
  public:
@@ -137,7 +109,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 namespace repr_c_drop {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=53
+// cc_bindings_from_rs/test/enums/enums.rs;l=31
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_c_drop :: DropMe") alignas(8)
     [[clang::trivial_abi]] DropMe final {
@@ -198,7 +170,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace repr_c_clone_counter {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=77
+// cc_bindings_from_rs/test/enums/enums.rs;l=55
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_c_clone_counter :: CloneCount") alignas(8)
     [[clang::trivial_abi]] CloneCount final {
@@ -246,7 +218,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace repr_c_clone_active_variant {
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=101
+// cc_bindings_from_rs/test/enums/enums.rs;l=79
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_c_clone_active_variant :: "
     "CloneActiveVariant") alignas(4) [[clang::trivial_abi]]
@@ -303,37 +275,18 @@ CloneActiveVariant final {
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=123
+// cc_bindings_from_rs/test/enums/enums.rs;l=101
 bool is_a(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=127
+// cc_bindings_from_rs/test/enums/enums.rs;l=105
 bool is_b(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
 // Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=131
+// cc_bindings_from_rs/test/enums/enums.rs;l=109
 bool is_c(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
 }  // namespace repr_c_clone_active_variant
-
-namespace deprecated_enum {
-
-// CRUBIT_ANNOTATE: cpp_enum=enum class
-//
-// Generated from:
-// cc_bindings_from_rs/test/enums/enums.rs;l=144
-enum class CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: deprecated_enum :: Color")
-    [[nodiscard]] [[deprecated("Use NewColor")]] Color : std::int32_t{
-        RED = INT32_C(0),
-        BLUE = INT32_C(2),
-    };
-
-}  // namespace deprecated_enum
-
-namespace classless_enum {}
-
-namespace cpp_enum {}
 
 namespace repr_c {
 
@@ -520,8 +473,6 @@ inline bool is_c(
 }
 
 }  // namespace repr_c_clone_active_variant
-
-namespace deprecated_enum {}
 
 }  // namespace enums
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN

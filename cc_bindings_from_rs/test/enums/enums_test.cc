@@ -10,7 +10,6 @@
 
 namespace {
 
-using enums::cpp_enum::Color;
 using enums::repr_c::MyEnum;
 using enums::repr_c_clone_active_variant::CloneActiveVariant;
 using enums::repr_c_clone_active_variant::is_a;
@@ -97,15 +96,6 @@ TEST(EnumsTest, TestCloneActiveVariant) {
   // And back to A
   CloneActiveVariant a2 = c;
   EXPECT_TRUE(is_a(a2));
-}
-
-TEST(CppEnumTest, BasicTest) {
-  static_assert(std::is_enum_v<Color>);
-
-  Color red = Color::RED;
-  Color blue = Color::BLUE;
-  EXPECT_EQ(static_cast<int32_t>(red), 0);
-  EXPECT_EQ(static_cast<int32_t>(blue), 2);
 }
 
 }  // namespace

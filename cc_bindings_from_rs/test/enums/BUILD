@@ -51,3 +51,34 @@ crubit_cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+rust_library(
+    name = "cpp_enums",
+    testonly = 1,
+    srcs = ["cpp_enums.rs"],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+)
+
+golden_test(
+    name = "cpp_enums_golden_test",
+    basename = "cpp_enums",
+    golden_h = "cpp_enums_cc_api.h",
+    rust_library = "cpp_enums",
+)
+
+cc_bindings_from_rust(
+    name = "cpp_enums_cc_api",
+    testonly = 1,
+    crate = ":cpp_enums",
+)
+
+crubit_cc_test(
+    name = "cpp_enums_test",
+    srcs = ["cpp_enums_test.cc"],
+    deps = [
+        ":cpp_enums_cc_api",
+        "@googletest//:gtest_main",
+    ],
+)
