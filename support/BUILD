@@ -70,6 +70,7 @@ rust_proc_macro(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//:__subpackages__",
+        "//security/ise_memory_safety/elf:__subpackages__",
     ],
     deps = [
         "@crate_index//:proc-macro2",
