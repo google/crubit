@@ -1228,6 +1228,7 @@ fn rs_type_kinds_for_func(
     db: &dyn BindingsGenerator,
     func: &Func,
 ) -> Result<(Vec<RsTypeKind>, RsTypeKind)> {
+
     let errors = Errors::new();
     let elide_references = db
         .ir()
@@ -1239,7 +1240,6 @@ fn rs_type_kinds_for_func(
         .iter()
         .enumerate()
         .filter_map(|(i, p)| {
-
             errors.consume_error(
                 db.rs_type_kind_with_lifetime_elision(
                     p.type_.clone(),
