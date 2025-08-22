@@ -109,7 +109,7 @@ fn get_field_rs_type_kind_for_layout(
     if let Some(unknown_attr) = &field.unknown_attr {
         // Both the template definition and its instantiation should enable experimental
         // features.
-        for target in record.defining_target.iter().chain([&record.owning_target]) {
+        for target in record.defining_target().into_iter().chain([&record.owning_target]) {
             let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
                 enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
@@ -131,7 +131,7 @@ fn get_field_rs_type_kind_for_layout(
         bail!("Bridge-by-value types are not supported in struct fields.")
     }
 
-    for target in record.defining_target.iter().chain([&record.owning_target]) {
+    for target in record.defining_target().into_iter().chain([&record.owning_target]) {
         let enabled_features = db.ir().target_crubit_features(target);
         let (missing_features, reason) = type_kind.required_crubit_features(db, enabled_features);
         ensure!(
@@ -147,7 +147,7 @@ fn get_field_rs_type_kind_for_layout(
     //
     // Users can still work around this with accessor functions.
     if record.should_implement_drop() && !record.is_union() && needs_manually_drop(&type_kind) {
-        for target in record.defining_target.iter().chain([&record.owning_target]) {
+        for target in record.defining_target().into_iter().chain([&record.owning_target]) {
             let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
                 enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
@@ -574,7 +574,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     // Both the template definition and its instantiation should enable experimental
     // features.
     let mut crubit_features = ir.target_crubit_features(&record.owning_target);
-    if let Some(defining_target) = &record.defining_target {
+    if let Some(defining_target) = record.defining_target() {
         crubit_features |= ir.target_crubit_features(defining_target);
     }
     let mut upcast_impls = vec![];

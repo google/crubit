@@ -648,7 +648,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             }
             BridgeRsTypeKind::ProtoMessageBridge { abi_rust, abi_cpp, .. } => {
                 let target =
-                    original_type.defining_target.as_ref().unwrap_or(&original_type.owning_target);
+                    original_type.defining_target().unwrap_or(&original_type.owning_target);
                 let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, db.ir(), target);
                 let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
 
@@ -673,7 +673,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             }
             BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
                 let target =
-                    original_type.defining_target.as_ref().unwrap_or(&original_type.owning_target);
+                    original_type.defining_target().unwrap_or(&original_type.owning_target);
                 let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, db.ir(), target);
 
                 let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;

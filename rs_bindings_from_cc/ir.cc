@@ -504,6 +504,9 @@ llvm::json::Value TemplateArg::ToJson() const {
 
 llvm::json::Value TemplateSpecialization::ToJson() const {
   return llvm::json::Object{
+      {"is_string_view", is_string_view},
+      {"is_wstring_view", is_wstring_view},
+      {"defining_target", defining_target},
       {"template_name", template_name},
       {"template_args", template_args},
   };
@@ -553,11 +556,9 @@ llvm::json::Value Record::ToJson() const {
   llvm::json::Object record{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
-      {"cc_preferred_name", cc_preferred_name},
       {"mangled_cc_name", mangled_cc_name},
       {"id", id},
       {"owning_target", owning_target},
-      {"defining_target", defining_target},
       {"template_specialization", template_specialization},
       {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},

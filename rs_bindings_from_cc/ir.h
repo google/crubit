@@ -565,6 +565,9 @@ struct TemplateArg {
 struct TemplateSpecialization {
   llvm::json::Value ToJson() const;
 
+  bool is_string_view;
+  bool is_wstring_view;
+  BazelLabel defining_target;
   std::string template_name;
   std::vector<TemplateArg> template_args;
 };
@@ -596,7 +599,6 @@ struct Record {
   // `rs_name` is similar to "__CcTemplateInst8MyStructIiE").
   Identifier rs_name;
   Identifier cc_name;
-  std::string cc_preferred_name;
   // Mangled record names are used to 1) provide valid Rust identifiers for
   // C++ template specializations, and 2) help build unique names for virtual
   // upcast thunks.
@@ -607,9 +609,6 @@ struct Record {
   // is the target that instantiated this type (not the target that defined the
   // template).
   BazelLabel owning_target;
-  // The target containing the template definition, if this is a templated
-  // record type.
-  std::optional<BazelLabel> defining_target;
   std::optional<TemplateSpecialization> template_specialization;
   std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;

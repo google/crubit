@@ -1002,6 +1002,12 @@ pub struct TemplateArg {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TemplateSpecialization {
+    /// Is this a `std::string_view`?
+    pub is_string_view: bool,
+    /// Is this a `std::wstring_view`?
+    pub is_wstring_view: bool,
+    /// The target containing the template definition
+    pub defining_target: BazelLabel,
     pub template_name: Rc<str>,
     pub template_args: Vec<TemplateArg>,
 }
@@ -1031,7 +1037,6 @@ pub struct TraitDerives {
 pub struct Record {
     pub rs_name: Identifier,
     pub cc_name: Identifier,
-    pub cc_preferred_name: Rc<str>,
 
     /// Mangled record names are used to 1) provide valid Rust identifiers for
     /// C++ template specializations, and 2) help build unique names for virtual
@@ -1039,9 +1044,6 @@ pub struct Record {
     pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
-    /// The target containing the template definition, if this is a templated
-    /// record type.
-    pub defining_target: Option<BazelLabel>,
     pub template_specialization: Option<TemplateSpecialization>,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
@@ -1164,8 +1166,14 @@ impl Record {
     /// We special-case a handful of template specializations, such as `std::string_view`,
     /// AKA `basic_string_view<char>`, even though we do not make `basic_string_view` itself
     /// available to all.
-    pub fn is_allowed_template_instantiation(self: &Record) -> bool {
-        matches!(self.cc_preferred_name.as_ref(), "std::string_view" | "std::wstring_view")
+    pub fn is_disallowed_template_instantiation(self: &Record) -> bool {
+        self.template_specialization
+            .as_ref()
+            .is_some_and(|ts| !ts.is_string_view && !ts.is_wstring_view)
+    }
+
+    pub fn defining_target(&self) -> Option<&BazelLabel> {
+        self.template_specialization.as_ref().map(|ts| &ts.defining_target)
     }
 }
 
@@ -1743,7 +1751,7 @@ impl Item {
     /// other than `owning_target()`.
     pub fn defining_target(&self) -> Option<&BazelLabel> {
         match self {
-            Item::Record(record) => record.defining_target.as_ref(),
+            Item::Record(record) => record.defining_target(),
             _ => None,
         }
     }

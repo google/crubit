@@ -50,27 +50,6 @@ namespace crubit {
 
 namespace {
 
-// Types which are overridden to pretend to be final.
-//
-// WARNING: marking a non-final type as final is very dangerous!
-// See docs/unpin.md
-//
-// In particular, only include a type in `FinalOverrides` if the type has no
-// usable tail padding -- for example, if
-/// `std::has_unique_object_representations_v<T>`, or if the type itself is
-// POD for the purpose of layout (in the Itanium ABI).
-//
-// This should be enforced by asserting in `override_final_test.cc` that it
-// has no tail padding.
-const absl::flat_hash_set<absl::string_view>& FinalOverrides() {
-  static auto& final_overrides = *new absl::flat_hash_set<absl::string_view>{
-      // string_view only has a pointer and a size_t, which are both the same
-      // size, and so has no usable tail padding.
-      "std::string_view",
-  };
-  return final_overrides;
-}
-
 std::string GetClassTemplateSpecializationCcName(
     const clang::ASTContext& ast_context,
     const clang::ClassTemplateSpecializationDecl* specialization_decl,
@@ -421,14 +400,14 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     return attr_error_item;
   }
 
-  std::string rs_name, cc_name, preferred_cc_name;
+  std::string rs_name, cc_name;
   clang::SourceLocation source_loc;
   std::optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
-  std::optional<BazelLabel> defining_target;
   std::optional<TemplateSpecialization> template_specialization;
   std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(*record_decl);
   BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
+  bool is_final_override = false;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -441,8 +420,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     // `_LIBCPP_PREFERRED_NAME(u16string_view)`.  See also b/244350186.
     cc_name = GetClassTemplateSpecializationCcName(
         ictx_.ctx_, specialization_decl, /*use_preferred_names=*/false);
-    preferred_cc_name = GetClassTemplateSpecializationCcName(
-        ictx_.ctx_, specialization_decl, /*use_preferred_names=*/true);
+    std::string cc_preferred_name =
+        GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl,
+                                             /*use_preferred_names=*/true);
+    template_specialization.emplace();
+    template_specialization->is_string_view =
+        cc_preferred_name == "std::string_view";
+    template_specialization->is_wstring_view =
+        cc_preferred_name == "std::wstring_view";
+    is_final_override = template_specialization->is_string_view;
     doc_comment = ictx_.GetComment(specialization_decl);
     if (!doc_comment.has_value()) {
       doc_comment =
@@ -474,12 +460,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       // really should be. This ensures that when we refer to this Item, it's
       // spelled `cc_std::__CcTemplateInst...`. But a major downside is that we
       // still generate this template inst struct...
-      if (preferred_cc_name == "std::string_view") {
+      if (template_specialization->is_string_view) {
         owning_target = target;
       }
-      defining_target = std::move(target);
+      template_specialization->defining_target = std::move(target);
     }
-    template_specialization.emplace();
     template_specialization->template_name =
         specialization_decl->getQualifiedNameAsString();
     // preferred_cc_name.substr(0, preferred_cc_name.find('<'));
@@ -625,8 +610,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                             is_derived_class || layout.hasOwnVFPtr();
 
   bool is_effectively_final = record_decl->isEffectivelyFinal() ||
-                              record_decl->isUnion() ||
-                              FinalOverrides().contains(preferred_cc_name);
+                              record_decl->isUnion() || is_final_override;
 
   std::optional<std::string> nodiscard;
   if (const auto* attr = record_decl->getAttr<clang::WarnUnusedResultAttr>();
@@ -658,11 +642,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   auto record = Record{
       .rs_name = Identifier(rs_name),
       .cc_name = Identifier(cc_name),
-      .cc_preferred_name = std::move(preferred_cc_name),
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
       .id = ictx_.GenerateItemId(record_decl),
       .owning_target = std::move(owning_target),
-      .defining_target = std::move(defining_target),
       .template_specialization = std::move(template_specialization),
       .unknown_attr = std::move(unknown_attr),
       .doc_comment = std::move(doc_comment),

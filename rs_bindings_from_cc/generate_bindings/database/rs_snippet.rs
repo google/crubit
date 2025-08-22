@@ -645,7 +645,7 @@ impl RsTypeKind {
         // the forward declaration.
         if let RsTypeKind::Record { record, .. } = &underlying_type {
             if record.owning_target != type_alias.owning_target
-                && record.defining_target.as_ref() != Some(&type_alias.owning_target)
+                && record.defining_target() != Some(&type_alias.owning_target)
             {
                 return Ok(underlying_type);
             }
@@ -871,11 +871,7 @@ impl RsTypeKind {
                     // std::string_view so we create an allow list fo them. This is just a temporary
                     // solution until we have a better way to handle template
                     // instantiations.
-                    if record.defining_target.is_none()
-                        || record.is_allowed_template_instantiation()
-                    {
-                        require_feature(CrubitFeature::Supported, None)
-                    } else if record.defining_target.is_some() {
+                    if record.is_disallowed_template_instantiation() {
                         require_feature(
                             CrubitFeature::Wrapper,
                             Some(&|| {
@@ -883,6 +879,8 @@ impl RsTypeKind {
                                     .into()
                             }),
                         )
+                    } else {
+                        require_feature(CrubitFeature::Supported, None)
                     }
                 }
                 RsTypeKind::Enum { .. } => require_feature(CrubitFeature::Supported, None),
@@ -894,12 +892,7 @@ impl RsTypeKind {
                     let is_pointer_bridge =
                         matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
 
-                    if original_type.template_specialization.is_none()
-                        || original_type.is_allowed_template_instantiation()
-                        || !is_pointer_bridge
-                    {
-                        require_feature(CrubitFeature::Supported, None)
-                    } else {
+                    if original_type.is_disallowed_template_instantiation() && is_pointer_bridge {
                         require_feature(
                             CrubitFeature::Experimental,
                             Some(&|| {
@@ -910,6 +903,8 @@ impl RsTypeKind {
                                 .into()
                             }),
                         )
+                    } else {
+                        require_feature(CrubitFeature::Supported, None)
                     }
                 }
                 RsTypeKind::TypeMapOverride(_) => require_feature(CrubitFeature::Supported, None),
@@ -1361,15 +1356,13 @@ impl RsTypeKind {
                     // need to skip the first part of the split, since it returns the empty string.
                     let name_parts =
                         rust_name.split("::").skip(is_absolute_path as usize).map(make_rs_ident);
-                    let target = original_type
-                        .defining_target
-                        .as_ref()
-                        .unwrap_or(&original_type.owning_target);
+                    let target =
+                        original_type.defining_target().unwrap_or(&original_type.owning_target);
 
                     let prefix = if is_absolute_path {
                         quote! {}
                     } else if db.ir().is_current_target(target) {
-                        quote! {crate}
+                        quote! { crate }
                     } else {
                         let ident = make_rs_ident(target.target_name());
                         quote! { :: #ident }
