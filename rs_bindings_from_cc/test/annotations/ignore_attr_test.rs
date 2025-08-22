@@ -2,6 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Automatically @generated lib.rs for the cc_library ast_util.
-
-extern crate annotation_reader_sys;
+// Ensure the bindings were generated.
+#[allow(unused)]
+use ignore_attr::crubit::test::MyStruct;

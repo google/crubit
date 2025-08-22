@@ -286,4 +286,18 @@
 #define CRUBIT_BRIDGE_SLICE_PTR(abi_cpp) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_slice_ptr_abi_cpp", abi_cpp)
 
+// Prevents Crubit from interpreting one or more named attributes on this
+// declaration.
+//
+// TODO: b/439606536 - This currently only ignores unknown attributes, but
+// should be extended to ignore attributes that Crubit interprets.
+//
+// ```c++
+// // example.h
+// // SAFETY: `my_attribute` does not affect ABI.
+// struct CRUBIT_UNSAFE_IGNORE_ATTR(my_attribute) [[my_attribute]] MyStruct {};
+// ```
+#define CRUBIT_UNSAFE_IGNORE_ATTR(name) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr", #name)
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

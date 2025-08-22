@@ -140,7 +140,10 @@ cc_library(
     hdrs = ["ast_util.h"],
     visibility = ["//:__subpackages__"],
     deps = [
+        "//common:annotation_reader",
+        "//common:status_macros",
         "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/functional:function_ref",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

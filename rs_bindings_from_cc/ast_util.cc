@@ -9,10 +9,13 @@
 #include <string>
 
 #include "absl/algorithm/container.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/functional/function_ref.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "common/annotation_reader.h"
+#include "common/status_macros.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -48,6 +51,22 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     // attrs, it crashes.
     return unknown_attr;
   }
+
+  absl::flat_hash_set<absl::string_view> ignored_attr_names;
+  {
+    CRUBIT_ASSIGN_OR_RETURN(
+        std::optional<AnnotateArgs> args,
+        GetAnnotateAttrArgs(decl, "crubit_unsafe_ignore_attr"));
+    if (args.has_value()) {
+      clang::ASTContext& ast_context = decl.getASTContext();
+      for (const clang::Expr* arg : *args) {
+        CRUBIT_ASSIGN_OR_RETURN(absl::string_view name,
+                                GetExprAsStringLiteral(*arg, ast_context));
+        ignored_attr_names.insert(name);
+      }
+    }
+  }
+
   for (clang::Attr* attr : decl.getAttrs()) {
     if (is_known(*attr)) {
       continue;
@@ -62,14 +81,19 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     if (clang::isa<clang::UnavailableAttr>(attr)) {
       continue;
     }
+    // Ignore attributes we have been instructed to ignore.
+    std::string name = attr->getAttrName() ? attr->getNormalizedFullName()
+                                           : attr->getSpelling();
+    if (ignored_attr_names.contains(name)) {
+      continue;
+    }
+
     if (unknown_attr.has_value()) {
       absl::StrAppend(&*unknown_attr, ", ");
     } else {
       unknown_attr.emplace("");
     }
-    absl::StrAppend(&*unknown_attr, attr->getAttrName()
-                                        ? attr->getNormalizedFullName()
-                                        : attr->getSpelling());
+    absl::StrAppend(&*unknown_attr, name);
   }
   return unknown_attr;
 }

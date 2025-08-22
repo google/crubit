@@ -26,6 +26,8 @@ bool IsFullClassTemplateSpecializationOrChild(const clang::Decl* decl);
 //
 // is_known is called exactly once on every attribute, and returns true if the
 // attribute is understood.
+//
+// Annotate attributes are ignored and CRUBIT_UNSAFE_IGNORE_ATTR is considered.
 absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
     absl::FunctionRef<bool(const clang::Attr&)> is_known =

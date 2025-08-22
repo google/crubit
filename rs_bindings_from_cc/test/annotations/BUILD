@@ -36,6 +36,28 @@ crubit_rust_test(
 )
 
 crubit_test_cc_library(
+    name = "ignore_attr",
+    hdrs = ["ignore_attr.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+crubit_rust_test(
+    name = "ignore_attr_test",
+    srcs = ["ignore_attr_test.rs"],
+    cc_deps = [
+        ":ignore_attr",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
     name = "must_bind",
     hdrs = ["must_bind.h"],
     deps = [
