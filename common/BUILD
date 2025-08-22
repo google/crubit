@@ -374,6 +374,7 @@ crubit_rust_test(
     name = "errors_test",
     srcs = ["errors_test.rs"],
     deps = [
+        ":arc_anyhow",
         ":error_report",
         ":errors",
         "@crate_index//:googletest",

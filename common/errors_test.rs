@@ -4,7 +4,7 @@
 
 use error_report::{anyhow, ErrorReport, ErrorReporting};
 use errors::Errors;
-use googletest::{expect_eq, fail, gtest, OrFail};
+use googletest::prelude::*;
 
 #[gtest]
 fn test_errors_consolidate_on_empty_list_returns_ok() -> googletest::Result<()> {
@@ -39,4 +39,21 @@ fn test_errors_consolidate_on_nonempty_list_returns_reportable_error() -> google
 fn test_errors_drop_with_unconsolidated_errors_panics() {
     let errors = Errors::new();
     errors.add(anyhow!("abc"));
+}
+
+#[gtest]
+fn consume_error() {
+    // With a non-error result we should get back Some, and no error should be added.
+    {
+        let errors = Errors::new();
+        expect_eq!(Some(17), errors.consume_error::<u64>(Ok(17)));
+        expect_eq!(Some(()), errors.consolidate().ok());
+    }
+
+    // With an error result we should get back None, and the error should be added.
+    {
+        let errors = Errors::new();
+        expect_eq!(None, errors.consume_error::<u64>(Err(anyhow!(""))));
+        expect_false!(errors.consolidate().is_ok());
+    }
 }

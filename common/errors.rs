@@ -44,6 +44,18 @@ impl Errors {
         self.list.borrow().is_empty()
     }
 
+    /// If the supplied result contains an error, add it to the list and return None. Otherwise
+    /// return the result.
+    pub fn consume_error<T>(&self, r: Result<T, Error>) -> Option<T> {
+        match r {
+            Ok(t) => Some(t),
+            Err(e) => {
+                self.add(e);
+                None
+            }
+        }
+    }
+
     /// Consolidates any errors into a single error message.
     ////
     /// Returns `Ok` if no errors have been added.

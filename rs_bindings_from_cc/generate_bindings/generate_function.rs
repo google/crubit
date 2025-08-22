@@ -1240,22 +1240,24 @@ fn rs_type_kinds_for_func(
         .enumerate()
         .filter_map(|(i, p)| {
 
-            db.rs_type_kind_with_lifetime_elision(
-                p.type_.clone(),
-                ElisionOptions {
-                    elide_references,
-                    is_return_type: false,
+            errors.consume_error(
+                db.rs_type_kind_with_lifetime_elision(
+                    p.type_.clone(),
+                    ElisionOptions {
+                        elide_references,
+                        is_return_type: false,
 
-                    // Only interesting for the return type.
-                    have_reference_param: false,
-                },
+                        // Only interesting for the return type.
+                        have_reference_param: false,
+                    },
+                )
+                .map_err(|err| anyhow!("Failed to format type of parameter {i}: {err}")),
             )
-            .map_err(|err| errors.add(anyhow!("Failed to format type of parameter {i}: {err}")))
-            .ok()
         })
         .collect();
-    let return_type = db
-        .rs_type_kind_with_lifetime_elision(
+
+    let return_type = errors.consume_error(
+        db.rs_type_kind_with_lifetime_elision(
             func.return_type.clone(),
             ElisionOptions {
                 elide_references,
@@ -1266,8 +1268,9 @@ fn rs_type_kinds_for_func(
                 }),
             },
         )
-        .map_err(|err| errors.add(anyhow!("Failed to format return type: {err}")))
-        .ok();
+        .map_err(|err| anyhow!("Failed to format return type: {err}")),
+    );
+
     errors.consolidate()?;
     Ok((param_types, return_type.unwrap()))
 }
@@ -1304,11 +1307,13 @@ pub fn generate_function(
     let thunk: Option<Thunk> = if derived_record.is_some() {
         None
     } else {
-        generate_function_thunk(db, &func, &param_idents, &param_types, &return_type)
-            .map_err(|err| {
-                errors.add(err);
-            })
-            .ok()
+        errors.consume_error(generate_function_thunk(
+            db,
+            &func,
+            &param_idents,
+            &param_types,
+            &return_type,
+        ))
     };
 
     let param_value_adjustments =
