@@ -141,8 +141,8 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "@abseil-cpp//absl/algorithm:container",
-        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/functional:function_ref",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",

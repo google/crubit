@@ -29,7 +29,9 @@
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticIDs.h"
@@ -37,6 +39,7 @@
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
@@ -418,9 +421,17 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
     std::optional<Identifier> param_name = GetTranslatedParamName(param);
     CHECK(param_name.has_value());  // No known failure cases.
+
+    absl::StatusOr<std::optional<std::string>> unknown_attr =
+        CollectUnknownAttrs(*param);
+    if (!unknown_attr.ok()) {
+      errors.Add(FormattedError::FromStatus(std::move(unknown_attr.status())));
+      continue;
+    }
+
     params.push_back({.type = *param_type,
                       .identifier = *std::move(param_name),
-                      .unknown_attr = CollectUnknownAttrs(*param)});
+                      .unknown_attr = std::move(*unknown_attr)});
   }
 
   bool undeduced_return_type =
@@ -549,7 +560,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
-  std::optional<std::string> unknown_attr =
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
       CollectUnknownAttrs(*function_decl, [&](const clang::Attr& attr) {
         if (auto* unused_attr =
                 clang::dyn_cast<clang::WarnUnusedResultAttr>(&attr)) {
@@ -567,6 +578,13 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         }
         return false;
       });
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *function_decl,
+        UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
+                              .enclosing_item_id = *enclosing_item_id},
+        FormattedError::FromStatus(std::move(unknown_attr.status())));
+  }
 
   // Silence ClangTidy, checked above: calling `errors.Add` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
@@ -589,7 +607,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .is_consteval = function_decl->isConsteval(),
       .nodiscard = std::move(nodiscard),
       .deprecated = std::move(deprecated),
-      .unknown_attr = std::move(unknown_attr),
+      .unknown_attr = std::move(*unknown_attr),
       .has_c_calling_convention = has_c_calling_convention,
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,

@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/type_alias.h"
 
 #include <optional>
+#include <string>
 #include <utility>
 
 #include "absl/log/check.h"
@@ -94,13 +95,24 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       decl->getQualifiedNameAsString() == "std::string_view";
   Identifier rs_name = is_string_view ? Identifier("raw_string_view")
                                       : (*identifier).rs_identifier();
+
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
+      CollectUnknownAttrs(*decl);
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *decl,
+        UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
+                              .enclosing_item_id = *enclosing_item_id},
+        FormattedError::FromStatus(std::move(unknown_attr.status())));
+  }
+
   return TypeAlias{
       .cc_name = (*identifier).cc_identifier,
       .rs_name = rs_name,
       .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
       .doc_comment = ictx_.GetComment(decl),
-      .unknown_attr = CollectUnknownAttrs(*decl),
+      .unknown_attr = std::move(*unknown_attr),
       .underlying_type = *underlying_type,
       .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc()),
       .enclosing_item_id = *std::move(enclosing_item_id),

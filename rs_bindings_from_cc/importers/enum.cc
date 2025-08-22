@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/enum.h"
 
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -88,11 +89,25 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
                                          enumerator_name.status().message()));
     }
 
+    absl::StatusOr<std::optional<std::string>> unknown_attr =
+        CollectUnknownAttrs(*enumerator);
+    if (!unknown_attr.ok()) {
+      return unsupported(
+          FormattedError::FromStatus(std::move(unknown_attr.status())));
+    }
+
     enumerators.push_back(Enumerator{
         .identifier = (*enumerator_name).rs_identifier(),
         .value = IntegerConstant(enumerator->getInitVal()),
-        .unknown_attr = CollectUnknownAttrs(*enumerator),
+        .unknown_attr = std::move(*unknown_attr),
     });
+  }
+
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
+      CollectUnknownAttrs(*enum_decl);
+  if (!unknown_attr.ok()) {
+    return unsupported(
+        FormattedError::FromStatus(std::move(unknown_attr.status())));
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);
@@ -106,7 +121,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .enumerators = enum_decl->isCompleteDefinition()
                          ? std::make_optional(std::move(enumerators))
                          : std::nullopt,
-      .unknown_attr = CollectUnknownAttrs(*enum_decl),
+      .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),
   };
 }

@@ -866,7 +866,7 @@ pub struct Field {
     pub size: usize,
 
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub unknown_attr: Option<Rc<str>>,
+    pub unknown_attr: Result<Option<Rc<str>>, String>,
 
     pub is_no_unique_address: bool,
     pub is_bitfield: bool,

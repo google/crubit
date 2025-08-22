@@ -106,16 +106,20 @@ fn get_field_rs_type_kind_for_layout(
     if field.is_no_unique_address {
         bail!("`[[no_unique_address]]` attribute was present.");
     }
-    if let Some(unknown_attr) = &field.unknown_attr {
-        // Both the template definition and its instantiation should enable experimental
-        // features.
-        for target in record.defining_target().into_iter().chain([&record.owning_target]) {
-            let enabled_features = db.ir().target_crubit_features(target);
-            ensure!(
-                enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
-                "unknown field attributes are only supported with experimental features \
-                enabled on {target}\nUnknown attribute: {unknown_attr}`"
-            );
+    match &field.unknown_attr {
+        Err(e) => bail!("{e}"),
+        Ok(None) => (),
+        Ok(Some(unknown_attr)) => {
+            // Both the template definition and its instantiation should enable experimental
+            // features.
+            for target in record.defining_target().into_iter().chain([&record.owning_target]) {
+                let enabled_features = db.ir().target_crubit_features(target);
+                ensure!(
+                    enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
+                    "unknown field attributes are only supported with experimental features \
+                    enabled on {target}\nUnknown attribute: {unknown_attr}`"
+                );
+            }
         }
     }
     let type_kind = match &field.type_ {

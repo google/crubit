@@ -8,10 +8,11 @@
 #include <optional>
 #include <string>
 
-#include "absl/base/nullability.h"
 #include "absl/functional/function_ref.h"
+#include "absl/status/statusor.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 
 namespace crubit {
@@ -25,7 +26,7 @@ bool IsFullClassTemplateSpecializationOrChild(const clang::Decl* decl);
 //
 // is_known is called exactly once on every attribute, and returns true if the
 // attribute is understood.
-std::optional<std::string> CollectUnknownAttrs(
+absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
     absl::FunctionRef<bool(const clang::Attr&)> is_known =
         [](const clang::Attr& attr) { return false; });

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <string>
 #include <utility>
 
 #include "absl/log/check.h"
@@ -54,12 +55,20 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   //       FormattedError::Static("Namespace renames are not supported yet"));
   // }
 
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
+      CollectUnknownAttrs(*namespace_decl);
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *namespace_decl, std::nullopt,
+        FormattedError::FromStatus(std::move(unknown_attr.status())));
+  }
+
   return Namespace{.cc_name = identifier->cc_identifier,
                    .rs_name = identifier->cc_identifier,
                    .id = ictx_.GenerateItemId(namespace_decl),
                    .canonical_namespace_id =
                        ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),
-                   .unknown_attr = CollectUnknownAttrs(*namespace_decl),
+                   .unknown_attr = std::move(*unknown_attr),
                    .owning_target = ictx_.GetOwningTarget(namespace_decl),
                    .child_item_ids = std::move(item_ids),
                    .enclosing_item_id = *std::move(enclosing_item_id),

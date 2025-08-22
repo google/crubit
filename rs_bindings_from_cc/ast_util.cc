@@ -10,6 +10,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/functional/function_ref.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "clang/AST/Attr.h"
@@ -38,7 +39,7 @@ bool IsFullClassTemplateSpecializationOrChild(const clang::Decl* decl) {
   return false;
 }
 
-std::optional<std::string> CollectUnknownAttrs(
+absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
     absl::FunctionRef<bool(const clang::Attr&)> is_known) {
   std::optional<std::string> unknown_attr;

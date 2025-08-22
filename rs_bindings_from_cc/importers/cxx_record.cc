@@ -22,6 +22,7 @@
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
@@ -378,7 +379,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   std::optional<IR::Item> attr_error_item;
-  std::optional<std::string> unknown_attr =
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
       CollectUnknownAttrs(*record_decl, [&](const clang::Attr& attr) {
         if (IsKnownAttr(attr)) {
           return true;
@@ -396,6 +397,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         }
         return false;
       });
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *record_decl, std::nullopt,
+        FormattedError::FromStatus(std::move(unknown_attr.status())));
+  }
   if (attr_error_item.has_value()) {
     return attr_error_item;
   }
@@ -595,7 +601,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                             .rs_name = Identifier(rs_name),
                             .id = ictx_.GenerateItemId(record_decl),
                             .owning_target = ictx_.GetOwningTarget(record_decl),
-                            .unknown_attr = std::move(unknown_attr),
+                            .unknown_attr = std::move(*unknown_attr),
                             .record_type = *record_type,
                             .enclosing_item_id = *std::move(enclosing_item_id)};
   }
@@ -646,7 +652,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .id = ictx_.GenerateItemId(record_decl),
       .owning_target = std::move(owning_target),
       .template_specialization = std::move(template_specialization),
-      .unknown_attr = std::move(unknown_attr),
+      .unknown_attr = std::move(*unknown_attr),
       .doc_comment = std::move(doc_comment),
       .bridge_type = std::move(bridge_type),
       .source_loc = ictx_.ConvertSourceLocation(source_loc),

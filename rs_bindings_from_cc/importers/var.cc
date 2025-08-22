@@ -100,6 +100,14 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
     mangled_name = std::nullopt;
   }
 
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
+      CollectUnknownAttrs(*var_decl);
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        FormattedError::FromStatus(std::move(unknown_attr.status())));
+  }
+
   ictx_.MarkAsSuccessfullyImported(var_decl);
   return GlobalVar{
       .cc_name = var_name->cc_identifier,
@@ -109,7 +117,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
       .source_loc = ictx_.ConvertSourceLocation(var_decl->getBeginLoc()),
       .mangled_name = mangled_name,
       .type = *std::move(type),
-      .unknown_attr = CollectUnknownAttrs(*var_decl),
+      .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),
   };
 }

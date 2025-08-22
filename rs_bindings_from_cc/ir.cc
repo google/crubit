@@ -373,7 +373,7 @@ llvm::json::Value Field::ToJson() const {
       {"access", AccessToString(access)},
       {"offset", offset},
       {"size", size},
-      {"unknown_attr", unknown_attr},
+      {"unknown_attr", toJSON(unknown_attr)},
       {"is_no_unique_address", is_no_unique_address},
       {"is_bitfield", is_bitfield},
       {"is_inheritable", is_inheritable},
