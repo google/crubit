@@ -473,7 +473,7 @@ pub enum RsTypeKind {
     /// This variant comes from the `CRUBIT_INTERNAL_RUST_TYPE` attribute macro in C++,
     /// which is used on types like `SliceRef`, `StrRef`, and C++ types generated from Rust
     /// types by cc_bindings_from_rs.
-    TypeMapOverride(Rc<TypeMapOverride>),
+    ExistingRustType(Rc<ExistingRustType>),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -621,8 +621,8 @@ impl RsTypeKind {
             }
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
             Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias),
-            Item::TypeMapOverride(type_map_override) => {
-                RsTypeKind::new_type_map_override(db, type_map_override)
+            Item::ExistingRustType(existing_rust_type) => {
+                RsTypeKind::new_existing_rust_type(db, existing_rust_type)
             }
             other_item => bail!("Item does not define a type: {other_item:?}"),
         }
@@ -712,15 +712,15 @@ impl RsTypeKind {
         Ok(RsTypeKind::Enum { enum_, crate_path })
     }
 
-    fn new_type_map_override(
+    fn new_existing_rust_type(
         db: &dyn BindingsGenerator,
-        type_map_override: Rc<TypeMapOverride>,
+        existing_rust_type: Rc<ExistingRustType>,
     ) -> Result<Self> {
-        if type_map_override.rs_name.as_ref() == SLICE_REF_NAME_RS {
-            let [slice_type_inner] = &type_map_override.type_parameters[..] else {
+        if existing_rust_type.rs_name.as_ref() == SLICE_REF_NAME_RS {
+            let [slice_type_inner] = &existing_rust_type.type_parameters[..] else {
                 bail!(
                     "SliceRef has {} type parameters, expected 1",
-                    type_map_override.type_parameters.len()
+                    existing_rust_type.type_parameters.len()
                 );
             };
 
@@ -735,7 +735,7 @@ impl RsTypeKind {
             });
         }
 
-        Ok(RsTypeKind::TypeMapOverride(type_map_override))
+        Ok(RsTypeKind::ExistingRustType(existing_rust_type))
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -907,7 +907,7 @@ impl RsTypeKind {
                         require_feature(CrubitFeature::Supported, None)
                     }
                 }
-                RsTypeKind::TypeMapOverride(_) => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::ExistingRustType(_) => require_feature(CrubitFeature::Supported, None),
             }
         }
         (missing_features, reasons.into_iter().join(", "))
@@ -934,7 +934,7 @@ impl RsTypeKind {
             // all the fields.
             RsTypeKind::Record { .. } => false,
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::TypeMapOverride(type_map_override) => type_map_override.is_same_layout,
+            RsTypeKind::ExistingRustType(existing_rust_type) => existing_rust_type.is_same_layout,
             _ => true,
         }
     }
@@ -1058,7 +1058,7 @@ impl RsTypeKind {
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
                 BridgeRsTypeKind::StdString { .. } => false,
             },
-            RsTypeKind::TypeMapOverride(_) => true,
+            RsTypeKind::ExistingRustType(_) => true,
         }
     }
 
@@ -1201,7 +1201,7 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::BridgeType { .. } => self.to_token_stream(db),
-            RsTypeKind::TypeMapOverride(_) => self.to_token_stream(db),
+            RsTypeKind::ExistingRustType(_) => self.to_token_stream(db),
             _ => self.to_token_stream(db),
         }
     }
@@ -1412,8 +1412,8 @@ impl RsTypeKind {
                     }
                 }
             }
-            RsTypeKind::TypeMapOverride(type_map_override) => {
-                type_map_override.rs_name.parse().expect("Invalid RsType::name in the IR")
+            RsTypeKind::ExistingRustType(existing_rust_type) => {
+                existing_rust_type.rs_name.parse().expect("Invalid RsType::name in the IR")
             }
         }
     }
@@ -1462,7 +1462,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         }
                         BridgeRsTypeKind::StdString { .. } => {}
                     },
-                    RsTypeKind::TypeMapOverride(_) => {}
+                    RsTypeKind::ExistingRustType(_) => {}
                 };
                 Some(curr)
             }
@@ -1477,8 +1477,8 @@ mod tests {
     use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;
 
-    fn make_type_map_override(name: Rc<str>, is_same_layout: bool) -> RsTypeKind {
-        RsTypeKind::TypeMapOverride(Rc::new(TypeMapOverride {
+    fn make_existing_rust_type(name: Rc<str>, is_same_layout: bool) -> RsTypeKind {
+        RsTypeKind::ExistingRustType(Rc::new(ExistingRustType {
             rs_name: name,
             cc_name: "".into(),
             type_parameters: Vec::new(),
@@ -1494,9 +1494,9 @@ mod tests {
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = make_type_map_override("A".into(), true);
-            let b = make_type_map_override("B".into(), true);
-            let c = make_type_map_override("C".into(), true);
+            let a = make_existing_rust_type("A".into(), true);
+            let b = make_existing_rust_type("B".into(), true);
+            let c = make_existing_rust_type("C".into(), true);
             RsTypeKind::FuncPtr {
                 option: false,
                 abi: "blah".into(),
@@ -1508,10 +1508,10 @@ mod tests {
             .dfs_iter()
             .map(|t| match t {
                 RsTypeKind::FuncPtr { .. } => "fn".to_string(),
-                RsTypeKind::TypeMapOverride(type_map_override) => {
-                    type_map_override.rs_name.to_string()
+                RsTypeKind::ExistingRustType(existing_rust_type) => {
+                    existing_rust_type.rs_name.to_string()
                 }
-                _ => unreachable!("Only FuncPtr and TypeMapOverride kinds are used in this test"),
+                _ => unreachable!("Only FuncPtr and ExistingRustType kinds are used in this test"),
             })
             .collect_vec();
         assert_eq!(vec!["fn", "A", "B", "C"], dfs_names);
@@ -1522,7 +1522,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let referent = Rc::new(make_type_map_override("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("T".into(), true));
         let reference = RsTypeKind::Reference {
             option: false,
             referent,
@@ -1534,7 +1534,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let referent = Rc::new(make_type_map_override("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("T".into(), true));
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1548,7 +1548,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_type_map_override("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("T".into(), true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1562,7 +1562,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_type_map_override("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("T".into(), true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,

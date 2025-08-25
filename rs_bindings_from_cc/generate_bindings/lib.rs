@@ -222,15 +222,15 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
                 ..Default::default()
             }
         }
-        Item::TypeMapOverride(type_override) => {
-            let rs_type_kind = db.rs_type_kind((&**type_override).into())?;
+        Item::ExistingRustType(existing_rust_type) => {
+            let rs_type_kind = db.rs_type_kind((&**existing_rust_type).into())?;
             let disable_comment = format!(
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type_kind})",
-                cpp_type = type_override.debug_name(&ir),
+                cpp_type = existing_rust_type.debug_name(&ir),
                 rs_type_kind = rs_type_kind.display(db),
             );
-            let assertions = type_override
+            let assertions = existing_rust_type
                 .size_align
                 .as_ref()
                 .map(|size_align| {
@@ -244,7 +244,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
 
             ApiSnippets {
                 generated_items: HashMap::from([(
-                    type_override.id,
+                    existing_rust_type.id,
                     GeneratedItem::Comment { message: disable_comment.into() },
                 )]),
                 assertions,
@@ -414,7 +414,7 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
         }
         RsTypeKind::Enum { .. }
         | RsTypeKind::Primitive(..)
-        | RsTypeKind::TypeMapOverride { .. } => false,
+        | RsTypeKind::ExistingRustType { .. } => false,
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
             BridgeRsTypeKind::BridgeVoidConverters { .. }
@@ -554,14 +554,14 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             bail!("Slices are not supported yet")
         }
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
-        RsTypeKind::TypeMapOverride(type_map_override) => {
+        RsTypeKind::ExistingRustType(existing_rust_type) => {
             ensure!(
-                type_map_override.is_same_layout,
-                "RsTypeKind::TypeMapOverride with is_same_layout=false is not supported yet"
+                existing_rust_type.is_same_layout,
+                "RsTypeKind::ExistingRustType with is_same_layout=false is not supported yet"
             );
 
             // Rust names are of the form ":: tuples_golden :: NontrivialDrop"
-            let mut rust_path = type_map_override.rs_name.as_ref();
+            let mut rust_path = existing_rust_type.rs_name.as_ref();
             let mut start_with_colon2 = false;
             if let Some(strip_universal_qualifier) = rust_path.strip_prefix(":: ") {
                 start_with_colon2 = true;
@@ -584,8 +584,8 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             };
 
             let cpp_abi_path = make_transmute_cpp_abi_path_from_item(
-                type_map_override.as_ref(),
-                &[type_map_override.cc_name.as_ref()],
+                existing_rust_type.as_ref(),
+                &[existing_rust_type.cc_name.as_ref()],
                 db,
             )?;
 

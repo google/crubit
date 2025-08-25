@@ -241,10 +241,10 @@ impl From<&TypeAlias> for CcType {
     }
 }
 
-impl From<&TypeMapOverride> for CcType {
-    fn from(type_map_override: &TypeMapOverride) -> Self {
+impl From<&ExistingRustType> for CcType {
+    fn from(existing_rust_type: &ExistingRustType) -> Self {
         CcType {
-            variant: CcTypeVariant::Record(type_map_override.id),
+            variant: CcTypeVariant::Record(existing_rust_type.id),
             is_const: false,
             unknown_attr: Rc::default(),
         }
@@ -1608,7 +1608,7 @@ impl GenericItem for UseMod {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct TypeMapOverride {
+pub struct ExistingRustType {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
     pub type_parameters: Vec<CcType>,
@@ -1619,7 +1619,7 @@ pub struct TypeMapOverride {
     pub must_bind: bool,
 }
 
-impl GenericItem for TypeMapOverride {
+impl GenericItem for ExistingRustType {
     fn id(&self) -> ItemId {
         self.id
     }
@@ -1655,7 +1655,7 @@ pub enum Item {
     Comment(Rc<Comment>),
     Namespace(Rc<Namespace>),
     UseMod(Rc<UseMod>),
-    TypeMapOverride(Rc<TypeMapOverride>),
+    ExistingRustType(Rc<ExistingRustType>),
 }
 
 macro_rules! forward_item {
@@ -1671,7 +1671,7 @@ macro_rules! forward_item {
             Item::Comment($item_name) => $expr,
             Item::Namespace($item_name) => $expr,
             Item::UseMod($item_name) => $expr,
-            Item::TypeMapOverride($item_name) => $expr,
+            Item::ExistingRustType($item_name) => $expr,
         }
     };
 }
@@ -1743,7 +1743,7 @@ impl Item {
                 unsupported.path.as_ref().and_then(|p| p.enclosing_item_id)
             }
             Item::UseMod(..) => None,
-            Item::TypeMapOverride(..) => None,
+            Item::ExistingRustType(..) => None,
         }
     }
 
@@ -1770,7 +1770,7 @@ impl Item {
             Item::Comment(_) => false,
             Item::Namespace(_) => false,
             Item::UseMod(_) => false,
-            Item::TypeMapOverride(_) => false,
+            Item::ExistingRustType(_) => false,
         }
     }
 
@@ -1794,7 +1794,7 @@ impl Item {
             Item::UnsupportedItem(_) => None,
             Item::Comment(_) => None,
             Item::UseMod(_) => None,
-            Item::TypeMapOverride(type_map_override) => Some(type_map_override.cc_name.clone()),
+            Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.cc_name.clone()),
         }
     }
 
@@ -1808,7 +1808,7 @@ impl Item {
             | Item::TypeAlias(_)
             | Item::Enum(_)
             | Item::UseMod(_)
-            | Item::TypeMapOverride(_) => true,
+            | Item::ExistingRustType(_) => true,
             Item::Func(_) | Item::UnsupportedItem(_) | Item::Comment(_) => false,
             Item::Namespace(_) => unreachable!("Found a namespace that's opened inside of a record. This is not valid C++, so this is a bug."),
         }

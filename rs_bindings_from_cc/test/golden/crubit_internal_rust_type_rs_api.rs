@@ -40,46 +40,46 @@ pub type BadSameAbiAttr = ::core::ffi::c_uchar;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=TypeMapOverrideFieldTypes
-pub struct TypeMapOverrideFieldTypes {
+///CRUBIT_ANNOTATE: cpp_type=ExistingRustTypeFieldTypes
+pub struct ExistingRustTypeFieldTypes {
     pub my_i8_struct: i8,
     pub my_i8_class: i8,
     pub my_i8_enum: i8,
     pub my_i8_alias: i8,
     pub error: crate::TooFewArgs,
 }
-impl !Send for TypeMapOverrideFieldTypes {}
-impl !Sync for TypeMapOverrideFieldTypes {}
-unsafe impl ::cxx::ExternType for TypeMapOverrideFieldTypes {
-    type Id = ::cxx::type_id!("TypeMapOverrideFieldTypes");
+impl !Send for ExistingRustTypeFieldTypes {}
+impl !Sync for ExistingRustTypeFieldTypes {}
+unsafe impl ::cxx::ExternType for ExistingRustTypeFieldTypes {
+    type Id = ::cxx::type_id!("ExistingRustTypeFieldTypes");
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
-// Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
+// Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
+// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __this (parameter #0): references are not supported)
 
-// Error while generating bindings for constructor 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
-// Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __param_0 (parameter #1): references are not supported)
+// Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
+// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for constructor 'TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes':
-// Can't generate bindings for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __this (parameter #0): references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::TypeMapOverrideFieldTypes (the type of __param_0 (parameter #1): references are not supported)
+// Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
+// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TypeMapOverrideFieldTypes::operator=':
-// Can't generate bindings for TypeMapOverrideFieldTypes::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
+// Error while generating bindings for function 'ExistingRustTypeFieldTypes::operator=':
+// Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'TypeMapOverrideFieldTypes::operator=':
-// Can't generate bindings for TypeMapOverrideFieldTypes::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for TypeMapOverrideFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
+// Error while generating bindings for function 'ExistingRustTypeFieldTypes::operator=':
+// Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
+// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 const _: () = {
     assert!(::core::mem::size_of::<i8>() == 1);
@@ -90,13 +90,13 @@ const _: () = {
     assert!(::core::mem::align_of::<i8>() == 1);
     assert!(::core::mem::size_of::<i8>() == 1);
     assert!(::core::mem::align_of::<i8>() == 1);
-    assert!(::core::mem::size_of::<crate::TypeMapOverrideFieldTypes>() == 5);
-    assert!(::core::mem::align_of::<crate::TypeMapOverrideFieldTypes>() == 1);
-    static_assertions::assert_impl_all!(crate::TypeMapOverrideFieldTypes: Copy,Clone);
-    static_assertions::assert_not_impl_any!(crate::TypeMapOverrideFieldTypes: Drop);
-    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_struct) == 0);
-    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_class) == 1);
-    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_enum) == 2);
-    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, my_i8_alias) == 3);
-    assert!(::core::mem::offset_of!(crate::TypeMapOverrideFieldTypes, error) == 4);
+    assert!(::core::mem::size_of::<crate::ExistingRustTypeFieldTypes>() == 5);
+    assert!(::core::mem::align_of::<crate::ExistingRustTypeFieldTypes>() == 1);
+    static_assertions::assert_impl_all!(crate::ExistingRustTypeFieldTypes: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::ExistingRustTypeFieldTypes: Drop);
+    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_struct) == 0);
+    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_class) == 1);
+    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_enum) == 2);
+    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_alias) == 3);
+    assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, error) == 4);
 };

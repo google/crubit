@@ -271,7 +271,7 @@ llvm::json::Value MemberFuncMetadata::ToJson() const {
   };
 }
 
-llvm::json::Value TypeMapOverride::ToJson() const {
+llvm::json::Value ExistingRustType::ToJson() const {
   llvm::json::Object override{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
@@ -286,7 +286,7 @@ llvm::json::Value TypeMapOverride::ToJson() const {
   }
 
   return llvm::json::Object{
-      {"TypeMapOverride", std::move(override)},
+      {"ExistingRustType", std::move(override)},
   };
 }
 

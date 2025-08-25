@@ -1273,7 +1273,7 @@ fn test_default_crubit_features_disabled_variadic_function() -> Result<()> {
 }
 
 #[gtest]
-fn test_type_map_override_assert() -> Result<()> {
+fn test_existing_rust_type_assert() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
         r#" #pragma clang lifetime_elision
             // Broken class: uses i32 but has size 1.
@@ -1299,7 +1299,7 @@ fn test_type_map_override_assert() -> Result<()> {
 }
 
 #[gtest]
-fn test_type_map_override_c_abi_incompatible() -> Result<()> {
+fn test_existing_rust_type_c_abi_incompatible() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
         r#" #pragma clang lifetime_elision
             // Broken class: uses i32 but has size 1.
@@ -1326,7 +1326,7 @@ fn test_type_map_override_c_abi_incompatible() -> Result<()> {
 }
 
 #[gtest]
-fn test_type_map_override_c_abi_compatible() -> Result<()> {
+fn test_existing_rust_type_c_abi_compatible() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
         r#" #pragma clang lifetime_elision
             class
@@ -1355,7 +1355,7 @@ fn test_type_map_override_c_abi_compatible() -> Result<()> {
 
 /// We cannot generate size/align assertions for incomplete types.
 #[gtest]
-fn test_type_map_override_assert_incomplete() -> Result<()> {
+fn test_existing_rust_type_assert_incomplete() -> Result<()> {
     let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
         r#" #pragma clang lifetime_elision
             // Broken class: uses i32 but has size 1.

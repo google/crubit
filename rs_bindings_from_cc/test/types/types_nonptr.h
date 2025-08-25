@@ -111,10 +111,10 @@ enum CRUBIT_INTERNAL_RUST_TYPE("i8") MyI8Enum : unsigned char { kX };
 // The alias should become i8, even though it's an alias for u8.
 using MyI8Alias CRUBIT_INTERNAL_RUST_TYPE("i8") = unsigned char;
 
-TEST(TypeMapOverrideStruct, MyI8Struct);
-TEST(TypeMapOverrideClass, MyI8Class);
-TEST(TypeMapOverrideEnum, MyI8Enum);
-TEST(TypeMapOverrideAlias, MyI8Alias);
+TEST(ExistingRustTypeStruct, MyI8Struct);
+TEST(ExistingRustTypeClass, MyI8Class);
+TEST(ExistingRustTypeEnum, MyI8Enum);
+TEST(ExistingRustTypeAlias, MyI8Alias);
 
 template <typename T>
 struct CRUBIT_INTERNAL_RUST_TYPE("&[]") SliceRef final {
@@ -123,32 +123,32 @@ struct CRUBIT_INTERNAL_RUST_TYPE("&[]") SliceRef final {
 };
 
 // Test all numerical types...
-TEST(TypeMapOverrideSliceRefConstUint8, SliceRef<const uint8_t>);
-TEST(TypeMapOverrideSliceRefUint8, SliceRef<uint8_t>);
-TEST(TypeMapOverrideSliceRefConstUint16, SliceRef<const uint16_t>);
-TEST(TypeMapOverrideSliceRefUint16, SliceRef<uint16_t>);
-TEST(TypeMapOverrideSliceRefConstUint32, SliceRef<const uint32_t>);
-TEST(TypeMapOverrideSliceRefUint32, SliceRef<uint32_t>);
-TEST(TypeMapOverrideSliceRefConstUint64, SliceRef<const uint64_t>);
-TEST(TypeMapOverrideSliceRefUint64, SliceRef<uint64_t>);
+TEST(ExistingRustTypeSliceRefConstUint8, SliceRef<const uint8_t>);
+TEST(ExistingRustTypeSliceRefUint8, SliceRef<uint8_t>);
+TEST(ExistingRustTypeSliceRefConstUint16, SliceRef<const uint16_t>);
+TEST(ExistingRustTypeSliceRefUint16, SliceRef<uint16_t>);
+TEST(ExistingRustTypeSliceRefConstUint32, SliceRef<const uint32_t>);
+TEST(ExistingRustTypeSliceRefUint32, SliceRef<uint32_t>);
+TEST(ExistingRustTypeSliceRefConstUint64, SliceRef<const uint64_t>);
+TEST(ExistingRustTypeSliceRefUint64, SliceRef<uint64_t>);
 
-TEST(TypeMapOverrideSliceRefConstInt8, SliceRef<const int8_t>);
-TEST(TypeMapOverrideSliceRefInt8, SliceRef<int8_t>);
-TEST(TypeMapOverrideSliceRefConstInt16, SliceRef<const int16_t>);
-TEST(TypeMapOverrideSliceRefInt16, SliceRef<int16_t>);
-TEST(TypeMapOverrideSliceRefConstInt32, SliceRef<const int32_t>);
-TEST(TypeMapOverrideSliceRefInt32, SliceRef<int32_t>);
-TEST(TypeMapOverrideSliceRefConstInt64, SliceRef<const int64_t>);
-TEST(TypeMapOverrideSliceRefInt64, SliceRef<int64_t>);
+TEST(ExistingRustTypeSliceRefConstInt8, SliceRef<const int8_t>);
+TEST(ExistingRustTypeSliceRefInt8, SliceRef<int8_t>);
+TEST(ExistingRustTypeSliceRefConstInt16, SliceRef<const int16_t>);
+TEST(ExistingRustTypeSliceRefInt16, SliceRef<int16_t>);
+TEST(ExistingRustTypeSliceRefConstInt32, SliceRef<const int32_t>);
+TEST(ExistingRustTypeSliceRefInt32, SliceRef<int32_t>);
+TEST(ExistingRustTypeSliceRefConstInt64, SliceRef<const int64_t>);
+TEST(ExistingRustTypeSliceRefInt64, SliceRef<int64_t>);
 
-TEST(TypeMapOverrideSliceRefConstFloat, SliceRef<const float>);
-TEST(TypeMapOverrideSliceRefFloat, SliceRef<float>);
-TEST(TypeMapOverrideSliceRefConstDouble, SliceRef<const double>);
-TEST(TypeMapOverrideSliceRefDouble, SliceRef<double>);
+TEST(ExistingRustTypeSliceRefConstFloat, SliceRef<const float>);
+TEST(ExistingRustTypeSliceRefFloat, SliceRef<float>);
+TEST(ExistingRustTypeSliceRefConstDouble, SliceRef<const double>);
+TEST(ExistingRustTypeSliceRefDouble, SliceRef<double>);
 
 // ... and arbitrary structs/enums.
-TEST(TypeMapOverrideSliceRefArbitraryStruct, SliceRef<ns::ExampleStruct>);
-TEST(TypeMapOverrideSliceRefArbitraryEnum, SliceRef<const ns::ExampleEnum>);
-TEST(TypeMapOverrideSliceRefArbitraryAliasEnum, SliceRef<AliasEnum>);
+TEST(ExistingRustTypeSliceRefArbitraryStruct, SliceRef<ns::ExampleStruct>);
+TEST(ExistingRustTypeSliceRefArbitraryEnum, SliceRef<const ns::ExampleEnum>);
+TEST(ExistingRustTypeSliceRefArbitraryAliasEnum, SliceRef<AliasEnum>);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPES_TYPES_NONPTR_H_

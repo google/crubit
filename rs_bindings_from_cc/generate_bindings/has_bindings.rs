@@ -138,7 +138,7 @@ pub fn has_bindings(
         | Item::Record(_)
         | Item::Enum(_)
         | Item::TypeAlias(_)
-        | Item::TypeMapOverride(_) => {
+        | Item::ExistingRustType(_) => {
             // has_bindings is called from `rs_type_kind()`, so we can't use
             // `BindingsGenerator::rs_type_kind()` here.
             match RsTypeKind::from_item_raw(
@@ -498,8 +498,8 @@ pub fn resolve_type_names(
             Item::UseMod(use_mod) => {
                 insert(use_mod.mod_name.identifier.clone(), ResolvedTypeName::ExplicitItem(id));
             }
-            Item::TypeMapOverride(type_map_override) => {
-                insert(type_map_override.rs_name.clone(), ResolvedTypeName::ExplicitItem(id));
+            Item::ExistingRustType(existing_rust_type) => {
+                insert(existing_rust_type.rs_name.clone(), ResolvedTypeName::ExplicitItem(id));
             }
             Item::Func(_) | Item::GlobalVar(_) | Item::UnsupportedItem(_) | Item::Comment(_) => {
                 // Not in the type namespace.

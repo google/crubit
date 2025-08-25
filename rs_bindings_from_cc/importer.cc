@@ -1127,9 +1127,9 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
   assert(!lifetimes || IsSameCanonicalUnqualifiedType(
                            lifetimes->Type(), clang::QualType(type, 0)));
 
-  if (auto override_type = GetTypeMapOverride(*type);
-      override_type.has_value()) {
-    return *std::move(override_type);
+  if (auto existing_rust_type = GetExistingRustType(*type);
+      existing_rust_type.has_value()) {
+    return *std::move(existing_rust_type);
   } else if (type->isPointerType() || type->isLValueReferenceType() ||
              type->isRValueReferenceType()) {
     clang::QualType pointee_type = type->getPointeeType();

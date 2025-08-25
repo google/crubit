@@ -157,9 +157,9 @@ cc_library(
 )
 
 cc_library(
-    name = "type_map_override",
-    srcs = ["type_map_override.cc"],
-    hdrs = ["type_map_override.h"],
+    name = "existing_rust_type",
+    srcs = ["existing_rust_type.cc"],
+    hdrs = ["existing_rust_type.h"],
     deps = [
         "//common:annotation_reader",
         "//common:status_macros",

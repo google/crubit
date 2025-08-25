@@ -935,7 +935,7 @@ inline std::ostream& operator<<(std::ostream& o, const UseMod& use_mod) {
 
 // A type which has no bindings generated, and instead uses an already-existing
 // rust type.
-struct TypeMapOverride {
+struct ExistingRustType {
   llvm::json::Value ToJson() const;
 
   std::string rs_name;
@@ -955,8 +955,8 @@ struct TypeMapOverride {
 };
 
 inline std::ostream& operator<<(std::ostream& o,
-                                const TypeMapOverride& type_mapped) {
-  return o << std::string(llvm::formatv("{0:2}", type_mapped.ToJson()));
+                                const ExistingRustType& existing_rust_type) {
+  return o << std::string(llvm::formatv("{0:2}", existing_rust_type.ToJson()));
 }
 
 // A complete intermediate representation of bindings for publicly accessible
@@ -997,7 +997,7 @@ struct IR {
 
   using Item = std::variant<Func, Record, IncompleteRecord, Enum, TypeAlias,
                             GlobalVar, UnsupportedItem, Comment, Namespace,
-                            UseMod, TypeMapOverride>;
+                            UseMod, ExistingRustType>;
   std::vector<Item> items;
   absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids;
   // Empty string signals that the bindings should be generated in the crate

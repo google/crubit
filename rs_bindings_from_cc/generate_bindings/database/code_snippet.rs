@@ -309,7 +309,7 @@ pub fn required_crubit_features(
                 &|| "incomplete type".into(),
             );
         }
-        Item::Comment { .. } | Item::TypeMapOverride { .. } | Item::UseMod { .. } => {}
+        Item::Comment { .. } | Item::ExistingRustType { .. } | Item::UseMod { .. } => {}
     }
     Ok(missing_features)
 }

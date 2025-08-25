@@ -18,16 +18,16 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(sizeof(struct TypeMapOverrideFieldTypes) == 5);
-static_assert(alignof(struct TypeMapOverrideFieldTypes) == 1);
+static_assert(sizeof(struct ExistingRustTypeFieldTypes) == 5);
+static_assert(alignof(struct ExistingRustTypeFieldTypes) == 1);
 static_assert(CRUBIT_OFFSET_OF(my_i8_struct,
-                               struct TypeMapOverrideFieldTypes) == 0);
-static_assert(CRUBIT_OFFSET_OF(my_i8_class, struct TypeMapOverrideFieldTypes) ==
-              1);
-static_assert(CRUBIT_OFFSET_OF(my_i8_enum, struct TypeMapOverrideFieldTypes) ==
+                               struct ExistingRustTypeFieldTypes) == 0);
+static_assert(CRUBIT_OFFSET_OF(my_i8_class,
+                               struct ExistingRustTypeFieldTypes) == 1);
+static_assert(CRUBIT_OFFSET_OF(my_i8_enum, struct ExistingRustTypeFieldTypes) ==
               2);
-static_assert(CRUBIT_OFFSET_OF(my_i8_alias, struct TypeMapOverrideFieldTypes) ==
-              3);
-static_assert(CRUBIT_OFFSET_OF(error, struct TypeMapOverrideFieldTypes) == 4);
+static_assert(CRUBIT_OFFSET_OF(my_i8_alias,
+                               struct ExistingRustTypeFieldTypes) == 3);
+static_assert(CRUBIT_OFFSET_OF(error, struct ExistingRustTypeFieldTypes) == 4);
 
 #pragma clang diagnostic pop

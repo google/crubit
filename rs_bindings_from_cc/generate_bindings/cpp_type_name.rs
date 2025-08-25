@@ -143,10 +143,10 @@ fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
             let qualifier = cpp_qualified_path_prefix(item, ir)?;
             Ok(quote! { #qualifier #ident })
         }
-        Item::TypeMapOverride(type_map_override) => type_map_override
+        Item::ExistingRustType(existing_rust_type) => existing_rust_type
             .cc_name
             .parse::<TokenStream>()
-            .map_err(|_| anyhow!("malformed type name: {:?}", type_map_override.cc_name)),
+            .map_err(|_| anyhow!("malformed type name: {:?}", existing_rust_type.cc_name)),
         _ => bail!("Item does not define a type: {:?}", item),
     }
 }

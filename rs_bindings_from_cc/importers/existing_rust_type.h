@@ -13,9 +13,10 @@
 namespace crubit {
 
 // Imports type decls which have an overridden type.
-class TypeMapOverrideImporter final : public DeclImporterBase<clang::TypeDecl> {
+class ExistingRustTypeImporter final
+    : public DeclImporterBase<clang::TypeDecl> {
  public:
-  explicit TypeMapOverrideImporter(ImportContext& context)
+  explicit ExistingRustTypeImporter(ImportContext& context)
       : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::TypeDecl*) override;
 };

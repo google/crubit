@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "rs_bindings_from_cc/importers/type_map_override.h"
+#include "rs_bindings_from_cc/importers/existing_rust_type.h"
 
 #include <optional>
 #include <string>
@@ -86,7 +86,7 @@ absl::StatusOr<std::optional<std::vector<CcType>>> GetTemplateParameters(
 
 }  // namespace
 
-std::optional<IR::Item> TypeMapOverrideImporter::Import(
+std::optional<IR::Item> ExistingRustTypeImporter::Import(
     clang::TypeDecl* type_decl) {
   absl::StatusOr<std::optional<absl::string_view>> rust_type =
       GetRustTypeAttribute(type_decl);
@@ -142,7 +142,7 @@ std::optional<IR::Item> TypeMapOverrideImporter::Import(
         .alignment = context.getTypeAlignInChars(cpp_type).getQuantity(),
     };
   }
-  return TypeMapOverride{
+  return ExistingRustType{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
       .type_parameters = type_parameters->value_or(std::vector<CcType>()),

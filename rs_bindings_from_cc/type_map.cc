@@ -39,7 +39,7 @@ bool IsKnownRustType(absl::string_view cpp_type) {
 
 }  // namespace
 
-std::optional<CcType> GetTypeMapOverride(const clang::Type& cpp_type) {
+std::optional<CcType> GetExistingRustType(const clang::Type& cpp_type) {
   std::string type_string = clang::QualType(&cpp_type, 0).getAsString();
   if (IsKnownRustType(type_string)) {
     return CcType(CcType::Primitive{type_string});

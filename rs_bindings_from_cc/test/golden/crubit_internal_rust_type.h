@@ -48,7 +48,7 @@ using BadSameAbiAttr
         "crubit_internal_same_abi", true)]]*/
     = unsigned char;
 
-struct TypeMapOverrideFieldTypes final {
+struct ExistingRustTypeFieldTypes final {
   MyI8Struct my_i8_struct;
   MyI8Class my_i8_class;
   MyI8Enum my_i8_enum;
