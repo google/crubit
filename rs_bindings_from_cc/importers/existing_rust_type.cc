@@ -49,7 +49,7 @@ absl::StatusOr<std::optional<absl::string_view>> GetRustTypeAttribute(
 // false. If the attribute is malformed, returns a bad status.
 //
 // `decl` must not be null.
-absl::StatusOr<bool> GetIsSameLayoutAttribute(const clang::Decl* decl) {
+absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
   CRUBIT_ASSIGN_OR_RETURN(
       std::optional<AnnotateArgs> args,
       GetAnnotateAttrArgs(*decl, "crubit_internal_same_abi"));
@@ -104,12 +104,12 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
   if (!rust_type->has_value()) {
     return std::nullopt;
   }
-  absl::StatusOr<bool> is_same_layout = GetIsSameLayoutAttribute(type_decl);
-  if (!is_same_layout.ok()) {
+  absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
+  if (!is_same_abi.ok()) {
     return ictx_.HardError(*type_decl,
                            FormattedError::PrefixedStrCat(
                                "Invalid crubit_internal_is_same_abi attribute",
-                               is_same_layout.status().message()));
+                               is_same_abi.status().message()));
   }
 
   auto rs_name = std::string(**rust_type);
@@ -148,7 +148,7 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
       .type_parameters = type_parameters->value_or(std::vector<CcType>()),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),
-      .is_same_layout = *is_same_layout,
+      .is_same_abi = *is_same_abi,
       .id = ictx_.GenerateItemId(type_decl),
   };
 }

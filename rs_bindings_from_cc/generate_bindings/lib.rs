@@ -556,8 +556,8 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
         RsTypeKind::ExistingRustType(existing_rust_type) => {
             ensure!(
-                existing_rust_type.is_same_layout,
-                "RsTypeKind::ExistingRustType with is_same_layout=false is not supported yet"
+                existing_rust_type.is_same_abi,
+                "RsTypeKind::ExistingRustType with is_same_abi=false is not supported yet"
             );
 
             // Rust names are of the form ":: tuples_golden :: NontrivialDrop"

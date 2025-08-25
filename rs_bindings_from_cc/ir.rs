@@ -1614,7 +1614,7 @@ pub struct ExistingRustType {
     pub type_parameters: Vec<CcType>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
-    pub is_same_layout: bool,
+    pub is_same_abi: bool,
     pub id: ItemId,
     pub must_bind: bool,
 }

@@ -934,7 +934,7 @@ impl RsTypeKind {
             // all the fields.
             RsTypeKind::Record { .. } => false,
             RsTypeKind::BridgeType { .. } => false,
-            RsTypeKind::ExistingRustType(existing_rust_type) => existing_rust_type.is_same_layout,
+            RsTypeKind::ExistingRustType(existing_rust_type) => existing_rust_type.is_same_abi,
             _ => true,
         }
     }
@@ -1477,14 +1477,14 @@ mod tests {
     use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;
 
-    fn make_existing_rust_type(name: Rc<str>, is_same_layout: bool) -> RsTypeKind {
+    fn make_existing_rust_type(name: Rc<str>, is_same_abi: bool) -> RsTypeKind {
         RsTypeKind::ExistingRustType(Rc::new(ExistingRustType {
             rs_name: name,
             cc_name: "".into(),
             type_parameters: Vec::new(),
             owning_target: BazelLabel("//new/for/testing".into()),
             size_align: None,
-            is_same_layout,
+            is_same_abi,
             id: ItemId::new_for_testing(0),
             must_bind: false,
         }))
