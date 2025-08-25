@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "support/bridge.h"
+#include "support/rs_std/slice_ref.h"
 
 // clang-format off
 #define CRUBIT_BRIDGE(rust_name, abi_rust, abi_cpp)         \
@@ -87,5 +88,8 @@ std::string_view StringViewByValue(std::string_view sv);
 
 std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
                                                          std::string_view sv);
+
+rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
+    rs_std::SliceRef<const std::string_view> slice);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

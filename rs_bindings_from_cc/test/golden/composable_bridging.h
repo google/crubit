@@ -5,6 +5,9 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMPOSABLE_BRIDGING_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMPOSABLE_BRIDGING_H_
 
+#include "crubit/support/rs_std/slice_ref.h"
+#include "absl/strings/string_view.h"
+
 // Note: a real example would require that Crubit implements CrubitAbiTrait in
 // order for the generated code to properly compile. This example just serves to
 // illustrate what the generated code will look like.
@@ -49,5 +52,7 @@ struct [[clang::annotate("crubit_internal_rust_type", "i8")]] [[clang::annotate(
 };
 
 MyOption<MyI8Struct> MakeMyI8Struct();
+
+void InspectStringViews(rs_std::SliceRef<absl::string_view> slice);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMPOSABLE_BRIDGING_H_

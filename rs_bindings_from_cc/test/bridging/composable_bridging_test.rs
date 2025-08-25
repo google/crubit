@@ -74,3 +74,21 @@ fn test_return_optional_string_view() {
     expect_eq!(live(ReturnOptionalStringView(true, "Hello".into())), live(Some("Hello".into())));
     expect_eq!(live(ReturnOptionalStringView(false, "Hello".into())), live(None));
 }
+
+#[gtest]
+fn test_return_slice_ref_string_view() {
+    let value: &[cc_std::std::raw_string_view] =
+        &[cc_std::std::raw_string_view::from("return slice ref string view test")];
+
+    // TODO(b/440573418): Eventually this should take an `Alias<[cc_std::std::raw_string_view]>`,
+    let result: *const [cc_std::std::raw_string_view] =
+        unsafe { ReturnSliceRefStringView(value as *const [_]) };
+
+    let result: &[cc_std::std::raw_string_view] = unsafe { &*result };
+
+    assert_that!(result.len(), eq(1));
+
+    let value: &[u8] = unsafe { &*value[0].as_raw_bytes() };
+    let result: &[u8] = unsafe { &*result[0].as_raw_bytes() };
+    expect_that!(result, eq(value))
+}

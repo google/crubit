@@ -67,7 +67,10 @@ cc_library(
         "//features:experimental",
         ":additional_composable_bridging_lib_src",
     ],
-    deps = ["//support:bridge_cpp"],
+    deps = [
+        "//support:bridge_cpp",
+        "//support/rs_std:slice_ref",
+    ],
 )
 
 additional_rust_srcs_for_crubit_bindings(

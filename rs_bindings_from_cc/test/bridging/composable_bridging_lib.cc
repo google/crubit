@@ -9,6 +9,8 @@
 #include <string_view>
 #include <utility>
 
+#include "support/rs_std/slice_ref.h"
+
 Vec3<float> MakeVec3(float x, float y, float z) {
   return {
       .x = x,
@@ -66,4 +68,9 @@ std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
     return std::nullopt;
   }
   return sv;
+}
+
+rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
+    rs_std::SliceRef<const std::string_view> slice) {
+  return slice;
 }

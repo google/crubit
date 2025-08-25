@@ -40,6 +40,10 @@ DEPS = {
         "unsupported",
     ],
     "types": ["//support/rs_std:char"],
+    "composable_bridging": [
+        "//support/rs_std:slice_ref",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
     "definition_of_forward_declaration": [
         "forward_declaration",
     ],
