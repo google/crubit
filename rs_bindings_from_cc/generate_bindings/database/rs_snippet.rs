@@ -971,6 +971,38 @@ impl RsTypeKind {
         }
     }
 
+    /// Returns true if the type is allowed to be passed as an element behind a single-element
+    /// pointer, otherwise false. The contrary to this is `allowed_behind_multi_element_pointer`,
+    /// which is more restrictive because the side of the type must be known.
+    pub fn allowed_behind_single_element_ptr(&self) -> bool {
+        match self.unalias() {
+            RsTypeKind::Error { .. } => false,
+            RsTypeKind::Pointer { .. } => true,
+            RsTypeKind::Reference { .. } => true,
+            RsTypeKind::RvalueReference { .. } => true,
+            RsTypeKind::FuncPtr { .. } => true,
+            RsTypeKind::IncompleteRecord { .. } => true,
+            RsTypeKind::Record { record, .. } => {
+                // Records that are bridged do not support being passed behind a pointer.
+                record.bridge_type.is_none()
+            }
+            RsTypeKind::Enum { .. } => true,
+            RsTypeKind::TypeAlias { .. } => unreachable!(),
+            RsTypeKind::Primitive(_) => true,
+            RsTypeKind::BridgeType { .. } => false,
+            RsTypeKind::ExistingRustType(_) => true,
+        }
+    }
+
+    /// Returns true if the type is allowed to be passed as an element behind a multi-element
+    /// pointer, otherwise false.
+    pub fn allowed_behind_multi_element_ptr(&self) -> bool {
+        // Incomplete records are _not_ allowed behind multi-element pointers
+        // because their stride is unknown.
+        self.allowed_behind_single_element_ptr()
+            && !matches!(self, RsTypeKind::IncompleteRecord { .. })
+    }
+
     pub fn format_as_return_type_fragment(
         &self,
         db: &dyn BindingsGenerator,
@@ -1612,5 +1644,68 @@ mod tests {
             );
             assert_eq!(reason, "references are not supported");
         }
+    }
+
+    #[gtest]
+    fn test_allowed_behind_single_and_multi_element_ptr() {
+        let crate_path = {
+            let ns = NamespaceQualifier { namespaces: vec![], nested_records: vec![] };
+            Rc::new(CratePath {
+                crate_ident: None,
+                crate_root_path: ns.clone(),
+                namespace_qualifier: ns,
+            })
+        };
+
+        let error = RsTypeKind::Error {
+            symbol: "some error".into(),
+            error: anyhow!("some error happened!"),
+            visibility_override: None,
+        };
+        expect_that!(error.allowed_behind_single_element_ptr(), eq(false));
+        expect_that!(error.allowed_behind_multi_element_ptr(), eq(false));
+
+        let prim = RsTypeKind::Primitive(Primitive::Int32T);
+        expect_that!(prim.allowed_behind_single_element_ptr(), eq(true));
+        expect_that!(prim.allowed_behind_multi_element_ptr(), eq(true));
+
+        let enum_ = RsTypeKind::Enum {
+            enum_: Rc::new(Enum {
+                cc_name: Identifier { identifier: "MyEnum".into() },
+                rs_name: Identifier { identifier: "MyEnum".into() },
+                id: ItemId::new_for_testing(0),
+                owning_target: BazelLabel("//foo/bar".into()),
+                source_loc: "some_file.h:123".into(),
+                underlying_type: CcType {
+                    variant: CcTypeVariant::Primitive(Primitive::Int32T),
+                    is_const: false,
+                    unknown_attr: "".into(),
+                },
+                enumerators: Some(vec![]),
+                unknown_attr: None,
+                enclosing_item_id: None,
+                must_bind: false,
+            }),
+            crate_path: crate_path.clone(),
+        };
+
+        expect_that!(enum_.allowed_behind_single_element_ptr(), eq(true));
+        expect_that!(enum_.allowed_behind_multi_element_ptr(), eq(true));
+
+        let incomplete_record = RsTypeKind::IncompleteRecord {
+            incomplete_record: Rc::new(IncompleteRecord {
+                cc_name: Identifier { identifier: "MyStruct".into() },
+                rs_name: Identifier { identifier: "MyStruct".into() },
+                id: ItemId::new_for_testing(0),
+                owning_target: BazelLabel("//foo/bar".into()),
+                unknown_attr: None,
+                record_type: RecordType::Class,
+                enclosing_item_id: None,
+                must_bind: false,
+            }),
+            crate_path: crate_path.clone(),
+        };
+        expect_that!(incomplete_record.allowed_behind_single_element_ptr(), eq(true));
+        expect_that!(incomplete_record.allowed_behind_multi_element_ptr(), eq(false));
     }
 }
