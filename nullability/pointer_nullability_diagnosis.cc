@@ -198,15 +198,9 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   // requirement, similar to subtype relationships, i.e. a Nullable LHS can
   // accept Nullable or Nonnull values, but a Nonnull LHS can accept only
   // Nonnull values.
-  if (!LHSType->isReferenceType() ||
-      LHSType.getNonReferenceType().isConstQualified()) {
-    if (!isSupportedPointerType(LHSType.getNonReferenceType())) {
-      // If LHS is a const reference to a non-pointer type, such as a template
-      // with type arguments that contain pointer types, check nothing yet.
-      // TODO: b/343960612 - decide on the checked conditions for these types
-      // and implement checking
-      return {};
-    }
+  if ((!LHSType->isReferenceType() ||
+       LHSType.getNonReferenceType().isConstQualified()) &&
+      isSupportedPointerType(LHSType.getNonReferenceType())) {
     QualType RHSType = RHS->getType().getNonReferenceType();
     if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) {
       llvm::dbgs() << "LHS is a pointer, but RHS is not.\n";
@@ -244,8 +238,8 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     // parameter types.
   }
 
-  // Now we have reached layers that require invariant nullability, references
-  // to mutable types with nullability.
+  // Now we have reached layers that require invariant nullability, either
+  // references to mutable pointers or pointers contained in template arguments.
   const TypeNullability* RHSNullability = State.Lattice.getTypeNullability(RHS);
   if (!RHSNullability) return untrackedError(RHS, Ctx, DiagCtx);
   if (LHSRange.isInvalid())
