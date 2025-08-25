@@ -413,7 +413,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::optional<TemplateSpecialization> template_specialization;
   std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(*record_decl);
   BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
-  bool is_final_override = false;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
@@ -434,7 +433,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         cc_preferred_name == "std::string_view";
     template_specialization->is_wstring_view =
         cc_preferred_name == "std::wstring_view";
-    is_final_override = template_specialization->is_string_view;
     doc_comment = ictx_.GetComment(specialization_decl);
     if (!doc_comment.has_value()) {
       doc_comment =
@@ -615,8 +613,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>() ||
                             is_derived_class || layout.hasOwnVFPtr();
 
-  bool is_effectively_final = record_decl->isEffectivelyFinal() ||
-                              record_decl->isUnion() || is_final_override;
+  bool is_effectively_final =
+      record_decl->isEffectivelyFinal() || record_decl->isUnion();
 
   std::optional<std::string> nodiscard;
   if (const auto* attr = record_decl->getAttr<clang::WarnUnusedResultAttr>();

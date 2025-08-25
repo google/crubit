@@ -1,7 +1,6 @@
 """Importers for various types of `Decl`s"""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(
     default_applicable_licenses = ["//:license"],
@@ -173,10 +172,4 @@ cc_library(
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
-)
-
-crubit_cc_test(
-    name = "override_final_test",
-    srcs = ["override_final_test.cc"],
-    deps = ["@googletest//:gtest_main"],
 )
