@@ -26,8 +26,43 @@ using ::testing::IsEmpty;
 using ::testing::SizeIs;
 
 TEST(PointerNullabilityTest, NoPointerOperations) {
-  EXPECT_TRUE(checkDiagnostics(R"cc(
+  // There should be no diagnostics for this code, even "untracked" errors.
+  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
     void target() { 1 + 2; }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
+    void target() { int x = 1; }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
+    int foo(int a, int b = 1);
+    void target() { foo(0); }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
+    struct Foo {
+      int x;
+      int y = 1;
+    };
+    void target() { Foo{0}; }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
+    struct Foo {
+      explicit Foo(int x) : x(x) {}
+      int x;
+      int y = 1;
+    };
+    void target() { Foo(0); }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnosticsHasUntracked(R"cc(
+    struct target {
+      explicit target(int x) : x(x) {}
+      int x;
+      int y = 1;
+    };
   )cc"));
 }
 

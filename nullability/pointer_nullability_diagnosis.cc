@@ -305,7 +305,12 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   // Now we have reached layers that require invariant nullability, either
   // references to mutable pointers or pointers contained in template arguments.
   const TypeNullability* RHSNullability = State.Lattice.getTypeNullability(RHS);
-  if (!RHSNullability) return untrackedError(RHS, Ctx, DiagCtx);
+  if (!RHSNullability) {
+    // The LHS might not have pointer layers, in which case it is expected
+    // for the RHS to be missing nullability in some cases.
+    if (LHSNullability.empty()) return {};
+    return untrackedError(RHS, Ctx, DiagCtx);
+  }
   if (LHSRange.isInvalid())
     LHSRange = CharSourceRange::getTokenRange(RHS->getSourceRange());
   if (!invariantMatch(LHSNullability, *RHSNullability)) {
