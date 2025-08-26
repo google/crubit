@@ -21,6 +21,7 @@
 #include "nullability/pragma.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTTypeTraits.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
@@ -31,6 +32,7 @@
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/ASTMatchers/ASTMatchersMacros.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/AdornedCFG.h"
@@ -51,6 +53,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Errc.h"
@@ -119,12 +122,63 @@ static SmallVector<PointerNullabilityDiagnostic> untrackedError(
                CharSourceRange::getTokenRange(E->getSourceRange()), Ctx)}};
 }
 
+constexpr llvm::StringLiteral kNonConstMethodCallID("non-const-method-call");
+
+// Matches a call (member call or operator call) to a non-const method.
+AST_MATCHER_FUNCTION(clang::ast_matchers::StatementMatcher,
+                     nonConstMethodCall) {
+  using namespace ::clang::ast_matchers;  // NOLINT: Too many names.
+  return callExpr(
+      callee(cxxMethodDecl(unless(isConst())).bind(kNonConstMethodCallID)));
+}
+
+// If `Pointer` is a pointer-producing expression that violates the expectation
+// that it is nonnull, check if `Pointer` contains:
+// - a call to a non-const method or operator.
+// - if so, is it in `ParentFunction` that contains another call to the same
+//   non-const method or operator in a null check?
+// Returns the null check expression if found or nullptr otherwise.
+static const Expr* absl_nullable matchesNonConstCallNullCheck(
+    const Expr& Pointer, ASTContext& Ctx,
+    const FunctionDecl* absl_nullable ParentFunction) {
+  using namespace ::clang::ast_matchers;  // NOLINT: Too many names.
+  if (ParentFunction == nullptr) return nullptr;
+
+  // Check if the pointer is produced by a non-const method call.
+  const CXXMethodDecl* NonConstMethodAsPointerSrc =
+      ast_matchers::selectFirst<const CXXMethodDecl>(
+          kNonConstMethodCallID,
+          match(nonConstMethodCall(),
+                DynTypedNode::create(*Pointer.IgnoreParenImpCasts()), Ctx));
+  if (NonConstMethodAsPointerSrc == nullptr) return nullptr;
+
+  // Next, check if there is a null check on a call to the same method.
+  // NOTE: we don't check that this is executed before the Pointer expression,
+  // or sufficient to show non-nullness, but the approximation may still be
+  // useful.
+  auto CallsMatchedMethod =
+      callExpr(callee(equalsNode(NonConstMethodAsPointerSrc)));
+  auto NullCheckOnNonConstCall = functionDecl(hasBody(hasDescendant(
+      expr(anyOf(binaryOperator(
+                     anyOf(hasOperatorName("=="), hasOperatorName("!=")),
+                     hasOperands(CallsMatchedMethod,
+                                 implicitCastExpr(hasSourceExpression(
+                                     cxxNullPtrLiteralExpr())))),
+                 implicitCastExpr(hasCastKind(CK_PointerToBoolean),
+                                  hasSourceExpression(CallsMatchedMethod))))
+          .bind("non-const-null-check"))));
+  return ast_matchers::selectFirst<const Expr>(
+      "non-const-null-check",
+      ast_matchers::match(NullCheckOnNonConstCall,
+                          DynTypedNode::create(*ParentFunction), Ctx));
+}
+
 // Diagnoses whether `E` violates the expectation that it is nonnull.
 static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
-    const Expr *absl_nonnull E, const Environment &Env, const ASTContext &Ctx,
+    const Expr* absl_nonnull E, const Environment& Env, ASTContext& Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx,
-    const clang::NamedDecl *absl_nullable Callee = nullptr,
-    const clang::IdentifierInfo *absl_nullable ParamName = nullptr,
+    const clang::NamedDecl* absl_nullable Callee = nullptr,
+    const clang::IdentifierInfo* absl_nullable ParamName = nullptr,
     CharSourceRange Range = {}) {
   std::optional<bool> IsNullable;
   if (PointerValue *ActualVal = getPointerValue(E, Env))
@@ -136,6 +190,16 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     if (*IsNullable) {
       if (Range.isInvalid())
         Range = CharSourceRange::getTokenRange(E->getSourceRange());
+      if (const Expr* NullCheck =
+              matchesNonConstCallNullCheck(*E, Ctx, Env.getCurrentFunc());
+          NullCheck != nullptr) {
+        CharSourceRange NoteRange = getRangeModuloMacros(
+            CharSourceRange::getTokenRange(NullCheck->getSourceRange()), Ctx);
+        return {{PointerNullabilityDiagnostic::ErrorCode::
+                     ExpectedNonnullWithCheckOnNonConstCall,
+                 DiagCtx, getRangeModuloMacros(Range, Ctx), Callee, ParamName,
+                 NoteRange}};
+      }
       return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
                DiagCtx, getRangeModuloMacros(Range, Ctx), Callee, ParamName}};
     }
@@ -463,8 +527,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
-    Expr *PtrExpr, Expr *IntExpr, const Environment &Env,
-    const ASTContext &Ctx) {
+    Expr* PtrExpr, Expr* IntExpr, const Environment& Env, ASTContext& Ctx) {
   // Adding or subtracting zero is allowed even if the pointer is null.
   if (auto *Lit = dyn_cast<IntegerLiteral>(IntExpr->IgnoreParenImpCasts())) {
     if (Lit->getValue().isZero()) return {};

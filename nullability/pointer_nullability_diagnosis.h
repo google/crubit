@@ -26,6 +26,10 @@ struct PointerNullabilityDiagnostic {
   enum class ErrorCode {
     /// A nullable pointer was used where a nonnull pointer was expected.
     ExpectedNonnull,
+    /// Similar to `ExpectedNonnull`, but the pointer comes from a non-const
+    /// call and there is a null check on a similar call elsewhere.
+    /// `NoteRange` refers to the null check.
+    ExpectedNonnullWithCheckOnNonConstCall,
     /// Nullability annotations are inconsistent with a previous declaration.
     /// `NoteRange` refers to the location of the previous declaration.
     InconsistentAnnotations,
