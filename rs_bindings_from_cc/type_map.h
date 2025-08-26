@@ -12,8 +12,7 @@
 
 namespace crubit {
 
-// Converts C++ types to an already-existing Rust type, instead of generating
-// bindings for the C++ type.
+// Converts C++ primitive types to the Rust equivalent.
 //
 // The return value is a fully-qualified Rust name, including builtin type
 // names.
@@ -22,7 +21,7 @@ namespace crubit {
 //
 // To create a new type mapping, add the type to the hardcoded list
 // of types.
-std::optional<CcType> GetExistingRustType(const clang::Type& cpp_type);
+std::optional<CcType> GetPrimitive(const clang::Type& cpp_type);
 
 }  // namespace crubit
 
