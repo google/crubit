@@ -5,7 +5,6 @@
 #include "support/rs_std/str_ref.h"
 
 #include <bit>
-#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -69,25 +68,26 @@ TEST(StrTest, Comparison) {
   static constexpr StrRef kStrRefCopy = kStrRef;
   static constexpr StrRef kStrRef2 = StrRef(kStrCopy);
 
-  static_assert(kStrRef.to_string_view() == kStrRef.to_string_view());
-  static_assert(kStrRef.to_string_view() == kStrRefCopy.to_string_view());
-  static_assert(kStrRef.to_string_view() == kStrRef2.to_string_view());
-  const StrRef kStrRef_prefix =
+  static_assert(kStrRef == kStrRef);
+  static_assert(kStrRef == kStrRefCopy);
+  static_assert(kStrRef == kStrRef2);
+
+  static constexpr StrRef kStrRef_prefix =
       StrRef(absl::string_view(kStr.data(), kStr.size() - 1));
-  const StrRef kStrRef_suffix =
+  static constexpr StrRef kStrRef_suffix =
       StrRef(absl::string_view(kStr.data() + 1, kStr.size() - 1));
-  const StrRef kStrRef_infix =
+  static constexpr StrRef kStrRef_infix =
       StrRef(absl::string_view(kStr.data() + 1, kStr.size() - 2));
 
-  EXPECT_NE(kStrRef.to_string_view(), kStrRef_prefix.to_string_view());
-  EXPECT_NE(kStrRef.to_string_view(), kStrRef_suffix.to_string_view());
-  EXPECT_NE(kStrRef.to_string_view(), kStrRef_infix.to_string_view());
+  EXPECT_GT(kStrRef, kStrRef_prefix);
+  EXPECT_LT(kStrRef, kStrRef_suffix);
+  EXPECT_LT(kStrRef, kStrRef_infix);
 }
 
 TEST(StrTest, FromAndTo) {
   static constexpr absl::string_view kStr = "12345";
   static constexpr StrRef kStrRef = StrRef(kStr);
-  EXPECT_EQ(absl::string_view(kStr), kStrRef.to_string_view());
+  EXPECT_EQ(kStr, kStrRef);
 }
 
 // To test the value of `data_`, the test includes the knowledge of
@@ -111,7 +111,7 @@ TEST(StrTest, Empty) {
   static constexpr const char* kEmpty = "";
   const StrRef empty = StrRef(absl::string_view(kEmpty, 0));
   static constexpr StrRef default_constructed;
-  EXPECT_EQ(empty.to_string_view(), default_constructed.to_string_view());
+  EXPECT_EQ(empty, default_constructed);
 
   const auto fields = std::bit_cast<StrRefFields>(empty);
   EXPECT_THAT(fields.ptr, Not(IsNull()));
@@ -151,7 +151,7 @@ TEST(ImplicitConversionTest, FromConstCharPtr) {
 void Fuzzer(std::string data) {
   const std::optional<StrRef> s = StrRef::FromUtf8(data);
   ASSERT_TRUE(s.has_value());
-  EXPECT_EQ(absl::string_view(data), s->to_string_view());
+  EXPECT_EQ(data, *s);
   const std::string data_copy(s->data(), s->data() + s->size());
   EXPECT_EQ(data, data_copy);
 }

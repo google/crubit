@@ -100,9 +100,10 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
   constexpr StrRef() noexcept = default;
   constexpr StrRef(const StrRef&) = default;
   constexpr StrRef& operator=(const StrRef&) = default;
-  constexpr StrRef(StrRef&&) noexcept = default;
-  constexpr StrRef& operator=(StrRef&&) noexcept = default;
-  ~StrRef() = default;
+
+  // A mirror of Rust's `len` method.
+  constexpr size_t len() const noexcept { return slice_.size(); }
+  constexpr bool empty() const noexcept { return slice_.size() == 0; }
 
   constexpr const char* data() const noexcept { return slice_.data(); }
   constexpr size_t size() const noexcept { return slice_.size(); }
@@ -144,16 +145,16 @@ constexpr bool operator==(absl::string_view lhs, StrRef rhs) noexcept {
   return rhs == lhs;
 }
 
-constexpr bool operator!=(StrRef lhs, StrRef rhs) noexcept {
-  return !(lhs == rhs);
+constexpr auto operator<=>(StrRef lhs, StrRef rhs) noexcept {
+  return lhs.to_string_view() <=> rhs.to_string_view();
 }
 
-constexpr bool operator!=(StrRef lhs, absl::string_view rhs) noexcept {
-  return !(lhs == rhs);
+constexpr auto operator<=>(StrRef lhs, absl::string_view rhs) noexcept {
+  return lhs.to_string_view() <=> rhs;
 }
 
-constexpr bool operator!=(absl::string_view lhs, StrRef rhs) noexcept {
-  return !(lhs == rhs);
+constexpr auto operator<=>(absl::string_view lhs, StrRef rhs) noexcept {
+  return lhs <=> rhs.to_string_view();
 }
 
 }  // namespace rs_std
