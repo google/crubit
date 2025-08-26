@@ -6,10 +6,16 @@
 
 #include <stdint.h>
 
+#include <array>
 #include <optional>
 #include <type_traits>
 
 #include "gtest/gtest.h"
+#include "fuzztest/fuzztest.h"
+#include "absl/strings/str_cat.h"
+#include "absl/types/span.h"
+#include "support/rs_std/internal/is_utf8.h"
+#include "support/rs_std/str_ref.h"
 
 namespace {
 
@@ -57,10 +63,9 @@ static_assert(std::is_standard_layout_v<rs_std::char_>);
 // `char` and the value equal to either:
 // - the representation of c-char in the execution character set (until C++23)
 // - the corresponding code point from ordinary literal encoding (since C++23).
-TEST(RsCharTest, FromAsciiLiteral) {
-  std::optional<const rs_std::char_> c = rs_std::char_::from_u32('x');
-  ASSERT_TRUE(c.has_value());
-  EXPECT_EQ(0x78, uint32_t{*c});
+TEST(CharTest, FromAsciiLiteral) {
+  const rs_std::char_ c('x');
+  EXPECT_EQ(0x78, uint32_t{c});
 }
 
 // This test covers the following case from
@@ -71,10 +76,9 @@ TEST(RsCharTest, FromAsciiLiteral) {
 // point value of c-char, provided that the code point value is representable
 // with a single UTF-8 code unit (that is, c-char is in the range 0x0-0x7F,
 // inclusive).
-TEST(RsCharTest, FromUtf8Literal) {
-  std::optional<const rs_std::char_> c = rs_std::char_::from_u32(u8'x');
-  ASSERT_TRUE(c.has_value());
-  EXPECT_EQ(0x78, uint32_t{*c});
+TEST(CharTest, FromUtf8Literal) {
+  const rs_std::char_ c(u8'x');
+  EXPECT_EQ(0x78, uint32_t{c});
 }
 
 // This test covers the following case from
@@ -85,10 +89,9 @@ TEST(RsCharTest, FromUtf8Literal) {
 // value of c-char, provided that the code point value is representable with a
 // single UTF-16 code unit (that is, c-char is in the range 0x0-0xFFFF,
 // inclusive).
-TEST(RsCharTest, FromUtf16Literal) {
-  std::optional<const rs_std::char_> c = rs_std::char_::from_u32(u'Ł');
-  ASSERT_TRUE(c.has_value());
-  EXPECT_EQ(0x141, uint32_t{*c});
+TEST(CharTest, FromUtf16Literal) {
+  const rs_std::char_ c(u'Ł');
+  EXPECT_EQ(0x141, uint32_t{c});
 }
 
 // This test covers the following case from
@@ -96,13 +99,12 @@ TEST(RsCharTest, FromUtf16Literal) {
 //
 // UTF-32 character literal, e.g. U'猫' or U'🍌'. Such literal has type
 // `char32_t` and the value equal to ISO/IEC 10646 code point value of c-char.
-TEST(RsCharTest, FromUtf32Literal) {
-  std::optional<const rs_std::char_> c = rs_std::char_::from_u32(U'🦀');
-  ASSERT_TRUE(c.has_value());
-  EXPECT_EQ(0x1F980, uint32_t{*c});
+TEST(CharTest, FromUtf32Literal) {
+  const rs_std::char_ c(U'🦀');
+  EXPECT_EQ(0x1F980, uint32_t{c});
 }
 
-TEST(RsCharTest, FromU32ValidityChecks) {
+TEST(CharTest, FromU32ValidityChecks) {
   // Max 32-bit value.
   EXPECT_FALSE(rs_std::char_::from_u32(0xffffffff).has_value());
 
@@ -140,37 +142,79 @@ TEST(RsCharTest, FromU32ValidityChecks) {
 
 // Test that `rs_std::char_` values can be compared with other
 // `rs_std::char_` values.
-TEST(RsCharTest, ComparisonWithAnotherRsChar) {
-  std::optional<const rs_std::char_> a = rs_std::char_::from_u32('a');
-  std::optional<const rs_std::char_> b = rs_std::char_::from_u32('b');
-  ASSERT_TRUE(a.has_value());
-  ASSERT_TRUE(b.has_value());
+TEST(CharTest, ComparisonWithAnotherRsChar) {
+  const rs_std::char_ a('a');
+  const rs_std::char_ b('b');
 
-  EXPECT_TRUE(*a == *a);
-  EXPECT_FALSE(*a != *a);
-  EXPECT_TRUE(*a <= *a);
-  EXPECT_FALSE(a < *a);
-  EXPECT_TRUE(*a >= *a);
-  EXPECT_FALSE(*a > *a);
+  EXPECT_TRUE(a == a);
+  EXPECT_FALSE(a != a);
+  EXPECT_TRUE(a <= a);
+  EXPECT_FALSE(a < a);
+  EXPECT_TRUE(a >= a);
+  EXPECT_FALSE(a > a);
 
-  EXPECT_FALSE(*a == *b);
-  EXPECT_TRUE(*a != *b);
-  EXPECT_TRUE(*a <= *b);
-  EXPECT_TRUE(*a < *b);
-  EXPECT_FALSE(*a >= *b);
-  EXPECT_FALSE(*a > *b);
+  EXPECT_FALSE(a == b);
+  EXPECT_TRUE(a != b);
+  EXPECT_TRUE(a <= b);
+  EXPECT_TRUE(a < b);
+  EXPECT_FALSE(a >= b);
+  EXPECT_FALSE(a > b);
 
-  EXPECT_FALSE(*b == *a);
-  EXPECT_TRUE(*b != *a);
-  EXPECT_FALSE(*b <= *a);
-  EXPECT_FALSE(*b < *a);
-  EXPECT_TRUE(*b >= *a);
-  EXPECT_TRUE(*b > *a);
+  EXPECT_FALSE(b == a);
+  EXPECT_TRUE(b != a);
+  EXPECT_FALSE(b <= a);
+  EXPECT_FALSE(b < a);
+  EXPECT_TRUE(b >= a);
+  EXPECT_TRUE(b > a);
 }
 
-TEST(RsCharTest, DefaultConstructedValue) {
+TEST(CharTest, DefaultConstructedValue) {
   rs_std::char_ c;
   EXPECT_EQ(0, uint32_t{c});
+}
+
+void ExpectEncodedIsUtf8(uint32_t data) {
+  std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
+  if (!c.has_value()) {
+    return;
+  }
+  std::array<uint8_t, 4> buffer;
+  rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
+  EXPECT_TRUE(rs_std::internal::IsUtf8(str.to_string_view()));
+}
+FUZZ_TEST(ExpectEncodedIsUtf8FuzzTest, ExpectEncodedIsUtf8);
+
+struct EncodeTestCase {
+  uint32_t data;
+  absl::Span<const char> expected_utf8_bytes;
+};
+
+class EncodedIsUtf8BytesTest : public testing::TestWithParam<EncodeTestCase> {};
+
+TEST_P(EncodedIsUtf8BytesTest, EncodedIsUtf8Bytes) {
+  auto [data, expected_utf8_bytes] = GetParam();
+  std::optional<rs_std::char_> c = rs_std::char_::from_u32(data);
+  if (!c.has_value()) {
+    return;
+  }
+  std::array<uint8_t, 4> buffer;
+  rs_std::StrRef str = c->encode_utf8(absl::MakeSpan(buffer));
+  EXPECT_TRUE(rs_std::internal::IsUtf8(str.to_string_view()));
+  EXPECT_EQ(absl::MakeSpan(str), expected_utf8_bytes);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EncodedIsUtf8BytesTests, EncodedIsUtf8BytesTest,
+    testing::Values(EncodeTestCase{0x00, {0x00}}, EncodeTestCase{0x01, {0x01}},
+                    EncodeTestCase{'x', {0x78}},
+                    EncodeTestCase{0xe9, {0xc3, 0xa9}},
+                    EncodeTestCase{0xa66e, {0xea, 0x99, 0xae}},
+                    EncodeTestCase{0x1f4a9, {0xf0, 0x9f, 0x92, 0xa9}}));
+
+TEST(CharTest, AbslStringify) {
+  EXPECT_EQ(absl::StrCat(rs_std::char_('x')), "x");
+  std::string expected_emoji = "💩";
+  EXPECT_EQ(absl::StrCat(rs_std::char_(U'💩')), expected_emoji);
 }
 
 }  // namespace

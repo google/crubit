@@ -15,6 +15,7 @@ package(default_applicable_licenses = ["//:license"])
 
 cc_library(
     name = "char",
+    srcs = ["char.cc"],
     hdrs = ["char.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
@@ -26,8 +27,12 @@ cc_library(
     # of Abseil that is relatively recent (although we can't rely on an
     # exact version and/or exact absl/base/options.h).
     deps = [
-        "//support/public:annotations_internal",
+        ":str_ref",
+        "//support:annotations",
         "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
     ],
 )
 
@@ -45,7 +50,13 @@ crubit_cc_test(
     srcs = ["char_test.cc"],
     deps = [
         ":char",
-        "@googletest//:gtest_main",
+        ":str_ref",
+        "//support/rs_std/internal:is_utf8",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:span",
+        "@fuzztest",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
     ],
 )
 

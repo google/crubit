@@ -5,13 +5,27 @@
 #ifndef CRUBIT_SUPPORT_RUST_STD_CHAR_H_
 #define CRUBIT_SUPPORT_RUST_STD_CHAR_H_
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 
-#include "crubit/support/annotations_internal.h"
 #include "absl/base/optimization.h"
+#include "absl/types/span.h"
+#include "support/annotations.h"
+#include "support/rs_std/str_ref.h"
 
 namespace rs_std {
+namespace internal {
+
+// A call to this function is used to trigger a compiler error when a `char_`
+// is constructed from a `uint32_t` that is not a valid Unicode code point.
+//
+// It is intentionally not-`constexpr` so that calls to it from a constexpr
+// context will result in a compiler error.
+inline void CharArgumentMustBeUnicodeCodePoint() {}
+
+}  // namespace internal
 
 // The names like `from_u32` and `from_u32_unchecked` mimic Rust names and
 // therefore don't need to be named the same as ordinary C++ names. See:
@@ -28,7 +42,16 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
   // effectively stores a C++ equivalent of a well-defined Rust's `u32` value
   // (and never has a `MaybeUninit<u32>` value).  See also the P2723R1 proposal
   // for C++ which argues that zero-initialization may mitigate 10% of exploits.
-  constexpr char_() = default;
+  constexpr char_() noexcept = default;
+
+  // Constant-time implicit constructor which converts a Unicode scalar value
+  // `uint32_t` into an `rs_std::char_`. This function performs compile-time
+  // validation that the `uint32_t` is a valid Unicode scalar value.
+  explicit consteval char_(char32_t c) noexcept : value_(c) {
+    if (!IsValidCodePoint(c)) {
+      internal::CharArgumentMustBeUnicodeCodePoint();
+    }
+  }
 
   // Converts a `uint32_t` into a `rs_std::char_`.
   //
@@ -43,17 +66,8 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
   //
   // This function mimics Rust's `char::from_u32`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32
-  static constexpr std::optional<char_> from_u32(char32_t c) {
-    // TODO(lukasza): Consider using slightly more efficient checks similarly
-    // to how `char_try_from_u32` is implemented in Rust standard library.
-    if (ABSL_PREDICT_FALSE(c > 0x10ffff)) {
-      // Value greater than Rust's `char::MAX`:
-      // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
-      return std::nullopt;
-    }
-
-    if (ABSL_PREDICT_FALSE(c >= 0xd800 && c <= 0xdfff)) {
-      // Surrogate characters.
+  static constexpr std::optional<char_> from_u32(char32_t c) noexcept {
+    if (!IsValidCodePoint(c)) {
       return std::nullopt;
     }
 
@@ -62,30 +76,11 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
 
   constexpr char_(const char_&) = default;
   constexpr char_& operator=(const char_&) = default;
-  constexpr char_(char_&&) = default;
-  constexpr char_& operator=(char_&&) = default;
-  ~char_() = default;
 
-  explicit constexpr operator std::uint32_t() const { return value_; }
+  explicit constexpr operator std::uint32_t() const noexcept { return value_; }
 
-  constexpr bool operator==(const char_& other) const {
-    return value_ == other.value_;
-  }
-  constexpr bool operator!=(const char_& other) const {
-    return value_ != other.value_;
-  }
-  constexpr bool operator<=(const char_& other) const {
-    return value_ <= other.value_;
-  }
-  constexpr bool operator<(const char_& other) const {
-    return value_ < other.value_;
-  }
-  constexpr bool operator>=(const char_& other) const {
-    return value_ >= other.value_;
-  }
-  constexpr bool operator>(const char_& other) const {
-    return value_ > other.value_;
-  }
+  friend constexpr bool operator==(char_ lhs, char_ rhs) noexcept;
+  friend constexpr auto operator<=>(char_ lhs, char_ rhs) noexcept;
 
   // The highest valid code point a char can have, '\u{10FFFF}'.
   //
@@ -93,18 +88,61 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
   // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
   static const char_ MAX;
 
+  // Encodes the UTF-8 representation of this `char_` into the given
+  // `output_buffer`.
+  //
+  // The `output_buffer` must be large enough to hold the UTF-8 representation
+  // of this `char_`, which may be 1, 2, 3, or 4 bytes.
+  //
+  // This function mimics Rust's `char::encode_utf8`:
+  // https://doc.rust-lang.org/std/primitive.char.html#method.encode_utf8
+  StrRef encode_utf8(absl::Span<uint8_t> output_buffer) const;
+
+  // Returns the number of bytes required to UTF-8-encode this `char_`.
+  //
+  // This function mimics Rust's `char::len_utf8`:
+  // https://doc.rust-lang.org/std/primitive.char.html#method.len_utf8
+  constexpr size_t len_utf8() const noexcept {
+    if (value_ < 0x80) {
+      return 1;
+    } else if (value_ < 0x800) {
+      return 2;
+    } else if (value_ < 0x10000) {
+      return 3;
+    } else {
+      return 4;
+    }
+  }
+
  private:
+  struct UnsafePromiseUnicode {};
+
   // This function mimics Rust's `char::from_u32_unchecked`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32_unchecked
   //
   // TODO(b/254095482): Figure out how to annotate/expose unsafe functions in
   // C++ and then make this method public.
-  static constexpr char_ from_u32_unchecked(std::uint32_t value) {
-    return char_(value);
+  static constexpr char_ from_u32_unchecked(uint32_t value) noexcept {
+    return char_(value, UnsafePromiseUnicode{});
   }
 
-  // Private constructor - intended to only be used from `from_u32_unchecked`.
-  explicit constexpr char_(std::uint32_t value) : value_(value) {}
+  static inline constexpr bool IsValidCodePoint(uint32_t c) noexcept {
+    // TODO(lukasza): Consider using slightly more efficient checks similarly
+    // to how `char_try_from_u32` is implemented in Rust standard library.
+    if (ABSL_PREDICT_FALSE(c > 0x10ffff)) {
+      // Value greater than Rust's `char::MAX`:
+      // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
+      return false;
+    }
+    if (ABSL_PREDICT_FALSE(c >= 0xd800 && c <= 0xdfff)) {
+      // Surrogate characters.
+      return false;
+    }
+    return true;
+  }
+
+  explicit constexpr char_(std::uint32_t value, UnsafePromiseUnicode)
+      : value_(value) {}
 
   // See "layout tests" comments in `char_test.cc` for explanation why
   // `char32_t` is not used.
@@ -116,6 +154,29 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
 // complains that `constexpr` variable cannot have non-literal type
 // 'const char_'.
 constexpr char_ char_::MAX = char_::from_u32_unchecked(0x10ffff);
+
+CRUBIT_DO_NOT_BIND constexpr bool operator==(char_ lhs, char_ rhs) noexcept {
+  return lhs.value_ == rhs.value_;
+}
+
+CRUBIT_DO_NOT_BIND constexpr auto operator<=>(char_ lhs, char_ rhs) noexcept {
+  return lhs.value_ <=> rhs.value_;
+}
+
+// Support automatic stringification with absl::StrCat and absl::StrFormat.
+// This will append a UTF-8-encoded representation of `char_` to the `sink`.
+//
+// Note: this interface does not actually depend on absl. However, we may
+// have difficulty if we ever want to upstream this interface to Rust itself.
+// If that happens, we can consider adding this type as an optional
+// dependency of absl, or otherwise extend the absl stringification mechanism
+// in order to understand this type.
+template <typename Sink>
+void AbslStringify(Sink& sink, const char_& c) {
+  std::array<uint8_t, 4> buffer;
+  StrRef str = c.encode_utf8(absl::MakeSpan(buffer));
+  sink.Append(str.to_string_view());
+}
 
 }  // namespace rs_std
 
