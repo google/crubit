@@ -257,12 +257,12 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   // relationship.
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
 
-  // If LHS is a) a reference to a const supported pointer or b) directly a
-  // supported pointer type, then the outermost pointer slot has a covariant
-  // requirement, similar to subtype relationships, i.e. a Nullable LHS can
-  // accept Nullable or Nonnull values, but a Nonnull LHS can accept only
-  // Nonnull values.
-  if ((!LHSType->isReferenceType() ||
+  // If LHS is a) an lvalue reference to a const supported pointer, b) an rvalue
+  // reference to a supported pointer, or c) directly a supported pointer type,
+  // then the outermost pointer slot has a covariant requirement, similar to
+  // subtype relationships, i.e. a Nullable LHS can accept Nullable or Nonnull
+  // values, but a Nonnull LHS can accept only Nonnull values.
+  if ((!LHSType->isLValueReferenceType() ||
        LHSType.getNonReferenceType().isConstQualified()) &&
       isSupportedPointerType(LHSType.getNonReferenceType())) {
     QualType RHSType = RHS->getType().getNonReferenceType();
