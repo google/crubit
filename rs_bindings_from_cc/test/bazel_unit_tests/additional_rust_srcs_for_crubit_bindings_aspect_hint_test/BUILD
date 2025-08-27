@@ -41,6 +41,7 @@ additional_rust_srcs_for_crubit_bindings(
     srcs = [
         "inner.rs",
     ],
+    cc_deps = [":empty_cc_lib_with_additional_rust_srcs"],
     namespace_path = "a::b::c",
 )
 

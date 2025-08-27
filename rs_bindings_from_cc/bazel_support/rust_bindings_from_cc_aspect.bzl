@@ -7,17 +7,14 @@ projection. See <internal link> and <internal link> for
 more context.
 """
 
+load("@bazel_skylib//lib:collections.bzl", "collections")
 load(
     "//features:crubit_feature_hint.bzl",
     "find_crubit_features",
 )
 load(
-    "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
-    "get_additional_rust_deps",
-    "get_additional_rust_srcs",
-)
-load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "AdditionalRustSrcsProviderInfo",
     "DepsForBindingsInfo",
     "RustBindingsFromCcInfo",
     "RustToolchainHeadersInfo",
@@ -60,6 +57,40 @@ public_headers_to_remove = {
 }
 private_headers_to_remove = {
 }
+
+def _get_additional_rust_srcs(aspect_ctx):
+    """Returns `extra_rs_srcs` associated with the `_target`.
+
+    Args:
+        aspect_ctx: The ctx from an aspect_hint.
+
+    Returns:
+        A list of `File` and its module paths as specified by the `extra_rs_srcs`.
+    """
+    additional_rust_srcs = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            ns_path = hint[AdditionalRustSrcsProviderInfo].namespace_path
+            for target in hint[AdditionalRustSrcsProviderInfo].srcs:
+                srcs = [(f, ns_path) for f in target.files.to_list()]
+                additional_rust_srcs.extend(srcs)
+    return collections.uniq(additional_rust_srcs)
+
+def _get_additional_rust_deps(aspect_ctx):
+    """Returns DepVariantInfo of `deps` and `cc_deps` associated with the `_target`.
+
+    Args:
+        aspect_ctx: The ctx from an aspect_hint.
+
+    Returns:
+        A list of `DepVariantInfo` of the given `deps` and `cc_deps`.
+    """
+    additional_rust_deps = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].deps)
+            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].cc_deps)
+    return collections.uniq(additional_rust_deps)
 
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
@@ -274,8 +305,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         header_includes.append("-include")
         header_includes.append(hdr.path)
 
-    extra_rs_srcs = get_additional_rust_srcs(ctx)
-    extra_deps = get_additional_rust_deps(ctx)
+    extra_rs_srcs = _get_additional_rust_srcs(ctx)
+    extra_deps = _get_additional_rust_deps(ctx)
     binding_infos = [
         dep[RustBindingsFromCcInfo]
         for dep in all_deps

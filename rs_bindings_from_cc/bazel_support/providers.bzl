@@ -4,6 +4,22 @@
 
 """All providers involved in C++/Rust interop."""
 
+AdditionalRustSrcsProviderInfo = provider(
+    doc = """
+The provider that specifies the Rust source files to be included in the Rust crate along with
+generated Rust bindings of this C++ target.
+""",
+    fields = {
+        "srcs": "The Rust source files to be included in addition to generated Rust bindings.",
+        "namespace_path": "The namespace path for the Rust source files.",
+        "deps": "List of DepVariantInfo of other libraries to be linked to this library target. " +
+                "These can be either other `rust_library` targets or `cc_library` targets if " +
+                "linking a native library.",
+        "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
+                   "will be linked to this library target.",
+    },
+)
+
 RustBindingsFromCcInfo = provider(
     doc = ("A provider that contains compile and linking information for the generated" +
            " `.cc` and `.rs` files."),

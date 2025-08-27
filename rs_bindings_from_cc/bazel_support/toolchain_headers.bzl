@@ -5,11 +5,8 @@
 """Generates bindings for the toolchain headers."""
 
 load(
-    "@@//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
-    "AdditionalRustSrcsProviderInfo",
-)
-load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "AdditionalRustSrcsProviderInfo",
     "DepsForBindingsInfo",
     "RustToolchainHeadersInfo",
 )

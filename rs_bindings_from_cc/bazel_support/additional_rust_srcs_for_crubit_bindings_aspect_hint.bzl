@@ -53,7 +53,11 @@ want to implement, cannot conflict with the future Crubit bindings.
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "BuildInfo", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
-load("@@//rs_bindings_from_cc/bazel_support:providers.bzl", "RustBindingsFromCcInfo")
+load("@@//rs_bindings_from_cc/bazel_support:providers.bzl", "AdditionalRustSrcsProviderInfo", "RustBindingsFromCcInfo")
+load(
+    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
+    "rust_bindings_from_cc_aspect",
+)
 
 visibility([
     # <internal link> start
@@ -62,22 +66,6 @@ visibility([
     "//support/...",
     # <internal link> end
 ])
-
-AdditionalRustSrcsProviderInfo = provider(
-    doc = """
-The provider that specifies the Rust source files to be included in the Rust crate along with
-generated Rust bindings of this C++ target.
-""",
-    fields = {
-        "srcs": "The Rust source files to be included in addition to generated Rust bindings.",
-        "namespace_path": "The namespace path for the Rust source files.",
-        "deps": "List of DepVariantInfo of other libraries to be linked to this library target. " +
-                "These can be either other `rust_library` targets or `cc_library` targets if " +
-                "linking a native library.",
-        "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
-                   "will be linked to this library target.",
-    },
-)
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
     return [AdditionalRustSrcsProviderInfo(
@@ -111,7 +99,7 @@ For modules which are not existing namespace names, use `pub mod` statement in t
             doc = """List of cc_library targets whose crubit-generated bindings will be made available to this library target.""",
             mandatory = False,
             default = [],
-            providers = [RustBindingsFromCcInfo],
+            aspects = [rust_bindings_from_cc_aspect],
         ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
@@ -125,24 +113,6 @@ extern crate std;
 ```
 """,
 )
-
-def get_additional_rust_srcs(aspect_ctx):
-    """Returns `extra_rs_srcs` associated with the `_target`.
-
-    Args:
-        aspect_ctx: The ctx from an aspect_hint.
-
-    Returns:
-        A list of `File` and its module paths as specified by the `extra_rs_srcs`.
-    """
-    additional_rust_srcs = []
-    for hint in aspect_ctx.rule.attr.aspect_hints:
-        if AdditionalRustSrcsProviderInfo in hint:
-            ns_path = hint[AdditionalRustSrcsProviderInfo].namespace_path
-            for target in hint[AdditionalRustSrcsProviderInfo].srcs:
-                srcs = [(f, ns_path) for f in target.files.to_list()]
-                additional_rust_srcs.extend(srcs)
-    return collections.uniq(additional_rust_srcs)
 
 def _create_dep_variant_info(dep):
     return DepVariantInfo(
