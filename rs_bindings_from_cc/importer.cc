@@ -788,9 +788,6 @@ std::optional<IR::Item> Importer::GetImportedItem(
 }
 
 BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
-  constexpr const char* kSentinelTarget =
-      "//:virtual_clang_resource_dir_target";
-
   // Template instantiations need to be generated in the target that triggered
   // the instantiation (not in the target where the template is defined).
   if (IsFullClassTemplateSpecializationOrChild(decl)) {
@@ -802,7 +799,7 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   // as the ID of a top-level item, but the function itself will be missing from
   // the IR's list of items, resulting in a crash when generating bindings.
   if (IsBuiltinFunction(decl)) {
-    return BazelLabel(kSentinelTarget);
+    return BazelLabel("//:virtual_clang_resource_dir_target");
   }
 
   clang::SourceManager& source_manager = ctx_.getSourceManager();
@@ -812,13 +809,14 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   // and appears to be a textual header, then we go up the include stack
   // until we find a header that has an owning target.
 
+  std::optional<llvm::StringRef> filename;
+
   while (source_location.isValid()) {
     if (source_location.isMacroID()) {
       source_location = source_manager.getExpansionLoc(source_location);
     }
     auto id = source_manager.getFileID(source_location);
-    std::optional<llvm::StringRef> filename =
-        source_manager.getNonBuiltinFilenameForID(id);
+    filename = source_manager.getNonBuiltinFilenameForID(id);
     if (!filename) {
       return BazelLabel("//:_nothing_should_depend_on_private_builtin_hdrs");
     }
@@ -842,7 +840,14 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     source_location = source_manager.getIncludeLoc(id);
   }
 
-  return BazelLabel(kSentinelTarget);
+  // If we get here, we couldn't find a bazel target that claims ownership of
+  // this header. For example, no targets enabling crubit contained the header.
+  // In that case, we use the filename as part of the target name, so that
+  // we can use it in error messages and have a useful action item for users.
+  // (For instance, to tell them to enable Crubit for that file!)
+  if (!filename) filename = "<unknown>";
+  return BazelLabel(
+      absl::StrCat("//_unknown_target:", absl::string_view(*filename)));
 }
 
 bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {

@@ -630,7 +630,12 @@ impl<T: Into<String>> From<T> for BazelLabel {
 
 impl Display for BazelLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", &*self.0)
+        // If this isn't actually a known bazel target, stringify for humans as the filename.
+        if let Some(s) = self.0.strip_prefix("//_unknown_target:") {
+            write!(f, "{}", s)
+        } else {
+            write!(f, "{}", &*self.0)
+        }
     }
 }
 
