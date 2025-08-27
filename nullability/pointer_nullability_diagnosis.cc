@@ -260,8 +260,8 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   // If LHS is a) an lvalue reference to a const supported pointer, b) an rvalue
   // reference to a supported pointer, or c) directly a supported pointer type,
   // then the outermost pointer slot has a covariant requirement, similar to
-  // subtype relationships, i.e. a Nullable LHS can accept Nullable or Nonnull
-  // values, but a Nonnull LHS can accept only Nonnull values.
+  // subtype relationships, i.e. a Nullable LHS type can accept Nullable or
+  // Nonnull values, but a Nonnull LHS type can accept only Nonnull values.
   if ((!LHSType->isLValueReferenceType() ||
        LHSType.getNonReferenceType().isConstQualified()) &&
       isSupportedPointerType(LHSType.getNonReferenceType())) {
@@ -278,6 +278,8 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
 
     // Continue unwrapping pointer layers outside of template arguments. Each of
     // these pointer layers is invariant if mutable, and covariant if const.
+    // Again, we are comparing the nullability layers of the LHS type with the
+    // nullability layers of the RHS value.
     // TODO: b/343960612 - implement this unwrapping and checking, including for
     // smart pointers, which are not as trivially unwrappable. For now, return
     // early. Once additional pointer layers are unwrapped, we can fall through
@@ -297,12 +299,14 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     // The return types have the same covariant requirement for const pointers
     // as outside of function pointer types, but the parameter types have a
     // contravariant requirement for const pointers. Mutable pointers remain
-    // invariant.
+    // invariant. Within the function pointer type, we are comparing the
+    // nullabilities of the types on the LHS and RHS, since there are no values
+    // on the RHS in this context.
     // TODO: b/343960612 - implement recursion into function pointer return and
     // parameter types.
   }
 
-  // Now we have reached layers that require invariant nullability, either
+  // Now we have reached layers that require invariant type nullability, either
   // references to mutable pointers or pointers contained in template arguments.
   const TypeNullability* RHSNullability = State.Lattice.getTypeNullability(RHS);
   if (!RHSNullability) {
