@@ -52,9 +52,12 @@ pub enum CrubitAbiType {
     UnsignedLongLong,
     Pair(Rc<CrubitAbiType>, Rc<CrubitAbiType>),
     StdString {
-        /// If true, use `crate::std::BoxedCppStringAbi` instead of
-        /// `::cc_std::std::BoxedCppStringAbi` in Rust tokens.
+        /// If true, use `crate::...` instead of `::cc_std::...` in Rust tokens.
         in_cc_std: bool,
+    },
+    Transmute {
+        rust_type: FullyQualifiedPath,
+        cpp_type: FullyQualifiedPath,
     },
     Type {
         rust_abi_path: FullyQualifiedPath,
@@ -80,11 +83,10 @@ impl CrubitAbiType {
         }
     }
 
-    pub fn transmute(inner: Self) -> Self {
-        CrubitAbiType::Type {
-            rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
-            cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
-            type_args: Rc::from([inner]),
+    pub fn transmute(rust_type: &str, cpp_type: &str) -> Self {
+        CrubitAbiType::Transmute {
+            rust_type: FullyQualifiedPath::new(rust_type),
+            cpp_type: FullyQualifiedPath::new(cpp_type),
         }
     }
 }
@@ -100,18 +102,30 @@ pub struct CrubitAbiTypeToCppTokens<'a>(pub &'a CrubitAbiType);
 impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self.0 {
-            CrubitAbiType::SignedChar => quote! { ::core::ffi::c_schar }.to_tokens(tokens),
-            CrubitAbiType::UnsignedChar => quote! { ::core::ffi::c_uchar }.to_tokens(tokens),
-            CrubitAbiType::UnsignedShort => quote! { ::core::ffi::c_ushort }.to_tokens(tokens),
-            CrubitAbiType::UnsignedInt => quote! { ::core::ffi::c_uint }.to_tokens(tokens),
-            CrubitAbiType::UnsignedLong => quote! { ::core::ffi::c_ulong }.to_tokens(tokens),
-            CrubitAbiType::LongLong => quote! { ::core::ffi::c_longlong }.to_tokens(tokens),
+            CrubitAbiType::SignedChar => {
+                quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_schar> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedChar => {
+                quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_uchar> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedShort => {
+                quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_ushort> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedInt => {
+                quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_uint> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedLong => {
+                quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_ulong> }.to_tokens(tokens)
+            }
+            CrubitAbiType::LongLong => {
+                quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_longlong> }.to_tokens(tokens)
+            }
             CrubitAbiType::UnsignedLongLong => {
-                quote! { ::core::ffi::c_ulonglong }.to_tokens(tokens)
+                quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_ulonglong> }.to_tokens(tokens)
             }
             CrubitAbiType::Pair(first, second) => {
-                let first_tokens = CrubitAbiTypeToRustTokens(first);
-                let second_tokens = CrubitAbiTypeToRustTokens(second);
+                let first_tokens = Self(first);
+                let second_tokens = Self(second);
                 // std::pair maps to the Rust's TupleAbi
                 quote! { ::bridge_rust::TupleAbi<(#first_tokens, #second_tokens)> }
                     .to_tokens(tokens);
@@ -124,10 +138,13 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                 };
                 quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
             }
+            CrubitAbiType::Transmute { rust_type, .. } => {
+                quote! { ::bridge_rust::TransmuteAbi<#rust_type> }.to_tokens(tokens);
+            }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
                 rust_abi_path.to_tokens(tokens);
                 if !type_args.is_empty() {
-                    let type_args_tokens = type_args.iter().map(CrubitAbiTypeToRustTokens);
+                    let type_args_tokens = type_args.iter().map(Self);
                     quote! { < #(#type_args_tokens),* > }.to_tokens(tokens);
                 }
             }
@@ -138,25 +155,42 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
 impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self.0 {
-            CrubitAbiType::SignedChar => quote! { signed char }.to_tokens(tokens),
-            CrubitAbiType::UnsignedChar => quote! { unsigned char }.to_tokens(tokens),
-            CrubitAbiType::UnsignedShort => quote! { unsigned short }.to_tokens(tokens),
-            CrubitAbiType::UnsignedInt => quote! { unsigned int }.to_tokens(tokens),
-            CrubitAbiType::UnsignedLong => quote! { unsigned long }.to_tokens(tokens),
-            CrubitAbiType::LongLong => quote! { long long }.to_tokens(tokens),
-            CrubitAbiType::UnsignedLongLong => quote! { unsigned long long }.to_tokens(tokens),
+            CrubitAbiType::SignedChar => {
+                quote! { ::crubit::TransmuteAbi<signed char> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedChar => {
+                quote! { ::crubit::TransmuteAbi<unsigned char> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedShort => {
+                quote! { ::crubit::TransmuteAbi<unsigned short> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedInt => {
+                quote! { ::crubit::TransmuteAbi<unsigned int> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedLong => {
+                quote! { ::crubit::TransmuteAbi<unsigned long> }.to_tokens(tokens)
+            }
+            CrubitAbiType::LongLong => {
+                quote! { ::crubit::TransmuteAbi<long long> }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedLongLong => {
+                quote! { ::crubit::TransmuteAbi<unsigned long long> }.to_tokens(tokens)
+            }
             CrubitAbiType::Pair(first, second) => {
-                let first_tokens = CrubitAbiTypeToCppTokens(first);
-                let second_tokens = CrubitAbiTypeToCppTokens(second);
+                let first_tokens = Self(first);
+                let second_tokens = Self(second);
                 quote! { ::crubit::PairAbi<#first_tokens, #second_tokens> }.to_tokens(tokens);
             }
             CrubitAbiType::StdString { .. } => {
                 quote! { ::crubit::BoxedAbi<std::string> }.to_tokens(tokens)
             }
+            CrubitAbiType::Transmute { cpp_type, .. } => {
+                quote! { ::crubit::TransmuteAbi<#cpp_type> }.to_tokens(tokens);
+            }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
                 cpp_abi_path.to_tokens(tokens);
                 if !type_args.is_empty() {
-                    let type_args_tokens = type_args.iter().map(CrubitAbiTypeToCppTokens);
+                    let type_args_tokens = type_args.iter().map(Self);
                     quote! { < #(#type_args_tokens),* > }.to_tokens(tokens);
                 }
             }
@@ -182,15 +216,7 @@ mod tests {
 
     #[gtest]
     fn one_param_by_bridge_test() {
-        let abi = CrubitAbiType::Type {
-            rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
-            cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
-            type_args: Rc::from([CrubitAbiType::Type {
-                rust_abi_path: FullyQualifiedPath::new("i32"),
-                cpp_abi_path: FullyQualifiedPath::new("int32_t"),
-                type_args: Rc::from([]),
-            }]),
-        };
+        let abi = CrubitAbiType::transmute("i32", "int32_t");
 
         let rust_tokens = CrubitAbiTypeToRustTokens(&abi).to_token_stream().to_string();
         expect_eq!(rust_tokens, quote! { ::bridge_rust::TransmuteAbi<i32> }.to_string());
@@ -201,35 +227,23 @@ mod tests {
 
     #[gtest]
     fn many_params_by_bridge_test() {
-        let abi = CrubitAbiType::Type {
-            rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TupleAbi"),
-            cpp_abi_path: FullyQualifiedPath::new("::crubit::TupleAbi"),
-            type_args: Rc::from([
-                CrubitAbiType::Type {
-                    rust_abi_path: FullyQualifiedPath::new("::bridge_rust::TransmuteAbi"),
-                    cpp_abi_path: FullyQualifiedPath::new("::crubit::TransmuteAbi"),
-                    type_args: Rc::from([CrubitAbiType::Type {
-                        rust_abi_path: FullyQualifiedPath::new("i32"),
-                        cpp_abi_path: FullyQualifiedPath::new("int32_t"),
-                        type_args: Rc::from([]),
-                    }]),
-                },
-                CrubitAbiType::Type {
-                    rust_abi_path: FullyQualifiedPath::new("crate::StatusAbi"),
-                    cpp_abi_path: FullyQualifiedPath::new("::crubit::absl::StatusAbi"),
-                    type_args: Rc::from([]),
-                },
-            ]),
-        };
+        let abi = CrubitAbiType::Pair(
+            Rc::new(CrubitAbiType::transmute("i32", "int32_t")),
+            Rc::new(CrubitAbiType::Type {
+                rust_abi_path: FullyQualifiedPath::new("crate::StatusAbi"),
+                cpp_abi_path: FullyQualifiedPath::new("::crubit::absl::StatusAbi"),
+                type_args: Rc::from([]),
+            }),
+        );
 
         let rust_tokens = CrubitAbiTypeToRustTokens(&abi).to_token_stream().to_string();
         expect_eq!(
             rust_tokens,
             quote! {
-                ::bridge_rust::TupleAbi<
+                ::bridge_rust::TupleAbi<(
                     ::bridge_rust::TransmuteAbi<i32>,
                     crate::StatusAbi
-                >
+                )>
             }
             .to_string()
         );
@@ -238,7 +252,7 @@ mod tests {
         expect_eq!(
             cpp_tokens,
             quote! {
-                ::crubit::TupleAbi<
+                ::crubit::PairAbi<
                     ::crubit::TransmuteAbi<int32_t>,
                     ::crubit::absl::StatusAbi
                 >

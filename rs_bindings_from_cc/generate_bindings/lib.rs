@@ -566,7 +566,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 start_with_colon2 = true;
                 rust_path = strip_universal_qualifier;
             }
-            let rust_abi_path = FullyQualifiedPath {
+            let rust_type = FullyQualifiedPath {
                 start_with_colon2,
                 parts: rust_path
                     .split(" :: ")
@@ -582,65 +582,57 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                     .collect::<Result<Rc<[Ident]>>>()?,
             };
 
-            let cpp_abi_path = make_transmute_cpp_abi_path_from_item(
+            let cpp_type = make_cpp_type_from_item(
                 existing_rust_type.as_ref(),
                 &[existing_rust_type.cc_name.as_ref()],
                 db,
             )?;
 
-            Ok(CrubitAbiType::transmute(CrubitAbiType::Type {
-                rust_abi_path,
-                cpp_abi_path,
-                type_args: Rc::default(),
-            }))
+            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
         }
-        RsTypeKind::Primitive(primitive) => {
-            let inner = match primitive {
-                Primitive::Bool => CrubitAbiType::new("bool", "bool"),
-                Primitive::Void => bail!("values of type `void` cannot be bridged by value"),
-                Primitive::Float => CrubitAbiType::new("f32", "float"),
-                Primitive::Double => CrubitAbiType::new("f64", "double"),
-                Primitive::Char => CrubitAbiType::new("::core::ffi::c_char", "char"),
-                Primitive::SignedChar => CrubitAbiType::SignedChar,
-                Primitive::UnsignedChar => CrubitAbiType::UnsignedChar,
-                Primitive::Short => CrubitAbiType::new("::core::ffi::c_short", "short"),
-                Primitive::Int => CrubitAbiType::new("::core::ffi::c_int", "int"),
-                Primitive::Long => CrubitAbiType::new("::core::ffi::c_long", "long"),
-                Primitive::LongLong => CrubitAbiType::LongLong,
-                Primitive::UnsignedShort => CrubitAbiType::UnsignedShort,
-                Primitive::UnsignedInt => CrubitAbiType::UnsignedInt,
-                Primitive::UnsignedLong => CrubitAbiType::UnsignedLong,
-                Primitive::UnsignedLongLong => CrubitAbiType::UnsignedLongLong,
-                Primitive::Char16T => CrubitAbiType::new("u16", "char16_t"),
-                Primitive::Char32T => CrubitAbiType::new("u32", "char32_t"),
-                Primitive::PtrdiffT => CrubitAbiType::new("isize", "ptrdiff_t"),
-                Primitive::IntptrT => CrubitAbiType::new("isize", "intptr_t"),
-                Primitive::StdPtrdiffT => CrubitAbiType::new("isize", "std::ptrdiff_t"),
-                Primitive::StdIntptrT => CrubitAbiType::new("isize", "std::intptr_t"),
-                Primitive::SizeT => CrubitAbiType::new("usize", "size_t"),
-                Primitive::UintptrT => CrubitAbiType::new("usize", "uintptr_t"),
-                Primitive::StdSizeT => CrubitAbiType::new("usize", "std::size_t"),
-                Primitive::StdUintptrT => CrubitAbiType::new("usize", "std::uintptr_t"),
-                Primitive::Int8T => CrubitAbiType::new("i8", "int8_t"),
-                Primitive::Int16T => CrubitAbiType::new("i16", "int16_t"),
-                Primitive::Int32T => CrubitAbiType::new("i32", "int32_t"),
-                Primitive::Int64T => CrubitAbiType::new("i64", "int64_t"),
-                Primitive::StdInt8T => CrubitAbiType::new("i8", "std::int8_t"),
-                Primitive::StdInt16T => CrubitAbiType::new("i16", "std::int16_t"),
-                Primitive::StdInt32T => CrubitAbiType::new("i32", "std::int32_t"),
-                Primitive::StdInt64T => CrubitAbiType::new("i64", "std::int64_t"),
-                Primitive::Uint8T => CrubitAbiType::new("u8", "uint8_t"),
-                Primitive::Uint16T => CrubitAbiType::new("u16", "uint16_t"),
-                Primitive::Uint32T => CrubitAbiType::new("u32", "uint32_t"),
-                Primitive::Uint64T => CrubitAbiType::new("u64", "uint64_t"),
-                Primitive::StdUint8T => CrubitAbiType::new("u8", "std::uint8_t"),
-                Primitive::StdUint16T => CrubitAbiType::new("u16", "std::uint16_t"),
-                Primitive::StdUint32T => CrubitAbiType::new("u32", "std::uint32_t"),
-                Primitive::StdUint64T => CrubitAbiType::new("u64", "std::uint64_t"),
-            };
-
-            Ok(CrubitAbiType::transmute(inner))
-        }
+        RsTypeKind::Primitive(primitive) => Ok(match primitive {
+            Primitive::Bool => CrubitAbiType::transmute("bool", "bool"),
+            Primitive::Void => bail!("values of type `void` cannot be bridged by value"),
+            Primitive::Float => CrubitAbiType::transmute("f32", "float"),
+            Primitive::Double => CrubitAbiType::transmute("f64", "double"),
+            Primitive::Char => CrubitAbiType::transmute("::core::ffi::c_char", "char"),
+            Primitive::SignedChar => CrubitAbiType::SignedChar,
+            Primitive::UnsignedChar => CrubitAbiType::UnsignedChar,
+            Primitive::Short => CrubitAbiType::transmute("::core::ffi::c_short", "short"),
+            Primitive::Int => CrubitAbiType::transmute("::core::ffi::c_int", "int"),
+            Primitive::Long => CrubitAbiType::transmute("::core::ffi::c_long", "long"),
+            Primitive::LongLong => CrubitAbiType::LongLong,
+            Primitive::UnsignedShort => CrubitAbiType::UnsignedShort,
+            Primitive::UnsignedInt => CrubitAbiType::UnsignedInt,
+            Primitive::UnsignedLong => CrubitAbiType::UnsignedLong,
+            Primitive::UnsignedLongLong => CrubitAbiType::UnsignedLongLong,
+            Primitive::Char16T => CrubitAbiType::transmute("u16", "char16_t"),
+            Primitive::Char32T => CrubitAbiType::transmute("u32", "char32_t"),
+            Primitive::PtrdiffT => CrubitAbiType::transmute("isize", "ptrdiff_t"),
+            Primitive::IntptrT => CrubitAbiType::transmute("isize", "intptr_t"),
+            Primitive::StdPtrdiffT => CrubitAbiType::transmute("isize", "std::ptrdiff_t"),
+            Primitive::StdIntptrT => CrubitAbiType::transmute("isize", "std::intptr_t"),
+            Primitive::SizeT => CrubitAbiType::transmute("usize", "size_t"),
+            Primitive::UintptrT => CrubitAbiType::transmute("usize", "uintptr_t"),
+            Primitive::StdSizeT => CrubitAbiType::transmute("usize", "std::size_t"),
+            Primitive::StdUintptrT => CrubitAbiType::transmute("usize", "std::uintptr_t"),
+            Primitive::Int8T => CrubitAbiType::transmute("i8", "int8_t"),
+            Primitive::Int16T => CrubitAbiType::transmute("i16", "int16_t"),
+            Primitive::Int32T => CrubitAbiType::transmute("i32", "int32_t"),
+            Primitive::Int64T => CrubitAbiType::transmute("i64", "int64_t"),
+            Primitive::StdInt8T => CrubitAbiType::transmute("i8", "std::int8_t"),
+            Primitive::StdInt16T => CrubitAbiType::transmute("i16", "std::int16_t"),
+            Primitive::StdInt32T => CrubitAbiType::transmute("i32", "std::int32_t"),
+            Primitive::StdInt64T => CrubitAbiType::transmute("i64", "std::int64_t"),
+            Primitive::Uint8T => CrubitAbiType::transmute("u8", "uint8_t"),
+            Primitive::Uint16T => CrubitAbiType::transmute("u16", "uint16_t"),
+            Primitive::Uint32T => CrubitAbiType::transmute("u32", "uint32_t"),
+            Primitive::Uint64T => CrubitAbiType::transmute("u64", "uint64_t"),
+            Primitive::StdUint8T => CrubitAbiType::transmute("u8", "std::uint8_t"),
+            Primitive::StdUint16T => CrubitAbiType::transmute("u16", "std::uint16_t"),
+            Primitive::StdUint32T => CrubitAbiType::transmute("u32", "std::uint32_t"),
+            Primitive::StdUint64T => CrubitAbiType::transmute("u64", "std::uint64_t"),
+        }),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             BridgeRsTypeKind::BridgeVoidConverters { .. } => {
                 bail!("Void pointer bridge types are not allowed within composable bridging")
@@ -698,7 +690,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
         RsTypeKind::Record { record, crate_path, .. } => {
             database::rs_snippet::check_by_value(record.as_ref())?;
 
-            let rust_abi_path = crate_path
+            let rust_type = crate_path
                 .to_fully_qualified_path(make_rs_ident(record.rs_name.identifier.as_ref()));
 
             // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
@@ -720,14 +712,9 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             } else {
                 &[cc_name][..]
             };
-            let cpp_abi_path =
-                make_transmute_cpp_abi_path_from_item(record.as_ref(), cc_name_parts, db)?;
+            let cpp_type = make_cpp_type_from_item(record.as_ref(), cc_name_parts, db)?;
 
-            Ok(CrubitAbiType::transmute(CrubitAbiType::Type {
-                rust_abi_path,
-                cpp_abi_path,
-                type_args: Rc::default(),
-            }))
+            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
         }
         _ => bail!("Unsupported RsTypeKind: {}", rs_type_kind.display(db)),
     }
@@ -796,8 +783,8 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
     }
 }
 
-/// Only to be used in a `CrubitAbiType::transmute(..)` context.
-fn make_transmute_cpp_abi_path_from_item(
+/// Only to be used in a `CrubitAbiType::Transmute` context.
+fn make_cpp_type_from_item(
     item: &impl GenericItem,
     cc_name_parts: &[&str],
     db: &dyn BindingsGenerator,
