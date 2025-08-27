@@ -991,9 +991,6 @@ pub enum BridgeType {
         abi_rust: Rc<str>,
         abi_cpp: Rc<str>,
     },
-    SlicePointer {
-        abi_cpp: Rc<str>,
-    },
     StdOptional(CcType),
     StdPair(CcType, CcType),
     StdString,

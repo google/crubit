@@ -274,18 +274,6 @@
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_abi_rust", abi_rust)   \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_abi_cpp", abi_cpp)
 
-// Declare this type as a bridge type that bridges to a native Rust slice
-// pointer, e.g. `*const [T]` and `*mut [T]`.
-//
-// Types with this annotation must take on the specific form of `Type<T>` or
-// `Type<const T>`, which bridge to `*const [T]` and `*mut [T]` respectively.
-//
-// The macro caller must provide the `abi_cpp` argument, which is the path to
-// the Crubit ABI type trait impl. The ABI must follow the slice pointer ABI,
-// which is a pointer followed by the size.
-#define CRUBIT_BRIDGE_SLICE_PTR(abi_cpp) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_slice_ptr_abi_cpp", abi_cpp)
-
 // Prevents Crubit from interpreting one or more named attributes on this
 // declaration.
 //

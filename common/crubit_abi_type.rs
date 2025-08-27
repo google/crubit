@@ -51,14 +51,6 @@ pub enum CrubitAbiType {
     LongLong,
     UnsignedLongLong,
     Pair(Rc<CrubitAbiType>, Rc<CrubitAbiType>),
-    SlicePtr {
-        is_const: bool,
-        cpp_span: FullyQualifiedPath,
-        // Stringified repr of the C++ and Rust types that goes in the span
-        // We would prefer a TokenStream here, but TokenStream isn't Hash + Eq.
-        cpp_value: Rc<str>,
-        rust_value: Rc<str>,
-    },
     StdString {
         /// If true, use `crate::std::BoxedCppStringAbi` instead of
         /// `::cc_std::std::BoxedCppStringAbi` in Rust tokens.
@@ -124,17 +116,6 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                 quote! { ::bridge_rust::TupleAbi<(#first_tokens, #second_tokens)> }
                     .to_tokens(tokens);
             }
-            CrubitAbiType::SlicePtr { is_const, rust_value, .. } => {
-                let rust_span = if *is_const {
-                    quote! { ::bridge_rust::ConstSlicePtrAbi }
-                } else {
-                    quote! { ::bridge_rust::MutSlicePtrAbi }
-                };
-                let rust_value = rust_value
-                    .parse::<TokenStream>()
-                    .expect("rust_value should always be a valid TokenStream");
-                quote! { #rust_span < #rust_value > }.to_tokens(tokens);
-            }
             CrubitAbiType::StdString { in_cc_std } => {
                 let root = if *in_cc_std {
                     quote! { crate }
@@ -168,17 +149,6 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
                 let first_tokens = CrubitAbiTypeToCppTokens(first);
                 let second_tokens = CrubitAbiTypeToCppTokens(second);
                 quote! { ::crubit::PairAbi<#first_tokens, #second_tokens> }.to_tokens(tokens);
-            }
-            CrubitAbiType::SlicePtr { is_const, cpp_span, cpp_value, .. } => {
-                let const_qualifier = if *is_const {
-                    quote! { const }
-                } else {
-                    quote! {}
-                };
-                let cpp_value = cpp_value
-                    .parse::<TokenStream>()
-                    .expect("cpp_value should always be a valid TokenStream");
-                quote! { #cpp_span < #const_qualifier #cpp_value > }.to_tokens(tokens);
             }
             CrubitAbiType::StdString { .. } => {
                 quote! { ::crubit::BoxedAbi<std::string> }.to_tokens(tokens)

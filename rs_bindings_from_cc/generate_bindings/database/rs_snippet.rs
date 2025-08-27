@@ -494,12 +494,6 @@ pub enum BridgeRsTypeKind {
         abi_rust: Rc<str>,
         abi_cpp: Rc<str>,
     },
-    /// Bridges to a `*mut [T]` or `*const [T]`.
-    SlicePointer {
-        mutability: Mutability,
-        pointee: CcType,
-        abi_cpp: Rc<str>,
-    },
     StdOptional(Rc<RsTypeKind>),
     StdPair(Rc<RsTypeKind>, Rc<RsTypeKind>),
     StdString {
@@ -548,30 +542,6 @@ impl BridgeRsTypeKind {
                     })
                     .collect::<Result<Rc<[RsTypeKind]>>>()?,
             },
-            BridgeType::SlicePointer { abi_cpp } => {
-                let Some([type_in_slice]) = record
-                    .template_specialization
-                    .as_ref()
-                    .map(|template_spec| &template_spec.template_args[..])
-                else {
-                    // This might break for std::span if we ever support it, which can have a second
-                    // template argument for the size.
-                    bail!("SlicePointer expects a single template argument");
-                };
-                let pointee: CcType = type_in_slice
-                    .type_
-                    .as_ref()
-                    .map_err(|err| anyhow!("Failed to get type from template arg: {}", err))?
-                    .clone();
-                let pointee_rs_type_kind = db.rs_type_kind(pointee.clone())?;
-                ensure!(
-                    pointee_rs_type_kind.is_c_abi_compatible_by_value(),
-                    "{} is not C ABI compatible, so it cannot be passed behind a slice",
-                    pointee_rs_type_kind.display(db)
-                );
-                let mutability = if pointee.is_const { Mutability::Const } else { Mutability::Mut };
-                BridgeRsTypeKind::SlicePointer { mutability, pointee, abi_cpp }
-            }
             BridgeType::StdOptional(t) => {
                 BridgeRsTypeKind::StdOptional(Rc::new(db.rs_type_kind(t)?))
             }
@@ -1085,7 +1055,6 @@ impl RsTypeKind {
                 BridgeRsTypeKind::BridgeVoidConverters { .. }
                 | BridgeRsTypeKind::Bridge { .. }
                 | BridgeRsTypeKind::ProtoMessageBridge { .. } => false,
-                BridgeRsTypeKind::SlicePointer { mutability, .. } => mutability.is_const(),
                 BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
                 BridgeRsTypeKind::StdString { .. } => false,
@@ -1418,14 +1387,6 @@ impl RsTypeKind {
                         quote! { #path < #(#generic_types_tokens),* > }
                     }
                     BridgeRsTypeKind::ProtoMessageBridge { rust_name, .. } => make_path(rust_name),
-                    BridgeRsTypeKind::SlicePointer { mutability, pointee, .. } => {
-                        let mutability = mutability.format_for_pointer();
-                        let pointee = db
-                            .rs_type_kind(pointee.clone())
-                            .expect("pointee was already validated as a valid RsTypeKind in BridgeRsTypeKind::new")
-                            .to_token_stream(db);
-                        quote! { * #mutability [#pointee] }
-                    }
                     BridgeRsTypeKind::StdOptional(inner) => {
                         let inner = inner.to_token_stream(db);
                         quote! { ::core::option::Option< #inner > }
@@ -1485,8 +1446,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                     RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                         BridgeRsTypeKind::BridgeVoidConverters { .. }
                         | BridgeRsTypeKind::ProtoMessageBridge { .. }
-                        | BridgeRsTypeKind::Bridge { .. }
-                        | BridgeRsTypeKind::SlicePointer { .. } => {}
+                        | BridgeRsTypeKind::Bridge { .. } => {}
                         BridgeRsTypeKind::StdOptional(t) => self.todo.push(t),
                         BridgeRsTypeKind::StdPair(t1, t2) => {
                             self.todo.push(t2);

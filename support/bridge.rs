@@ -327,56 +327,6 @@ unsafe impl<A: CrubitAbi> CrubitAbi for OptionAbi<A> {
     }
 }
 
-/// A [`CrubitAbi`] for encoding a const slice pointer by encoding a pointer followed by a size.
-pub struct ConstSlicePtrAbi<T>(PhantomData<T>);
-
-// SAFETY: The ABI contract for `ConstSlicePtrAbi<T>` is that the value is encoded as follows:
-// pointer, followed by size.
-unsafe impl<T> CrubitAbi for ConstSlicePtrAbi<T> {
-    type Value = *const [T];
-
-    const SIZE: usize = mem::size_of::<*const ()>() + mem::size_of::<usize>();
-
-    fn encode(value: Self::Value, encoder: &mut Encoder) {
-        encoder.encode_transmute(value as *const ());
-        encoder.encode_transmute(value.len());
-    }
-
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
-        // SAFETY: the caller guarantees that the buffer contains a pointer, followed by a size_t.
-        unsafe {
-            let ptr = decoder.decode_transmute();
-            let len = decoder.decode_transmute();
-            ptr::slice_from_raw_parts(ptr, len)
-        }
-    }
-}
-
-/// A [`CrubitAbi`] for encoding a mutable slice pointer by encoding a pointer followed by a size.
-pub struct MutSlicePtrAbi<T>(PhantomData<T>);
-
-// SAFETY: The ABI contract for `MutSlicePtrAbi<T>` is that the value is encoded as follows:
-// pointer, followed by size.
-unsafe impl<T> CrubitAbi for MutSlicePtrAbi<T> {
-    type Value = *mut [T];
-
-    const SIZE: usize = mem::size_of::<*mut ()>() + mem::size_of::<usize>();
-
-    fn encode(value: Self::Value, encoder: &mut Encoder) {
-        encoder.encode_transmute(value as *mut ());
-        encoder.encode_transmute(value.len());
-    }
-
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
-        // SAFETY: the caller guarantees that the buffer contains a pointer, followed by a size_t.
-        unsafe {
-            let ptr = decoder.decode_transmute();
-            let len = decoder.decode_transmute();
-            ptr::slice_from_raw_parts_mut(ptr, len)
-        }
-    }
-}
-
 /// Internal functions and types for Crubit generated code.
 #[doc(hidden)]
 pub mod internal {

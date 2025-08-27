@@ -460,14 +460,6 @@ llvm::json::Value BridgeType::ToJson() const {
                 },
             }};
           },
-          [&](const BridgeType::SlicePointer& annotation) {
-            return llvm::json::Object{{
-                "SlicePointer",
-                llvm::json::Object{
-                    {"abi_cpp", annotation.abi_cpp},
-                },
-            }};
-          },
           [&](const BridgeType::StdOptional& std_optional) {
             return llvm::json::Object{
                 {"StdOptional", std_optional.inner_type->ToJson()}};

@@ -141,13 +141,9 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
   auto crubit_abi_values = GetKeyValues<3>(
       record_decl, {"crubit_bridge_rust_name", "crubit_bridge_abi_rust",
                     "crubit_bridge_abi_cpp"});
-  auto crubit_slice_ptr_abi_values =
-      GetKeyValues<1>(record_decl, {"crubit_bridge_slice_ptr_abi_cpp"});
-  CHECK(1 >= void_converter_values.has_value() + crubit_abi_values.has_value() +
-                 crubit_slice_ptr_abi_values.has_value())
-      << "CRUBIT_BRIDGE_VOID_CONVERTERS, CRUBIT_BRIDGE, and "
-         "CRUBIT_BRIDGE_SLICE_PTR are mutually exclusive, and cannot be used "
-         "on the same type.";
+  CHECK(1 >= void_converter_values.has_value() + crubit_abi_values.has_value())
+      << "CRUBIT_BRIDGE_VOID_CONVERTERS, CRUBIT_BRIDGE, and are mutually "
+         "exclusive, and cannot be used on the same type.";
 
   if (crubit::IsProto2Message(record_decl)) {
     return BridgeType{BridgeType::ProtoMessageBridge{
@@ -170,12 +166,6 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
     return BridgeType{BridgeType::Bridge{
         .rust_name = std::move(rust_name),
         .abi_rust = std::move(abi_rust),
-        .abi_cpp = std::move(abi_cpp),
-    }};
-  }
-  if (crubit_slice_ptr_abi_values.has_value()) {
-    auto [abi_cpp] = *crubit_slice_ptr_abi_values;
-    return BridgeType{BridgeType::SlicePointer{
         .abi_cpp = std::move(abi_cpp),
     }};
   }

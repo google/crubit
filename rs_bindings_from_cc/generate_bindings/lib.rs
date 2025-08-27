@@ -420,7 +420,6 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
             BridgeRsTypeKind::BridgeVoidConverters { .. }
             | BridgeRsTypeKind::Bridge { .. }
             | BridgeRsTypeKind::ProtoMessageBridge { .. } => is_record_unsafe(db, &original_type),
-            BridgeRsTypeKind::SlicePointer { .. } => true,
             BridgeRsTypeKind::StdOptional(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
             BridgeRsTypeKind::StdPair(t1, t2) => {
                 db.is_rs_type_kind_unsafe(t1.as_ref().clone())
@@ -684,22 +683,6 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                     .collect::<Result<Rc<[CrubitAbiType]>>>()?;
 
                 Ok(CrubitAbiType::Type { rust_abi_path, cpp_abi_path, type_args })
-            }
-            BridgeRsTypeKind::SlicePointer { mutability, pointee, abi_cpp } => {
-                // TODO(okabayashi): Eventually we want a more intelligent way to have TokenStreams
-                // that can be used as keys, i.e. are Eq + Hash. For now, we just use the string
-                // representation and the FromStr impl when we need the TokenStream back.
-                let cpp_value = Rc::from(
-                    cpp_type_name::format_cpp_type(&pointee, db.ir())?.to_string().as_str(),
-                );
-                let rust_value = db.rs_type_kind(pointee.clone())?;
-                let rust_value = Rc::from(rust_value.to_token_stream(db).to_string());
-                Ok(CrubitAbiType::SlicePtr {
-                    is_const: mutability.is_const(),
-                    cpp_span: FullyQualifiedPath::new(&abi_cpp),
-                    cpp_value,
-                    rust_value,
-                })
             }
             BridgeRsTypeKind::StdOptional(inner) => {
                 let inner_abi = db.crubit_abi_type(inner.as_ref().clone())?;
