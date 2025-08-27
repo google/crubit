@@ -1,6 +1,6 @@
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
-load("//rs_bindings_from_cc/test/fission_build:enable_fission.bzl", "enable_fission_test")
+load("//rs_bindings_from_cc/test/bazel/fission_build:enable_fission.bzl", "enable_fission_test")
 
 package(default_applicable_licenses = ["//:license"])
 
