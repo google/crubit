@@ -42,9 +42,7 @@ cc_library(
     name = "annotations",
     hdrs = ["annotations.h"],
     visibility = [
-        # INTERNAL VISIBILITY ONLY.
-        # FOR USAGE ADD TO //support/public:annotations
-        "//:__subpackages__",
+        "//visibility:public",
     ],
     deps = [
         "//support/public:annotations_internal",
@@ -55,9 +53,7 @@ cc_library(
     name = "annotations_internal",
     hdrs = ["annotations_internal.h"],
     visibility = [
-        # INTERNAL VISIBILITY ONLY.
-        # Use annotations.h instead.
-        "//:__subpackages__",
+        "//visibility:public",
     ],
     deps = [
         "@abseil-cpp//absl/base:core_headers",
@@ -69,8 +65,7 @@ rust_proc_macro(
     srcs = ["crubit_annotate.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
-        "//:__subpackages__",
-        "//security/ise_memory_safety/elf:__subpackages__",
+        "//visibility:public",
     ],
     deps = [
         "@crate_index//:proc-macro2",
@@ -213,10 +208,7 @@ cc_library(
     name = "bridge_cpp",
     hdrs = ["bridge.h"],
     visibility = [
-        # INTERNAL VISIBILITY ONLY.
-        # FOR USAGE ADD TO //support/public:bridge_cpp
-        "//:__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
+        "//visibility:public",
     ],
 )
 
@@ -234,9 +226,7 @@ cc_library(
     srcs = ["status_bridge.cc"],
     hdrs = ["status_bridge.h"],
     visibility = [
-        # INTERNAL VISIBILITY ONLY.
-        # FOR USAGE ADD TO //support/public:status_bridge_cpp
-        "//:__subpackages__",
+        "//visibility:public",
     ],
     deps = [
         ":bridge_cpp",
