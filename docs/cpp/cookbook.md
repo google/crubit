@@ -222,3 +222,28 @@ To mail the CL performing this change, use <internal link>_manage: add
 NOTE: By disabling Crubit on this declaration, items which depend on it may
 also, in turn, not receive bindings. For example, if it declares a type, then
 functions which accept or return that type will also not receive bindings.
+
+### Disable Crubit on a header {#disable-header}
+
+If an entire header is giving problems (e.g. is unparseable), then it can be
+removed from consideration by Crubit. Once disabled, Crubit will avoid reading
+the header directly, although it is still included via `#include` preprocessor
+directives.
+
+Add the target name and header name to `public_headers_to_remove` in
+rs_bindings_from_cc/bazel_support/rust_bindings_from_cc_aspect.bzl.
+See the example in
+rs_bindings_from_cc/test/disable/disable_header/.
+
+To mail the CL performing this change, use <internal link>_manage: add
+`AUTO_MANAGE=testing:TGP` to the CL description.
+
+> NOTE: By disabling Crubit on this header, items which are defined in that
+> header will not receive bindings. For example, this means that functions which
+> use types defined in that header will also not get bindings, even if the
+> function was defined in a header that was not disabled.
+>
+> When possible, it's preferable to use a smaller fix. For example, if the same
+> header is owned by two targets, it's preferable to move the header into a
+> third target, depended on by both. That way, functions which use types defined
+> in that header will still get bindings, in both targets.

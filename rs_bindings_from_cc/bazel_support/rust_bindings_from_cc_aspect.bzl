@@ -51,7 +51,12 @@ targets_to_remove = [
 
 # Specific headers, in specific targets, which do not receive Rust bindings.
 #
-# This is mainly for if the same header is in two different targets, only one of which is canonical.
+# There are three reasons to add a header to this list:
+# 1. The header triggers a bug in Crubit. In that case, it should be associated with a bug link.
+# 2. The header is unparseable on its own. In that case, a comment like `# unparseable` suffices.
+#    (For example, this is expected on targets with `features=["-parse_headers"]`.)
+# 3. The header is owned by another target as well, and we want to mark the _other_ one as
+#    canonically owning it. In that case, the comment should point to the other target.
 public_headers_to_remove = {
     "//rs_bindings_from_cc/test/disable/disable_header:test_lib": [
         "rs_bindings_from_cc/test/disable/disable_header/disabled_header.h",
