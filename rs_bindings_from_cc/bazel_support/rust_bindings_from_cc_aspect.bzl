@@ -229,6 +229,18 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if RustBindingsFromCcInfo in target:
         return []
 
+    # If this is a header target for a cc_public_library, we can't assign ownership of the headers
+    # to this target. The header-only target actually cannot usefully get bindings (e.g.
+    # non-inline functions would have no implementation to link against), and should
+    # only be used by the implementation. For getting Rust bindings, the non-header-only target
+    # is the target that gets bindings.
+    if str(ctx.label).endswith("_cc_public_library_headers"):
+        # Concretely, if we don't filter it out, then additional_rust_srcs will still be added
+        # by the cc_public_library macro to the _cc_public_library_headers, which can't get
+        # bindings! that won't get bindings. This unavoidably causes the additional Rust sources to
+        # fail to compile, unless we filter it out early, as here.
+        return []
+
     # We generate bindings for these headers via the
     # support/cc_std:cc_std target.
     if target.label == Label("//third_party/stl:stl"):
