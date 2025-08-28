@@ -687,17 +687,24 @@ impl RsTypeKind {
         existing_rust_type: Rc<ExistingRustType>,
     ) -> Result<Self> {
         if existing_rust_type.rs_name.as_ref() == SLICE_REF_NAME_RS {
-            let [slice_type_inner] = &existing_rust_type.type_parameters[..] else {
+            let [inner_cc_type] = &existing_rust_type.type_parameters[..] else {
                 bail!(
                     "SliceRef has {} type parameters, expected 1",
                     existing_rust_type.type_parameters.len()
                 );
             };
 
+            let inner_rs_type_kind = db.rs_type_kind(inner_cc_type.clone())?;
+            ensure!(
+                inner_rs_type_kind.allowed_behind_multi_element_ptr(),
+                "SliceRef pointee type is not allowed behind a multi element pointer: {}",
+                inner_rs_type_kind.display(db),
+            );
+
             return Ok(RsTypeKind::Pointer {
-                pointee: Rc::new(db.rs_type_kind(slice_type_inner.clone())?),
+                pointee: Rc::new(inner_rs_type_kind),
                 is_slice: true,
-                mutability: if slice_type_inner.is_const {
+                mutability: if inner_cc_type.is_const {
                     Mutability::Const
                 } else {
                     Mutability::Mut
@@ -967,10 +974,18 @@ impl RsTypeKind {
     /// Returns true if the type is allowed to be passed as an element behind a multi-element
     /// pointer, otherwise false.
     pub fn allowed_behind_multi_element_ptr(&self) -> bool {
-        // Incomplete records are _not_ allowed behind multi-element pointers
-        // because their stride is unknown.
-        self.allowed_behind_single_element_ptr()
-            && !matches!(self, RsTypeKind::IncompleteRecord { .. })
+        match self.unalias() {
+            RsTypeKind::IncompleteRecord { .. } => {
+                // Incomplete records are disallowed because the stride is unknown.
+                false
+            }
+            RsTypeKind::Primitive(Primitive::Void) => {
+                // Void pointers are disallowed because they are type erased pointers,
+                // so the stride is unknown.
+                false
+            }
+            _ => self.allowed_behind_single_element_ptr(),
+        }
     }
 
     pub fn format_as_return_type_fragment(
@@ -1606,17 +1621,17 @@ mod tests {
         }
     }
 
-    #[gtest]
-    fn test_allowed_behind_single_and_multi_element_ptr() {
-        let crate_path = {
-            let ns = NamespaceQualifier { namespaces: vec![], nested_records: vec![] };
-            Rc::new(CratePath {
-                crate_ident: None,
-                crate_root_path: ns.clone(),
-                namespace_qualifier: ns,
-            })
-        };
+    fn make_crate_path() -> Rc<CratePath> {
+        let ns = NamespaceQualifier { namespaces: vec![], nested_records: vec![] };
+        Rc::new(CratePath {
+            crate_ident: None,
+            crate_root_path: ns.clone(),
+            namespace_qualifier: ns,
+        })
+    }
 
+    #[gtest]
+    fn test_simple_types_allowed_behind_single_and_multi_element_ptr() {
         let error = RsTypeKind::Error {
             symbol: "some error".into(),
             error: anyhow!("some error happened!"),
@@ -1646,13 +1661,15 @@ mod tests {
                 enclosing_item_id: None,
                 must_bind: false,
             }),
-            crate_path: crate_path.clone(),
+            crate_path: make_crate_path(),
         };
 
         expect_that!(enum_.allowed_behind_single_element_ptr(), eq(true));
         expect_that!(enum_.allowed_behind_multi_element_ptr(), eq(true));
+    }
 
-        let incomplete_record = RsTypeKind::IncompleteRecord {
+    fn make_incomplete_record() -> RsTypeKind {
+        RsTypeKind::IncompleteRecord {
             incomplete_record: Rc::new(IncompleteRecord {
                 cc_name: Identifier { identifier: "MyStruct".into() },
                 rs_name: Identifier { identifier: "MyStruct".into() },
@@ -1663,9 +1680,48 @@ mod tests {
                 enclosing_item_id: None,
                 must_bind: false,
             }),
-            crate_path: crate_path.clone(),
-        };
+            crate_path: make_crate_path(),
+        }
+    }
+
+    #[gtest]
+    fn test_incomplete_record_only_allowed_behind_single_element_ptr() {
+        let incomplete_record = make_incomplete_record();
         expect_that!(incomplete_record.allowed_behind_single_element_ptr(), eq(true));
         expect_that!(incomplete_record.allowed_behind_multi_element_ptr(), eq(false));
+    }
+
+    #[gtest]
+    fn test_alias_incomplete_record_only_allowed_behind_single_element_ptr() {
+        let alias_incomplete_record = RsTypeKind::TypeAlias {
+            type_alias: Rc::new(TypeAlias {
+                cc_name: Identifier { identifier: "MyAlias".into() },
+                rs_name: Identifier { identifier: "MyAlias".into() },
+                id: ItemId::new_for_testing(1),
+                owning_target: BazelLabel("//foo/bar".into()),
+                doc_comment: None,
+                unknown_attr: None,
+                underlying_type: CcType {
+                    variant: CcTypeVariant::Record(ItemId::new_for_testing(0)),
+                    is_const: false,
+                    unknown_attr: "".into(),
+                },
+                source_loc: "some_file.h:123".into(),
+                enclosing_item_id: None,
+                must_bind: false,
+            }),
+            underlying_type: Rc::new(make_incomplete_record()),
+            crate_path: make_crate_path(),
+        };
+
+        expect_that!(alias_incomplete_record.allowed_behind_single_element_ptr(), eq(true));
+        expect_that!(alias_incomplete_record.allowed_behind_multi_element_ptr(), eq(false));
+    }
+
+    #[gtest]
+    fn test_void_ptr_only_allowed_behind_single_element_ptr() {
+        let void_ptr = RsTypeKind::Primitive(Primitive::Void);
+        expect_that!(void_ptr.allowed_behind_single_element_ptr(), eq(true));
+        expect_that!(void_ptr.allowed_behind_multi_element_ptr(), eq(false));
     }
 }
