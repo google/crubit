@@ -110,6 +110,12 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
         FormattedError::FromStatus(std::move(unknown_attr.status())));
   }
 
+  if (ictx_.IsFromProtoTarget(*enum_decl)) {
+    // TODO(b/406221412): Proto enums aren't at the expected location.
+    return unsupported(
+        FormattedError::Static("b/406221412: Proto enums are not supported"));
+  }
+
   ictx_.MarkAsSuccessfullyImported(enum_decl);
   return Enum{
       .cc_name = (*enum_name).cc_identifier,

@@ -158,6 +158,10 @@ class ImportContext {
   // other redeclarations of the decl.
   virtual bool IsFromCurrentTarget(const clang::Decl* decl) const = 0;
 
+  // Returns true iff the `decl` is from a proto target. Does not look into
+  // other redeclarations of the decl.
+  virtual bool IsFromProtoTarget(const clang::Decl& decl) const = 0;
+
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //
   // If the decl's name is an identifier, this returns that identifier as-is.

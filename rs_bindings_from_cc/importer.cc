@@ -322,8 +322,14 @@ const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
   if (auto* namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
     return namespace_decl;
   }
-  if (auto* cxx_record_decl = llvm::dyn_cast<clang::CXXRecordDecl>(decl)) {
-    if (cxx_record_decl->isInjectedClassName()) {
+  auto is_injected_class_name = [](const clang::Decl* decl) {
+    if (auto* cxx_record_decl = llvm::dyn_cast<clang::CXXRecordDecl>(decl)) {
+      return cxx_record_decl->isInjectedClassName();
+    }
+    return false;
+  };
+  if (llvm::isa<clang::TagDecl>(decl)) {
+    if (is_injected_class_name(decl)) {
       return nullptr;
     }
     auto owning_target = GetOwningTarget(decl);
@@ -331,9 +337,9 @@ const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
     clang::Decl* canonical = nullptr;
     for (auto iter = decl->redecls_begin(); iter != decl->redecls_end();
          ++iter) {
-      auto* redecl = llvm::dyn_cast<clang::CXXRecordDecl>(*iter);
+      auto* redecl = llvm::dyn_cast<clang::TagDecl>(*iter);
       CHECK(redecl);
-      if (redecl->isInjectedClassName()) {
+      if (is_injected_class_name(redecl)) {
         continue;
       }
       if (GetOwningTarget(redecl) != owning_target) {
@@ -341,7 +347,7 @@ const clang::Decl* Importer::CanonicalizeDecl(const clang::Decl* decl) const {
       }
       if (redecl->isThisDeclarationADefinition()) {
         canonical = redecl;
-        break;  // Multiple definitions are not allowed for record types.
+        break;  // Multiple definitions are not allowed.
       }
       if (!canonical) {
         canonical = redecl;
@@ -852,6 +858,16 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
 
 bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
+}
+
+bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
+  // TODO(b/b/441343672): This is probably not a good way to detect if something
+  // is from a proto target, and we should do something more durable.
+  clang::SourceManager& source_manager = ctx_.getSourceManager();
+  std::optional<llvm::StringRef> filename =
+      source_manager.getNonBuiltinFilenameForID(
+          source_manager.getFileID(decl.getLocation()));
+  return filename.has_value() && filename->ends_with(".proto.h");
 }
 
 IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
