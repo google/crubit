@@ -198,7 +198,7 @@ void Foo(float x);
 // For Rust callers: <internal link>/cpp/cookbook#renaming
 inline void FooInt(int x) {return Foo(x);}
 // For Rust callers: <internal link>/cpp/cookbook#renaming
-inline void FooFloat(float x) {return FooFloat(x);}
+inline void FooFloat(float x) {return Foo(x);}
 ```
 
 ## Working around blocking bugs in Crubit {#blockers}
