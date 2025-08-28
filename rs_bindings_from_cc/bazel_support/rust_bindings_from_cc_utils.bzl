@@ -171,7 +171,18 @@ def generate_and_compile_bindings(
             rust_file = rs_output,
             namespaces_file = namespaces_output,
         ),
-        OutputGroupInfo(out = depset([x for x in [cc_output, rs_output, namespaces_output, error_report_output] if x != None])),
+        OutputGroupInfo(
+            out = depset([x for x in [
+                cc_output,
+                rs_output,
+                namespaces_output,
+                error_report_output,
+            ] if x != None]),
+            out_compiled = depset(
+                [dep_variant_info.crate_info.output] +
+                all_static_libraries(cc_info),
+            ),
+        ),
         # The C++ bindings of the generated Rust bindings are the original C++ file.
         CcBindingsFromRustInfo(
             cc_info = dep_variant_info.cc_info,
@@ -179,6 +190,14 @@ def generate_and_compile_bindings(
             headers = public_hdrs,
             features = [],
         ),
+    ]
+
+def all_static_libraries(cc_info):
+    return [
+        library_to_link.static_library
+        for linker_input in cc_info.linking_context.linker_inputs.to_list()
+        for library_to_link in linker_input.libraries
+        if library_to_link.static_library != None
     ]
 
 bindings_attrs = {
