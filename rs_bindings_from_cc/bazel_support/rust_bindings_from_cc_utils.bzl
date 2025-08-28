@@ -5,6 +5,9 @@
 """Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
 """
 
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 load(

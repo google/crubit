@@ -4,6 +4,7 @@
 
 """A rule that generates bindings source files for a given C++ library."""
 
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_flavor_transition",

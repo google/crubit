@@ -16,6 +16,7 @@ load(
     "DepInfo",
     "DepVariantInfo",
 )
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 
 def collect_transformed_deps(ctx):
     """Creates DepVariantInfos from all dependencies and from the rust_bindings_from_cc_aspect.

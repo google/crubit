@@ -50,6 +50,8 @@ want to implement, cannot conflict with the future Crubit bindings.
 
 """
 
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "BuildInfo", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")

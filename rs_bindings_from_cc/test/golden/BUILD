@@ -118,6 +118,7 @@ bzl_library(
     deps = [
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
+        "@rules_cc//cc/common",
     ],
 )
 

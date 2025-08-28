@@ -5,6 +5,7 @@
 """Test-only bindings generation macros."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_flavor_transition",

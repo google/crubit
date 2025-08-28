@@ -29,6 +29,7 @@ bzl_library(
         "//rs_bindings_from_cc/bazel_support:providers_bzl",
         "@bazel_skylib//rules:common_settings",
         "@bazel_tools//tools/cpp:toolchain_utils_bzl",
+        "@rules_cc//cc/common",
         "@rules_rust//rust:bzl_lib",
         "@rules_rust//rust/private:bzl_lib",
     ],

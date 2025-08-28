@@ -4,6 +4,8 @@
 
 """A rule that collects C++ and Rust dependencies for the generated bindings files."""
 
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+
 # buildifier: disable=bzl-visibility
 load(
     "@rules_rust//rust/private:providers.bzl",

@@ -4,6 +4,7 @@
 
 """Generates bindings for the toolchain headers."""
 
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
     "AdditionalRustSrcsProviderInfo",

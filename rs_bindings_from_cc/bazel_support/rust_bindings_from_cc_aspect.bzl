@@ -7,6 +7,8 @@ projection. See <internal link> and <internal link> for
 more context.
 """
 
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
 load(
     "//features:crubit_feature_hint.bzl",

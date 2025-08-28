@@ -4,6 +4,8 @@
 
 """`cc_bindings_from_rust` rule."""
 
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "@rules_rust//rust:rust_common.bzl",
     "BuildInfo",

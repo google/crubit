@@ -5,6 +5,7 @@
 """Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
 """
 
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 
