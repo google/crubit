@@ -12,6 +12,7 @@
 
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/char.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -627,16 +628,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     memcpy(this, &value, sizeof(value));
   }
 
-  // Error generating bindings for `unsupported_types::SomeStruct::create`
-  // defined at
-  // cc_bindings_from_rs/test/structs/structs.rs;l=337:
-  // support for the Rust `char` type requires
-  // //features:experimental
+  // Generated from:
+  // cc_bindings_from_rs/test/structs/structs.rs;l=337
+  static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
 
- private:
-  // Field type has been replaced with a blob of bytes: support for the Rust
-  // `char` type requires //features:experimental
-  unsigned char unsupported_field[4];
+ public:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/structs/structs.rs;l=333
+    rs_std::char_ unsupported_field;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1154,6 +1155,18 @@ inline SomeStruct::SomeStruct() {
 static_assert(std::is_trivially_destructible_v<SomeStruct>);
 static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
 static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create(
+    rs_std::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);
+}
+inline ::structs::unsupported_types::SomeStruct SomeStruct::create(
+    rs_std::char_ x) {
+  crubit::Slot<::structs::unsupported_types::SomeStruct>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(x, __return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, unsupported_field));
 }

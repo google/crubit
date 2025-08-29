@@ -49,9 +49,16 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   void set_b(double b);
 
  private:
-  // Field type has been replaced with a blob of bytes: support for non-repr(C)
-  // unions requires //features:experimental
-  unsigned char __opaque_blob_of_bytes[8];
+  // Generated from:
+  // examples/rust/rust_union/example.rs;l=6
+  struct {
+    std::int32_t value;
+  } a;
+  // Generated from:
+  // examples/rust/rust_union/example.rs;l=7
+  struct {
+    double value;
+  } b;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -90,7 +97,8 @@ inline void ReprRustUnion::set_b(double b) {
   return __crubit_internal::__crubit_thunk_set_ub(self, b);
 }
 inline void ReprRustUnion::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ReprRustUnion, __opaque_blob_of_bytes));
+  static_assert(0 == offsetof(ReprRustUnion, a));
+  static_assert(0 == offsetof(ReprRustUnion, b));
 }
 }  // namespace example_crate
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN

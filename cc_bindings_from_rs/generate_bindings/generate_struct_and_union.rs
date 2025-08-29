@@ -659,10 +659,7 @@ fn generate_fields<'tcx>(
     };
 
     // Used for generating enum bindings.
-    let is_supported_enum = adt_def.is_enum()
-        && repr_attrs.contains(&rustc_hir::attrs::ReprC)
-        && crate_features(db, core.def_id.krate)
-            .contains(crubit_feature::CrubitFeature::Experimental);
+    let is_supported_enum = adt_def.is_enum() && repr_attrs.contains(&rustc_hir::attrs::ReprC);
 
     let tag_size_with_padding =
         if is_supported_enum { get_tag_size_with_padding(layout) } else { 0 };
@@ -689,20 +686,6 @@ fn generate_fields<'tcx>(
         // Handle cases of unsupported ADTs.
         ty::AdtKind::Enum if (!repr_attrs.contains(&rustc_hir::attrs::ReprC)) => {
             vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
-        }
-        ty::AdtKind::Enum if !is_supported_enum => {
-            vec![err_fields(anyhow!(
-                "support for repr(C) enums requires //features:experimental"
-            ))]
-        }
-        ty::AdtKind::Union
-            if !repr_attrs.contains(&rustc_hir::attrs::ReprC)
-                && !crate_features(db, core.def_id.krate)
-                    .contains(crubit_feature::CrubitFeature::Experimental) =>
-        {
-            vec![err_fields(anyhow!(
-              "support for non-repr(C) unions requires //features:experimental"
-          ))]
         }
 
         // Otherwise, get the fields and determine the memory layout.

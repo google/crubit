@@ -286,12 +286,7 @@ pub fn format_ty_for_cc<'tcx>(
                 })
             ));
 
-            let mut cc_type = CcSnippet::with_include(
-                quote! { rs_std::char_ },
-                db.support_header("rs_std/char.h"),
-            );
-            cc_type.prereqs.required_features |= FineGrainedFeature::RustChar;
-            cc_type
+            CcSnippet::with_include(quote! { rs_std::char_ }, db.support_header("rs_std/char.h"))
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize

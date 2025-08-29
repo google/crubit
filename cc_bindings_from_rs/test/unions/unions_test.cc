@@ -28,8 +28,8 @@ concept HasYField = requires(T u) { u.x; };
 
 TEST(UnionsTest, ReprRustUnionFieldSmokeTest) {
   unions::repr_rust::U my_union = unions::repr_rust::create();
-  EXPECT_FALSE(HasXField<unions::repr_rust::U>);
-  EXPECT_FALSE(HasYField<unions::repr_rust::U>);
+  EXPECT_TRUE(HasXField<unions::repr_rust::U>);
+  EXPECT_TRUE(HasYField<unions::repr_rust::U>);
   my_union.set_x(1);
   my_union.set_y(2);
 
@@ -48,8 +48,8 @@ TEST(UnionsTest, ReprRustUnionPacked) {
   unions::repr_rust_packed::U my_union_packed =
       unions::repr_rust_packed::create();
   unions::repr_rust::U my_union = unions::repr_rust::create();
-  EXPECT_FALSE(HasXField<unions::repr_rust_packed::U>);
-  EXPECT_FALSE(HasYField<unions::repr_rust_packed::U>);
+  EXPECT_TRUE(HasXField<unions::repr_rust_packed::U>);
+  EXPECT_TRUE(HasYField<unions::repr_rust_packed::U>);
 
   EXPECT_EQ(alignof(my_union_packed), 1);
   EXPECT_EQ(alignof(my_union), 4);
@@ -70,8 +70,8 @@ TEST(UnionsTest, ReprCUnionCloneTest) {
 
 TEST(UnionsTest, ReprRustUnionCloneTest) {
   unions::repr_rust_clone::U my_union = unions::repr_rust_clone::create();
-  EXPECT_FALSE(HasXField<unions::repr_rust_clone::U>);
-  EXPECT_FALSE(HasYField<unions::repr_rust_clone::U>);
+  EXPECT_TRUE(HasXField<unions::repr_rust_clone::U>);
+  EXPECT_TRUE(HasYField<unions::repr_rust_clone::U>);
   my_union.set_x(3);
   unions::repr_rust_clone::U my_clone = my_union;
   my_union.set_x(2);
@@ -94,7 +94,7 @@ TEST(UnionsTest, ReprCUnionDropTest) {
 }
 
 TEST(UnionsTest, ReprRustUnionDropTest) {
-  EXPECT_FALSE(HasXField<unions::repr_rust_drop::U>);
+  EXPECT_TRUE(HasXField<unions::repr_rust_drop::U>);
   int32_t drops = 0;
   {
     unions::repr_rust_drop::U my_union;

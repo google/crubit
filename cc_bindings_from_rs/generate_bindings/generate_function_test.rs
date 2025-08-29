@@ -453,25 +453,6 @@ fn test_format_item_fn_reused_reference_lifetime_struct() {
 }
 
 #[test]
-fn test_format_item_fn_char() {
-    let test_src = r#"
-            #[unsafe(no_mangle)]
-            pub fn foo(_x: char) {}
-        "#;
-    test_format_item_with_features(
-        test_src,
-        "foo",
-        <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
-        |result| {
-            assert_eq!(
-                result.unwrap_err(),
-                "support for the Rust `char` type requires //features:experimental"
-            )
-        },
-    );
-}
-
-#[test]
 fn test_format_fn_cpp_name() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: cpp_name=Create"]

@@ -393,6 +393,14 @@ unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -
             .write(__rs_return_value);
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create(x: char, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::structs_golden::unsupported_types::SomeStruct::create(x);
+        (__ret_ptr as *mut ::structs_golden::unsupported_types::SomeStruct)
+            .write(__rs_return_value);
+    }
+}
 const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::unsupported_types::SomeStruct, unsupported_field)
         == 0

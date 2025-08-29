@@ -11,7 +11,6 @@ flagset::flags! {
     /// it needs e.g. "references".
     pub enum FineGrainedFeature : u8 {
         EscapeCppReservedKeyword,
-        RustChar,
     }
 }
 
@@ -26,13 +25,6 @@ impl FineGrainedFeature {
                 ensure!(
                     crubit_features.contains(Experimental),
                     "support for escaping C++ reserved keywords requires {}",
-                    Experimental.aspect_hint()
-                )
-            }
-            Self::RustChar => {
-                ensure!(
-                    crubit_features.contains(Experimental),
-                    "support for the Rust `char` type requires {}",
                     Experimental.aspect_hint()
                 )
             }
