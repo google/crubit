@@ -438,7 +438,7 @@ pub enum RsTypeKind {
     },
     FuncPtr {
         option: bool,
-        abi: Rc<str>,
+        cc_calling_conv: CcCallingConv,
         return_type: Rc<RsTypeKind>,
         param_types: Rc<[RsTypeKind]>,
     },
@@ -818,8 +818,8 @@ impl RsTypeKind {
                         Some(&|| "references are not supported".into()),
                     );
                 }
-                RsTypeKind::FuncPtr { abi, .. } => {
-                    if &**abi == "C" {
+                RsTypeKind::FuncPtr { cc_calling_conv, .. } => {
+                    if *cc_calling_conv == CcCallingConv::C {
                         require_feature(CrubitFeature::Supported, None);
                     } else {
                         require_feature(
@@ -1191,10 +1191,11 @@ impl RsTypeKind {
                     quote! {::ctor::ConstRvalueReference<#lifetime, #referent_>}
                 }
             }
-            RsTypeKind::FuncPtr { option, abi, return_type, param_types } => {
+            RsTypeKind::FuncPtr { option, cc_calling_conv, return_type, param_types } => {
                 let param_types_ = param_types
                     .iter()
                     .map(|type_| type_.to_token_stream_replacing_by_self(db, self_record));
+                let abi = cc_calling_conv.rs_extern_abi();
                 let mut tokens = quote! { extern #abi fn( #( #param_types_ ),* ) };
                 if let Some(return_frag) =
                     return_type.format_as_return_type_fragment(db, self_record)
@@ -1297,8 +1298,9 @@ impl RsTypeKind {
                     quote! {::ctor::ConstRvalueReference<#lifetime, #referent_tokens>}
                 }
             }
-            RsTypeKind::FuncPtr { option, abi, return_type, param_types } => {
+            RsTypeKind::FuncPtr { option, cc_calling_conv, return_type, param_types } => {
                 let param_types_tokens = param_types.iter().map(|ty| ty.to_token_stream(db));
+                let abi = cc_calling_conv.rs_extern_abi();
                 let mut tokens = quote! { extern #abi fn( #( #param_types_tokens ),* ) };
                 if let Some(return_frag) = return_type.format_as_return_type_fragment(db, None) {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
@@ -1506,7 +1508,7 @@ mod tests {
             let c = make_existing_rust_type("C".into(), true);
             RsTypeKind::FuncPtr {
                 option: false,
-                abi: "blah".into(),
+                cc_calling_conv: CcCallingConv::C,
                 param_types: Rc::from([a, b]),
                 return_type: Rc::new(c),
             }
@@ -1598,13 +1600,13 @@ mod tests {
         for func_ptr in [
             RsTypeKind::FuncPtr {
                 option: false,
-                abi: "C".into(),
+                cc_calling_conv: CcCallingConv::C,
                 return_type: Rc::new(reference.clone()),
                 param_types: no_types.into(),
             },
             RsTypeKind::FuncPtr {
                 option: false,
-                abi: "C".into(),
+                cc_calling_conv: CcCallingConv::C,
                 return_type: Rc::new(int),
                 param_types: Rc::from([reference]),
             },

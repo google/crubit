@@ -6,7 +6,7 @@ use arc_anyhow::{anyhow, ensure, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
 use database::rs_snippet::{ElisionOptions, Lifetime, Mutability, RsTypeKind};
 use database::BindingsGenerator;
-use ir::{CcCallingConv, CcType, CcTypeVariant, PointerTypeKind};
+use ir::{CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::rs_type_kind`.
@@ -98,7 +98,7 @@ pub fn rs_type_kind_with_lifetime_elision(
             );
             Ok(RsTypeKind::FuncPtr {
                 option: !*non_null,
-                abi: cc_calling_conv_to_rs_abi(*call_conv).into(),
+                cc_calling_conv: *call_conv,
                 return_type,
                 param_types,
             })
@@ -142,62 +142,6 @@ pub fn rs_type_kind_with_lifetime_elision(
                 elision_options.have_reference_param,
                 elision_options.is_return_type,
             )
-        }
-    }
-}
-
-/// Converts clang::CallingConv enum [1] into an equivalent Rust Abi [2, 3, 4].
-/// [1]
-/// https://github.com/llvm/llvm-project/blob/c6a3225bb03b6afc2b63fbf13db3c100406b32ce/clang/include/clang/Basic/Specifiers.h#L262-L283
-/// [2] https://doc.rust-lang.org/reference/types/function-pointer.html
-/// [3]
-/// https://doc.rust-lang.org/reference/items/functions.html#extern-function-qualifier
-/// [4]
-/// https://github.com/rust-lang/rust/blob/b27ccbc7e1e6a04d749e244a3c13f72ca38e80e7/compiler/rustc_target/src/spec/abi.rs#L49
-fn cc_calling_conv_to_rs_abi(call_conv: CcCallingConv) -> &'static str {
-    match call_conv {
-        CcCallingConv::C => {
-            // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-            // that:
-            // - `extern "C"` [...] whatever the default your C compiler supports.
-            // - `extern "cdecl"` -- The default for x86_32 C code.
-            //
-            // We don't support C++ exceptions and therefore we use "C" (rather than
-            // "C-unwind") - we have no need for unwinding across the FFI boundary -
-            // e.g. from C++ into Rust frames (or vice versa).
-            "C"
-        }
-        CcCallingConv::X86FastCall => {
-            // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-            // that the fastcall ABI -- corresponds to MSVC's __fastcall and GCC and
-            // clang's __attribute__((fastcall)).
-            "fastcall"
-        }
-        CcCallingConv::X86VectorCall => {
-            // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-            // that the vectorcall ABI -- corresponds to MSVC's __vectorcall and
-            // clang's __attribute__((vectorcall)).
-            "vectorcall"
-        }
-        CcCallingConv::X86ThisCall => {
-            // We don't support C++ exceptions and therefore we use "thiscall" (rather
-            // than "thiscall-unwind") - we have no need for unwinding across the FFI
-            // boundary - e.g. from C++ into Rust frames (or vice versa).
-            "thiscall"
-        }
-        CcCallingConv::X86StdCall => {
-            // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-            // extern "stdcall" -- The default for the Win32 API on x86_32.
-            //
-            // We don't support C++ exceptions and therefore we use "stdcall" (rather
-            // than "stdcall-unwind") - we have no need for unwinding across the FFI
-            // boundary - e.g. from C++ into Rust frames (or vice versa).
-            "stdcall"
-        }
-        CcCallingConv::Win64 => {
-            // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
-            // extern "win64" -- The default for C code on x86_64 Windows.
-            "win64"
         }
     }
 }
