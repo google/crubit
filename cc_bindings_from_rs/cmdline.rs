@@ -118,6 +118,14 @@ pub struct Cmdline {
     #[clap(long = "crate-rename", value_parser = parse_key_value_pair,
            value_name = "CRATE_NAME=RENAMED")]
     pub crate_rename: Vec<(String, String)>,
+
+    /// The name of the crate to generate bindings for.
+    ///
+    /// If provided, this value must correspond to the name of an extern crate provided to the
+    /// `rustc_args`. If not specified, the bindings will be generated for the crate being
+    /// compiled via the provided `rustc_args`.
+    #[clap(long, value_parser, value_name = "STRING")]
+    pub source_crate_name: Option<String>,
 }
 
 impl Cmdline {

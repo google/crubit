@@ -159,6 +159,15 @@ impl CrubitAttrs {
 /// attributes of the specified definition.
 pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
     let mut crubit_attrs = CrubitAttrs::default();
+    if !did.is_local() && tcx.crate_name(did.krate).as_str() == "core" {
+        // TODO: cramertj - calling `get_all_attrs` on `did` values from `core` crashes like:
+        //
+        // compiler/rustc_metadata/src/rmeta/decoder.rs:1396:17:
+        // assertion `left == right` failed
+        //   left: TypeNs("core")
+        //   right: Ctor
+        return Ok(crubit_attrs);
+    }
     for attr in tcx.get_all_attrs(did) {
         let Some(comment) = attr.doc_str() else { continue };
         let Some((_, key_value)) = comment.as_str().split_once("CRUBIT_ANNOTATE:") else {

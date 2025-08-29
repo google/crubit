@@ -33,7 +33,7 @@ use rustc_hir::{self as hir, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
-use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use rustc_span::def_id::{DefId, LocalDefId};
 use std::collections::{BTreeSet, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -278,8 +278,9 @@ fn generate_associated_item<'tcx>(
             assoc_item.opt_name()
         )),
     };
-    let result = result
-        .and_then(|snippet| snippet.resolve_feature_requirements(crate_features(db, LOCAL_CRATE)));
+    let result = result.and_then(|snippet| {
+        snippet.resolve_feature_requirements(crate_features(db, db.source_crate_num()))
+    });
     match result {
         Err(err) => {
             if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
@@ -753,7 +754,7 @@ fn generate_fields<'tcx>(
                                         .format_ty_for_cc(ty, TypeLocation::Other)?
                                         .resolve_feature_requirements(crate_features(
                                             db,
-                                            LOCAL_CRATE,
+                                            db.source_crate_num(),
                                         ))?,
                                 })
                             });

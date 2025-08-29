@@ -350,7 +350,7 @@ pub fn format_ty_for_cc<'tcx>(
                     "Not a public or a supported reexported type (b/262052635)."
                 );
 
-                if def_id.krate == LOCAL_CRATE {
+                if def_id.krate == db.source_crate_num() {
                     prereqs.defs.insert(def_id);
                 } else {
                     let other_crate_name = tcx.crate_name(def_id.krate);

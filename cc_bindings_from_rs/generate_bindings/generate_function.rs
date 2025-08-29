@@ -29,7 +29,7 @@ use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt};
-use rustc_span::def_id::{DefId, LOCAL_CRATE};
+use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use std::collections::BTreeSet;
 
@@ -82,7 +82,7 @@ fn thunk_name(
     let target_path_mangled_hash = if db.no_thunk_name_mangling() {
         "".to_string()
     } else {
-        format!("{}_", tcx.crate_hash(LOCAL_CRATE).to_hex())
+        format!("{}_", tcx.crate_hash(db.source_crate_num()).to_hex())
     };
     if needs_thunk {
         format!(

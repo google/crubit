@@ -81,6 +81,7 @@ fn new_db<'tcx>(
     }
     generate_bindings::new_database(
         tcx,
+        cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
         crubit_support_path_format,
         cmdline.default_crate_features,
         crate_name_to_include_paths.into(),

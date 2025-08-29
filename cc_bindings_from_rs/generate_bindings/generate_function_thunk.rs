@@ -21,7 +21,7 @@ use query_compiler::post_analysis_typing_env;
 use quote::format_ident;
 use quote::quote;
 use rustc_middle::ty::{self, Ty, TyCtxt};
-use rustc_span::def_id::{DefId, LOCAL_CRATE};
+use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, Symbol};
 use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
@@ -588,7 +588,7 @@ pub fn generate_trait_thunks<'tcx>(
                 let symbol = tcx.symbol_name(instance);
                 format!(
                     "__crubit_thunk_{}_{}",
-                    tcx.crate_hash(LOCAL_CRATE).to_hex(),
+                    tcx.crate_hash(db.source_crate_num()).to_hex(),
                     &escape_non_identifier_chars(symbol.name)
                 )
             }

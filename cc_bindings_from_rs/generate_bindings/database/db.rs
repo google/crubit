@@ -30,6 +30,11 @@ memoized::query_group! {
       fn tcx(&self) -> TyCtxt<'tcx>;
 
       #[input]
+      /// Name of the `extern` crate that bindings should be generated for.
+      /// If `None`, bindings will be generated for the crate currently being compiled.
+      fn source_crate_name(&self) -> Option<Rc<str>>;
+
+      #[input]
       /// Format specifier for `#include` Crubit C++ support library headers,
       /// using `{header}` as the place holder.  Example:
       /// `<crubit/support/{header}>` results in `#include
@@ -79,6 +84,10 @@ memoized::query_group! {
 
       #[input]
       fn h_out_include_guard(&self) -> IncludeGuard;
+
+      /// The `CrateNum` of the crate that the bindings should be generated for.
+      /// This will be `LOCAL_CRATE` if no `source_crate_name` was provided.
+      fn source_crate_num(&self) -> CrateNum;
 
       /// Returns the include for the given Crubit runtime support header.
       ///

@@ -103,8 +103,28 @@ fn repr_attrs_from_db(
     repr_attrs(db.tcx(), def_id)
 }
 
+fn source_crate_num(db: &dyn BindingsGenerator<'_>) -> CrateNum {
+    let Some(source_crate_name) = db.source_crate_name() else {
+        return LOCAL_CRATE;
+    };
+    let source_crate_name = Symbol::intern(&*source_crate_name);
+    let tcx = db.tcx();
+    let Some(crate_num) = tcx
+        .used_crates(())
+        .iter()
+        .copied()
+        .find(|&crate_num| tcx.crate_name(crate_num) == source_crate_name)
+    else {
+        db.fatal_errors()
+            .report(&format!("Failed to resolve source crate name: `{source_crate_name}`"));
+        return LOCAL_CRATE;
+    };
+    crate_num
+}
+
 pub fn new_database<'db>(
     tcx: TyCtxt<'db>,
+    source_crate_name: Option<Rc<str>>,
     crubit_support_path_format: Rc<str>,
     default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
@@ -118,6 +138,7 @@ pub fn new_database<'db>(
 ) -> Database<'db> {
     Database::new(
         tcx,
+        source_crate_name,
         crubit_support_path_format,
         default_features,
         crate_name_to_include_paths,
@@ -128,6 +149,7 @@ pub fn new_database<'db>(
         fatal_errors,
         no_thunk_name_mangling,
         h_out_include_guard,
+        source_crate_num,
         support_header,
         repr_attrs_from_db,
         reexported_symbol_canonical_name_mapping,
@@ -148,9 +170,10 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
     let tcx = db.tcx();
 
     let top_comment = {
-        let crate_name = tcx.crate_name(LOCAL_CRATE);
+        let source_crate_num = db.source_crate_num();
+        let crate_name = tcx.crate_name(source_crate_num);
         let crubit_features = {
-            let mut crubit_features: Vec<&str> = crate_features(db, LOCAL_CRATE)
+            let mut crubit_features: Vec<&str> = crate_features(db, source_crate_num)
                 .into_iter()
                 .map(|feature| feature.short_name())
                 .collect();
@@ -1222,7 +1245,7 @@ fn generate_item_impl(
     };
 
     if let Ok(Some(item)) = item {
-        Ok(Some(item.resolve_feature_requirements(crate_features(db, LOCAL_CRATE))?))
+        Ok(Some(item.resolve_feature_requirements(crate_features(db, db.source_crate_num()))?))
     } else {
         item
     }
@@ -1364,7 +1387,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let mut extern_c_decls = BTreeSet::new();
     let mut main_apis = HashMap::<DefId, CcSnippet>::new();
 
-    let defs_in_crate = defs_in_mod_recursive(tcx, LOCAL_CRATE.as_def_id());
+    let defs_in_crate = defs_in_mod_recursive(tcx, db.source_crate_num().as_def_id());
     let formatted_items = defs_in_crate
         .into_iter()
         .filter_map(|def_info| {
@@ -1460,7 +1483,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
 
     // Generate top-level elements of the C++ header file.
     let cc_api = {
-        let cpp_top_level_ns = format_top_level_ns_for_crate(db, LOCAL_CRATE);
+        let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num());
         let cpp_top_level_ns = format_cc_ident(db, cpp_top_level_ns.as_str())?;
 
         let includes = format_cc_includes(&includes);

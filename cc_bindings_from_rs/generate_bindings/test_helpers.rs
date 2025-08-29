@@ -69,6 +69,7 @@ fn bindings_db_for_tests_with_features(
 ) -> Database {
     new_database(
         tcx,
+        /* source_crate_name= */ None,
         /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
         /* default_features= */ Default::default(),
         /* crate_name_to_include_paths= */ Default::default(),
