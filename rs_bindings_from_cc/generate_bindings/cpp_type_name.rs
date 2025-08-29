@@ -84,7 +84,7 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
                 > #ptr #const_fragment
             })
         }
-        CcTypeVariant::Record(id) => {
+        CcTypeVariant::Decl(id) => {
             let item = ir.find_untyped_decl(*id);
             let type_name = cpp_type_name_for_item(item, ir)?;
             Ok(quote! {#const_fragment #type_name})

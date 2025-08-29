@@ -1704,7 +1704,7 @@ mod tests {
                 doc_comment: None,
                 unknown_attr: None,
                 underlying_type: CcType {
-                    variant: CcTypeVariant::Record(ItemId::new_for_testing(0)),
+                    variant: CcTypeVariant::Decl(ItemId::new_for_testing(0)),
                     is_const: false,
                     unknown_attr: "".into(),
                 },

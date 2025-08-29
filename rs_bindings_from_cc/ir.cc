@@ -131,7 +131,7 @@ llvm::json::Value CcType::ToJson() const {
                  }},
             };
           },
-          [&](ItemId id) { return llvm::json::Object{{"Record", id}}; }},
+          [&](ItemId id) { return llvm::json::Object{{"Decl", id}}; }},
       variant);
 
   return llvm::json::Object{

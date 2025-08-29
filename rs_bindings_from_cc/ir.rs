@@ -224,7 +224,7 @@ impl CcType {
 impl From<&Record> for CcType {
     fn from(record: &Record) -> Self {
         CcType {
-            variant: CcTypeVariant::Record(record.id),
+            variant: CcTypeVariant::Decl(record.id),
             is_const: false,
             unknown_attr: Rc::default(),
         }
@@ -234,7 +234,7 @@ impl From<&Record> for CcType {
 impl From<&TypeAlias> for CcType {
     fn from(alias: &TypeAlias) -> Self {
         CcType {
-            variant: CcTypeVariant::Record(alias.id),
+            variant: CcTypeVariant::Decl(alias.id),
             is_const: false,
             unknown_attr: Rc::default(),
         }
@@ -244,7 +244,7 @@ impl From<&TypeAlias> for CcType {
 impl From<&ExistingRustType> for CcType {
     fn from(existing_rust_type: &ExistingRustType) -> Self {
         CcType {
-            variant: CcTypeVariant::Record(existing_rust_type.id),
+            variant: CcTypeVariant::Decl(existing_rust_type.id),
             is_const: false,
             unknown_attr: Rc::default(),
         }
@@ -454,7 +454,7 @@ pub enum CcTypeVariant {
         /// The parameter types, followed by the return type.
         param_and_return_types: Rc<[CcType]>,
     },
-    Record(ItemId),
+    Decl(ItemId),
 }
 
 impl CcTypeVariant {
@@ -482,7 +482,7 @@ pub trait TypeWithDeclId {
 impl TypeWithDeclId for CcType {
     fn decl_id(&self) -> Option<ItemId> {
         match &self.variant {
-            CcTypeVariant::Record(id) => Some(*id),
+            CcTypeVariant::Decl(id) => Some(*id),
             _ => None,
         }
     }

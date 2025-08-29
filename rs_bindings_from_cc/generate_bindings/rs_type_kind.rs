@@ -103,7 +103,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 param_types,
             })
         }
-        CcTypeVariant::Record(id) => {
+        CcTypeVariant::Decl(id) => {
             let ir = db.ir();
             let item = ir.find_untyped_decl(*id);
 

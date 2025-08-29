@@ -1214,7 +1214,7 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
             }
             // This is a simplification, as function pointers can have their own lifetimes, but
             // this isn't important in this context.
-            FuncPointer { .. } | Record(_) | Primitive(_) => false,
+            FuncPointer { .. } | Decl(_) | Primitive(_) => false,
         }
     }
 
