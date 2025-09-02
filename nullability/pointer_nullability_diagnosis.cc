@@ -223,7 +223,8 @@ static bool invariantMatch(ArrayRef<PointerTypeNullability> A,
                     "when expected to be invariant, but they were not: "
                  << nullabilityToString(A) << " vs. " << nullabilityToString(B)
                  << "\n";
-    return false;
+    // Do not produce a diagnostic for these cases.
+    return true;
   }
 
   for (int I = 0; I < A.size(); ++I) {
@@ -267,7 +268,10 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
       isSupportedPointerType(LHSType.getNonReferenceType())) {
     QualType RHSType = RHS->getType().getNonReferenceType();
     if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) {
-      llvm::dbgs() << "LHS is a pointer, but RHS is not.\n";
+      llvm::dbgs() << "LHS is a pointer, but RHS is not.\nLHS type:";
+      LHSType->dump(llvm::dbgs(), Ctx);
+      llvm::dbgs() << "RHSType: ";
+      RHSType->dump(llvm::dbgs(), Ctx);
       return {};
     }
 
