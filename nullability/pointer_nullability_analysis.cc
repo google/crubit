@@ -1426,13 +1426,21 @@ void transferType_DeclRefExpr(const DeclRefExpr *absl_nonnull DRE,
     if (DRE->hasExplicitTemplateArgs())
       Resugar.addTemplateArgs(DRE->getDecl(), DRE->template_arguments());
     std::deque<TypeNullability> ScopeNullabilityStorage;
-    for (auto NNS = DRE->getQualifierLoc(); NNS; NNS = NNS.getPrefix()) {
-      if (auto *CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
-              NNS.getNestedNameSpecifier()->getAsRecordDecl())) {
+    for (auto NNS = DRE->getQualifierLoc(); NNS;) {
+      if (auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
+              NNS.getNestedNameSpecifier().getAsRecordDecl())) {
         ScopeNullabilityStorage.push_back(
-            getTypeNullability(NNS.getTypeLoc(), State.Lattice.defaults()));
+            getTypeNullability(NNS.getAsTypeLoc(), State.Lattice.defaults()));
         Resugar.Enclosing.push_back({CTSD, ScopeNullabilityStorage.back()});
       }
+      if (NNS.getNestedNameSpecifier().getKind() ==
+          clang::NestedNameSpecifier::Kind::Namespace)
+        NNS = NNS.getAsNamespaceAndPrefix().Prefix;
+      else if (NNS.getNestedNameSpecifier().getKind() ==
+               clang::NestedNameSpecifier::Kind::Type)
+        NNS = NNS.getAsTypeLoc().getPrefix();
+      else
+        NNS = clang::NestedNameSpecifierLoc();
     }
 
     return State.Lattice.getTypeNullabilityWithOverrides(*DRE->getDecl(),
@@ -1455,8 +1463,8 @@ void transferType_MemberExpr(const MemberExpr *absl_nonnull ME,
 
     Resugarer Resugar(State.Lattice.defaults());
     if (const auto *RT = BaseType->getAs<RecordType>()) {
-      if (auto *CTSpec =
-              dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+      if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
+              RT->getOriginalDecl())) {
         Resugar.Enclosing.push_back({CTSpec, BaseNullability});
       }
     }
@@ -1541,8 +1549,8 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
         Resugarer Resugar(State.Lattice.defaults());
         // Resugar from class template arguments, if any.
         if (const auto *RT = UnderPointers->getAs<RecordType>()) {
-          if (auto *CTSpec =
-                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+          if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
+                  RT->getOriginalDecl())) {
             Resugar.Enclosing.push_back({CTSpec, UnderPointersNullability});
           }
         }
@@ -1768,8 +1776,8 @@ void transferType_CXXOperatorCallExpr(
       TypeNullability BaseNullability = getNullabilityForChild(Base, State);
       Resugarer Resugar(State.Lattice.defaults());
       if (const auto *RT = Base->getType()->getAs<RecordType>()) {
-        if (auto *CTSpec =
-                dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+        if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
+                RT->getOriginalDecl())) {
           Resugar.Enclosing.push_back({CTSpec, BaseNullability});
         }
       }

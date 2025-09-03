@@ -67,7 +67,7 @@ TEST_F(PointerNullabilityLatticeTest, ConstMethodProducesNewValueAfterJoin) {
 
   auto *SDecl =
       cast<CXXRecordDecl>(lookup("S", *AST.context().getTranslationUnitDecl()));
-  QualType SType = AST.context().getRecordType(SDecl);
+  QualType SType = AST.context().getCanonicalTagType(SDecl);
 
   auto *CE = selectFirst<CallExpr>(
       "call", match(cxxMemberCallExpr(callee(functionDecl(hasName("property"))))

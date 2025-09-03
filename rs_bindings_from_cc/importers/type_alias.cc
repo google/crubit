@@ -32,8 +32,9 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       return std::nullopt;
     }
     underlying_qualtype = typedef_name_decl->getUnderlyingType();
-    clang::QualType type =
-        decl->getASTContext().getTypedefType(typedef_name_decl);
+    clang::QualType type = decl->getASTContext().getTypedefType(
+        clang::ElaboratedTypeKeyword::None, /*Qualifier=*/std::nullopt,
+        typedef_name_decl);
     if (const auto* tag_decl = type->getAsTagDecl();
         tag_decl && tag_decl->getDeclContext() == decl_context &&
         tag_decl->getName() == decl->getName()) {

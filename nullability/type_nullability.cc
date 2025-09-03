@@ -241,7 +241,7 @@ std::optional<NullabilityKind> getAliasNullability(const TemplateName &TN) {
 }
 
 QualType ignoreTrivialSugar(QualType T) {
-  while (!T.hasLocalQualifiers() && isa<ParenType, ElaboratedType>(T))
+  while (!T.hasLocalQualifiers() && isa<ParenType>(T))
     T = T->getLocallyUnqualifiedSingleStepDesugaredType();
   return T;
 }
@@ -355,21 +355,21 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   // Update `BestLocSoFar` for a new TypeLoc seen.
   //
-  // If not `OverrideElaborated`, an existing ElaboratedTypeLoc in
+  // If not `OverrideQualifiedType`, an existing TypeLoc with qualifiers in
   // `BestLocSoFar` will be kept instead of replacing it with `Loc`. This
   // supports reporting of the most complete TypeLoc for a type, e.g.
   // `std::unique_ptr<int>` instead of just `unique_ptr<int>`.
-  void recordLoc(TypeLoc Loc, bool OverrideElaborated = false) {
+  void recordLoc(TypeLoc Loc, bool OverrideQualifiedType = false) {
     if (BestLocSoFar && BestLocSoFar->getType().getCanonicalType() !=
                             Loc.getType().getCanonicalType()) {
       // We've moved on to visiting a new type, so clear the Loc.
       BestLocSoFar = std::nullopt;
     }
-    // In most cases we want to keep the most Elaborated Loc for the type, but
+    // In most cases we want to keep the most qualified Loc for the type, but
     // template arguments supersede that preference. And don't keep any bare
     // `auto` TypeLocs, because bare `auto` cannot be annotated.
-    if ((!BestLocSoFar || OverrideElaborated ||
-         BestLocSoFar->getTypeLocClass() != TypeLoc::Elaborated) &&
+    if ((!BestLocSoFar || OverrideQualifiedType ||
+         !BestLocSoFar->getPrefix()) &&
         Loc.getTypeLocClass() != TypeLoc::Auto) {
       BestLocSoFar = Loc;
     }
@@ -447,7 +447,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     // Per clang's AST, instantiated Type is std::pair<int, float> with only
     // SubstTemplateTypeParmTypes for sugar, we're trying to recover INT, FLOAT.
     //
-    // When walking the ElaboratedType for the S<FLOAT>:: qualifier we set up:
+    // When walking a type with a qualifier, e.g., for the S<FLOAT>:: we set up:
     //
     // Current -> {Associated=S<float>, Args=<FLOAT>, Extends=null, ArgCtx=null}
     //
@@ -538,6 +538,92 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     BestLocSoFar = std::nullopt;
   }
 
+  // If we see foo<args>::ty then we may need sugar from args to resugar ty.
+  // Record the information in a TemplateContext graph.
+  std::vector<TemplateContext> getBoundTemplateArgsFromQualifiedType(
+      const Type* absl_nonnull T,
+      std::optional<NestedNameSpecifierLoc> NNSLoc) {
+    std::vector<TemplateContext> BoundTemplateArgs;
+    // Iterate over qualifiers right-to-left, looking for template args.
+    for (NestedNameSpecifier NNS = T->getPrefix(); NNS;) {
+      // TODO: there are other ways a NNS could bind template args:
+      //   template <typename T> foo { struct bar { using baz = T; }; };
+      //   using T = foo<int * _Nullable>::bar;
+      //   using U = T::baz;
+      // Here T:: is not a TemplateSpecializationType (directly or indirectly).
+      // Nevertheless it provides sugar that is referenced from baz.
+      // Probably we need another type visitor to collect bindings in general.
+      if (NNS.getKind() == NestedNameSpecifier::Kind::Type) {
+        if (const auto* TST =
+                dyn_cast_or_null<TemplateSpecializationType>(NNS.getAsType())) {
+          TemplateContext Ctx;
+          Ctx.Args = TST->template_arguments();
+          Ctx.ArgsFile = File;
+          Ctx.ArgContext = CurrentTemplateContext;
+          // `Extends` is initialized below: we chain BoundTemplateArgs
+          // together.
+          Ctx.AssociatedDecl =
+              TST->isTypeAlias()
+                  ? TST->getTemplateName().getAsTemplateDecl()
+                  : static_cast<Decl*>(TST->getAsCXXRecordDecl());
+
+          if (NNSLoc) {
+            if (auto TSTLoc = NNSLoc->getAsTypeLoc()
+                                  .getAs<TemplateSpecializationTypeLoc>()) {
+              Ctx.ArgLocs = std::vector<TemplateArgumentLoc>();
+              Ctx.ArgLocs->reserve(TSTLoc.getNumArgs());
+              for (unsigned I = 0, N = TSTLoc.getNumArgs(); I < N; ++I) {
+                Ctx.ArgLocs->push_back(TSTLoc.getArgLoc(I));
+              }
+            }
+          }
+
+          translateTemplateArgsForSpecialization(Ctx);
+          BoundTemplateArgs.push_back(Ctx);
+        }
+      }
+
+      // Get next prefix from the NNS and NNSLoc.
+      switch (NNS.getKind()) {
+        case NestedNameSpecifier::Kind::Null:
+        case NestedNameSpecifier::Kind::Global:
+        case NestedNameSpecifier::Kind::MicrosoftSuper:
+          NNS = std::nullopt;
+          if (NNSLoc) NNSLoc = clang::NestedNameSpecifierLoc();
+          break;
+        case NestedNameSpecifier::Kind::Namespace:
+          NNS = NNS.getAsNamespaceAndPrefix().Prefix;
+          if (NNSLoc) NNSLoc = NNSLoc->getAsNamespaceAndPrefix().Prefix;
+          break;
+        case NestedNameSpecifier::Kind::Type:
+          NNS = NNS.getAsType()->getPrefix();
+          if (NNSLoc) NNSLoc = NNSLoc->getAsTypeLoc().getPrefix();
+          break;
+        default:
+          NNS = std::nullopt;
+          if (NNSLoc) NNSLoc = clang::NestedNameSpecifierLoc();
+          llvm_unreachable("unexpected NestedNameSpecifier kind");
+      }
+    }
+
+    if (!BoundTemplateArgs.empty()) {
+      // Wire up the inheritance chain so all the contexts are visible.
+      BoundTemplateArgs.back().Extends = CurrentTemplateContext;
+      for (int I = 0; I < BoundTemplateArgs.size() - 1; ++I)
+        BoundTemplateArgs[I].Extends = &BoundTemplateArgs[I + 1];
+    }
+    return BoundTemplateArgs;
+  }
+
+  template <typename TypeLocT>
+  std::vector<TemplateContext> getBoundTemplateArgsFromQualifiedType(
+      const Type* absl_nonnull T, std::optional<TypeLoc> L) {
+    return getBoundTemplateArgsFromQualifiedType(
+        T, L ? std::optional<NestedNameSpecifierLoc>(
+                   L->getAs<TypeLocT>().getQualifierLoc())
+             : std::nullopt);
+  }
+
  public:
   NullabilityWalker(FileID File) : File(File) {}
 
@@ -560,7 +646,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
         // `std::vector<int *>::value_type`, prefer to report the Loc for the
         // `int *` template argument rather than the entire type, since the
         // value_type alias is equal to the template parameter.
-        if (ArgLoc) recordLoc(*ArgLoc, /*OverrideElaborated=*/true);
+        if (ArgLoc) recordLoc(*ArgLoc, /*OverrideQualifiedType=*/true);
         visit(TA.getAsType(), ArgLoc);
         break;
       }
@@ -579,7 +665,7 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     // TODO: The nullability of template functions can affect local classes too,
     // this can be relevant e.g. when instantiating templates with such types.
     if (auto *CRD = dyn_cast<CXXRecordDecl>(DC))
-      visit(DC->getParentASTContext().getRecordType(CRD), std::nullopt);
+      visit(DC->getParentASTContext().getCanonicalTagType(CRD), std::nullopt);
   }
 
   void visit(const Type *absl_nonnull T, std::optional<TypeLoc> L) {
@@ -587,7 +673,40 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     Base::visit(T, L);
   }
 
+  // Check if `T` might represent a qualified type like foo<args>::ty where we
+  // may need sugar from args to resugar ty. The majority should be covered by
+  // visitTemplateSpecializationType, visitTypedefType, and visitRecordType,
+  // but technically these other cases also support getQualifierLoc().
+  std::vector<TemplateContext> getBoundTemplateArgsFromOtherQualifiedTypes(
+      const Type* absl_nonnull T, std::optional<TypeLoc> L) {
+    switch (T->getTypeClass()) {
+      case Type::DeducedTemplateSpecialization:
+        return getBoundTemplateArgsFromQualifiedType<
+            DeducedTemplateSpecializationTypeLoc>(T, L);
+      case Type::DependentName:
+        return getBoundTemplateArgsFromQualifiedType<DependentNameTypeLoc>(T,
+                                                                           L);
+      case Type::DependentTemplateSpecialization:
+        return getBoundTemplateArgsFromQualifiedType<
+            DependentTemplateSpecializationTypeLoc>(T, L);
+      case Type::Enum:
+      case Type::InjectedClassName:
+        return getBoundTemplateArgsFromQualifiedType<TagTypeLoc>(T, L);
+      case Type::Using:
+        return getBoundTemplateArgsFromQualifiedType<UsingTypeLoc>(T, L);
+      default:
+        break;
+    }
+    return {};
+  }
+
   void visitType(const Type *absl_nonnull T, std::optional<TypeLoc> L) {
+    std::vector<TemplateContext> BoundTemplateArgs =
+        getBoundTemplateArgsFromOtherQualifiedTypes(T, L);
+    std::optional<llvm::SaveAndRestore<const TemplateContext*>> Restore;
+    if (!BoundTemplateArgs.empty())
+      Restore.emplace(CurrentTemplateContext, &BoundTemplateArgs.front());
+
     // For sugar not explicitly handled below, desugar and continue.
     // (We need to walk the full structure of the canonical type.)
     if (auto *Desugar =
@@ -640,6 +759,14 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
   void visitTemplateSpecializationType(
       const TemplateSpecializationType *absl_nonnull TST,
       std::optional<TemplateSpecializationTypeLoc> L) {
+    std::vector<TemplateContext> BoundTemplateArgs =
+        getBoundTemplateArgsFromQualifiedType(
+            TST, L ? std::optional<NestedNameSpecifierLoc>(L->getQualifierLoc())
+                   : std::nullopt);
+    std::optional<llvm::SaveAndRestore<const TemplateContext*>> Restore;
+    if (!BoundTemplateArgs.empty())
+      Restore.emplace(CurrentTemplateContext, &BoundTemplateArgs.front());
+
     if (TST->isTypeAlias()) {
       auto NK = getAliasNullability(TST->getTemplateName());
       if (NK == NullabilityKind::Unspecified) {
@@ -753,67 +880,15 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     visitType(T, L);
   }
 
-  // If we see foo<args>::ty then we may need sugar from args to resugar ty.
-  void visitElaboratedType(const ElaboratedType *absl_nonnull ET,
-                           std::optional<ElaboratedTypeLoc> L) {
-    std::vector<TemplateContext> BoundTemplateArgs;
-    std::optional<NestedNameSpecifierLoc> NNSLoc;
-    if (L) {
-      NNSLoc = L->getQualifierLoc();
-    }
-    // Iterate over qualifiers right-to-left, looking for template args.
-    for (auto *NNS = ET->getQualifier(); NNS;) {
-      // TODO: there are other ways a NNS could bind template args:
-      //   template <typename T> foo { struct bar { using baz = T; }; };
-      //   using T = foo<int * _Nullable>::bar;
-      //   using U = T::baz;
-      // Here T:: is not a TemplateSpecializationType (directly or indirectly).
-      // Nevertheless it provides sugar that is referenced from baz.
-      // Probably we need another type visitor to collect bindings in general.
-      if (const auto *TST =
-              dyn_cast_or_null<TemplateSpecializationType>(NNS->getAsType())) {
-        TemplateContext Ctx;
-        Ctx.Args = TST->template_arguments();
-        Ctx.ArgsFile = File;
-        Ctx.ArgContext = CurrentTemplateContext;
-        // `Extends` is initialized below: we chain BoundTemplateArgs together.
-        Ctx.AssociatedDecl =
-            TST->isTypeAlias() ? TST->getTemplateName().getAsTemplateDecl()
-                               : static_cast<Decl *>(TST->getAsCXXRecordDecl());
-
-        if (NNSLoc) {
-          if (auto TSTLoc =
-                  NNSLoc->getTypeLoc().getAs<TemplateSpecializationTypeLoc>()) {
-            Ctx.ArgLocs = std::vector<TemplateArgumentLoc>();
-            Ctx.ArgLocs->reserve(TSTLoc.getNumArgs());
-            for (unsigned I = 0, N = TSTLoc.getNumArgs(); I < N; ++I) {
-              Ctx.ArgLocs->push_back(TSTLoc.getArgLoc(I));
-            }
-          }
-        }
-
-        translateTemplateArgsForSpecialization(Ctx);
-        BoundTemplateArgs.push_back(Ctx);
-      }
-
-      NNS = NNS->getPrefix();
-      if (NNSLoc) {
-        NNSLoc = NNSLoc->getPrefix();
-      }
-    }
-    std::optional<llvm::SaveAndRestore<const TemplateContext *>> Restore;
-    if (!BoundTemplateArgs.empty()) {
-      // Wire up the inheritance chain so all the contexts are visible.
-      BoundTemplateArgs.back().Extends = CurrentTemplateContext;
-      for (int I = 0; I < BoundTemplateArgs.size() - 1; ++I)
-        BoundTemplateArgs[I].Extends = &BoundTemplateArgs[I + 1];
+  void visitTypedefType(const TypedefType* T, std::optional<TypedefTypeLoc> L) {
+    std::vector<TemplateContext> BoundTemplateArgs =
+        getBoundTemplateArgsFromQualifiedType(
+            T, L ? std::optional<NestedNameSpecifierLoc>(L->getQualifierLoc())
+                 : std::nullopt);
+    std::optional<llvm::SaveAndRestore<const TemplateContext*>> Restore;
+    if (!BoundTemplateArgs.empty())
       Restore.emplace(CurrentTemplateContext, &BoundTemplateArgs.front());
-    }
-    visit(ET->getNamedType(),
-          L ? std::optional<TypeLoc>(L->getNamedTypeLoc()) : std::nullopt);
-  }
 
-  void visitTypedefType(const TypedefType *T, std::optional<TypedefTypeLoc> L) {
     llvm::SaveAndRestore SwitchFile(File, getGoverningFile(T->getDecl()));
     // Don't look for new Locs inside an alias.
     visitType(T, std::nullopt);
@@ -821,15 +896,24 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
 
   void visitRecordType(const RecordType *absl_nonnull RT,
                        std::optional<RecordTypeLoc> L) {
+    std::vector<TemplateContext> BoundTemplateArgs =
+        getBoundTemplateArgsFromQualifiedType(
+            RT, L ? std::optional<NestedNameSpecifierLoc>(L->getQualifierLoc())
+                  : std::nullopt);
+    std::optional<llvm::SaveAndRestore<const TemplateContext*>> Restore;
+    if (!BoundTemplateArgs.empty())
+      Restore.emplace(CurrentTemplateContext, &BoundTemplateArgs.front());
+
     if (isSupportedSmartPointerType(QualType(RT, 0))) {
       report(RT);
     } else {
       ignoreUnexpectedNullability();
     }
-    visit(RT->getDecl()->getDeclContext());
+    visit(RT->getOriginalDecl()->getDeclContext());
 
     // Visit template arguments of this record type.
-    if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+    if (auto* CTSD =
+            dyn_cast<ClassTemplateSpecializationDecl>(RT->getOriginalDecl())) {
       unsigned I = 0;
 
       // If we have a sugared template context, use the sugar.
@@ -1115,12 +1199,13 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
   }
 
   QualType VisitRecordType(const RecordType *absl_nonnull RT) {
-    if (const auto *CTSD =
-            dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+    if (const auto* CTSD =
+            dyn_cast<ClassTemplateSpecializationDecl>(RT->getOriginalDecl())) {
       std::vector<TemplateArgument> TransformedArgs;
       for (const auto &Arg : CTSD->getTemplateArgs().asArray())
         TransformedArgs.push_back(Visit(Arg));
       return Ctx.getTemplateSpecializationType(
+          clang::ElaboratedTypeKeyword::None,
           TemplateName(CTSD->getSpecializedTemplate()), TransformedArgs,
           TransformedArgs, QualType(RT, 0));
     }

@@ -21,8 +21,40 @@ namespace clang::tidy::nullability {
 static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
     QualType T) {
   class Walker : public TypeVisitor<Walker, bool> {
+    void addTemplateDeclsSeenInQualifiers(const Type* T) {
+      for (NestedNameSpecifier NNS = T->getPrefix(); NNS;) {
+        if (NNS.getKind() == NestedNameSpecifier::Kind::Type) {
+          if (const auto* TST = dyn_cast_or_null<TemplateSpecializationType>(
+                  NNS.getAsType())) {
+            TemplateDeclsSeen.insert(
+                TST->getTemplateName().getAsTemplateDecl());
+          }
+        }
+
+        switch (NNS.getKind()) {
+          case NestedNameSpecifier::Kind::Null:
+          case NestedNameSpecifier::Kind::Global:
+          case NestedNameSpecifier::Kind::MicrosoftSuper:
+            NNS = std::nullopt;
+            break;
+          case NestedNameSpecifier::Kind::Namespace:
+            NNS = NNS.getAsNamespaceAndPrefix().Prefix;
+            break;
+          case NestedNameSpecifier::Kind::Type:
+            NNS = NNS.getAsType()->getPrefix();
+            break;
+          default:
+            NNS = std::nullopt;
+            llvm_unreachable("unexpected NestedNameSpecifier kind");
+            break;
+        }
+      }
+    }
+
    public:
     bool VisitType(const Type* T) {
+      addTemplateDeclsSeenInQualifiers(T);
+
       // Walk through sugar other than the types handled specifically below.
       if (const Type* Next =
               T->getLocallyUnqualifiedSingleStepDesugaredType().getTypePtr();
@@ -42,6 +74,7 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
     }
     bool VisitPointerType(const PointerType* T) { return true; }
     bool VisitRecordType(const RecordType* T) {
+      addTemplateDeclsSeenInQualifiers(T);
       bool IsSupported = isSupportedSmartPointerType(QualType(T, 0));
       if (!IsSupported) {
         llvm::errs() << "If `isSupportedPointerType` returned true for the "
@@ -53,6 +86,7 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
       return IsSupported;
     }
     bool VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* T) {
+      addTemplateDeclsSeenInQualifiers(T);
       // If the replaced template parameter is not a parameter of a template
       // that we've seen while walking the type, then it is a template parameter
       // of the current context and the type is only a pointer by way of the
@@ -81,7 +115,9 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
       // inferable.
       return Visit(T->getReplacementType().getTypePtr());
     }
+
     bool VisitTemplateSpecializationType(const TemplateSpecializationType* T) {
+      addTemplateDeclsSeenInQualifiers(T);
       if (T->isTypeAlias()) {
         TemplateDeclsSeen.insert(T->getTemplateName().getAsTemplateDecl());
         return Visit(T->getAliasedType().getTypePtr());
@@ -95,15 +131,6 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
         assert(false);
       }
       return IsSupported;
-    }
-    bool VisitElaboratedType(const ElaboratedType* T) {
-      for (auto* NNS = T->getQualifier(); NNS; NNS = NNS->getPrefix()) {
-        if (const auto* TST = dyn_cast_or_null<TemplateSpecializationType>(
-                NNS->getAsType())) {
-          TemplateDeclsSeen.insert(TST->getTemplateName().getAsTemplateDecl());
-        }
-      }
-      return Visit(T->desugar().getTypePtr());
     }
 
    private:

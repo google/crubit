@@ -28,14 +28,14 @@ using clang::ast_matchers::selectFirst;
 
 clang::QualType getClassType(llvm::StringRef name,
                              const clang::ASTContext& ast_context) {
-  return ast_context.getRecordType(selectFirst<clang::CXXRecordDecl>(
+  return ast_context.getCanonicalTagType(selectFirst<clang::CXXRecordDecl>(
       "class", match(cxxRecordDecl(hasName(name)).bind("class"),
                      const_cast<clang::ASTContext&>(ast_context))));
 }
 
 clang::QualType getEnumType(llvm::StringRef name,
                             const clang::ASTContext& ast_context) {
-  return ast_context.getEnumType(selectFirst<clang::EnumDecl>(
+  return ast_context.getCanonicalTagType(selectFirst<clang::EnumDecl>(
       "enum", match(enumDecl(hasName(name)).bind("enum"),
                     const_cast<clang::ASTContext&>(ast_context))));
 }

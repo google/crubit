@@ -91,7 +91,7 @@ pub mod crubit {
 
         // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=24
         // Error while generating bindings for function 'crubit::test::FunctionWithDoNotBindArgument':
-        // Parameter #0 is not supported: Unsupported type 'struct crubit::test::DoNotBindStruct': No generated bindings found for 'DoNotBindStruct'
+        // Parameter #0 is not supported: Unsupported type 'crubit::test::DoNotBindStruct': No generated bindings found for 'DoNotBindStruct'
 
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]

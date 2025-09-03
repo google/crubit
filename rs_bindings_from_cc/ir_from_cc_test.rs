@@ -2247,7 +2247,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                    cpp_identifier: Some("my_field"),
                    doc_comment: Some("Doc comment for `my_field`."),
                    type_: Err(
-                       "Unsupported type 'struct Packed': No generated bindings found for 'Packed'",
+                       "Unsupported type 'Packed': No generated bindings found for 'Packed'",
                    ),
                    access: Public,
                    offset: 0,

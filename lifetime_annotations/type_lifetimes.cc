@@ -667,20 +667,12 @@ llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> GetTemplateArgs(
     type = typedef_type->desugar();
   }
 
-  if (auto elaborated = type->getAs<clang::ElaboratedType>()) {
-    if (clang::NestedNameSpecifier* qualifier = elaborated->getQualifier()) {
-      if (const clang::Type* qualifier_type = qualifier->getAsType()) {
-        result = GetTemplateArgs(clang::QualType(qualifier_type, 0));
-      }
-    }
-  }
-
   if (auto specialization = type->getAs<clang::TemplateSpecializationType>()) {
     result.push_back(specialization->template_arguments());
   } else if (auto record = type->getAs<clang::RecordType>()) {
     if (auto specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
-                record->getDecl())) {
+                record->getOriginalDecl())) {
       result.push_back(specialization_decl->getTemplateArgs().asArray());
     }
   }
@@ -692,7 +684,7 @@ std::optional<llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>>>
 GetTemplateArgs(llvm::ArrayRef<clang::TemplateArgumentLoc> template_arg_locs) {
   llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> args;
   args.push_back({});
-  for (const auto &loc: template_arg_locs) {
+  for (const auto& loc : template_arg_locs) {
     if (auto* source_info = loc.getTypeSourceInfo()) {
       args.back().push_back(source_info->getTypeLoc());
     } else {
@@ -735,25 +727,8 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
 
   llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> args;
 
-  if (auto elaborated_type_loc = type_loc.getAs<clang::ElaboratedTypeLoc>()) {
-    if (clang::NestedNameSpecifierLoc qualifier =
-            elaborated_type_loc.getQualifierLoc()) {
-      if (qualifier.getTypeLoc()) {
-        if (auto qualifier_args = GetTemplateArgs(qualifier.getTypeLoc())) {
-          args = *qualifier_args;
-        } else {
-          return std::nullopt;
-        }
-      }
-    }
-    if (auto elaborated_args =
-            GetTemplateArgs(elaborated_type_loc.getNamedTypeLoc())) {
-      args.append(*elaborated_args);
-    } else {
-      return std::nullopt;
-    }
-  } else if (auto template_specialization_type_loc =
-                 type_loc.getAs<clang::TemplateSpecializationTypeLoc>()) {
+  if (auto template_specialization_type_loc =
+          type_loc.getAs<clang::TemplateSpecializationTypeLoc>()) {
     args.push_back({});
     for (unsigned i = 0; i < template_specialization_type_loc.getNumArgs();
          ++i) {
@@ -767,7 +742,7 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
   } else if (auto record_type_loc = type_loc.getAs<clang::RecordTypeLoc>()) {
     if (auto specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
-                record_type_loc.getDecl())) {
+                record_type_loc.getOriginalDecl())) {
       if (specialization_decl->getTemplateArgsAsWritten()) {
         return GetTemplateArgs(
             specialization_decl->getTemplateArgsAsWritten()->arguments());

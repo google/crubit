@@ -566,9 +566,9 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithUnnamedMembers"]
             pub struct StructWithUnnamedMembers {
                pub first_field: ::core::ffi::c_int,
-               #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:11)': No generated bindings found for ''"]
+               #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'StructWithUnnamedMembers::(anonymous struct at ./ir_from_cc_virtual_header.h:7:11)': No generated bindings found for ''"]
                pub(crate) __unnamed_field1: [::core::mem::MaybeUninit<u8>; 8],
-               #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:11:11)': No generated bindings found for ''"]
+               #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'StructWithUnnamedMembers::(anonymous union at ./ir_from_cc_virtual_header.h:11:11)': No generated bindings found for ''"]
                pub(crate) __unnamed_field2: [::core::mem::MaybeUninit<u8>; 4],
                pub last_field: ::core::ffi::c_int,
             }

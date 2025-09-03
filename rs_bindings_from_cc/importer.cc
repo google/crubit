@@ -48,6 +48,7 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Mangle.h"
+#include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
@@ -1058,8 +1059,9 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
   crubit::RecordingDiagnosticConsumer diagnostic_recorder =
       crubit::RecordDiagnostics(sema_.getDiagnostics(), [&] {
         // Attempt to instantiate.
-        (void)sema_.isCompleteType(specialization_decl->getLocation(),
-                                   ctx_.getRecordType(specialization_decl));
+        (void)sema_.isCompleteType(
+            specialization_decl->getLocation(),
+            ctx_.getCanonicalTagType(specialization_decl));
       });
   if (diagnostic_recorder.getNumErrors() != 0) {
     return absl::InvalidArgumentError(absl::Substitute(
@@ -1273,12 +1275,12 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         return absl::UnimplementedError("Unsupported builtin type");
     }
   } else if (const auto* tag_type = type->getAsAdjusted<clang::TagType>()) {
-    return ConvertTypeDecl(tag_type->getDecl());
+    return ConvertTypeDecl(tag_type->getOriginalDecl()->getDefinitionOrSelf());
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
     return ConvertTypeDecl(typedef_type->getDecl());
   } else if (const auto* using_type = type->getAs<clang::UsingType>()) {
-    return ConvertTypeDecl(using_type->getFoundDecl());
+    return ConvertTypeDecl(using_type->getDecl());
   } else if (const auto* tst_type =
                  type->getAs<clang::TemplateSpecializationType>()) {
     return ConvertTemplateSpecializationType(tst_type);
@@ -1296,29 +1298,13 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
       "Unsupported clang::Type class '", type->getTypeClassName(), "'"));
 }
 
-// Returns a QualType with leading ElaboratedType nodes removed.
-//
-// This is analogous to getDesugaredType but *only* removes ElaboratedType
-// sugar.
-static clang::QualType GetUnelaboratedType(clang::QualType qual_type,
-                                           clang::ASTContext& ast_context) {
-  clang::QualifierCollector qualifiers;
-  while (true) {
-    const clang::Type* type = qualifiers.strip(qual_type);
-    if (const auto* elaborated = llvm::dyn_cast<clang::ElaboratedType>(type)) {
-      qual_type = elaborated->getNamedType();
-      continue;
-    }
-
-    return ast_context.getQualifiedType(type, qualifiers);
-  }
-}
-
 absl::StatusOr<CcType> Importer::ConvertQualType(
     clang::QualType qual_type,
     const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
-  qual_type = GetUnelaboratedType(std::move(qual_type), ctx_);
-  std::string type_string = qual_type.getAsString();
+  clang::PrintingPolicy printing_policy = ctx_.getPrintingPolicy();
+  printing_policy.FullyQualifiedName = true;
+  std::string type_string = qual_type.getAsString(printing_policy);
+
   absl::StatusOr<CcType> type =
       ConvertType(qual_type.getTypePtr(), lifetimes, nullable);
   if (!type.ok()) {
@@ -1345,7 +1331,8 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
     // upcast thunks.
     llvm::SmallString<128> storage;
     llvm::raw_svector_ostream buffer(storage);
-    mangler_->mangleCanonicalTypeName(ctx_.getRecordType(record_decl), buffer);
+    mangler_->mangleCanonicalTypeName(ctx_.getCanonicalTagType(record_decl),
+                                      buffer);
 
     // The Itanium mangler does not provide a way to get the mangled
     // representation of a type. Instead, we call mangleTypeName() that

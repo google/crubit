@@ -66,7 +66,7 @@ std::string GetClassTemplateSpecializationCcName(
   // `-Wimplicitly-unsigned-literal` warning.  See also b/244616557.
   policy.AlwaysIncludeTypeForTemplateArgument = true;
 
-  return clang::QualType(specialization_decl->getTypeForDecl(), 0)
+  return clang::QualType(ast_context.getCanonicalTagType(specialization_decl))
       .getAsString(policy);
 }
 

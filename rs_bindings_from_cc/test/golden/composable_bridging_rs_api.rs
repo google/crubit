@@ -565,7 +565,7 @@ pub unsafe fn InspectStringViews(
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<9> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi9EEE is a template instantiation)
 
 // Error while generating bindings for struct 'absl::swap_internal::IsSwappable<void ()>':
-// Can't generate bindings for absl::swap_internal::IsSwappable<void ()> due to missing bindings for its dependency: Unsupported type 'void (void)': Unsupported clang::Type class 'FunctionProto'
+// Can't generate bindings for absl::swap_internal::IsSwappable<void ()> due to missing bindings for its dependency: Unsupported type 'void ()': Unsupported clang::Type class 'FunctionProto'
 
 // Error while generating bindings for class 'absl::Span<std::basic_string_view<char, std::char_traits<char>>>':
 // Can't generate bindings for absl::Span<std::basic_string_view<char, std::char_traits<char>>>, because of missing required features (<internal link>):

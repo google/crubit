@@ -526,7 +526,8 @@ std::string ObjectRepository::DebugString() const {
   os << "InitialPointsToMap:\n" << initial_points_to_map_.DebugString() << "\n";
   for (const auto& [field, object] : field_object_map_) {
     os << "Field '";
-    field.second->printName(os, field.second->getASTContext().getPrintingPolicy());
+    field.second->printName(os,
+                            field.second->getASTContext().getPrintingPolicy());
     os << "' on " << field.first->DebugString()
        << " object: " << object->DebugString() << "\n";
   }
@@ -787,13 +788,13 @@ void ForEachFieldAndBase(clang::QualType record_type,
                          const CallackBase& callback_base) {
   assert(record_type->isRecordType());
   for (clang::FieldDecl* f :
-       record_type->getAs<clang::RecordType>()->getDecl()->fields()) {
+       record_type->getAs<clang::RecordType>()->getOriginalDecl()->fields()) {
     ObjectLifetimes field_lifetimes = object_lifetimes.GetFieldOrBaseLifetimes(
         f->getType(), GetFieldLifetimeArguments(f));
     callback_field(field_lifetimes, f);
   }
   if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
-          record_type->getAs<clang::RecordType>()->getDecl())) {
+          record_type->getAs<clang::RecordType>()->getOriginalDecl())) {
     for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
       clang::QualType base_type = base.getType();
       auto base_object_lifetimes = object_lifetimes.GetFieldOrBaseLifetimes(
@@ -926,8 +927,8 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
     }
 
     // Base classes.
-    if (auto* cxxrecord =
-            clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
+    if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
+            record_type->getOriginalDecl())) {
       for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
         const Object* base_obj =
             GetBaseClassObject(orig_object, base.getType());
@@ -940,7 +941,7 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
     }
 
     // Fields.
-    for (auto f : record_type->getDecl()->fields()) {
+    for (auto f : record_type->getOriginalDecl()->fields()) {
       const Object* field_obj = GetFieldObject(orig_object, f);
       const Object* new_field_obj = clone(field_obj);
       field_object_map_[std::make_pair(new_object, f)] = new_field_obj;
@@ -956,8 +957,10 @@ std::optional<const Object*> ObjectRepository::GetFieldObjectInternal(
   if (iter != field_object_map_.end()) {
     return iter->second;
   }
-  if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
-          struct_object->Type()->getAs<clang::RecordType>()->getDecl())) {
+  if (auto* cxxrecord =
+          clang::dyn_cast<clang::CXXRecordDecl>(struct_object->Type()
+                                                    ->getAs<clang::RecordType>()
+                                                    ->getOriginalDecl())) {
     for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
       std::optional<const Object*> field_object = GetFieldObjectInternal(
           GetBaseClassObject(struct_object, base.getType()), field);
