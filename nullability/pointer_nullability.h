@@ -144,8 +144,14 @@ void initNullPointer(dataflow::PointerValue &PointerVal,
 dataflow::PointerValue &createNullPointer(QualType PointeeType,
                                           dataflow::Environment &Env);
 
+/// Returns true if `NullState` is known to be null or is from a nullable source
+/// and may be null.
+bool isNullable(
+    PointerNullState NullState, const dataflow::Environment &Env,
+    const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
+
 /// Returns true if `PointerVal` is known to be null or is from a nullable
-/// source and may be null.
+/// source and may be null. Convenience overload for `isNullable` above.
 bool isNullable(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
     const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
@@ -156,11 +162,15 @@ bool isReachableNullptrLiteral(
     const dataflow::Environment &Env,
     const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
 
+/// Returns the strongest provable assertion we can make for the given null
+/// state. If a pointer with that state may not be null, returns Nonnull. If it
+/// is known to be null or is from a nullable source and may be null, returns
+/// Nullable. Otherwise, returns Unspecified.
+clang::NullabilityKind getNullability(
+    PointerNullState PointerNullState, const dataflow::Environment &Env,
+    const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);
+
 /// Returns the strongest provable assertion we can make about `PointerVal`.
-/// If PointerVal may not be null, returns Nonnull.
-/// If PointerVal is known to be null or is from a nullable source and may be
-/// null, returns Nullable.
-/// Otherwise, returns Unspecified.
 clang::NullabilityKind getNullability(
     const dataflow::PointerValue &PointerVal, const dataflow::Environment &Env,
     const dataflow::Formula *absl_nullable AdditionalConstraints = nullptr);

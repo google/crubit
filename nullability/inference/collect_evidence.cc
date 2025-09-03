@@ -384,25 +384,44 @@ static TypeNullability getReturnTypeNullabilityAnnotationsWithOverrides(
   return N;
 }
 
-static Evidence::Kind getArgEvidenceKindFromNullability(
-    NullabilityKind Nullability, QualType ParamType) {
+// Type properties relevant to evidence generation.
+struct EvidenceTypeProperties {
+  // Whether the type is an lvalue reference.
+  bool IsLValueRef;
+  // Whether, after stripping away any potential outer reference type, the
+  // remaining type is `const`-qualified.
+  bool IsNonReferenceConst;
+};
+
+static EvidenceTypeProperties getEvidenceTypeProperties(QualType ParamType) {
   bool IsReference = ParamType->isLValueReferenceType();
+  bool IsNonReferenceConst = ParamType.getNonReferenceType().isConstQualified();
+  return {IsReference, IsNonReferenceConst};
+}
+
+static Evidence::Kind getArgEvidenceKindFromNullability(
+    NullabilityKind Nullability, EvidenceTypeProperties TyProps) {
   switch (Nullability) {
     case NullabilityKind::Nullable:
-      return IsReference ? Evidence::NULLABLE_REFERENCE_ARGUMENT
-                         : Evidence::NULLABLE_ARGUMENT;
+      return TyProps.IsLValueRef ? Evidence::NULLABLE_REFERENCE_ARGUMENT
+                                 : Evidence::NULLABLE_ARGUMENT;
     case NullabilityKind::NonNull: {
-      bool IsNonReferenceConst =
-          ParamType.getNonReferenceType().isConstQualified();
-      return IsReference ? (IsNonReferenceConst
-                                ? Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST
-                                : Evidence::NONNULL_REFERENCE_ARGUMENT)
-                         : Evidence::NONNULL_ARGUMENT;
+      return TyProps.IsLValueRef
+                 ? (TyProps.IsNonReferenceConst
+                        ? Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST
+                        : Evidence::NONNULL_REFERENCE_ARGUMENT)
+                 : Evidence::NONNULL_ARGUMENT;
     }
     default:
-      return IsReference ? Evidence::UNKNOWN_REFERENCE_ARGUMENT
-                         : Evidence::UNKNOWN_ARGUMENT;
+      return TyProps.IsLValueRef ? Evidence::UNKNOWN_REFERENCE_ARGUMENT
+                                 : Evidence::UNKNOWN_ARGUMENT;
   }
+}
+
+static Evidence::Kind getArgEvidenceKindFromNullability(
+    NullabilityKind Nullability, QualType ParamType) {
+  return getArgEvidenceKindFromNullability(
+      Nullability, getEvidenceTypeProperties(ParamType));
 }
 
 static std::optional<Evidence::Kind> evidenceKindFromDeclaredNullability(
@@ -500,106 +519,38 @@ struct SerializedSrcLoc {
 };
 }  // namespace
 
-static SerializedSrcLoc serializeLoc(const SourceManager& SM,
+static SerializedSrcLoc serializeLoc(const SourceManager &SM,
                                      SourceLocation Loc) {
   if (Loc = SM.getFileLoc(Loc); Loc.isValid())
     return SerializedSrcLoc{Loc.printToString(SM)};
   return SerializedSrcLoc{};
 }
 
-static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
-                        USRCache& USRCache, const Decl& Target, Slot S,
-                        Evidence::Kind Kind, const SerializedSrcLoc &Loc) {
-  CHECK(isInferenceTarget(Target))
-      << "Evidence emitted for a Target which is not an inference target: "
-      << (dyn_cast<NamedDecl>(&Target)
-              ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
-              : "not a named decl");
-  std::string_view USR = getOrGenerateUSR(USRCache, Target);
-  if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, Loc.Loc));
-}
-
 namespace {
-class DefinitionEvidenceCollector {
+// Collects nullability evidence from data summarized from the AST.
+class Collector {
  public:
-  // Instantiate the class only in this static function, to restrict the
-  // lifetime of the object, which holds reference parameters.
-  static void collect(std::vector<InferableSlot> &InferableSlots,
-                      const Formula &InferableSlotsConstraint,
-                      llvm::function_ref<EvidenceEmitter> Emit,
-                      USRCache &USRCache, const CFGElement &CFGElem,
-                      const PointerNullabilityLattice &Lattice,
-                      const Environment &Env, const dataflow::Solver &Solver,
-                      const SourceManager &SM) {
-    DefinitionEvidenceCollector Collector(InferableSlots,
-                                          InferableSlotsConstraint, Emit,
-                                          USRCache, Lattice, Env, Solver, SM);
-    if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
-      const Stmt *S = CFGStmt->getStmt();
-      if (!S) return;
-      Collector.fromDereference(*S);
-      Collector.fromCallExpr(*S);
-      Collector.fromConstructExpr(*S);
-      Collector.fromReturn(*S);
-      Collector.fromAssignment(*S);
-      Collector.fromArithmetic(*S);
-      Collector.fromAggregateInitialization(*S);
-      Collector.fromArraySubscript(*S);
-    } else if (auto CFGInit = CFGElem.getAs<clang::CFGInitializer>()) {
-      Collector.fromCFGInitializer(*CFGInit);
-    }
-  }
-
- private:
-  DefinitionEvidenceCollector(std::vector<InferableSlot> &InferableSlots,
-                              const Formula &InferableSlotsConstraint,
-                              llvm::function_ref<EvidenceEmitter> Emit,
-                              USRCache &USRCache,
-                              const PointerNullabilityLattice &Lattice,
-                              const Environment &Env,
-                              const dataflow::Solver &Solver,
-                              const SourceManager &SM)
-      : InferableSlots(InferableSlots),
+  Collector(const std::vector<InferableSlot> &InferableSlots,
+            const Formula &InferableSlotsConstraint,
+            llvm::function_ref<EvidenceEmitter> Emit, const Environment &Env,
+            const dataflow::Solver &Solver)
+      : Env(Env),
+        InferableSlots(InferableSlots),
         InferableSlotsConstraint(InferableSlotsConstraint),
         Emit(Emit),
-        USRCache(USRCache),
-        Lattice(Lattice),
-        Env(Env),
-        Solver(Solver),
-        SM(SM) {}
+        Solver(Solver) {}
 
   void emit(std::string_view USR, Slot S, Evidence::Kind Kind,
             const SerializedSrcLoc &Loc) {
-    Emit(makeEvidence(USR, S, Kind, Loc.Loc));
+    if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, Loc.Loc));
   }
 
-  // Legacy `emit`, for uses still dependent on an AST `Decl`.
-  void emit(const Decl& Target, Slot S, Evidence::Kind Kind,
-            const SerializedSrcLoc& Loc) {
-    wrappedEmit(Emit, USRCache, Target, S, Kind, Loc);
-  }
-
-  /// Records evidence derived from the necessity that `Value` is nonnull.
-  /// It may be dereferenced, passed as a nonnull param, etc, per
-  /// `EvidenceKind`.
-  void mustBeNonnull(const dataflow::PointerValue& Value,
-                     const SerializedSrcLoc& Loc, Evidence::Kind EvidenceKind) {
-    CHECK(hasPointerNullState(Value))
-        << "Value should be the value of an expression. Cannot collect "
-           "evidence for nullability if there is no null state.";
-    auto *IsNull = getPointerNullState(Value).IsNull;
-    // If `IsNull` is top, we can't infer anything about it.
-    if (IsNull == nullptr) return;
-    auto &A = Env.arena();
-    mustBeTrueByMarkingNonnull(A.makeNot(*IsNull), Loc, EvidenceKind);
-  }
-
-  /// Records evidence for Nonnull-ness of one slot, derived from the necessity
+  /// Collects evidence for Nonnull-ness of one slot, derived from the necessity
   /// that `MustBeTrue` must be true.
   ///
   /// Used when we have reason to believe that `MustBeTrue` can be made true by
   /// marking a slot Nonnull.
-  void mustBeTrueByMarkingNonnull(const Formula& MustBeTrue,
+  void mustBeTrueByMarkingNonnull(const Formula &MustBeTrue,
                                   const SerializedSrcLoc &Loc,
                                   Evidence::Kind EvidenceKind) {
     auto &A = Env.arena();
@@ -636,24 +587,13 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  void fromDereference(const Stmt &S) {
-    auto [Target, Loc] = describeDereference(S);
-    if (!Target || !isSupportedPointerType(Target->getType())) return;
-
-    // It is a dereference of a pointer. Now gather evidence from it.
-    dataflow::PointerValue *DereferencedValue = getPointerValue(Target, Env);
-    if (!DereferencedValue) return;
-    mustBeNonnull(*DereferencedValue, serializeLoc(SM, Loc),
-                  Evidence::UNCHECKED_DEREFERENCE);
-  }
-
-  /// Records evidence for Nullable-ness for potentially multiple slots, derived
-  /// from the necessity that `MustBeTrue` must be true.
+  /// Collects evidence for Nullable-ness for potentially multiple slots,
+  /// derived from the necessity that `MustBeTrue` must be true.
   ///
   /// Used when we have reason to believe that `MustBeTrue` can be made provably
   /// true by marking a single slot Nullable, and that all such slots should be
   /// marked Nullable.
-  void mustBeTrueByMarkingNullable(const Formula& MustBeTrue,
+  void mustBeTrueByMarkingNullable(const Formula &MustBeTrue,
                                    const SerializedSrcLoc &Loc,
                                    Evidence::Kind EvidenceKind) {
     auto &A = Env.arena();
@@ -675,98 +615,348 @@ class DefinitionEvidenceCollector {
     }
   }
 
-  /// Collect evidence for each of `InferableSlots` if that slot being marked
-  /// Nullable would imply `Value`'s FromNullable property.
+  /// For a variety of assignment-like operations, where the assignee is a
+  /// declaration (e.g. field, variable, parameter), collects evidence regarding
+  /// the type of the assignment's right-hand side (RHS) and any inferable-slots
+  /// which may influence the value's nullability. For example, if the assignee
+  /// is Nonnull, collects evidence that the RHS is nonnull as well.
   ///
-  /// This function is called when we have reason to believe that `Value` must
-  /// be Nullable.
-  void mustBeMarkedNullable(const dataflow::PointerValue &Value,
-                            const SerializedSrcLoc &Loc,
-                            Evidence::Kind EvidenceKind) {
-    CHECK(hasPointerNullState(Value))
-        << "Value should be the value of an expression. Cannot collect "
-           "evidence for nullability if there is no null state.";
-    auto *FromNullable = getPointerNullState(Value).FromNullable;
-    // If `FromNullable` is top, we can't infer anything about it.
-    if (FromNullable == nullptr) return;
-    mustBeTrueByMarkingNullable(*FromNullable, Loc, EvidenceKind);
-  }
-
-  // Emit evidence based on the relationship between the nullability of the
-  // expression on the RHS of an assignment and the nullability of the
-  // declaration on the LHS.
-  // `LHSType` should be a pointer type or a reference to a pointer type.
-  void fromAssignmentToType(QualType LHSType,
-                            const TypeNullability& LHSTypeNullability,
-                            const Expr& RHSExpr,
-                            const SerializedSrcLoc& RHSLoc) {
-    //  TODO: Account for variance and each layer of nullability when we handle
-    //  more than top-level pointers.
-    if (LHSTypeNullability.empty()) return;
-    const dataflow::PointerValue *PointerValue = getPointerValue(&RHSExpr, Env);
-    if (!PointerValue) return;
-    const PointerTypeNullability &TopLevel = LHSTypeNullability[0];
+  /// The parameters define the properties of the assignment:
+  ///
+  /// * `IsLHSTypeConst` indicates whether the LHS declarations's type is const,
+  ///   after stripping away any potential outer reference type.
+  ///
+  /// * `LHSTopLevel` is the outermost nullability property of the declaration's
+  ///   nullability vector.
+  ///
+  /// * `RHSTypeNullability` holds the (top-level) nullability of the RHS's type
+  ///    *if and only if* the LHS declaration is a reference to a pointer. In
+  ///    this (unusual) case, the assignment places stricter constraints on the
+  ///    RHS's nullability, so we can collect additional evidence.
+  ///
+  /// * `RHSValueNullability` is the value nullability of the RHS expression.
+  ///
+  /// * `RHSLoc` is the beginning source location of the RHS expression.
+  void collectAssignmentToType(
+      bool IsLHSTypeConst, const PointerTypeNullability &LHSTopLevel,
+      const std::optional<PointerTypeNullability> &RHSTypeNullability,
+      const PointerNullState &RHSValueNullability,
+      const SerializedSrcLoc &RHSLoc) {
     dataflow::Arena &A = Env.arena();
-
-    bool SkipValueAssignedToNonnull = false;
-
-    if (/* LHSType is an lvalue reference to a pointer. */
-        LHSType->isLValueReferenceType()) {
-      // If the reference is either to a (mutable or const) Nonnull pointer or
-      // to a mutable Nullable pointer, emit evidence that makes the top level
-      // type nullability of `RHSExpr` match the top level of
-      // `LHSTypeNullability`. This is distinct from the value nullability of
-      // `RHSExpr` being constrained, which is handled below.
-      if (TopLevel.concrete() == NullabilityKind::NonNull ||
-          (TopLevel.isSymbolic() &&
+    if (RHSTypeNullability) {
+      // If the LHS declaration's type is a reference to either a (mutable or
+      // const) Nonnull pointer or a mutable Nullable pointer, emit evidence
+      // that makes `RHSTypeNullability` match `LHSTopLevel`.
+      if (LHSTopLevel.concrete() == NullabilityKind::NonNull ||
+          (LHSTopLevel.isSymbolic() &&
            Env.proves(A.makeImplies(InferableSlotsConstraint,
-                                    TopLevel.isNonnull(A))))) {
-        if (const TypeNullability *RHSTypeNullability =
-                Lattice.getTypeNullability(&RHSExpr)) {
-          CHECK_GT(RHSTypeNullability->size(), 0);
-          const PointerTypeNullability &RHSTopLevel = (*RHSTypeNullability)[0];
-          mustBeTrueByMarkingNonnull(RHSTopLevel.isNonnull(A), RHSLoc,
-                                     Evidence::ASSIGNED_TO_NONNULL_REFERENCE);
-          // It would be duplicative to emit both ASSIGNED_TO_NONNULL_REFERENCE
-          // and ASSIGNED_TO_NONNULL for the same assignment.
-          SkipValueAssignedToNonnull = true;
-        }
-      } else if (!LHSType.getNonReferenceType().isConstQualified() &&
-                 (TopLevel.concrete() == NullabilityKind::Nullable ||
-                  (TopLevel.isSymbolic() &&
-                   Env.proves(A.makeImplies(InferableSlotsConstraint,
-                                            TopLevel.isNullable(A)))))) {
-        if (const TypeNullability *RHSTypeNullability =
-                Lattice.getTypeNullability(&RHSExpr)) {
-          CHECK_GT(RHSTypeNullability->size(), 0);
-          const PointerTypeNullability &RHSTopLevel = (*RHSTypeNullability)[0];
-          // The LHS can't be Nullable and also Nonnull, so we can skip the
-          // later checks for it being Nonnull.
-          SkipValueAssignedToNonnull = true;
-          mustBeTrueByMarkingNullable(RHSTopLevel.isNullable(A), RHSLoc,
-                                      Evidence::ASSIGNED_TO_MUTABLE_NULLABLE);
-        }
+                                    LHSTopLevel.isNonnull(A))))) {
+        mustBeTrueByMarkingNonnull(RHSTypeNullability->isNonnull(A), RHSLoc,
+                                   Evidence::ASSIGNED_TO_NONNULL_REFERENCE);
+        // It would be duplicative to emit both ASSIGNED_TO_NONNULL_REFERENCE
+        // and ASSIGNED_TO_NONNULL for the same assignment.
+        return;
+      }
+      if (!IsLHSTypeConst &&
+          (LHSTopLevel.concrete() == NullabilityKind::Nullable ||
+           (LHSTopLevel.isSymbolic() &&
+            Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                     LHSTopLevel.isNullable(A)))))) {
+        mustBeTrueByMarkingNullable(RHSTypeNullability->isNullable(A), RHSLoc,
+                                    Evidence::ASSIGNED_TO_MUTABLE_NULLABLE);
+        // The LHS can't be Nullable and also Nonnull, so we can skip the
+        // later checks for it being Nonnull.
+        return;
       }
     }
 
     // If the left hand side is Nonnull, emit evidence that the PointerValue on
-    // the right hand side must also be Nonnull, unless we've already emitted
-    // evidence to that effect.
-    if (!SkipValueAssignedToNonnull &&
-        (TopLevel.concrete() == NullabilityKind::NonNull ||
-         (TopLevel.isSymbolic() &&
+    // the right hand side must also be Nonnull, unless
+    // `RHSValueNullability.IsNull` is top, in which case we can't infer
+    // anything about the RHS.
+    if (RHSValueNullability.IsNull != nullptr &&
+        (LHSTopLevel.concrete() == NullabilityKind::NonNull ||
+         (LHSTopLevel.isSymbolic() &&
           Env.proves(A.makeImplies(InferableSlotsConstraint,
-                                   TopLevel.isNonnull(A)))))) {
-      mustBeNonnull(*PointerValue, RHSLoc, Evidence::ASSIGNED_TO_NONNULL);
+                                   LHSTopLevel.isNonnull(A)))))) {
+      const Formula &RHSNotIsNull =
+          Env.arena().makeNot(*RHSValueNullability.IsNull);
+      mustBeTrueByMarkingNonnull(RHSNotIsNull, RHSLoc,
+                                 Evidence::ASSIGNED_TO_NONNULL);
     }
   }
 
+  /// Collects evidence for parameter nullability based on arguments passed at
+  /// call sites. Considers two distinct cases, based on the setting of
+  /// `ArgNullState` -- when populated, the argument is a pointer value; when
+  /// nullopt, the argument is a nullptr literal.
+  void collectArgEvidence(std::string_view FunctionUSR, Slot ParamSlot,
+                          EvidenceTypeProperties ParamTyProps,
+                          std::optional<PointerNullState> ArgNullState,
+                          const SerializedSrcLoc &ArgLoc) {
+    // Calculate the parameter's nullability, using InferableSlotsConstraint to
+    // reflect the current knowledge of the annotations from previous inference
+    // rounds, and not all possible annotations for them.
+    NullabilityKind ArgNullability =
+        ArgNullState
+            ? getNullability(*ArgNullState, Env, &InferableSlotsConstraint)
+            : getNullabilityForNullptrT(Env, &InferableSlotsConstraint);
+    emit(FunctionUSR, ParamSlot,
+         getArgEvidenceKindFromNullability(ArgNullability, ParamTyProps),
+         ArgLoc);
+  }
+
+  /// Collects evidence from an operation that requires two pointer operands to
+  /// differ in value. Specifically, considers cases where one operand is known
+  /// statically to be null, in which case we have evidence that the other is
+  /// Nonnull. The canonical example is `CHECK_NE(p, q)`, but other operations
+  /// could conceivably provide the same potential evidence.
+  ///
+  /// This function is not intended for use when either operand is a nullptr
+  /// literal, since that can be handled more efficiently by avoiding the calls
+  /// to `proves()`.
+  void collectAbortIfEqual(const dataflow::Formula &FirstIsNull,
+                           const SerializedSrcLoc &FirstLoc,
+                           const dataflow::Formula &SecondIsNull,
+                           const SerializedSrcLoc &SecondLoc) {
+    auto &A = Env.arena();
+    if (Env.proves(FirstIsNull)) {
+      mustBeTrueByMarkingNonnull(A.makeNot(SecondIsNull), SecondLoc,
+                                 Evidence::ABORT_IF_NULL);
+    } else if (Env.proves(SecondIsNull)) {
+      mustBeTrueByMarkingNonnull(A.makeNot(FirstIsNull), FirstLoc,
+                                 Evidence::ABORT_IF_NULL);
+    }
+  }
+
+  /// Collects evidence for return-type Nullability.
+  void collectReturn(std::string_view FunctionUSR,
+                     EvidenceTypeProperties ReturnTyProps,
+                     PointerNullState ReturnNullState,
+                     const SerializedSrcLoc &ReturnLoc) {
+    NullabilityKind ReturnNullability =
+        getNullability(ReturnNullState, Env, &InferableSlotsConstraint);
+
+    Evidence::Kind ReturnEvidenceKind;
+    if (ReturnTyProps.IsLValueRef) {
+      switch (ReturnNullability) {
+        case NullabilityKind::Nullable:
+          ReturnEvidenceKind = Evidence::NULLABLE_REFERENCE_RETURN;
+          break;
+        case NullabilityKind::NonNull:
+          ReturnEvidenceKind = ReturnTyProps.IsNonReferenceConst
+                                   ? Evidence::NONNULL_REFERENCE_RETURN_AS_CONST
+                                   : Evidence::NONNULL_REFERENCE_RETURN;
+          break;
+        default:
+          ReturnEvidenceKind = Evidence::UNKNOWN_REFERENCE_RETURN;
+      }
+    } else {
+      switch (ReturnNullability) {
+        case NullabilityKind::Nullable:
+          ReturnEvidenceKind = Evidence::NULLABLE_RETURN;
+          break;
+        case NullabilityKind::NonNull:
+          ReturnEvidenceKind = Evidence::NONNULL_RETURN;
+          break;
+        default:
+          ReturnEvidenceKind = Evidence::UNKNOWN_RETURN;
+      }
+    }
+    emit(FunctionUSR, SLOT_RETURN_TYPE, ReturnEvidenceKind, ReturnLoc);
+  }
+
+  /// Collects evidence from assignments, specifically about the nullability of
+  /// an assignee based on the nullability of the RHS value.
+  ///
+  /// `ValueNullState` holds the null state of  the RHS expression. It should be
+  ///  nullopt *if and only if* the RHS expression has `std::nullptr_t` type.
+  ///
+  /// Example:
+  /// ```
+  /// void target(int* p, int* q, NullabilityUnknown<int*> r) {
+  ///   p = nullptr;
+  ///   if (!r) {
+  ///     q = r;
+  ///   }
+  ///   int i = 0;
+  ///   int* s = &i;
+  /// }
+  /// ```
+  /// From the above, we collect evidence from each of the assignments of `p`
+  /// and `q` that they were ASSIGNED_FROM_NULLABLE and evidence from the
+  /// assignment of `s` that it was ASSIGNED_FROM_NONNULL.
+  void collectAssignmentFromValue(
+      PointerTypeNullability TypeNullability,
+      std::optional<PointerNullState> ValueNullState,
+      const SerializedSrcLoc &ValueLoc,
+      Evidence::Kind EvidenceKindForAssignmentFromNullable) {
+    dataflow::Arena &A = Env.arena();
+    const Formula &TypeIsNullable = TypeNullability.isNullable(A);
+
+    // If the flow conditions already imply that the type is nullable, or
+    // that the type is not nullable, we can skip collecting evidence.
+    if (Env.proves(TypeIsNullable) || !Env.allows(TypeIsNullable)) return;
+
+    clang::NullabilityKind ValNullability =
+        ValueNullState
+            ? getNullability(*ValueNullState, Env, &InferableSlotsConstraint)
+            : getNullabilityForNullptrT(Env, &InferableSlotsConstraint);
+
+    for (auto &IS : InferableSlots) {
+      auto &Implication = A.makeImplies(
+          IS.getSymbolicNullability().isNullable(A), TypeIsNullable);
+      // It's not expected that a slot's isNullable formula could be proven
+      // false by the environment alone (without the
+      // InferableSlotsConstraint), but SAT calls are relatively expensive, so
+      // only DCHECK. This has so far only been observed in the case of the SAT
+      // solver reaching its iteration limit before or during this check, in
+      // which case we won't be able to collect accurate evidence anyway, so we
+      // simply return early.
+      DCHECK(Env.allows(IS.getSymbolicNullability().isNullable(A)));
+      if (Solver.reachedLimit()) return;
+      if (Env.proves(Implication)) {
+        Evidence::Kind EvidenceKind;
+        switch (ValNullability) {
+          case NullabilityKind::Nullable:
+            EvidenceKind = EvidenceKindForAssignmentFromNullable;
+            break;
+          case NullabilityKind::NonNull:
+            EvidenceKind = Evidence::ASSIGNED_FROM_NONNULL;
+            break;
+          default:
+            EvidenceKind = Evidence::ASSIGNED_FROM_UNKNOWN;
+        }
+        emit(IS.getInferenceTargetUSR(), IS.getTargetSlot(), EvidenceKind,
+             ValueLoc);
+        return;
+      }
+    }
+  }
+
+ private:
+  const Environment &Env;
+  const std::vector<InferableSlot> &InferableSlots;
+  const Formula &InferableSlotsConstraint;
+  llvm::function_ref<EvidenceEmitter> Emit;
+  const dataflow::Solver &Solver;
+};
+
+class SummarizerAndCollector {
+ public:
+  // Instantiate the class only in this static function, to restrict the
+  // lifetime of the object, which holds reference parameters.
+  static void collect(const std::vector<InferableSlot> &InferableSlots,
+                      const Formula &InferableSlotsConstraint,
+                      llvm::function_ref<EvidenceEmitter> Emit,
+                      USRCache &USRCache, const CFGElement &CFGElem,
+                      const PointerNullabilityLattice &Lattice,
+                      const Environment &Env, const dataflow::Solver &Solver,
+                      const SourceManager &SM) {
+    SummarizerAndCollector SAC(InferableSlots, InferableSlotsConstraint, Emit,
+                               USRCache, Lattice, Env, Solver, SM);
+    if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
+      const Stmt *S = CFGStmt->getStmt();
+      if (!S) return;
+      SAC.summarizeDereference(*S);
+      SAC.summarizeCallExpr(*S);
+      SAC.summarizeConstructExpr(*S);
+      SAC.summarizeReturn(*S);
+      SAC.summarizeAssignment(*S);
+      SAC.summarizeArithmetic(*S);
+      SAC.summarizeAggregateInitialization(*S);
+      SAC.summarizeArraySubscript(*S);
+    } else if (auto CFGInit = CFGElem.getAs<clang::CFGInitializer>()) {
+      SAC.summarizeCFGInitializer(*CFGInit);
+    }
+  }
+
+ private:
+  SummarizerAndCollector(const std::vector<InferableSlot> &InferableSlots,
+                         const Formula &InferableSlotsConstraint,
+                         llvm::function_ref<EvidenceEmitter> Emit,
+                         USRCache &USRCache,
+                         const PointerNullabilityLattice &Lattice,
+                         const Environment &Env, const dataflow::Solver &Solver,
+                         const SourceManager &SM)
+      : EvidenceCollector(InferableSlots, InferableSlotsConstraint, Emit, Env,
+                          Solver),
+        Env(Env),
+        HasInferableSlots(!InferableSlots.empty()),
+        USRCache(USRCache),
+        Lattice(Lattice),
+        SM(SM) {}
+
+  /// Captures the necessity that `NullState` is nonnull.  It may be because the
+  /// associated value was dereferenced, passed as a nonnull param, etc, per
+  /// `EvidenceKind`.
+  void mustBeNonnull(const PointerNullState &NullState,
+                     const SerializedSrcLoc &Loc, Evidence::Kind EvidenceKind) {
+    auto *IsNull = NullState.IsNull;
+    // If `IsNull` is top, we can't infer anything about it.
+    if (IsNull == nullptr) return;
+    auto &A = Env.arena();
+    const Formula &F = A.makeNot(*IsNull);
+    EvidenceCollector.mustBeTrueByMarkingNonnull(F, Loc, EvidenceKind);
+  }
+
+  PointerNullState getPointerNullStateOrDie(
+      const dataflow::PointerValue &Value) {
+    CHECK(hasPointerNullState(Value))
+        << "Value should be the value of an expression. Cannot collect "
+           "evidence for nullability if there is no null state.";
+    return getPointerNullState(Value);
+  }
+
+  void summarizeDereference(const Stmt &S) {
+    auto [Target, Loc] = describeDereference(S);
+    if (!Target || !isSupportedPointerType(Target->getType())) return;
+
+    // It is a dereference of a pointer. Now gather evidence from it.
+    dataflow::PointerValue *DereferencedValue = getPointerValue(Target, Env);
+    if (!DereferencedValue) return;
+    mustBeNonnull(getPointerNullStateOrDie(*DereferencedValue),
+                  serializeLoc(SM, Loc), Evidence::UNCHECKED_DEREFERENCE);
+  }
+
+  // Summarize an assignment to a pointer-typed declaration, to extract
+  // nullability constraints on the RHS (potentially both its type and value)
+  // stemming from the declaration's Nullability.  `LHSType` should be a pointer
+  // type or a reference to a pointer type.
+  void summarizeAssignmentToType(QualType LHSType,
+                                 const TypeNullability &LHSTypeNullability,
+                                 const Expr &RHSExpr,
+                                 const SerializedSrcLoc &RHSLoc) {
+    // TODO: Account for variance and each layer of nullability when we handle
+    // more than top-level pointers.
+    if (LHSTypeNullability.empty()) return;
+    const PointerTypeNullability &LHSTopLevel = LHSTypeNullability[0];
+    const dataflow::PointerValue *PointerValue = getPointerValue(&RHSExpr, Env);
+    if (!PointerValue) return;
+    PointerNullState RHSNullState = getPointerNullStateOrDie(*PointerValue);
+    EvidenceTypeProperties LHSTyProps = getEvidenceTypeProperties(LHSType);
+    std::optional<PointerTypeNullability> RHSTopLevel;
+
+    if (LHSTyProps.IsLValueRef) {
+      const TypeNullability *RHSTypeNullability =
+          Lattice.getTypeNullability(&RHSExpr);
+      if (RHSTypeNullability != nullptr) {
+        CHECK_GT(RHSTypeNullability->size(), 0);
+        RHSTopLevel = (*RHSTypeNullability)[0];
+      }
+    }
+
+    EvidenceCollector.collectAssignmentToType(LHSTyProps.IsNonReferenceConst,
+                                              LHSTopLevel, RHSTopLevel,
+                                              RHSNullState, RHSLoc);
+  }
+
   template <typename CallOrConstructExpr>
-  void fromArgsAndParams(const FunctionDecl &CalleeDecl,
-                         const CallOrConstructExpr &Expr,
-                         bool MayBeMissingImplicitConversion) {
-    bool CollectEvidenceForCallee = isInferenceTarget(CalleeDecl);
-    bool CollectEvidenceForCaller = !InferableSlots.empty();
+  void summarizeArgsAndParams(const FunctionDecl &CalleeDecl,
+                              const CallOrConstructExpr &Expr,
+                              bool MayBeMissingImplicitConversion) {
+    bool SummarizeCallee = isInferenceTarget(CalleeDecl);
+    bool SummarizeCaller = HasInferableSlots;
 
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
@@ -797,57 +987,58 @@ class DefinitionEvidenceCollector {
           << " type: " << Iter.arg().getType().getAsString();
 
       if (isa<clang::CXXDefaultArgExpr>(Iter.arg())) {
-        // Evidence collection for the callee from default argument values is
-        // handled when collecting from declarations, and there's no useful
-        // evidence available to collect for the caller.
+        // Summarization and evidence collection for the callee from default
+        // argument values is handled when processing declarations, and there's
+        // no useful evidence available to collect for the caller (and so
+        // nothing to summarize).
         return;
       }
 
       SerializedSrcLoc ArgLoc = serializeLoc(SM, Iter.arg().getExprLoc());
 
-      if (CollectEvidenceForCaller) {
+      if (SummarizeCaller) {
         auto ParamNullability = getNullabilityAnnotationsFromDeclAndOverrides(
             Iter.param(), Lattice);
 
-        // Collect evidence from constraints that the parameter's nullability
+        // Summarize potential constraints that the parameter's nullability
         // places on the argument's nullability.
-        fromAssignmentToType(Iter.param().getType(), ParamNullability,
-                             Iter.arg(), ArgLoc);
+        summarizeAssignmentToType(Iter.param().getType(), ParamNullability,
+                                  Iter.arg(), ArgLoc);
       }
 
-      if (CollectEvidenceForCallee &&
-          // Don't collect evidence if the parameter is already annotated in
-          // source. This will still collect evidence if the parameter has only
-          // a previously-inferred nullability, in order to maintain that
-          // inference in this iteration.
+      if (SummarizeCallee &&
+          // Don't summarize if the parameter is already annotated in
+          // source. This will still summarize otherwise (irrespective of
+          // whether the parameter has a previously-inferred nullability), in
+          // order to maintain that inference in this iteration.
           !evidenceKindFromDeclaredNullability(
               getTypeNullability(Iter.param(), Lattice.defaults()))) {
         dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
-        if (PV || ArgIsNullPtrT) {
-          // Calculate the parameter's nullability based on InferableSlots
-          // for the caller being assigned to Unknown or their
-          // previously-inferred value, to reflect the current annotations and
-          // not all possible annotations for them.
-          NullabilityKind ArgNullability =
-              PV ? getNullability(*PV, Env, &InferableSlotsConstraint)
-                 : getNullabilityForNullptrT(Env, &InferableSlotsConstraint);
-          emit(CalleeDecl, paramSlot(Iter.paramIdx()),
-               getArgEvidenceKindFromNullability(ArgNullability,
-                                                 Iter.param().getType()),
-               ArgLoc);
+        if (PV != nullptr) {
+          EvidenceCollector.collectArgEvidence(
+              getOrGenerateUSR(USRCache, CalleeDecl),
+              paramSlot(Iter.paramIdx()),
+              getEvidenceTypeProperties(Iter.param().getType()),
+              getPointerNullState(*PV), ArgLoc);
+        } else if (ArgIsNullPtrT) {
+          EvidenceCollector.collectArgEvidence(
+              getOrGenerateUSR(USRCache, CalleeDecl),
+              paramSlot(Iter.paramIdx()),
+              getEvidenceTypeProperties(Iter.param().getType()),
+              /*ArgNullState*/ std::nullopt, ArgLoc);
         }
       }
     }
   }
 
-  /// Collects evidence from the assignment of function arguments to the types
-  /// of the corresponding parameter, used when we have a FunctionProtoType but
-  /// no FunctionDecl.
-  /// TODO: When we collect evidence for more complex slots than just top-level
-  /// pointers, emit evidence of the function parameter's nullability as a slot
-  /// in the appropriate declaration.
-  void fromFunctionProtoTypeCall(const FunctionProtoType &CalleeType,
-                                 const CallExpr &Expr) {
+  /// Summarizes call expressions where we have a FunctionProtoType but no
+  /// FunctionDecl, focusing on relating function arguments to the types of the
+  /// corresponding parameter.
+  /// TODO: When we summarize more complex slots than just top-level pointers,
+  /// summarize the function parameter's nullability as a slot in the
+  /// appropriate declaration.
+  void summarizeFunctionProtoTypeCall(const FunctionProtoType &CalleeType,
+                                      const CallExpr &Expr) {
     // For each pointer parameter of the function, ...
     for (unsigned I = 0; I < CalleeType.getNumParams(); ++I) {
       const auto ParamType = CalleeType.getParamType(I);
@@ -861,22 +1052,24 @@ class DefinitionEvidenceCollector {
       // nullabilities, check for overrides from previous inference iterations.
       auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
 
-      // Collect evidence from constraints that the parameter's nullability
-      // places on the argument's nullability.
-      fromAssignmentToType(ParamType, ParamNullability, *Expr.getArg(I),
-                           serializeLoc(SM, Expr.getArg(I)->getExprLoc()));
+      // Summarize potential constraints that the parameter's nullability places
+      // on the argument's nullability.
+      summarizeAssignmentToType(ParamType, ParamNullability, *Expr.getArg(I),
+                                serializeLoc(SM, Expr.getArg(I)->getExprLoc()));
     }
   }
 
-  /// Collect evidence that the function pointer was dereferenced and from the
-  /// matching up of parameter/argument nullabilities.
-  void fromFunctionPointerCallExpr(const Type &CalleeFunctionType,
-                                   const CallExpr &Expr) {
-    if (InferableSlots.empty()) return;
+  /// Summarizes call expressions involving function pointers, noting that the
+  /// function pointer was dereferenced and matches up parameter/argument
+  /// nullabilities.
+  void summarizeFunctionPointerCallExpr(const Type &CalleeFunctionType,
+                                        const CallExpr &Expr) {
+    if (!HasInferableSlots) return;
     if (const auto *Callee = Expr.getCallee()) {
       // Function pointers are only ever raw pointers.
       if (const auto *PV = getRawPointerValue(Callee, Env)) {
-        mustBeNonnull(*PV, serializeLoc(SM, Expr.getExprLoc()),
+        mustBeNonnull(getPointerNullStateOrDie(*PV),
+                      serializeLoc(SM, Expr.getExprLoc()),
                       Evidence::UNCHECKED_DEREFERENCE);
       }
     }
@@ -884,10 +1077,10 @@ class DefinitionEvidenceCollector {
     auto *CalleeFunctionProtoType =
         CalleeFunctionType.getAs<FunctionProtoType>();
     CHECK(CalleeFunctionProtoType);
-    fromFunctionProtoTypeCall(*CalleeFunctionProtoType, Expr);
+    summarizeFunctionProtoTypeCall(*CalleeFunctionProtoType, Expr);
   }
 
-  /// Handles the case of a call to a function without a FunctionDecl, e.g. that
+  /// Summarizes a call to a function without a FunctionDecl, e.g. the function
   /// is provided as a parameter or another decl, e.g. a field or local
   /// variable.
   ///
@@ -902,11 +1095,11 @@ class DefinitionEvidenceCollector {
   ///
   /// With `CalleeDecl` in this case not being a FunctionDecl as in most
   /// CallExpr cases, distinct handling is needed.
-  void fromCallExprWithoutFunctionCalleeDecl(const Decl &CalleeDecl,
-                                             const CallExpr &Expr) {
+  void summarizeCallExprWithoutFunctionCalleeDecl(const Decl &CalleeDecl,
+                                                  const CallExpr &Expr) {
     if (CalleeDecl.isFunctionPointerType()) {
       if (auto *FuncType = CalleeDecl.getFunctionType()) {
-        fromFunctionPointerCallExpr(*FuncType, Expr);
+        summarizeFunctionPointerCallExpr(*FuncType, Expr);
       } else {
         llvm::errs() << "Unsupported case of a function pointer type, for "
                         "which we aren't retrieving a valid FunctionType. \n";
@@ -933,7 +1126,7 @@ class DefinitionEvidenceCollector {
     // can collect evidence from arguments assigned to parameter types.
     if (auto *FuncType = CalleeDecl.getFunctionType()) {
       if (auto *FuncProtoType = FuncType->getAs<FunctionProtoType>()) {
-        fromFunctionProtoTypeCall(*FuncProtoType, Expr);
+        summarizeFunctionProtoTypeCall(*FuncProtoType, Expr);
         return;
       }
     }
@@ -944,7 +1137,7 @@ class DefinitionEvidenceCollector {
             dyn_cast<clang::ValueDecl>(&CalleeDecl)) {
       if (QualType CalleeType = CalleeAsValueDecl->getType();
           CalleeType.getNonReferenceType()->isFunctionPointerType()) {
-        fromFunctionPointerCallExpr(
+        summarizeFunctionPointerCallExpr(
             *(CalleeType.getNonReferenceType()->getPointeeType()), Expr);
         return;
       }
@@ -953,20 +1146,18 @@ class DefinitionEvidenceCollector {
     // If we run into other cases meeting this criterion, skip them, but log
     // first so we can potentially add support later.
     llvm::errs() << "Unsupported case of a CallExpr without a FunctionDecl. "
-                    "Not collecting any evidence from this CallExpr:\n";
+                    "Not summarizing this CallExpr:\n";
     Expr.getBeginLoc().dump(CalleeDecl.getASTContext().getSourceManager());
     Expr.dump();
     llvm::errs() << "Which is a call to:\n";
     CalleeDecl.dump();
   }
 
-  /// Given a `CallExpr` for a call to our special macro single-argument capture
-  /// function, collect evidence for a slot that can prevent the abort condition
-  /// from being true if it is annotated Nonnull.
+  /// Summarizes `CallExpr`, which contains a call to our special macro
+  /// single-argument capture function, to extract constraints on the argument.
   ///
-  /// e.g. From `CHECK(x)`, we collect evidence for a slot that can cause `x` to
-  /// not be null.
-  void fromAbortIfFalseMacroCall(const CallExpr &CallExpr) {
+  /// e.g. From `CHECK(x)`, we constrain `x` to not be null.
+  void summarizeAbortIfFalseMacroCall(const CallExpr &CallExpr) {
     CHECK_EQ(CallExpr.getNumArgs(), 1);
     const Expr *Arg = CallExpr.getArg(0);
     if (!Arg) return;
@@ -974,25 +1165,25 @@ class DefinitionEvidenceCollector {
     if (isSupportedPointerType(ArgType)) {
       const dataflow::PointerValue *PV = getPointerValue(Arg, Env);
       if (!PV) return;
-      mustBeNonnull(*PV, serializeLoc(SM, Arg->getExprLoc()),
+      mustBeNonnull(getPointerNullStateOrDie(*PV),
+                    serializeLoc(SM, Arg->getExprLoc()),
                     Evidence::ABORT_IF_NULL);
     } else if (ArgType->isBooleanType()) {
       const dataflow::BoolValue *BV = Env.get<dataflow::BoolValue>(*Arg);
       if (!BV || BV->getKind() == dataflow::BoolValue::Kind::TopBool) return;
-      mustBeTrueByMarkingNonnull(BV->formula(),
-                                 serializeLoc(SM, Arg->getExprLoc()),
-                                 Evidence::ABORT_IF_NULL);
+
+      EvidenceCollector.mustBeTrueByMarkingNonnull(
+          BV->formula(), serializeLoc(SM, Arg->getExprLoc()),
+          Evidence::ABORT_IF_NULL);
     }
   }
 
-  /// Given a `CallExpr` for a call to our special macro two-argument capture
-  /// function for not-equal checks, if one of the arguments is a nullptr
-  /// constant or provably null, collect evidence for a slot that can prevent
-  /// the other argument from being null.
+  /// Summarizes `CallExpr`, which contains a call to our special macro
+  /// two-argument capture function for not-equal checks. Extracts potential
+  /// constraints between the macro arguments.
   ///
-  /// e.g. From `CHECK_NE(x, nullptr)`, we collect evidence for a slot that can
-  /// cause `x` to not be null.
-  void fromAbortIfEqualMacroCall(const CallExpr &CallExpr) {
+  /// For example, from `CHECK_NE(x, nullptr)`, we constrain `x` to not be null.
+  void summarizeAbortIfEqualMacroCall(const CallExpr &CallExpr) {
     CHECK_EQ(CallExpr.getNumArgs(), 2);
     const Expr *First = CallExpr.getArg(0);
     const Expr *Second = CallExpr.getArg(1);
@@ -1001,20 +1192,22 @@ class DefinitionEvidenceCollector {
     if (!FirstSupported && !SecondSupported) return;
 
     ASTContext &Context = CallExpr.getCalleeDecl()->getASTContext();
-    const dataflow::PointerValue *ValueComparedToNull = nullptr;
-    SourceLocation EvidenceLoc;
     if (First->isNullPointerConstant(Context,
                                      Expr::NPC_ValueDependentIsNotNull)) {
-      if (!isSupportedPointerType(Second->getType())) return;
-      ValueComparedToNull = getPointerValue(Second, Env);
-      if (!ValueComparedToNull) return;
-      EvidenceLoc = Second->getExprLoc();
+      if (!SecondSupported) return;
+      const dataflow::PointerValue *PV = getPointerValue(Second, Env);
+      if (!PV) return;
+      mustBeNonnull(getPointerNullStateOrDie(*PV),
+                    serializeLoc(SM, Second->getExprLoc()),
+                    Evidence::ABORT_IF_NULL);
     } else if (Second->isNullPointerConstant(
                    Context, Expr::NPC_ValueDependentIsNotNull)) {
-      if (!isSupportedPointerType(First->getType())) return;
-      ValueComparedToNull = getPointerValue(First, Env);
-      if (!ValueComparedToNull) return;
-      EvidenceLoc = First->getExprLoc();
+      if (!FirstSupported) return;
+      const dataflow::PointerValue *PV = getPointerValue(First, Env);
+      if (!PV) return;
+      mustBeNonnull(getPointerNullStateOrDie(*PV),
+                    serializeLoc(SM, First->getExprLoc()),
+                    Evidence::ABORT_IF_NULL);
     } else {
       if (!FirstSupported || !SecondSupported) {
         // If this happens outside of the nullptr literal case, we'd like to
@@ -1029,29 +1222,23 @@ class DefinitionEvidenceCollector {
 
       const dataflow::PointerValue *FirstPV = getPointerValue(First, Env);
       if (!FirstPV) return;
+      const dataflow::Formula *absl_nullable FirstIsNull =
+          getPointerNullState(*FirstPV).IsNull;
+      if (!FirstIsNull) return;
+
       const dataflow::PointerValue *SecondPV = getPointerValue(Second, Env);
       if (!SecondPV) return;
-      PointerNullState FirstNullState = getPointerNullState(*FirstPV);
-      if (!FirstNullState.IsNull) return;
-      PointerNullState SecondNullState = getPointerNullState(*SecondPV);
-      if (!SecondNullState.IsNull) return;
+      const dataflow::Formula *absl_nullable SecondIsNull =
+          getPointerNullState(*SecondPV).IsNull;
+      if (!SecondIsNull) return;
 
-      if (Env.proves(*FirstNullState.IsNull)) {
-        ValueComparedToNull = SecondPV;
-        EvidenceLoc = Second->getExprLoc();
-      } else if (Env.proves(*SecondNullState.IsNull)) {
-        ValueComparedToNull = FirstPV;
-        EvidenceLoc = First->getExprLoc();
-      } else {
-        return;
-      }
+      EvidenceCollector.collectAbortIfEqual(
+          *FirstIsNull, serializeLoc(SM, First->getExprLoc()), *SecondIsNull,
+          serializeLoc(SM, Second->getExprLoc()));
     }
-
-    mustBeNonnull(*ValueComparedToNull, serializeLoc(SM, EvidenceLoc),
-                  Evidence::ABORT_IF_NULL);
   }
 
-  void fromCallExpr(const Stmt &S) {
+  void summarizeCallExpr(const Stmt &S) {
     auto *CallExpr = dyn_cast<clang::CallExpr>(&S);
     if (!CallExpr) return;
     auto *CalleeDecl = CallExpr->getCalleeDecl();
@@ -1060,22 +1247,22 @@ class DefinitionEvidenceCollector {
       if (CalleeFunctionDecl->getDeclName().isIdentifier()) {
         llvm::StringRef Name = CalleeFunctionDecl->getName();
         if (Name == ArgCaptureAbortIfFalse) {
-          fromAbortIfFalseMacroCall(*CallExpr);
+          summarizeAbortIfFalseMacroCall(*CallExpr);
           return;
         }
         if (Name == ArgCaptureAbortIfEqual) {
-          fromAbortIfEqualMacroCall(*CallExpr);
+          summarizeAbortIfEqualMacroCall(*CallExpr);
           return;
         }
         if (const Expr *Initializer =
                 getUnderlyingInitExprInStdMakeUnique(*CalleeFunctionDecl)) {
           if (const auto *CE = dyn_cast<CXXConstructExpr>(Initializer)) {
-            fromArgsAndParams(*CE->getConstructor(), *CallExpr,
-                              /*MayBeMissingImplicitConversion=*/true);
+            summarizeArgsAndParams(*CE->getConstructor(), *CallExpr,
+                                   /*MayBeMissingImplicitConversion=*/true);
             return;
           }
           if (const auto *PLI = dyn_cast<CXXParenListInitExpr>(Initializer)) {
-            fromMakeUniqueFieldInits(RecordInitListHelper(PLI), *CallExpr);
+            summarizeMakeUniqueFieldInits(RecordInitListHelper(PLI), *CallExpr);
             return;
           }
           if (const auto *ImpCast = dyn_cast<ImplicitCastExpr>(Initializer);
@@ -1091,25 +1278,25 @@ class DefinitionEvidenceCollector {
           }
         }
       }
-      fromArgsAndParams(*CalleeFunctionDecl, *CallExpr,
-                        /*MayBeMissingImplicitConversion=*/false);
+      summarizeArgsAndParams(*CalleeFunctionDecl, *CallExpr,
+                             /*MayBeMissingImplicitConversion=*/false);
     } else {
-      fromCallExprWithoutFunctionCalleeDecl(*CalleeDecl, *CallExpr);
+      summarizeCallExprWithoutFunctionCalleeDecl(*CalleeDecl, *CallExpr);
     }
   }
 
-  void fromConstructExpr(const Stmt &S) {
+  void summarizeConstructExpr(const Stmt &S) {
     auto *ConstructExpr = dyn_cast<clang::CXXConstructExpr>(&S);
     if (!ConstructExpr) return;
     auto *ConstructorDecl = dyn_cast_or_null<clang::CXXConstructorDecl>(
         ConstructExpr->getConstructor());
     if (!ConstructorDecl) return;
 
-    fromArgsAndParams(*ConstructorDecl, *ConstructExpr,
-                      /*MayBeMissingImplicitConversion=*/false);
+    summarizeArgsAndParams(*ConstructorDecl, *ConstructExpr,
+                           /*MayBeMissingImplicitConversion=*/false);
   }
 
-  void fromReturn(const Stmt &S) {
+  void summarizeReturn(const Stmt &S) {
     // Is this CFGElement a return statement?
     auto *ReturnStmt = dyn_cast<clang::ReturnStmt>(&S);
     if (!ReturnStmt) return;
@@ -1121,148 +1308,64 @@ class DefinitionEvidenceCollector {
             CurrentFunc->getReturnType().getNonReferenceType()))
       return;
 
-    // Skip gathering evidence about the current function's return type if
-    // the current function is not an inference target or the return type
-    // already includes an annotation.
+    // Only gather evidence about the current function's return type if
+    // the current function is an inference target and the return type
+    // does not already include an annotation.
     if (isInferenceTarget(*CurrentFunc) &&
         !evidenceKindFromDeclaredReturnType(*CurrentFunc, Lattice.defaults())) {
-      NullabilityKind ReturnNullability =
-          getNullability(ReturnExpr, Env, &InferableSlotsConstraint);
-      bool ReturnTypeIsReference =
-          CurrentFunc->getReturnType()->isReferenceType();
-      Evidence::Kind ReturnEvidenceKind;
-      switch (ReturnNullability) {
-        case NullabilityKind::Nullable:
-          ReturnEvidenceKind = ReturnTypeIsReference
-                                   ? Evidence::NULLABLE_REFERENCE_RETURN
-                                   : Evidence::NULLABLE_RETURN;
-          break;
-        case NullabilityKind::NonNull: {
-          bool ReturnTypeNonReferenceIsConst = CurrentFunc->getReturnType()
-                                                   .getNonReferenceType()
-                                                   .isConstQualified();
-          ReturnEvidenceKind =
-              ReturnTypeIsReference
-                  ? (ReturnTypeNonReferenceIsConst
-                         ? Evidence::NONNULL_REFERENCE_RETURN_AS_CONST
-                         : Evidence::NONNULL_REFERENCE_RETURN)
-                  : Evidence::NONNULL_RETURN;
-          break;
-        }
-        default:
-          ReturnEvidenceKind = ReturnTypeIsReference
-                                   ? Evidence::UNKNOWN_REFERENCE_RETURN
-                                   : Evidence::UNKNOWN_RETURN;
-      }
-      emit(*CurrentFunc, SLOT_RETURN_TYPE, ReturnEvidenceKind,
-           serializeLoc(SM, ReturnExpr->getExprLoc()));
+      const dataflow::PointerValue *PV = getPointerValue(ReturnExpr, Env);
+      if (!PV) return;
+      EvidenceCollector.collectReturn(
+          getOrGenerateUSR(USRCache, *CurrentFunc),
+          getEvidenceTypeProperties(CurrentFunc->getReturnType()),
+          getPointerNullState(*PV), serializeLoc(SM, ReturnExpr->getExprLoc()));
     }
 
+    // Potentially infer back from the return type to returned expressions.
     TypeNullability ReturnTypeNullability =
         getReturnTypeNullabilityAnnotationsWithOverrides(*CurrentFunc, Lattice);
-    fromAssignmentToType(CurrentFunc->getReturnType(), ReturnTypeNullability,
-                         *ReturnExpr,
-                         serializeLoc(SM, ReturnExpr->getExprLoc()));
+    summarizeAssignmentToType(CurrentFunc->getReturnType(),
+                              ReturnTypeNullability, *ReturnExpr,
+                              serializeLoc(SM, ReturnExpr->getExprLoc()));
   }
 
-  /// Collects evidence for a slot that would, if marked Nullable, cause
-  /// TypeNullability's first-layer nullability to be Nullable. We collect for
-  /// this slot, evidence that a value was assigned with a PointerValue's
-  /// nullability (`PVNullability`), whether Nullable, Nonnull, or Unknown.
-  ///
-  /// e.g. This is used for example to collect from the following:
-  /// ```
-  /// void target(int* p, int* q, NullabilityUnknown<int*> r) {
-  ///   p = nullptr;
-  ///   if (!r) {
-  ///     q = r;
-  ///   }
-  ///   int i = 0;
-  ///   int* s = &i;
-  /// }
-  /// ```
-  /// evidence from each of the assignments of `p` and `q` that they were
-  /// ASSIGNED_FROM_NULLABLE and evidence from the assignment of `s` that it was
-  /// ASSIGNED_FROM_NONNULL.
-  void fromAssignmentFromValue(
-      const TypeNullability& TypeNullability,
-      clang::NullabilityKind PVNullability, const SerializedSrcLoc &ValueLoc,
-      Evidence::Kind EvidenceKindForAssignmentFromNullable) {
-    if (TypeNullability.empty()) return;
-    dataflow::Arena &A = Env.arena();
-    const Formula &TypeIsNullable = TypeNullability[0].isNullable(A);
-    // If the flow conditions already imply that the type is nullable, or
-    // that the type is not nullable, we can skip collecting evidence.
-    if (Env.proves(TypeIsNullable) || !Env.allows(TypeIsNullable)) return;
-    for (auto &IS : InferableSlots) {
-      auto &Implication = A.makeImplies(
-          IS.getSymbolicNullability().isNullable(A), TypeIsNullable);
-      // It's not expected that a slot's isNullable formula could be proven
-      // false by the environment alone (without the
-      // InferableSlotsConstraint), but SAT calls are relatively expensive, so
-      // only DCHECK. This has so far only been observed in the case of the SAT
-      // solver reaching its iteration limit before or during this check, in
-      // which case we won't be able to collect accurate evidence anyway, so we
-      // simply return early.
-      bool AllowsNullable =
-          Env.allows(IS.getSymbolicNullability().isNullable(A));
-      if (Solver.reachedLimit()) return;
-      DCHECK(AllowsNullable);
-      if (Env.proves(Implication)) {
-        Evidence::Kind EvidenceKind;
-        switch (PVNullability) {
-          case NullabilityKind::Nullable:
-            EvidenceKind = EvidenceKindForAssignmentFromNullable;
-            break;
-          case NullabilityKind::NonNull:
-            EvidenceKind = Evidence::ASSIGNED_FROM_NONNULL;
-            break;
-          default:
-            EvidenceKind = Evidence::ASSIGNED_FROM_UNKNOWN;
-        }
-        emit(IS.getInferenceTargetUSR(), IS.getTargetSlot(), EvidenceKind,
-             ValueLoc);
-        return;
-      }
-    }
+  /// Summarizes an assignment of RHS to an expression with type LHSType and
+  /// nullability LHSNullability, through a direct assignment statement,
+  /// aggregate initialization, etc.
+  void summarizeAssignmentLike(
+      QualType LHSType, const TypeNullability &LHSNullability, const Expr &RHS,
+      const SerializedSrcLoc &Loc,
+      Evidence::Kind EvidenceKindForAssignmentFromNullable =
+          Evidence::ASSIGNED_FROM_NULLABLE) {
+    const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
+    if (!PV && !RHS.getType()->isNullPtrType()) return;
+    summarizeAssignmentToType(LHSType, LHSNullability, RHS, Loc);
+
+    // Summarize potential constraints on the LHS.
+    if (LHSNullability.empty()) return;
+    std::optional<PointerNullState> NullState =
+        PV ? std::make_optional(getPointerNullState(*PV)) : std::nullopt;
+    EvidenceCollector.collectAssignmentFromValue(
+        LHSNullability[0], NullState, Loc,
+        EvidenceKindForAssignmentFromNullable);
   }
 
-  /// Collects evidence based on an assignment of RHS to LHSDecl, through a
-  /// direct assignment statement, aggregate initialization, etc.
-  void fromAssignmentLike(const ValueDecl& LHSDecl, const Expr& RHS,
-                          const SerializedSrcLoc &Loc,
-                          Evidence::Kind EvidenceKindForAssignmentFromNullable =
-                              Evidence::ASSIGNED_FROM_NULLABLE) {
-    fromAssignmentLike(
+  /// Summarizes an assignment of RHS to LHSDecl, through a direct assignment
+  /// statement, aggregate initialization, etc.
+  void summarizeAssignmentLike(
+      const ValueDecl &LHSDecl, const Expr &RHS, const SerializedSrcLoc &Loc,
+      Evidence::Kind EvidenceKindForAssignmentFromNullable =
+          Evidence::ASSIGNED_FROM_NULLABLE) {
+    summarizeAssignmentLike(
         LHSDecl.getType(),
         getNullabilityAnnotationsFromDeclAndOverrides(LHSDecl, Lattice), RHS,
         Loc, EvidenceKindForAssignmentFromNullable);
   }
 
-  /// Collects evidence based on an assignment of RHS to an expression with type
-  /// LHSType and nullability LHSNullability, through a direct assignment
-  /// statement, aggregate initialization, etc.
-  void fromAssignmentLike(QualType LHSType,
-                          const TypeNullability& LHSNullability,
-                          const Expr& RHS, const SerializedSrcLoc &Loc,
-                          Evidence::Kind EvidenceKindForAssignmentFromNullable =
-                              Evidence::ASSIGNED_FROM_NULLABLE) {
-    const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
-    if (!PV && !RHS.getType()->isNullPtrType()) return;
-    fromAssignmentToType(LHSType, LHSNullability, RHS, Loc);
-    clang::NullabilityKind PVNullability =
-        PV != nullptr
-            ? getNullability(*PV, Env, &InferableSlotsConstraint)
-            : getNullabilityForNullptrT(Env, &InferableSlotsConstraint);
-    fromAssignmentFromValue(LHSNullability, PVNullability, Loc,
-                            EvidenceKindForAssignmentFromNullable);
-  }
-
-  /// Collects evidence from direct assignment statements, e.g. `p = nullptr`,
-  /// whether initializing a new declaration or re-assigning to an existing
-  /// declaration.
-  void fromAssignment(const Stmt &S) {
-    if (InferableSlots.empty()) return;
+  /// Summarizes direct assignment statements, e.g. `p = nullptr`, whether
+  /// initializing a new declaration or re-assigning to an existing declaration.
+  void summarizeAssignment(const Stmt &S) {
+    if (!HasInferableSlots) return;
 
     // Initialization of new decl.
     if (auto *DeclStmt = dyn_cast<clang::DeclStmt>(&S)) {
@@ -1279,7 +1382,7 @@ class DefinitionEvidenceCollector {
                          << VarDecl->getInit()->getType() << "\n";
             return;
           }
-          fromAssignmentLike(
+          summarizeAssignmentLike(
               *VarDecl, *VarDecl->getInit(),
               serializeLoc(SM, VarDecl->getInit()->getExprLoc()));
         }
@@ -1323,18 +1426,19 @@ class DefinitionEvidenceCollector {
         isa<ConditionalOperator>(dataflow::ignoreCFGOmittedNodes(*LHS)))
       return;
     CHECK(TypeNullability);
-    fromAssignmentLike(LHSType, *TypeNullability, *RHS, serializeLoc(SM, *Loc));
+    summarizeAssignmentLike(LHSType, *TypeNullability, *RHS,
+                            serializeLoc(SM, *Loc));
   }
 
-  void fromArithmeticArg(const Expr* Arg, const SerializedSrcLoc &Loc) {
+  void summarizeArithmeticArg(const Expr *Arg, const SerializedSrcLoc &Loc) {
     // No support needed for smart pointers, which do not support arithmetic
     // operations.
     if (!Arg || !isSupportedRawPointerType(Arg->getType())) return;
     if (auto *PV = getPointerValue(Arg, Env))
-      mustBeNonnull(*PV, Loc, Evidence::ARITHMETIC);
+      mustBeNonnull(getPointerNullStateOrDie(*PV), Loc, Evidence::ARITHMETIC);
   }
 
-  void fromArithmetic(const Stmt &S) {
+  void summarizeArithmetic(const Stmt &S) {
     // A nullptr can be added to 0 and nullptr can be subtracted from nullptr
     // without hitting UB. But for now, we skip handling these special cases and
     // assume all pointers involved in these operations must be nonnull.
@@ -1348,7 +1452,8 @@ class DefinitionEvidenceCollector {
             return;
           case BO_AddAssign:
           case BO_SubAssign:
-            fromArithmeticArg(Op->getLHS(), serializeLoc(SM, Op->getExprLoc()));
+            summarizeArithmeticArg(Op->getLHS(),
+                                   serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
@@ -1359,8 +1464,10 @@ class DefinitionEvidenceCollector {
             return;
           case BO_Add:
           case BO_Sub:
-            fromArithmeticArg(Op->getLHS(), serializeLoc(SM, Op->getExprLoc()));
-            fromArithmeticArg(Op->getRHS(), serializeLoc(SM, Op->getExprLoc()));
+            summarizeArithmeticArg(Op->getLHS(),
+                                   serializeLoc(SM, Op->getExprLoc()));
+            summarizeArithmeticArg(Op->getRHS(),
+                                   serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
@@ -1373,15 +1480,15 @@ class DefinitionEvidenceCollector {
           case UO_PreInc:
           case UO_PostDec:
           case UO_PreDec:
-            fromArithmeticArg(Op->getSubExpr(),
-                              serializeLoc(SM, Op->getExprLoc()));
+            summarizeArithmeticArg(Op->getSubExpr(),
+                                   serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
     }
   }
 
-  void fromCFGInitializer(const CFGInitializer &CFGInit) {
+  void summarizeCFGInitializer(const CFGInitializer &CFGInit) {
     const CXXCtorInitializer *Initializer = CFGInit.getInitializer();
     if (!Initializer) {
       // We expect this not to be the case, but not to a production-crash-worthy
@@ -1395,7 +1502,7 @@ class DefinitionEvidenceCollector {
     // underlying CXXConstructExpr, so we don't need to handle those, only the
     // member initializers.
     const FieldDecl *Field = Initializer->getAnyMember();
-    if (Field == nullptr || InferableSlots.empty() ||
+    if (Field == nullptr || !HasInferableSlots ||
         !isSupportedPointerType(Field->getType()))
       return;
 
@@ -1415,26 +1522,26 @@ class DefinitionEvidenceCollector {
         IsDefaultInitializer && isOrIsConstructedFromNullPointerConstant(
                                     InitExpr, Field->getASTContext());
 
-    fromAssignmentLike(
+    summarizeAssignmentLike(
         *Field, *InitExpr, serializeLoc(SM, InitExpr->getExprLoc()),
         NullptrDefaultInit ? Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER
                            : Evidence::ASSIGNED_FROM_NULLABLE);
   }
 
-  void fromFieldInits(const RecordInitListHelper &Helper) {
+  void summarizeFieldInits(const RecordInitListHelper &Helper) {
     // Any initialization of base classes/fields will be collected from the
-    // InitListExpr for the base initialization, so we only need to collect here
-    // from the field inits.
+    // InitListExpr for the base initialization, so we only need to summarize
+    // here the field inits.
     for (auto [Field, InitExpr] : Helper.field_inits()) {
       if (!isSupportedPointerType(Field->getType())) continue;
 
-      fromAssignmentLike(*Field, *InitExpr,
-                         serializeLoc(SM, InitExpr->getExprLoc()));
+      summarizeAssignmentLike(*Field, *InitExpr,
+                              serializeLoc(SM, InitExpr->getExprLoc()));
     }
   }
 
-  void fromMakeUniqueFieldInits(const RecordInitListHelper &Helper,
-                                const CallExpr &MakeUniqueCall) {
+  void summarizeMakeUniqueFieldInits(const RecordInitListHelper &Helper,
+                                     const CallExpr &MakeUniqueCall) {
     // Skip through the base inits to get to the field inits. Any initialization
     // of base classes/fields will be collected from the InitListExpr for the
     // base initialization.
@@ -1456,31 +1563,33 @@ class DefinitionEvidenceCollector {
         ++I;
         continue;
       }
-      fromAssignmentLike(*Field, *Arg, serializeLoc(SM, Arg->getExprLoc()));
+      summarizeAssignmentLike(*Field, *Arg,
+                              serializeLoc(SM, Arg->getExprLoc()));
       ++I;
     }
   }
 
-  void fromAggregateInitialization(const Stmt &S) {
+  void summarizeAggregateInitialization(const Stmt &S) {
     if (auto *InitList = dyn_cast<clang::InitListExpr>(&S);
         InitList && InitList->getType()->isRecordType() &&
         !(InitList->isSemanticForm() && InitList->isTransparent())) {
-      fromFieldInits(RecordInitListHelper(InitList));
+      summarizeFieldInits(RecordInitListHelper(InitList));
       return;
     }
     if (auto *ParenListInit = dyn_cast<clang::CXXParenListInitExpr>(&S);
         ParenListInit && ParenListInit->getType()->isRecordType()) {
-      fromFieldInits(RecordInitListHelper(ParenListInit));
+      summarizeFieldInits(RecordInitListHelper(ParenListInit));
     }
   }
 
-  void fromArraySubscript(const Stmt &S) {
+  void summarizeArraySubscript(const Stmt &S) {
     // For raw pointers, we see an ArraySubscriptExpr.
     if (auto *Op = dyn_cast<clang::ArraySubscriptExpr>(&S)) {
       const Expr *Base = Op->getBase();
       if (!Base || !isSupportedRawPointerType(Base->getType())) return;
       if (auto *PV = getPointerValue(Base, Env))
-        mustBeNonnull(*PV, serializeLoc(SM, Op->getRBracketLoc()),
+        mustBeNonnull(getPointerNullStateOrDie(*PV),
+                      serializeLoc(SM, Op->getRBracketLoc()),
                       Evidence::ARRAY_SUBSCRIPT);
       return;
     }
@@ -1491,21 +1600,44 @@ class DefinitionEvidenceCollector {
       const Expr *Base = Call->getArg(0);
       if (!Base || !isSupportedSmartPointerType(Base->getType())) return;
       if (auto *PV = getPointerValue(Base, Env))
-        mustBeNonnull(*PV, serializeLoc(SM, Call->getOperatorLoc()),
+        mustBeNonnull(getPointerNullStateOrDie(*PV),
+                      serializeLoc(SM, Call->getOperatorLoc()),
                       Evidence::ARRAY_SUBSCRIPT);
     }
   }
 
-  const std::vector<InferableSlot> &InferableSlots;
-  const Formula &InferableSlotsConstraint;
-  llvm::function_ref<EvidenceEmitter> Emit;
+  Collector EvidenceCollector;
+  const Environment &Env;
+  // Whether the definition being analyzed has any inferable slots. Lack of
+  // inferable slots simplifies the analysis.
+  const bool HasInferableSlots;
   USRCache &USRCache;
   const PointerNullabilityLattice &Lattice;
-  const Environment &Env;
-  const dataflow::Solver &Solver;
   const SourceManager &SM;
 };
 }  // namespace
+
+// Convenience override for functions that follow. Handles translation from AST
+// data into the lower-level evidence format used by `Emit`.
+static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
+                        USRCache &USRCache, const Decl &Target, Slot S,
+                        Evidence::Kind Kind, SourceLocation Loc) {
+  CHECK(isInferenceTarget(Target))
+      << "Evidence emitted for a Target which is not an inference target: "
+      << (dyn_cast<NamedDecl>(&Target)
+              ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
+              : "not a named decl");
+  auto &SM = Target.getDeclContext()->getParentASTContext().getSourceManager();
+
+  std::string_view USR = getOrGenerateUSR(USRCache, Target);
+  if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, serializeLoc(SM, Loc).Loc));
+}
+
+static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
+                        std::string_view USR, Slot S, Evidence::Kind Kind,
+                        const SerializedSrcLoc &Loc) {
+  if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, Loc.Loc));
+}
 
 /// Returns a function that the analysis can use to override Decl nullability
 /// values from the source code being analyzed with previously inferred
@@ -1569,22 +1701,22 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
 }
 
-// Convenience override for functions that follow. Handles translation from AST
-// data into the lower-level evidence format used by `Emit`.
-static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
-                        USRCache& USRCache, const Decl& Target, Slot S,
-                        Evidence::Kind Kind, SourceLocation Loc) {
-  wrappedEmit(
-      Emit, USRCache, Target, S, Kind,
-      serializeLoc(
-          Target.getDeclContext()->getParentASTContext().getSourceManager(),
-          Loc));
+static void collectConstructorExitBlock(
+    std::string_view USR, PointerNullState NullState,
+    const SerializedSrcLoc &Loc, const Environment &ExitEnv,
+    const Formula &InferableSlotsConstraint,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  if (isNullable(NullState, ExitEnv, &InferableSlotsConstraint)) {
+    wrappedEmit(Emit, USR, Slot(0), Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
+                Loc);
+  }
 }
 
-// If D is a constructor definition, collect LEFT_NULLABLE_BY_CONSTRUCTOR
-// evidence for smart pointer fields implicitly default-initialized and left
-// nullable in the exit block of the constructor body.
-static void collectEvidenceFromConstructorExitBlock(
+// If D is a constructor definition, summarizes cases of potential
+// LEFT_NULLABLE_BY_CONSTRUCTOR evidence for smart pointer fields implicitly
+// default-initialized and left nullable in the exit block of the constructor
+// body.
+static void summarizeConstructorExitBlock(
     const clang::Decl &MaybeConstructor, const Environment &ExitEnv,
     const Formula &InferableSlotsConstraint,
     llvm::function_ref<EvidenceEmitter> Emit, USRCache &USRCache) {
@@ -1606,9 +1738,8 @@ static void collectEvidenceFromConstructorExitBlock(
     // have a default member initializer, so it was default constructed
     // (and null) at the beginning of the constructor body.
 
-    // If it is still nullable in the constructor's exit block
-    // environment, we collect evidence that it was assigned from a
-    // nullable value.
+    // If it is still nullable in the constructor's exit block environment, we
+    // will collect evidence that it was assigned from a nullable value.
     const dataflow::PointerValue *PV = getPointerValueFromSmartPointer(
         cast<dataflow::RecordStorageLocation>(
             ExitEnv.getThisPointeeStorageLocation()->getChild(*Field)),
@@ -1632,13 +1763,25 @@ static void collectEvidenceFromConstructorExitBlock(
     // here.
     if (!hasPointerNullState(*PV)) continue;
 
-    if (isNullable(*PV, ExitEnv, &InferableSlotsConstraint)) {
-      wrappedEmit(
-          Emit, USRCache, *Field, Slot(0),
-          Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
-          Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
-    }
+    PointerNullState NullState = getPointerNullState(*PV);
+    auto &SM =
+        Field->getDeclContext()->getParentASTContext().getSourceManager();
+    std::string_view USR = getOrGenerateUSR(USRCache, *Field);
+    SerializedSrcLoc Loc = serializeLoc(
+        SM, Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
+    collectConstructorExitBlock(USR, NullState, Loc, ExitEnv,
+                                InferableSlotsConstraint, Emit);
   }
+}
+
+static void collectSupportedLateInitializerExitBlock(
+    std::string_view USR, PointerNullState NullState,
+    const SerializedSrcLoc &Loc, const Environment &ExitEnv,
+    const Formula &InferableSlotsConstraint,
+    llvm::function_ref<EvidenceEmitter> Emit) {
+  if (!isNullable(NullState, ExitEnv, &InferableSlotsConstraint))
+    wrappedEmit(Emit, USR, Slot(0),
+                Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER, Loc);
 }
 
 // Supported late initializers are no-argument SetUp methods of classes that
@@ -1646,7 +1789,7 @@ static void collectEvidenceFromConstructorExitBlock(
 // collect LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER evidence for smart pointer
 // fields that are not nullable. This allows ignoring the
 // LEFT_NULLABLE_BY_CONSTRUCTOR evidence for such a field.
-static void collectEvidenceFromSupportedLateInitializerExitBlock(
+static void summarizeSupportedLateInitializerExitBlock(
     const clang::Decl &MaybeLateInitializationMethod,
     const Environment &ExitEnv, const Formula &InferableSlotsConstraint,
     llvm::function_ref<EvidenceEmitter> Emit, USRCache &USRCache) {
@@ -1679,11 +1822,14 @@ static void collectEvidenceFromSupportedLateInitializerExitBlock(
       continue;
     const dataflow::PointerValue *PV = getPointerValueFromSmartPointer(
         cast<dataflow::RecordStorageLocation>(ChildLoc), ExitEnv);
-    if (PV != nullptr && hasPointerNullState(*PV) &&
-        !isNullable(*PV, ExitEnv, &InferableSlotsConstraint)) {
-      wrappedEmit(Emit, USRCache, *ChildDecl, Slot(0),
-                  Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
-                  Method->getBeginLoc());
+    if (PV != nullptr && hasPointerNullState(*PV)) {
+      PointerNullState NullState = getPointerNullState(*PV);
+      std::string_view USR = getOrGenerateUSR(USRCache, *ChildDecl);
+      SerializedSrcLoc Loc =
+          serializeLoc(Method->getParentASTContext().getSourceManager(),
+                       Method->getBeginLoc());
+      collectSupportedLateInitializerExitBlock(USR, NullState, Loc, ExitEnv,
+                                               InferableSlotsConstraint, Emit);
     }
   }
 }
@@ -1933,7 +2079,7 @@ llvm::Error collectEvidenceFromDefinition(
           const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
               &State) {
         if (Solver->reachedLimit()) return;
-        DefinitionEvidenceCollector::collect(
+        SummarizerAndCollector::collect(
             InferableSlots, InferableSlotsConstraint, Emit, USRCache, Element,
             State.Lattice, State.Env, *Solver, Ctx.getSourceManager());
       };
@@ -1950,12 +2096,11 @@ llvm::Error collectEvidenceFromDefinition(
   if (Results.empty()) return llvm::Error::success();
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
-    collectEvidenceFromConstructorExitBlock(Definition, ExitBlockResult->Env,
-                                            InferableSlotsConstraint, Emit,
-                                            USRCache);
-    collectEvidenceFromSupportedLateInitializerExitBlock(
-        Definition, ExitBlockResult->Env, InferableSlotsConstraint, Emit,
-        USRCache);
+    summarizeConstructorExitBlock(Definition, ExitBlockResult->Env,
+                                  InferableSlotsConstraint, Emit, USRCache);
+    summarizeSupportedLateInitializerExitBlock(Definition, ExitBlockResult->Env,
+                                               InferableSlotsConstraint, Emit,
+                                               USRCache);
   }
 
   return llvm::Error::success();
