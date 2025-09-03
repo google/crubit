@@ -491,23 +491,32 @@ static Evidence makeEvidence(std::string_view USR, Slot S, Evidence::Kind Kind,
   return E;
 }
 
+namespace {
+// Serialized version of source locations. Currently, we're representing the
+// serialized data as a string, but we introduce a fresh type in the spirit of
+// "strong types."
+struct SerializedSrcLoc {
+  std::string Loc;
+};
+}  // namespace
+
+static SerializedSrcLoc serializeLoc(const SourceManager& SM,
+                                     SourceLocation Loc) {
+  if (Loc = SM.getFileLoc(Loc); Loc.isValid())
+    return SerializedSrcLoc{Loc.printToString(SM)};
+  return SerializedSrcLoc{};
+}
+
 static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
-                        USRCache &USRCache, const Decl &Target, Slot S,
-                        Evidence::Kind Kind, SourceLocation Loc) {
+                        USRCache& USRCache, const Decl& Target, Slot S,
+                        Evidence::Kind Kind, const SerializedSrcLoc &Loc) {
   CHECK(isInferenceTarget(Target))
       << "Evidence emitted for a Target which is not an inference target: "
       << (dyn_cast<NamedDecl>(&Target)
               ? dyn_cast<NamedDecl>(&Target)->getQualifiedNameAsString()
               : "not a named decl");
-  // TODO: make collecting and propagating location information optional?
-  auto &SM = Target.getDeclContext()->getParentASTContext().getSourceManager();
-  // TODO: are macro locations actually useful enough for debugging?
-  //       we could leave them out, and make room for non-macro samples.
-  std::string LocAsString;
-  if (Loc = SM.getFileLoc(Loc); Loc.isValid())
-    LocAsString = Loc.printToString(SM);
   std::string_view USR = getOrGenerateUSR(USRCache, Target);
-  if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, LocAsString));
+  if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, Loc.Loc));
 }
 
 namespace {
@@ -560,24 +569,21 @@ class DefinitionEvidenceCollector {
         SM(SM) {}
 
   void emit(std::string_view USR, Slot S, Evidence::Kind Kind,
-            SourceLocation Loc) {
-    std::string LocAsString;
-    if (Loc = SM.getFileLoc(Loc); Loc.isValid())
-      LocAsString = Loc.printToString(SM);
-    Emit(makeEvidence(USR, S, Kind, LocAsString));
+            const SerializedSrcLoc &Loc) {
+    Emit(makeEvidence(USR, S, Kind, Loc.Loc));
   }
 
   // Legacy `emit`, for uses still dependent on an AST `Decl`.
-  void emit(const Decl &Target, Slot S, Evidence::Kind Kind,
-            SourceLocation Loc) {
+  void emit(const Decl& Target, Slot S, Evidence::Kind Kind,
+            const SerializedSrcLoc& Loc) {
     wrappedEmit(Emit, USRCache, Target, S, Kind, Loc);
   }
 
   /// Records evidence derived from the necessity that `Value` is nonnull.
   /// It may be dereferenced, passed as a nonnull param, etc, per
   /// `EvidenceKind`.
-  void mustBeNonnull(const dataflow::PointerValue &Value, SourceLocation Loc,
-                     Evidence::Kind EvidenceKind) {
+  void mustBeNonnull(const dataflow::PointerValue& Value,
+                     const SerializedSrcLoc& Loc, Evidence::Kind EvidenceKind) {
     CHECK(hasPointerNullState(Value))
         << "Value should be the value of an expression. Cannot collect "
            "evidence for nullability if there is no null state.";
@@ -593,7 +599,8 @@ class DefinitionEvidenceCollector {
   ///
   /// Used when we have reason to believe that `MustBeTrue` can be made true by
   /// marking a slot Nonnull.
-  void mustBeTrueByMarkingNonnull(const Formula &MustBeTrue, SourceLocation Loc,
+  void mustBeTrueByMarkingNonnull(const Formula& MustBeTrue,
+                                  const SerializedSrcLoc &Loc,
                                   Evidence::Kind EvidenceKind) {
     auto &A = Env.arena();
     // If `MustBeTrue` is already proven true or false (or both, which indicates
@@ -636,7 +643,8 @@ class DefinitionEvidenceCollector {
     // It is a dereference of a pointer. Now gather evidence from it.
     dataflow::PointerValue *DereferencedValue = getPointerValue(Target, Env);
     if (!DereferencedValue) return;
-    mustBeNonnull(*DereferencedValue, Loc, Evidence::UNCHECKED_DEREFERENCE);
+    mustBeNonnull(*DereferencedValue, serializeLoc(SM, Loc),
+                  Evidence::UNCHECKED_DEREFERENCE);
   }
 
   /// Records evidence for Nullable-ness for potentially multiple slots, derived
@@ -645,8 +653,8 @@ class DefinitionEvidenceCollector {
   /// Used when we have reason to believe that `MustBeTrue` can be made provably
   /// true by marking a single slot Nullable, and that all such slots should be
   /// marked Nullable.
-  void mustBeTrueByMarkingNullable(const Formula &MustBeTrue,
-                                   SourceLocation Loc,
+  void mustBeTrueByMarkingNullable(const Formula& MustBeTrue,
+                                   const SerializedSrcLoc &Loc,
                                    Evidence::Kind EvidenceKind) {
     auto &A = Env.arena();
     // If `MustBeTrue` is already proven true or false (or both, which indicates
@@ -673,7 +681,8 @@ class DefinitionEvidenceCollector {
   /// This function is called when we have reason to believe that `Value` must
   /// be Nullable.
   void mustBeMarkedNullable(const dataflow::PointerValue &Value,
-                            SourceLocation Loc, Evidence::Kind EvidenceKind) {
+                            const SerializedSrcLoc &Loc,
+                            Evidence::Kind EvidenceKind) {
     CHECK(hasPointerNullState(Value))
         << "Value should be the value of an expression. Cannot collect "
            "evidence for nullability if there is no null state.";
@@ -688,8 +697,9 @@ class DefinitionEvidenceCollector {
   // declaration on the LHS.
   // `LHSType` should be a pointer type or a reference to a pointer type.
   void fromAssignmentToType(QualType LHSType,
-                            const TypeNullability &LHSTypeNullability,
-                            const Expr &RHSExpr, SourceLocation RHSLoc) {
+                            const TypeNullability& LHSTypeNullability,
+                            const Expr& RHSExpr,
+                            const SerializedSrcLoc& RHSLoc) {
     //  TODO: Account for variance and each layer of nullability when we handle
     //  more than top-level pointers.
     if (LHSTypeNullability.empty()) return;
@@ -793,7 +803,7 @@ class DefinitionEvidenceCollector {
         return;
       }
 
-      SourceLocation ArgLoc = Iter.arg().getExprLoc();
+      SerializedSrcLoc ArgLoc = serializeLoc(SM, Iter.arg().getExprLoc());
 
       if (CollectEvidenceForCaller) {
         auto ParamNullability = getNullabilityAnnotationsFromDeclAndOverrides(
@@ -854,7 +864,7 @@ class DefinitionEvidenceCollector {
       // Collect evidence from constraints that the parameter's nullability
       // places on the argument's nullability.
       fromAssignmentToType(ParamType, ParamNullability, *Expr.getArg(I),
-                           Expr.getArg(I)->getExprLoc());
+                           serializeLoc(SM, Expr.getArg(I)->getExprLoc()));
     }
   }
 
@@ -866,7 +876,8 @@ class DefinitionEvidenceCollector {
     if (const auto *Callee = Expr.getCallee()) {
       // Function pointers are only ever raw pointers.
       if (const auto *PV = getRawPointerValue(Callee, Env)) {
-        mustBeNonnull(*PV, Expr.getExprLoc(), Evidence::UNCHECKED_DEREFERENCE);
+        mustBeNonnull(*PV, serializeLoc(SM, Expr.getExprLoc()),
+                      Evidence::UNCHECKED_DEREFERENCE);
       }
     }
 
@@ -963,11 +974,13 @@ class DefinitionEvidenceCollector {
     if (isSupportedPointerType(ArgType)) {
       const dataflow::PointerValue *PV = getPointerValue(Arg, Env);
       if (!PV) return;
-      mustBeNonnull(*PV, Arg->getExprLoc(), Evidence::ABORT_IF_NULL);
+      mustBeNonnull(*PV, serializeLoc(SM, Arg->getExprLoc()),
+                    Evidence::ABORT_IF_NULL);
     } else if (ArgType->isBooleanType()) {
       const dataflow::BoolValue *BV = Env.get<dataflow::BoolValue>(*Arg);
       if (!BV || BV->getKind() == dataflow::BoolValue::Kind::TopBool) return;
-      mustBeTrueByMarkingNonnull(BV->formula(), Arg->getExprLoc(),
+      mustBeTrueByMarkingNonnull(BV->formula(),
+                                 serializeLoc(SM, Arg->getExprLoc()),
                                  Evidence::ABORT_IF_NULL);
     }
   }
@@ -1034,7 +1047,8 @@ class DefinitionEvidenceCollector {
       }
     }
 
-    mustBeNonnull(*ValueComparedToNull, EvidenceLoc, Evidence::ABORT_IF_NULL);
+    mustBeNonnull(*ValueComparedToNull, serializeLoc(SM, EvidenceLoc),
+                  Evidence::ABORT_IF_NULL);
   }
 
   void fromCallExpr(const Stmt &S) {
@@ -1141,13 +1155,14 @@ class DefinitionEvidenceCollector {
                                    : Evidence::UNKNOWN_RETURN;
       }
       emit(*CurrentFunc, SLOT_RETURN_TYPE, ReturnEvidenceKind,
-           ReturnExpr->getExprLoc());
+           serializeLoc(SM, ReturnExpr->getExprLoc()));
     }
 
     TypeNullability ReturnTypeNullability =
         getReturnTypeNullabilityAnnotationsWithOverrides(*CurrentFunc, Lattice);
     fromAssignmentToType(CurrentFunc->getReturnType(), ReturnTypeNullability,
-                         *ReturnExpr, ReturnExpr->getExprLoc());
+                         *ReturnExpr,
+                         serializeLoc(SM, ReturnExpr->getExprLoc()));
   }
 
   /// Collects evidence for a slot that would, if marked Nullable, cause
@@ -1170,8 +1185,8 @@ class DefinitionEvidenceCollector {
   /// ASSIGNED_FROM_NULLABLE and evidence from the assignment of `s` that it was
   /// ASSIGNED_FROM_NONNULL.
   void fromAssignmentFromValue(
-      const TypeNullability &TypeNullability,
-      clang::NullabilityKind PVNullability, SourceLocation ValueLoc,
+      const TypeNullability& TypeNullability,
+      clang::NullabilityKind PVNullability, const SerializedSrcLoc &ValueLoc,
       Evidence::Kind EvidenceKindForAssignmentFromNullable) {
     if (TypeNullability.empty()) return;
     dataflow::Arena &A = Env.arena();
@@ -1214,8 +1229,8 @@ class DefinitionEvidenceCollector {
 
   /// Collects evidence based on an assignment of RHS to LHSDecl, through a
   /// direct assignment statement, aggregate initialization, etc.
-  void fromAssignmentLike(const ValueDecl &LHSDecl, const Expr &RHS,
-                          SourceLocation Loc,
+  void fromAssignmentLike(const ValueDecl& LHSDecl, const Expr& RHS,
+                          const SerializedSrcLoc &Loc,
                           Evidence::Kind EvidenceKindForAssignmentFromNullable =
                               Evidence::ASSIGNED_FROM_NULLABLE) {
     fromAssignmentLike(
@@ -1228,8 +1243,8 @@ class DefinitionEvidenceCollector {
   /// LHSType and nullability LHSNullability, through a direct assignment
   /// statement, aggregate initialization, etc.
   void fromAssignmentLike(QualType LHSType,
-                          const TypeNullability &LHSNullability,
-                          const Expr &RHS, SourceLocation Loc,
+                          const TypeNullability& LHSNullability,
+                          const Expr& RHS, const SerializedSrcLoc &Loc,
                           Evidence::Kind EvidenceKindForAssignmentFromNullable =
                               Evidence::ASSIGNED_FROM_NULLABLE) {
     const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
@@ -1264,8 +1279,9 @@ class DefinitionEvidenceCollector {
                          << VarDecl->getInit()->getType() << "\n";
             return;
           }
-          fromAssignmentLike(*VarDecl, *VarDecl->getInit(),
-                             VarDecl->getInit()->getExprLoc());
+          fromAssignmentLike(
+              *VarDecl, *VarDecl->getInit(),
+              serializeLoc(SM, VarDecl->getInit()->getExprLoc()));
         }
       }
       return;
@@ -1307,10 +1323,10 @@ class DefinitionEvidenceCollector {
         isa<ConditionalOperator>(dataflow::ignoreCFGOmittedNodes(*LHS)))
       return;
     CHECK(TypeNullability);
-    fromAssignmentLike(LHSType, *TypeNullability, *RHS, *Loc);
+    fromAssignmentLike(LHSType, *TypeNullability, *RHS, serializeLoc(SM, *Loc));
   }
 
-  void fromArithmeticArg(const Expr *Arg, SourceLocation Loc) {
+  void fromArithmeticArg(const Expr* Arg, const SerializedSrcLoc &Loc) {
     // No support needed for smart pointers, which do not support arithmetic
     // operations.
     if (!Arg || !isSupportedRawPointerType(Arg->getType())) return;
@@ -1332,7 +1348,7 @@ class DefinitionEvidenceCollector {
             return;
           case BO_AddAssign:
           case BO_SubAssign:
-            fromArithmeticArg(Op->getLHS(), Op->getExprLoc());
+            fromArithmeticArg(Op->getLHS(), serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
@@ -1343,8 +1359,8 @@ class DefinitionEvidenceCollector {
             return;
           case BO_Add:
           case BO_Sub:
-            fromArithmeticArg(Op->getLHS(), Op->getExprLoc());
-            fromArithmeticArg(Op->getRHS(), Op->getExprLoc());
+            fromArithmeticArg(Op->getLHS(), serializeLoc(SM, Op->getExprLoc()));
+            fromArithmeticArg(Op->getRHS(), serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
@@ -1357,7 +1373,8 @@ class DefinitionEvidenceCollector {
           case UO_PreInc:
           case UO_PostDec:
           case UO_PreDec:
-            fromArithmeticArg(Op->getSubExpr(), Op->getExprLoc());
+            fromArithmeticArg(Op->getSubExpr(),
+                              serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
@@ -1398,9 +1415,9 @@ class DefinitionEvidenceCollector {
         IsDefaultInitializer && isOrIsConstructedFromNullPointerConstant(
                                     InitExpr, Field->getASTContext());
 
-    fromAssignmentLike(*Field, *InitExpr, InitExpr->getExprLoc(),
-                       NullptrDefaultInit
-                           ? Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER
+    fromAssignmentLike(
+        *Field, *InitExpr, serializeLoc(SM, InitExpr->getExprLoc()),
+        NullptrDefaultInit ? Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER
                            : Evidence::ASSIGNED_FROM_NULLABLE);
   }
 
@@ -1411,7 +1428,8 @@ class DefinitionEvidenceCollector {
     for (auto [Field, InitExpr] : Helper.field_inits()) {
       if (!isSupportedPointerType(Field->getType())) continue;
 
-      fromAssignmentLike(*Field, *InitExpr, InitExpr->getExprLoc());
+      fromAssignmentLike(*Field, *InitExpr,
+                         serializeLoc(SM, InitExpr->getExprLoc()));
     }
   }
 
@@ -1438,7 +1456,7 @@ class DefinitionEvidenceCollector {
         ++I;
         continue;
       }
-      fromAssignmentLike(*Field, *Arg, Arg->getExprLoc());
+      fromAssignmentLike(*Field, *Arg, serializeLoc(SM, Arg->getExprLoc()));
       ++I;
     }
   }
@@ -1462,7 +1480,8 @@ class DefinitionEvidenceCollector {
       const Expr *Base = Op->getBase();
       if (!Base || !isSupportedRawPointerType(Base->getType())) return;
       if (auto *PV = getPointerValue(Base, Env))
-        mustBeNonnull(*PV, Op->getRBracketLoc(), Evidence::ARRAY_SUBSCRIPT);
+        mustBeNonnull(*PV, serializeLoc(SM, Op->getRBracketLoc()),
+                      Evidence::ARRAY_SUBSCRIPT);
       return;
     }
     // For smart pointers to arrays, we see a CXXOperatorCallExpr.
@@ -1472,7 +1491,8 @@ class DefinitionEvidenceCollector {
       const Expr *Base = Call->getArg(0);
       if (!Base || !isSupportedSmartPointerType(Base->getType())) return;
       if (auto *PV = getPointerValue(Base, Env))
-        mustBeNonnull(*PV, Call->getOperatorLoc(), Evidence::ARRAY_SUBSCRIPT);
+        mustBeNonnull(*PV, serializeLoc(SM, Call->getOperatorLoc()),
+                      Evidence::ARRAY_SUBSCRIPT);
     }
   }
 
@@ -1547,6 +1567,18 @@ static bool hasAnyInferenceTargets(dataflow::ReferencedDecls &RD) {
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
   constexpr std::int64_t MaxSATIterations = 2'000'000;
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
+}
+
+// Convenience override for functions that follow. Handles translation from AST
+// data into the lower-level evidence format used by `Emit`.
+static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
+                        USRCache& USRCache, const Decl& Target, Slot S,
+                        Evidence::Kind Kind, SourceLocation Loc) {
+  wrappedEmit(
+      Emit, USRCache, Target, S, Kind,
+      serializeLoc(
+          Target.getDeclContext()->getParentASTContext().getSourceManager(),
+          Loc));
 }
 
 // If D is a constructor definition, collect LEFT_NULLABLE_BY_CONSTRUCTOR
