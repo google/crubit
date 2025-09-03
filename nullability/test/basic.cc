@@ -253,6 +253,21 @@ TEST(PointerNullabilityTest, DeclarationWithInit) {
       int *_Nonnull c = new int;
     }
   )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nonnull nonnull, int* _Nullable nullable) {
+      int* _Nonnull& ref_to_nonnull_from_nonnull = nonnull;
+      int* _Nonnull& ref_to_nonnull_from_nullable = nullable;  // [[unsafe]]
+      int* _Nullable& ref_to_nullable_from_nonnull = nonnull;  // [[unsafe]]
+      int* _Nullable& ref_to_nullable_from_nullable = nullable;
+
+      int* _Nonnull const& ref_to_const_nonnull_from_nonnull = nonnull;
+      int* _Nonnull const& ref_to_const_nonnull_from_nullable =
+          nullable;  // [[unsafe]]
+      int* _Nullable const& ref_to_const_nullable_from_nonnull = nonnull;
+      int* _Nullable const& ref_to_const_nullable_from_nullable = nullable;
+    }
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, Assignment) {
