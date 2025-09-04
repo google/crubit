@@ -77,7 +77,7 @@ using dataflow::WidenResult;
 
 namespace {
 
-TypeNullability prepend(NullabilityKind Head, const TypeNullability &Tail) {
+TypeNullability prepend(NullabilityKind Head, const TypeNullability& Tail) {
   TypeNullability Result = {Head};
   Result.insert(Result.end(), Tail.begin(), Tail.end());
   return Result;
@@ -86,30 +86,30 @@ TypeNullability prepend(NullabilityKind Head, const TypeNullability &Tail) {
 // If `E` is already associated with a `PointerValue`, returns it.
 // Otherwise, associates a newly created `PointerValue` with `E` and returns it.
 // Returns null iff `E` is not a raw pointer expression.
-PointerValue *absl_nullable ensureRawPointerHasValue(const Expr *absl_nonnull E,
-                                                     Environment &Env) {
+PointerValue* absl_nullable ensureRawPointerHasValue(const Expr* absl_nonnull E,
+                                                     Environment& Env) {
   if (!isSupportedRawPointerType(E->getType())) return nullptr;
 
   if (E->isPRValue()) {
-    if (auto *Val = Env.get<PointerValue>(*E)) return Val;
-    auto *Val = cast<PointerValue>(Env.createValue(E->getType()));
+    if (auto* Val = Env.get<PointerValue>(*E)) return Val;
+    auto* Val = cast<PointerValue>(Env.createValue(E->getType()));
     Env.setValue(*E, *Val);
     return Val;
   }
 
-  StorageLocation *Loc = Env.getStorageLocation(*E);
+  StorageLocation* Loc = Env.getStorageLocation(*E);
   if (Loc == nullptr) {
     Loc = &Env.createStorageLocation(*E);
     Env.setStorageLocation(*E, *Loc);
   }
-  if (auto *Val = Env.get<PointerValue>(*Loc)) return Val;
-  auto *Val = cast<PointerValue>(Env.createValue(E->getType()));
+  if (auto* Val = Env.get<PointerValue>(*Loc)) return Val;
+  auto* Val = cast<PointerValue>(Env.createValue(E->getType()));
   Env.setValue(*Loc, *Val);
   return Val;
 }
 
-void computeNullability(const Expr *absl_nonnull E,
-                        TransferState<PointerNullabilityLattice> &State,
+void computeNullability(const Expr* absl_nonnull E,
+                        TransferState<PointerNullabilityLattice>& State,
                         std::function<TypeNullability()> Compute) {
   (void)State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
     auto Nullability = Compute();
@@ -140,9 +140,9 @@ void computeNullability(const Expr *absl_nonnull E,
 
 // Returns the computed nullability for a subexpr of the current expression.
 // This is always available as we compute bottom-up.
-const TypeNullability &getNullabilityForChild(
-    const Expr *absl_nonnull E,
-    TransferState<PointerNullabilityLattice> &State) {
+const TypeNullability& getNullabilityForChild(
+    const Expr* absl_nonnull E,
+    TransferState<PointerNullabilityLattice>& State) {
   return State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
     // Since we process child nodes before parents, we should already have
     // computed the child nullability. However, this is not true in all test
@@ -158,16 +158,16 @@ const TypeNullability &getNullabilityForChild(
   });
 }
 
-static const Decl *absl_nullable getAssociatedTemplateDecl(
-    const SubstTemplateTypeParmType *ST) {
-  const Decl *AssociatedDecl = ST->getAssociatedDecl();
+static const Decl* absl_nullable getAssociatedTemplateDecl(
+    const SubstTemplateTypeParmType* ST) {
+  const Decl* AssociatedDecl = ST->getAssociatedDecl();
   if (!AssociatedDecl) return nullptr;
   if (isa<RedeclarableTemplateDecl>(AssociatedDecl)) return AssociatedDecl;
-  if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(AssociatedDecl))
+  if (auto* VTSD = dyn_cast<VarTemplateSpecializationDecl>(AssociatedDecl))
     return VTSD->getSpecializedTemplate();
-  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(AssociatedDecl))
+  if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(AssociatedDecl))
     return CTSD->getSpecializedTemplate();
-  if (auto *FD = dyn_cast<FunctionDecl>(AssociatedDecl);
+  if (auto* FD = dyn_cast<FunctionDecl>(AssociatedDecl);
       FD && FD->isTemplateInstantiation())
     return FD->getPrimaryTemplate();
   return nullptr;
@@ -191,18 +191,18 @@ static const Decl *absl_nullable getAssociatedTemplateDecl(
 // where template arguments can be determined from surrounding code.
 struct Resugarer {
   using SubstTy = SubstTemplateTypeParmType;
-  const TypeNullabilityDefaults &Defaults;
+  const TypeNullabilityDefaults& Defaults;
 
-  Resugarer(const TypeNullabilityDefaults &Defaults) : Defaults(Defaults) {}
+  Resugarer(const TypeNullabilityDefaults& Defaults) : Defaults(Defaults) {}
 
   // The entity referenced is nested within a class template, e.g. `a.front()`
   // where a is a vector<int* _Nonnull>.
   // We have a nullability vector [Nonnull] for the specialization vector<int*>.
   struct FromEnclosingClassNullability {
-    ClassTemplateSpecializationDecl *Specialization;
+    ClassTemplateSpecializationDecl* Specialization;
     const ArrayRef<PointerTypeNullability> SpecializationNullability;
 
-    std::optional<TypeNullability> operator()(const SubstTy *ST) const {
+    std::optional<TypeNullability> operator()(const SubstTy* ST) const {
       if (Specialization != ST->getAssociatedDecl()) return std::nullopt;
       // TODO: The code below does not deal correctly with partial
       // specializations. We should eventually handle these, but for now, just
@@ -233,11 +233,11 @@ struct Resugarer {
   // The entity is referenced using template arguments, e.g.
   // `make_unique<int* _Nonnull>`. We have the template arguments.
   struct FromTemplateArgs {
-    TemplateDecl *Template;
+    TemplateDecl* Template;
     ArrayRef<TemplateArgumentLoc> Args;
 
     std::optional<TypeNullability> operator()(
-        const SubstTy *ST, const TypeNullabilityDefaults &Defaults) const {
+        const SubstTy* ST, const TypeNullabilityDefaults& Defaults) const {
       if (Template != getAssociatedTemplateDecl(ST)) return std::nullopt;
       // Some or all of the template arguments may be deduced, and we won't
       // see those on the `DeclRefExpr`. If the template argument was deduced,
@@ -252,7 +252,7 @@ struct Resugarer {
       // referring to an argument that follows the pack.
       if (ST->getIndex() >= Args.size()) return std::nullopt;
 
-      TypeSourceInfo *TSI = Args[ST->getIndex()].getTypeSourceInfo();
+      TypeSourceInfo* TSI = Args[ST->getIndex()].getTypeSourceInfo();
       if (TSI == nullptr) return std::nullopt;
       return getTypeNullability(TSI->getTypeLoc(), Defaults);
     }
@@ -261,13 +261,13 @@ struct Resugarer {
 
   // Add a FromTemplateArgs context reflecting that the specialization
   // `ResolvedTo` was chosen using the provided template arguments.
-  void addTemplateArgs(const ValueDecl *ResolvedTo,
+  void addTemplateArgs(const ValueDecl* ResolvedTo,
                        ArrayRef<TemplateArgumentLoc> UsingArgs) {
-    if (const auto *VD = llvm::dyn_cast<VarDecl>(ResolvedTo)) {
+    if (const auto* VD = llvm::dyn_cast<VarDecl>(ResolvedTo)) {
       Template.push_back(
           {cast<VarTemplateSpecializationDecl>(VD)->getSpecializedTemplate(),
            UsingArgs});
-    } else if (auto *FD = llvm::dyn_cast<FunctionDecl>(ResolvedTo)) {
+    } else if (auto* FD = llvm::dyn_cast<FunctionDecl>(ResolvedTo)) {
       // TODO(b/268345783): We don't currently handle template arguments for
       // function templates with template parameter packs correctly when looking
       // up arguments later. For function templates, other template parameters
@@ -277,7 +277,7 @@ struct Resugarer {
       // with template parameter packs followed by other template parameters.
       auto TemplateArgs = FD->getTemplateSpecializationArgs()->asArray();
       bool SeenPack = false;
-      for (const auto &TA : TemplateArgs) {
+      for (const auto& TA : TemplateArgs) {
         if (SeenPack) return;
         if (TA.getKind() == TemplateArgument::Pack) SeenPack = true;
       }
@@ -288,23 +288,23 @@ struct Resugarer {
 
   // Implement the getTypeNullability() callback interface by searching
   // all our contexts for a match.
-  std::optional<TypeNullability> operator()(const SubstTy *ST) const {
-    for (const auto &R : Enclosing)
+  std::optional<TypeNullability> operator()(const SubstTy* ST) const {
+    for (const auto& R : Enclosing)
       if (auto Ret = R(ST)) return Ret;
-    for (const auto &R : Template)
+    for (const auto& R : Template)
       if (auto Ret = R(ST, Defaults)) return Ret;
     return std::nullopt;
   }
 };
 
 PointerTypeNullability getPointerTypeNullability(
-    const Expr *absl_nonnull E, PointerNullabilityAnalysis::Lattice &L) {
+    const Expr* absl_nonnull E, PointerNullabilityAnalysis::Lattice& L) {
   // TODO: handle this in non-flow-sensitive transfer instead
   if (auto FromClang = E->getType()->getNullability();
       FromClang && *FromClang != NullabilityKind::Unspecified)
     return *FromClang;
 
-  if (const auto *TyNullability = L.getTypeNullability(E)) {
+  if (const auto* TyNullability = L.getTypeNullability(E)) {
     if (!TyNullability->empty())
       // Return the nullability of the topmost pointer in the type.
       return TyNullability->front();
@@ -314,8 +314,8 @@ PointerTypeNullability getPointerTypeNullability(
 }
 
 void initPointerFromTypeNullability(
-    PointerValue &PointerVal, const Expr *absl_nonnull E,
-    TransferState<PointerNullabilityLattice> &State) {
+    PointerValue& PointerVal, const Expr* absl_nonnull E,
+    TransferState<PointerNullabilityLattice>& State) {
   initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
                        getPointerTypeNullability(E, State.Lattice));
 }
@@ -324,15 +324,15 @@ void initPointerFromTypeNullability(
 // `PointerValue` associated with it. Also ensure that it has nullability
 // state.
 void ensureRawPointerHasValueAndNullability(
-    const CFGElement &Elt, Environment &Env,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CFGElement& Elt, Environment& Env,
+    TransferState<PointerNullabilityLattice>& State) {
   auto S = Elt.getAs<CFGStmt>();
   if (!S) return;
 
-  const Expr *E = dyn_cast<Expr>(S->getStmt());
+  const Expr* E = dyn_cast<Expr>(S->getStmt());
   if (!E) return;
 
-  if (auto *PointerVal = ensureRawPointerHasValue(E, Env)) {
+  if (auto* PointerVal = ensureRawPointerHasValue(E, Env)) {
     if (!hasPointerNullState(*PointerVal)) {
       initPointerFromTypeNullability(*PointerVal, E, State);
     }
@@ -346,22 +346,22 @@ void ensureRawPointerHasValueAndNullability(
 /// -  The original pointer value if no unpacking took place.
 /// -  Null if `PointerLoc` is not associated with a value.
 /// This is analogous to the unpacking done on `TopBoolValue`s in the framework.
-PointerValue *absl_nullable unpackPointerValue(StorageLocation &PointerLoc,
-                                               Environment &Env) {
-  auto *PointerVal = Env.get<PointerValue>(PointerLoc);
+PointerValue* absl_nullable unpackPointerValue(StorageLocation& PointerLoc,
+                                               Environment& Env) {
+  auto* PointerVal = Env.get<PointerValue>(PointerLoc);
   if (!PointerVal) return nullptr;
 
   PointerNullState NullState = getPointerNullState(*PointerVal);
   if (NullState.FromNullable && NullState.IsNull) return PointerVal;
 
-  auto &A = Env.getDataflowAnalysisContext().arena();
+  auto& A = Env.getDataflowAnalysisContext().arena();
 
   if (NullState.FromNullable == nullptr)
     NullState.FromNullable = &A.makeAtomRef(A.makeAtom());
   if (NullState.IsNull == nullptr)
     NullState.IsNull = &A.makeAtomRef(A.makeAtom());
 
-  auto &NewPointerVal = Env.create<PointerValue>(PointerVal->getPointeeLoc());
+  auto& NewPointerVal = Env.create<PointerValue>(PointerVal->getPointeeLoc());
   initPointerNullState(NewPointerVal, Env.getDataflowAnalysisContext(),
                        NullState);
   Env.setValue(PointerLoc, NewPointerVal);
@@ -369,16 +369,16 @@ PointerValue *absl_nullable unpackPointerValue(StorageLocation &PointerLoc,
   return &NewPointerVal;
 }
 
-void setToPointerWithNullability(StorageLocation &PtrLoc, NullabilityKind NK,
-                                 Environment &Env) {
-  auto &Val = *cast<PointerValue>(Env.createValue(PtrLoc.getType()));
+void setToPointerWithNullability(StorageLocation& PtrLoc, NullabilityKind NK,
+                                 Environment& Env) {
+  auto& Val = *cast<PointerValue>(Env.createValue(PtrLoc.getType()));
   initPointerNullState(Val, Env.getDataflowAnalysisContext(), NK);
   Env.setValue(PtrLoc, Val);
 }
 
-void initSmartPointerForExpr(const Expr *E,
-                             TransferState<PointerNullabilityLattice> &State) {
-  RecordStorageLocation *Loc = nullptr;
+void initSmartPointerForExpr(const Expr* E,
+                             TransferState<PointerNullabilityLattice>& State) {
+  RecordStorageLocation* Loc = nullptr;
   if (E->isPRValue()) {
     Loc = &State.Env.getResultObjectLocation(*E);
   } else {
@@ -389,8 +389,8 @@ void initSmartPointerForExpr(const Expr *E,
     }
   }
 
-  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
-  auto *Val = State.Env.get<PointerValue>(PtrLoc);
+  StorageLocation& PtrLoc = Loc->getSyntheticField(PtrField);
+  auto* Val = State.Env.get<PointerValue>(PtrLoc);
   if (Val == nullptr) {
     Val = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
     State.Env.setValue(PtrLoc, *Val);
@@ -400,22 +400,22 @@ void initSmartPointerForExpr(const Expr *E,
 }
 
 void transferValue_NullPointer(
-    const Expr *absl_nonnull NullPointer, const MatchFinder::MatchResult &,
-    TransferState<PointerNullabilityLattice> &State) {
-  if (auto *PointerVal = ensureRawPointerHasValue(NullPointer, State.Env)) {
+    const Expr* absl_nonnull NullPointer, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
+  if (auto* PointerVal = ensureRawPointerHasValue(NullPointer, State.Env)) {
     initNullPointer(*PointerVal, State.Env.getDataflowAnalysisContext());
   }
 }
 
 void transferValue_PointerIncOrDec(
-    const UnaryOperator *absl_nonnull UnaryOp, const MatchFinder::MatchResult &,
-    TransferState<PointerNullabilityLattice> &State) {
+    const UnaryOperator* absl_nonnull UnaryOp, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
   // The framework propagates the subexpression's value (in the case of post-
   // increment) or storage location (in the case of pre-increment). We just
   // need to create a new nonnull value.
-  if (StorageLocation *Loc =
+  if (StorageLocation* Loc =
           State.Env.getStorageLocation(*UnaryOp->getSubExpr())) {
-    auto *Val = cast<PointerValue>(State.Env.createValue(Loc->getType()));
+    auto* Val = cast<PointerValue>(State.Env.createValue(Loc->getType()));
     initPointerNullState(*Val, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::NonNull);
     State.Env.setValue(*Loc, *Val);
@@ -423,14 +423,14 @@ void transferValue_PointerIncOrDec(
 }
 
 void transferValue_PointerAddOrSubAssign(
-    const BinaryOperator *absl_nonnull BinaryOp,
-    const MatchFinder::MatchResult &,
-    TransferState<PointerNullabilityLattice> &State) {
+    const BinaryOperator* absl_nonnull BinaryOp,
+    const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
   // The framework propagates the storage location of the LHS, so we just need
   // to create a new nonnull value.
-  if (StorageLocation *Loc =
+  if (StorageLocation* Loc =
           State.Env.getStorageLocation(*BinaryOp->getLHS())) {
-    auto *Val = cast<PointerValue>(State.Env.createValue(Loc->getType()));
+    auto* Val = cast<PointerValue>(State.Env.createValue(Loc->getType()));
     initPointerNullState(*Val, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::NonNull);
     State.Env.setValue(*Loc, *Val);
@@ -438,21 +438,21 @@ void transferValue_PointerAddOrSubAssign(
 }
 
 void transferValue_NotNullPointer(
-    const Expr *absl_nonnull NotNullPointer, const MatchFinder::MatchResult &,
-    TransferState<PointerNullabilityLattice> &State) {
-  if (auto *PointerVal = ensureRawPointerHasValue(NotNullPointer, State.Env)) {
+    const Expr* absl_nonnull NotNullPointer, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
+  if (auto* PointerVal = ensureRawPointerHasValue(NotNullPointer, State.Env)) {
     initPointerNullState(*PointerVal, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::NonNull);
   }
 }
 
 bool isStdWeakPtrType(QualType Ty) {
-  const CXXRecordDecl *RD = Ty.getCanonicalType()->getAsCXXRecordDecl();
+  const CXXRecordDecl* RD = Ty.getCanonicalType()->getAsCXXRecordDecl();
   if (RD == nullptr) return false;
 
   if (!RD->getDeclContext()->isStdNamespace()) return false;
 
-  const IdentifierInfo *ID = RD->getIdentifier();
+  const IdentifierInfo* ID = RD->getIdentifier();
   if (ID == nullptr) return false;
 
   return ID->getName() == "weak_ptr";
@@ -464,8 +464,8 @@ bool isPointerTypeConvertible(QualType From, QualType To) {
 
   if (From == To) return true;
 
-  auto *FromDecl = From->getPointeeType()->getAsCXXRecordDecl();
-  auto *ToDecl = To->getPointeeType()->getAsCXXRecordDecl();
+  auto* FromDecl = From->getPointeeType()->getAsCXXRecordDecl();
+  auto* ToDecl = To->getPointeeType()->getAsCXXRecordDecl();
 
   // If these aren't pointers to records, then just assume they're convertible.
   if (FromDecl == nullptr || ToDecl == nullptr) return true;
@@ -474,9 +474,9 @@ bool isPointerTypeConvertible(QualType From, QualType To) {
 }
 
 void transferValue_SmartPointerConstructor(
-    const CXXConstructExpr *Ctor, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*Ctor);
+    const CXXConstructExpr* Ctor, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  RecordStorageLocation& Loc = State.Env.getResultObjectLocation(*Ctor);
 
   // Default and `nullptr_t` constructor.
   if (Ctor->getConstructor()->isDefaultConstructor() ||
@@ -499,7 +499,7 @@ void transferValue_SmartPointerConstructor(
   // Copy or move from an existing smart pointer.
   if (Ctor->getNumArgs() >= 1 &&
       isSupportedSmartPointerType(Ctor->getArg(0)->getType())) {
-    auto *SrcLoc = Ctor->getArg(0)->isGLValue()
+    auto* SrcLoc = Ctor->getArg(0)->isGLValue()
                        ? State.Env.get<RecordStorageLocation>(*Ctor->getArg(0))
                        : &State.Env.getResultObjectLocation(*Ctor->getArg(0));
     if (Ctor->getNumArgs() == 2 &&
@@ -530,9 +530,9 @@ void transferValue_SmartPointerConstructor(
 }
 
 void transferValue_SmartPointerAssignment(
-    const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto *Loc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(0));
+    const CXXOperatorCallExpr* OpCall, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  auto* Loc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(0));
   if (Loc == nullptr) return;
 
   if (OpCall->getArg(1)->getType()->isNullPtrType()) {
@@ -548,18 +548,18 @@ void transferValue_SmartPointerAssignment(
     // other than a raw pointer, smart pointer, or nullptr_t, then it's
     // nonnull (instead of unspecified).
     // If we add more cases, expand `diagnoseSmartPointerAssignment` as well.
-    StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+    StorageLocation& PtrLoc = Loc->getSyntheticField(PtrField);
     setToPointerWithNullability(PtrLoc, NullabilityKind::Unspecified,
                                 State.Env);
     return;
   }
 
-  auto *SrcLoc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(1));
+  auto* SrcLoc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(1));
   setSmartPointerValue(*Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env),
                        State.Env);
 
   // If this is the move assignment operator, set the source to null.
-  auto *Method = dyn_cast_or_null<CXXMethodDecl>(OpCall->getCalleeDecl());
+  auto* Method = dyn_cast_or_null<CXXMethodDecl>(OpCall->getCalleeDecl());
   if (Method != nullptr &&
       Method->getParamDecl(0)->getType()->isRValueReferenceType()) {
     setSmartPointerToNull(*SrcLoc, State.Env);
@@ -567,8 +567,8 @@ void transferValue_SmartPointerAssignment(
 }
 
 void transferValue_SmartPointerReleaseCall(
-    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   // If the return type isn't what we expect, bail out.
   // This can happen if the smart pointer doesn't declare a `pointer` or
   // `element_type` type alias and our fallback logic of using `T*` as the
@@ -580,20 +580,20 @@ void transferValue_SmartPointerReleaseCall(
     return;
   }
 
-  RecordStorageLocation *Loc = getImplicitObjectLocation(*MCE, State.Env);
+  RecordStorageLocation* Loc = getImplicitObjectLocation(*MCE, State.Env);
   if (Loc == nullptr) return;
-  StorageLocation &PtrLoc = Loc->getSyntheticField(PtrField);
+  StorageLocation& PtrLoc = Loc->getSyntheticField(PtrField);
 
-  if (auto *Val = State.Env.get<PointerValue>(PtrLoc))
+  if (auto* Val = State.Env.get<PointerValue>(PtrLoc))
     State.Env.setValue(*MCE, *Val);
   State.Env.setValue(
       PtrLoc, createNullPointer(PtrLoc.getType()->getPointeeType(), State.Env));
 }
 
 void transferValue_SmartPointerResetCall(
-    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  RecordStorageLocation *Loc = getImplicitObjectLocation(*MCE, State.Env);
+    const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  RecordStorageLocation* Loc = getImplicitObjectLocation(*MCE, State.Env);
   if (Loc == nullptr) return;
 
   // Zero-arg and `nullptr_t` overloads, as well as single-argument constructor
@@ -609,34 +609,34 @@ void transferValue_SmartPointerResetCall(
                        State.Env);
 }
 
-void swapSmartPointers(RecordStorageLocation *Loc1, RecordStorageLocation *Loc2,
-                       Environment &Env) {
-  PointerValue *Val1 = getPointerValueFromSmartPointer(Loc1, Env);
-  PointerValue *Val2 = getPointerValueFromSmartPointer(Loc2, Env);
+void swapSmartPointers(RecordStorageLocation* Loc1, RecordStorageLocation* Loc2,
+                       Environment& Env) {
+  PointerValue* Val1 = getPointerValueFromSmartPointer(Loc1, Env);
+  PointerValue* Val2 = getPointerValueFromSmartPointer(Loc2, Env);
 
   if (Loc1) setSmartPointerValue(*Loc1, Val2, Env);
   if (Loc2) setSmartPointerValue(*Loc2, Val1, Env);
 }
 
 void transferValue_SmartPointerMemberSwapCall(
-    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   swapSmartPointers(getImplicitObjectLocation(*MCE, State.Env),
                     State.Env.get<RecordStorageLocation>(*MCE->getArg(0)),
                     State.Env);
 }
 
 void transferValue_SmartPointerFreeSwapCall(
-    const CallExpr *CE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CallExpr* CE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   swapSmartPointers(State.Env.get<RecordStorageLocation>(*CE->getArg(0)),
                     State.Env.get<RecordStorageLocation>(*CE->getArg(1)),
                     State.Env);
 }
 
 void transferValue_SmartPointerGetCall(
-    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   // If the return type isn't what we expect, bail out.
   // See `transferValue_SmartPointerReleaseCall()` for more details.
   if (MCE->getType()->getCanonicalTypeUnqualified() !=
@@ -644,35 +644,35 @@ void transferValue_SmartPointerGetCall(
           ->getCanonicalTypeUnqualified()) {
     return;
   }
-  if (Value *Val = getPointerValueFromSmartPointer(
+  if (Value* Val = getPointerValueFromSmartPointer(
           getImplicitObjectLocation(*MCE, State.Env), State.Env))
     State.Env.setValue(*MCE, *Val);
 }
 
 void transferValue_SmartPointerBoolConversionCall(
-    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  if (PointerValue *Val = getPointerValueFromSmartPointer(
+    const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  if (PointerValue* Val = getPointerValueFromSmartPointer(
           getImplicitObjectLocation(*MCE, State.Env), State.Env)) {
-    if (const Formula *IsNull = getPointerNullState(*Val).IsNull)
+    if (const Formula* IsNull = getPointerNullState(*Val).IsNull)
       State.Env.setValue(
           *MCE, State.Env.makeNot(State.Env.arena().makeBoolValue(*IsNull)));
   }
 }
 
-QualType getReceiverIgnoringImpCastsType(const CXXOperatorCallExpr *OpCall) {
+QualType getReceiverIgnoringImpCastsType(const CXXOperatorCallExpr* OpCall) {
   // Matchers hasArgument() appears to ignore implicit casts, so we ignore them
   // here as well to get the same behavior:
   // https://github.com/llvm/llvm-project/blob/a58c3d3ac7c6b2fd9710ab2189d7971ef37e714f/clang/include/clang/ASTMatchers/ASTMatchers.h#L4563
-  const Expr *Receiver = OpCall->getArg(0)->IgnoreImpCasts();
+  const Expr* Receiver = OpCall->getArg(0)->IgnoreImpCasts();
   if (Receiver->isPRValue() && Receiver->getType()->isPointerType())
     return Receiver->getType()->getPointeeType();
   return Receiver->getType();
 }
 
 void transferValue_SmartPointerOperatorStar(
-    const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXOperatorCallExpr* OpCall, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   // If the return type isn't what we expect, bail out.
   // See `transferValue_SmartPointerReleaseCall()` for more details.
   // Besides incorrectly guessing the underlyingRawPointerType, we could also
@@ -686,14 +686,14 @@ void transferValue_SmartPointerOperatorStar(
           ->getCanonicalTypeUnqualified()) {
     return;
   }
-  if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
+  if (PointerValue* Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setStorageLocation(*OpCall, Val->getPointeeLoc());
   }
 }
 
 void transferValue_SmartPointerOperatorArrow(
-    const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXOperatorCallExpr* OpCall, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   // If the return type isn't what we expect, bail out.
   // See `transferValue_SmartPointerReleaseCall()` for more details.
   if (OpCall->getType()->getCanonicalTypeUnqualified() !=
@@ -701,16 +701,16 @@ void transferValue_SmartPointerOperatorArrow(
           ->getCanonicalTypeUnqualified()) {
     return;
   }
-  if (PointerValue *Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
+  if (PointerValue* Val = getSmartPointerValue(OpCall->getArg(0), State.Env)) {
     State.Env.setValue(*OpCall, *Val);
   }
 }
 
 void transferValue_SmartPointerFactoryCall(
-    const CallExpr *CE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*CE);
-  StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
+    const CallExpr* CE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  RecordStorageLocation& Loc = State.Env.getResultObjectLocation(*CE);
+  StorageLocation& PtrLoc = Loc.getSyntheticField(PtrField);
 
   setToPointerWithNullability(PtrLoc, NullabilityKind::NonNull, State.Env);
 
@@ -721,15 +721,15 @@ void transferValue_SmartPointerFactoryCall(
       CE->getNumArgs() == 1 &&
       (CE->getArg(0)->getType()->isPointerType() ||
        CE->getArg(0)->getType()->isNullPtrType())) {
-    auto *SmartPV = State.Env.get<PointerValue>(PtrLoc);
+    auto* SmartPV = State.Env.get<PointerValue>(PtrLoc);
     if (!SmartPV) return;
-    auto *RawPV = State.Env.get<PointerValue>(SmartPV->getPointeeLoc());
+    auto* RawPV = State.Env.get<PointerValue>(SmartPV->getPointeeLoc());
     if (!RawPV) return;
     if (CE->getArg(0)->getType()->isNullPtrType()) {
       initNullPointer(*RawPV, State.Env.getDataflowAnalysisContext());
       return;
     }
-    auto *ArgPV = getRawPointerValue(CE->getArg(0), State.Env);
+    auto* ArgPV = getRawPointerValue(CE->getArg(0), State.Env);
     if (!ArgPV || !hasPointerNullState(*ArgPV)) return;
     initPointerNullState(*RawPV, State.Env.getDataflowAnalysisContext(),
                          getPointerNullState(*ArgPV));
@@ -737,20 +737,20 @@ void transferValue_SmartPointerFactoryCall(
 }
 
 void transferValue_SmartPointerComparisonOpCall(
-    const CXXOperatorCallExpr *OpCall, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXOperatorCallExpr* OpCall, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   // Formula representing an equality (`==`) comparison of the two operands.
   // If the operator is `!=`, this will need to be negated below.
-  const Formula *EqualityFormula = nullptr;
+  const Formula* EqualityFormula = nullptr;
 
   bool NullPtr1 = OpCall->getArg(0)->getType()->isNullPtrType();
   bool NullPtr2 = OpCall->getArg(1)->getType()->isNullPtrType();
   assert(!NullPtr1 || !NullPtr2);
 
-  PointerValue *Val1 = nullptr;
+  PointerValue* Val1 = nullptr;
   if (!NullPtr1) Val1 = getSmartPointerValue(OpCall->getArg(0), State.Env);
 
-  PointerValue *Val2 = nullptr;
+  PointerValue* Val2 = nullptr;
   if (!NullPtr2) Val2 = getSmartPointerValue(OpCall->getArg(1), State.Env);
 
   if (NullPtr1) {
@@ -767,7 +767,7 @@ void transferValue_SmartPointerComparisonOpCall(
 
   if (EqualityFormula == nullptr) return;
 
-  BoolValue &EqualityValue = State.Env.arena().makeBoolValue(*EqualityFormula);
+  BoolValue& EqualityValue = State.Env.arena().makeBoolValue(*EqualityFormula);
 
   if (OpCall->getOperator() == OO_EqualEqual)
     State.Env.setValue(*OpCall, EqualityValue);
@@ -776,23 +776,23 @@ void transferValue_SmartPointerComparisonOpCall(
 }
 
 void transferValue_SharedPtrCastCall(
-    const CallExpr *CE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  Environment &Env = State.Env;
-  DataflowAnalysisContext &Ctx = Env.getDataflowAnalysisContext();
-  Arena &A = Env.arena();
+    const CallExpr* CE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  Environment& Env = State.Env;
+  DataflowAnalysisContext& Ctx = Env.getDataflowAnalysisContext();
+  Arena& A = Env.arena();
 
-  auto *Callee = dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl());
+  auto* Callee = dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl());
   if (Callee == nullptr) return;
 
-  auto *SrcLoc = Env.get<RecordStorageLocation>(*CE->getArg(0));
+  auto* SrcLoc = Env.get<RecordStorageLocation>(*CE->getArg(0));
   if (SrcLoc == nullptr) return;
-  StorageLocation &SrcPtrLoc = SrcLoc->getSyntheticField(PtrField);
-  auto *SrcPtrVal = Env.get<PointerValue>(SrcPtrLoc);
+  StorageLocation& SrcPtrLoc = SrcLoc->getSyntheticField(PtrField);
+  auto* SrcPtrVal = Env.get<PointerValue>(SrcPtrLoc);
   if (SrcPtrVal == nullptr) return;
 
-  RecordStorageLocation &DestLoc = Env.getResultObjectLocation(*CE);
-  StorageLocation &DestPtrLoc = DestLoc.getSyntheticField(PtrField);
+  RecordStorageLocation& DestLoc = Env.getResultObjectLocation(*CE);
+  StorageLocation& DestPtrLoc = DestLoc.getSyntheticField(PtrField);
 
   if (Callee->getName() == "const_pointer_cast") {
     // A `const_pointer_cast` will definitely produce a pointer with the same
@@ -800,7 +800,7 @@ void transferValue_SharedPtrCastCall(
     // pointer value.
     Env.setValue(DestPtrLoc, *SrcPtrVal);
   } else {
-    auto &DestPtrVal =
+    auto& DestPtrVal =
         *cast<PointerValue>(Env.createValue(DestPtrLoc.getType()));
     initPointerNullState(DestPtrVal, Ctx);
     State.Env.setValue(DestPtrLoc, DestPtrVal);
@@ -846,17 +846,17 @@ void transferValue_SharedPtrCastCall(
 }
 
 void transferValue_WeakPtrLockCall(
-    const CXXMemberCallExpr *MCE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  RecordStorageLocation &Loc = State.Env.getResultObjectLocation(*MCE);
-  StorageLocation &PtrLoc = Loc.getSyntheticField(PtrField);
+    const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  RecordStorageLocation& Loc = State.Env.getResultObjectLocation(*MCE);
+  StorageLocation& PtrLoc = Loc.getSyntheticField(PtrField);
 
   setToPointerWithNullability(PtrLoc, NullabilityKind::Nullable, State.Env);
 }
 
 void transferValue_SmartPointerArrowMemberExpr(
-    const MemberExpr *ME, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const MemberExpr* ME, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   // Most accesses of a smart pointer involve a glvalue of smart pointer type,
   // and `transferValue_SmartPointer` will ensure in this case that the
   // nullability properties of the underlying raw pointer are initialized.
@@ -865,23 +865,23 @@ void transferValue_SmartPointerArrowMemberExpr(
   // and this function handles initialization of the underlying raw pointer
   // in this case.
 
-  const Expr &Base = *ME->getBase();
-  auto *BasePtrVal = State.Env.get<PointerValue>(Base);
+  const Expr& Base = *ME->getBase();
+  auto* BasePtrVal = State.Env.get<PointerValue>(Base);
   if (BasePtrVal == nullptr) {
     BasePtrVal = cast<PointerValue>(State.Env.createValue(Base.getType()));
     State.Env.setValue(Base, *BasePtrVal);
   }
 
-  auto &SmartPtrLoc = cast<RecordStorageLocation>(BasePtrVal->getPointeeLoc());
-  StorageLocation &PtrLoc = SmartPtrLoc.getSyntheticField(PtrField);
-  auto *PtrVal = State.Env.get<PointerValue>(PtrLoc);
+  auto& SmartPtrLoc = cast<RecordStorageLocation>(BasePtrVal->getPointeeLoc());
+  StorageLocation& PtrLoc = SmartPtrLoc.getSyntheticField(PtrField);
+  auto* PtrVal = State.Env.get<PointerValue>(PtrLoc);
   if (PtrVal == nullptr) {
     PtrVal = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
     State.Env.setValue(PtrLoc, *PtrVal);
   }
 
   PointerTypeNullability Nullability = NullabilityKind::Unspecified;
-  if (const auto *TyNullability =
+  if (const auto* TyNullability =
           State.Lattice.getTypeNullability(ME->getBase())) {
     if (TyNullability->size() >= 2) Nullability = (*TyNullability)[1];
   }
@@ -890,19 +890,19 @@ void transferValue_SmartPointerArrowMemberExpr(
                        Nullability);
 }
 
-void transferValue_Pointer(const Expr *absl_nonnull PointerExpr,
-                           const MatchFinder::MatchResult &Result,
-                           TransferState<PointerNullabilityLattice> &State) {
-  auto *PointerVal = ensureRawPointerHasValue(PointerExpr, State.Env);
+void transferValue_Pointer(const Expr* absl_nonnull PointerExpr,
+                           const MatchFinder::MatchResult& Result,
+                           TransferState<PointerNullabilityLattice>& State) {
+  auto* PointerVal = ensureRawPointerHasValue(PointerExpr, State.Env);
   if (!PointerVal) return;
 
   initPointerFromTypeNullability(*PointerVal, PointerExpr, State);
 
-  if (const auto *Cast = dyn_cast<CastExpr>(PointerExpr);
+  if (const auto* Cast = dyn_cast<CastExpr>(PointerExpr);
       Cast && Cast->getCastKind() == CK_LValueToRValue) {
-    if (StorageLocation *Loc =
+    if (StorageLocation* Loc =
             State.Env.getStorageLocation(*Cast->getSubExpr())) {
-      if (PointerValue *Val = unpackPointerValue(*Loc, State.Env)) {
+      if (PointerValue* Val = unpackPointerValue(*Loc, State.Env)) {
         State.Env.setValue(*PointerExpr, *Val);
       }
     }
@@ -913,11 +913,11 @@ void transferValue_Pointer(const Expr *absl_nonnull PointerExpr,
 //
 // `LHSNull` and `RHSNull` represent the nullability of the left- and right-hand
 // expresssions, respectively. A nullptr value is interpreted as Top.
-BoolValue *absl_nullable processPointerComparison(
-    const Formula &ComparisonFormula, const Formula *absl_nullable LHSNull,
-    const Formula *absl_nullable RHSNull, BinaryOperatorKind Opcode,
-    Environment &Env) {
-  auto &A = Env.arena();
+BoolValue* absl_nullable processPointerComparison(
+    const Formula& ComparisonFormula, const Formula* absl_nullable LHSNull,
+    const Formula* absl_nullable RHSNull, BinaryOperatorKind Opcode,
+    Environment& Env) {
+  auto& A = Env.arena();
 
   // If the null state of either pointer is "top", the result of the comparison
   // is a top bool, and we don't have any knowledge we can add to the flow
@@ -936,9 +936,9 @@ BoolValue *absl_nullable processPointerComparison(
     return &A.makeBoolValue(Opcode == BO_EQ ? *LHSNull : A.makeNot(*LHSNull));
 
   CHECK(Opcode == BO_EQ || Opcode == BO_NE);
-  auto &PointerEQ =
+  auto& PointerEQ =
       Opcode == BO_EQ ? ComparisonFormula : A.makeNot(ComparisonFormula);
-  auto &PointerNE =
+  auto& PointerNE =
       Opcode == BO_EQ ? A.makeNot(ComparisonFormula) : ComparisonFormula;
 
   // nullptr == nullptr
@@ -958,25 +958,25 @@ BoolValue *absl_nullable processPointerComparison(
 // unknown pointers when there is evidence that it is nullable, for example
 // when the pointer is compared to nullptr, or cast to boolean.
 void transferValue_NullCheckComparison(
-    const BinaryOperator *absl_nonnull BinaryOp,
-    const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto *LHS = BinaryOp->getLHS();
-  auto *RHS = BinaryOp->getRHS();
+    const BinaryOperator* absl_nonnull BinaryOp,
+    const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  auto* LHS = BinaryOp->getLHS();
+  auto* RHS = BinaryOp->getRHS();
   assert(LHS != nullptr && RHS != nullptr);
 
   // Boolean representing the comparison between the two pointer values.
   // We can rely on the dataflow framework to have produced a value for this.
-  auto *ComparisonVal = State.Env.get<BoolValue>(*BinaryOp);
+  auto* ComparisonVal = State.Env.get<BoolValue>(*BinaryOp);
   assert(ComparisonVal != nullptr);
-  auto &ComparisonFormula = ComparisonVal->formula();
+  auto& ComparisonFormula = ComparisonVal->formula();
 
-  auto *LHSVal = getRawPointerValue(LHS, State.Env);
+  auto* LHSVal = getRawPointerValue(LHS, State.Env);
   if (!LHSVal || !hasPointerNullState(*LHSVal)) return;
-  auto *RHSVal = getRawPointerValue(RHS, State.Env);
+  auto* RHSVal = getRawPointerValue(RHS, State.Env);
   if (!RHSVal || !hasPointerNullState(*RHSVal)) return;
 
-  if (auto *Val = processPointerComparison(ComparisonFormula,
+  if (auto* Val = processPointerComparison(ComparisonFormula,
                                            getPointerNullState(*LHSVal).IsNull,
                                            getPointerNullState(*RHSVal).IsNull,
                                            BinaryOp->getOpcode(), State.Env))
@@ -984,10 +984,10 @@ void transferValue_NullCheckComparison(
 }
 
 void transferValue_NullCheckImplicitCastPtrToBool(
-    const Expr *absl_nonnull CastExpr, const MatchFinder::MatchResult &,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto &A = State.Env.arena();
-  if (auto *CE = dyn_cast<clang::CastExpr>(CastExpr);
+    const Expr* absl_nonnull CastExpr, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
+  auto& A = State.Env.arena();
+  if (auto* CE = dyn_cast<clang::CastExpr>(CastExpr);
       CE && CE->getSubExpr()->getType()->isNullPtrType()) {
     // nullptr_t values might have PointerValues, but never have modeled null
     // state. Skip over casts of them to bool.
@@ -996,7 +996,7 @@ void transferValue_NullCheckImplicitCastPtrToBool(
     // CFG elements that would use this boolean.
     return;
   }
-  auto *PointerVal = getRawPointerValue(CastExpr->IgnoreImplicit(), State.Env);
+  auto* PointerVal = getRawPointerValue(CastExpr->IgnoreImplicit(), State.Env);
   if (!PointerVal) return;
 
   auto Nullability = getPointerNullState(*PointerVal);
@@ -1007,9 +1007,9 @@ void transferValue_NullCheckImplicitCastPtrToBool(
     State.Env.setValue(*CastExpr, A.makeTopValue());
 }
 
-void initializeOutputParameter(const Expr *absl_nonnull Arg,
-                               TransferState<PointerNullabilityLattice> &State,
-                               const VarDecl &Param) {
+void initializeOutputParameter(const Expr* absl_nonnull Arg,
+                               TransferState<PointerNullabilityLattice>& State,
+                               const VarDecl& Param) {
   // When a function has an "output parameter" - a non-const pointer or
   // reference to a pointer of unknown nullability - assume that the function
   // may set the pointer to non-null.
@@ -1041,9 +1041,9 @@ void initializeOutputParameter(const Expr *absl_nonnull Arg,
   if (InnerNullability.front().concrete() != NullabilityKind::Unspecified)
     return;
 
-  StorageLocation *Loc = nullptr;
+  StorageLocation* Loc = nullptr;
   if (ParamTy->isPointerType()) {
-    if (PointerValue *OuterPointer = getRawPointerValue(Arg, State.Env))
+    if (PointerValue* OuterPointer = getRawPointerValue(Arg, State.Env))
       Loc = &OuterPointer->getPointeeLoc();
   } else if (ParamTy->isReferenceType()) {
     Loc = State.Env.getStorageLocation(*Arg);
@@ -1051,54 +1051,54 @@ void initializeOutputParameter(const Expr *absl_nonnull Arg,
   if (Loc == nullptr) return;
 
   if (isSupportedRawPointerType(ParamTy->getPointeeType())) {
-    auto *InnerPointer =
+    auto* InnerPointer =
         cast<PointerValue>(State.Env.createValue(ParamTy->getPointeeType()));
     initPointerNullState(*InnerPointer, State.Env.getDataflowAnalysisContext(),
                          NullabilityKind::Unspecified);
 
     State.Env.setValue(*Loc, *InnerPointer);
   } else {
-    auto &SmartPointerLoc = *cast<RecordStorageLocation>(Loc);
+    auto& SmartPointerLoc = *cast<RecordStorageLocation>(Loc);
     setToPointerWithNullability(SmartPointerLoc.getSyntheticField(PtrField),
                                 NullabilityKind::Unspecified, State.Env);
   }
 }
 
 // `D` is declared somewhere in `absl` or `util`, either directly or nested.
-bool isDeclaredInAbseilOrUtil(const Decl &D) {
-  const auto *DC = D.getDeclContext();
+bool isDeclaredInAbseilOrUtil(const Decl& D) {
+  const auto* DC = D.getDeclContext();
   if (DC == nullptr || DC->isTranslationUnit()) return false;
 
   // Find the topmost, non-TU DeclContext.
-  const DeclContext *Parent = DC->getParent();
+  const DeclContext* Parent = DC->getParent();
   while (Parent != nullptr && !Parent->isTranslationUnit()) {
     DC = Parent;
     Parent = DC->getParent();
   }
 
   // Check if it is the `absl` namespace.
-  const auto *NS = dyn_cast_or_null<NamespaceDecl>(DC);
+  const auto* NS = dyn_cast_or_null<NamespaceDecl>(DC);
   return NS != nullptr && NS->getDeclName().isIdentifier() &&
          (NS->getName() == "absl" || NS->getName() == "util");
 }
 
 // Models the `GetReferenceableValue` functions used in Abseil logging and
 // elsewhere.
-void modelGetReferenceableValue(const CallExpr &CE, Environment &Env) {
+void modelGetReferenceableValue(const CallExpr& CE, Environment& Env) {
   // We only model the `GetReferenceableValue` overload that takes and returns a
   // reference.
   if (!CE.isGLValue()) return;
   assert(CE.getNumArgs() == 1);
   assert(CE.getArg(0) != nullptr);
-  if (StorageLocation *Loc = Env.getStorageLocation(*CE.getArg(0)))
+  if (StorageLocation* Loc = Env.getStorageLocation(*CE.getArg(0)))
     Env.setStorageLocation(CE, *Loc);
 }
 
 // Models the Abseil-logging `CheckNE_Impl` function. Essentially, associates
 // the `IsNull` of the call result with the comparison `arg0 != arg1`.
-void modelCheckNE(const CallExpr &CE, Environment &Env) {
+void modelCheckNE(const CallExpr& CE, Environment& Env) {
   assert(isSupportedRawPointerType(CE.getType()));
-  auto *PointerVal = getRawPointerValue(&CE, Env);
+  auto* PointerVal = getRawPointerValue(&CE, Env);
   if (!PointerVal)
     PointerVal = cast<PointerValue>(Env.createValue(CE.getType()));
   // Force the pointer state to `Nullable`, which we will then potentially
@@ -1108,11 +1108,11 @@ void modelCheckNE(const CallExpr &CE, Environment &Env) {
   initPointerNullState(*PointerVal, Env.getDataflowAnalysisContext(),
                        NullabilityKind::Nullable);
   Env.setValue(CE, *PointerVal);
-  const Formula *IsNull = getPointerNullState(*PointerVal).IsNull;
+  const Formula* IsNull = getPointerNullState(*PointerVal).IsNull;
   assert(IsNull != nullptr && "`IsNull` can never be 'Top' here");
 
-  auto *LHS = CE.getArg(0);
-  auto *RHS = CE.getArg(1);
+  auto* LHS = CE.getArg(0);
+  auto* RHS = CE.getArg(1);
   assert(LHS != nullptr && RHS != nullptr);
   auto LTy = LHS->getType();
   auto RTy = RHS->getType();
@@ -1120,44 +1120,44 @@ void modelCheckNE(const CallExpr &CE, Environment &Env) {
   if (!isSupportedPointerType(LTy) && !LTy->isNullPtrType()) return;
   if (!isSupportedPointerType(RTy) && !RTy->isNullPtrType()) return;
 
-  const Formula *LHSNull = nullptr;
+  const Formula* LHSNull = nullptr;
   if (LTy->isNullPtrType()) {
     // Values of nullptr type are not themselves pointers and so not
     // modeled directly. They are only modeled if and when they are cast
     // to pointers. So, we need to supply a formula directly.
     LHSNull = &Env.arena().makeLiteral(true);
   } else {
-    auto *V = getPointerValue(LHS, Env);
+    auto* V = getPointerValue(LHS, Env);
     if (!V) return;
     assert(hasPointerNullState(*V));
     LHSNull = getPointerNullState(*V).IsNull;
   }
 
-  const Formula *RHSNull = nullptr;
+  const Formula* RHSNull = nullptr;
   if (RTy->isNullPtrType()) {
     RHSNull = &Env.arena().makeLiteral(true);
   } else {
-    auto *V = getPointerValue(RHS, Env);
+    auto* V = getPointerValue(RHS, Env);
     if (!V) return;
     assert(hasPointerNullState(*V));
     RHSNull = getPointerNullState(*V).IsNull;
   }
 
-  if (auto *Val =
+  if (auto* Val =
           processPointerComparison(*IsNull, LHSNull, RHSNull, BO_NE, Env))
     Env.assume(Env.arena().makeEquals(Val->formula(), *IsNull));
 }
 
-void transferValue_CallExpr(const CallExpr *absl_nonnull CE,
-                            const MatchFinder::MatchResult &Result,
-                            TransferState<PointerNullabilityLattice> &State) {
+void transferValue_CallExpr(const CallExpr* absl_nonnull CE,
+                            const MatchFinder::MatchResult& Result,
+                            TransferState<PointerNullabilityLattice>& State) {
   // The dataflow framework itself generally does not model `CallExpr`s
   // (including creating values for the results). We model some specific
   // function calls and handle value creation for certain types.
 
-  const auto *FuncDecl = CE->getDirectCallee();
+  const auto* FuncDecl = CE->getDirectCallee();
   if (FuncDecl != nullptr) {
-    if (const IdentifierInfo *FunII =
+    if (const IdentifierInfo* FunII =
             FuncDecl->getDeclName().getAsIdentifierInfo()) {
       if (FunII->isStr("__assert_nullability")) return;
 
@@ -1174,7 +1174,7 @@ void transferValue_CallExpr(const CallExpr *absl_nonnull CE,
     }
   }
 
-  StorageLocation *Loc = nullptr;
+  StorageLocation* Loc = nullptr;
   if (CE->isGLValue()) {
     // The function returned a reference. Create a storage location for the
     // expression so that if code creates a pointer from the reference, we will
@@ -1192,7 +1192,7 @@ void transferValue_CallExpr(const CallExpr *absl_nonnull CE,
   if (isSupportedRawPointerType(CE->getType())) {
     // Create a pointer so that we can attach nullability to it and have the
     // nullability propagate with the pointer.
-    auto *PointerVal = getRawPointerValue(CE, State.Env);
+    auto* PointerVal = getRawPointerValue(CE, State.Env);
     if (!PointerVal) {
       PointerVal = cast<PointerValue>(State.Env.createValue(CE->getType()));
     }
@@ -1211,7 +1211,7 @@ void transferValue_CallExpr(const CallExpr *absl_nonnull CE,
 
   // Don't treat parameters of our macro replacement argument-capture functions
   // as output parameters.
-  if (const IdentifierInfo *FunII =
+  if (const IdentifierInfo* FunII =
           FuncDecl->getDeclName().getAsIdentifierInfo();
       FunII && (FunII->isStr(ArgCaptureAbortIfFalse) ||
                 FunII->isStr(ArgCaptureAbortIfEqual)))
@@ -1222,13 +1222,13 @@ void transferValue_CallExpr(const CallExpr *absl_nonnull CE,
 }
 
 void transferValue_AccessorCall(
-    const CXXMemberCallExpr *absl_nonnull MCE,
-    const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto *member = Result.Nodes.getNodeAs<clang::ValueDecl>("member-decl");
-  PointerValue *PointerVal = nullptr;
-  StorageLocation *FieldLoc = nullptr;
-  if (dataflow::RecordStorageLocation *RecordLoc =
+    const CXXMemberCallExpr* absl_nonnull MCE,
+    const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  auto* member = Result.Nodes.getNodeAs<clang::ValueDecl>("member-decl");
+  PointerValue* PointerVal = nullptr;
+  StorageLocation* FieldLoc = nullptr;
+  if (dataflow::RecordStorageLocation* RecordLoc =
           dataflow::getImplicitObjectLocation(*MCE, State.Env)) {
     FieldLoc = RecordLoc->getChild(*member);
     PointerVal = dyn_cast_or_null<PointerValue>(State.Env.getValue(*FieldLoc));
@@ -1245,12 +1245,12 @@ void transferValue_AccessorCall(
   }
 }
 
-std::function<void(StorageLocation &)>
-initCallbackForStorageLocationIfSmartPointer(const CallExpr *absl_nonnull CE,
-                                             dataflow::Environment &Env) {
+std::function<void(StorageLocation&)>
+initCallbackForStorageLocationIfSmartPointer(const CallExpr* absl_nonnull CE,
+                                             dataflow::Environment& Env) {
   if (!isSupportedSmartPointerType(CE->getType()))
-    return [](StorageLocation &Loc) {};
-  return [CE, &Env](StorageLocation &Loc) {
+    return [](StorageLocation& Loc) {};
+  return [CE, &Env](StorageLocation& Loc) {
     setSmartPointerValue(cast<RecordStorageLocation>(Loc),
                          cast<PointerValue>(Env.createValue(
                              underlyingRawPointerType(CE->getType()))),
@@ -1259,10 +1259,10 @@ initCallbackForStorageLocationIfSmartPointer(const CallExpr *absl_nonnull CE,
 }
 
 void handleConstMemberCall(
-    const CallExpr *absl_nonnull CE,
-    dataflow::RecordStorageLocation *absl_nullable RecordLoc,
-    const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CallExpr* absl_nonnull CE,
+    dataflow::RecordStorageLocation* absl_nullable RecordLoc,
+    const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   if (RecordLoc == nullptr) {
     // Perform default handling
     transferValue_CallExpr(CE, Result, State);
@@ -1274,14 +1274,14 @@ void handleConstMemberCall(
   // treatment is different from booleans or raw pointers, which are
   // represented as Values.
   if (isSupportedSmartPointerType(CE->getType())) {
-    const FunctionDecl *DirectCallee = CE->getDirectCallee();
+    const FunctionDecl* DirectCallee = CE->getDirectCallee();
     if (DirectCallee == nullptr) {
       // Perform default handling
       transferValue_CallExpr(CE, Result, State);
       return;
     }
 
-    StorageLocation &Loc =
+    StorageLocation& Loc =
         State.Lattice.getOrCreateConstMethodReturnStorageLocation(
             *RecordLoc, DirectCallee, State.Env,
             initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
@@ -1304,7 +1304,7 @@ void handleConstMemberCall(
   // Values) handle them appropriately.
   if (CE->isPRValue() && (isSupportedRawPointerType(CE->getType()) ||
                           CE->getType()->isBooleanType())) {
-    Value *Val = State.Lattice.getOrCreateConstMethodReturnValue(*RecordLoc, CE,
+    Value* Val = State.Lattice.getOrCreateConstMethodReturnValue(*RecordLoc, CE,
                                                                  State.Env);
     if (Val == nullptr) {
       // Perform default handling
@@ -1313,18 +1313,18 @@ void handleConstMemberCall(
     }
 
     State.Env.setValue(*CE, *Val);
-    if (auto *PointerVal = dyn_cast<PointerValue>(Val))
+    if (auto* PointerVal = dyn_cast<PointerValue>(Val))
       initPointerFromTypeNullability(*PointerVal, CE, State);
     return;
   }
 
   // If the const method returns a reference, handle it separately.
-  const FunctionDecl *DirectCallee = CE->getDirectCallee();
+  const FunctionDecl* DirectCallee = CE->getDirectCallee();
   if (DirectCallee != nullptr &&
       DirectCallee->getReturnType()->isReferenceType()) {
-    StorageLocation &Loc =
+    StorageLocation& Loc =
         State.Lattice.getOrCreateConstMethodReturnStorageLocation(
-            *RecordLoc, DirectCallee, State.Env, [](StorageLocation &Loc) {});
+            *RecordLoc, DirectCallee, State.Env, [](StorageLocation& Loc) {});
     State.Env.setStorageLocation(*CE, Loc);
     return;
   }
@@ -1334,25 +1334,25 @@ void handleConstMemberCall(
 }
 
 void transferValue_ConstMemberCall(
-    const CXXMemberCallExpr *absl_nonnull MCE,
-    const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXMemberCallExpr* absl_nonnull MCE,
+    const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   handleConstMemberCall(
       MCE, dataflow::getImplicitObjectLocation(*MCE, State.Env), Result, State);
 }
 
 void transferValue_ConstMemberOperatorCall(
-    const CXXOperatorCallExpr *OCE, const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+    const CXXOperatorCallExpr* OCE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  auto* RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
       State.Env.getStorageLocation(*OCE->getArg(0)));
   handleConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
-void handleNonConstMemberCall(const CallExpr *absl_nonnull CE,
-                              dataflow::RecordStorageLocation *RecordLoc,
-                              const MatchFinder::MatchResult &Result,
-                              TransferState<PointerNullabilityLattice> &State) {
+void handleNonConstMemberCall(const CallExpr* absl_nonnull CE,
+                              dataflow::RecordStorageLocation* RecordLoc,
+                              const MatchFinder::MatchResult& Result,
+                              TransferState<PointerNullabilityLattice>& State) {
   // When a non-const member function is called, clear all (non-const)
   // pointer-type fields of the receiver. Const-qualified fields can't be
   // changed (at least, not without UB).
@@ -1362,7 +1362,7 @@ void handleNonConstMemberCall(const CallExpr *absl_nonnull CE,
       if (FieldType.isConstQualified() || !isSupportedRawPointerType(FieldType))
         continue;
 
-      const auto *FieldStronglyTyped = dyn_cast<FieldDecl>(Field);
+      const auto* FieldStronglyTyped = dyn_cast<FieldDecl>(Field);
       if (FieldStronglyTyped == nullptr) continue;
       if (isa<ClassTemplateSpecializationDecl>(
               FieldStronglyTyped->getParent())) {
@@ -1377,7 +1377,7 @@ void handleNonConstMemberCall(const CallExpr *absl_nonnull CE,
         // the way this is done in `transferType_DeclRefExpr()`.
         State.Env.clearValue(*FieldLoc);
       } else {
-        auto *Val = cast<PointerValue>(
+        auto* Val = cast<PointerValue>(
             State.Env.createValue(FieldStronglyTyped->getType()));
         State.Env.setValue(*FieldLoc, *Val);
         TypeNullability N =
@@ -1401,25 +1401,25 @@ void handleNonConstMemberCall(const CallExpr *absl_nonnull CE,
 }
 
 void transferValue_NonConstMemberCall(
-    const CXXMemberCallExpr *absl_nonnull MCE,
-    const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXMemberCallExpr* absl_nonnull MCE,
+    const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   handleNonConstMemberCall(
       MCE, dataflow::getImplicitObjectLocation(*MCE, State.Env), Result, State);
 }
 
 void transferValue_NonConstMemberOperatorCall(
-    const CXXOperatorCallExpr *absl_nonnull OCE,
-    const MatchFinder::MatchResult &Result,
-    TransferState<PointerNullabilityLattice> &State) {
-  auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+    const CXXOperatorCallExpr* absl_nonnull OCE,
+    const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  auto* RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
       State.Env.getStorageLocation(*OCE->getArg(0)));
   handleNonConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
-void transferType_DeclRefExpr(const DeclRefExpr *absl_nonnull DRE,
-                              const MatchFinder::MatchResult &MR,
-                              TransferState<PointerNullabilityLattice> &State) {
+void transferType_DeclRefExpr(const DeclRefExpr* absl_nonnull DRE,
+                              const MatchFinder::MatchResult& MR,
+                              TransferState<PointerNullabilityLattice>& State) {
   computeNullability(DRE, State, [&] {
     Resugarer Resugar(State.Lattice.defaults());
 
@@ -1448,11 +1448,11 @@ void transferType_DeclRefExpr(const DeclRefExpr *absl_nonnull DRE,
   });
 }
 
-void transferType_MemberExpr(const MemberExpr *absl_nonnull ME,
-                             const MatchFinder::MatchResult &MR,
-                             TransferState<PointerNullabilityLattice> &State) {
+void transferType_MemberExpr(const MemberExpr* absl_nonnull ME,
+                             const MatchFinder::MatchResult& MR,
+                             TransferState<PointerNullabilityLattice>& State) {
   computeNullability(ME, State, [&]() {
-    auto *Member = ME->getMemberDecl();
+    auto* Member = ME->getMemberDecl();
     auto BaseType = ME->getBase()->getType();
     auto BaseNullability =
         ArrayRef(getNullabilityForChild(ME->getBase(), State));
@@ -1462,7 +1462,7 @@ void transferType_MemberExpr(const MemberExpr *absl_nonnull ME,
     }
 
     Resugarer Resugar(State.Lattice.defaults());
-    if (const auto *RT = BaseType->getAs<RecordType>()) {
+    if (const auto* RT = BaseType->getAs<RecordType>()) {
       if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
               RT->getOriginalDecl())) {
         Resugar.Enclosing.push_back({CTSpec, BaseNullability});
@@ -1475,9 +1475,9 @@ void transferType_MemberExpr(const MemberExpr *absl_nonnull ME,
   });
 }
 
-void transferType_CastExpr(const CastExpr *absl_nonnull CE,
-                           const MatchFinder::MatchResult &MR,
-                           TransferState<PointerNullabilityLattice> &State) {
+void transferType_CastExpr(const CastExpr* absl_nonnull CE,
+                           const MatchFinder::MatchResult& MR,
+                           TransferState<PointerNullabilityLattice>& State) {
   computeNullability(CE, State, [&]() -> TypeNullability {
     // Most casts that can convert ~unrelated types drop nullability in general.
     // As a special case, preserve nullability of outer raw pointer types.
@@ -1487,9 +1487,9 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
     // nullability.
     auto PreserveOuterRawPointers = [&](TypeNullability V) {
       auto ArgNullability = getNullabilityForChild(CE->getSubExpr(), State);
-      const PointerType *ArgType = dyn_cast<PointerType>(
+      const PointerType* ArgType = dyn_cast<PointerType>(
           CE->getSubExpr()->getType().getCanonicalType().getTypePtr());
-      const PointerType *CastType =
+      const PointerType* CastType =
           dyn_cast<PointerType>(CE->getType().getCanonicalType().getTypePtr());
       for (int I = 0; ArgType && CastType; ++I) {
         V[I] = ArgNullability[I];
@@ -1511,13 +1511,13 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
     // template arguments.
     auto PreserveAndResugarFromBaseOrDerived = [&](TypeNullability V) {
       V = PreserveOuterRawPointers(V);
-      if (auto *ECE = dyn_cast<ExplicitCastExpr>(CE)) {
+      if (auto* ECE = dyn_cast<ExplicitCastExpr>(CE)) {
         // TODO: b/396242014 - Apply the nullability annotations from the target
         // type rather than preserving the argument's nullability. Do this both
         // for outer pointers and for template arguments.
         return V;
       }
-      if (auto *ICE = dyn_cast<ImplicitCastExpr>(CE);
+      if (auto* ICE = dyn_cast<ImplicitCastExpr>(CE);
           ICE && ICE->isPartOfExplicitCast()) {
         // Let the nullability be picked up from the explicit cast; no need to
         // do work here.
@@ -1530,9 +1530,9 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
       }
 
       int NumOuterRawPointers = 0;
-      const Type *UnderPointers =
+      const Type* UnderPointers =
           CE->getSubExpr()->getType().getCanonicalType().getTypePtr();
-      while (auto *PT = dyn_cast<PointerType>(UnderPointers)) {
+      while (auto* PT = dyn_cast<PointerType>(UnderPointers)) {
         UnderPointers = PT->getPointeeType().getTypePtr();
         ++NumOuterRawPointers;
       }
@@ -1540,7 +1540,7 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
         // For the elements of V after the nullability for any outer raw
         // pointers, resugar the result type from the argument's template
         // arguments.
-        const TypeNullability &ArgNullability =
+        const TypeNullability& ArgNullability =
             getNullabilityForChild(CE->getSubExpr(), State);
         TypeNullability UnderPointersNullability;
         for (int J = NumOuterRawPointers; J < ArgNullability.size(); ++J) {
@@ -1548,7 +1548,7 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
         }
         Resugarer Resugar(State.Lattice.defaults());
         // Resugar from class template arguments, if any.
-        if (const auto *RT = UnderPointers->getAs<RecordType>()) {
+        if (const auto* RT = UnderPointers->getAs<RecordType>()) {
           if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
                   RT->getOriginalDecl())) {
             Resugar.Enclosing.push_back({CTSpec, UnderPointersNullability});
@@ -1597,7 +1597,7 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
       case CK_UserDefinedConversion:
         return unspecifiedNullability(CE);
       case CK_ConstructorConversion:
-        if (auto *CCE = llvm::dyn_cast<CXXConstructExpr>(CE->getSubExpr())) {
+        if (auto* CCE = llvm::dyn_cast<CXXConstructExpr>(CE->getSubExpr())) {
           // This node is syntactic only.
           return getNullabilityForChild(CE->getSubExpr(), State);
         }
@@ -1645,7 +1645,7 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
       case CK_NullToPointer: {
         TypeNullability Nullability;
         // Explicit casts get the inner of the written type.
-        if (const auto *ECE = dyn_cast<ExplicitCastExpr>(CE))
+        if (const auto* ECE = dyn_cast<ExplicitCastExpr>(CE))
           Nullability =
               getTypeNullability(ECE->getTypeInfoAsWritten()->getTypeLoc(),
                                  State.Lattice.defaults());
@@ -1708,33 +1708,33 @@ void transferType_CastExpr(const CastExpr *absl_nonnull CE,
 }
 
 void transferType_MaterializeTemporaryExpr(
-    const MaterializeTemporaryExpr *absl_nonnull MTE,
-    const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+    const MaterializeTemporaryExpr* absl_nonnull MTE,
+    const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   computeNullability(MTE, State, [&]() {
     return getNullabilityForChild(MTE->getSubExpr(), State);
   });
 }
 
 void transferType_CXXBindTemporaryExpr(
-    const CXXBindTemporaryExpr *BTE, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXBindTemporaryExpr* BTE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   computeNullability(BTE, State, [&]() {
     return getNullabilityForChild(BTE->getSubExpr(), State);
   });
 }
 
 void transferType_CopyOrMoveConstruct(
-    const CXXConstructExpr *CCE, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXConstructExpr* CCE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   computeNullability(CCE, State, [&]() {
     return getNullabilityForChild(CCE->getArg(0), State);
   });
 }
 
 TypeNullability computeTypeNullabilityForCallExpr(
-    const CallExpr *absl_nonnull CE,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CallExpr* absl_nonnull CE,
+    TransferState<PointerNullabilityLattice>& State) {
   TypeNullability CalleeNullability =
       getNullabilityForChild(CE->getCallee(), State);
   ArrayRef ResultNullability = CalleeNullability;
@@ -1746,9 +1746,9 @@ TypeNullability computeTypeNullabilityForCallExpr(
   return ResultNullability.vec();
 }
 
-void transferType_CallExpr(const CallExpr *absl_nonnull CE,
-                           const MatchFinder::MatchResult &MR,
-                           TransferState<PointerNullabilityLattice> &State) {
+void transferType_CallExpr(const CallExpr* absl_nonnull CE,
+                           const MatchFinder::MatchResult& MR,
+                           TransferState<PointerNullabilityLattice>& State) {
   computeNullability(CE, State, [&]() {
     if (auto ID = CE->getBuiltinCallee();
         (ID == Builtin::BIforward || ID == Builtin::BImove) &&
@@ -1761,9 +1761,9 @@ void transferType_CallExpr(const CallExpr *absl_nonnull CE,
 }
 
 void transferType_CXXOperatorCallExpr(
-    const CXXOperatorCallExpr *absl_nonnull CE,
-    const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+    const CXXOperatorCallExpr* absl_nonnull CE,
+    const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   computeNullability(CE, State, [&]() {
     // If this is a method call, see if it is a template specialization
     // and whether resugaring with the Base (arg 0)'s nullability helps
@@ -1771,11 +1771,11 @@ void transferType_CXXOperatorCallExpr(
     // This only helps refine the return type nullability, not callee's
     // nullability including the params. TODO(b/405355053): see if we can refine
     // the params too.
-    if (auto *Callee = dyn_cast<CXXMethodDecl>(CE->getCalleeDecl())) {
-      const auto *Base = CE->getArg(0);
+    if (auto* Callee = dyn_cast<CXXMethodDecl>(CE->getCalleeDecl())) {
+      const auto* Base = CE->getArg(0);
       TypeNullability BaseNullability = getNullabilityForChild(Base, State);
       Resugarer Resugar(State.Lattice.defaults());
-      if (const auto *RT = Base->getType()->getAs<RecordType>()) {
+      if (const auto* RT = Base->getType()->getAs<RecordType>()) {
         if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
                 RT->getOriginalDecl())) {
           Resugar.Enclosing.push_back({CTSpec, BaseNullability});
@@ -1797,8 +1797,8 @@ void transferType_CXXOperatorCallExpr(
 }
 
 void transferType_UnaryOperator(
-    const UnaryOperator *absl_nonnull UO, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+    const UnaryOperator* absl_nonnull UO, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   computeNullability(UO, State, [&]() -> TypeNullability {
     switch (UO->getOpcode()) {
       case UO_AddrOf:
@@ -1839,8 +1839,8 @@ void transferType_UnaryOperator(
 }
 
 void transferType_BinaryOperator(
-    const BinaryOperator *absl_nonnull BO, const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+    const BinaryOperator* absl_nonnull BO, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   computeNullability(BO, State, [&]() -> TypeNullability {
     switch (BO->getOpcode()) {
       case BO_PtrMemD:
@@ -1882,9 +1882,9 @@ void transferType_BinaryOperator(
   });
 }
 
-void transferType_NewExpr(const CXXNewExpr *absl_nonnull NE,
-                          const MatchFinder::MatchResult &MR,
-                          TransferState<PointerNullabilityLattice> &State) {
+void transferType_NewExpr(const CXXNewExpr* absl_nonnull NE,
+                          const MatchFinder::MatchResult& MR,
+                          TransferState<PointerNullabilityLattice>& State) {
   computeNullability(NE, State, [&]() {
     TypeNullability ObjectNullability =
         getTypeNullability(NE->getAllocatedTypeSourceInfo()->getTypeLoc(),
@@ -1896,11 +1896,11 @@ void transferType_NewExpr(const CXXNewExpr *absl_nonnull NE,
 }
 
 void transferType_ArraySubscriptExpr(
-    const ArraySubscriptExpr *absl_nonnull ASE,
-    const MatchFinder::MatchResult &MR,
-    TransferState<PointerNullabilityLattice> &State) {
+    const ArraySubscriptExpr* absl_nonnull ASE,
+    const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   computeNullability(ASE, State, [&]() {
-    auto &BaseNullability = getNullabilityForChild(ASE->getBase(), State);
+    auto& BaseNullability = getNullabilityForChild(ASE->getBase(), State);
     QualType BaseType = ASE->getBase()->getType();
     CHECK(isSupportedRawPointerType(BaseType) || BaseType->isVectorType());
     return isSupportedRawPointerType(BaseType)
@@ -1909,9 +1909,9 @@ void transferType_ArraySubscriptExpr(
   });
 }
 
-void transferType_ThisExpr(const CXXThisExpr *absl_nonnull TE,
-                           const MatchFinder::MatchResult &MR,
-                           TransferState<PointerNullabilityLattice> &State) {
+void transferType_ThisExpr(const CXXThisExpr* absl_nonnull TE,
+                           const MatchFinder::MatchResult& MR,
+                           TransferState<PointerNullabilityLattice>& State) {
   computeNullability(TE, State, [&]() {
     // If the current class is an instantiation, we can't assume any particular
     // nullability of its arguments.
@@ -2015,10 +2015,10 @@ auto buildValueTransferer() {
                                         transferValue_AccessorCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
           dataflow::isSmartPointerLikeOperatorStar(),
-          [](const CXXOperatorCallExpr *CE,
-             const MatchFinder::MatchResult &Result,
-             TransferState<PointerNullabilityLattice> &State) {
-            auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+          [](const CXXOperatorCallExpr* CE,
+             const MatchFinder::MatchResult& Result,
+             TransferState<PointerNullabilityLattice>& State) {
+            auto* RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
                 State.Env.getStorageLocation(*CE->getArg(0)));
             dataflow::transferSmartPointerLikeCachedDeref(
                 CE, RecordLoc, State,
@@ -2026,10 +2026,10 @@ auto buildValueTransferer() {
           })
       .CaseOfCFGStmt<CXXOperatorCallExpr>(
           dataflow::isSmartPointerLikeOperatorArrow(),
-          [](const CXXOperatorCallExpr *CE,
-             const MatchFinder::MatchResult &Result,
-             TransferState<PointerNullabilityLattice> &State) {
-            auto *RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
+          [](const CXXOperatorCallExpr* CE,
+             const MatchFinder::MatchResult& Result,
+             TransferState<PointerNullabilityLattice>& State) {
+            auto* RecordLoc = cast_or_null<dataflow::RecordStorageLocation>(
                 State.Env.getStorageLocation(*CE->getArg(0)));
             dataflow::transferSmartPointerLikeCachedGet(
                 CE, RecordLoc, State,
@@ -2037,18 +2037,18 @@ auto buildValueTransferer() {
           })
       .CaseOfCFGStmt<CXXMemberCallExpr>(
           dataflow::isSmartPointerLikeValueMethodCall(),
-          [](const CXXMemberCallExpr *CE,
-             const MatchFinder::MatchResult &Result,
-             TransferState<PointerNullabilityLattice> &State) {
+          [](const CXXMemberCallExpr* CE,
+             const MatchFinder::MatchResult& Result,
+             TransferState<PointerNullabilityLattice>& State) {
             dataflow::transferSmartPointerLikeCachedDeref(
                 CE, getImplicitObjectLocation(*CE, State.Env), State,
                 initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
           })
       .CaseOfCFGStmt<CXXMemberCallExpr>(
           dataflow::isSmartPointerLikeGetMethodCall(),
-          [](const CXXMemberCallExpr *CE,
-             const MatchFinder::MatchResult &Result,
-             TransferState<PointerNullabilityLattice> &State) {
+          [](const CXXMemberCallExpr* CE,
+             const MatchFinder::MatchResult& Result,
+             TransferState<PointerNullabilityLattice>& State) {
             dataflow::transferSmartPointerLikeCachedGet(
                 CE, getImplicitObjectLocation(*CE, State.Env), State,
                 initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
@@ -2078,26 +2078,26 @@ auto buildValueTransferer() {
 // Ensure that all expressions of smart pointer type have an underlying
 // raw pointer initialized from the type nullability.
 void ensureSmartPointerInitialized(
-    const CFGElement &Elt, TransferState<PointerNullabilityLattice> &State) {
+    const CFGElement& Elt, TransferState<PointerNullabilityLattice>& State) {
   auto S = Elt.getAs<CFGStmt>();
   if (!S) return;
 
-  auto *E = dyn_cast<Expr>(S->getStmt());
+  auto* E = dyn_cast<Expr>(S->getStmt());
   if (E == nullptr || !isSupportedSmartPointerType(E->getType())) return;
 
   initSmartPointerForExpr(E, State);
 
-  auto *SmartPtrLoc = E->isGLValue() ? State.Env.get<RecordStorageLocation>(*E)
+  auto* SmartPtrLoc = E->isGLValue() ? State.Env.get<RecordStorageLocation>(*E)
                                      : &State.Env.getResultObjectLocation(*E);
   if (SmartPtrLoc == nullptr) return;
-  StorageLocation &PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
+  StorageLocation& PtrLoc = SmartPtrLoc->getSyntheticField(PtrField);
   unpackPointerValue(PtrLoc, State.Env);
 }
 
 }  // namespace
 
 PointerNullabilityAnalysis::PointerNullabilityAnalysis(
-    ASTContext &Context, Environment &Env, const NullabilityPragmas &Pragmas)
+    ASTContext& Context, Environment& Env, const NullabilityPragmas& Pragmas)
     : DataflowAnalysis<PointerNullabilityAnalysis, PointerNullabilityLattice>(
           Context),
       TypeTransferer(buildTypeTransferer()),
@@ -2112,16 +2112,16 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(
 }
 
 PointerTypeNullability PointerNullabilityAnalysis::assignNullabilityVariable(
-    const ValueDecl *absl_nonnull D, dataflow::Arena &A) {
+    const ValueDecl* absl_nonnull D, dataflow::Arena& A) {
   auto [It, Inserted] = NFS.DeclTopLevelNullability.try_emplace(
       cast<ValueDecl>(D->getCanonicalDecl()));
   if (Inserted) It->second = PointerTypeNullability::createSymbolic(A);
   return It->second;
 }
 
-void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
-                                          PointerNullabilityLattice &Lattice,
-                                          Environment &Env) {
+void PointerNullabilityAnalysis::transfer(const CFGElement& Elt,
+                                          PointerNullabilityLattice& Lattice,
+                                          Environment& Env) {
   TransferState<PointerNullabilityLattice> State(Lattice, Env);
 
   TypeTransferer(Elt, getASTContext(), State);
@@ -2130,17 +2130,17 @@ void PointerNullabilityAnalysis::transfer(const CFGElement &Elt,
   ensureSmartPointerInitialized(Elt, State);
 }
 
-static const Formula *absl_nullable mergeFormulas(
-    const Formula *absl_nullable Bool1, const Environment &Env1,
-    const Formula *absl_nullable Bool2, const Environment &Env2,
-    Environment &MergedEnv) {
+static const Formula* absl_nullable mergeFormulas(
+    const Formula* absl_nullable Bool1, const Environment& Env1,
+    const Formula* absl_nullable Bool2, const Environment& Env2,
+    Environment& MergedEnv) {
   if (Bool1 == Bool2) {
     return Bool1;
   }
 
   if (Bool1 == nullptr || Bool2 == nullptr) return nullptr;
 
-  auto &A = MergedEnv.arena();
+  auto& A = MergedEnv.arena();
 
   // If `Bool1` and `Bool2` is constrained to the same true / false value, that
   // can serve as the return value - this simplifies the flow condition tracked
@@ -2154,7 +2154,7 @@ static const Formula *absl_nullable mergeFormulas(
     return &A.makeLiteral(false);
   }
 
-  auto &MergedBool = A.makeAtomRef(A.makeAtom());
+  auto& MergedBool = A.makeAtomRef(A.makeAtom());
   // TODO(b/233582219): Flow conditions are not necessarily mutually
   // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
   // this section when the patch is committed.
@@ -2166,11 +2166,11 @@ static const Formula *absl_nullable mergeFormulas(
   return &MergedBool;
 }
 
-void PointerNullabilityAnalysis::join(QualType Type, const Value &Val1,
-                                      const Environment &Env1,
-                                      const Value &Val2,
-                                      const Environment &Env2, Value &MergedVal,
-                                      Environment &MergedEnv) {
+void PointerNullabilityAnalysis::join(QualType Type, const Value& Val1,
+                                      const Environment& Env1,
+                                      const Value& Val2,
+                                      const Environment& Env2, Value& MergedVal,
+                                      Environment& MergedEnv) {
   if (!isSupportedRawPointerType(Type)) return;
 
   if (!hasPointerNullState(cast<PointerValue>(Val1)) ||
@@ -2187,10 +2187,10 @@ void PointerNullabilityAnalysis::join(QualType Type, const Value &Val1,
   auto Nullability1 = getPointerNullState(cast<PointerValue>(Val1));
   auto Nullability2 = getPointerNullState(cast<PointerValue>(Val2));
 
-  auto *FromNullable =
+  auto* FromNullable =
       mergeFormulas(Nullability1.FromNullable, Env1, Nullability2.FromNullable,
                     Env2, MergedEnv);
-  auto *Null = mergeFormulas(Nullability1.IsNull, Env1, Nullability2.IsNull,
+  auto* Null = mergeFormulas(Nullability1.IsNull, Env1, Nullability2.IsNull,
                              Env2, MergedEnv);
 
   initPointerNullState(cast<PointerValue>(MergedVal),
@@ -2199,12 +2199,12 @@ void PointerNullabilityAnalysis::join(QualType Type, const Value &Val1,
 }
 
 ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,
-                                                     const Value &Val1,
-                                                     const Environment &Env1,
-                                                     const Value &Val2,
-                                                     const Environment &Env2) {
-  if (const auto *PointerVal1 = dyn_cast<PointerValue>(&Val1)) {
-    const auto &PointerVal2 = cast<PointerValue>(Val2);
+                                                     const Value& Val1,
+                                                     const Environment& Env1,
+                                                     const Value& Val2,
+                                                     const Environment& Env2) {
+  if (const auto* PointerVal1 = dyn_cast<PointerValue>(&Val1)) {
+    const auto& PointerVal2 = cast<PointerValue>(Val2);
 
     if (&PointerVal1->getPointeeLoc() != &PointerVal2.getPointeeLoc())
       return ComparisonResult::Different;
@@ -2235,16 +2235,16 @@ ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,
 // be proven equivalent. Otherwise, (`Prev` and `Cur` are provably equivalent),
 // returns `Cur`. Returns `Cur`, if `Prev` is equivalent to `Cur`. Otherwise,
 // returns `Top`.
-static std::pair<const Formula *absl_nullable, LatticeEffect>
-widenNullabilityProperty(const Formula *absl_nullable Prev,
-                         const Environment &PrevEnv,
-                         const Formula *absl_nullable Cur,
-                         Environment &CurEnv) {
+static std::pair<const Formula* absl_nullable, LatticeEffect>
+widenNullabilityProperty(const Formula* absl_nullable Prev,
+                         const Environment& PrevEnv,
+                         const Formula* absl_nullable Cur,
+                         Environment& CurEnv) {
   if (Prev == Cur) return {Cur, LatticeEffect::Unchanged};
   if (Prev == nullptr) return {nullptr, LatticeEffect::Unchanged};
   if (Cur == nullptr) return {nullptr, LatticeEffect::Changed};
 
-  Arena &A = CurEnv.arena();
+  Arena& A = CurEnv.arena();
 
   // Note that either of `PrevEnv` or `CurEnv` may be self-contradictory
   // (unsatisfiable). So, we're careful to check only that both are consistent
@@ -2259,15 +2259,15 @@ widenNullabilityProperty(const Formula *absl_nullable Prev,
 }
 
 std::optional<WidenResult> PointerNullabilityAnalysis::widen(
-    QualType Type, Value &Prev, const Environment &PrevEnv, Value &Current,
-    Environment &CurrentEnv) {
-  auto *PrevPtr = dyn_cast<PointerValue>(&Prev);
+    QualType Type, Value& Prev, const Environment& PrevEnv, Value& Current,
+    Environment& CurrentEnv) {
+  auto* PrevPtr = dyn_cast<PointerValue>(&Prev);
   if (PrevPtr == nullptr) return std::nullopt;
 
   // Widen pointers (when different) to a pointer with a "top" storage location.
-  auto &CurPtr = cast<PointerValue>(Current);
+  auto& CurPtr = cast<PointerValue>(Current);
 
-  DataflowAnalysisContext &DACtx = CurrentEnv.getDataflowAnalysisContext();
+  DataflowAnalysisContext& DACtx = CurrentEnv.getDataflowAnalysisContext();
   assert(&PrevEnv.getDataflowAnalysisContext() == &DACtx);
 
   bool LocUnchanged = &PrevPtr->getPointeeLoc() == &CurPtr.getPointeeLoc();
@@ -2292,13 +2292,13 @@ std::optional<WidenResult> PointerNullabilityAnalysis::widen(
     return WidenResult{&CurPtr, LatticeEffect::Unchanged};
 
   // Widen the loc if needed.
-  StorageLocation *WidenedLoc =
+  StorageLocation* WidenedLoc =
       LocUnchanged
           ? &CurPtr.getPointeeLoc()
           : &getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType());
 
   // Construct the new, widened value.
-  auto &WidenedPtr = CurrentEnv.create<PointerValue>(*WidenedLoc);
+  auto& WidenedPtr = CurrentEnv.create<PointerValue>(*WidenedLoc);
   initPointerNullState(WidenedPtr, CurrentEnv.getDataflowAnalysisContext(),
                        {FromNullableWidened, NullWidened});
 
@@ -2310,8 +2310,8 @@ std::optional<WidenResult> PointerNullabilityAnalysis::widen(
   return WidenResult{&WidenedPtr, Effect};
 }
 
-StorageLocation &PointerNullabilityAnalysis::getTopStorageLocation(
-    DataflowAnalysisContext &DACtx, QualType Ty) {
+StorageLocation& PointerNullabilityAnalysis::getTopStorageLocation(
+    DataflowAnalysisContext& DACtx, QualType Ty) {
   auto [It, Inserted] = TopStorageLocations.try_emplace(Ty, nullptr);
   if (Inserted) It->second = &DACtx.createStorageLocation(Ty);
   return *It->second;

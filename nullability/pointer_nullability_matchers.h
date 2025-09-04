@@ -29,13 +29,13 @@ AST_MATCHER(QualType, isSupportedSmartPointer) {
 AST_MATCHER(Expr, isGLValue) { return Node.isGLValue(); }
 
 AST_MATCHER(Stmt, isRawPointerValueInit) {
-  const auto *ValueInit = dyn_cast<CXXScalarValueInitExpr>(&Node);
+  const auto* ValueInit = dyn_cast<CXXScalarValueInitExpr>(&Node);
   return ValueInit != nullptr &&
          isSupportedRawPointerType(ValueInit->getType());
 }
 
 AST_MATCHER(Stmt, isRawPointerImplicitValueInit) {
-  const auto *ValueInit = dyn_cast<ImplicitValueInitExpr>(&Node);
+  const auto* ValueInit = dyn_cast<ImplicitValueInitExpr>(&Node);
   return ValueInit != nullptr &&
          isSupportedRawPointerType(ValueInit->getType());
 }
@@ -74,7 +74,7 @@ ast_matchers::internal::Matcher<Stmt> isWeakPtrLockCall();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
 
 AST_MATCHER(Stmt, isNullPointerDefaultInit) {
-  const auto *DefaultInit = dyn_cast<CXXDefaultInitExpr>(&Node);
+  const auto* DefaultInit = dyn_cast<CXXDefaultInitExpr>(&Node);
   return DefaultInit != nullptr &&
          isNullPointerLiteral().matches(*DefaultInit->getExpr(), Finder,
                                         Builder);
