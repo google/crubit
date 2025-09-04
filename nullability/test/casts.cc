@@ -14,7 +14,7 @@ namespace {
 TEST(PointerNullabilityTest, NonNullPtrImplicitCastToBool) {
   // x
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nonnull x) {
+    void target(int* _Nonnull x) {
       *x;
       if (x) {
         *x;
@@ -27,7 +27,7 @@ TEST(PointerNullabilityTest, NonNullPtrImplicitCastToBool) {
 
   // !x
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nonnull x) {
+    void target(int* _Nonnull x) {
       *x;
       if (!x) {
         *x;  // unreachable
@@ -42,7 +42,7 @@ TEST(PointerNullabilityTest, NonNullPtrImplicitCastToBool) {
 TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
   // x
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x) {
+    void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (x) {
         *x;
@@ -55,7 +55,7 @@ TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
 
   // !x
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable x) {
+    void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (!x) {
         *x;  // [[unsafe]]
@@ -74,7 +74,7 @@ TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
 TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
   // x
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x) {
+    void target(int* x) {
       *x;  // false-negative
       if (x) {
         *x;
@@ -87,7 +87,7 @@ TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
 
   // !x
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *x) {
+    void target(int* x) {
       *x;  // false-negative
       if (!x) {
         *x;  // [[unsafe]]
@@ -125,25 +125,24 @@ TEST(PointerNullabilityTest, Bitcast) {
 
     void target() {
       // Bitcasts preserve nullability.
-      __assert_nullability<NK_nullable>((void *)value<int *_Nullable>());
-      __assert_nullability<NK_nonnull>((void *)value<int *_Nonnull>());
-      __assert_nullability<NK_unspecified>((void *)value<int *>());
+      __assert_nullability<NK_nullable>((void*)value<int* _Nullable>());
+      __assert_nullability<NK_nonnull>((void*)value<int* _Nonnull>());
+      __assert_nullability<NK_unspecified>((void*)value<int*>());
       // Nullability of further outer pointer types is preserved in bitcasts.
       __assert_nullability<NK_nullable, NK_nullable>(
-          (void **)value<int *_Nullable *_Nullable>());
+          (void**)value<int* _Nullable* _Nullable>());
       __assert_nullability<NK_nonnull, NK_nonnull>(
-          (void **)value<int *_Nonnull *_Nonnull>());
-      __assert_nullability<NK_unspecified, NK_unspecified>(
-          (void **)value<int **>());
+          (void**)value<int* _Nonnull* _Nonnull>());
+      __assert_nullability<NK_unspecified, NK_unspecified>((void**)value<int**>());
       // But nullability of other inner types is dropped.
       __assert_nullability<NK_nullable, NK_unspecified>(
-          (void **)value<vector<int *_Nullable> *_Nullable>());
+          (void**)value<vector<int* _Nullable>* _Nullable>());
       __assert_nullability<NK_nonnull, NK_unspecified>(
-          (void **)value<vector<int *_Nonnull> *_Nonnull>());
+          (void**)value<vector<int* _Nonnull>* _Nonnull>());
 
       __assert_nullability<NK_nonnull, NK_unspecified>(
-          (void **)value<int *_Nonnull>);
-      __assert_nullability<NK_nonnull>((void *)value<int *_Nonnull *_Nonnull>());
+          (void**)value<int* _Nonnull>);
+      __assert_nullability<NK_nonnull>((void*)value<int* _Nonnull* _Nonnull>());
     }
   )cc"));
 }
@@ -158,8 +157,8 @@ TEST(PointerNullabilityTest, NoOp) {
     void target() {
       // No-op casts preserve deep nullability.
       __assert_nullability  // [[unsafe]] TODO: fix false positive
-          <NK_nullable, NK_nullable>(const_cast<vector<int> *>(
-              (vector<int> *const)value<vector<int *_Nullable> *_Nullable>()));
+          <NK_nullable, NK_nullable>(const_cast<vector<int>*>(
+              (vector<int>* const)value<vector<int* _Nullable>* _Nullable>()));
     }
   )cc"));
 }
@@ -180,17 +179,17 @@ TEST(PointerNullabilityTest, Inheritance) {
       // CK_BaseToDerived: preserves only outer nullability for explicit casts
       // and for implicit casts generated as part of an explicit cast.
       __assert_nullability<NK_nullable, NK_unspecified>(
-          (derived<int *> *)value<base<int *_Nullable> *_Nullable>());
+          (derived<int*>*)value<base<int* _Nullable>* _Nullable>());
       // CK_DerivedToBase: resugars from the argument's template parameters for
       // implicit casts
-      __assert_nullability<NK_nullable>(value<derived<int *_Nullable>>().getX());
+      __assert_nullability<NK_nullable>(value<derived<int* _Nullable>>().getX());
       // CK_Dynamic: dynamic_cast returns a nullable pointer.
-      auto b = value<base<int *_Nonnull> *_Nonnull>();
+      auto b = value<base<int* _Nonnull>* _Nonnull>();
       __assert_nullability  // [[unsafe]] TODO: fix false positive
-          <NK_nullable, NK_unspecified>(dynamic_cast<derived<int> *>(b));
+          <NK_nullable, NK_unspecified>(dynamic_cast<derived<int>*>(b));
       // ... only if casting to a pointer!
-      auto c = value<base<int *>>();
-      __assert_nullability<NK_unspecified>(dynamic_cast<derived<int *> &>(c));
+      auto c = value<base<int*>>();
+      __assert_nullability<NK_unspecified>(dynamic_cast<derived<int*>&>(c));
     }
   )cc"));
 }
@@ -200,14 +199,14 @@ TEST(PointerNullabilityTest, UserDefinedConversions) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     template <class X>
     struct BuildFromPointer {
-      BuildFromPointer(int *);
+      BuildFromPointer(int*);
     };
 
     void target() {
       // User-defined conversions could do anything.
       // CK_ConstructorConversion
       __assert_nullability<NK_unspecified>(
-          (BuildFromPointer<double *>)value<int *_Nonnull>());
+          (BuildFromPointer<double*>)value<int* _Nonnull>());
     }
   )cc"));
 }
@@ -221,13 +220,13 @@ TEST(PointerNullabilityTest, CastToNonPointer) {
     void target() {
       // Casting away pointerness destroys nullability.
       // CK_PointerToIntegral
-      __assert_nullability<>((I)value<int *_Nonnull>());
+      __assert_nullability<>((I)value<int* _Nonnull>());
       // CK_PointerToBoolean
-      __assert_nullability<>((bool)value<int *_Nonnull>());
+      __assert_nullability<>((bool)value<int* _Nonnull>());
       // Casting them back does not recover it.
       // CK_IntegralToPointer
       __assert_nullability  // [[unsafe]] TODO: fix false positive
-          <>((int *)(I)value<int *_Nonnull>());
+          <>((int*)(I)value<int* _Nonnull>());
     }
   )cc"));
 }
@@ -237,11 +236,11 @@ TEST(PointerNullabilityTest, TrivialNullability) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {
       // Null is nullable!
-      __assert_nullability<NK_nullable>((int *)nullptr);
+      __assert_nullability<NK_nullable>((int*)nullptr);
 
       // Decayed objects are non-null.
       int array[2];
-      __assert_nullability<NK_nonnull>((int *)array);
+      __assert_nullability<NK_nonnull>((int*)array);
     }
   )cc"));
 }
@@ -249,7 +248,7 @@ TEST(PointerNullabilityTest, TrivialNullability) {
 TEST(PointerNullabilityTest, CastNullToAlias) {
   // This used to crash!
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    using P = int *;
+    using P = int*;
     P target() { return nullptr; }
   )cc"));
 }
@@ -259,10 +258,10 @@ TEST(PointerNullabilityTest, CastExpression) {
   // whose annotations conflict with the initializer. Decide whether to do so,
   // and then treat static casts in an equivalent manner.
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void target(int *_Nullable p) {
-      static_cast<int *_Nonnull>(p);  // TODO: To warn, or not to warn, that is
+    void target(int* _Nullable p) {
+      static_cast<int* _Nonnull>(p);  // TODO: To warn, or not to warn, that is
                                       // the question.
-      static_cast<int *>(p);
+      static_cast<int*>(p);
     }
   )cc"));
 
@@ -273,11 +272,11 @@ TEST(PointerNullabilityTest, CastExpression) {
       T2 arg2;
     };
 
-    void target(Struct3Arg<1, int *_Nullable, int *> &p) {
-      *static_cast<const Struct3Arg<1, int *, int *> &>(p).arg1;  // [[unsafe]]
-      *static_cast<const Struct3Arg<1, int *, int *> &>(p).arg2;
-      *static_cast<int *>(p.arg1);  // [[unsafe]]
-      *static_cast<int *>(p.arg2);
+    void target(Struct3Arg<1, int* _Nullable, int*>& p) {
+      *static_cast<const Struct3Arg<1, int*, int*>&>(p).arg1;  // [[unsafe]]
+      *static_cast<const Struct3Arg<1, int*, int*>&>(p).arg2;
+      *static_cast<int*>(p.arg1);  // [[unsafe]]
+      *static_cast<int*>(p.arg2);
     }
   )cc"));
 
@@ -285,9 +284,19 @@ TEST(PointerNullabilityTest, CastExpression) {
     struct Base {};
     struct Derived : public Base {};
 
-    void target(Derived *_Nullable x, Derived *_Nonnull y) {
-      *static_cast<Base *>(x);  // [[unsafe]]
-      *static_cast<Base *>(y);
+    void target(Derived* _Nullable x, Derived* _Nonnull y) {
+      *static_cast<Base*>(x);  // [[unsafe]]
+      *static_cast<Base*>(y);
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Base {};
+    struct Derived : public Base {};
+
+    void target(Derived* _Nullable x) {
+      Base* y = x;
+      *y;  // [[unsafe]]
     }
   )cc"));
 
@@ -298,13 +307,13 @@ TEST(PointerNullabilityTest, CastExpression) {
       T2 arg2;
     };
 
-    void target(Struct3Arg<1, int *_Nullable, int *> &p) {
-      *((const Struct3Arg<1, int *, int *> &)p).arg1;  // [[unsafe]]
-      *((const Struct3Arg<1, int *, int *> &)p).arg2;
-      *(int *)p.arg1;  // [[unsafe]]
-      *(int *)p.arg2;
-      *(float *)p.arg1;  // [[unsafe]]
-      *(char *)p.arg2;
+    void target(Struct3Arg<1, int* _Nullable, int*>& p) {
+      *((const Struct3Arg<1, int*, int*>&)p).arg1;  // [[unsafe]]
+      *((const Struct3Arg<1, int*, int*>&)p).arg2;
+      *(int*)p.arg1;  // [[unsafe]]
+      *(int*)p.arg2;
+      *(float*)p.arg1;  // [[unsafe]]
+      *(char*)p.arg2;
     }
   )cc"));
 
@@ -315,9 +324,9 @@ TEST(PointerNullabilityTest, CastExpression) {
       T1 arg1;
     };
 
-    void target(Struct2Arg<const int *, const int *_Nullable> &p) {
-      *const_cast<int *>(p.arg0);
-      *const_cast<int *>(p.arg1);  // [[unsafe]]
+    void target(Struct2Arg<const int*, const int* _Nullable>& p) {
+      *const_cast<int*>(p.arg0);
+      *const_cast<int*>(p.arg1);  // [[unsafe]]
     }
   )cc"));
 }
@@ -328,6 +337,44 @@ TEST(PointerNullabilityTest, CastToNullptrT) {
     using nullptr_t = decltype(nullptr);
     }
     void target(const std::nullptr_t null) { std::nullptr_t p = null; }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CastDerivedToBase) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    class Parent {};
+
+    class Child : public Parent {
+     public:
+      static const Child& Singleton() {
+        static Child kChild;
+        return kChild;
+      }
+    };
+
+    void target() {
+      const Parent* _Nullable ptr = nullptr;
+      ptr = &Child::Singleton();
+      *ptr;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CastDerivedToBaseWithAliasing) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Base {
+      int* _Nullable nullable_field;
+    };
+
+    struct Derived : public Base {};
+
+    int* _Nonnull getNonnull();
+
+    void target(Derived* _Nonnull x) {
+      Base* alias = x;
+      alias->nullable_field = getNonnull();
+      *x->nullable_field;
+    }
   )cc"));
 }
 
