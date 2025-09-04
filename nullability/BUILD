@@ -70,6 +70,8 @@ cc_library(
         ":type_nullability",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
     ],
 )
 

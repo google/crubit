@@ -6,13 +6,27 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_MATCHERS_H_
 
 #include "nullability/type_nullability.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/Stmt.h"
+#include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchersInternal.h"
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
+#include "clang/Basic/LLVM.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {
 namespace nullability {
+
+namespace internal {
+
+ast_matchers::internal::Matcher<Stmt> isSmartPointerMethodCallFunc(
+    llvm::ArrayRef<const llvm::StringRef*> NameRefs);
+
+}  // namespace internal
 
 AST_MATCHER(QualType, isSupportedPointer) {
   return isSupportedPointerType(Node);
@@ -63,8 +77,10 @@ ast_matchers::internal::Matcher<Stmt> isSmartPointerArrowMemberExpr();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerConstructor();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerOperatorCall(
     llvm::StringRef Name, int NumArgs);
-ast_matchers::internal::Matcher<Stmt> isSmartPointerMethodCall(
-    llvm::StringRef Name);
+extern const ast_matchers::internal::VariadicFunction<
+    ast_matchers::internal::Matcher<Stmt>, llvm::StringRef,
+    internal::isSmartPointerMethodCallFunc>
+    isSmartPointerMethodCall;
 ast_matchers::internal::Matcher<Stmt> isSmartPointerFreeSwapCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerBoolConversionCall();
 ast_matchers::internal::Matcher<Stmt> isSmartPointerFactoryCall();

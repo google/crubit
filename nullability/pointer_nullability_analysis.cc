@@ -1982,12 +1982,14 @@ auto buildValueTransferer() {
                                        transferValue_SmartPointerConstructor)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("=", 2),
                                           transferValue_SmartPointerAssignment)
-      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("release"),
-                                        transferValue_SmartPointerReleaseCall)
-      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
-                                        transferValue_SmartPointerResetCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(
-          isSmartPointerMethodCall("swap"),
+          isSmartPointerMethodCall("release", "Release"),
+          transferValue_SmartPointerReleaseCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(
+          isSmartPointerMethodCall("reset", "Reset"),
+          transferValue_SmartPointerResetCall)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(
+          isSmartPointerMethodCall("swap", "Swap"),
           transferValue_SmartPointerMemberSwapCall)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFreeSwapCall(),
                                transferValue_SmartPointerFreeSwapCall)

@@ -10,6 +10,10 @@
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchersInternal.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator.h"
 
 namespace clang::tidy::nullability {
 
@@ -141,10 +145,21 @@ Matcher<Stmt> isSmartPointerOperatorCall(llvm::StringRef Name, int NumArgs) {
       hasArgument(0, hasType(isSupportedSmartPointer())));
 }
 
-Matcher<Stmt> isSmartPointerMethodCall(llvm::StringRef Name) {
+namespace internal {
+
+ast_matchers::internal::Matcher<Stmt> isSmartPointerMethodCallFunc(
+    llvm::ArrayRef<const llvm::StringRef*> NameRefs) {
   return cxxMemberCallExpr(thisPointerType(isSupportedSmartPointer()),
-                           callee(cxxMethodDecl(hasName(Name))));
+                           callee(cxxMethodDecl(hasAnyName(llvm::to_vector<2>(
+                               llvm::make_pointee_range(NameRefs))))));
 }
+
+}  // namespace internal
+
+const ast_matchers::internal::VariadicFunction<
+    ast_matchers::internal::Matcher<Stmt>, llvm::StringRef,
+    internal::isSmartPointerMethodCallFunc>
+    isSmartPointerMethodCall = {};
 
 Matcher<Stmt> isSmartPointerFreeSwapCall() {
   return callExpr(callee(functionDecl(isInStdNamespace(), hasName("swap"))),

@@ -876,7 +876,7 @@ class AllowedMovedFromNonnullSmartPointerExprs {
     for (const BoundNodes& Node :
          match(findAll(expr(anyOf(
                    cxxMemberCallExpr(
-                       isSmartPointerMethodCall("reset"),
+                       isSmartPointerMethodCall("reset", "Reset"),
                        unless(hasArgument(0, hasType(isNullPtrType()))),
                        onImplicitObjectArgument(expr().bind("e"))),
                    cxxOperatorCallExpr(isSmartPointerOperatorCall("=", 2),
@@ -1154,14 +1154,14 @@ static DiagTransferFunc pointerNullabilityDiagnoserBefore() {
       // `operator->` doesn't dereference. It just returns a pointer from which
       // a MemberExpr is built (with `->`), which does the actual dereference.
       .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
-      // `=` / `reset()`
+      // `=` / `reset()` / `Reset()`
       .CaseOfCFGStmt<BinaryOperator>(
           binaryOperator(hasOperatorName("="), hasLHS(isPointerExpr())),
           diagnoseAssignment)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerOperatorCall("=", 2),
                                           diagnoseSmartPointerAssignment)
-      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("reset"),
-                                        diagnoseSmartPointerReset)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(
+          isSmartPointerMethodCall("reset", "Reset"), diagnoseSmartPointerReset)
       // `--` / `++`
       .CaseOfCFGStmt<UnaryOperator>(
           unaryOperator(hasType(isSupportedRawPointer()),
