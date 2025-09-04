@@ -62,6 +62,8 @@ public_headers_to_remove = {
         "rs_bindings_from_cc/test/disable/disable_header/disabled_header.h",
     ],
 }
+private_headers_to_remove = {
+}
 
 def _get_additional_rust_srcs(aspect_ctx):
     """Returns `extra_rs_srcs` associated with the `_target`.
@@ -99,12 +101,20 @@ def _get_additional_rust_deps(aspect_ctx):
 
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
+    private_hdrs = _filter_hdrs(ctx.rule.files.srcs) if hasattr(ctx.rule.attr, "srcs") else []
     label = str(ctx.label)
     public_hdrs = [
         h
         for h in public_hdrs
         if h.short_path not in public_headers_to_remove.get(label, [])
     ]
+    private_hdrs = [
+        h
+        for h in private_hdrs
+        if h.short_path not in private_headers_to_remove.get(label, [])
+    ]
+
+    all_standalone_hdrs = depset(public_hdrs + private_hdrs).to_list()
 
     # If Crubit is not enabled for this target, then disable header parsing by removing all headers
     # from the list of public headers. This allows Crubit to work on target A, even if it
@@ -121,13 +131,8 @@ def _collect_hdrs(ctx, crubit_features):
     # for a target in all build configurations, instead of as part of a build configuration like
     # AddressSanitizer.
     if not crubit_features:
-        # By keeping the header assignment around, we allow for continued
-        # good error messages that mention the build target.
-        # TODO(b/408994283): remove even this, and use file names in errors instead.
-        # Losing track of the owned headers would allow us to _substantially_ shrink
-        # target_args.
-        return [], public_hdrs
-    return public_hdrs, public_hdrs
+        public_hdrs = []
+    return public_hdrs, all_standalone_hdrs
 
 def _make_all_deps_and_target_args(ctx, extra_rule_specific_deps, direct):
     all_deps = getattr(ctx.rule.attr, "deps", []) + extra_rule_specific_deps + [
@@ -262,25 +267,19 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     extra_cc_compilation_action_inputs = []
     extra_rule_specific_deps = []
-
-    # Headers for which we will produce bindings.
-    # This only differs from attributed_hdrs if we disable Crubit on the target.
     public_hdrs = []
-
-    # Headers attributed to this target
-    attributed_hdrs = []
-
+    all_standalone_hdrs = []
     features = find_crubit_features(target, ctx)
     if hasattr(ctx.rule.attr, "hdrs"):
-        public_hdrs, attributed_hdrs = _collect_hdrs(ctx, features)
+        public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx, features)
 
     elif ctx.rule.kind == "cc_embed_data" or ctx.rule.kind == "upb_proto_library":
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
-        attributed_hdrs = public_hdrs
+        all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
 
     elif ctx.rule.kind == "cc_stubby_library":
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
-        attributed_hdrs = public_hdrs
+        all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
         extra_rule_specific_deps = ctx.rule.attr.implicit_cc_deps
 
     has_public_headers = len(public_hdrs) > 0
@@ -295,7 +294,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             "// File intentionally left empty, its purpose is to satisfy rules_rust APIs.",
         )
         public_hdrs = [empty_header_file]
-        attributed_hdrs = attributed_hdrs + public_hdrs
+        all_standalone_hdrs = all_standalone_hdrs + public_hdrs
         extra_cc_compilation_action_inputs = public_hdrs
 
     # At execution time we convert this depset to a json array that gets passed to our tool through
@@ -305,8 +304,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # 2. instead of json string, we use a struct that will be expanded to flags at execution time.
     #    This requires changes to Bazel.
     direct_target_args = {}
-    if attributed_hdrs:
-        direct_target_args["h"] = [h.path for h in attributed_hdrs]
+    if all_standalone_hdrs:
+        direct_target_args["h"] = [h.path for h in all_standalone_hdrs]
     if features:
         direct_target_args["f"] = features
 
