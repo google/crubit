@@ -753,6 +753,63 @@ TEST void unusualSmartPointerTypeOperatorsInBase() {
   Ptr.release()->nonConstMemberFunction();
 }
 
+// An unusual smart pointer type which indicates that the `pointer` type
+// is `void*`. Perhaps later it is possible to convert to a `T*`, but
+// that conversion is hidden from our analysis.
+template <class T>
+struct _Nullable VoidStarSmartPointer {
+  using pointer = void*;
+
+  void* get() const;
+};
+
+// An unusual smart pointer type that can be constructed from
+// a VoidStarSmartPointer (or assigned, swapped, or reset).
+// Likely, to make this work, the operations do more than just copy the
+// underlying pointers around, but that is invisible to the analysis.
+//
+// The operator*, operator-> would have type checked, but if we naively copied
+// the underlying pointers directly, it would break assumptions about the types.
+template <class T>
+struct _Nullable NonVoidStarSmartPointer {
+  using pointer = T*;
+
+  NonVoidStarSmartPointer(VoidStarSmartPointer<T> & Other);
+  NonVoidStarSmartPointer& operator=(const VoidStarSmartPointer<T>&);
+  NonVoidStarSmartPointer& operator=(const VoidStarSmartPointer<T>&&);
+  NonVoidStarSmartPointer();
+
+  void swap(VoidStarSmartPointer<T> & Other);
+  void reset(void* P = nullptr);
+
+  T* operator->() const;
+  T& operator*() const;
+  T* get() const;
+};
+
+TEST void copyFromVoidStarSmartPointerType(VoidStarSmartPointer<S> Void) {
+  NonVoidStarSmartPointer<S> NonVoid(Void);
+  // We shouldn't crash while analyzing these calls (copying the incorrectly
+  // typed `void*` pointer from Arg to Ptr, and using it in subsequent
+  // analysis steps).
+  NonVoid->nonConstMemberFunction();
+  (*NonVoid).nonConstMemberFunction();
+  NonVoid.get()->nonConstMemberFunction();
+
+  NonVoid = Void;
+  NonVoid->nonConstMemberFunction();
+
+  NonVoid = std::move(Void);
+  NonVoid->nonConstMemberFunction();
+
+  VoidStarSmartPointer<S> FreshVoid;
+  NonVoid.reset(FreshVoid.get());
+  NonVoid->nonConstMemberFunction();
+
+  NonVoid.swap(FreshVoid);
+  NonVoid->nonConstMemberFunction();
+}
+
 }  // namespace unusual_smart_pointer_type
 
 // Check non-member operator overloading (check if we have assumptions

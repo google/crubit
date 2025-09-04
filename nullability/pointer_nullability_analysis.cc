@@ -458,17 +458,28 @@ bool isStdWeakPtrType(QualType Ty) {
   return ID->getName() == "weak_ptr";
 }
 
+QualType underlyingRawPointerTypeFromSmartPointer(RecordStorageLocation& Loc) {
+  return Loc.getSyntheticField(PtrField).getType();
+}
+
 bool isPointerTypeConvertible(QualType From, QualType To) {
   assert(isSupportedRawPointerType(From));
   assert(isSupportedRawPointerType(To));
 
-  if (From == To) return true;
+  if (From->getCanonicalTypeUnqualified() == To->getCanonicalTypeUnqualified())
+    return true;
 
   auto* FromDecl = From->getPointeeType()->getAsCXXRecordDecl();
   auto* ToDecl = To->getPointeeType()->getAsCXXRecordDecl();
 
-  // If these aren't pointers to records, then just assume they're convertible.
-  if (FromDecl == nullptr || ToDecl == nullptr) return true;
+  // If these aren't pointers to records, don't consider them convertible.
+  // Otherwise there could be strange type errors.
+  // We assume array decay to pointers should already be covered.
+  // - for example, C++ doesn't let you assign a `float*` to a `char*`, or
+  //   assign an `Enum1*` to an `Enum2*`.
+  // - if we have a scalar type on one side and a record type on the other,
+  //   it could e.g., lead to looking up record member vars on an `int*`.
+  if (FromDecl == nullptr || ToDecl == nullptr) return false;
 
   return FromDecl == ToDecl || FromDecl->isDerivedFrom(ToDecl);
 }
@@ -486,11 +497,12 @@ void transferValue_SmartPointerConstructor(
     return;
   }
 
-  // Construct from raw pointer.
+  // Construct from raw pointer, but make sure the pointer types are
+  // convertible.
   if (Ctor->getNumArgs() >= 1 &&
       isSupportedRawPointerType(Ctor->getArg(0)->getType()) &&
       isPointerTypeConvertible(Ctor->getArg(0)->getType(),
-                               Loc.getSyntheticField(PtrField).getType())) {
+                               underlyingRawPointerTypeFromSmartPointer(Loc))) {
     setSmartPointerValue(Loc, getRawPointerValue(Ctor->getArg(0), State.Env),
                          State.Env);
     return;
@@ -505,13 +517,22 @@ void transferValue_SmartPointerConstructor(
     if (Ctor->getNumArgs() == 2 &&
         isSupportedRawPointerType(Ctor->getArg(1)->getType())) {
       // `shared_ptr` aliasing constructor.
-      setSmartPointerValue(Loc, getRawPointerValue(Ctor->getArg(1), State.Env),
-                           State.Env);
+      if (isPointerTypeConvertible(
+              Ctor->getArg(1)->getType(),
+              underlyingRawPointerTypeFromSmartPointer(Loc))) {
+        setSmartPointerValue(
+            Loc, getRawPointerValue(Ctor->getArg(1), State.Env), State.Env);
+      }
     } else {
-      setSmartPointerValue(
-          Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env), State.Env);
+      if (isPointerTypeConvertible(
+              underlyingRawPointerTypeFromSmartPointer(*SrcLoc),
+              underlyingRawPointerTypeFromSmartPointer(Loc))) {
+        setSmartPointerValue(
+            Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env), State.Env);
+      }
     }
 
+    // If this is the move constructor, set the source to null.
     if (Ctor->getConstructor()
             ->getParamDecl(0)
             ->getType()
@@ -555,8 +576,12 @@ void transferValue_SmartPointerAssignment(
   }
 
   auto* SrcLoc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(1));
-  setSmartPointerValue(*Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env),
-                       State.Env);
+  if (isPointerTypeConvertible(
+          underlyingRawPointerTypeFromSmartPointer(*SrcLoc),
+          underlyingRawPointerTypeFromSmartPointer(*Loc))) {
+    setSmartPointerValue(
+        *Loc, getPointerValueFromSmartPointer(SrcLoc, State.Env), State.Env);
+  }
 
   // If this is the move assignment operator, set the source to null.
   auto* Method = dyn_cast_or_null<CXXMethodDecl>(OpCall->getCalleeDecl());
@@ -605,8 +630,16 @@ void transferValue_SmartPointerResetCall(
     return;
   }
 
-  setSmartPointerValue(*Loc, getRawPointerValue(MCE->getArg(0), State.Env),
-                       State.Env);
+  // std::shared_ptr::reset can take >1 argument, so we don't restrict to just
+  // getNumArgs() == 1.
+  if (MCE->getNumArgs() >= 1 &&
+      isSupportedRawPointerType(MCE->getArg(0)->getType()) &&
+      isPointerTypeConvertible(
+          MCE->getArg(0)->getType(),
+          underlyingRawPointerTypeFromSmartPointer(*Loc))) {
+    setSmartPointerValue(*Loc, getRawPointerValue(MCE->getArg(0), State.Env),
+                         State.Env);
+  }
 }
 
 void swapSmartPointers(RecordStorageLocation* Loc1, RecordStorageLocation* Loc2,
@@ -614,8 +647,20 @@ void swapSmartPointers(RecordStorageLocation* Loc1, RecordStorageLocation* Loc2,
   PointerValue* Val1 = getPointerValueFromSmartPointer(Loc1, Env);
   PointerValue* Val2 = getPointerValueFromSmartPointer(Loc2, Env);
 
-  if (Loc1) setSmartPointerValue(*Loc1, Val2, Env);
-  if (Loc2) setSmartPointerValue(*Loc2, Val1, Env);
+  if (Loc1) {
+    if (Loc2 == nullptr ||
+        isPointerTypeConvertible(
+            underlyingRawPointerTypeFromSmartPointer(*Loc2),
+            underlyingRawPointerTypeFromSmartPointer(*Loc1))) {
+      setSmartPointerValue(*Loc1, Val2, Env);
+    }
+  }
+  if (Loc2) {
+    if (Loc1 == nullptr || isPointerTypeConvertible(
+                               underlyingRawPointerTypeFromSmartPointer(*Loc1),
+                               underlyingRawPointerTypeFromSmartPointer(*Loc2)))
+      setSmartPointerValue(*Loc2, Val1, Env);
+  }
 }
 
 void transferValue_SmartPointerMemberSwapCall(
