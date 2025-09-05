@@ -13,6 +13,12 @@ load(
     "@rules_rust//rust/private:rustc.bzl",
     "rustc_compile_action",
 )
+
+# buildifier: disable=bzl-visibility
+load(
+    "@rules_rust//rust/private:utils.bzl",
+    "can_use_metadata_for_pipelining",
+)
 load("@bazel_skylib//lib:structs.bzl", "structs")
 
 def _get_crate_info(providers):
@@ -70,6 +76,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
 
     lib = ctx.actions.declare_file(lib_name)
     rmeta = ctx.actions.declare_file(rmeta_name)
+    metadata_supports_pipelining = can_use_metadata_for_pipelining(toolchain, "rlib")
 
     # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
     # should omit the rustc_flags.
@@ -89,6 +96,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             aliases = {},
             output = lib,
             metadata = rmeta,
+            metadata_supports_pipelining = metadata_supports_pipelining,
             edition = "2018",
             is_test = False,
             rustc_env = {},
