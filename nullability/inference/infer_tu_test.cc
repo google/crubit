@@ -716,6 +716,48 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
                     {inferredSlot(1, Nullability::NONNULL)})));
 }
 
+// This tests a case where the initial analysis before inference queries the SAT
+// solver (when doing a Join).
+TEST_F(InferTUTest, MultipleIterationsWithJoinAndDeadCode) {
+  build(R"cc(
+    int* otherFunction(int* P) {
+      *P = 0;
+      return P;
+    }
+
+    int* target(int* Nonnull, int* Nullable) {
+      int* NonnullLocal1 = otherFunction(Nonnull);
+      int* NonnullLocal2;
+      if (Nullable == nullptr) {
+        NonnullLocal2 = NonnullLocal1;
+      } else if (Nonnull == nullptr) {
+        // dead code after some rounds of inference, since nonnull
+        // later can't be nullptr. In the end, we should see that
+        // NonnullLocal2 remains Nonnull and the return slot is Nonnull.
+        NonnullLocal2 = nullptr;
+      } else {
+        NonnullLocal2 = Nullable;
+      }
+      return NonnullLocal2;
+    }
+
+    void caller(int X) { target(&X, nullptr); }
+  )cc");
+  EXPECT_THAT(
+      inferTU(AST->context(), Pragmas, /*Iterations=*/3),
+      UnorderedElementsAre(inference(hasName("otherFunction"),
+                                     {inferredSlot(0, Nullability::NONNULL),
+                                      inferredSlot(1, Nullability::NONNULL)}),
+                           inference(hasName("target"),
+                                     {inferredSlot(0, Nullability::NONNULL),
+                                      inferredSlot(1, Nullability::NONNULL),
+                                      inferredSlot(2, Nullability::NULLABLE)}),
+                           inference(hasName("NonnullLocal1"),
+                                     {inferredSlot(0, Nullability::NONNULL)}),
+                           inference(hasName("NonnullLocal2"),
+                                     {inferredSlot(0, Nullability::NONNULL)})));
+}
+
 TEST_F(InferTUTest, Pragma) {
   build(R"cc(
 #pragma nullability file_default nonnull
