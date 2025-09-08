@@ -36,10 +36,11 @@ def _bindings_for_toolchain_headers_impl(ctx):
     toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
     builtin_headers = toolchain.builtin_headers
 
-    stl_headers = toolchain.stl_headers + ctx.files.extra_hdrs
+    stl_headers = depset(toolchain.stl_headers + ctx.files.extra_hdrs)
 
-    std_files = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + stl_headers
-    std_and_builtin_files = depset(direct = stl_headers + builtin_headers, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
+    # TODO(b/803417336): depset(...).to_list() is necessary to deduplicate header files.
+    std_files = depset(transitive = [ctx.attr._stl[CcInfo].compilation_context.headers, stl_headers]).to_list()
+    std_and_builtin_files = depset(builtin_headers, transitive = [stl_headers, ctx.attr._stl[CcInfo].compilation_context.headers])
 
     prefixed_libcxx_hdrs = _add_prefix(ctx.attr.public_libcxx_hdrs, "c++/v1/")
 
