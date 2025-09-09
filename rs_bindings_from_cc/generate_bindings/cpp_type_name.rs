@@ -4,12 +4,14 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::expect_format_cc_type_name;
+use database::rs_snippet::{RsTypeKind, RustPtrKind};
 use error_report::{anyhow, bail};
-use ir::{CcCallingConv, CcType, CcTypeVariant, Item, PointerTypeKind, Record, IR};
+use ir::{CcCallingConv, Item, PointerTypeKind, Record, IR};
 use proc_macro2::TokenStream;
 use quote::quote;
+use std::rc::Rc;
 
-pub fn format_cpp_type(ty: &CcType, ir: &IR) -> Result<TokenStream> {
+pub fn format_cpp_type(ty: &RsTypeKind, ir: &IR) -> Result<TokenStream> {
     // Formatting *both* pointers *and* references as pointers, because:
     // - Pointers and references have the same representation in the ABI.
     // - Clang's `-Wreturn-type-c-linkage` warns when using references in C++
@@ -17,7 +19,7 @@ pub fn format_cpp_type(ty: &CcType, ir: &IR) -> Result<TokenStream> {
     format_cpp_type_inner(ty, ir, /* references_ok= */ false)
 }
 
-pub fn format_cpp_type_with_references(ty: &CcType, ir: &IR) -> Result<TokenStream> {
+pub fn format_cpp_type_with_references(ty: &RsTypeKind, ir: &IR) -> Result<TokenStream> {
     format_cpp_type_inner(ty, ir, /* references_ok= */ true)
 }
 
@@ -33,41 +35,66 @@ pub fn cpp_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<Toke
     Ok(quote! { #namespace_qualifier #ident })
 }
 
-fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<TokenStream> {
-    let const_fragment = if ty.is_const {
-        quote! {const}
-    } else {
-        quote! {}
-    };
-    match &ty.variant {
-        CcTypeVariant::Primitive(primitive) => Ok(quote! { #primitive #const_fragment }),
-        CcTypeVariant::Pointer(pointer) => {
-            let nested_type = format_cpp_type_inner(&pointer.pointee_type, ir, references_ok)?;
-            let ptr = match (references_ok, pointer.kind) {
-                (true, PointerTypeKind::LValueRef) => quote! {&},
-                (true, PointerTypeKind::RValueRef) => quote! {&&},
-                _ => quote! {*},
-            };
-            Ok(quote! {#nested_type #ptr #const_fragment})
+pub fn format_cpp_type_inner(
+    rs_type_kind: &RsTypeKind,
+    ir: &IR,
+    references_ok: bool,
+) -> Result<TokenStream> {
+    match rs_type_kind {
+        RsTypeKind::Error { symbol, .. } => symbol.parse().map_err(|_| {
+            anyhow!("malformed type name, this is a crubit implementation bug: {:?}", symbol)
+        }),
+        RsTypeKind::Pointer { pointee, kind, mutability } => {
+            let nested_type = format_cpp_type_inner(pointee, ir, references_ok)?;
+            let const_fragment = mutability.is_const().then(|| quote! { const });
+            match kind {
+                RustPtrKind::CcPtr(kind) => {
+                    let ptr = match (references_ok, kind) {
+                        (true, PointerTypeKind::LValueRef) => quote! {&},
+                        (true, PointerTypeKind::RValueRef) => quote! {&&},
+                        _ => quote! {*},
+                    };
+                    Ok(quote! { #nested_type #const_fragment #ptr })
+                }
+                RustPtrKind::Slice => {
+                    Ok(quote! { ::rs_std::SliceRef<#const_fragment #nested_type> })
+                }
+            }
         }
-        CcTypeVariant::FuncPointer { non_null, call_conv, param_and_return_types } => {
-            let (ret_type, param_types) = param_and_return_types.split_last().expect(
-                "funcValue should always have a return type, this is a crubit implementation bug",
-            );
-
+        RsTypeKind::Reference { option, referent, mutability, .. } => {
+            let const_fragment = mutability.is_const().then(|| quote! { const });
+            let nested_type = format_cpp_type_inner(referent, ir, references_ok)?;
+            let pointer_kind = if *option || !references_ok {
+                quote! { * }
+            } else {
+                quote! { & }
+            };
+            Ok(quote! { #nested_type #const_fragment #pointer_kind })
+        }
+        RsTypeKind::RvalueReference { referent, mutability, .. } => {
+            let const_fragment = mutability.is_const().then(|| quote! { const });
+            let nested_type = format_cpp_type_inner(referent, ir, references_ok)?;
+            let pointer_kind = if !references_ok {
+                quote! { * }
+            } else {
+                quote! { && }
+            };
+            Ok(quote! { #nested_type #const_fragment #pointer_kind })
+        }
+        RsTypeKind::FuncPtr { option, cc_calling_conv, return_type, param_types } => {
             // Function pointer types don't ignore references, but luckily,
             // `-Wreturn-type-c-linkage` does. So we can just re-enable references now
             // so that the function type is exactly correct.
-            let ret_type = format_cpp_type_inner(ret_type, ir, /* references_ok= */ true)?;
+            let ret_type = format_cpp_type_inner(return_type, ir, /* references_ok= */ true)?;
             let param_types = param_types
                 .iter()
                 .map(|t| format_cpp_type_inner(t, ir, /* references_ok= */ true))
                 .collect::<Result<Vec<_>>>()?;
-            let attr = match call_conv {
+            let attr = match cc_calling_conv {
                 CcCallingConv::C => quote! {},
                 other => quote! { __attribute__((#other)) },
             };
-            let ptr = if *non_null && references_ok {
+            let ptr = if !*option && references_ok {
                 quote! {&}
             } else {
                 quote! {*}
@@ -81,13 +108,21 @@ fn format_cpp_type_inner(ty: &CcType, ir: &IR, references_ok: bool) -> Result<To
             Ok(quote! {
                 crubit::type_identity_t<
                     #ret_type ( #( #param_types ),* ) #attr
-                > #ptr #const_fragment
+                > #ptr
             })
         }
-        CcTypeVariant::Decl(id) => {
-            let item = ir.find_untyped_decl(*id);
-            let type_name = cpp_type_name_for_item(item, ir)?;
-            Ok(quote! {#const_fragment #type_name})
+        RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
+            cpp_type_name_for_item(&Item::IncompleteRecord(Rc::clone(incomplete_record)), ir)
+        }
+        RsTypeKind::Record { record, .. } => cpp_type_name_for_record(record, ir),
+        RsTypeKind::Enum { enum_, .. } => cpp_type_name_for_item(&Item::Enum(Rc::clone(enum_)), ir),
+        RsTypeKind::TypeAlias { type_alias, .. } => {
+            cpp_type_name_for_item(&Item::TypeAlias(Rc::clone(type_alias)), ir)
+        }
+        RsTypeKind::Primitive(primitive) => Ok(quote! { #primitive }),
+        RsTypeKind::BridgeType { original_type, .. } => cpp_type_name_for_record(original_type, ir),
+        RsTypeKind::ExistingRustType(existing_rust_type) => {
+            cpp_type_name_for_item(&Item::ExistingRustType(Rc::clone(existing_rust_type)), ir)
         }
     }
 }

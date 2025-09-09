@@ -282,32 +282,53 @@ fn generate_function_assertation_for_identifier(
             implementation_function = quote! { #namespace_qualifier #record_ident :: #fn_ident };
             member_function_prefix = quote! { :: #namespace_qualifier #record_ident :: };
             // The first parameter of instance methods is `this`.
-            func_params = func.params.iter().skip(1).cloned().collect_vec();
+            func_params = &func.params[1..];
         } else {
             method_qualification = quote! {};
             implementation_function = quote! { #namespace_qualifier #record_ident :: #fn_ident };
             member_function_prefix = quote! {};
-            func_params = func.params.clone();
+            func_params = &func.params[..];
         }
     } else {
         let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
         method_qualification = quote! {};
         implementation_function = quote! { #namespace_qualifier #fn_ident };
         member_function_prefix = quote! {};
-        func_params = func.params.clone();
+        func_params = &func.params[..];
     }
 
     let mut cc_param_types = func_params
         .iter()
-        .map(|p| cpp_type_name::format_cpp_type_with_references(&p.type_, ir))
+        .map(|p| {
+            let mut tt = cpp_type_name::format_cpp_type_with_references(
+                &db.rs_type_kind(p.type_.clone())?,
+                ir,
+            )?;
+            if p.type_.is_const {
+                tt = quote! { #tt const };
+            }
+            Ok(tt)
+        })
         .collect::<Result<Vec<_>>>()?;
     if func.is_variadic {
         cc_param_types.push(quote! { ... });
     }
 
-    let return_type_name = cpp_type_name::format_cpp_type_with_references(&func.return_type, ir)?;
+    let mut return_type_name = cpp_type_name::format_cpp_type_with_references(
+        &db.rs_type_kind(func.return_type.clone())?,
+        ir,
+    )?;
 
-    let cc_function_type = quote! { #return_type_name ( #member_function_prefix *) ( #( #cc_param_types ),* ) #method_qualification };
+    if func.return_type.is_const {
+        return_type_name = quote! { #return_type_name const };
+    }
+
+    let cc_function_type = quote! {
+        #return_type_name
+        ( #member_function_prefix* )
+        ( #( #cc_param_types ),* )
+        #method_qualification
+    };
 
     Ok(ThunkImpl::FuntionTypeAssertation { cc_function_type, implementation_function })
 }
@@ -396,8 +417,8 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let cpp_type = cpp_type_name::format_cpp_type(&p.type_, ir)?;
             let arg_type = db.rs_type_kind(p.type_.clone())?;
+            let cpp_type = cpp_type_name::format_cpp_type(&arg_type, ir)?;
             if let RsTypeKind::BridgeType { bridge_type, .. } = arg_type.unalias() {
                 let BridgeRsTypeKind::BridgeVoidConverters { rust_to_cpp_converter, .. } =
                     bridge_type
@@ -474,7 +495,7 @@ pub fn generate_function_thunk_impl(
     // list.)
     let return_type_kind = db.rs_type_kind(func.return_type.clone())?;
     let is_return_value_c_abi_compatible = return_type_kind.is_c_abi_compatible_by_value();
-    let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&func.return_type, ir)?;
+    let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&return_type_kind, ir)?;
 
     let return_type_name = if return_type_kind.is_crubit_abi_bridge_type() {
         param_idents.insert(0, expect_format_cc_ident("__return_abi_buffer"));
@@ -482,10 +503,7 @@ pub fn generate_function_thunk_impl(
         quote! { void }
     } else if !is_return_value_c_abi_compatible {
         param_idents.insert(0, expect_format_cc_ident("__return"));
-        // In order to be modified, the return type can't be const.
-        let mut cc_return_type = func.return_type.clone();
-        cc_return_type.is_const = false;
-        let return_type_name = cpp_type_name::format_cpp_type(&cc_return_type, &ir)?;
+        let return_type_name = cpp_type_name::format_cpp_type(&return_type_kind, ir)?;
         if let RsTypeKind::BridgeType {
             bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
             ..
@@ -528,12 +546,9 @@ pub fn generate_function_thunk_impl(
             } else {
                 quote! {#this_arg->}
             };
-            (
-                quote! { #this_dot #implementation_function},
-                arg_expressions.iter().skip(1).cloned().collect_vec(),
-            )
+            (quote! { #this_dot #implementation_function}, &arg_expressions[1..])
         } else {
-            (implementation_function, arg_expressions)
+            (implementation_function, &arg_expressions[..])
         };
 
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
@@ -567,18 +582,13 @@ pub fn generate_function_thunk_impl(
             CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::LValueRef, .. }) => {
                 quote! { return & #return_expr }
             }
-            CcTypeVariant::Pointer(PointerType {
-                kind: PointerTypeKind::RValueRef,
-                pointee_type,
-                ..
-            }) => {
-                // The code below replicates bits of `format_cpp_type`, but formats an rvalue
-                // reference (which `format_cpp_type` would format as a pointer).
-                // `const_fragment` from `format_cpp_type` is ignored - it is not applicable for
-                // references.
-                let nested_type = cpp_type_name::format_cpp_type(pointee_type, ir)?;
+            CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::RValueRef, .. }) => {
+                let nested_type = cpp_type_name::format_cpp_type_with_references(
+                    &db.rs_type_kind(func.return_type.clone())?,
+                    ir,
+                )?;
                 quote! {
-                    #nested_type && lvalue = #return_expr;
+                    #nested_type lvalue = #return_expr;
                     return &lvalue
                 }
             }

@@ -57,7 +57,7 @@ extern "C" void __rust_thunk___ZNR6Inline12LvalueMethodEv(
 static_assert((void (::Inline::*)() &)&Inline::LvalueMethod);
 
 extern "C" void __rust_thunk___ZNKR6Inline17LvalueMethodConstEv(
-    const struct Inline* __this) {
+    struct Inline const* __this) {
   __this->LvalueMethodConst();
 }
 
@@ -71,7 +71,7 @@ extern "C" void __rust_thunk___ZNO6Inline12RvalueMethodEv(
 static_assert((void (::Inline::*)() &&)&Inline::RvalueMethod);
 
 extern "C" void __rust_thunk___ZNKO6Inline17RvalueMethodConstEv(
-    const struct Inline* __this) {
+    struct Inline const* __this) {
   std::move(*__this).RvalueMethodConst();
 }
 

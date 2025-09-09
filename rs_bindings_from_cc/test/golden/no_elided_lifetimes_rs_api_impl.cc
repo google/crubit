@@ -38,14 +38,14 @@ static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
 extern "C" struct TriviallyCopyableButNontriviallyDestructible*
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
-    const struct TriviallyCopyableButNontriviallyDestructible* __param_0) {
+    struct TriviallyCopyableButNontriviallyDestructible const* __param_0) {
   return &__this->operator=(*__param_0);
 }
 
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
-    const struct TriviallyCopyableButNontriviallyDestructible* __param_0) {
+    struct TriviallyCopyableButNontriviallyDestructible const* __param_0) {
   crubit::construct_at(__this, *__param_0);
 }
 
@@ -60,8 +60,8 @@ extern "C" void __rust_thunk___ZN12WrappedValueC1Ei(class WrappedValue* __this,
 }
 
 extern "C" void __rust_thunk___ZNK12WrappedValueplERKS_(
-    class WrappedValue* __return, const class WrappedValue* __this,
-    const class WrappedValue* rhs) {
+    class WrappedValue* __return, class WrappedValue const* __this,
+    class WrappedValue const* rhs) {
   new (__return) auto(__this->operator+(*rhs));
 }
 

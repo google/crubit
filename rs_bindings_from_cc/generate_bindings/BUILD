@@ -98,6 +98,7 @@ rust_library(
         "//common:code_gen_utils",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
     ],

@@ -138,7 +138,7 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
         quote! {
             extern "C" int const*
             __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2ftest_3atesting_5ftarget(
-                    const class MyTemplate<int>*__this) {
+                    class MyTemplate<int> const * __this) {
                 return &__this->value();
             }
         }

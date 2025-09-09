@@ -49,7 +49,7 @@ extern "C" void __rust_thunk___ZN6crubit4test10SomeStructC1Eiii(
 }
 
 extern "C" void __rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(
-    const struct crubit::test::SomeStruct* __this) {
+    struct crubit::test::SomeStruct const* __this) {
   __this->MethodOldName();
 }
 

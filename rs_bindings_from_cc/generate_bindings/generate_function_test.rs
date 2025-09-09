@@ -159,7 +159,7 @@ fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z3fooRK1S(const struct S* s) {
+            extern "C" void __rust_thunk___Z3fooRK1S(struct S const * s) {
                 foo(*s);
             }
         }
@@ -215,7 +215,7 @@ fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
         generate_bindings_tokens_for_test(ir)?.rs_api_impl,
         quote! {
             extern "C" int __rust_thunk___ZNK10SomeStruct9some_funcEi(
-                    const struct SomeStruct* __this, int arg) {
+                    struct SomeStruct const * __this, int arg) {
                 return __this->some_func(arg);
             }
         }
@@ -555,7 +555,7 @@ fn test_impl_eq_for_member_function() -> Result<()> {
         rs_api_impl,
         quote! {
             extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
-                    const struct SomeStruct* __this, const struct SomeStruct* other) {
+                    struct SomeStruct const * __this, struct SomeStruct const * other) {
                 return __this->operator==(*other);
             }
         }
@@ -684,7 +684,7 @@ fn test_impl_lt_for_member_function() -> Result<()> {
         rs_api_impl,
         quote! {
             extern "C" bool __rust_thunk___ZNK10SomeStructltERKS_(
-                    const struct SomeStruct* __this, const struct SomeStruct* other) {
+                    struct SomeStruct const * __this, struct SomeStruct const * other) {
                 return __this->operator<(*other);
             }
         }
@@ -1611,7 +1611,7 @@ fn test_nonunpin_return_assign() -> Result<()> {
         quote! {
             extern "C" void __rust_thunk___ZN10NontrivialaSERKS_(
                 struct Nontrivial* __return, struct Nontrivial* __this,
-                const struct Nontrivial* other
+                struct Nontrivial const * other
             ) {
                 new(__return) auto(__this->operator=(*other));
             }

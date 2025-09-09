@@ -10,7 +10,7 @@ use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
 use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
-use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind};
+use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind, RustPtrKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
@@ -549,7 +549,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             // We don't actually _have_ to expand the type alias here
             db.crubit_abi_type(underlying_type.as_ref().clone())
         }
-        RsTypeKind::Pointer { is_slice: true, .. } => {
+        RsTypeKind::Pointer { kind: RustPtrKind::Slice, .. } => {
             bail!("Slices are not supported yet")
         }
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),

@@ -78,6 +78,7 @@ extern "C" void __rust_thunk___Z14MakeMyI8Structv(
 static_assert((struct MyOption<MyI8Struct> (*)())&MakeMyI8Struct);
 
 static_assert(
-    (void (*)(rs_std::SliceRef<std::string_view>))&InspectStringViews);
+    (void (*)(::rs_std::SliceRef<class std::basic_string_view<
+                  char, std::char_traits<char>>>))&InspectStringViews);
 
 #pragma clang diagnostic pop

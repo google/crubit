@@ -409,6 +409,15 @@ impl UniformReprTemplateType {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum RustPtrKind {
+    /// The C++ pointer type that this was derived from, which is used for spelling the original
+    /// C++ type back out even if we only treat it as a raw pointer in Rust.
+    CcPtr(PointerTypeKind),
+    /// This is the `rs_std::SliceRef` type.
+    Slice,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RsTypeKind {
     /// An error occurred while generating the type.
@@ -422,7 +431,7 @@ pub enum RsTypeKind {
     },
     Pointer {
         pointee: Rc<RsTypeKind>,
-        is_slice: bool,
+        kind: RustPtrKind,
         mutability: Mutability,
     },
     Reference {
@@ -703,7 +712,7 @@ impl RsTypeKind {
 
             return Ok(RsTypeKind::Pointer {
                 pointee: Rc::new(inner_rs_type_kind),
-                is_slice: true,
+                kind: RustPtrKind::Slice,
                 mutability: if inner_cc_type.is_const {
                     Mutability::Const
                 } else {
@@ -1156,10 +1165,10 @@ impl RsTypeKind {
         self_record: Option<&Record>,
     ) -> TokenStream {
         match self {
-            RsTypeKind::Pointer { pointee, is_slice, mutability } => {
+            RsTypeKind::Pointer { pointee, kind, mutability } => {
                 let mutability = mutability.format_for_pointer();
                 let pointee_ = pointee.to_token_stream_replacing_by_self(db, self_record);
-                if *is_slice {
+                if let RustPtrKind::Slice = kind {
                     quote! {* #mutability [#pointee_] }
                 } else {
                     quote! {* #mutability #pointee_ }
@@ -1263,10 +1272,10 @@ impl RsTypeKind {
                 // the only types using `()` like this are all pub(crate) (generated here.)
                 quote! { ::forward_declare::Incomplete<::forward_declare::symbol!(#symbol), ()> }
             }
-            RsTypeKind::Pointer { pointee, is_slice, mutability } => {
+            RsTypeKind::Pointer { pointee, kind, mutability } => {
                 let mutability = mutability.format_for_pointer();
                 let pointee_tokens = pointee.to_token_stream(db);
-                if *is_slice {
+                if let RustPtrKind::Slice = kind {
                     quote! {* #mutability [#pointee_tokens] }
                 } else {
                     quote! {* #mutability #pointee_tokens }

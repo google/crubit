@@ -4,7 +4,7 @@
 
 use arc_anyhow::{anyhow, ensure, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
-use database::rs_snippet::{ElisionOptions, Lifetime, Mutability, RsTypeKind};
+use database::rs_snippet::{ElisionOptions, Lifetime, Mutability, RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
 use ir::{CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
@@ -59,7 +59,13 @@ pub fn rs_type_kind_with_lifetime_elision(
                     .map(Lifetime::from)
                     .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
                 None if elision_options.elide_references => Lifetime::elided(),
-                None => return Ok(RsTypeKind::Pointer { pointee, is_slice: false, mutability }),
+                None => {
+                    return Ok(RsTypeKind::Pointer {
+                        pointee,
+                        kind: RustPtrKind::CcPtr(pointer.kind),
+                        mutability,
+                    })
+                }
             };
             if let PointerTypeKind::RValueRef = pointer.kind {
                 Ok(RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime })
