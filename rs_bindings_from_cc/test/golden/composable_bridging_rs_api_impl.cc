@@ -81,4 +81,33 @@ static_assert(
     (void (*)(::rs_std::SliceRef<class std::basic_string_view<
                   char, std::char_traits<char>>>))&InspectStringViews);
 
+extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::internal::Encode<
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<void*>>>(__return_abi_buffer,
+                                                            MaybeVoidPtr());
+}
+
+static_assert((struct MyOption<void*> (*)())&MaybeVoidPtr);
+
+extern "C" void
+__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
+    unsigned char* __return_abi_buffer, ::rs_std::SliceRef<const int> slice) {
+  ::crubit::internal::Encode<::crubit::MyOptionAbi<
+      ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>>(
+      __return_abi_buffer, AcceptsSliceAndReturnsStatusErrorIfEmpty(slice));
+}
+
+static_assert((struct MyOption<rs_std::SliceRef<const int>> (*)(
+    ::rs_std::SliceRef<const int>))&AcceptsSliceAndReturnsStatusErrorIfEmpty);
+
+extern "C" void __rust_thunk___Z16ReturnsCStrArrayv(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::internal::Encode<
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<char const**>>>(
+      __return_abi_buffer, ReturnsCStrArray());
+}
+
+static_assert((struct MyOption<const char**> (*)())&ReturnsCStrArray);
+
 #pragma clang diagnostic pop

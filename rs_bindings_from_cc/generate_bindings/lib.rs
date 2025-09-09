@@ -5,12 +5,13 @@
 
 use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
+use cpp_type_name::format_cpp_type_with_references;
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
 use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
-use database::rs_snippet::{BridgeRsTypeKind, RsTypeKind, RustPtrKind};
+use database::rs_snippet::{BridgeRsTypeKind, Mutability, RsTypeKind, RustPtrKind};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
@@ -549,8 +550,16 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             // We don't actually _have_ to expand the type alias here
             db.crubit_abi_type(underlying_type.as_ref().clone())
         }
-        RsTypeKind::Pointer { kind: RustPtrKind::Slice, .. } => {
-            bail!("Slices are not supported yet")
+        RsTypeKind::Pointer { pointee, kind, mutability } => {
+            let rust_tokens = pointee.to_token_stream(db);
+            let cpp_tokens = format_cpp_type_with_references(&pointee, db.ir())?;
+
+            Ok(CrubitAbiType::Ptr {
+                is_const: mutability == Mutability::Const,
+                is_rust_slice: kind == RustPtrKind::Slice,
+                rust_type: rust_tokens,
+                cpp_type: cpp_tokens,
+            })
         }
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
         RsTypeKind::ExistingRustType(existing_rust_type) => {

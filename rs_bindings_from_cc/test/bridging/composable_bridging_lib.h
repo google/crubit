@@ -11,15 +11,10 @@
 #include <string_view>
 #include <utility>
 
+#include "absl/status/statusor.h"
+#include "support/annotations.h"
 #include "support/bridge.h"
 #include "support/rs_std/slice_ref.h"
-
-// clang-format off
-#define CRUBIT_BRIDGE(rust_name, abi_rust, abi_cpp)         \
-  [[clang::annotate("crubit_bridge_rust_name", rust_name)]] \
-  [[clang::annotate("crubit_bridge_abi_rust", abi_rust)]]   \
-  [[clang::annotate("crubit_bridge_abi_cpp", abi_cpp)]]
-// clang-format on
 
 // Bridge type with a template type argument.
 template <typename T>
@@ -91,5 +86,12 @@ std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
 
 rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
     rs_std::SliceRef<const std::string_view> slice);
+
+CRUBIT_UNSAFE_MARK_SAFE
+absl::StatusOr<void*> AcceptsVoidPtrAndReturnsStatusErrorIfNull(void* ptr);
+
+CRUBIT_UNSAFE_MARK_SAFE
+absl::StatusOr<rs_std::SliceRef<const int>>
+AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

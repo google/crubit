@@ -9,6 +9,8 @@
 #include <string_view>
 #include <utility>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "support/rs_std/slice_ref.h"
 
 Vec3<float> MakeVec3(float x, float y, float z) {
@@ -72,5 +74,20 @@ std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
 
 rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
     rs_std::SliceRef<const std::string_view> slice) {
+  return slice;
+}
+
+absl::StatusOr<void*> AcceptsVoidPtrAndReturnsStatusErrorIfNull(void* ptr) {
+  if (ptr == nullptr) {
+    return absl::InvalidArgumentError("ptr is null");
+  }
+  return ptr;
+}
+
+absl::StatusOr<rs_std::SliceRef<const int>>
+AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice) {
+  if (slice.size() == 0) {
+    return absl::InvalidArgumentError("slice is empty");
+  }
   return slice;
 }

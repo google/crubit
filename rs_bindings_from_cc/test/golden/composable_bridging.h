@@ -55,4 +55,11 @@ MyOption<MyI8Struct> MakeMyI8Struct();
 
 void InspectStringViews(rs_std::SliceRef<absl::string_view> slice);
 
+MyOption<void*> MaybeVoidPtr();
+
+MyOption<rs_std::SliceRef<const int>> AcceptsSliceAndReturnsStatusErrorIfEmpty(
+    rs_std::SliceRef<const int> slice);
+
+MyOption<const char**> ReturnsCStrArray();
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMPOSABLE_BRIDGING_H_

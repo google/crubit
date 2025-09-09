@@ -41,7 +41,7 @@ impl ToTokens for FullyQualifiedPath {
 }
 
 /// Abstract representation of the type selector for bridge operations on a type.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 pub enum CrubitAbiType {
     SignedChar,
     UnsignedChar,
@@ -50,6 +50,15 @@ pub enum CrubitAbiType {
     UnsignedLong,
     LongLong,
     UnsignedLongLong,
+    /// The Crubit ABI of a pointer is just transmuting the pointer
+    Ptr {
+        is_const: bool,
+        /// Is this a Rust slice (*mut [T] / rs_std::SliceRef<T>),
+        /// or just a pointer (*mut T / T*).
+        is_rust_slice: bool,
+        rust_type: TokenStream,
+        cpp_type: TokenStream,
+    },
     Pair(Rc<CrubitAbiType>, Rc<CrubitAbiType>),
     StdString {
         /// If true, use `crate::...` instead of `::cc_std::...` in Rust tokens.
@@ -123,6 +132,18 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
             CrubitAbiType::UnsignedLongLong => {
                 quote! { ::bridge_rust::TransmuteAbi<::core::ffi::c_ulonglong> }.to_tokens(tokens)
             }
+            CrubitAbiType::Ptr { is_const, is_rust_slice, rust_type, .. } => {
+                let mut ty = rust_type.clone();
+                if *is_rust_slice {
+                    ty = quote! { [#ty] };
+                }
+                if *is_const {
+                    ty = quote! { *const #ty };
+                } else {
+                    ty = quote! { *mut #ty };
+                }
+                quote! { ::bridge_rust::TransmuteAbi<#ty> }.to_tokens(tokens);
+            }
             CrubitAbiType::Pair(first, second) => {
                 let first_tokens = Self(first);
                 let second_tokens = Self(second);
@@ -175,6 +196,18 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
             }
             CrubitAbiType::UnsignedLongLong => {
                 quote! { ::crubit::TransmuteAbi<unsigned long long> }.to_tokens(tokens)
+            }
+            CrubitAbiType::Ptr { is_const, is_rust_slice, cpp_type, .. } => {
+                let mut ty = cpp_type.clone();
+                if *is_const {
+                    ty = quote! { const #ty };
+                }
+                if *is_rust_slice {
+                    ty = quote! { ::rs_std::SliceRef<#ty> };
+                } else {
+                    ty = quote! { #ty * };
+                }
+                quote! { ::crubit::TransmuteAbi<#ty> }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
                 let first_tokens = Self(first);

@@ -92,3 +92,31 @@ fn test_return_slice_ref_string_view() {
     let result: &[u8] = unsafe { &*result[0].as_raw_bytes() };
     expect_that!(result, eq(value))
 }
+
+#[gtest]
+fn test_status_of_pointer_is_bridged() {
+    let result = AcceptsVoidPtrAndReturnsStatusErrorIfNull(core::ptr::null_mut());
+    expect_that!(
+        result,
+        status_rs_matchers::status_is(status::absl::StatusErrorCode::InvalidArgument)
+    );
+
+    let mut thing = true;
+    let void_ptr: *mut core::ffi::c_void = &raw mut thing as *mut _;
+    let result = AcceptsVoidPtrAndReturnsStatusErrorIfNull(void_ptr);
+    expect_that!(result, ok(eq(&void_ptr)),);
+}
+
+#[gtest]
+fn test_status_of_slice_ref_is_bridged_as_slice_ptr() {
+    let empty_slice: &[core::ffi::c_int] = &[];
+    let result = AcceptsSliceAndReturnsStatusErrorIfEmpty(empty_slice as *const _);
+    expect_that!(
+        result,
+        status_rs_matchers::status_is(status::absl::StatusErrorCode::InvalidArgument)
+    );
+
+    let non_empty_slice: &[core::ffi::c_int] = &[1, 2, 3];
+    let result = AcceptsSliceAndReturnsStatusErrorIfEmpty(non_empty_slice as *const _);
+    expect_that!(result, ok(eq(&(non_empty_slice as *const _))));
+}

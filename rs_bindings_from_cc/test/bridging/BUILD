@@ -69,7 +69,10 @@ cc_library(
     ],
     deps = [
         "//support:bridge_cpp",
+        "//support/public:annotations",
         "//support/rs_std:slice_ref",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )
 
@@ -84,8 +87,10 @@ crubit_rust_test(
     cc_deps = [
         ":composable_bridging_lib",
         "//support/cc_std",
+        "@abseil-cpp//absl/status",
     ],
     deps = [
+        "@abseil-cpp//absl/status:status_rs_matchers",
         "@crate_index//:googletest",
     ],
 )
