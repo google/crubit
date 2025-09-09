@@ -157,10 +157,7 @@ cc_library(
     name = "bazel_types",
     srcs = [],
     hdrs = ["bazel_types.h"],
-    deps = [
-        "//common:string_type",
-        "@abseil-cpp//absl/log:check",
-    ],
+    deps = ["//common:string_type"],
 )
 
 cc_library(
@@ -285,8 +282,6 @@ cc_library(
         "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:frontend",
-        "@llvm-project//clang:sema",
-        "@llvm-project//llvm:Support",
     ],
 )
 
