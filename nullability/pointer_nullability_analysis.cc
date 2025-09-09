@@ -788,8 +788,10 @@ void transferValue_SmartPointerComparisonOpCall(
   // If the operator is `!=`, this will need to be negated below.
   const Formula* EqualityFormula = nullptr;
 
-  bool NullPtr1 = OpCall->getArg(0)->getType()->isNullPtrType();
-  bool NullPtr2 = OpCall->getArg(1)->getType()->isNullPtrType();
+  bool NullPtr1 =
+      OpCall->getArg(0)->IgnoreImpCasts()->getType()->isNullPtrType();
+  bool NullPtr2 =
+      OpCall->getArg(1)->IgnoreImpCasts()->getType()->isNullPtrType();
   assert(!NullPtr1 || !NullPtr2);
 
   PointerValue* Val1 = nullptr;

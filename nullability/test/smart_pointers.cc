@@ -626,6 +626,39 @@ TEST void userDefinedSmartPointersWithNonPointerRHSAssignOp(NonPointer Param) {
   unknown(Local = Param);
 }
 
+// An example where operator== takes a raw pointer argument instead of
+// std::nullptr_t for comparison to `nullptr` literals.
+struct _Nullable WithCompareRawPointer {
+  using pointer = int*;
+
+  WithCompareRawPointer();
+};
+bool operator==(const WithCompareRawPointer& X, const WithCompareRawPointer& Y);
+bool operator==(const WithCompareRawPointer& X, int* Y);
+bool operator!=(const WithCompareRawPointer& X, int* Y);
+
+TEST void userDefinedSmartPointersWithCompareRawPointer(
+    _Nonnull WithCompareRawPointer NonnullParam,
+    _Nullable WithCompareRawPointer NullableParam,
+    int* _Nonnull NonnullRawPointer) {
+  // This is a crash repro -- make sure that when the argument is literal
+  // `nullptr`, the analysis looks through the cast from `nullptr_t` to `int*`.
+  WithCompareRawPointer Null;
+  provable(Null == nullptr);
+  provable(NonnullParam != nullptr);
+  possible(NullableParam == nullptr);
+  possible(NullableParam != nullptr);
+
+  // Other things can prove.
+  provable(Null == WithCompareRawPointer());
+  provable(NonnullParam == NonnullParam);
+
+  // Compare to a raw pointer that isn't literal nullptr
+  // (we don't model for now, just don't want to crash)
+  NonnullParam == NonnullRawPointer;
+  NonnullParam != NonnullRawPointer;
+}
+
 }  // namespace user_defined_smart_pointers
 
 namespace derived_from_unique_ptr {
