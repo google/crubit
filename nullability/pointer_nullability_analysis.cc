@@ -578,8 +578,11 @@ void transferValue_SmartPointerAssignment(
     return;
   }
 
-  auto* SrcLoc = State.Env.get<RecordStorageLocation>(*OpCall->getArg(1));
-  if (isPointerTypeConvertible(
+  auto* SrcLoc = OpCall->getArg(1)->isGLValue()
+                     ? State.Env.get<RecordStorageLocation>(*OpCall->getArg(1))
+                     : &State.Env.getResultObjectLocation(*OpCall->getArg(1));
+  if (SrcLoc != nullptr &&
+      isPointerTypeConvertible(
           underlyingRawPointerTypeFromSmartPointer(*SrcLoc),
           underlyingRawPointerTypeFromSmartPointer(*Loc))) {
     setSmartPointerValue(
@@ -588,7 +591,7 @@ void transferValue_SmartPointerAssignment(
 
   // If this is the move assignment operator, set the source to null.
   auto* Method = dyn_cast_or_null<CXXMethodDecl>(OpCall->getCalleeDecl());
-  if (Method != nullptr &&
+  if (SrcLoc != nullptr && Method != nullptr &&
       Method->getParamDecl(0)->getType()->isRValueReferenceType()) {
     setSmartPointerToNull(*SrcLoc, State.Env);
   }

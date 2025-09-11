@@ -659,6 +659,36 @@ TEST void userDefinedSmartPointersWithCompareRawPointer(
   NonnullParam != NonnullRawPointer;
 }
 
+// Assignable from a smart pointer where the operator= is the more usual one
+// (param is a reference).
+template <typename T>
+struct _Nullable AssignFromUniquePtrRvalueRef {
+  using pointer = T*;
+
+  AssignFromUniquePtrRvalueRef();
+  AssignFromUniquePtrRvalueRef& operator=(std::unique_ptr<T>&& P);
+};
+
+// Assignable from a smart pointer where the operator= is the less usual
+// (param is a value).
+template <typename T>
+struct _Nullable AssignFromUniquePtrValue {
+  using pointer = T*;
+
+  AssignFromUniquePtrValue();
+  AssignFromUniquePtrValue& operator=(std::unique_ptr<T> P);
+};
+
+TEST void assignOperatorByRefOrByValue() {
+  AssignFromUniquePtrRvalueRef<int> TakingRvalueRef;
+  TakingRvalueRef = std::make_unique<int>();
+  nonnull(TakingRvalueRef);
+
+  AssignFromUniquePtrValue<int> TakingValue;
+  TakingValue = std::make_unique<int>();
+  nonnull(TakingValue);
+}
+
 }  // namespace user_defined_smart_pointers
 
 namespace derived_from_unique_ptr {
