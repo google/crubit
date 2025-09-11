@@ -94,7 +94,10 @@ def _get_dep_bindings_infos(ctx):
     ]
 
 def _target_name_to_include_guard(target):
-    return (target.label.package + "/" + target.label.name).replace("/", "_").upper()
+    return "".join([
+        c if c.isalnum() else "_"
+        for c in (target.label.package + "/" + target.label.name).upper().elems()
+    ])
 
 def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_crate_renames):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
