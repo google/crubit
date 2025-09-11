@@ -481,7 +481,10 @@ bool isPointerTypeConvertible(QualType From, QualType To) {
   //   it could e.g., lead to looking up record member vars on an `int*`.
   if (FromDecl == nullptr || ToDecl == nullptr) return false;
 
-  return FromDecl == ToDecl || FromDecl->isDerivedFrom(ToDecl);
+  if (FromDecl == ToDecl) return true;
+  // If we don't have the complete definition, we can't check isDerivedFrom.
+  if (!FromDecl->isCompleteDefinition()) return false;
+  return FromDecl->isDerivedFrom(ToDecl);
 }
 
 void transferValue_SmartPointerConstructor(

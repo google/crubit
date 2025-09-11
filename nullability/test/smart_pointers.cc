@@ -843,6 +843,30 @@ TEST void copyFromVoidStarSmartPointerType(VoidStarSmartPointer<S> Void) {
   NonVoid->nonConstMemberFunction();
 }
 
+// Test what happens if you have a copy involving an incomplete type.
+// Since the code is dealing with pointers and this could be used only for
+// a nullptr it may seem fine. But we need to query "isDerivedFrom" to check
+// if the copy is okay, and isDerivedFrom will crash on incomplete types.
+struct IncompleteType;
+
+struct _Nullable NullOnlyPointer {
+  using pointer = IncompleteType*;
+  NullOnlyPointer();
+};
+
+template <class T>
+struct _Nullable CopyableFromNullOnlyPointer {
+  using pointer = T*;
+
+  CopyableFromNullOnlyPointer(NullOnlyPointer Null);
+  pointer get() const;
+};
+
+TEST void copyFromNullOnlyPointerWithIncompleteType(NullOnlyPointer Null) {
+  CopyableFromNullOnlyPointer<S> Dest(Null);
+  Dest.get()->nonConstMemberFunction();
+}
+
 }  // namespace unusual_smart_pointer_type
 
 // Check non-member operator overloading (check if we have assumptions
