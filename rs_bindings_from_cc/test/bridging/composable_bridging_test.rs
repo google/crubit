@@ -120,3 +120,9 @@ fn test_status_of_slice_ref_is_bridged_as_slice_ptr() {
     let result = AcceptsSliceAndReturnsStatusErrorIfEmpty(non_empty_slice as *const _);
     expect_that!(result, ok(eq(&(non_empty_slice as *const _))));
 }
+
+#[gtest]
+fn test_optional_my_struct() {
+    let x = ReturnOptionalMyStruct();
+    assert_eq!(x.unwrap().x, 42);
+}

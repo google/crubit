@@ -563,11 +563,6 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
         }
         RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
         RsTypeKind::ExistingRustType(existing_rust_type) => {
-            ensure!(
-                existing_rust_type.is_same_abi,
-                "RsTypeKind::ExistingRustType with is_same_abi=false is not supported yet"
-            );
-
             // Rust names are of the form ":: tuples_golden :: NontrivialDrop"
             let mut rust_path = existing_rust_type.rs_name.as_ref();
             let mut start_with_colon2 = false;
@@ -578,9 +573,9 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             let rust_type = FullyQualifiedPath {
                 start_with_colon2,
                 parts: rust_path
-                    .split(" :: ")
+                    .split("::")
                     .map(|ident| {
-                        syn::parse_str::<Ident>(ident).map_err(|_| {
+                        syn::parse_str::<Ident>(ident.trim()).map_err(|_| {
                             anyhow!(
                                 "The type `{ident}` does not parse as an identifier. \
                         This may be because it contains template parameters, and \
@@ -593,7 +588,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
 
             let cpp_type = make_cpp_type_from_item(
                 existing_rust_type.as_ref(),
-                &[existing_rust_type.cc_name.as_ref()],
+                &existing_rust_type.cc_name.split("::").collect::<Vec<&str>>(),
                 db,
             )?;
 

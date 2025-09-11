@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "absl/status/statusor.h"
+#include "rs_bindings_from_cc/test/bridging/rust_library.h"
 #include "support/annotations.h"
 #include "support/bridge.h"
 #include "support/rs_std/slice_ref.h"
@@ -93,5 +94,10 @@ absl::StatusOr<void*> AcceptsVoidPtrAndReturnsStatusErrorIfNull(void* ptr);
 CRUBIT_UNSAFE_MARK_SAFE
 absl::StatusOr<rs_std::SliceRef<const int>>
 AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice);
+
+CRUBIT_MUST_BIND
+inline std::optional<rust_library::MyStruct> ReturnOptionalMyStruct() {
+  return rust_library::MyStruct();
+};
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

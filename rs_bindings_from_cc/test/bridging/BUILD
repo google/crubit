@@ -1,4 +1,9 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "cc_bindings_from_rust",
+)
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -6,6 +11,16 @@ load(
 load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
+)
+
+rust_library(
+    name = "rust_library",
+    srcs = ["rust_library.rs"],
+)
+
+cc_bindings_from_rust(
+    name = "rust_library_cc",
+    crate = ":rust_library",
 )
 
 cc_library(
@@ -68,6 +83,7 @@ cc_library(
         ":additional_composable_bridging_lib_src",
     ],
     deps = [
+        ":rust_library_cc",
         "//support:bridge_cpp",
         "//support/public:annotations",
         "//support/rs_std:slice_ref",
