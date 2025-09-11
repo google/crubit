@@ -21,11 +21,14 @@ namespace clang::tidy::nullability {
 namespace {
 using ::clang::ast_matchers::anything;
 using ::clang::ast_matchers::equalsNode;
+using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasDeclContext;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::isImplicit;
+using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::namedDecl;
+using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::unless;
 
 template <class T = NamedDecl>
@@ -457,15 +460,15 @@ TEST(InferableTest, TypeAliasTemplate) {
 
     template <typename U>
     struct S {
-      Alias<U*> inferable;
-      Alias<U> not_inferable;
-      PtrAlias<U> inferable_pointer_in_alias;
+      Alias<U*> Inferable;
+      Alias<U> NotInferable;
+      PtrAlias<U> InferablePointerInAlias;
     };
 
     S<int*> AnS;
-    int** FromInferable = AnS.inferable;
-    int* FromNotInferable = AnS.not_inferable;
-    int** FromInferablePointerInAlias = AnS.inferable_pointer_in_alias;
+    int** FromInferable = AnS.Inferable;
+    int* FromNotInferable = AnS.NotInferable;
+    int** FromInferablePointerInAlias = AnS.InferablePointerInAlias;
   )cc");
   auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(
@@ -489,19 +492,19 @@ TEST(InferableTest, NestedTemplates) {
     struct S {
       template <typename U>
       struct Nested {
-        U* inferable_u;
-        U not_inferable_u;
-        T* inferable_t;
-        T not_inferable_t;
+        U* InferableU;
+        U NotInferableU;
+        T* InferableT;
+        T NotInferableT;
       };
       Nested<bool*> ANested;
     };
 
     S<int*> AnS;
-    bool** FromInferableU = AnS.ANested.inferable_u;
-    bool* FromNotInferableU = AnS.ANested.not_inferable_u;
-    int** FromInferableT = AnS.ANested.inferable_t;
-    int* FromNotInferableT = AnS.ANested.not_inferable_t;
+    bool** FromInferableU = AnS.ANested.InferableU;
+    bool* FromNotInferableU = AnS.ANested.NotInferableU;
+    int** FromInferableT = AnS.ANested.InferableT;
+    int* FromNotInferableT = AnS.ANested.NotInferableT;
   )cc");
   auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(
@@ -522,6 +525,109 @@ TEST(InferableTest, NestedTemplates) {
                             .getInit()
                             ->IgnoreImplicit())
            ->getMemberDecl()));
+}
+
+TEST(InferableTest, TemplateParamTypedDeclsInFunctionTemplate) {
+  TestAST AST(R"cc(
+    template <typename T>
+    void func(T* ParamStar, T Param) {
+      T* LocalStar;
+      T Local;
+    }
+
+    template <typename T>
+    T* returnStar() {}
+
+    template <typename T>
+    T returnNoStar() {}
+
+    void instantiate() {
+      func<int*>(nullptr, nullptr);
+      returnStar<bool*>();
+      returnNoStar<char*>();
+    }
+  )cc");
+
+  auto& Ctx = AST.context();
+
+  {
+    const FunctionDecl* FuncInstantiation = selectFirst<FunctionDecl>(
+        "func_instantiation",
+        match(functionDecl(isTemplateInstantiation(), hasName("func"))
+                  .bind("func_instantiation"),
+              Ctx));
+    ASSERT_NE(FuncInstantiation, nullptr);
+    EXPECT_TRUE(hasInferable(FuncInstantiation->getParamDecl(0)->getType()));
+    EXPECT_FALSE(hasInferable(FuncInstantiation->getParamDecl(1)->getType()));
+
+    const VarDecl& LocalStar =
+        lookup<VarDecl>("LocalStar", Ctx, FuncInstantiation);
+    EXPECT_TRUE(hasInferable(LocalStar.getType()));
+    const VarDecl& Local = lookup<VarDecl>("Local", Ctx, FuncInstantiation);
+    EXPECT_FALSE(hasInferable(Local.getType()));
+  }
+
+  {
+    const FunctionDecl* ReturnStarInstantiation = selectFirst<FunctionDecl>(
+        "returnStar_instantiation",
+        match(functionDecl(isTemplateInstantiation(), hasName("returnStar"))
+                  .bind("returnStar_instantiation"),
+              Ctx));
+    ASSERT_NE(ReturnStarInstantiation, nullptr);
+    EXPECT_TRUE(hasInferable(ReturnStarInstantiation->getReturnType()));
+  }
+
+  {
+    const FunctionDecl* ReturnNoStarInstantiation = selectFirst<FunctionDecl>(
+        "returnNoStar_instantiation",
+        match(functionDecl(isTemplateInstantiation(), hasName("returnNoStar"))
+                  .bind("returnNoStar_instantiation"),
+              Ctx));
+    ASSERT_NE(ReturnNoStarInstantiation, nullptr);
+    EXPECT_FALSE(hasInferable(ReturnNoStarInstantiation->getReturnType()));
+  }
+}
+
+TEST(InferableTest, TypeInsideTemplateTypeParamIsNotInferable) {
+  TestAST AST(R"cc(
+    template <class T>
+    // Being named Ptr does not guarantee that the return type will always be a
+    // pointer. So, we still don't annotate unless the pointer-ness is part of
+    // the template declaration.
+    T::Ptr ReturnsTypeNamedPtr();
+    template <class T>
+    T::Ptr* ReturnsPtr();
+
+    class S {
+     public:
+      typedef const char* Ptr;
+    };
+
+    int main() {
+      ReturnsTypeNamedPtr<S>();
+      ReturnsPtr<S>();
+    }
+  )cc");
+
+  {
+    const FunctionDecl* ReturnsTypeNamedPtr = selectFirst<FunctionDecl>(
+        "func", match(functionDecl(isTemplateInstantiation(),
+                                   hasName("ReturnsTypeNamedPtr"))
+                          .bind("func"),
+                      AST.context()));
+    ASSERT_NE(ReturnsTypeNamedPtr, nullptr);
+    EXPECT_FALSE(hasInferable(ReturnsTypeNamedPtr->getReturnType()));
+  }
+
+  {
+    const FunctionDecl* ReturnsPtr = selectFirst<FunctionDecl>(
+        "func",
+        match(functionDecl(isTemplateInstantiation(), hasName("ReturnsPtr"))
+                  .bind("func"),
+              AST.context()));
+    ASSERT_NE(ReturnsPtr, nullptr);
+    EXPECT_TRUE(hasInferable(ReturnsPtr->getReturnType()));
+  }
 }
 
 }  // namespace

@@ -5,55 +5,105 @@
 #include "nullability/inference/inferable.h"
 
 #include <cassert>
+#include <optional>
 
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"  // IWYU pragma: keep, to work around forward decl usage in clang
-#include "clang/AST/Type.h"
+#include "clang/AST/NestedNameSpecifierBase.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/AST/TypeVisitor.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
 
+static void forEachTypeNestedNameSpecifier(
+    const Type& T, llvm::function_ref<void(const Type&)> ForType) {
+  for (NestedNameSpecifier NNS = T.getPrefix(); NNS;) {
+    if (NNS.getKind() == NestedNameSpecifier::Kind::Type) {
+      assert(NNS.getAsType() != nullptr);
+      ForType(*NNS.getAsType());
+    }
+
+    switch (NNS.getKind()) {
+      case NestedNameSpecifier::Kind::Null:
+      case NestedNameSpecifier::Kind::Global:
+      case NestedNameSpecifier::Kind::MicrosoftSuper:
+        NNS = std::nullopt;
+        break;
+      case NestedNameSpecifier::Kind::Namespace:
+        NNS = NNS.getAsNamespaceAndPrefix().Prefix;
+        break;
+      case NestedNameSpecifier::Kind::Type:
+        NNS = NNS.getAsType()->getPrefix();
+        break;
+      default:
+        NNS = std::nullopt;
+        llvm_unreachable("unexpected NestedNameSpecifier kind");
+        break;
+    }
+  }
+}
+
 static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
     QualType T) {
   class Walker : public TypeVisitor<Walker, bool> {
-    void addTemplateDeclsSeenInQualifiers(const Type* T) {
-      for (NestedNameSpecifier NNS = T->getPrefix(); NNS;) {
-        if (NNS.getKind() == NestedNameSpecifier::Kind::Type) {
-          if (const auto* TST = dyn_cast_or_null<TemplateSpecializationType>(
-                  NNS.getAsType())) {
-            TemplateDeclsSeen.insert(
-                TST->getTemplateName().getAsTemplateDecl());
-          }
+    void addTemplateDeclsSeenInQualifiers(const Type& T) {
+      forEachTypeNestedNameSpecifier(T, [this](const Type& NNSType) {
+        if (const auto* TST =
+                dyn_cast_or_null<TemplateSpecializationType>(&NNSType)) {
+          TemplateDeclsSeen.insert(TST->getTemplateName().getAsTemplateDecl());
         }
+      });
+    }
 
-        switch (NNS.getKind()) {
-          case NestedNameSpecifier::Kind::Null:
-          case NestedNameSpecifier::Kind::Global:
-          case NestedNameSpecifier::Kind::MicrosoftSuper:
-            NNS = std::nullopt;
-            break;
-          case NestedNameSpecifier::Kind::Namespace:
-            NNS = NNS.getAsNamespaceAndPrefix().Prefix;
-            break;
-          case NestedNameSpecifier::Kind::Type:
-            NNS = NNS.getAsType()->getPrefix();
-            break;
-          default:
-            NNS = std::nullopt;
-            llvm_unreachable("unexpected NestedNameSpecifier kind");
-            break;
+    bool hasNestedNameSpecifierThatIsSubstitutedParamOfUnseenTemplate(
+        const Type& T) {
+      bool AnyIsParamOfUnseenTemplate = false;
+      forEachTypeNestedNameSpecifier(T, [&AnyIsParamOfUnseenTemplate,
+                                         this](const Type& NNSType) {
+        if (const auto* Substituted =
+                dyn_cast_or_null<SubstTemplateTypeParmType>(&NNSType)) {
+          AnyIsParamOfUnseenTemplate = AnyIsParamOfUnseenTemplate ||
+                                       isParamOfUnseenTemplate(*Substituted);
         }
-      }
+      });
+      return AnyIsParamOfUnseenTemplate;
+    }
+
+    bool isParamOfUnseenTemplate(const SubstTemplateTypeParmType& T) {
+      // If the replaced template parameter is not a parameter of a template
+      // that we've seen while walking the type, then it is a template parameter
+      // of the current context and the type is only a pointer by way of the
+      // replacement type. We no longer consider it to be a supported pointer
+      // type.
+      //
+      // This avoids inferring the nullability for declarations in a template
+      // that may only sometimes be pointers, e.g. a field holding the
+      // underlying data in a generic wrapper type, for which we will never
+      // write an annotation in the template and for which the nullability
+      // should instead be specified as part of the template argument.
+      if (TemplateDeclsSeen.contains(T.getAssociatedDecl())) return false;
+      const auto* CTSD =
+          dyn_cast<ClassTemplateSpecializationDecl>(T.getAssociatedDecl());
+      return !CTSD ||
+             !TemplateDeclsSeen.contains(CTSD->getSpecializedTemplate());
     }
 
    public:
     bool VisitType(const Type* T) {
-      addTemplateDeclsSeenInQualifiers(T);
+      addTemplateDeclsSeenInQualifiers(*T);
+
+      // If this is a type nested within a substituted template type parameter
+      // of the current context, then treat the whole type as unsupported, as
+      // we would the substituted template type parameter.
+      if (hasNestedNameSpecifierThatIsSubstitutedParamOfUnseenTemplate(*T))
+        return false;
 
       // Walk through sugar other than the types handled specifically below.
       if (const Type* Next =
@@ -74,7 +124,7 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
     }
     bool VisitPointerType(const PointerType* T) { return true; }
     bool VisitRecordType(const RecordType* T) {
-      addTemplateDeclsSeenInQualifiers(T);
+      addTemplateDeclsSeenInQualifiers(*T);
       bool IsSupported = isSupportedSmartPointerType(QualType(T, 0));
       if (!IsSupported) {
         llvm::errs() << "If `isSupportedPointerType` returned true for the "
@@ -86,25 +136,9 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
       return IsSupported;
     }
     bool VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* T) {
-      addTemplateDeclsSeenInQualifiers(T);
-      // If the replaced template parameter is not a parameter of a template
-      // that we've seen while walking the type, then it is a template parameter
-      // of the current context and the type is only a pointer by way of the
-      // replacement type. We no longer consider it to be a supported pointer
-      // type.
-      //
-      // This avoids inferring the nullability for declarations in a template
-      // that may only sometimes be pointers, e.g. a field holding the
-      // underlying data in a generic wrapper type, for which we will never
-      // write an annotation in the template and for which the nullability
-      // should instead be specified as part of the template argument.
-      if (!TemplateDeclsSeen.contains(T->getAssociatedDecl())) {
-        if (const auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(
-                T->getAssociatedDecl());
-            !CTSD ||
-            !TemplateDeclsSeen.contains(CTSD->getSpecializedTemplate())) {
-          return false;
-        }
+      addTemplateDeclsSeenInQualifiers(*T);
+      if (isParamOfUnseenTemplate(*T)) {
+        return false;
       }
 
       // If the template parameter being replaced is a parameter of a template
@@ -117,7 +151,7 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
     }
 
     bool VisitTemplateSpecializationType(const TemplateSpecializationType* T) {
-      addTemplateDeclsSeenInQualifiers(T);
+      addTemplateDeclsSeenInQualifiers(*T);
       if (T->isTypeAlias()) {
         TemplateDeclsSeen.insert(T->getTemplateName().getAsTemplateDecl());
         return Visit(T->getAliasedType().getTypePtr());
