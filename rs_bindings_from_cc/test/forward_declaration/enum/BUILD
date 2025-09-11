@@ -9,6 +9,7 @@ crubit_test_cc_library(
         "forward_declaration.cc",
     ],
     hdrs = ["forward_declaration.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

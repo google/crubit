@@ -6,11 +6,13 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "forward_declaration1",
     hdrs = ["forward_declaration1.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_test_cc_library(
     name = "forward_declaration2",
     hdrs = ["forward_declaration2.h"],
+    aspect_hints = ["//features:experimental"],
     deps = [
         ":forward_declaration1",
     ],
@@ -19,6 +21,7 @@ crubit_test_cc_library(
 crubit_test_cc_library(
     name = "definition",
     hdrs = ["definition.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 # Test cases to ensure we can easily convert forward declarations of the same type across crates

@@ -6,6 +6,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "failed_template_instantiation_member_function",
     hdrs = ["failed_template_instantiation_member_function.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

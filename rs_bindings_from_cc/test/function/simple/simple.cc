@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "rs_bindings_from_cc/test/function/simple/simple_functions.h"
+#include "rs_bindings_from_cc/test/function/simple/simple.h"
 
 int return_value() { return 42; }
 

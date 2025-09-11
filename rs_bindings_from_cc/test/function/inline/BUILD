@@ -1,19 +1,32 @@
 """End-to-end example of using a simple inline function."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
-load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
+load(
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    "golden_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
-crubit_test_cc_library(
-    name = "hello_world",
-    hdrs = ["hello_world.h"],
+cc_library(
+    name = "inline",
+    hdrs = ["inline.h"],
+    aspect_hints = ["//features:supported"],
+)
+
+golden_test(
+    name = "inline_golden_test",
+    basename = "inline",
+    cc_library = "inline",
+    golden_cc = "inline_api_impl.cc",
+    golden_rs = "inline_rs_api.rs",
 )
 
 crubit_rust_test(
-    name = "main",
-    srcs = ["test.rs"],
-    cc_deps = [":hello_world"],
+    name = "inline_test",
+    srcs = ["inline_test.rs"],
+    cc_deps = [":inline"],
     deps = [
         "@crate_index//:googletest",
     ],

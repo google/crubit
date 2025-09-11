@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "func_return_and_param_types",
     srcs = ["func_return_and_param_types.cc"],
     hdrs = ["func_return_and_param_types.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

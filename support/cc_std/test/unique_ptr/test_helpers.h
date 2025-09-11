@@ -6,12 +6,14 @@
 
 #include <memory>
 
+#include "support/annotations.h"
+
 namespace unique_ptr_test {
 
-inline std::unique_ptr<int> create_unique_ptr() {
+CRUBIT_MUST_BIND inline std::unique_ptr<int> create_unique_ptr() {
   return std::make_unique<int>(1);
 }
-inline void destroy_unique_ptr(std::unique_ptr<int>) {}
+CRUBIT_MUST_BIND inline void destroy_unique_ptr(std::unique_ptr<int>) {}
 
 }  // namespace unique_ptr_test
 

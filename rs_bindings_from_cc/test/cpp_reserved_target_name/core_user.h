@@ -7,8 +7,6 @@
 
 #include "rs_bindings_from_cc/test/cpp_reserved_target_name/core.h"
 
-#pragma clang lifetime_elision
-
 struct StructInHeaderThatIncludeCoreHeader final {
   StructInCore struct_in_core;
 };

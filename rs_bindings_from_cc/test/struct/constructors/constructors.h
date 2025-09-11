@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 
-#pragma clang lifetime_elision
-
 // `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent
 // generating bindings for constructors, even though the presence of a
 // user-defined copy constructor technically means that the struct below

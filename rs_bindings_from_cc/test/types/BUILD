@@ -27,6 +27,7 @@ crubit_test_cc_library(
 crubit_test_cc_library(
     name = "types_inferred_lifetimes",
     hdrs = ["types_inferred_lifetimes.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use googletest::prelude::*;
+use googletest::gtest;
 
 #[gtest]
 fn test_crubit_enabled_cc_library_named_core_in_transitive_deps() {

@@ -8,6 +8,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "non_type_template_params",
     hdrs = ["non_type_template_params.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

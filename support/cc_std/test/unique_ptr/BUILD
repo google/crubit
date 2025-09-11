@@ -11,11 +11,13 @@ crubit_test_cc_library(
     name = "test_helpers",
     testonly = 1,
     hdrs = ["test_helpers.h"],
+    aspect_hints = ["//features:experimental"],
+    deps = ["//support:annotations"],
 )
 
 crubit_rust_test(
-    name = "unique_ptr",
-    srcs = ["test.rs"],
+    name = "unique_ptr_test",
+    srcs = ["unique_ptr_test.rs"],
     cc_deps = [
         ":test_helpers",
         "//support/cc_std",

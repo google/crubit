@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "methods",
     srcs = ["methods.cc"],
     hdrs = ["methods.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

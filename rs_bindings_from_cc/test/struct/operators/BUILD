@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "add",
     srcs = ["add.cc"],
     hdrs = ["add.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(
@@ -25,6 +26,7 @@ crubit_test_cc_library(
     name = "add_assign",
     srcs = ["add_assign.cc"],
     hdrs = ["add_assign.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(
@@ -41,6 +43,7 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "rename",
     hdrs = ["rename.h"],
+    aspect_hints = ["//features:experimental"],
     deps = ["//support:annotations"],
 )
 
@@ -58,6 +61,7 @@ crubit_test_cc_library(
     name = "operators",
     srcs = ["operators.cc"],
     hdrs = ["operators.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

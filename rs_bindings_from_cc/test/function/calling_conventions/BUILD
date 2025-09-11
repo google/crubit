@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "calling_conventions",
     srcs = ["calling_conventions.cc"],
     hdrs = ["calling_conventions.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

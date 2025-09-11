@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "rs_bindings_from_cc/test/struct/destructors/field_destruction_order.h"
+#include "rs_bindings_from_cc/test/struct/destructors/destructors.h"
 
 namespace {
 int g_destruction_record = 0;

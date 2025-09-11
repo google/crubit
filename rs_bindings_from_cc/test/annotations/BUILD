@@ -77,6 +77,9 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "rust_name",
     hdrs = ["rust_name.h"],
+    aspect_hints = [
+        "//features:infer_operator_lifetimes",
+    ],
     deps = [
         "//support:annotations",
         "//support/internal:bindings_support",

@@ -8,17 +8,20 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "class_template_definition",
     hdrs = ["class_template_definition.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_test_cc_library(
     name = "class_template_instantiation1",
     hdrs = ["class_template_instantiation1.h"],
+    aspect_hints = ["//features:experimental"],
     deps = [":class_template_definition"],
 )
 
 crubit_test_cc_library(
     name = "class_template_instantiation2",
     hdrs = ["class_template_instantiation2.h"],
+    aspect_hints = ["//features:experimental"],
     deps = [":class_template_definition"],
 )
 

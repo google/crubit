@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
 
-#pragma clang lifetime_elision
-
 inline int hello_world_inline() { return 42; }
 
 // This testcase helps verify that thunks correctly work with const-ref
@@ -14,7 +12,9 @@ inline int hello_world_inline() { return 42; }
 struct SomeStruct final {
   int int_field;
 };
-inline int take_struct_by_const_ref(const SomeStruct& s) { return s.int_field; }
+inline int take_struct_by_const_ptr(const SomeStruct* s) {
+  return s->int_field;
+}
 
 // This testcase helps verify that thunks correctly work with primitive types
 // that have multi-word type names (e.g. `unsigned int`). Using an 'inline'
@@ -24,11 +24,11 @@ inline unsigned int double_unsigned_int(unsigned int i) { return 2 * i; }
 // This is a regression test for b/244630626.  This mimics the standard library
 // that forward-declares and then defines an inline `get_id` function in a
 // `this_thread` namespace.
-namespace foo {
+namespace namespaced {
 inline int forward_declared_doubler(int x);
-}  // namespace foo
-namespace foo {
+}  // namespace namespaced
+namespace namespaced {
 inline int forward_declared_doubler(int x) { return x * 2; }
-}  // namespace foo
+}  // namespace namespaced
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_

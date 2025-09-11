@@ -6,6 +6,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "forward_declaration",
     hdrs = ["forward_declaration.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_test_cc_library(
@@ -13,6 +14,7 @@ crubit_test_cc_library(
     hdrs = [
         "definition.h",
     ],
+    aspect_hints = ["//features:experimental"],
     deps = [
         ":forward_declaration",
     ],

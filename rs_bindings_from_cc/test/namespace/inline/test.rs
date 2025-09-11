@@ -10,10 +10,12 @@ mod tests {
     #[gtest]
     fn test_inline_namespaces() {
         let s = foo::inline1::MyStruct { value: 123 };
-        assert_eq!(123, foo::inline1::GetStructValue1(&s));
-        assert_eq!(123, foo::inline1::GetStructValue2(&s));
-        assert_eq!(123, foo::inline1::GetStructValue3(&s));
-        assert_eq!(123, foo::inline1::GetStructValue4(&s));
+        unsafe {
+            assert_eq!(123, foo::inline1::GetStructValue1(&raw const s));
+            assert_eq!(123, foo::inline1::GetStructValue2(&raw const s));
+            assert_eq!(123, foo::inline1::GetStructValue3(&raw const s));
+            assert_eq!(123, foo::inline1::GetStructValue4(&raw const s));
+        }
 
         // Notably, the C++ standard library uses `inline` namespaces, but we
         // still want to be able to refer to `std::string`, rather than
@@ -25,11 +27,13 @@ mod tests {
         #[allow(unused_assignments)]
         let mut s2 = foo::MyStruct { value: 456 };
         s2 = s; // these are literally the same type.
-        // The functions should be available as `foo::GetStructValue...`
-        // as well.
-        assert_eq!(123, foo::GetStructValue1(&s2));
-        assert_eq!(123, foo::GetStructValue2(&s2));
-        assert_eq!(123, foo::GetStructValue3(&s2));
-        assert_eq!(123, foo::GetStructValue4(&s2));
+                // The functions should be available as `foo::GetStructValue...`
+                // as well.
+        unsafe {
+            assert_eq!(123, foo::GetStructValue1(&raw const s2));
+            assert_eq!(123, foo::GetStructValue2(&raw const s2));
+            assert_eq!(123, foo::GetStructValue3(&raw const s2));
+            assert_eq!(123, foo::GetStructValue4(&raw const s2));
+        }
     }
 }

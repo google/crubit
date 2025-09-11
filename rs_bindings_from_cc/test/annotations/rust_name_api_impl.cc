@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:rust_name
-// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
+// Features: infer_operator_lifetimes, supported, unsafe_types
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -55,23 +55,5 @@ extern "C" void __rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(
 
 static_assert((void (::crubit::test::SomeStruct::*)() const) &
               crubit::test::SomeStruct::MethodOldName);
-
-static_assert(sizeof(struct std::integral_constant<bool, false>) == 1);
-static_assert(alignof(struct std::integral_constant<bool, false>) == 1);
-
-extern "C" void
-__rust_thunk___ZNSt3__u17integral_constantIbLb0EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3arust_5fname(
-    struct std::integral_constant<bool, false>* __this) {
-  crubit::construct_at(__this);
-}
-
-static_assert(sizeof(struct std::integral_constant<bool, true>) == 1);
-static_assert(alignof(struct std::integral_constant<bool, true>) == 1);
-
-extern "C" void
-__rust_thunk___ZNSt3__u17integral_constantIbLb1EEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fannotations_3arust_5fname(
-    struct std::integral_constant<bool, true>* __this) {
-  crubit::construct_at(__this);
-}
 
 #pragma clang diagnostic pop

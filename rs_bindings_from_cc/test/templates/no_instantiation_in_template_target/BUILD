@@ -10,11 +10,13 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "template_without_instantiation",
     hdrs = ["template_without_instantiation.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_test_cc_library(
     name = "type_alias_in_different_target",
     hdrs = ["type_alias_in_different_target.h"],
+    aspect_hints = ["//features:experimental"],
     deps = [":template_without_instantiation"],
 )
 

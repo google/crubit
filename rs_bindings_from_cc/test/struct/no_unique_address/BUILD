@@ -8,6 +8,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "no_unique_address",
     hdrs = ["no_unique_address.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

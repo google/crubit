@@ -20,11 +20,12 @@ load(
 )
 
 def crubit_test_cc_library(name, **kwargs):
-    """A wrapper for cc_library in Crubit integration tests.
+    """A wrapper for cc_library which adds BBCP artifacts for the generated Rust bindings.
 
-    This is equivalent to cc_library, but it sets the default aspect_hints to `:experimental`.
+    Note: these output files are redundant with golden files, so there's no need to use this target
+    when also generating goldens for the resulting Rust bindings.
     """
-    kwargs.setdefault("aspect_hints", ["//features:experimental"])
+    kwargs.setdefault("aspect_hints", ["//features:supported"])
     cc_library(
         name = name,
         **kwargs

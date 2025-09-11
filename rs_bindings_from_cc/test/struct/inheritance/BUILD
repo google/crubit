@@ -10,6 +10,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "upcast",
     hdrs = ["upcast.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(
@@ -26,6 +27,7 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "inherited_methods",
     hdrs = ["inherited_methods.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 golden_test(

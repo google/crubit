@@ -8,11 +8,13 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "type_alias",
     hdrs = ["type_alias.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_test_cc_library(
     name = "type_alias_in_different_target",
     hdrs = ["type_alias_in_different_target.h"],
+    aspect_hints = ["//features:experimental"],
     deps = [":type_alias"],
 )
 

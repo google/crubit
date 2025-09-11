@@ -9,6 +9,7 @@ crubit_test_cc_library(
         "forward_declaration.cc",
     ],
     hdrs = ["forward_declaration.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 # Basic but odd uses of forward declaration. Actually, these usages aren't _that_ odd: Crubit

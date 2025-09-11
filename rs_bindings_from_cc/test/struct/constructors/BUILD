@@ -9,20 +9,15 @@ crubit_test_cc_library(
     name = "constructors",
     srcs = ["constructors.cc"],
     hdrs = ["constructors.h"],
-)
-
-crubit_test_cc_library(
-    name = "no_elided_lifetimes",
-    srcs = ["no_elided_lifetimes.cc"],
-    hdrs = ["no_elided_lifetimes.h"],
+    # operator lifetime inference and ctor
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(
-    name = "main",
+    name = "constructors_test",
     srcs = ["test.rs"],
     cc_deps = [
         ":constructors",
-        ":no_elided_lifetimes",
     ],
     deps = [
         "//support:ctor",

@@ -14,6 +14,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "type_alias_access_rule",
     hdrs = ["type_alias_access_rule.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 golden_test(

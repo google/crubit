@@ -8,6 +8,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "explicit_specialization",
     hdrs = ["explicit_specialization.h"],
+    aspect_hints = ["//features:experimental"],
 )
 
 crubit_rust_test(

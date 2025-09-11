@@ -5,9 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_NAMESPACE_INLINE_INLINE_H_
 
-#pragma clang lifetime_elision
-
-
 namespace foo {
 inline namespace inline1 {
 
@@ -15,9 +12,9 @@ struct MyStruct final {
   int value;
 };
 
-inline int GetStructValue1(const foo::MyStruct& s) { return s.value; }
+inline int GetStructValue1(const foo::MyStruct* s) { return s->value; }
 
-inline int GetStructValue2(const foo::inline1::MyStruct& s) { return s.value; }
+inline int GetStructValue2(const foo::inline1::MyStruct* s) { return s->value; }
 
 }  // namespace inline1
 
@@ -26,8 +23,8 @@ inline int GetStructValue2(const foo::inline1::MyStruct& s) { return s.value; }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winline-namespace-reopened-noninline"
 namespace inline1 {
-inline int GetStructValue3(const foo::MyStruct& s) { return s.value; }
-inline int GetStructValue4(const foo::inline1::MyStruct& s) { return s.value; }
+inline int GetStructValue3(const foo::MyStruct* s) { return s->value; }
+inline int GetStructValue4(const foo::inline1::MyStruct* s) { return s->value; }
 }  // namespace inline1
 #pragma clang diagnostic pop
 }  // namespace foo
