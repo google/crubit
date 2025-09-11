@@ -29,7 +29,7 @@
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/TemplateBase.h"
-#include "clang/AST/Type.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
@@ -258,14 +258,12 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   // relationship.
   SmallVector<PointerNullabilityDiagnostic> Diagnostics;
 
-  // If LHS is a) an lvalue reference to a const supported pointer, b) an rvalue
-  // reference to a supported pointer, or c) directly a supported pointer type,
-  // then the outermost pointer slot has a covariant requirement, similar to
-  // subtype relationships, i.e. a Nullable LHS type can accept Nullable or
-  // Nonnull values, but a Nonnull LHS type can accept only Nonnull values.
-  if ((!LHSType->isLValueReferenceType() ||
-       LHSType.getNonReferenceType().isConstQualified()) &&
-      isSupportedPointerType(LHSType.getNonReferenceType())) {
+  // If LHS is a supported pointer type or a reference to such, then the
+  // outermost pointer slot has a covariant requirement for the value's
+  // nullability, similar to subtype relationships, i.e. a Nullable LHS type can
+  // accept Nullable or Nonnull values, but a Nonnull LHS type can accept only
+  // Nonnull values.
+  if (isSupportedPointerType(LHSType.getNonReferenceType())) {
     QualType RHSType = RHS->getType().getNonReferenceType();
     if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) {
       LLVM_DEBUG({
@@ -288,10 +286,14 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     // nullability layers of the RHS value.
     // TODO: b/343960612 - implement this unwrapping and checking, including for
     // smart pointers, which are not as trivially unwrappable. For now, return
-    // early. Once additional pointer layers are unwrapped, we can fall through
-    // to checking function pointer types and then invariant nullability for any
-    // template argument pointers.
-    return Diagnostics;
+    // early, except for mutable l-value reference types, which fall through to
+    // the type-nullability check below. Once additional pointer layers are
+    // unwrapped, we can fall through to checking function pointer types and
+    // then invariant nullability for any template argument pointers, but will
+    // need more complex control flow for mutable l-value reference types.
+    if (!LHSType->isLValueReferenceType() ||
+        LHSType.getNonReferenceType().isConstQualified())
+      return Diagnostics;
 
     // If the last pointer layer is a function pointer, we need to recurse into
     // the function pointer with different relationship requirements.

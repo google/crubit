@@ -127,19 +127,21 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )cc"));
 
   // passing a reference to an unannotated pointer
-  //
-  // TODO(b/233582219): Fix false negative. The unannotated pointer should be
-  // considered nullable if it has been used as a nullable pointer.
   EXPECT_TRUE(checkDiagnostics(R"cc(
-    void takeNonnullRef(int *_Nonnull &);
-    void takeNullableRef(int *_Nullable &);
-    void takeUnannotatedRef(int *&);
-    void target(int *ptr_unannotated) {
+    void takeNonnullRef(int* _Nonnull&);
+    void takeNullableRef(int* _Nullable&);
+    void takeUnannotatedRef(int*&);
+    void target(int* ptr_unannotated) {
+      int* UnannotatedNullValue = nullptr;
+      takeNonnullRef(UnannotatedNullValue);  // [[unsafe]]
+
       takeNonnullRef(ptr_unannotated);
       *ptr_unannotated;
 
       takeNullableRef(ptr_unannotated);
-      *ptr_unannotated;  // false-negative
+      *ptr_unannotated;  // false-negative? The unannotated pointer could be
+                         // considered nullable if it has been used as a
+                         // nullable pointer.
 
       takeUnannotatedRef(ptr_unannotated);
       *ptr_unannotated;
