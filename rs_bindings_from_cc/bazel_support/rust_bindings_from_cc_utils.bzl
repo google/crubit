@@ -53,7 +53,7 @@ def generate_and_compile_bindings(
       action_inputs: A depset of inputs to the bindings generating action.
       target_args: A depset of strings, each one representing mapping of target to
                         its per-target arguments (headers, features) in json format.
-      extra_rs_srcs: list[file]: Additional source files for the Rust crate.
+      extra_rs_srcs: list[tuple[file, str]]: Additional source file and module path pairs for the Rust crate.
       deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.
       deps_for_rs_file: depset[DepVariantInfo]: DepVariantInfos needed by the generated Rust source file.
       extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
