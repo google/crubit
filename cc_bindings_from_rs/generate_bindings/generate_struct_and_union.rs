@@ -499,6 +499,9 @@ pub fn generate_adt_core<'tcx>(
     // Note: we erase regions in order to get bindings regardless of what lifetime parameters are
     // present. We want to generate bindings for functions regardless of their lifetime bounds, as
     // C++ cannot special-case the availability of a function based on lifetimes.
+    #[rustversion::since(2025-09-10)]
+    let self_ty = tcx.erase_and_anonymize_regions(tcx.type_of(def_id).instantiate_identity());
+    #[rustversion::before(2025-09-10)]
     let self_ty = tcx.erase_regions(tcx.type_of(def_id).instantiate_identity());
     assert!(self_ty.is_adt());
     assert!(is_public_or_supported_export(db, def_id), "Caller should verify");
