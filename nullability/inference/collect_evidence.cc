@@ -44,6 +44,7 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
@@ -1956,38 +1957,43 @@ static std::vector<InferableSlot> gatherInferableSlots(
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
-      if (hasInferable(Parameters[I]->getType()) &&
-          !evidenceKindFromDeclaredTypeLoc(
-              Parameters[I]->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+      const ParmVarDecl* Param = Parameters[I];
+      const TypeSourceInfo* TSI = Param->getTypeSourceInfo();
+      if (hasInferable(Param->getType()) &&
+          (!TSI ||
+           !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
         InferableSlots.emplace_back(
-            Analysis.assignNullabilityVariable(Parameters[I], Arena),
-            paramSlot(I), *TargetAsFunc, USRCache);
+            Analysis.assignNullabilityVariable(Param, Arena), paramSlot(I),
+            *TargetAsFunc, USRCache);
       }
     }
   }
 
   for (const FieldDecl *Field : ReferencedDecls.Fields) {
+    const TypeSourceInfo* TSI = Field->getTypeSourceInfo();
     if (isInferenceTarget(*Field) &&
-        !evidenceKindFromDeclaredTypeLoc(
-            Field->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+        (!TSI ||
+         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Field, Arena), Slot(0), *Field,
           USRCache);
     }
   }
   for (const VarDecl *Global : ReferencedDecls.Globals) {
+    const TypeSourceInfo* TSI = Global->getTypeSourceInfo();
     if (isInferenceTarget(*Global) &&
-        !evidenceKindFromDeclaredTypeLoc(
-            Global->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+        (!TSI ||
+         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Global, Arena), Slot(0), *Global,
           USRCache);
     }
   }
   for (const VarDecl *Local : ReferencedDecls.Locals) {
+    const TypeSourceInfo* TSI = Local->getTypeSourceInfo();
     if (isInferenceTarget(*Local) &&
-        !evidenceKindFromDeclaredTypeLoc(
-            Local->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+        (!TSI ||
+         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Local, Arena), Slot(0), *Local,
           USRCache);
@@ -2005,12 +2011,13 @@ static std::vector<InferableSlot> gatherInferableSlots(
   for (const ParmVarDecl *Param : ReferencedDecls.LambdaCapturedParams) {
     CHECK_EQ(Param->getFunctionScopeDepth(), 0)
         << "Not expecting lambda capture of anything with depth > 0.";
-    if (const auto *ContainingFunction =
+    if (const auto* ContainingFunction =
             dyn_cast<FunctionDecl>(Param->getParentFunctionOrMethod());
         ContainingFunction && isInferenceTarget(*ContainingFunction) &&
         hasInferable(Param->getType()) &&
-        !evidenceKindFromDeclaredTypeLoc(
-            Param->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+        (!Param->getTypeSourceInfo() ||
+         !evidenceKindFromDeclaredTypeLoc(
+             Param->getTypeSourceInfo()->getTypeLoc(), Defaults))) {
       unsigned Index = Param->getFunctionScopeIndex();
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Param, Arena), paramSlot(Index),
@@ -2194,8 +2201,10 @@ void collectEvidenceFromTargetDeclaration(
 
     for (unsigned I = 0; I < Fn->param_size(); ++I) {
       const ParmVarDecl *ParamDecl = Fn->getParamDecl(I);
-      if (auto K = evidenceKindFromDeclaredTypeLoc(
-              ParamDecl->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+      const TypeSourceInfo* TSI = ParamDecl->getTypeSourceInfo();
+      if (!TSI) continue;
+      if (auto K =
+              evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) {
         wrappedEmit(Emit, USRCache, *Fn, paramSlot(I), *K,
                     ParamDecl->getTypeSpecStartLoc());
       }
@@ -2229,14 +2238,16 @@ void collectEvidenceFromTargetDeclaration(
       }
     }
   } else if (const auto *Field = dyn_cast<clang::FieldDecl>(&D)) {
-    if (auto K = evidenceKindFromDeclaredTypeLoc(
-            Field->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+    const TypeSourceInfo* TSI = Field->getTypeSourceInfo();
+    if (!TSI) return;
+    if (auto K = evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) {
       wrappedEmit(Emit, USRCache, *Field, Slot(0), *K,
                   Field->getTypeSpecStartLoc());
     }
   } else if (const auto *Var = dyn_cast<clang::VarDecl>(&D)) {
-    if (auto K = evidenceKindFromDeclaredTypeLoc(
-            Var->getTypeSourceInfo()->getTypeLoc(), Defaults)) {
+    const TypeSourceInfo* TSI = Var->getTypeSourceInfo();
+    if (!TSI) return;
+    if (auto K = evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) {
       wrappedEmit(Emit, USRCache, *Var, Slot(0), *K,
                   Var->getTypeSpecStartLoc());
     }
