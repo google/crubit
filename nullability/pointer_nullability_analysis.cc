@@ -527,7 +527,8 @@ void transferValue_SmartPointerConstructor(
             Loc, getRawPointerValue(Ctor->getArg(1), State.Env), State.Env);
       }
     } else {
-      if (isPointerTypeConvertible(
+      if (SrcLoc != nullptr &&
+          isPointerTypeConvertible(
               underlyingRawPointerTypeFromSmartPointer(*SrcLoc),
               underlyingRawPointerTypeFromSmartPointer(Loc))) {
         setSmartPointerValue(

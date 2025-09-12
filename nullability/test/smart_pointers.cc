@@ -184,6 +184,22 @@ TEST void moveConstructor(_Nonnull std::unique_ptr<int> NonnullParam,
   nullable(UnknownParam);
 }
 
+TEST void constructorWithOpaqueValueExprSource(bool b) {
+  // This is a crash repro, potentially because we are missing storage locations
+  // through `OpaqueValueExpr` (TODO(b/444678008)). To repro, we use a GNU
+  // extension of ?: where the second operand is missing, defaulting to the
+  // first operand.
+  std::unique_ptr<int> NonnullWithGnuExtension(
+      makeNonnull() ?: std::make_unique<int>(10));
+
+  // In contrast, this uses the normal ?: operator and appears to get
+  // copy-elision, so doesn't have the `OpaqueValueExpr` and no
+  // CXXConstructExpr at all.
+  std::unique_ptr<int> NonnullWithNormalConditionalOperator(
+      makeNonnull() ? makeNonnull() : std::make_unique<int>(10));
+  nonnull(NonnullWithNormalConditionalOperator);
+}
+
 TEST void sharedPtrFromUniquePtr(_Nonnull std::unique_ptr<int> NonnullParam,
                                  _Nullable std::unique_ptr<int> NullableParam,
                                  std::unique_ptr<int> UnknownParam) {
