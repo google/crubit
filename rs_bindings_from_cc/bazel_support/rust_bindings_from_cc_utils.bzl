@@ -14,6 +14,10 @@ load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
 )
+load(
+    "//common/bazel_support:cc_info_util.bzl",
+    "get_static_libraries_from_cc_info",
+)
 load("@@//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
 load("@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
 load(
@@ -180,7 +184,7 @@ def generate_and_compile_bindings(
             ] if x != None]),
             out_compiled = depset(
                 [dep_variant_info.crate_info.output] +
-                all_static_libraries(cc_info),
+                get_static_libraries_from_cc_info(cc_info),
             ),
         ),
         # The C++ bindings of the generated Rust bindings are the original C++ file.
@@ -190,14 +194,6 @@ def generate_and_compile_bindings(
             headers = public_hdrs,
             features = [],
         ),
-    ]
-
-def all_static_libraries(cc_info):
-    return [
-        library_to_link.static_library
-        for linker_input in cc_info.linking_context.linker_inputs.to_list()
-        for library_to_link in linker_input.libraries
-        if library_to_link.static_library != None
     ]
 
 bindings_attrs = {

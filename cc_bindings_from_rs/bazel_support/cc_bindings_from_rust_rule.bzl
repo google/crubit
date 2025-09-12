@@ -49,6 +49,10 @@ load(
     "GeneratedBindingsInfo",
 )
 load(
+    "//common/bazel_support:cc_info_util.bzl",
+    "get_static_libraries_from_cc_info",
+)
+load(
     "//features:crubit_feature_hint.bzl",
     "find_crubit_features",
 )
@@ -252,7 +256,7 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
       target: The target crate, e.g. as provided to `ctx.attr.crate`.
 
     Returns:
-      CcInfo for the generated "..._cc_api_impl.rs".
+      DepVariantInfo for the generated "..._cc_api_impl.rs".
     """
     deps = [
         DepVariantInfo(
@@ -266,7 +270,7 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
 
     # The `..._cc_api_impl.rs` file needs to depend on all the deps of the target crate.
     deps += target[CrateInfo].deps.to_list()
-    dep_variant_info = compile_rust(
+    return compile_rust(
         ctx,
         attr = ctx.rule.attr,
         src = rs_out_file,
@@ -276,7 +280,6 @@ def _compile_rs_out_file(ctx, rs_out_file, target):
         include_coverage = True,
         force_all_deps_direct = False,
     )
-    return dep_variant_info.cc_info
 
 def _cc_bindings_from_rust_aspect_impl(target, ctx):
     basename = target.label.name
@@ -361,7 +364,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         proto_crate_renames,
     )
 
-    impl_cc_info = _compile_rs_out_file(ctx, bindings_info.rust_file, target)
+    dep_variant_info = _compile_rs_out_file(ctx, bindings_info.rust_file, target)
 
     (extra_cc_hdrs, extra_cc_srcs) = get_additional_cc_hdrs_and_srcs(ctx)
 
@@ -370,11 +373,17 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         bindings_info.h_file,
         extra_cc_hdrs,
         extra_cc_srcs,
-        cc_infos = [target[CcInfo], impl_cc_info] + [
+        cc_infos = [target[CcInfo], dep_variant_info.cc_info] + [
             dep_bindings_info.cc_info
             for dep_bindings_info in _get_dep_bindings_infos(ctx)
         ],
     )
+
+    out_compiled = depset(
+        [dep_variant_info.crate_info.output] +
+        get_static_libraries_from_cc_info(cc_info),
+    )
+
     return [
         CcBindingsFromRustInfo(
             cc_info = cc_info,
@@ -384,7 +393,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             configuration = config,
         ),
         bindings_info,
-        OutputGroupInfo(out = output_depset),
+        OutputGroupInfo(out = output_depset, out_compiled = out_compiled),
     ]
 
 cc_bindings_from_rust_aspect = aspect(

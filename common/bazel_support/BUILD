@@ -1,3 +1,4 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@bazel_skylib//rules:common_settings.bzl",
     "string_list_flag",
@@ -7,6 +8,12 @@ load("//cc_bindings_from_rs/bazel_support:toolchain.bzl", "cc_bindings_from_rs_t
 package(
     default_applicable_licenses = ["//:license"],
     default_visibility = ["//common/bazel_support:__subpackages__"],
+)
+
+bzl_library(
+    name = "cc_info_util_bzl",
+    srcs = ["cc_info_util.bzl"],
+    visibility = ["//:__subpackages__"],
 )
 
 # FLAGS

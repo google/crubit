@@ -23,6 +23,7 @@ bzl_library(
         ":cc_bindings_from_rust_cli_flag_aspect_hint_bzl",
         ":cc_bindings_from_rust_library_config_aspect_hint_bzl",
         ":providers_bzl",
+        "//common/bazel_support:cc_info_util_bzl",
         "//features:crubit_feature_hint_bzl",
         "//features:global_features_bzl",
         "//rs_bindings_from_cc/bazel_support:compile_rust_bzl",

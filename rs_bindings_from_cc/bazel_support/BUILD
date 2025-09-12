@@ -72,6 +72,7 @@ bzl_library(
         ":generate_bindings_bzl",
         ":providers_bzl",
         "//cc_bindings_from_rs/bazel_support:providers_bzl",
+        "//common/bazel_support:cc_info_util_bzl",
         "@bazel_tools//tools/cpp:toolchain_utils",
         "@rules_cc//cc/common",
     ],
