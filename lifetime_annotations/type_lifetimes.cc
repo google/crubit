@@ -28,6 +28,7 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/NestedNameSpecifier.h"
+#include "clang/AST/NestedNameSpecifierBase.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeLoc.h"
@@ -667,6 +668,13 @@ llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> GetTemplateArgs(
     type = typedef_type->desugar();
   }
 
+  if (clang::NestedNameSpecifier qualifier = type->getPrefix()) {
+    if (qualifier.getKind() == clang::NestedNameSpecifier::Kind::Type) {
+      if (const clang::Type* qualifier_type = qualifier.getAsType()) {
+        result = GetTemplateArgs(clang::QualType(qualifier_type, 0));
+      }
+    }
+  }
   if (auto specialization = type->getAs<clang::TemplateSpecializationType>()) {
     result.push_back(specialization->template_arguments());
   } else if (auto record = type->getAs<clang::RecordType>()) {
@@ -727,6 +735,15 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
 
   llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> args;
 
+  if (clang::NestedNameSpecifierLoc qualifier = type_loc.getPrefix()) {
+    if (qualifier.getAsTypeLoc()) {
+      if (auto qualifier_args = GetTemplateArgs(qualifier.getAsTypeLoc())) {
+        args = *qualifier_args;
+      } else {
+        return std::nullopt;
+      }
+    }
+  }
   if (auto template_specialization_type_loc =
           type_loc.getAs<clang::TemplateSpecializationTypeLoc>()) {
     args.push_back({});
