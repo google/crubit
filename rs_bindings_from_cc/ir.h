@@ -692,6 +692,7 @@ struct Record {
   std::vector<ItemId> child_item_ids;
   std::optional<ItemId> enclosing_item_id;
   bool must_bind = false;
+  bool overloads_operator_delete = false;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)

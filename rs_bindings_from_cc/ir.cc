@@ -577,6 +577,7 @@ llvm::json::Value Record::ToJson() const {
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_item_id", enclosing_item_id},
       {"must_bind", must_bind},
+      {"overloads_operator_delete", overloads_operator_delete},
   };
 
   return llvm::json::Object{

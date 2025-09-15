@@ -44,6 +44,7 @@
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -300,6 +301,41 @@ std::optional<Identifier> StringRefToOptionalIdentifier(llvm::StringRef name) {
     return std::nullopt;
   }
   return Identifier(std::string(name));
+}
+
+// Returns true if the given record (or any of its bases) has an overloaded
+// operator delete.
+bool OverloadsOperatorDelete(clang::CXXRecordDecl& record_decl) {
+  for (const clang::CXXMethodDecl* method : record_decl.methods()) {
+    if (method->getOverloadedOperator() == clang::OO_Delete) {
+      return true;
+    }
+  }
+  for (const clang::CXXBaseSpecifier& base : record_decl.bases()) {
+    if (OverloadsOperatorDelete(*base.getType()->getAsCXXRecordDecl())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Returns true if the given record is, or could have, an overloaded operator
+// delete.
+//
+// Note: we implement this here, instead of as a query, so that this works even
+// in the face of ambiguous bases, bases that don't get bindings, methods
+// that don't get bindings, etc.
+bool MayOverloadOperatorDelete(clang::CXXRecordDecl& record_decl) {
+  // If it has a virtual destructor, then operator delete may be
+  // overloaded by a derived class, regardless of whether it is defined
+  // in the base.
+  // NOTE: we may want to relax this in the case of e.g. std::vector<T> for
+  // non-final T.
+  if (record_decl.getDestructor()->isVirtual() &&
+      !record_decl.isEffectivelyFinal()) {
+    return true;
+  }
+  return OverloadsOperatorDelete(record_decl);
 }
 
 }  // namespace
@@ -669,6 +705,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           is_explicit_class_template_instantiation_definition,
       .child_item_ids = std::move(item_ids),
       .enclosing_item_id = *std::move(enclosing_item_id),
+      .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
   };
 
   // If the align attribute was attached to the typedef decl, we should

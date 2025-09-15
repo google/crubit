@@ -1137,6 +1137,8 @@ pub struct Record {
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_item_id: Option<ItemId>,
     pub must_bind: bool,
+    /// Whether this type has an overload of `operator delete`.
+    pub overloads_operator_delete: bool,
 }
 
 impl GenericItem for Record {

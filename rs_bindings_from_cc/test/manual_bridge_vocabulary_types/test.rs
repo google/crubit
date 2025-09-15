@@ -28,10 +28,49 @@ fn test_nontrivial_type_wrapped_by_unique_ptr_as_function_arg_and_return_value()
 #[gtest]
 fn test_unique_ptr_string() {
     // MakeUniquePtrString still gets bindings in :experimental, using ctor and templates
-    // -- but it won't be the Rust vector reimplementation.
+    // -- but it won't be the Rust unique_ptr reimplementation.
     // However, because of the bridging operation, we don't necessarily know how to spell
     // the underlying type, and can't safely generate bindings here.
     assert!(!item_exists::value_exists!(helper_lib::MakeUniquePtrString))
+}
+
+/// Even if MakeUniquePtrOverloadedDelete gets bindings (due to experimental), it must not
+/// be the Rust unique_ptr reimplementation, because of the overloaded operator delete.
+#[gtest]
+fn test_unique_ptr_overloaded_delete() {
+    let p = helper_lib::MakeUniquePtrOverloadedDelete();
+    assert_ne!(
+        std::any::Any::type_id(&p),
+        std::any::TypeId::of::<cc_std::std::unique_ptr<OverloadedDelete>>()
+    );
+}
+
+/// Even if MakeUniquePtrOverloadedDestroyingDelete gets bindings (due to experimental), it must not
+/// be the Rust unique_ptr reimplementation, because of the overloaded operator delete.
+#[gtest]
+fn test_unique_ptr_overloaded_destroying_delete() {
+    let p = helper_lib::MakeUniquePtrOverloadedDestroyingDelete();
+    assert_ne!(
+        std::any::Any::type_id(&p),
+        std::any::TypeId::of::<cc_std::std::unique_ptr<OverloadedDestroyingDelete>>()
+    );
+}
+
+/// Even if MakeUniquePtrPolymorphicType gets bindings (due to experimental), it must not
+/// be the Rust unique_ptr reimplementation, because it can call a derived class's overloaded
+/// operator delete, but the Rust reimplementation will not.
+#[gtest]
+fn test_unique_ptr_polymorphic_type() {
+    let p = helper_lib::MakeUniquePtrPolymorphicType();
+    assert_ne!(
+        std::any::Any::type_id(&p),
+        std::any::TypeId::of::<cc_std::std::unique_ptr<PolymorphicType>>()
+    );
+}
+
+#[gtest]
+fn test_unique_ptr_final_type() {
+    let _: cc_std::std::unique_ptr<FinalType> = helper_lib::MakeUniquePtrFinalType();
 }
 
 #[gtest]
@@ -52,4 +91,43 @@ fn test_vector_string() {
     // However, because of the bridging operation, we don't necessarily know how to spell
     // the underlying type, and can't safely generate bindings here.
     assert!(!item_exists::value_exists!(helper_lib::MakeVectorString))
+}
+
+/// Even if MakeVectorOverloadedDelete gets bindings (due to experimental), it must not
+/// be the Rust vector reimplementation, because of the overloaded operator delete.
+#[gtest]
+fn test_vector_overloaded_delete() {
+    let v = helper_lib::MakeVectorOverloadedDelete();
+    assert_ne!(
+        std::any::Any::type_id(&v),
+        std::any::TypeId::of::<cc_std::std::vector<OverloadedDelete>>()
+    );
+}
+
+/// Even if MakeVectorOverloadedDestroyingDelete gets bindings (due to experimental), it must not
+/// be the Rust vector reimplementation, because of the overloaded operator delete.
+#[gtest]
+fn test_vector_overloaded_destroying_delete() {
+    let v = helper_lib::MakeVectorOverloadedDestroyingDelete();
+    assert_ne!(
+        std::any::Any::type_id(&v),
+        std::any::TypeId::of::<cc_std::std::vector<OverloadedDestroyingDelete>>()
+    );
+}
+
+/// Even if MakeVectorPolymorphicType gets bindings (due to experimental), it must not
+/// be the Rust vector reimplementation, because it can call a derived class's overloaded
+/// operator delete, but the Rust reimplementation will not.
+#[gtest]
+fn test_vector_polymorphic() {
+    let v = helper_lib::MakeVectorPolymorphicType();
+    assert_ne!(
+        std::any::Any::type_id(&v),
+        std::any::TypeId::of::<cc_std::std::vector<PolymorphicType>>()
+    );
+}
+
+#[gtest]
+fn test_vector_final_type() {
+    let _: cc_std::std::vector<FinalType> = helper_lib::MakeVectorFinalType();
 }

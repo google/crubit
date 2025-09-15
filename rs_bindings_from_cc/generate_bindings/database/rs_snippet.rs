@@ -336,7 +336,7 @@ impl UniformReprTemplateType {
             .collect::<Result<Vec<RsTypeKind>>>()?;
 
         let this = match (template_specialization.template_name.as_ref(), &type_args[..]) {
-            ("std::unique_ptr", [_t, RsTypeKind::Record { record, .. }]) => {
+            ("std::unique_ptr", [t, RsTypeKind::Record { record, .. }]) => {
                 let has_std_deleter =
                     record.template_specialization.as_ref().is_some_and(|deleter| {
                         deleter.template_name.as_ref() == "std::default_delete"
@@ -346,9 +346,12 @@ impl UniformReprTemplateType {
                 if !has_std_deleter {
                     return Ok(None);
                 }
+                if t.overloads_operator_delete() {
+                    return Ok(None);
+                }
                 Self::StdUniquePtr { element_type: type_args.remove(0) }
             }
-            ("std::vector", [_t, RsTypeKind::Record { record, .. }]) => {
+            ("std::vector", [t, RsTypeKind::Record { record, .. }]) => {
                 let has_std_allocator =
                     record.template_specialization.as_ref().is_some_and(|allocator| {
                         allocator.template_name.as_ref() == "std::allocator"
@@ -357,6 +360,9 @@ impl UniformReprTemplateType {
                                 == template_specialization.template_args[0]
                     });
                 if !has_std_allocator {
+                    return Ok(None);
+                }
+                if t.overloads_operator_delete() {
                     return Ok(None);
                 }
                 Self::StdVector { element_type: type_args.remove(0) }
@@ -1238,6 +1244,17 @@ impl RsTypeKind {
         db: &'a dyn BindingsGenerator<'db>,
     ) -> impl std::fmt::Display + use<'a, 'db> {
         DisplayRsTypeKind { rs_type_kind: self, db }
+    }
+
+    pub fn overloads_operator_delete(&self) -> bool {
+        match self.unalias() {
+            RsTypeKind::Record { record, .. } => record.overloads_operator_delete,
+            // Unlikely to come up (usually a compilation error to even consider it), but
+            // we should imagine that an incomplete type _might_ implement operator delete?
+            // This is going to go poorly either way.
+            RsTypeKind::IncompleteRecord { .. } => true,
+            _ => false,
+        }
     }
 }
 
