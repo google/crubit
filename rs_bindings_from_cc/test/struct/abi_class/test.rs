@@ -2,32 +2,29 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[cfg(test)]
-mod tests {
-    use abi_class::*;
-    use googletest::prelude::*;
+use abi_class::*;
+use googletest::prelude::*;
 
-    #[gtest]
-    fn test_struct_float() {
-        let x = StructFloat::Create(123.0);
-        let y = StructFloat::Create(456.0);
-        let sum = StructFloat::Add(x, y);
-        assert_eq!(123.0 + 456.0, StructFloat::Inspect(sum));
-    }
+#[gtest]
+fn test_struct_float() {
+    let x = StructFloat::Create(123.0);
+    let y = StructFloat::Create(456.0);
+    let sum = StructFloat::Add(x, y);
+    assert_eq!(123.0 + 456.0, StructFloat::Inspect(sum));
+}
 
-    #[gtest]
-    fn test_struct_memory() {
-        let x = StructMemory::Create(456);
-        let y = StructMemory::Create(321);
-        let sum = StructMemory::Add(x, y);
-        assert_eq!(456 + 321, StructMemory::Inspect(sum));
-    }
+#[gtest]
+fn test_struct_memory() {
+    let x = StructMemory::Create(456);
+    let y = StructMemory::Create(321);
+    let sum = StructMemory::Add(x, y);
+    assert_eq!(456 + 321, StructMemory::Inspect(sum));
+}
 
-    #[gtest]
-    fn test_struct_integer() {
-        let x = StructInteger::Create(456);
-        let y = StructInteger::Create(789);
-        let sum = StructInteger::Add(x, y);
-        assert_eq!(456 + 789, StructInteger::Inspect(sum));
-    }
+#[gtest]
+fn test_struct_integer() {
+    let x = StructInteger::Create(456);
+    let y = StructInteger::Create(789);
+    let sum = StructInteger::Add(x, y);
+    assert_eq!(456 + 789, StructInteger::Inspect(sum));
 }

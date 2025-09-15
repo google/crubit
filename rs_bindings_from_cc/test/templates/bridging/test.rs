@@ -2,21 +2,18 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[cfg(test)]
-mod tests {
-    use forward_declare::CppCast;
-    use googletest::prelude::*;
+use forward_declare::CppCast;
+use googletest::prelude::*;
 
-    #[gtest]
-    fn test_bridging() {
-        let x = class_template_instantiation1::Create(123);
+#[gtest]
+fn test_bridging() {
+    let x = class_template_instantiation1::Create(123);
 
-        // GetValue below expects a reference to template instantiation from the
-        // `class_template_instantiation2` create, but `x` is from the
-        // `class_template_instantiation1` crate instead.  Because of that an
-        // explicit cast is required.
-        let v = class_template_instantiation2::GetValue((&x).cpp_cast());
+    // GetValue below expects a reference to template instantiation from the
+    // `class_template_instantiation2` create, but `x` is from the
+    // `class_template_instantiation1` crate instead.  Because of that an
+    // explicit cast is required.
+    let v = class_template_instantiation2::GetValue((&x).cpp_cast());
 
-        assert_eq!(123, v);
-    }
+    assert_eq!(123, v);
 }

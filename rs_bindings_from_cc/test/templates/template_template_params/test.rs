@@ -2,12 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[cfg(test)]
-mod tests {
-    use googletest::prelude::*;
+use googletest::prelude::*;
 
-    #[gtest]
-    fn test_template_template_params() {
-        assert_eq!(42, template_template_params::MyTypeAlias::GetPolicy());
-    }
+#[gtest]
+fn test_template_template_params() {
+    assert_eq!(42, template_template_params::MyTypeAlias::GetPolicy());
 }

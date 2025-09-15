@@ -2,11 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[cfg(test)]
+use googletest::prelude::*;
 
-mod tests {
-    use googletest::prelude::*;
-
-    #[gtest]
-    fn test_build() {}
-}
+#[gtest]
+fn test_build() {}
