@@ -69,6 +69,11 @@ fn test_unique_ptr_polymorphic_type() {
 }
 
 #[gtest]
+fn test_unique_ptr_incomplete() {
+    assert!(!item_exists::value_exists!(helper_lib::MakeUniquePtrIncompleteType))
+}
+
+#[gtest]
 fn test_unique_ptr_final_type() {
     let _: cc_std::std::unique_ptr<FinalType> = helper_lib::MakeUniquePtrFinalType();
 }

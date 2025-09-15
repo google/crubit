@@ -35,6 +35,8 @@ struct NonTrivialType {
   ~NonTrivialType() { x = 0; }
 };
 
+struct IncompleteType;
+
 inline int UseUniquePtrByValue(std::unique_ptr<int> p) { return *p; }
 
 inline int UseUniquePtrByRef(std::unique_ptr<int>& p) { return *p; }
@@ -76,6 +78,9 @@ inline std::unique_ptr<PolymorphicType> MakeUniquePtrPolymorphicType() {
 }
 
 inline std::unique_ptr<FinalType> MakeUniquePtrFinalType() { return nullptr; }
+inline std::unique_ptr<IncompleteType> MakeUniquePtrIncompleteType() {
+  return nullptr;
+}
 
 // std::unique_ptr ends
 

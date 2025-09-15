@@ -337,6 +337,7 @@ impl UniformReprTemplateType {
 
         let this = match (template_specialization.template_name.as_ref(), &type_args[..]) {
             ("std::unique_ptr", [t, RsTypeKind::Record { record, .. }]) => {
+                ensure!(t.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", t.display(db));
                 let has_std_deleter =
                     record.template_specialization.as_ref().is_some_and(|deleter| {
                         deleter.template_name.as_ref() == "std::default_delete"
@@ -1132,6 +1133,10 @@ impl RsTypeKind {
 
     pub fn is_bool(&self) -> bool {
         matches!(self.unalias(), RsTypeKind::Primitive(Primitive::Bool))
+    }
+
+    pub fn is_complete(&self) -> bool {
+        !matches!(self.unalias(), RsTypeKind::IncompleteRecord { .. })
     }
 
     /// Iterates over `self` and all the nested types (e.g. pointees, generic
