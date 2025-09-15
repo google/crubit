@@ -365,6 +365,10 @@ impl UniformReprTemplateType {
                 if t.overloads_operator_delete() {
                     return Ok(None);
                 }
+                if t.is_bool() {
+                    // The rust implementation doesn't specialize bool like C++ does.
+                    return Ok(None);
+                }
                 Self::StdVector { element_type: type_args.remove(0) }
             }
             ("absl::Span", [_t]) => {

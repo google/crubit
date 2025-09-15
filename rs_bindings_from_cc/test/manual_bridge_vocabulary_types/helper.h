@@ -84,6 +84,7 @@ inline size_t UseVectorByValue(std::vector<int> v) { return v.size(); }
 inline size_t UseVectorByRef(std::vector<int>& v) { return v.size(); }
 inline std::vector<int> MakeVector(int value) { return {value}; }
 inline std::vector<std::string> MakeVectorString() { return {"hello, world"}; }
+inline std::vector<bool> MakeVectorBool() { return {}; }
 
 inline std::vector<OverloadedDelete> MakeVectorOverloadedDelete() { return {}; }
 inline std::vector<OverloadedDestroyingDelete>

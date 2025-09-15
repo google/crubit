@@ -92,6 +92,13 @@ fn test_vector_string() {
     // the underlying type, and can't safely generate bindings here.
     assert!(!item_exists::value_exists!(helper_lib::MakeVectorString))
 }
+/// Even if MakeVectorBool gets bindings (due to experimental), it must not
+/// be the Rust vector reimplementation, because of the vector<bool> specialization.
+#[gtest]
+fn test_vector_bool() {
+    let v = helper_lib::MakeVectorBool();
+    assert_ne!(std::any::Any::type_id(&v), std::any::TypeId::of::<cc_std::std::vector<bool>>());
+}
 
 /// Even if MakeVectorOverloadedDelete gets bindings (due to experimental), it must not
 /// be the Rust vector reimplementation, because of the overloaded operator delete.
