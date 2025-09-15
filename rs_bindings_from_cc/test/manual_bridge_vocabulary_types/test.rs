@@ -74,6 +74,11 @@ fn test_unique_ptr_incomplete() {
 }
 
 #[gtest]
+fn test_unique_ptr_deleted_destructor() {
+    assert!(!item_exists::value_exists!(helper_lib::MakeUniquePtrDeletedDestructor))
+}
+
+#[gtest]
 fn test_unique_ptr_final_type() {
     let _: cc_std::std::unique_ptr<FinalType> = helper_lib::MakeUniquePtrFinalType();
 }
@@ -142,4 +147,9 @@ fn test_vector_polymorphic() {
 #[gtest]
 fn test_vector_final_type() {
     let _: cc_std::std::vector<FinalType> = helper_lib::MakeVectorFinalType();
+}
+
+#[gtest]
+fn test_vector_deleted_destructor() {
+    assert!(!item_exists::value_exists!(helper_lib::MakeVectorDeletedDestructor))
 }

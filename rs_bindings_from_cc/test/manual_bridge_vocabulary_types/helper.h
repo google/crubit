@@ -29,6 +29,10 @@ struct PolymorphicType {
 
 struct FinalType final : PolymorphicType {};
 
+struct DeletedDestructorType {
+  ~DeletedDestructorType() = delete;
+};
+
 // std::unique_ptr begins
 struct NonTrivialType {
   int x;
@@ -81,6 +85,9 @@ inline std::unique_ptr<FinalType> MakeUniquePtrFinalType() { return nullptr; }
 inline std::unique_ptr<IncompleteType> MakeUniquePtrIncompleteType() {
   return nullptr;
 }
+inline std::unique_ptr<DeletedDestructorType> MakeUniquePtrDeletedDestructor() {
+  return nullptr;
+}
 
 // std::unique_ptr ends
 
@@ -98,6 +105,9 @@ MakeVectorOverloadedDestroyingDelete() {
 }
 inline std::vector<PolymorphicType> MakeVectorPolymorphicType() { return {}; }
 inline std::vector<FinalType> MakeVectorFinalType() { return {}; }
+inline std::vector<DeletedDestructorType> MakeVectorDeletedDestructor() {
+  return {};
+}
 // std::vector ends
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_HELPER_LIB_H_

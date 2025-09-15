@@ -338,6 +338,7 @@ impl UniformReprTemplateType {
         let this = match (template_specialization.template_name.as_ref(), &type_args[..]) {
             ("std::unique_ptr", [t, RsTypeKind::Record { record, .. }]) => {
                 ensure!(t.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", t.display(db));
+                ensure!(t.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
                 let has_std_deleter =
                     record.template_specialization.as_ref().is_some_and(|deleter| {
                         deleter.template_name.as_ref() == "std::default_delete"
@@ -353,6 +354,7 @@ impl UniformReprTemplateType {
                 Self::StdUniquePtr { element_type: type_args.remove(0) }
             }
             ("std::vector", [t, RsTypeKind::Record { record, .. }]) => {
+                ensure!(t.is_destructible(), "Rust std::vector<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
                 let has_std_allocator =
                     record.template_specialization.as_ref().is_some_and(|allocator| {
                         allocator.template_name.as_ref() == "std::allocator"
@@ -1137,6 +1139,16 @@ impl RsTypeKind {
 
     pub fn is_complete(&self) -> bool {
         !matches!(self.unalias(), RsTypeKind::IncompleteRecord { .. })
+    }
+
+    pub fn is_destructible(&self) -> bool {
+        match self.unalias() {
+            RsTypeKind::Record { record, .. } => {
+                record.destructor != SpecialMemberFunc::Unavailable
+            }
+            RsTypeKind::IncompleteRecord { .. } => false,
+            _ => true,
+        }
     }
 
     /// Iterates over `self` and all the nested types (e.g. pointees, generic
