@@ -37,7 +37,7 @@ extern "C" class DestructionOrderRecorder*
 __rust_thunk___ZN24DestructionOrderRecorderaSEOS_(
     class DestructionOrderRecorder* __this,
     class DestructionOrderRecorder* other) {
-  return &__this->operator=(std::move(*other));
+  return std::addressof(__this->operator=(std::move(*other)));
 }
 
 extern "C" void __rust_thunk___ZN24DestructionOrderRecorderD1Ev(
@@ -69,7 +69,7 @@ extern "C" class FieldDestructionOrderTester*
 __rust_thunk___ZN27FieldDestructionOrderTesteraSEOS_(
     class FieldDestructionOrderTester* __this,
     class FieldDestructionOrderTester* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
+  return std::addressof(__this->operator=(std::move(*__param_0)));
 }
 
 extern "C" void

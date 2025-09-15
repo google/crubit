@@ -39,7 +39,7 @@ extern "C" struct TriviallyCopyableButNontriviallyDestructible*
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
     struct TriviallyCopyableButNontriviallyDestructible const* __param_0) {
-  return &__this->operator=(*__param_0);
+  return std::addressof(__this->operator=(*__param_0));
 }
 
 extern "C" void

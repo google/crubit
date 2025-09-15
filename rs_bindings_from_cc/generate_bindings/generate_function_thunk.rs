@@ -580,7 +580,7 @@ pub fn generate_function_thunk_impl(
         match &func.return_type.variant {
             CcTypeVariant::Primitive(Primitive::Void) => return_expr,
             CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::LValueRef, .. }) => {
-                quote! { return & #return_expr }
+                quote! { return std::addressof( #return_expr ) }
             }
             CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::RValueRef, .. }) => {
                 let nested_type = cpp_type_name::format_cpp_type_with_references(
