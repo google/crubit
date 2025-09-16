@@ -5,18 +5,57 @@ load(
 )
 
 cc_library(
-    name = "helper_lib",
-    hdrs = ["helper.h"],
+    name = "common",
+    hdrs = ["common.h"],
     aspect_hints = [
         "//features:experimental",
     ],
 )
 
+cc_library(
+    name = "unique_ptr_lib",
+    hdrs = ["unique_ptr_lib.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":common",
+    ],
+)
+
 crubit_rust_test(
-    name = "test",
-    srcs = ["test.rs"],
+    name = "unique_ptr_test",
+    srcs = ["unique_ptr_test.rs"],
     cc_deps = [
-        ":helper_lib",
+        ":common",
+        ":unique_ptr_lib",
+        "//support/cc_std",
+    ],
+    proc_macro_deps = [
+        "//common:item_exists",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
+    name = "vector_lib",
+    hdrs = ["vector_lib.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":common",
+    ],
+)
+
+crubit_rust_test(
+    name = "vector_test",
+    srcs = ["vector_test.rs"],
+    cc_deps = [
+        ":common",
+        ":vector_lib",
         "//support/cc_std",
     ],
     proc_macro_deps = [
