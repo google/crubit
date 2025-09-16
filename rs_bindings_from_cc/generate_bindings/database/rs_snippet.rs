@@ -302,6 +302,55 @@ pub enum UniformReprTemplateType {
     },
 }
 
+pub fn template_arg_to_record(
+    db: &dyn BindingsGenerator,
+    template_arg: &TemplateArg,
+) -> Result<Option<Rc<Record>>> {
+    let arg_type = match &template_arg.type_ {
+        Ok(arg_type) => arg_type.clone(),
+        Err(e) => bail!("{e}"),
+    };
+
+    let CcTypeVariant::Decl(id) = arg_type.variant else {
+        return Ok(None);
+    };
+    let Item::Record(record) = db.ir().find_untyped_decl(id) else {
+        return Ok(None);
+    };
+    Ok(Some(record.clone()))
+}
+
+fn is_default_delete(
+    db: &dyn BindingsGenerator,
+    template_type: &TemplateArg,
+    deleter: &TemplateArg,
+) -> Result<bool> {
+    let Some(deleter) = template_arg_to_record(db, deleter)? else {
+        return Ok(false);
+    };
+    Ok(deleter.template_specialization.as_ref().is_some_and(|deleter| {
+        deleter.template_name.as_ref() == "std::default_delete"
+            && deleter.template_args.len() == 1
+            && deleter.template_args[0] == *template_type
+    }))
+}
+
+// Returns true if allocator is std::allocator<template_type>
+fn is_std_allocator(
+    db: &dyn BindingsGenerator,
+    template_type: &TemplateArg,
+    allocator: &TemplateArg,
+) -> Result<bool> {
+    let Some(allocator) = template_arg_to_record(db, allocator)? else {
+        return Ok(false);
+    };
+    Ok(allocator.template_specialization.as_ref().is_some_and(|allocator| {
+        allocator.template_name.as_ref() == "std::allocator"
+            && allocator.template_args.len() == 1
+            && allocator.template_args[0] == *template_type
+    }))
+}
+
 impl UniformReprTemplateType {
     /// Returns the `UniformReprTemplateType` for a `TemplateSpecialization`.
     /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
@@ -316,52 +365,41 @@ impl UniformReprTemplateType {
         let Some(template_specialization) = template_specialization else {
             return Ok(None);
         };
+        let type_arg = |template_arg: &TemplateArg| -> Result<RsTypeKind> {
+            let arg_type = match &template_arg.type_ {
+                Ok(arg_type) => arg_type.clone(),
+                Err(e) => bail!("{e}"),
+            };
+            // Importantly, `is_return_type` is not propagated through inner types.
+            let arg_type_kind = db.rs_type_kind(arg_type)?;
+            ensure!(
+                !arg_type_kind.is_bridge_type(),
+                "Bridge types cannot be used as template arguments"
+            );
+            Ok(arg_type_kind)
+        };
 
-        let mut type_args = template_specialization
-            .template_args
-            .iter()
-            .map(|arg| {
-                let arg_type = match &arg.type_ {
-                    Ok(arg_type) => arg_type.clone(),
-                    Err(e) => bail!("{e}"),
-                };
-                // Importantly, `is_return_type` is not propagated through inner types.
-                let arg_type_kind = db.rs_type_kind(arg_type)?;
-                ensure!(
-                    !arg_type_kind.is_bridge_type(),
-                    "Bridge types cannot be used as template arguments"
-                );
-                Ok(arg_type_kind)
-            })
-            .collect::<Result<Vec<RsTypeKind>>>()?;
-
-        let this = match (template_specialization.template_name.as_ref(), &type_args[..]) {
-            ("std::unique_ptr", [t, RsTypeKind::Record { record, .. }]) => {
+        let this = match (
+            template_specialization.template_name.as_ref(),
+            &template_specialization.template_args[..],
+        ) {
+            ("std::unique_ptr", [t, deleter]) => {
+                let has_std_deleter = is_default_delete(db, t, deleter)?;
+                let t = type_arg(t)?;
                 ensure!(t.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", t.display(db));
                 ensure!(t.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
-                let has_std_deleter =
-                    record.template_specialization.as_ref().is_some_and(|deleter| {
-                        deleter.template_name.as_ref() == "std::default_delete"
-                            && deleter.template_args.len() == 1
-                            && deleter.template_args[0] == template_specialization.template_args[0]
-                    });
                 if !has_std_deleter {
                     return Ok(None);
                 }
                 if t.overloads_operator_delete() {
                     return Ok(None);
                 }
-                Self::StdUniquePtr { element_type: type_args.remove(0) }
+                Self::StdUniquePtr { element_type: t }
             }
-            ("std::vector", [t, RsTypeKind::Record { record, .. }]) => {
+            ("std::vector", [t, allocator]) => {
+                let has_std_allocator = is_std_allocator(db, t, allocator)?;
+                let t = type_arg(t)?;
                 ensure!(t.is_destructible(), "Rust std::vector<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
-                let has_std_allocator =
-                    record.template_specialization.as_ref().is_some_and(|allocator| {
-                        allocator.template_name.as_ref() == "std::allocator"
-                            && allocator.template_args.len() == 1
-                            && allocator.template_args[0]
-                                == template_specialization.template_args[0]
-                    });
                 if !has_std_allocator {
                     return Ok(None);
                 }
@@ -372,11 +410,13 @@ impl UniformReprTemplateType {
                     // The rust implementation doesn't specialize bool like C++ does.
                     return Ok(None);
                 }
-                Self::StdVector { element_type: type_args.remove(0) }
+
+                Self::StdVector { element_type: t }
             }
-            ("absl::Span", [_t]) => {
+            ("absl::Span", [t]) => {
                 // Revisit the CcType of _t to see if it is const.
-                let is_const = template_specialization.template_args[0].type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
+                let element_type = type_arg(t)?;
+                let is_const = t.type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
                 Self::AbslSpan {
                     is_const,
 
@@ -386,11 +426,17 @@ impl UniformReprTemplateType {
                     // Spans returned by a C++ function have an unclear lifetime, and so must be
                     // returned as a raw span.
                     include_lifetime: !is_return_type,
-
-                    element_type: type_args.remove(0),
+                    element_type,
                 }
             }
-            _ => return Ok(None),
+            _ => {
+                // If all else fails, it's some unknown template type. Read any errors from the
+                // template arguments.
+                for t in &template_specialization.template_args {
+                    type_arg(t)?;
+                }
+                return Ok(None);
+            }
         };
         Ok(Some(Rc::new(this)))
     }
