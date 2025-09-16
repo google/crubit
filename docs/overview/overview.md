@@ -95,11 +95,14 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-If needed, one can find and inspect the generated bindings using:
+If needed, one can find and inspect the generated bindings in the "Generated
+Files and Directories" section for that directory in Code Search or manually
+building the bindings using:
 
 ```sh
-$ find "$(bazel info bazel-bin)/examples/cc_bindings_from_rs_basics/" \
-    -name example_crate_cc_api.h
+$ bazel build --config=crubit-genfiles \
+    //examples/rust/function:example_crate
+$ cat "$(bazel info bazel-bin)/examples/rust/function/example_crate.h"
 ```
 
 Inspecting the generated file may be useful to look at comments that Crubit
