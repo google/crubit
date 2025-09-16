@@ -153,3 +153,11 @@ fn test_vector_final_type() {
 fn test_vector_deleted_destructor() {
     assert!(!item_exists::value_exists!(helper_lib::MakeVectorDeletedDestructor))
 }
+
+/// The Rust std::vector reimplementation does support non-trivial types, but it's not very
+/// useful with them!
+#[gtest]
+fn test_vector_non_trivial() {
+    let v: cc_std::std::vector<NonTrivialType> = helper_lib::MakeVectorNonTrivial();
+    assert_eq!(v.len(), 0);
+}

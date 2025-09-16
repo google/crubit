@@ -33,12 +33,12 @@ struct DeletedDestructorType {
   ~DeletedDestructorType() = delete;
 };
 
-// std::unique_ptr begins
 struct NonTrivialType {
   int x;
   ~NonTrivialType() { x = 0; }
 };
 
+// std::unique_ptr begins
 struct IncompleteType;
 
 inline int UseUniquePtrByValue(std::unique_ptr<int> p) { return *p; }
@@ -108,6 +108,7 @@ inline std::vector<FinalType> MakeVectorFinalType() { return {}; }
 inline std::vector<DeletedDestructorType> MakeVectorDeletedDestructor() {
   return {};
 }
+inline std::vector<NonTrivialType> MakeVectorNonTrivial() { return {}; }
 // std::vector ends
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_HELPER_LIB_H_
