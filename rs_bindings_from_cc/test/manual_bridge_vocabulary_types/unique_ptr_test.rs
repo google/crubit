@@ -83,3 +83,8 @@ fn test_unique_ptr_deleted_destructor() {
 fn test_unique_ptr_final_type() {
     let _: cc_std::std::unique_ptr<FinalType> = unique_ptr_lib::MakeUniquePtrFinalType();
 }
+
+#[gtest]
+fn test_unique_ptr_no_bindings() {
+    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrNoBindings))
+}

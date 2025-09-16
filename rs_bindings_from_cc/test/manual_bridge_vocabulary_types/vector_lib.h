@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/common.h"
+#include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/crubit_disabled.h"
 #include "support/annotations.h"
 
 CRUBIT_MUST_BIND
@@ -33,5 +34,6 @@ inline std::vector<DeletedDestructorType> MakeVectorDeletedDestructor() {
   return {};
 }
 inline std::vector<NonTrivialType> MakeVectorNonTrivial() { return {}; }
+inline std::vector<NoBindings> MakeUniquePtrNoBindings() { return {}; }
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_VECTOR_LIB_H_

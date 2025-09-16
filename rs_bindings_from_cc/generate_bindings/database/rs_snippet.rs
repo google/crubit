@@ -376,6 +376,12 @@ impl UniformReprTemplateType {
                 !arg_type_kind.is_bridge_type(),
                 "Bridge types cannot be used as template arguments"
             );
+            // We don't do this in required_crubit_features() because it doesn't know which
+            // template arguments actually need to be free of errors. (For example,
+            // allocator/deleter do not.)
+            if let RsTypeKind::Error { error, .. } = arg_type_kind {
+                return Err(error);
+            }
             Ok(arg_type_kind)
         };
 
@@ -428,6 +434,11 @@ impl UniformReprTemplateType {
                     include_lifetime: !is_return_type,
                     element_type,
                 }
+            }
+            _ if template_specialization.is_string_view
+                || template_specialization.is_wstring_view =>
+            {
+                return Ok(None);
             }
             _ => {
                 // If all else fails, it's some unknown template type. Read any errors from the

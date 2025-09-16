@@ -9,6 +9,7 @@
 #include <string>
 
 #include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/common.h"
+#include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/crubit_disabled.h"
 
 struct IncompleteType;
 
@@ -59,5 +60,6 @@ inline std::unique_ptr<IncompleteType> MakeUniquePtrIncompleteType() {
 inline std::unique_ptr<DeletedDestructorType> MakeUniquePtrDeletedDestructor() {
   return nullptr;
 }
+inline std::unique_ptr<NoBindings> MakeUniquePtrNoBindings() { return nullptr; }
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_UNIQUE_PTR_LIB_H_

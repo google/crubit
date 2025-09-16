@@ -55,3 +55,8 @@ fn test_vector_final_type() {
 fn test_vector_deleted_destructor() {
     assert!(!item_exists::value_exists!(vector_lib::MakeVectorDeletedDestructor))
 }
+
+#[gtest]
+fn test_vector_no_bindings() {
+    assert!(!item_exists::value_exists!(vector_lib::MakeUniquePtrNoBindings))
+}

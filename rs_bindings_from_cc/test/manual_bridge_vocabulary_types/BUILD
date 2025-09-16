@@ -13,6 +13,11 @@ cc_library(
 )
 
 cc_library(
+    name = "crubit_disabled",
+    hdrs = ["crubit_disabled.h"],
+)
+
+cc_library(
     name = "unique_ptr_lib",
     hdrs = ["unique_ptr_lib.h"],
     aspect_hints = [
@@ -20,6 +25,7 @@ cc_library(
     ],
     deps = [
         ":common",
+        ":crubit_disabled",
     ],
 )
 
@@ -47,6 +53,7 @@ cc_library(
     ],
     deps = [
         ":common",
+        ":crubit_disabled",
         "//support:annotations",
     ],
 )
@@ -75,6 +82,7 @@ cc_library(
     ],
     deps = [
         ":common",
+        ":crubit_disabled",
         "//support:annotations",
     ],
 )
