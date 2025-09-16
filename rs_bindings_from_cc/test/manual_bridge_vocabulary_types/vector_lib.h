@@ -10,9 +10,13 @@
 #include <vector>
 
 #include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/common.h"
+#include "support/annotations.h"
 
+CRUBIT_MUST_BIND
 inline size_t UseVectorByValue(std::vector<int> v) { return v.size(); }
+CRUBIT_MUST_BIND
 inline size_t UseVectorByRef(std::vector<int>& v) { return v.size(); }
+CRUBIT_MUST_BIND
 inline std::vector<int> MakeVector(int value) { return {value}; }
 inline std::vector<std::string> MakeVectorString() { return {"hello, world"}; }
 inline std::vector<bool> MakeVectorBool() { return {}; }
@@ -23,6 +27,7 @@ MakeVectorOverloadedDestroyingDelete() {
   return {};
 }
 inline std::vector<PolymorphicType> MakeVectorPolymorphicType() { return {}; }
+CRUBIT_MUST_BIND
 inline std::vector<FinalType> MakeVectorFinalType() { return {}; }
 inline std::vector<DeletedDestructorType> MakeVectorDeletedDestructor() {
   return {};

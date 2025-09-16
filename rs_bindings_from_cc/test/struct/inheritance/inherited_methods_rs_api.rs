@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/inheritance:inherited_methods
-// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
+// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, std_vector, supported, unsafe_types, wrapper
 
 #![rustfmt::skip]
 #![feature(

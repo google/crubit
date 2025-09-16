@@ -25,46 +25,25 @@ fn test_vector_string() {
     // the underlying type, and can't safely generate bindings here.
     assert!(!item_exists::value_exists!(vector_lib::MakeVectorString))
 }
-/// Even if MakeVectorBool gets bindings (due to experimental), it must not
-/// be the Rust vector reimplementation, because of the vector<bool> specialization.
+
 #[gtest]
 fn test_vector_bool() {
-    let v = vector_lib::MakeVectorBool();
-    assert_ne!(std::any::Any::type_id(&v), std::any::TypeId::of::<cc_std::std::vector<bool>>());
+    assert!(!item_exists::value_exists!(vector_lib::MakeVectorBool))
 }
 
-/// Even if MakeVectorOverloadedDelete gets bindings (due to experimental), it must not
-/// be the Rust vector reimplementation, because of the overloaded operator delete.
 #[gtest]
 fn test_vector_overloaded_delete() {
-    let v = vector_lib::MakeVectorOverloadedDelete();
-    assert_ne!(
-        std::any::Any::type_id(&v),
-        std::any::TypeId::of::<cc_std::std::vector<OverloadedDelete>>()
-    );
+    assert!(!item_exists::value_exists!(vector_lib::MakeVectorOverloadedDelete))
 }
 
-/// Even if MakeVectorOverloadedDestroyingDelete gets bindings (due to experimental), it must not
-/// be the Rust vector reimplementation, because of the overloaded operator delete.
 #[gtest]
 fn test_vector_overloaded_destroying_delete() {
-    let v = vector_lib::MakeVectorOverloadedDestroyingDelete();
-    assert_ne!(
-        std::any::Any::type_id(&v),
-        std::any::TypeId::of::<cc_std::std::vector<OverloadedDestroyingDelete>>()
-    );
+    assert!(!item_exists::value_exists!(vector_lib::MakeVectorOverloadedDestroyingDelete))
 }
 
-/// Even if MakeVectorPolymorphicType gets bindings (due to experimental), it must not
-/// be the Rust vector reimplementation, because it can call a derived class's overloaded
-/// operator delete, but the Rust reimplementation will not.
 #[gtest]
 fn test_vector_polymorphic() {
-    let v = vector_lib::MakeVectorPolymorphicType();
-    assert_ne!(
-        std::any::Any::type_id(&v),
-        std::any::TypeId::of::<cc_std::std::vector<PolymorphicType>>()
-    );
+    assert!(!item_exists::value_exists!(vector_lib::MakeVectorPolymorphicType))
 }
 
 #[gtest]
@@ -75,12 +54,4 @@ fn test_vector_final_type() {
 #[gtest]
 fn test_vector_deleted_destructor() {
     assert!(!item_exists::value_exists!(vector_lib::MakeVectorDeletedDestructor))
-}
-
-/// The Rust std::vector reimplementation does support non-trivial types, but it's not very
-/// useful with them!
-#[gtest]
-fn test_vector_non_trivial() {
-    let v: cc_std::std::vector<NonTrivialType> = vector_lib::MakeVectorNonTrivial();
-    assert_eq!(v.len(), 0);
 }

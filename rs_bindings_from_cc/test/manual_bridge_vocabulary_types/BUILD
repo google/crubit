@@ -43,10 +43,11 @@ cc_library(
     name = "vector_lib",
     hdrs = ["vector_lib.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:std_vector",
     ],
     deps = [
         ":common",
+        "//support:annotations",
     ],
 )
 
@@ -56,6 +57,34 @@ crubit_rust_test(
     cc_deps = [
         ":common",
         ":vector_lib",
+        "//support/cc_std",
+    ],
+    proc_macro_deps = [
+        "//common:item_exists",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
+    name = "vector_experimental_lib",
+    hdrs = ["vector_lib.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":common",
+        "//support:annotations",
+    ],
+)
+
+crubit_rust_test(
+    name = "vector_experimental_test",
+    srcs = ["vector_experimental_test.rs"],
+    cc_deps = [
+        ":common",
+        ":vector_experimental_lib",
         "//support/cc_std",
     ],
     proc_macro_deps = [

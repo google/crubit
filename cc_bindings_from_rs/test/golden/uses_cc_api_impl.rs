@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // uses_rust_golden
-// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, supported, unsafe_types, wrapper
+// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, std_vector, supported, unsafe_types, wrapper
 
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]

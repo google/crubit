@@ -48,6 +48,15 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set which specifically std::vector support.
+#
+# See <internal link>
+crubit_feature_hint(
+    name = "std_vector",
+    crubit_features = SUPPORTED_FEATURES + ["std_vector"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #
