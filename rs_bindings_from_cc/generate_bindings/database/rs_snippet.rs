@@ -921,6 +921,14 @@ impl RsTypeKind {
                         Some(&|| "std::vector is being released: b/356638830".into()),
                     );
                 }
+                RsTypeKind::Record { uniform_repr_template_type: Some(x), .. }
+                    if matches!(**x, UniformReprTemplateType::StdUniquePtr { .. }) =>
+                {
+                    require_feature(
+                        CrubitFeature::StdUniquePtr,
+                        Some(&|| "std::unique_ptr is being released: b/369994952".into()),
+                    );
+                }
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //
                 // Whether a record type is supported in rust does _not_ depend on whether each

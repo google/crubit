@@ -10,13 +10,17 @@
 
 #include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/common.h"
 #include "rs_bindings_from_cc/test/manual_bridge_vocabulary_types/crubit_disabled.h"
+#include "support/annotations.h"
 
 struct IncompleteType;
 
+CRUBIT_MUST_BIND
 inline int UseUniquePtrByValue(std::unique_ptr<int> p) { return *p; }
 
+CRUBIT_MUST_BIND
 inline int UseUniquePtrByRef(std::unique_ptr<int>& p) { return *p; }
 
+CRUBIT_MUST_BIND
 inline std::unique_ptr<int> MakeUniquePtr(int value) {
   return std::make_unique<int>(value);
 }
@@ -53,6 +57,7 @@ inline std::unique_ptr<PolymorphicType> MakeUniquePtrPolymorphicType() {
   return nullptr;
 }
 
+CRUBIT_MUST_BIND
 inline std::unique_ptr<FinalType> MakeUniquePtrFinalType() { return nullptr; }
 inline std::unique_ptr<IncompleteType> MakeUniquePtrIncompleteType() {
   return nullptr;

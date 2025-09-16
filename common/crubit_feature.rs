@@ -30,6 +30,9 @@ flagset::flags! {
         /// Enable the native Rust std::vector<T> reimplementation.
         StdVector,
 
+        /// Enable the native Rust std::unique_ptr<T> reimplementation.
+        StdUniquePtr,
+
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
@@ -50,6 +53,7 @@ impl CrubitFeature {
             Self::UnsafeTypes => "unsafe_types",
             Self::DoNotHardcodeStatusBridge => "do_not_hardcode_status_bridge",
             Self::StdVector => "std_vector",
+            Self::StdUniquePtr => "std_unique_ptr",
             Self::Experimental => "experimental",
         }
     }
@@ -69,6 +73,7 @@ impl CrubitFeature {
                 "//features:do_not_hardcode_status_bridge"
             }
             Self::StdVector => "//features:std_vector",
+            Self::StdUniquePtr => "//features:std_unique_ptr",
             Self::Experimental => "//features:experimental",
         }
     }
@@ -84,6 +89,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"unsafe_types" => CrubitFeature::UnsafeTypes.into(),
         b"do_not_hardcode_status_bridge" => CrubitFeature::DoNotHardcodeStatusBridge.into(),
         b"std_vector" => CrubitFeature::StdVector.into(),
+        b"std_unique_ptr" => CrubitFeature::StdUniquePtr.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         _ => return None,
     };
@@ -191,6 +197,7 @@ mod tests {
                 | CrubitFeature::UnsafeTypes
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
+                | CrubitFeature::StdUniquePtr
                 | CrubitFeature::Experimental
         );
     }
@@ -219,6 +226,7 @@ mod tests {
                 | CrubitFeature::UnsafeTypes
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
+                | CrubitFeature::StdUniquePtr
                 | CrubitFeature::Experimental
         );
     }
@@ -235,6 +243,7 @@ mod tests {
                 | CrubitFeature::UnsafeTypes
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
+                | CrubitFeature::StdUniquePtr
                 | CrubitFeature::Experimental
         );
     }

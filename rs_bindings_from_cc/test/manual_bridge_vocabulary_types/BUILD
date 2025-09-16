@@ -21,11 +21,12 @@ cc_library(
     name = "unique_ptr_lib",
     hdrs = ["unique_ptr_lib.h"],
     aspect_hints = [
-        "//features:experimental",
+        "//features:std_unique_ptr",
     ],
     deps = [
         ":common",
         ":crubit_disabled",
+        "//support:annotations",
     ],
 )
 
@@ -35,6 +36,35 @@ crubit_rust_test(
     cc_deps = [
         ":common",
         ":unique_ptr_lib",
+        "//support/cc_std",
+    ],
+    proc_macro_deps = [
+        "//common:item_exists",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
+    name = "unique_ptr_experimental_lib",
+    hdrs = ["unique_ptr_lib.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        ":common",
+        ":crubit_disabled",
+        "//support:annotations",
+    ],
+)
+
+crubit_rust_test(
+    name = "unique_ptr_experimental_test",
+    srcs = ["unique_ptr_experimental_test.rs"],
+    cc_deps = [
+        ":common",
+        ":unique_ptr_experimental_lib",
         "//support/cc_std",
     ],
     proc_macro_deps = [

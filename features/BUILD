@@ -57,6 +57,15 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set which specifically enables std::unique_ptr support.
+#
+# See <internal link>
+crubit_feature_hint(
+    name = "std_unique_ptr",
+    crubit_features = SUPPORTED_FEATURES + ["std_unique_ptr"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #

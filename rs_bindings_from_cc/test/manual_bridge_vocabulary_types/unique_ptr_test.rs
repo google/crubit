@@ -35,38 +35,19 @@ fn test_unique_ptr_string() {
     assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrString))
 }
 
-/// Even if MakeUniquePtrOverloadedDelete gets bindings (due to experimental), it must not
-/// be the Rust unique_ptr reimplementation, because of the overloaded operator delete.
 #[gtest]
 fn test_unique_ptr_overloaded_delete() {
-    let p = unique_ptr_lib::MakeUniquePtrOverloadedDelete();
-    assert_ne!(
-        std::any::Any::type_id(&p),
-        std::any::TypeId::of::<cc_std::std::unique_ptr<OverloadedDelete>>()
-    );
+    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrOverloadedDelete))
 }
 
-/// Even if MakeUniquePtrOverloadedDestroyingDelete gets bindings (due to experimental), it must not
-/// be the Rust unique_ptr reimplementation, because of the overloaded operator delete.
 #[gtest]
 fn test_unique_ptr_overloaded_destroying_delete() {
-    let p = unique_ptr_lib::MakeUniquePtrOverloadedDestroyingDelete();
-    assert_ne!(
-        std::any::Any::type_id(&p),
-        std::any::TypeId::of::<cc_std::std::unique_ptr<OverloadedDestroyingDelete>>()
-    );
+    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrOverloadedDestroyingDelete))
 }
 
-/// Even if MakeUniquePtrPolymorphicType gets bindings (due to experimental), it must not
-/// be the Rust unique_ptr reimplementation, because it can call a derived class's overloaded
-/// operator delete, but the Rust reimplementation will not.
 #[gtest]
 fn test_unique_ptr_polymorphic_type() {
-    let p = unique_ptr_lib::MakeUniquePtrPolymorphicType();
-    assert_ne!(
-        std::any::Any::type_id(&p),
-        std::any::TypeId::of::<cc_std::std::unique_ptr<PolymorphicType>>()
-    );
+    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrPolymorphicType))
 }
 
 #[gtest]
