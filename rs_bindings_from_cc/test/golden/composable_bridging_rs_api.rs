@@ -221,28 +221,28 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char> (crate::__CcTemplateInstSt16initializer_listIcE is a template instantiation)
 
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char32_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char32_t *>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char32_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPDiEEEE is a template instantiation)
+// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char32_t *>> due to missing bindings for its dependency: Can't generate bindings for std::__wrap_iter<char32_t *>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<char32_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPDiEE is a template instantiation)
 
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char16_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char16_t *>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char16_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPDsEEEE is a template instantiation)
+// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char16_t *>> due to missing bindings for its dependency: Can't generate bindings for std::__wrap_iter<char16_t *>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<char16_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPDsEE is a template instantiation)
 
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char32_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char32_t *>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char32_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKDiEEEE is a template instantiation)
+// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char32_t *>> due to missing bindings for its dependency: Can't generate bindings for std::__wrap_iter<const char32_t *>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<const char32_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPKDiEE is a template instantiation)
 
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char16_t *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char16_t *>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char16_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKDsEEEE is a template instantiation)
+// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char16_t *>> due to missing bindings for its dependency: Can't generate bindings for std::__wrap_iter<const char16_t *>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<const char16_t *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPKDsEE is a template instantiation)
 
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char *>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKcEEEE is a template instantiation)
+// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char *>> due to missing bindings for its dependency: Can't generate bindings for std::__wrap_iter<const char *>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<const char *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPKcEE is a template instantiation)
 
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char *>>':
-// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char *>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPcEEEE is a template instantiation)
+// Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char *>> due to missing bindings for its dependency: Can't generate bindings for std::__wrap_iter<char *>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<char *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPcEE is a template instantiation)
 
 // Error while generating bindings for class 'std::reverse_iterator<const char32_t *>':
 // Can't generate bindings for std::reverse_iterator<const char32_t *>, because of missing required features (<internal link>):
@@ -335,20 +335,20 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // Can't generate bindings for std::pmr::polymorphic_allocator<wchar_t> due to missing bindings for its dependency: Unsupported type 'wchar_t': Unsupported builtin type
 
 // Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE is a template instantiation)
+// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>> due to missing bindings for its dependency: Can't generate bindings for std::char_traits<char32_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char32_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDiEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>':
-// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_9allocatorIDiEEEE is a template instantiation)
+// Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>> due to missing bindings for its dependency: Can't generate bindings for std::char_traits<char32_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char32_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDiEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_3pmr21polymorphic_allocatorIDsEEEE is a template instantiation)
+// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>> due to missing bindings for its dependency: Can't generate bindings for std::char_traits<char16_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char16_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDsEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>':
-// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>> (crate::__CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_9allocatorIDsEEEE is a template instantiation)
+// Can't generate bindings for std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>> due to missing bindings for its dependency: Can't generate bindings for std::char_traits<char16_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char16_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDsEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string':
 // Unsupported type 'char8_t': Unsupported builtin type
@@ -363,52 +363,52 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // Unsupported type 'wchar_t': Unsupported builtin type
 
 // Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_3pmr21polymorphic_allocatorIDiEEPDivEE is a template instantiation)
+// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char32_t>, char32_t *, void> due to missing bindings for its dependency: Can't generate bindings for std::pmr::polymorphic_allocator<char32_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char32_t> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIDiEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_3pmr21polymorphic_allocatorIDsEEPDsvEE is a template instantiation)
+// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char16_t>, char16_t *, void> due to missing bindings for its dependency: Can't generate bindings for std::pmr::polymorphic_allocator<char16_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char16_t> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIDsEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_3pmr21polymorphic_allocatorIcEEPcvEE is a template instantiation)
+// Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void> due to missing bindings for its dependency: Can't generate bindings for std::pmr::polymorphic_allocator<char>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIcEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::allocator<char32_t>, char32_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char32_t>, char32_t *, void>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::allocator<char32_t>, char32_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_9allocatorIDiEEPDivEE is a template instantiation)
+// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char32_t>, char32_t *, void> due to missing bindings for its dependency: Can't generate bindings for std::allocator<char32_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char32_t> (crate::__CcTemplateInstNSt3__u9allocatorIDiEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::allocator<char16_t>, char16_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char16_t>, char16_t *, void>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::allocator<char16_t>, char16_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_9allocatorIDsEEPDsvEE is a template instantiation)
+// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char16_t>, char16_t *, void> due to missing bindings for its dependency: Can't generate bindings for std::allocator<char16_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char16_t> (crate::__CcTemplateInstNSt3__u9allocatorIDsEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::allocator<char>, char *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char>, char *, void>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::allocator<char>, char *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_9allocatorIcEEPcvEE is a template instantiation)
+// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char>, char *, void> due to missing bindings for its dependency: Can't generate bindings for std::allocator<char>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char> (crate::__CcTemplateInstNSt3__u9allocatorIcEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>':
-// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_3pmr21polymorphic_allocatorIDiEEEE is a template instantiation)
+// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>> due to missing bindings for its dependency: Can't generate bindings for std::pmr::polymorphic_allocator<char32_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char32_t> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIDiEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>>':
-// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_3pmr21polymorphic_allocatorIDsEEEE is a template instantiation)
+// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char16_t>> due to missing bindings for its dependency: Can't generate bindings for std::pmr::polymorphic_allocator<char16_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char16_t> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIDsEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::allocator_traits<std::pmr::polymorphic_allocator<char>>':
-// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::pmr::polymorphic_allocator<char>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_3pmr21polymorphic_allocatorIcEEEE is a template instantiation)
+// Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char>> due to missing bindings for its dependency: Can't generate bindings for std::pmr::polymorphic_allocator<char>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pmr::polymorphic_allocator<char> (crate::__CcTemplateInstNSt3__u3pmr21polymorphic_allocatorIcEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::allocator_traits<std::allocator<char32_t>>':
-// Can't generate bindings for std::allocator_traits<std::allocator<char32_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::allocator<char32_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_9allocatorIDiEEEE is a template instantiation)
+// Can't generate bindings for std::allocator_traits<std::allocator<char32_t>> due to missing bindings for its dependency: Can't generate bindings for std::allocator<char32_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char32_t> (crate::__CcTemplateInstNSt3__u9allocatorIDiEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::allocator_traits<std::allocator<char16_t>>':
-// Can't generate bindings for std::allocator_traits<std::allocator<char16_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::allocator<char16_t>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_9allocatorIDsEEEE is a template instantiation)
+// Can't generate bindings for std::allocator_traits<std::allocator<char16_t>> due to missing bindings for its dependency: Can't generate bindings for std::allocator<char16_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char16_t> (crate::__CcTemplateInstNSt3__u9allocatorIDsEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::allocator_traits<std::allocator<char>>':
-// Can't generate bindings for std::allocator_traits<std::allocator<char>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::allocator<char>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_9allocatorIcEEEE is a template instantiation)
+// Can't generate bindings for std::allocator_traits<std::allocator<char>> due to missing bindings for its dependency: Can't generate bindings for std::allocator<char>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator<char> (crate::__CcTemplateInstNSt3__u9allocatorIcEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_filebuf<char, std::char_traits<char>>':
 // Can't generate bindings for std::basic_filebuf<char, std::char_traits<char>>, because of missing required features (<internal link>):
@@ -515,8 +515,7 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_streambuf<wchar_t, std::char_traits<wchar_t>> (incomplete type)
 
 // Error while generating bindings for class 'std::fpos<__mbstate_t>':
-// Can't generate bindings for std::fpos<__mbstate_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::fpos<__mbstate_t> (crate::__CcTemplateInstNSt3__u4fposI11__mbstate_tEE is a template instantiation)
+// Can't generate bindings for std::fpos<__mbstate_t> due to missing bindings for its dependency: Skipping generating bindings for '__mbstate_t' because it has a leading `__`
 
 // Error while generating bindings for struct 'std::char_traits<char>':
 // Can't generate bindings for std::char_traits<char>, because of missing required features (<internal link>):
@@ -551,18 +550,361 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char32_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDiEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string_view<char32_t, std::char_traits<char32_t>>':
-// Can't generate bindings for std::basic_string_view<char32_t, std::char_traits<char32_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<char32_t, std::char_traits<char32_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDiNS_11char_traitsIDiEEEE is a template instantiation)
+// Can't generate bindings for std::basic_string_view<char32_t, std::char_traits<char32_t>> due to missing bindings for its dependency: Can't generate bindings for std::char_traits<char32_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char32_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDiEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string_view<char16_t, std::char_traits<char16_t>>':
-// Can't generate bindings for std::basic_string_view<char16_t, std::char_traits<char16_t>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<char16_t, std::char_traits<char16_t>> (crate::__CcTemplateInstNSt3__u17basic_string_viewIDsNS_11char_traitsIDsEEEE is a template instantiation)
+// Can't generate bindings for std::basic_string_view<char16_t, std::char_traits<char16_t>> due to missing bindings for its dependency: Can't generate bindings for std::char_traits<char16_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char16_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDsEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string_view<char8_t, std::char_traits<char8_t>>':
 // Can't generate bindings for std::basic_string_view<char8_t, std::char_traits<char8_t>> due to missing bindings for its dependency: Unsupported type 'char8_t': Unsupported builtin type
 
-// Error while generating bindings for class 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>':
-// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>> due to missing bindings for its dependency: Unsupported type 'wchar_t': Unsupported builtin type
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=std :: basic_string_view < wchar_t , std :: char_traits < wchar_t >>
+pub struct __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) __data_: [::core::mem::MaybeUninit<u8>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) __size_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}
+impl !Sync for __CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!(
+        "std :: basic_string_view < wchar_t , std :: char_traits < wchar_t >>"
+    ),
+    crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE
+);
+
+// Error while generating bindings for type alias 'traits_type':
+// Can't generate bindings for traits_type, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for traits_type (error: Can't generate bindings for std::char_traits<wchar_t> due to missing bindings for its dependency)
+
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::value_type':
+// Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::pointer':
+// Unsupported type 'wchar_t *': Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::const_pointer':
+// Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::reference':
+// Unsupported type 'wchar_t &': Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::const_reference':
+// Unsupported type 'const wchar_t &': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::const_iterator':
+// Unsupported type 'std::basic_string_view<wchar_t>::const_pointer': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::iterator':
+// Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for type alias 'const_reverse_iterator':
+// Can't generate bindings for const_reverse_iterator, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *> due to missing bindings for its dependency)
+
+// Error while generating bindings for type alias 'reverse_iterator':
+// Can't generate bindings for reverse_iterator, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for reverse_iterator (error: Can't generate bindings for const_reverse_iterator, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *> due to missing bindings for its dependency))
+
+// Error while generating bindings for type alias 'size_type':
+// Can't generate bindings for size_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
+
+// Error while generating bindings for type alias 'difference_type':
+// Can't generate bindings for difference_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
+
+// Error while generating bindings for global variable 'std::basic_string_view<wchar_t>::npos':
+// static data members are not supported
+
+// Error while generating bindings for constructor 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>>':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>> (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Error while generating bindings for constructor 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>>':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>> (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::operator=':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Error while generating bindings for constructor 'std::basic_string_view<wchar_t>::basic_string_view':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::basic_string_view':
+// Function templates are not supported yet
+
+// Error while generating bindings for constructor 'std::basic_string_view<wchar_t>::basic_string_view':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::begin':
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::end':
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::cbegin':
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::cend':
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rbegin':
+// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *> due to missing bindings for its dependency)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rend':
+// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *> due to missing bindings for its dependency)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::crbegin':
+// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *> due to missing bindings for its dependency)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::crend':
+// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *> due to missing bindings for its dependency)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::size':
+// Return type is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::length':
+// Return type is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::max_size':
+// Return type is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::empty':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::empty, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::empty ([[nodiscard]] attribute)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::operator[]':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::at':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::front':
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::back':
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::data':
+// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_pointer': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::remove_prefix':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::remove_suffix':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::swap':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::swap, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::swap (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::copy':
+// Parameter #0 is not supported: Unsupported type 'wchar_t *': Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::substr':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #3 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #4 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #3 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
+// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
+// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
+// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
+// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
+// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
+// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+//
+// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
+// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+//
+// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::starts_with':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::starts_with':
+// Parameter #0 is not supported: Unsupported type 'const std::basic_string_view<wchar_t>::value_type * _Nonnull': Unsupported type 'const std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::ends_with':
+// Parameter #0 is not supported: Unsupported type 'std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+
+// Error while generating bindings for function 'std::basic_string_view<wchar_t>::ends_with':
+// Parameter #0 is not supported: Unsupported type 'const std::basic_string_view<wchar_t>::value_type * _Nonnull': Unsupported type 'const std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
 
 // Error while generating bindings for struct 'std::placeholders::__ph<10>':
 // Can't generate bindings for std::placeholders::__ph<10>, because of missing required features (<internal link>):
@@ -674,6 +1016,30 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::Vec3, z) == 8);
     assert!(::core::mem::size_of::<i8>() == 1);
     assert!(::core::mem::align_of::<i8>() == 1);
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE,
+        >() == 16
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE,
+        >() == 8
+    );
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE: Drop);
+    assert!(
+        ::core::mem::offset_of!(
+            crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE,
+            __data_
+        ) == 0
+    );
+    assert!(
+        ::core::mem::offset_of!(
+            crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE,
+            __size_
+        ) == 8
+    );
     assert!(::core::mem::size_of::<*const [::core::ffi::c_int]>() == 16);
     assert!(::core::mem::align_of::<*const [::core::ffi::c_int]>() == 8);
     assert!(

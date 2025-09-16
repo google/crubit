@@ -73,9 +73,7 @@ impl Default for TopLevel {
 
 // Error while generating bindings for type alias 'Alias6':
 // Can't generate bindings for Alias6, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias6 (error: Can't generate bindings for MyTemplate<MyTemplate<TopLevel>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation))
+// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias6 (error: Can't generate bindings for MyTemplate<MyTemplate<TopLevel>> due to missing bindings for its dependency)
 
 pub mod test_namespace_bindings {
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -118,9 +116,7 @@ pub mod test_namespace_bindings {
 
     // Error while generating bindings for type alias 'Alias9':
     // Can't generate bindings for Alias9, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias9 (error: Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>>, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation)
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation))
+    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias9 (error: Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> due to missing bindings for its dependency)
 }
 
 // namespace test_namespace_bindings
@@ -136,14 +132,14 @@ pub mod test_namespace_bindings {
 // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation)
 
 // Error while generating bindings for class 'MyTemplate<MyTemplate<TopLevel>>':
-// Can't generate bindings for MyTemplate<MyTemplate<TopLevel>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<TopLevel>> (crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE is a template instantiation)
+// Can't generate bindings for MyTemplate<MyTemplate<TopLevel>> due to missing bindings for its dependency: Can't generate bindings for MyTemplate<TopLevel>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<TopLevel> (crate::__CcTemplateInst10MyTemplateI8TopLevelE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<TopLevel> (crate::__CcTemplateInst10MyTemplateI8TopLevelE is a template instantiation)
 
 // Error while generating bindings for class 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
-// Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation)
+// Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> due to missing bindings for its dependency: Can't generate bindings for MyTemplate<test_namespace_bindings::Inner>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation)
 
 // Error while generating bindings for class 'MyTemplate<bool>':
 // Can't generate bindings for MyTemplate<bool>, because of missing required features (<internal link>):

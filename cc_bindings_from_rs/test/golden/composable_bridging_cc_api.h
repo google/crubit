@@ -5,7 +5,8 @@
 // Automatically @generated C++ bindings for the following Rust crate:
 // composable_bridging_rust_golden
 // Features: do_not_hardcode_status_bridge, experimental,
-// infer_operator_lifetimes, std_vector, supported, unsafe_types, wrapper
+// infer_operator_lifetimes, std_unique_ptr, std_vector, supported,
+// unsafe_types, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_COMPOSABLE_BRIDGING_RUST_GOLDEN
