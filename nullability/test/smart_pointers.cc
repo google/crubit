@@ -481,6 +481,9 @@ TEST void dynamicPointerCast(_Nonnull std::shared_ptr<Base> NonnullParam,
   nullable(NullableParam);
   unknown(UnknownParam);
 
+  auto* PrevNonnullParam = NonnullParam.get();
+  auto* PrevNullableParam = NullableParam.get();
+  auto* PrevUnknownParam = UnknownParam.get();
   nullable(std::dynamic_pointer_cast<Derived>(std::move(NonnullParam)));
   nullable(std::dynamic_pointer_cast<Derived>(std::move(NullableParam)));
   nullable(std::dynamic_pointer_cast<Derived>(std::move(UnknownParam)));
@@ -493,6 +496,10 @@ TEST void dynamicPointerCast(_Nonnull std::shared_ptr<Base> NonnullParam,
   possible(NonnullParam != nullptr);
   possible(NullableParam != nullptr);
   possible(UnknownParam != nullptr);
+  // The pointer value may also have changed.
+  possible(NonnullParam.get() != PrevNonnullParam);
+  possible(NullableParam.get() != PrevNullableParam);
+  possible(UnknownParam.get() != PrevUnknownParam);
 
   // However, if the argument was Null, then it should remain Null (and not just
   // nullable) after calling the rvalue reference overload.

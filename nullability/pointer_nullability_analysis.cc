@@ -886,13 +886,10 @@ void transferValue_SharedPtrCastCall(
   if (Callee->getParamDecl(0)->getType()->isRValueReferenceType()) {
     if (Callee->getName() == "dynamic_pointer_cast") {
       // `dynamic_pointer_cast` sets its argument to null only if the cast
-      // succeeded. So if the argument wasn't yet nullable, replace it with a
-      // new nullable pointer.
-      PointerNullState SrcNullability = getPointerNullState(*SrcPtrVal);
-      if (SrcNullability.FromNullable == nullptr ||
-          !Env.proves(*SrcNullability.FromNullable))
-        setToPointerWithNullability(SrcPtrLoc, NullabilityKind::Nullable,
-                                    State.Env);
+      // succeeded. So, replace the argument with a new Nullable (but not
+      // definitely Null) pointer.
+      setToPointerWithNullability(SrcPtrLoc, NullabilityKind::Nullable,
+                                  State.Env);
     } else {
       setSmartPointerToNull(*SrcLoc, State.Env);
     }
