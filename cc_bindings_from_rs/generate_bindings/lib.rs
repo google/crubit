@@ -1483,15 +1483,17 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
 
     // Generate top-level elements of the C++ header file.
     let cc_api = {
-        let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num());
-        let cpp_top_level_ns = format_cc_ident(db, cpp_top_level_ns.as_str())?;
+        let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num())
+            .iter()
+            .map(|ns| db.format_cc_ident(*ns))
+            .collect::<Result<Vec<_>>>()?;
 
         let includes = format_cc_includes(&includes);
         let ordered_cc = format_namespace_bound_cc_tokens(db, ordered_cc, tcx);
         quote! {
             #includes
             __NEWLINE__ __NEWLINE__
-            namespace #cpp_top_level_ns {
+            namespace #(#cpp_top_level_ns)::* {
                 __NEWLINE__
                 #ordered_cc
                 __NEWLINE__

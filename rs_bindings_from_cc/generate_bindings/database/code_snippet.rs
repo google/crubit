@@ -1296,7 +1296,7 @@ pub enum ThunkImpl {
         return_type_name: TokenStream,
         thunk_ident: Ident,
         param_types: Vec<TokenStream>,
-        param_idents: Vec<TokenStream>,
+        param_idents: Vec<Ident>,
         conversion_stmts: TokenStream,
         return_stmt: TokenStream,
     },

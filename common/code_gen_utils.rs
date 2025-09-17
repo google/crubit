@@ -6,6 +6,7 @@ use arc_anyhow::{anyhow, ensure, Result};
 use heck::ToSnakeCase;
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::rc::Rc;
@@ -151,22 +152,44 @@ pub fn is_cpp_reserved_keyword(ident: &str) -> bool {
     RESERVED_CC_KEYWORDS.contains(ident)
 }
 
+/// If `ident` is a reserved C++ keyword, returns a string with an underscore appended to it.
+/// Otherwise, returns `ident`.
+pub fn unkeyword_cpp_ident(ident: &str) -> Cow<'_, str> {
+    if is_cpp_reserved_keyword(ident) {
+        Cow::Owned(format!("{ident}_"))
+    } else {
+        Cow::Borrowed(ident)
+    }
+}
+
 /// Formats a C++ identifier. Panics if `ident` is a C++ reserved keyword.
 #[track_caller]
-pub fn expect_format_cc_ident(ident: &str) -> TokenStream {
+pub fn expect_format_cc_ident(ident: &str) -> Ident {
     format_cc_ident(ident)
         .unwrap_or_else(|err| panic!("Can't format `{ident}` as a C++ identifier: {err}"))
 }
 
+/// Fallibly parses a [`proc_macro2::Ident`] where Rust keywords are permitted.
+///
+/// * Unlike [`Ident::new`], this is fallible and returns Err if it fails.
+/// * Unlike [`syn::parse_str::<Ident>`], Rust keywords are permitted, making this suitable for
+///   parsing identifiers that that Rust doesn't allow but C++ does, like "move".
+fn parse_any(ident: &str) -> syn::Result<Ident> {
+    syn::parse::Parser::parse_str(<Ident as syn::ext::IdentExt>::parse_any, ident)
+}
+
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
-pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
-    check_valid_cc_name(ident)?;
-    ident
-        .parse()
-        // Explicitly mapping the error via `anyhow!`, because `LexError` is not `Sync`
-        // (required for `anyhow::Error` to implement `From<LexError>`) and
-        // therefore we can't just use `?`.
+pub fn format_cc_ident(ident: &str) -> Result<Ident> {
+    ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
+    ensure!(
+        !is_cpp_reserved_keyword(ident),
+        "`{ident}` is a C++ reserved keyword and can't be used as a C++ identifier",
+    );
+    // Explicitly mapping the error via `anyhow!`, because `LexError` is not `Sync`
+    // (required for `anyhow::Error` to implement `From<LexError>`) and
+    // therefore we can't just use `?`.
+    parse_any(ident)
         .map_err(|lex_error| anyhow!("Can't format `{ident}` as a C++ identifier: {lex_error}"))
 }
 
@@ -213,8 +236,6 @@ pub fn make_rs_ident(ident: &str) -> Ident {
 }
 
 pub fn check_valid_cc_name(name: &str) -> Result<()> {
-    ensure!(!name.is_empty(), "Empty string is not a valid C++ identifier");
-
     // C++ doesn't have an equivalent of
     // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
     // an error is returned when `ident` is a C++ reserved keyword.
@@ -352,7 +373,7 @@ impl NamespaceQualifier {
         }
     }
 
-    pub fn cc_idents(&self) -> Result<Vec<TokenStream>> {
+    pub fn cc_idents(&self) -> Result<Vec<Ident>> {
         self.parts().map(|ns| format_cc_ident(ns)).collect()
     }
 }
@@ -482,28 +503,28 @@ pub mod tests {
     use super::*;
     use googletest::prelude::*;
     use itertools::Itertools;
-    use quote::quote;
+    use quote::{quote, ToTokens};
     use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
     use token_stream_printer::cc_tokens_to_formatted_string_for_tests;
 
     #[gtest]
     fn test_format_cc_ident_basic() {
-        assert_cc_matches!(format_cc_ident("foo").unwrap(), quote! { foo });
+        assert_cc_matches!(format_cc_ident("foo").unwrap().to_token_stream(), quote! { foo });
     }
 
     #[gtest]
     fn test_format_cc_ident_exotic_xid_start() {
-        assert_cc_matches!(format_cc_ident("Łukasz").unwrap(), quote! { Łukasz });
+        assert_cc_matches!(format_cc_ident("Łukasz").unwrap().to_token_stream(), quote! { Łukasz });
     }
 
     #[gtest]
     fn test_format_cc_ident_underscore() {
-        assert_cc_matches!(format_cc_ident("_").unwrap(), quote! { _ });
+        assert_cc_matches!(format_cc_ident("_").unwrap().to_token_stream(), quote! { _ });
     }
 
     #[gtest]
     fn test_format_cc_ident_reserved_rust_keyword() {
-        assert_cc_matches!(format_cc_ident("impl").unwrap(), quote! { impl });
+        assert_cc_matches!(format_cc_ident("impl").unwrap().to_token_stream(), quote! { impl });
     }
 
     #[gtest]
@@ -519,12 +540,15 @@ pub mod tests {
         // https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
 
         // These may appear in `IR::Func::name`.
-        assert_cc_matches!(format_cc_ident("operator==").unwrap(), quote! { operator== });
-        assert_cc_matches!(format_cc_ident("operator new").unwrap(), quote! { operator new });
+        assert_cc_matches!(format_cc_type_name("operator==").unwrap(), quote! { operator== });
+        assert_cc_matches!(format_cc_type_name("operator new").unwrap(), quote! { operator new });
 
         // This may appear in `IR::Record::cc_name` (although in practice these will
         // be namespace-qualified most of the time).
-        assert_cc_matches!(format_cc_ident("MyTemplate<int>").unwrap(), quote! { MyTemplate<int> });
+        assert_cc_matches!(
+            format_cc_type_name("MyTemplate<int>").unwrap(),
+            quote! { MyTemplate<int> }
+        );
     }
 
     /// https://en.cppreference.com/w/cpp/language/identifiers#Qualified_identifiers
@@ -534,11 +558,11 @@ pub mod tests {
     #[gtest]
     fn test_format_cc_ident_qualified_identifiers() {
         assert_cc_matches!(
-            format_cc_ident("std::vector<int>").unwrap(),
+            format_cc_type_name("std::vector<int>").unwrap(),
             quote! { std::vector<int> }
         );
         assert_cc_matches!(
-            format_cc_ident("::std::vector<int>").unwrap(),
+            format_cc_type_name("::std::vector<int>").unwrap(),
             quote! { ::std::vector<int> }
         );
     }
@@ -562,7 +586,6 @@ pub mod tests {
             // We used to trim leading and/or trailing whitespace, but stricter validation
             // of leading whitespace seems desirable.
             r#" operator "" _km "#,
-            " foo",
             // Other tests
             "(foo",
             "(foo)",
@@ -570,11 +593,8 @@ pub mod tests {
         for test in tests.into_iter() {
             let err = format_cc_ident(test).unwrap_err();
             let actual_msg = err.to_string();
-            let c = test.chars().next().unwrap();
-            let expected_msg = format!(
-                "The following character can't be used as a start of a C++ identifier: {c}"
-            );
-            assert_eq!(actual_msg, expected_msg);
+            let expected_msg = format!("Can't format `{test}` as a C++ identifier: ");
+            expect_that!(actual_msg, starts_with(expected_msg));
         }
     }
 

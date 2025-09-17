@@ -14,7 +14,7 @@ use error_report::{anyhow, bail};
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
+use quote::{format_ident, quote, ToTokens};
 use std::borrow::Cow;
 use std::fmt::Write;
 use std::rc::Rc;
@@ -380,10 +380,10 @@ pub fn generate_function_thunk_impl(
                         quote! { #fn_ident }
                     } else {
                         let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
-                        let record_ident =
-                            expect_format_cc_ident(record.cc_name.identifier.as_ref());
+                        let record_name =
+                            expect_format_cc_type_name(record.cc_name.identifier.as_ref());
                         let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
-                        quote! { #namespace_qualifier #record_ident :: #fn_ident }
+                        quote! { #namespace_qualifier #record_name :: #fn_ident }
                     }
                 }
                 None => {
@@ -409,10 +409,8 @@ pub fn generate_function_thunk_impl(
 
     let mut conversion_externs = quote! {};
     let mut conversion_stmts = quote! {};
-    let convert_ident = |ident: &TokenStream| -> TokenStream {
-        let ident = format_ident!("__converted_{}", ident.to_string());
-        quote! { #ident }
-    };
+    let convert_ident =
+        |ident: &Ident| -> Ident { format_ident!("__converted_{}", ident.to_string()) };
     let mut param_types = func
         .params
         .iter()
@@ -452,11 +450,13 @@ pub fn generate_function_thunk_impl(
         .params
         .iter()
         .map(|p| {
-            let mut ident = expect_format_cc_ident(&p.identifier.identifier);
-            if db.rs_type_kind(p.type_.clone())?.is_pointer_bridge_type() {
+            let ident = expect_format_cc_ident(&p.identifier.identifier);
+            let ident = if db.rs_type_kind(p.type_.clone())?.is_pointer_bridge_type() {
                 let formatted_ident = convert_ident(&ident);
-                ident = quote! { &(#formatted_ident.val) };
-            }
+                quote! { &(#formatted_ident.val) }
+            } else {
+                ident.to_token_stream()
+            };
             match &p.type_.variant {
                 CcTypeVariant::Pointer(pointer) => match pointer.kind {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),

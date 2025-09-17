@@ -6,7 +6,7 @@ extern crate rustc_span;
 
 use crate::db::BindingsGenerator;
 use arc_anyhow::Result;
-use code_gen_utils::{make_rs_ident, NamespaceQualifier};
+use code_gen_utils::{format_cc_type_name, make_rs_ident, NamespaceQualifier};
 use proc_macro2::TokenStream;
 use quote::quote;
 use rustc_span::def_id::DefId;
@@ -23,7 +23,7 @@ pub struct FullyQualifiedName {
 
     /// Configurable top-level namespace of the C++ bindings.
     /// For example, this would be `::foo` for `foo::bar::baz::qux`.
-    pub cpp_top_level_ns: Symbol,
+    pub cpp_top_level_ns: Rc<[Symbol]>,
 
     /// Path to the module where the item is located.
     /// For example, this would be `cmp` for `std::cmp::Ordering`.
@@ -80,15 +80,25 @@ impl FullyQualifiedName {
         let krate = tcx.crate_name(def_id.krate);
         let cpp_top_level_ns = db.format_top_level_ns_for_crate(def_id.krate);
 
-        // Crash OK: these attributes are introduced by crubit itself, and "should
-        // never" be malformed.
-        let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
+        let attributes = crubit_attr::get_attrs(tcx, def_id)
+            .expect("these attributes should never be malformed because they are introduced by crubit itself");
         let cpp_type = attributes.cpp_type;
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
         let name = full_path.pop().expect("At least the item's name should be present");
         let rs_name = name.data.get_opt_name();
-        let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or(rs_name);
+        let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or_else(|| {
+            // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
+            // This prevents silly Rust names like "reinterpret_cast" from trying to be named
+            // "reinterpret_cast" in C++, which would be an error.
+            // If the user has opted in to one of these reserved names by setting cpp_name, however,
+            // we should _not_ implicitly change it, and should instead given them an error.
+            // Hence, this unkeywording behavior only happens in the case where we implicitly
+            // delegate to the Rust name.
+            rs_name.map(|rs_name| {
+                Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
+            })
+        });
 
         let mod_path = NamespaceQualifier::new(
             full_path
@@ -110,16 +120,20 @@ impl FullyQualifiedName {
 
     pub fn format_for_cc(&self, db: &dyn BindingsGenerator<'_>) -> Result<TokenStream> {
         if let Some(path) = self.cpp_type {
-            let path = db.format_cc_ident(path)?;
-            return Ok(quote! {#path});
+            let path = format_cc_type_name(path.as_str())?;
+            return Ok(path);
         }
 
         let name = self.cpp_name.expect("`format_for_cc` can't be called on name-less item kinds");
 
-        let cpp_top_level_ns = db.format_cc_ident(self.cpp_top_level_ns)?;
+        let cpp_top_level_ns = self
+            .cpp_top_level_ns
+            .iter()
+            .map(|ns| db.format_cc_ident(*ns))
+            .collect::<Result<Vec<_>>>()?;
         let ns_path = format_ns_path_for_cc(db, &self.cpp_ns_path)?;
-        let name = db.format_cc_ident(name)?;
-        Ok(quote! { :: #cpp_top_level_ns:: #ns_path #name })
+        let name = format_cc_type_name(name.as_str())?;
+        Ok(quote! { :: #(#cpp_top_level_ns::)* #ns_path #name })
     }
 
     pub fn format_for_rs(&self) -> TokenStream {

@@ -17,17 +17,14 @@ use crate::{
     RsSnippet, SortedByDef, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
-use code_gen_utils::make_rs_ident;
-use code_gen_utils::CcInclude;
+use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
-use proc_macro2::{Literal, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::post_analysis_typing_env;
-use quote::format_ident;
-use quote::quote;
-use quote::ToTokens;
+use quote::{format_ident, quote};
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
 use rustc_hir::{self as hir, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
@@ -517,9 +514,9 @@ pub fn generate_adt_core<'tcx>(
     // succeeds, but this would lead to infinite recursion, so we only replicate
     // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
     // `generate_adt_core`.
-    fully_qualified_name
-        .format_for_cc(db)
-        .with_context(|| format!("Error formatting the fully-qualified C++ name of `{cpp_name}"))?;
+    fully_qualified_name.format_for_cc(db).with_context(|| {
+        format!("Error formatting the fully-qualified C++ name of `{cpp_name}`")
+    })?;
 
     let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
     let crubit_attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
@@ -615,7 +612,7 @@ fn generate_fields<'tcx>(
     }
     struct Field {
         type_info: Result<FieldTypeInfo>,
-        cc_name: TokenStream,
+        cc_name: Ident,
         rs_name: TokenStream,
         is_public: bool,
         index: usize,
@@ -638,7 +635,7 @@ fn generate_fields<'tcx>(
     let err_fields = |err| {
         vec![Field {
             type_info: Err(err),
-            cc_name: quote! { __opaque_blob_of_bytes },
+            cc_name: format_ident!("__opaque_blob_of_bytes"),
             rs_name: quote! { __opaque_blob_of_bytes },
             is_public: false,
             index: 0,
@@ -756,7 +753,7 @@ fn generate_fields<'tcx>(
                             };
                             let cc_name =
                                 format_cc_ident(db, cc_name.as_str()).unwrap_or_else(|_err| {
-                                    format_ident!("__field{index}").into_token_stream()
+                                    format_ident!("__field{index}")
                                 });
                             let rs_name = {
                                 let name_starts_with_digit = name
@@ -889,36 +886,36 @@ fn generate_fields<'tcx>(
                         .collect()
                 } else {
                     let variant_offset_assertions: TokenStream = adt_def.variants().iter_enumerated().map(|(variant_index, variant_def)| {
-                  let cc_variant_struct_name = format_cc_ident(db, variant_def.ident(tcx).as_str())
-                      .unwrap_or_else(|_err| format_ident!("err_field").into_token_stream());
-                  let tag_unsuffixed = Literal::u64_unsuffixed(tag_size_with_padding);
-                  // If the variant has no fields, don't bother generating any assertions.
-                  if variant_sizes[variant_index.index()] == 0  {
-                      quote! {}
-                  } else {
-                      quote! { static_assert(#tag_unsuffixed == offsetof(#adt_cc_name, #cc_variant_struct_name)); }
-                  }
-              }).collect();
+                        let cc_variant_struct_name = format_cc_ident(db, variant_def.ident(tcx).as_str())
+                            .unwrap_or_else(|_err| format_ident!("err_field"));
+                        let tag_unsuffixed = Literal::u64_unsuffixed(tag_size_with_padding);
+                        // If the variant has no fields, don't bother generating any assertions.
+                        if variant_sizes[variant_index.index()] == 0  {
+                            quote! {}
+                        } else {
+                            quote! { static_assert(#tag_unsuffixed == offsetof(#adt_cc_name, #cc_variant_struct_name)); }
+                        }
+                    }).collect();
                     // Check for each field's offsets within the variant.
                     let variant_field_assertions: TokenStream = variants_fields
-                  .iter().enumerate().flat_map(|(variant_index, fields_for_variant)| {
-                      let variant_def = adt_def.variant(VariantIdx::from_usize(variant_index));
-                      let cc_variant = variant_def.ident(tcx);
-                      let qualified_struct_name =
-                          format_cc_ident(db, format!("{}::__crubit_{}_struct", adt_cc_name, cc_variant).as_ref())
-                              .unwrap();
-                      // If the variant has no fields, don't bother generating any assertions.
-                      if variant_def.fields.is_empty() {
-                          quote! {}
-                      }
-                      else {
-                          //
-                      fields_for_variant.iter().filter(|field| field.type_info.is_ok() && field.size() != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
-                      let offset = Literal::u64_unsuffixed(*offset);
-                          quote! { static_assert(#offset == offsetof(#qualified_struct_name, #cc_name)); }
-                  }).collect()
-              }
-                  }).collect();
+                        .iter()
+                        .enumerate()
+                        .flat_map(|(variant_index, fields_for_variant)| {
+                            let variant_def = adt_def.variant(VariantIdx::from_usize(variant_index));
+                            let cc_variant = variant_def.ident(tcx);
+                            let qualified_struct_name =
+                                expect_format_cc_type_name(&format!("{}::__crubit_{}_struct", adt_cc_name, cc_variant));
+                            // If the variant has no fields, don't bother generating any assertions.
+                            if variant_def.fields.is_empty() {
+                                quote! {}
+                            } else {
+                                //
+                                fields_for_variant.iter().filter(|field| field.type_info.is_ok() && field.size() != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
+                                    let offset = Literal::u64_unsuffixed(*offset);
+                                    quote! { static_assert(#offset == offsetof(#qualified_struct_name, #cc_name)); }
+                                }).collect()
+                            }
+                    }).collect();
                     quote! {#variant_offset_assertions #variant_field_assertions }
                 }
             }
@@ -1186,9 +1183,8 @@ fn generate_fields<'tcx>(
                             .iter_enumerated()
                             .map(|(variant_index, variant_def)| {
                                 let cc_variant_name =
-                                    format_cc_ident(db, variant_def.name.as_str()).unwrap_or_else(
-                                        |_err| format_ident!("err_field").into_token_stream(),
-                                    );
+                                    format_cc_ident(db, variant_def.name.as_str())
+                                        .unwrap_or_else(|_err| format_ident!("err_field"));
                                 let tag_value = Literal::u128_unsuffixed(
                                     adt_def.discriminant_for_variant(tcx, variant_index).val,
                                 );
@@ -1242,7 +1238,7 @@ fn generate_fields<'tcx>(
                             db,
                             format!("__crubit_{}_struct", variant_def.ident(tcx).as_str()).as_ref(),
                         )
-                        .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
+                        .unwrap_or_else(|_err| format_ident!("err_struct"));
 
                         // Get the corresponding field tokens.
                         let fields_for_variant = &tokens_per_variant[variant_index.index()];
@@ -1255,9 +1251,7 @@ fn generate_fields<'tcx>(
                         // a note that the variant is empty.
                         if variant_sizes[variant_index.index()] == 0 {
                             let cc_variant_name = format_cc_ident(db, variant_def.name.as_str())
-                                .unwrap_or_else(|_err| {
-                                    format_ident!("err_field").into_token_stream()
-                                });
+                                .unwrap_or_else(|_err| format_ident!("err_field"));
                             let msg = format!(
                                 "Variant {} has no size, so no struct is generated.",
                                 cc_variant_name
@@ -1281,12 +1275,12 @@ fn generate_fields<'tcx>(
                     .map(|(variant_index, variant_def)| {
                         // Get the variant name.
                         let cc_variant_name = format_cc_ident(db, variant_def.name.as_str())
-                            .unwrap_or_else(|_err| format_ident!("err_field").into_token_stream());
+                            .unwrap_or_else(|_err| format_ident!("err_field"));
                         let cc_variant_struct_type = format_cc_ident(
                             db,
                             format!("__crubit_{}_struct", variant_def.ident(tcx).as_str()).as_ref(),
                         )
-                        .unwrap_or_else(|_err| format_ident!("err_struct").into_token_stream());
+                        .unwrap_or_else(|_err| format_ident!("err_struct"));
 
                         // If the variant has no fields (i.e. the struct is empty), we can skip
                         // this declaration.

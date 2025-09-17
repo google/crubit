@@ -15,14 +15,15 @@ use crate::{
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{
-    escape_non_identifier_chars, expect_format_cc_ident, make_rs_ident, CcInclude,
+    escape_non_identifier_chars, expect_format_cc_ident, format_cc_type_name, make_rs_ident,
+    CcInclude,
 };
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::BindingsGenerator;
 use database::{SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
-use proc_macro2::{Literal, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{is_copy, post_analysis_typing_env};
 use quote::quote;
 use rustc_hir::attrs::AttributeKind;
@@ -96,7 +97,7 @@ fn thunk_name(
 }
 
 /// Returns a vector of identifiers `{prefix}_{i}` for `i` in `[0, n)`.
-fn ident_for_each(prefix: &str, n: usize) -> Vec<TokenStream> {
+fn ident_for_each(prefix: &str, n: usize) -> Vec<Ident> {
     (0..n).map(|i| expect_format_cc_ident(&format!("{prefix}_{i}"))).collect()
 }
 
@@ -114,7 +115,7 @@ fn ident_for_each(prefix: &str, n: usize) -> Vec<TokenStream> {
 /// C-ABI-compatible version of the type.
 fn cc_param_to_c_abi<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    cc_ident: TokenStream,
+    cc_ident: Ident,
     ty: SugaredTy<'tcx>,
     post_analysis_typing_env: ty::TypingEnv<'tcx>,
     includes: &mut BTreeSet<CcInclude>,
@@ -124,14 +125,14 @@ fn cc_param_to_c_abi<'tcx>(
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
                 if let CcType::Pointer { .. } = cpp_type {
-                    cc_ident
+                    quote! { #cc_ident }
                 } else {
                     quote! { & #cc_ident }
                 }
             }
         }
     } else if is_c_abi_compatible_by_value(ty.mid()) {
-        cc_ident
+        quote! { #cc_ident }
     } else if let Some(tuple_tys) = ty.as_tuple(db) {
         let n = tuple_tys.len();
         let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);
@@ -203,7 +204,7 @@ fn cc_param_to_c_abi<'tcx>(
 struct ReturnConversion {
     /// The name of a variable holding a pointer to storage of the C-ABI-compatible version of
     /// the return type.
-    storage_name: TokenStream,
+    storage_name: Ident,
     /// An expression that unpacks the return value from the storage location.
     unpack_expr: TokenStream,
 }
@@ -221,7 +222,7 @@ fn format_ty_for_cc_amending_prereqs<'tcx>(
 
 fn cc_return_value_from_c_abi<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    ident: TokenStream,
+    ident: Ident,
     ty: SugaredTy<'tcx>,
     prereqs: &mut CcPrerequisites,
     storage_statements: &mut TokenStream,
@@ -231,7 +232,7 @@ fn cc_return_value_from_c_abi<'tcx>(
     if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
-                let cpp_type = format_cc_ident(db, cpp_type.as_ref())?;
+                let cpp_type = format_cc_type_name(cpp_type.as_ref())?;
                 // Below, we use a union to allocate uninitialized memory that fits cpp_type.
                 // The union prevents the type from being default constructed. It's
                 // the responsibility of the thunk to properly initialize the
@@ -392,7 +393,7 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
 }
 
 struct Param<'tcx> {
-    cc_name: TokenStream,
+    cc_name: Ident,
     cpp_type: TokenStream,
     ty: SugaredTy<'tcx>,
 }

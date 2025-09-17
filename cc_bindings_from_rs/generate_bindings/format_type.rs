@@ -22,7 +22,7 @@ use database::code_snippet::{CcPrerequisites, CcSnippet};
 use database::BindingsGenerator;
 use database::{FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 use rustc_hir::def::Res;
@@ -34,37 +34,35 @@ use rustc_span::symbol::{sym, Symbol};
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
-pub fn format_top_level_ns_for_crate(db: &dyn BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
+pub fn format_top_level_ns_for_crate(
+    db: &dyn BindingsGenerator<'_>,
+    krate: CrateNum,
+) -> Rc<[Symbol]> {
     let crate_name = if krate == LOCAL_CRATE {
         "self".to_string()
     } else {
         db.tcx().crate_name(krate).to_string()
     };
-    if let Some(namespace) = db.crate_name_to_namespace().get(crate_name.as_str()) {
-        Symbol::intern(namespace)
+    if let Some(namespaces) = db.crate_name_to_namespace().get(crate_name.as_str()) {
+        namespaces.split("::").map(Symbol::intern).collect()
     } else {
-        db.tcx().crate_name(krate)
+        Rc::from([db.tcx().crate_name(krate)])
     }
 }
 
-pub fn format_cc_ident_symbol(db: &dyn BindingsGenerator, ident: Symbol) -> Result<TokenStream> {
+pub fn format_cc_ident_symbol(db: &dyn BindingsGenerator, ident: Symbol) -> Result<Ident> {
     format_cc_ident(db, ident.as_str())
 }
 
 /// Implementation of `BindingsGenerator::format_cc_ident`.
-pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<TokenStream> {
+pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<Ident> {
     // TODO(b/254104998): Check whether the crate where the identifier is defined is
     // enabled for the feature. Right now if the dep enables the feature but the
     // current crate doesn't, we will escape the identifier in the dep but
     // consider it failed in the current crate.
-    if code_gen_utils::is_cpp_reserved_keyword(ident)
-        && check_feature_enabled_on_self_and_all_deps(
-            db,
-            FineGrainedFeature::EscapeCppReservedKeyword,
-        )
+    if check_feature_enabled_on_self_and_all_deps(db, FineGrainedFeature::EscapeCppReservedKeyword)
     {
-        let ident = format!("{ident}_");
-        code_gen_utils::format_cc_ident(&ident)
+        code_gen_utils::format_cc_ident(code_gen_utils::unkeyword_cpp_ident(ident).as_ref())
     } else {
         code_gen_utils::format_cc_ident(ident)
     }

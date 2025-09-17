@@ -5,7 +5,7 @@
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use std::hash::{Hash, Hasher};
@@ -41,7 +41,7 @@ pub struct AdtCoreBindings<'tcx> {
     /// namespace-qualified name), for `CcSnippet`s that are emitted into
     /// the same namespace as the ADT.  (This seems to be all the snippets
     /// today.)
-    pub cc_short_name: TokenStream,
+    pub cc_short_name: Ident,
 
     /// Rust spelling of the ADT type - e.g.
     /// `::some_crate::some_module::SomeStruct`.

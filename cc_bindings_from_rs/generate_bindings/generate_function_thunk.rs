@@ -54,7 +54,7 @@ pub fn generate_thunk_decl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
-    thunk_name: &TokenStream,
+    thunk_name: &Ident,
     has_self_param: bool,
 ) -> Result<CcSnippet> {
     let mut prereqs = CcPrerequisites::default();
@@ -526,7 +526,7 @@ pub fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
 }
 
 pub struct TraitThunks {
-    pub method_name_to_cc_thunk_name: HashMap<Symbol, TokenStream>,
+    pub method_name_to_cc_thunk_name: HashMap<Symbol, Ident>,
     pub cc_thunk_decls: CcSnippet,
     pub rs_thunk_impls: RsSnippet,
 }
@@ -593,7 +593,6 @@ pub fn generate_trait_thunks<'tcx>(
                 )
             }
         };
-        method_name_to_cc_thunk_name.insert(method.name(), format_cc_ident(db, &thunk_name)?);
 
         let sig_mid = liberate_and_deanonymize_late_bound_regions(
             tcx,
@@ -605,10 +604,15 @@ pub fn generate_trait_thunks<'tcx>(
         // to for traits defined or implemented in the current crate.
         let sig_hir = None;
 
-        cc_thunk_decls.add_assign({
-            let thunk_name = format_cc_ident(db, &thunk_name)?;
-            generate_thunk_decl(db, &sig_mid, sig_hir, &thunk_name, /*has_self_param=*/ true)?
-        });
+        let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
+        cc_thunk_decls.add_assign(generate_thunk_decl(
+            db,
+            &sig_mid,
+            sig_hir,
+            &thunk_name_cc_ident,
+            /*has_self_param=*/ true,
+        )?);
+        method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 
         rs_thunk_impls += {
             let struct_name = &adt.rs_fully_qualified_name;

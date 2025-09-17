@@ -15,7 +15,7 @@ use crate::type_location::TypeLocation;
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReporting, ReportFatalError};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::{Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::Symbol;
@@ -111,13 +111,13 @@ memoized::query_group! {
       /// Formats a C++ identifier, if possible.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_cc_ident
-      fn format_cc_ident(&self, ident: Symbol) -> Result<TokenStream>;
+      fn format_cc_ident(&self, ident: Symbol) -> Result<Ident>;
 
       /// Formats the top-level namespace for the given crate, e.g. as `self::foo`, or
       /// `somecrate::foo`.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_top_level_ns_for_crate
-      fn format_top_level_ns_for_crate(&self, krate: CrateNum) -> Symbol;
+      fn format_top_level_ns_for_crate(&self, krate: CrateNum) -> Rc<[Symbol]>;
 
       /// Formats `ty` into a `CcSnippet` that represents how the type should be
       /// spelled in a C++ declaration of a function parameter or field.
