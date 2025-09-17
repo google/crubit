@@ -321,8 +321,7 @@ impl NamespaceQualifier {
         // example:
         // - Panic early if any strings are empty, or are not Rust identifiers
         // - Report an error early if any strings are C++ reserved keywords
-        // This may make `format_for_cc`, `format_with_cc_body`, and
-        // `format_namespace_bound_cc_tokens` infallible.
+        // This may make `format_for_cc` and `format_namespace_bound_cc_tokens` infallible.
         Self { namespaces: iter.into_iter().map(Into::into).collect(), nested_records: vec![] }
     }
 
@@ -354,23 +353,6 @@ impl NamespaceQualifier {
     pub fn format_for_cc(&self) -> Result<TokenStream> {
         let namespace_cc_idents = self.cc_idents()?;
         Ok(quote! { #(#namespace_cc_idents::)* })
-    }
-
-    pub fn format_with_cc_body(
-        &self,
-        body: TokenStream,
-        attributes: Vec<TokenStream>,
-    ) -> Result<TokenStream> {
-        if self.is_empty() {
-            Ok(body)
-        } else {
-            let namespace_cc_idents = self.cc_idents()?;
-            Ok(quote! {
-                __NEWLINE__ #(#attributes)* namespace #(#namespace_cc_idents)::* { __NEWLINE__
-                    #body
-                __NEWLINE__ }  __NEWLINE__
-            })
-        }
     }
 
     pub fn cc_idents(&self) -> Result<Vec<Ident>> {
@@ -726,28 +708,6 @@ pub mod tests {
         let msg = cc_error.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
         assert!(msg.contains("C++ reserved keyword"));
-    }
-
-    #[gtest]
-    fn test_namespace_qualifier_format_with_cc_body_top_level_namespace() {
-        let ns = NamespaceQualifier::new::<&str>([]);
-        assert_cc_matches!(
-            ns.format_with_cc_body(quote! { cc body goes here }, vec![]).unwrap(),
-            quote! { cc body goes here },
-        );
-    }
-
-    #[gtest]
-    fn test_namespace_qualifier_format_with_cc_body_nested_namespace() {
-        let ns = NamespaceQualifier::new(["foo", "bar", "baz"]);
-        assert_cc_matches!(
-            ns.format_with_cc_body(quote! { cc body goes here }, vec![]).unwrap(),
-            quote! {
-                namespace foo::bar::baz {
-                    cc body goes here
-                }  // namespace foo::bar::baz
-            },
-        );
     }
 
     #[gtest]

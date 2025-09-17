@@ -18,6 +18,22 @@ pub mod deprecated_module {
     }
 }
 
+// Ensure that attributes on the inner submodule trigger non-nested-namespace syntax, as nested
+// namespace syntax does not accept attributes (see b/445613694).
+pub mod outer {
+    #[deprecated]
+    pub mod inner_deprecated {
+        pub struct SomeType;
+    }
+
+    pub mod middle {
+        #[deprecated]
+        pub mod innermost_deprecated {
+            pub struct SomeType;
+        }
+    }
+}
+
 /// This is a regression test that verifies that thunk impls use the right
 /// fully-qualified name when referring to methods:
 ///
