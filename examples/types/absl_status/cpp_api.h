@@ -6,7 +6,10 @@
 #define THIRD_PARTY_CRUBIT_EXAMPLES_TYPES_ABSL_STATUS_CPP_API_H_
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 
 absl::Status ReturnsStatus(bool ok);
+
+absl::StatusOr<int> ReturnsStatusOrInt(bool ok);
 
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_TYPES_ABSL_STATUS_CPP_API_H_

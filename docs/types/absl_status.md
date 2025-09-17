@@ -8,9 +8,10 @@ Google monorepo.
 NOTE: The APIs here have planned future backwards-incompatible changes, and you
 may see LSCs as we migrate to the end state API.
 
-In Google C++, the standard types for communicating an error is `absl::Status`.
-This has support in Rust when it is directly passed by value, or returned by
-value, and is mapped to a Rust `Result<(), StatusError>`. For example:
+In Google C++, the standard types for communicating an error are `absl::Status`
+and `absl::StatusOr<T>`. These have support in Rust when they are directly
+passed by value, or returned by value, and are mapped to a Rust `Result`. For
+example:
 
 ```c++
 absl::Status Foo();
