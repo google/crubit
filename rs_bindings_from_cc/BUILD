@@ -38,15 +38,15 @@ rust_bindings_from_cc_binary(
 deps_for_bindings(
     name = "deps_for_bindings",
     deps_for_generated_cc_file = [
-        "//support/internal:bindings_support",
-        "//support/public:bridge_cpp",
-        "//support/public:status_bridge_cpp",
+        "//support/public:bindings_support",
+        "//support:bridge_cpp",
+        "//support:status_bridge_cpp",
     ],
     deps_for_generated_rs_file = [
         "//support:ctor",
         "//support:forward_declare",
         "//support:oops",
-        "//support/public:bridge_rust",
+        "//support:bridge_rust",
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
         "@crate_index//:static_assertions",

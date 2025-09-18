@@ -12,7 +12,7 @@ crubit_test_cc_library(
     hdrs = ["do_not_bind.h"],
     deps = [
         "//support:annotations",
-        "//support/internal:bindings_support",
+        "//support/public:bindings_support",
     ],
 )
 
@@ -62,7 +62,7 @@ crubit_test_cc_library(
     hdrs = ["must_bind.h"],
     deps = [
         "//support:annotations",
-        "//support/internal:bindings_support",
+        "//support/public:bindings_support",
     ],
 )
 
@@ -82,7 +82,7 @@ crubit_test_cc_library(
     ],
     deps = [
         "//support:annotations",
-        "//support/internal:bindings_support",
+        "//support/public:bindings_support",
     ],
 )
 

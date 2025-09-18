@@ -17,8 +17,8 @@ cc_library(
         ":additional_either_src",
     ],
     deps = [
-        "//support/public:annotations",  # build_cleaner: keep
-        "//support/public:bridge_cpp",  # build_cleaner: keep
+        "//support:annotations",  # build_cleaner: keep
+        "//support:bridge_cpp",  # build_cleaner: keep
     ],
 )
 

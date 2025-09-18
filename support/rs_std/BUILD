@@ -100,8 +100,8 @@ cc_library(
     # have a version of Abseil that is relatively recent (although we can't rely on an exact version
     # and/or exact absl/base/options.h).
     deps = [
+        "//support:annotations_internal",
         "//support/internal:bindings_support",
-        "//support/public:annotations_internal",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/types:span",
     ],
@@ -134,8 +134,8 @@ cc_library(
     # and/or exact absl/base/options.h).
     deps = [
         ":slice_ref",
+        "//support:annotations_internal",
         "//support/internal:bindings_support",
-        "//support/public:annotations_internal",
         "//support/rs_std/internal:is_utf8",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/base:nullability",

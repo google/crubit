@@ -36,7 +36,7 @@ crubit_rust_test(
     cc_deps = [
         ":common",
         ":unique_ptr_lib",
-        "//support/cc_std",
+        "//support/public:cc_std",
     ],
     proc_macro_deps = [
         "//common:item_exists",
@@ -65,7 +65,7 @@ crubit_rust_test(
     cc_deps = [
         ":common",
         ":unique_ptr_experimental_lib",
-        "//support/cc_std",
+        "//support/public:cc_std",
     ],
     proc_macro_deps = [
         "//common:item_exists",
@@ -94,7 +94,7 @@ crubit_rust_test(
     cc_deps = [
         ":common",
         ":vector_lib",
-        "//support/cc_std",
+        "//support/public:cc_std",
     ],
     proc_macro_deps = [
         "//common:item_exists",
@@ -123,7 +123,7 @@ crubit_rust_test(
     cc_deps = [
         ":common",
         ":vector_experimental_lib",
-        "//support/cc_std",
+        "//support/public:cc_std",
     ],
     proc_macro_deps = [
         "//common:item_exists",

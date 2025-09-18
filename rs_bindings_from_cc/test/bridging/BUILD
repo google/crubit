@@ -31,7 +31,7 @@ cc_library(
         ":converter",
     ],
     deps = [
-        "//support/internal:bindings_support",  # build_cleaner: keep
+        "//support/public:bindings_support",  # build_cleaner: keep
     ],
 )
 
@@ -58,7 +58,7 @@ cc_library(
         "//features:supported",
     ],
     deps = [
-        "//support/internal:bindings_support",  # build_cleaner: keep
+        "//support/public:bindings_support",  # build_cleaner: keep
     ],
 )
 
@@ -84,8 +84,8 @@ cc_library(
     ],
     deps = [
         ":rust_library_cc",
+        "//support:annotations",
         "//support:bridge_cpp",
-        "//support/public:annotations",
         "//support/rs_std:slice_ref",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

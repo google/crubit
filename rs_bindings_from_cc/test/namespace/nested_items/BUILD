@@ -6,7 +6,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "nested_items",
     hdrs = ["nested_items.h"],
-    deps = ["//support/public:annotations"],
+    deps = ["//support:annotations"],
 )
 
 crubit_rust_test(
