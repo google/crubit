@@ -267,16 +267,14 @@ fn format_with_cc_body(
     mut tokens: TokenStream,
     attributes: Vec<TokenStream>,
 ) -> Result<TokenStream> {
-    if ns.is_empty() {
-        assert!(attributes.is_empty());
-        return Ok(tokens);
-    }
     let mut namespaces = ns.parts().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
 
     // Nested namespace syntax does not accept attributes (see b/445613694), so we have to split out
     // the with-attribute decl to contain only the trailing namespace.
     if !attributes.is_empty() {
-        let innermost_namespace = namespaces.pop().unwrap();
+        let innermost_namespace = namespaces
+            .pop()
+            .expect("there should be at least one namespace if there are attributes");
         tokens = quote! {
             __NEWLINE__
             namespace #(#attributes)* #innermost_namespace { __NEWLINE__
