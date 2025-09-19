@@ -97,13 +97,11 @@ cc_library(
         "//nullability/test:__pkg__",
     ],
     deps = [
-        ":ast_helpers",
-        ":macro_arg_capture",
         ":pointer_nullability",
         ":pointer_nullability_lattice",
-        ":pointer_nullability_matchers",
         ":pragma",
         ":type_nullability",
+        ":value_transferer",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:analysis",
@@ -316,6 +314,26 @@ cc_library(
     hdrs = ["annotations.h"],
     visibility = ["//nullability/inference:__pkg__"],
     deps = ["@llvm-project//llvm:Support"],
+)
+
+cc_library(
+    name = "value_transferer",
+    srcs = ["value_transferer.cc"],
+    hdrs = ["value_transferer.h"],
+    deps = [
+        ":ast_helpers",
+        ":macro_arg_capture",
+        ":pointer_nullability",
+        ":pointer_nullability_lattice",
+        ":pointer_nullability_matchers",
+        ":type_nullability",
+        "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/log:check",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
+    ],
 )
 
 cc_test(
