@@ -291,6 +291,16 @@ TEST(PointerNullabilityTest, CastExpression) {
   )cc"));
 
   EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Base {};
+    struct Derived : public Base {};
+
+    void target(Derived* _Nullable x) {
+      Base* y = x;
+      *y;  // [[unsafe]]
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <int I0, typename T1, typename T2>
     struct Struct3Arg {
       T1 arg1;
@@ -327,6 +337,41 @@ TEST(PointerNullabilityTest, CastToNullptrT) {
     using nullptr_t = decltype(nullptr);
     }
     void target(const std::nullptr_t null) { std::nullptr_t p = null; }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CastDerivedToBase) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    class Parent {};
+
+    class Child : public Parent {
+     public:
+      static const Child& Singleton();
+    };
+
+    void target() {
+      const Parent* _Nullable ptr = nullptr;
+      ptr = &Child::Singleton();
+      *ptr;
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CastDerivedToBaseWithAliasing) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Base {
+      int* _Nullable nullable_field;
+    };
+
+    struct Derived : public Base {};
+
+    int* _Nonnull getNonnull();
+
+    void target(Derived* _Nonnull x) {
+      Base* alias = x;
+      alias->nullable_field = getNonnull();
+      *x->nullable_field;
+    }
   )cc"));
 }
 
