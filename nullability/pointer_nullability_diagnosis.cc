@@ -267,7 +267,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     QualType RHSType = RHS->getType().getNonReferenceType();
     if (!RHSType->isNullPtrType() && !isSupportedPointerType(RHSType)) {
       LLVM_DEBUG({
-        llvm::dbgs() << "LHS is a pointer, but RHS is not.\n LHS type:";
+        llvm::dbgs() << "LHS is a pointer, but RHS is not.\n LHS type: ";
         LHSType->dump(llvm::dbgs(), Ctx);
         llvm::dbgs() << "RHSType: ";
         RHSType->dump(llvm::dbgs(), Ctx);
