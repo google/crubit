@@ -1096,6 +1096,10 @@ pub struct TraitDerives {
 #[serde(deny_unknown_fields)]
 pub struct Record {
     pub rs_name: Identifier,
+    /// The C++ name of the record. If the record is a template specialization, the fully qualified
+    /// name is used. Otherwise, the only the name of the record is used.
+    /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
+    /// parent modules for nested items which are disallowed for template specializations in Crubit.
     pub cc_name: Identifier,
 
     /// Mangled record names are used to 1) provide valid Rust identifiers for
