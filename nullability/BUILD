@@ -101,12 +101,11 @@ cc_library(
         ":pointer_nullability_lattice",
         ":pragma",
         ":type_nullability",
+        ":type_transferer",
         ":value_transferer",
         "@abseil-cpp//absl/base:nullability",
-        "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
-        "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",
     ],
@@ -333,6 +332,24 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
+    ],
+)
+
+cc_library(
+    name = "type_transferer",
+    srcs = ["type_transferer.cc"],
+    hdrs = ["type_transferer.h"],
+    deps = [
+        ":pointer_nullability",
+        ":pointer_nullability_lattice",
+        ":type_nullability",
+        "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/log:check",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
     ],
 )
 
