@@ -66,7 +66,7 @@ pub enum CrubitAbiType {
     },
     Transmute {
         rust_type: FullyQualifiedPath,
-        cpp_type: FullyQualifiedPath,
+        cpp_type: TokenStream,
     },
     Type {
         rust_abi_path: FullyQualifiedPath,
@@ -95,7 +95,9 @@ impl CrubitAbiType {
     pub fn transmute(rust_type: &str, cpp_type: &str) -> Self {
         CrubitAbiType::Transmute {
             rust_type: FullyQualifiedPath::new(rust_type),
-            cpp_type: FullyQualifiedPath::new(cpp_type),
+            cpp_type: cpp_type.parse().unwrap_or_else(|e| {
+                panic!("Failed to parse C++ type `{cpp_type}` as a TokenStream: {e}")
+            }),
         }
     }
 }

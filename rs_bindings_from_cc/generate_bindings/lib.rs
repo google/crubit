@@ -590,7 +590,8 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 existing_rust_type.as_ref(),
                 &existing_rust_type.cc_name.split("::").collect::<Vec<&str>>(),
                 db,
-            )?;
+            )?
+            .to_token_stream();
 
             Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
         }
@@ -716,7 +717,8 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             } else {
                 &[cc_name][..]
             };
-            let cpp_type = make_cpp_type_from_item(record.as_ref(), cc_name_parts, db)?;
+            let cpp_type =
+                make_cpp_type_from_item(record.as_ref(), cc_name_parts, db)?.to_token_stream();
 
             Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
         }

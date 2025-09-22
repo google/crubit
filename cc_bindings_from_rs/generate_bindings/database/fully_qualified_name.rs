@@ -7,7 +7,7 @@ extern crate rustc_span;
 use crate::db::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::{format_cc_type_name, make_rs_ident, NamespaceQualifier};
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
@@ -137,12 +137,17 @@ impl FullyQualifiedName {
     }
 
     pub fn format_for_rs(&self) -> TokenStream {
+        let iter = self.rs_name_parts();
+        quote! { #( ::#iter )* }
+    }
+
+    /// Returns an iterator of parts to spell out the Rust name.
+    pub fn rs_name_parts(&self) -> impl Iterator<Item = Ident> + use<'_> {
+        let krate = make_rs_ident(self.krate.as_str());
+        let mod_path = self.rs_mod_path.parts_with_snake_case_record_names();
         let name =
             self.rs_name.as_ref().expect("`format_for_rs` can't be called on name-less item kinds");
-
-        let krate = make_rs_ident(self.krate.as_str());
-        let mod_path = self.rs_mod_path.format_for_rs();
         let name = make_rs_ident(name.as_str());
-        quote! { :: #krate :: #mod_path #name }
+        std::iter::once(krate).chain(mod_path).chain(std::iter::once(name))
     }
 }

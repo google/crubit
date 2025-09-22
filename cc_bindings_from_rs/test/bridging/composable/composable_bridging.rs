@@ -3,38 +3,30 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use bridge_rust::{CrubitAbi, Decoder, Encoder};
+use cc_std::std::raw_string_view;
+use std::marker::PhantomData;
 use std::mem;
 
-pub fn returns_some_int() -> Option<i32> {
-    Some(42)
+pub fn maybe_int() -> Option<i32> {
+    Some(4)
 }
 
-pub fn returns_no_int() -> Option<i32> {
+pub fn maybe_string_view() -> Option<raw_string_view> {
     None
 }
 
-pub fn unwrap_or_zero(x: Option<i32>) -> i32 {
-    x.unwrap_or(0)
+pub fn maybe_int_slice() -> Option<*const [i32]> {
+    Some(&[1, 2, 3][..] as *const [_])
 }
 
-pub fn option_increments(x: Option<i32>) -> Option<i32> {
-    x.map(|x| x + 1)
-}
-
-///CRUBIT_ANNOTATE: cpp_type=std::optional
-///CRUBIT_ANNOTATE: bridge_abi_cpp=crubit::OptionalAbi
-///CRUBIT_ANNOTATE: bridge_abi_rust=MyOptionRustAbi
+#[crubit_annotate::cpp_bridge(
+    cpp_type = "std::optional",
+    bridge_abi_cpp = "crubit::OptionalAbi",
+    bridge_abi_rust = "MyOptionRustAbi"
+)]
 pub struct MyOptionRust<T>(Option<T>);
 
-pub fn make_my_option_rust() -> MyOptionRust<i32> {
-    MyOptionRust(Some(42))
-}
-
-pub fn maybe_int_slice() -> Option<*const [i32]> {
-    Some(&[1, 2, 3][..] as *const [i32])
-}
-
-pub struct MyOptionRustAbi<T>(core::marker::PhantomData<T>);
+pub struct MyOptionRustAbi<T>(PhantomData<T>);
 
 unsafe impl<A: CrubitAbi> CrubitAbi for MyOptionRustAbi<A> {
     type Value = MyOptionRust<A::Value>;

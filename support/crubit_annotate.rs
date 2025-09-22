@@ -229,6 +229,17 @@ pub fn cpp_convertible(attribute: TokenStream, input: TokenStream) -> TokenStrea
     })
 }
 
+/// Composable bridging.
+#[proc_macro_attribute]
+pub fn cpp_bridge(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        key_value_list_with_keys_to_doc_comment(
+            attribute,
+            &["cpp_type", "bridge_abi_cpp", "bridge_abi_rust"],
+        )
+    })
+}
+
 /// Marks a Rust item as having a different name when used from C++.
 ///
 /// This allows for renaming Rust functions and types names that are not C++-compatible, such as

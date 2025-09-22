@@ -89,8 +89,7 @@ fn test_format_bridged_type_in_generic_types() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: Can't format ADT as it has a generic type \
-                `RustType` that is a bridged type"
+            "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: Result as a bridge type is not yet supported"
         );
     });
 }
@@ -641,7 +640,7 @@ fn test_format_item_struct_with_unsupported_field_type() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let broken_field_msg = "Field type has been replaced with a blob of bytes: \
-                                Generic types are not supported yet (b/259749095)";
+                                Unsupported bridge type: [i32; 3_usize]";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -889,7 +888,7 @@ fn test_format_item_struct_fields_with_doc_comments() {
         let comment_for_successful_field = " Documentation of `successful_field`.\n\n\
               Generated from: <crubit_unittests.rs>;l=4";
         let comment_for_unsupported_field = "Field type has been replaced with a blob of bytes: \
-             Generic types are not supported yet (b/259749095)";
+             Unsupported bridge type: [i32; 3_usize]";
         assert_cc_matches!(
             main_api.tokens,
             quote! {

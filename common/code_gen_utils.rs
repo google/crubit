@@ -409,6 +409,13 @@ impl CcInclude {
         Self::SystemHeader("tuple".into())
     }
 
+    /// Creates a `CcInclude` that represents `#include <optional>` and provides
+    /// C++ `std::optional`.
+    /// See https://en.cppreference.com/w/cpp/header/optional
+    pub fn optional() -> Self {
+        Self::SystemHeader("optional".into())
+    }
+
     /// Creates a `CcInclude` that represents `#include <type_traits>` and
     /// provides C++ APIs like `std::is_trivially_copy_constructible_v`.
     /// See https://en.cppreference.com/w/cpp/header/type_traits

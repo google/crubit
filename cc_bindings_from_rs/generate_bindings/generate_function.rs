@@ -18,6 +18,7 @@ use code_gen_utils::{
     escape_non_identifier_chars, expect_format_cc_ident, format_cc_type_name, make_rs_ident,
     CcInclude,
 };
+use crubit_abi_type::CrubitAbiTypeToCppTokens;
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::BindingsGenerator;
 use database::{SugaredTy, TypeLocation};
@@ -129,6 +130,21 @@ fn cc_param_to_c_abi<'tcx>(
                 } else {
                     quote! { & #cc_ident }
                 }
+            }
+            BridgedType::Composable(composable) => {
+                // We're the library, and are about to send it over to Rust.
+                // We need to encode it into a buffer, then send that over.
+                includes.insert(db.support_header("bridge.h"));
+                let crubit_abi_type = CrubitAbiTypeToCppTokens(&composable.crubit_abi_type);
+
+                let buffer_name = expect_format_cc_ident(&format!("{cc_ident}_buffer"));
+                // Create a buffer, encode it into the buffer, and then make the buffer be
+                // what we sent to Rust across the C ABI.
+                statements.extend(quote! {
+                    unsigned char #buffer_name[#crubit_abi_type::kSize];
+                    ::crubit::internal::Encode<#crubit_abi_type>(#buffer_name, #cc_ident)
+                });
+                quote! { #buffer_name }
             }
         }
     } else if is_c_abi_compatible_by_value(ty.mid()) {
@@ -252,6 +268,21 @@ fn cc_return_value_from_c_abi<'tcx>(
                     storage_name: storage_name.clone(),
                     unpack_expr: quote! {
                         std::move(#local_name.val)
+                    },
+                })
+            }
+            BridgedType::Composable(composable) => {
+                // make the buffer space for it, then decode the buffer into a value
+                // ::crubit::internal::Decode<T>(buffer);
+                prereqs.includes.insert(db.support_header("bridge.h"));
+                let crubit_abi_type = CrubitAbiTypeToCppTokens(&composable.crubit_abi_type);
+                storage_statements.extend(quote! {
+                    unsigned char #storage_name[#crubit_abi_type::kSize];
+                });
+                Ok(ReturnConversion {
+                    storage_name: storage_name.clone(),
+                    unpack_expr: quote! {
+                        ::crubit::internal::Decode<#crubit_abi_type>(#storage_name)
                     },
                 })
             }

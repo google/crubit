@@ -479,7 +479,6 @@ fn test_format_ty_for_cc_failures() {
             "Type `std::cmp::Ordering` comes from the `core` crate, \
              but no `--crate-header` was specified for this crate",
         ),
-        ("Option<i8>", "Generic types are not supported yet (b/259749095)"),
         (
             // TODO(b/258261328): Once cross-crate bindings are supported we should try
             // to test them via a test crate that we control (rather than testing via
@@ -489,9 +488,7 @@ fn test_format_ty_for_cc_failures() {
         ),
         (
             "*const Option<i8>",
-            "Failed to format the pointee \
-             of the pointer type `*const std::option::Option<i8>`: \
-             Generic types are not supported yet (b/259749095)",
+            "Failed to format the pointee of the pointer type `*const std::option::Option<i8>`: Bridged types must appear in a bridgeable type location",
         ),
     ];
     let preamble = quote! {
@@ -628,10 +625,6 @@ fn test_format_ty_for_rs_failures() {
         (
             "impl Eq", // TyKind::Alias
             "The following Rust type is not supported yet: impl Eq",
-        ),
-        (
-            "Option<i8>", // TyKind::Adt - generic + different crate
-            "Generic types are not supported yet (b/259749095)",
         ),
     ];
     let preamble = quote! {};

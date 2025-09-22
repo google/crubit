@@ -7,6 +7,7 @@ extern crate rustc_span;
 use crate::FineGrainedFeature;
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
+use crubit_abi_type::CrubitAbiType;
 use error_report::bail;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
@@ -17,6 +18,29 @@ use std::collections::BTreeSet;
 use std::collections::HashSet;
 use std::fmt;
 use std::ops::{Add, AddAssign};
+
+/// A CrubitAbiType that has C++ prerequisites.
+/// This type just serves as a named pair for CrubitAbiType and CcPrerequisites, and is useful
+/// for when we build up a CrubitAbiType where some of the inner types (e.g. std::string_view)
+/// might have C++ prerequisites (e.g. <string>) that need to be included to work.
+#[derive(Clone)]
+pub struct CrubitAbiTypeWithCcPrereqs {
+    pub crubit_abi_type: CrubitAbiType,
+    pub prereqs: CcPrerequisites,
+}
+
+impl CrubitAbiTypeWithCcPrereqs {
+    /// Extracts the CrubitAbiType and adds the C++ prerequisites to the given `prereqs`.
+    pub fn crubit_abi_type(self, prereqs: &mut CcPrerequisites) -> CrubitAbiType {
+        *prereqs += self.prereqs;
+        self.crubit_abi_type
+    }
+}
+impl From<CrubitAbiType> for CrubitAbiTypeWithCcPrereqs {
+    fn from(crubit_abi_type: CrubitAbiType) -> Self {
+        Self { crubit_abi_type, prereqs: Default::default() }
+    }
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct CcPrerequisites {

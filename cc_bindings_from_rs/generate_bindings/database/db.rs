@@ -7,7 +7,7 @@ extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::adt_core_bindings::AdtCoreBindings;
-use crate::code_snippet::{ApiSnippets, CcSnippet};
+use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use crate::fully_qualified_name::FullyQualifiedName;
 use crate::include_guard::IncludeGuard;
 use crate::sugared_ty::SugaredTy;
@@ -205,6 +205,8 @@ memoized::query_group! {
       /// ADT, and 2) check if formatting would have succeeded (e.g. when called from
       /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate.
       fn generate_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
+
+      fn crubit_abi_type_from_ty(&self, ty: Ty<'tcx>) -> Result<CrubitAbiTypeWithCcPrereqs>;
   }
   pub struct Database;
 }

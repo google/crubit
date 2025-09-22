@@ -24,10 +24,10 @@ mod generate_function_thunk;
 mod generate_struct_and_union;
 
 use crate::format_type::{
-    create_canonical_name_from_foreign_path, ensure_ty_is_pointer_like, format_cc_ident,
-    format_cc_ident_symbol, format_param_types_for_cc, format_region_as_cc_lifetime,
-    format_ret_ty_for_cc, format_top_level_ns_for_crate, is_bridged_type, BridgedType,
-    BridgedTypeConversionInfo,
+    create_canonical_name_from_foreign_path, crubit_abi_type_from_ty, ensure_ty_is_pointer_like,
+    format_cc_ident, format_cc_ident_symbol, format_param_types_for_cc,
+    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
+    is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
@@ -163,6 +163,7 @@ pub fn new_database<'db>(
         generate_item,
         generate_function,
         generate_adt_core,
+        crubit_abi_type_from_ty,
     )
 }
 
@@ -1223,10 +1224,20 @@ fn generate_item_impl(
 
     let item = match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
-            if query_compiler::has_non_lifetime_generics(tcx, def_id) {
+            let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
+
+            let has_composable_bridging_attrs = matches!(
+                attributes.get_bridging_attrs()?,
+                Some(crubit_attr::BridgingAttrs::Composable { .. })
+            );
+
+            if !has_composable_bridging_attrs
+                && BridgedBuiltin::new(db, tcx.adt_def(def_id)).is_none()
+                && query_compiler::has_non_lifetime_generics(tcx, def_id)
+            {
                 bail!("Generic types are not supported yet (b/259749095)");
             }
-            let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
+
             if let Some(cpp_type) = attributes.cpp_type {
                 let item_name = tcx.def_path_str(def_id);
                 bail!(

@@ -32,6 +32,9 @@ TESTS = [name[:-3] for name in glob(
     aspect_hints = [
         "//features:experimental",
     ],
+    deps = [
+        "//support:bridge_rust",
+    ],
 ) for name in TESTS]
 
 [golden_test(

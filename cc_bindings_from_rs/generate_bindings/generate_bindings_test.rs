@@ -1233,8 +1233,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Can't format reference type `&'static RustType` because the referent is a \
-            bridged type. Passing bridged types by reference is not supported."
+            "Error formatting function return type `&'static RustType`: Failed to format the referent of the reference type `&'static RustType`: Bridged types must appear in a bridgeable type location"
         );
     });
 
@@ -1242,8 +1241,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Can't format pointer type `*const RustType` because the pointee is a bridged \
-            type. Passing bridged types by pointer is not supported."
+            "Error formatting function return type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: Bridged types must appear in a bridgeable type location"
         );
     });
 
@@ -1251,8 +1249,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Can't format reference type `&'a RustType` because the referent is a \
-            bridged type. Passing bridged types by reference is not supported."
+            "Error handling parameter #0 of type `&'a RustType`: Failed to format the referent of the reference type `&'a RustType`: Bridged types must appear in a bridgeable type location"
         );
     });
 
@@ -1260,8 +1257,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Can't format pointer type `*const RustType` because the pointee is a bridged \
-            type. Passing bridged types by pointer is not supported."
+            "Error handling parameter #0 of type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: Bridged types must appear in a bridgeable type location"
         );
     });
 }

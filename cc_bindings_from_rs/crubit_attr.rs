@@ -91,6 +91,11 @@ pub struct CrubitAttrs {
     /// annotated Rust Type.
     pub cpp_to_rust_converter: Option<Symbol>,
 
+    /// The name of the Rust Crubit ABI that the type should be bridged as.
+    pub bridge_abi_rust: Option<Symbol>,
+    /// The name of the C++ Crubit ABI that the type should be bridged as.
+    pub bridge_abi_cpp: Option<Symbol>,
+
     /// Whether the annotated item must be bound to C++.
     ///
     /// By default, when a given item does not receive bindings, it is replaced
@@ -118,13 +123,15 @@ const EMPTY_SYMBOL: Symbol = kw::Empty;
 const EMPTY_SYMBOL: Symbol = sym::empty;
 
 impl CrubitAttrs {
-    const CPP_TYPE: &'static str = "cpp_type";
-    const CPP_NAME: &'static str = "cpp_name";
-    const CPP_TYPE_INCLUDE: &'static str = "include_path";
-    const CPP_ENUM: &'static str = "cpp_enum";
-    const RUST_TO_CPP_CONVERTER: &'static str = "rust_to_cpp_converter";
-    const CPP_TO_RUST_CONVERTER: &'static str = "cpp_to_rust_converter";
-    const MUST_BIND: &'static str = "must_bind";
+    pub const CPP_TYPE: &'static str = "cpp_type";
+    pub const CPP_NAME: &'static str = "cpp_name";
+    pub const CPP_TYPE_INCLUDE: &'static str = "include_path";
+    pub const CPP_ENUM: &'static str = "cpp_enum";
+    pub const RUST_TO_CPP_CONVERTER: &'static str = "rust_to_cpp_converter";
+    pub const CPP_TO_RUST_CONVERTER: &'static str = "cpp_to_rust_converter";
+    pub const BRIDGE_ABI_RUST: &'static str = "bridge_abi_rust";
+    pub const BRIDGE_ABI_CPP: &'static str = "bridge_abi_cpp";
+    pub const MUST_BIND: &'static str = "must_bind";
 
     fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
         Ok(match name {
@@ -134,6 +141,8 @@ impl CrubitAttrs {
             CrubitAttrs::CPP_ENUM => self.cpp_enum,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter,
+            CrubitAttrs::BRIDGE_ABI_RUST => self.bridge_abi_rust,
+            CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp,
             // MUST_BIND is a boolean attribute, so it does not have a Symbol value.
             CrubitAttrs::MUST_BIND => self.must_bind.then_some(EMPTY_SYMBOL),
             _ => bail!("Invalid attribute name: \"{name}\""),
@@ -148,11 +157,129 @@ impl CrubitAttrs {
             CrubitAttrs::CPP_ENUM => self.cpp_enum = symbol,
             CrubitAttrs::RUST_TO_CPP_CONVERTER => self.rust_to_cpp_converter = symbol,
             CrubitAttrs::CPP_TO_RUST_CONVERTER => self.cpp_to_rust_converter = symbol,
+            CrubitAttrs::BRIDGE_ABI_RUST => self.bridge_abi_rust = symbol,
+            CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp = symbol,
             CrubitAttrs::MUST_BIND => self.must_bind = true,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())
     }
+
+    /// Returns the Crubit attributes that specify a bridging strategy,
+    /// either composable, extern C function converters, or just a pointer case.
+    ///
+    /// Returns None if the attributes are not present.
+    /// Returns an error if the attributes are present but malformed.
+    pub fn get_bridging_attrs(&self) -> Result<Option<BridgingAttrs>> {
+        match self {
+            Self {
+                cpp_type: Some(cpp_type),
+                include_path,
+                cpp_to_rust_converter,
+                rust_to_cpp_converter,
+                bridge_abi_rust: None,
+                bridge_abi_cpp: None,
+                ..
+            } => match (cpp_to_rust_converter, rust_to_cpp_converter) {
+                (Some(cpp_to_rust_converter), Some(rust_to_cpp_converter)) => {
+                    Ok(Some(BridgingAttrs::ExternCFuncConverters {
+                        include_path: *include_path,
+                        cpp_type: *cpp_type,
+                        cpp_to_rust_converter: *cpp_to_rust_converter,
+                        rust_to_cpp_converter: *rust_to_cpp_converter,
+                    }))
+                }
+                (None, None) => Ok(Some(BridgingAttrs::JustCppType {
+                    include_path: *include_path,
+                    cpp_type: *cpp_type,
+                })),
+                _ => bail!(
+                    "Invalid state of  #[crubit_annotate::...] attribute. \
+                        Some, but not all, of cpp_to_rust_converter and rust_to_cpp_converter \
+                        are set."
+                ),
+            },
+            Self {
+                cpp_type,
+                cpp_to_rust_converter: None,
+                rust_to_cpp_converter: None,
+                bridge_abi_rust,
+                bridge_abi_cpp,
+                ..
+            } => match (cpp_type, bridge_abi_rust, bridge_abi_cpp) {
+                (Some(cpp_type), Some(abi_rust), Some(abi_cpp)) => {
+                    Ok(Some(BridgingAttrs::Composable {
+                        cpp_type: *cpp_type,
+                        abi_rust: *abi_rust,
+                        abi_cpp: *abi_cpp,
+                    }))
+                }
+                (None, None, None) => Ok(None),
+                _ => bail!(
+                    "Invalid state of  #[crubit_annotate::...] attribute. \
+                        Some, but not all, of cpp_type, bridge_abi_rust, and bridge_abi_cpp \
+                        are set."
+                ),
+            },
+            Self {
+                cpp_type,
+                cpp_to_rust_converter,
+                rust_to_cpp_converter,
+                bridge_abi_rust,
+                bridge_abi_cpp,
+                ..
+            } => {
+                let mut attrs = Vec::with_capacity(6);
+                if cpp_type.is_some() {
+                    attrs.push(CrubitAttrs::CPP_TYPE);
+                }
+                if cpp_to_rust_converter.is_some() {
+                    attrs.push(CrubitAttrs::CPP_TO_RUST_CONVERTER);
+                }
+                if rust_to_cpp_converter.is_some() {
+                    attrs.push(CrubitAttrs::RUST_TO_CPP_CONVERTER);
+                }
+                if bridge_abi_rust.is_some() {
+                    attrs.push(CrubitAttrs::BRIDGE_ABI_RUST);
+                }
+                if bridge_abi_cpp.is_some() {
+                    attrs.push(CrubitAttrs::BRIDGE_ABI_CPP);
+                }
+                ensure!(
+                    attrs.is_empty(),
+                    "Invalid state of  #[crubit_annotate::...] attribute. \
+                        contains conflicting attributes: {attrs:?}"
+                );
+                Ok(None)
+            }
+        }
+    }
+}
+
+/// An enum that separates out bridging attributes. Successful construction of
+/// this type from `CrubitAttrs::get_bridging_attrs` indicates that the
+/// attributes are valid and there are no conflicting attributes.
+#[derive(Debug)]
+pub enum BridgingAttrs {
+    JustCppType {
+        include_path: Option<Symbol>,
+        cpp_type: Symbol,
+    },
+    ExternCFuncConverters {
+        include_path: Option<Symbol>,
+        cpp_type: Symbol,
+        cpp_to_rust_converter: Symbol,
+        rust_to_cpp_converter: Symbol,
+    },
+    Composable {
+        /// The name of the C++ type that the annotated Rust type should be bridged
+        /// to.
+        cpp_type: Symbol,
+        /// The name of the Rust Crubit ABI that the type should be bridged as.
+        abi_rust: Symbol,
+        /// The name of the C++ Crubit ABI that the type should be bridged as.
+        abi_cpp: Symbol,
+    },
 }
 
 /// Returns a CrubitAttrs object containing all the `#[doc="CRUBIT_ANNOTATE: key=value"]`

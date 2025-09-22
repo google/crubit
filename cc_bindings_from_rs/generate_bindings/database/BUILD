@@ -29,6 +29,7 @@ rust_library(
         "//cc_bindings_from_rs:crubit_attr",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
+        "//common:crubit_abi_type",
         "//common:crubit_feature",
         "//common:error_report",
         "//common:memoized",

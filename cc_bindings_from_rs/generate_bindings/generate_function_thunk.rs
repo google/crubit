@@ -12,6 +12,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcConstQualifier;
+use crubit_abi_type::CrubitAbiTypeToRustTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
 use database::{AdtCoreBindings, BindingsGenerator, SugaredTy};
 use error_report::{anyhow, bail, ensure};
@@ -99,6 +100,9 @@ pub fn generate_thunk_decl<'tcx>(
     } else if let Some(tuple_abi) = tuple_c_abi_c_type(sig_mid.output()) {
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #tuple_abi __ret_ptr });
+    } else if let Some(BridgedType::Composable(_)) = is_bridged_type(db, sig_mid.output())? {
+        thunk_ret_type = quote! { void };
+        thunk_params.push(quote! { unsigned char * __ret_ptr });
     } else {
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
@@ -137,36 +141,42 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
         .with_context(|| format!("Error handling parameter `{local_name}`"))?;
 
     let temp_name = format_ident!("__crubit_temp");
-    let rs_out_decl = quote! {
-        let mut #temp_name =
-            ::core::mem::MaybeUninit::<#rs_type>::uninit();
-    };
 
-    let convert = match bridged_type {
-        BridgedType::Legacy { conversion_info, .. } => match conversion_info {
-            BridgedTypeConversionInfo::PointerLikeTransmute => quote! {
-                #temp_name.write(::core::mem::transmute(#local_name));
-            },
-            BridgedTypeConversionInfo::ExternCFuncConverters { cpp_to_rust_converter, .. } => {
-                let cpp_to_rust_converter_ident = add_extern_c_decl(
-                    extern_c_decls,
-                    ExternCDeclKind::CppToRustConverter,
-                    *cpp_to_rust_converter,
-                );
-                quote! {
-                    #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
+    match bridged_type {
+        BridgedType::Legacy { conversion_info, .. } => {
+            let convert = match conversion_info {
+                BridgedTypeConversionInfo::PointerLikeTransmute => quote! {
+                    #temp_name.write(::core::mem::transmute(#local_name));
+                },
+                BridgedTypeConversionInfo::ExternCFuncConverters {
+                    cpp_to_rust_converter, ..
+                } => {
+                    let cpp_to_rust_converter_ident = add_extern_c_decl(
+                        extern_c_decls,
+                        ExternCDeclKind::CppToRustConverter,
+                        *cpp_to_rust_converter,
+                    );
+                    quote! {
+                        #cpp_to_rust_converter_ident(#local_name,#temp_name.as_mut_ptr() as *mut core::ffi::c_void);
+                    }
                 }
-            }
-        },
-    };
-
-    Ok(quote! {
-        let #local_name = {
-            #rs_out_decl
-            #convert
-            #temp_name.assume_init()
-        };
-    })
+            };
+            Ok(quote! {
+                let #local_name = {
+                    let mut #temp_name = ::core::mem::MaybeUninit::<#rs_type>::uninit();
+                    #convert
+                    #temp_name.assume_init()
+                };
+            })
+        }
+        BridgedType::Composable(composable) => {
+            let crubit_abi_type = CrubitAbiTypeToRustTokens(&composable.crubit_abi_type);
+            // SAFETY: The buffer is the correct size, as determined by Crubit.
+            Ok(quote! {
+                let #local_name = unsafe { ::bridge_rust::internal::decode::<#crubit_abi_type>(#local_name) };
+            })
+        }
+    }
 }
 
 /// Converts a local named `local_name` from its C ABI-compatible type
@@ -230,8 +240,11 @@ fn c_abi_for_param_type<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
 ) -> Result<TokenStream> {
-    if is_bridged_type(db, ty)?.is_some() {
-        Ok(quote! { *const core::ffi::c_void })
+    if let Some(bridged) = is_bridged_type(db, ty)? {
+        match bridged {
+            BridgedType::Legacy { .. } => Ok(quote! { *const core::ffi::c_void }),
+            BridgedType::Composable(_) => Ok(quote! { *const core::ffi::c_uchar }),
+        }
     } else if is_c_abi_compatible_by_value(ty) {
         let rs_type = db.format_ty_for_rs(ty)?;
         Ok(quote! { #rs_type })
@@ -343,6 +356,20 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                     }
                 }
             },
+            BridgedType::Composable(composable) => {
+                let crubit_abi_type = CrubitAbiTypeToRustTokens(&composable.crubit_abi_type);
+                quote! {
+                    // SAFETY: TODO(okabayashi)
+                    unsafe {
+                        ::bridge_rust::internal::encode::<#crubit_abi_type>(
+                            // TODO(okabayashi): This ptr case can be removed once tuple bridging is supported,
+                            // as it only is required in the tuple recursive case.
+                            #c_ptr as *mut core::ffi::c_uchar,
+                            #rs_value,
+                        );
+                    }
+                }
+            }
         }
     } else if is_c_abi_compatible_by_value(rs_type) {
         write_directly()?
@@ -466,8 +493,15 @@ pub fn generate_thunk_impl<'tcx>(
         let return_ptr_ident = format_ident!("__ret_ptr");
         let rs_return_value_ident = format_ident!("__rs_return_value");
         thunk_return_type = quote! { () };
+
+        let return_ptr_type = if let Some(BridgedType::Composable(_)) = output_is_bridged {
+            // Composable bridging writes its Crubit ABI form in an unsigned char array.
+            quote! { *mut core::ffi::c_uchar }
+        } else {
+            quote! { *mut core::ffi::c_void }
+        };
         thunk_params.push(quote! {
-            #return_ptr_ident: *mut core::ffi::c_void
+            #return_ptr_ident: #return_ptr_type
         });
         let write_return_value = write_rs_value_to_c_abi_ptr(
             db,

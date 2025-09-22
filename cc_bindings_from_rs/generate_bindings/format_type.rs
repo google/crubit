@@ -18,12 +18,14 @@ use crate::{
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{CcInclude, NamespaceQualifier};
-use database::code_snippet::{CcPrerequisites, CcSnippet};
+use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
+use crubit_attr::BridgingAttrs;
+use database::code_snippet::{CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use database::BindingsGenerator;
 use database::{FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
-use proc_macro2::{Ident, TokenStream};
-use quote::quote;
+use proc_macro2::{Ident, Span, TokenStream};
+use quote::{quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 use rustc_hir::def::Res;
 use rustc_hir::lang_items::LangItem;
@@ -126,7 +128,7 @@ pub fn create_canonical_name_from_foreign_path(
 pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     pointee: SugaredTy<'tcx>,
-    mutability: rustc_middle::mir::Mutability,
+    mutability: Mutability,
     pointer_sigil: TokenStream,
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
@@ -327,9 +329,35 @@ pub fn format_ty_for_cc<'tcx>(
             let mut prereqs = CcPrerequisites::default();
 
             if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+                ensure!(
+                    location.is_bridgeable(),
+                    "Bridged types must appear in a bridgeable type location"
+                );
                 match bridged_type {
                     BridgedType::Legacy { include_path, .. } => {
                         prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
+                    }
+                    BridgedType::Composable(mut composable) => {
+                        // The existance of crubit_abi_type implies that the type can fully
+                        // composably bridge.
+
+                        let mut tokens = composable.cpp_type.to_token_stream();
+
+                        if !substs.is_empty() {
+                            let mut generic_types_tokens = Vec::with_capacity(substs.len());
+                            for subst in *substs {
+                                let snippet = format_ty_for_cc(
+                                    db,
+                                    SugaredTy::missing_hir(subst.expect_ty()),
+                                    location,
+                                )?;
+                                generic_types_tokens
+                                    .push(snippet.into_tokens(&mut composable.prereqs));
+                            }
+                            quote! { < #(#generic_types_tokens),* > }.to_tokens(&mut tokens);
+                        }
+
+                        return Ok(CcSnippet { tokens, prereqs: composable.prereqs });
                     }
                 }
             } else {
@@ -793,9 +821,11 @@ pub fn format_ty_for_rs<'tcx>(
         }
         ty::TyKind::Adt(adt, substs) => {
             let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
+            let has_composable_bridging =
+                matches!(is_bridged_type(db, ty)?, Some(BridgedType::Composable(_)));
             ensure!(
-                has_cpp_type || !has_non_lifetime_substs(substs),
-                "Generic types are not supported yet (b/259749095)"
+                has_cpp_type || !has_non_lifetime_substs(substs) || has_composable_bridging,
+                "Generic types without composable bridging are not supported yet (b/259749095)"
             );
             let type_name = FullyQualifiedName::new(db, adt.did()).format_for_rs();
             let generic_params = if substs.len() == 0 {
@@ -903,6 +933,13 @@ pub enum BridgedType {
         include_path: Symbol,
         conversion_info: BridgedTypeConversionInfo,
     },
+    Composable(Box<BridgedTypeComposable>),
+}
+
+pub struct BridgedTypeComposable {
+    pub cpp_type: FullyQualifiedPath,
+    pub prereqs: CcPrerequisites,
+    pub crubit_abi_type: CrubitAbiType,
 }
 
 /// A description of what method is used to convert between values of the Rust and C++ types.
@@ -948,27 +985,225 @@ pub fn ensure_ty_is_pointer_like<'tcx>(
     }
 }
 
-/// Returns `Ok(Some(BridgedType)))` if #[crubit_annotate::...] is configured to require type
-/// bridging.
-///
-/// A type is said to require type bridging ("bridged type") if either
-/// `cpp_to_rust_converter` or `rust_to_cpp_converter` is set in the
-/// #[crubit_annotate::...] attribute. The idea is that for a Rust
-/// type with an equivalent but not ABI compatible C++ type, conversion
-/// functions that turn one type into another can be specified.
-pub fn requires_type_bridging<'tcx>(
+pub fn crubit_abi_type_from_ty<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-    attrs: crubit_attr::CrubitAttrs,
+) -> Result<CrubitAbiTypeWithCcPrereqs> {
+    Ok(CrubitAbiTypeWithCcPrereqs::from(match ty.kind() {
+        ty::TyKind::Bool => CrubitAbiType::transmute("bool", "bool"),
+        ty::TyKind::Char => CrubitAbiType::transmute("char", "::rs_std::char_"),
+        ty::TyKind::Int(int_ty) => match int_ty {
+            ty::IntTy::Isize => CrubitAbiType::transmute("isize", "std::intptr_t"),
+            ty::IntTy::I8 => CrubitAbiType::transmute("i8", "std::int8_t"),
+            ty::IntTy::I16 => CrubitAbiType::transmute("i16", "std::int16_t"),
+            ty::IntTy::I32 => CrubitAbiType::transmute("i32", "std::int32_t"),
+            ty::IntTy::I64 => CrubitAbiType::transmute("i64", "std::int64_t"),
+            _ => bail!("Unsupported bridge type: {int_ty:?}"),
+        },
+        ty::TyKind::Uint(uint_ty) => match uint_ty {
+            ty::UintTy::Usize => CrubitAbiType::transmute("usize", "std::uintptr_t"),
+            ty::UintTy::U8 => CrubitAbiType::transmute("u8", "std::uint8_t"),
+            ty::UintTy::U16 => CrubitAbiType::transmute("u16", "std::uint16_t"),
+            ty::UintTy::U32 => CrubitAbiType::transmute("u32", "std::uint32_t"),
+            ty::UintTy::U64 => CrubitAbiType::transmute("u64", "std::uint64_t"),
+            _ => bail!("Unsupported bridge type: {uint_ty:?}"),
+        },
+        ty::TyKind::Float(float_ty) => match float_ty {
+            ty::FloatTy::F32 => CrubitAbiType::transmute("f32", "float"),
+            ty::FloatTy::F64 => CrubitAbiType::transmute("f64", "double"),
+            _ => bail!("Unsupported bridge type: {float_ty:?}"),
+        },
+        ty::TyKind::Adt(adt, substs) => {
+            // Check if it has it's own bridge attrs
+            let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
+                .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
+
+            if let Some(bridging_attrs) = attrs.get_bridging_attrs()? {
+                match bridging_attrs {
+                    BridgingAttrs::Composable { abi_rust, abi_cpp, .. } => {
+                        return crubit_abi_type_from_bridged_adt(db, abi_rust, abi_cpp, substs);
+                    }
+                    BridgingAttrs::JustCppType { include_path, cpp_type } => {
+                        let fully_qualified_name = FullyQualifiedName::new(db, adt.did());
+                        let mut prereqs = CcPrerequisites::default();
+                        if let Some(include_path) = include_path {
+                            prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
+                        }
+                        return Ok(CrubitAbiTypeWithCcPrereqs {
+                            crubit_abi_type: CrubitAbiType::Transmute {
+                                rust_type: FullyQualifiedPath {
+                                    start_with_colon2: true,
+                                    parts: fully_qualified_name.rs_name_parts().collect::<Rc<[Ident]>>(),
+                                },
+                                cpp_type: cpp_type.as_str().parse().expect("Malformed cpp_type annotation"),
+                            },
+                            prereqs,
+                        });
+                    }
+                    _ => bail!("Failed to construct the CrubitAbiType for {ty} because it has bridging attrs for a different kind of bridging: {bridging_attrs:?}"),
+                }
+            } else {
+                // if it doesn't, try seeing if it's a builtin.
+                if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
+                    return bridged_builtin.crubit_abi_type(db, substs);
+                }
+
+                let fully_qualified_name = FullyQualifiedName::new(db, adt.did());
+
+                // It's just a regular old type.
+                // Question: do we need to check that it doesn't have any generics?
+
+                CrubitAbiType::Transmute {
+                    rust_type: FullyQualifiedPath {
+                        start_with_colon2: true,
+                        parts: fully_qualified_name.rs_name_parts().collect::<Rc<[Ident]>>(),
+                    },
+                    cpp_type: fully_qualified_name.format_for_cc(db)?,
+                }
+            }
+        }
+        ty::TyKind::Never => bail!("Never type is unsupported in bridging"),
+        ty::TyKind::Tuple(_tys) => bail!("composably bridging tuples is not yet supported."),
+        ty::TyKind::RawPtr(mut pointee, mutability) => {
+            let mut is_rust_slice = false;
+            if let ty::TyKind::Slice(slice_ty) = pointee.kind() {
+                pointee = *slice_ty;
+                is_rust_slice = true;
+            }
+            // Do we need to confirm that pointee is layout compatible?
+            let rust_type = db.format_ty_for_rs(pointee)?;
+            let cpp_type_with_prereqs =
+                db.format_ty_for_cc(SugaredTy::missing_hir(pointee), TypeLocation::Other)?;
+
+            return Ok(CrubitAbiTypeWithCcPrereqs {
+                crubit_abi_type: CrubitAbiType::Ptr {
+                    is_const: mutability.is_not(),
+                    is_rust_slice,
+                    rust_type,
+                    cpp_type: cpp_type_with_prereqs.tokens,
+                },
+                prereqs: cpp_type_with_prereqs.prereqs,
+            });
+        }
+        ty::TyKind::Ref(_region, _inner, _mutability) => {
+            // TODO(okabayashi): Support &str and &[T], and possibly other reference types.
+            bail!("Reference types are not yet supported in bridging");
+        }
+        _ => bail!("Unsupported bridge type: {ty:?}"),
+    }))
+}
+
+#[derive(Copy, Clone)]
+pub enum BridgedBuiltin {
+    Result,
+    Option,
+}
+
+impl BridgedBuiltin {
+    /// Determines if an AdtDef is for a Result or Option or neither.
+    pub fn new(db: &dyn BindingsGenerator<'_>, adt: AdtDef<'_>) -> Option<Self> {
+        let variant = adt.variants().iter().next()?;
+
+        match db.tcx().lang_items().from_def_id(variant.def_id) {
+            Some(LangItem::ResultOk | LangItem::ResultErr) => Some(BridgedBuiltin::Result),
+            Some(LangItem::OptionSome | LangItem::OptionNone) => Some(BridgedBuiltin::Option),
+            _ => None,
+        }
+    }
+
+    /// Returns a CrubitAbiType for a bridged builtin like Result or Option.
+    /// Returns Ok(None) if the type is not a bridged builtin.
+    /// Returns an error is `crubit_abi_type_from_ty` fails for any of the generic args.
+    pub fn crubit_abi_type<'tcx>(
+        self,
+        db: &dyn BindingsGenerator<'tcx>,
+        substs: &[GenericArg<'tcx>],
+    ) -> Result<CrubitAbiTypeWithCcPrereqs> {
+        match self {
+            BridgedBuiltin::Result => {
+                bail!("Result as a bridge type is not yet supported")
+            }
+            BridgedBuiltin::Option => {
+                let inner = db.crubit_abi_type_from_ty(substs[0].expect_ty())?;
+                Ok(CrubitAbiTypeWithCcPrereqs {
+                    crubit_abi_type: CrubitAbiType::option(inner.crubit_abi_type),
+                    prereqs: inner.prereqs,
+                })
+            }
+        }
+    }
+
+    pub fn cpp_name(self) -> FullyQualifiedPath {
+        match self {
+            BridgedBuiltin::Result => todo!(),
+            BridgedBuiltin::Option => FullyQualifiedPath::new("std::optional"),
+        }
+    }
+
+    pub fn prereqs(self) -> CcPrerequisites {
+        match self {
+            BridgedBuiltin::Result => CcPrerequisites::default(),
+            BridgedBuiltin::Option => {
+                let mut prereqs = CcPrerequisites::default();
+                prereqs.includes.insert(CcInclude::optional());
+                prereqs
+            }
+        }
+    }
+}
+
+/// Returns a CrubitAbiType for a manually annotated composable bridged ADT.
+/// May return an error is `crubit_abi_type_from_ty` fails for any of the generic args.
+fn crubit_abi_type_from_bridged_adt<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    abi_rust: Symbol,
+    abi_cpp: Symbol,
+    substs: &[GenericArg<'tcx>],
+) -> Result<CrubitAbiTypeWithCcPrereqs> {
+    let mut prereqs = CcPrerequisites::default();
+    let crubit_abi_type = CrubitAbiType::Type {
+        rust_abi_path: FullyQualifiedPath {
+            start_with_colon2: true,
+            parts: {
+                let tcx = db.tcx();
+                let krate = tcx.crate_name(db.source_crate_num());
+                let crate_name = Ident::new(krate.as_str(), Span::call_site());
+                let rust_abi_path = Ident::new(abi_rust.as_str(), Span::call_site());
+                Rc::from([crate_name, rust_abi_path])
+            },
+        },
+        cpp_abi_path: FullyQualifiedPath::new(abi_cpp.as_str()),
+        type_args: substs
+            .iter()
+            .map(|subst| {
+                let crubit_abi_type_with_cc_prereqs =
+                    db.crubit_abi_type_from_ty(subst.expect_ty())?;
+                Ok(crubit_abi_type_with_cc_prereqs.crubit_abi_type(&mut prereqs))
+            })
+            .collect::<Result<Rc<[CrubitAbiType]>>>()?,
+    };
+    Ok(CrubitAbiTypeWithCcPrereqs { crubit_abi_type, prereqs })
+}
+
+/// Returns a BridgedType for a manually annotated bridged ADT.
+/// Returns None if the type is not manually annotated as bridged.
+/// Returns an error if getting the bridging attributes fails.
+fn is_manually_annotated_bridged_adt<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
 ) -> Result<Option<BridgedType>> {
-    match attrs {
-        crubit_attr::CrubitAttrs {
-            cpp_type: Some(cpp_type),
-            include_path,
-            cpp_to_rust_converter: None,
-            rust_to_cpp_converter: None,
-            ..
-        } => {
+    // We take a `Ty` instead of adt + substs directly so we can use `Ty` in error messages.
+    let ty::TyKind::Adt(adt, substs) = ty.kind() else {
+        panic!("should only be called on an ADT type");
+    };
+    let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
+        .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
+    let Some(bridging_attrs) = attrs.get_bridging_attrs()? else {
+        return Ok(None);
+    };
+
+    match bridging_attrs {
+        BridgingAttrs::JustCppType { include_path, cpp_type } => {
             let Some(include_path) = include_path else {
                 // NOTE: this branch is surprising, and the annotations should probably be rewritten
                 // to be more explicit.
@@ -983,25 +1218,23 @@ pub fn requires_type_bridging<'tcx>(
                 panic!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}: {err}")
             });
 
-            match code_gen_utils::is_cpp_pointer_type(ts) {
-                Some(cv) => {
-                    ensure_ty_is_pointer_like(db, ty)?;
+            let Some(cv) = code_gen_utils::is_cpp_pointer_type(ts) else {
+                return Ok(None);
+            };
 
-                    Ok(Some(BridgedType::Legacy {
-                        cpp_type: CcType::Pointer { cpp_type, cv },
-                        include_path,
-                        conversion_info: BridgedTypeConversionInfo::PointerLikeTransmute,
-                    }))
-                }
-                None => Ok(None),
-            }
+            ensure_ty_is_pointer_like(db, ty)?;
+
+            Ok(Some(BridgedType::Legacy {
+                cpp_type: CcType::Pointer { cpp_type, cv },
+                include_path,
+                conversion_info: BridgedTypeConversionInfo::PointerLikeTransmute,
+            }))
         }
-        crubit_attr::CrubitAttrs {
-            cpp_type: Some(cpp_type),
+        BridgingAttrs::ExternCFuncConverters {
             include_path,
-            cpp_to_rust_converter: Some(cpp_to_rust_converter),
-            rust_to_cpp_converter: Some(rust_to_cpp_converter),
-            ..
+            cpp_type,
+            cpp_to_rust_converter,
+            rust_to_cpp_converter,
         } => {
             let Some(include_path) = include_path else {
                 panic!("Failed to parse CrubitAttrs.include_path for {ty} = {cpp_type}: missing include_path")
@@ -1011,91 +1244,28 @@ pub fn requires_type_bridging<'tcx>(
                 panic!("Failed to parse CrubitAttrs.cpp_type for {ty} = {cpp_type}: {err}")
             });
 
-            match code_gen_utils::is_cpp_pointer_type(ts) {
-                Some(cv) => Ok(Some(BridgedType::Legacy {
-                    cpp_type: CcType::Pointer { cpp_type, cv },
-                    include_path,
-                    conversion_info: BridgedTypeConversionInfo::ExternCFuncConverters {
-                        cpp_to_rust_converter,
-                        rust_to_cpp_converter,
-                    },
-                })),
-                None => Ok(Some(BridgedType::Legacy {
-                    cpp_type: CcType::Other(cpp_type),
-                    include_path,
-                    conversion_info: BridgedTypeConversionInfo::ExternCFuncConverters {
-                        cpp_to_rust_converter,
-                        rust_to_cpp_converter,
-                    },
-                })),
-            }
+            Ok(Some(BridgedType::Legacy {
+                cpp_type: match code_gen_utils::is_cpp_pointer_type(ts) {
+                    Some(cv) => CcType::Pointer { cpp_type, cv },
+                    None => CcType::Other(cpp_type),
+                },
+                include_path,
+                conversion_info: BridgedTypeConversionInfo::ExternCFuncConverters {
+                    cpp_to_rust_converter,
+                    rust_to_cpp_converter,
+                },
+            }))
         }
-        crubit_attr::CrubitAttrs { cpp_to_rust_converter: Some(cpp_to_rust_converter), .. } => {
-            bail!(
-                "Invalid state of  #[crubit_annotate::...] attribute. rust_to_cpp_converter \
-                    set ({cpp_to_rust_converter}), but cpp_type not set."
-            )
-        }
-        crubit_attr::CrubitAttrs { rust_to_cpp_converter: Some(rust_to_cpp_converter), .. } => {
-            bail!(
-                "Invalid state of  #[crubit_annotate::...] attribute. cpp_to_rust_converter \
-                    set ({rust_to_cpp_converter}), but cpp_type not set."
-            )
-        }
-        crubit_attr::CrubitAttrs {
-            cpp_type: None,
-            include_path: _,
-            cpp_to_rust_converter: None,
-            rust_to_cpp_converter: None,
-            ..
-        } => Ok(None),
-    }
-}
-
-/// Returns the contents of the `__crubit_annotate` attribute if type bridging
-/// is configured. An error is returned if the attribute could not be parsed or
-/// is in an invalid state.
-pub fn is_bridged_adt<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-    adt: &AdtDef<'_>,
-    substs: &[GenericArg<'tcx>],
-) -> Result<Option<BridgedType>> {
-    let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
-        .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
-    if let Some(attrs) = requires_type_bridging(db, ty, attrs)? {
-        return Ok(Some(attrs));
-    };
-
-    // Detect built in bridge types
-    if let Some(variant) = adt.variants().iter().next() {
-        match db.tcx().lang_items().from_def_id(variant.def_id) {
-            Some(LangItem::ResultOk | LangItem::ResultErr) => {
-                // TODO(okabayashi): Make Result a bridge type
-            }
-            Some(LangItem::OptionSome | LangItem::OptionNone) => {
-                // TODO(okabayashi): Make Option a bridge type
-            }
-            _ => {}
+        BridgingAttrs::Composable { cpp_type, abi_rust, abi_cpp } => {
+            let crubit_abi_type_with_cc_prereqs =
+                crubit_abi_type_from_bridged_adt(db, abi_rust, abi_cpp, substs)?;
+            Ok(Some(BridgedType::Composable(Box::new(BridgedTypeComposable {
+                cpp_type: FullyQualifiedPath::new(cpp_type.as_str()),
+                prereqs: crubit_abi_type_with_cc_prereqs.prereqs,
+                crubit_abi_type: crubit_abi_type_with_cc_prereqs.crubit_abi_type,
+            }))))
         }
     }
-
-    // The ADT does not need to be bridged, but check if it has generic types that
-    // need to be bridged e.g. Box<BridgedType> cannot be formated at
-    // the moment. If we encounter a type like this we return an error.
-    substs.iter().try_for_each(|a| {
-        let Some(ty) = a.as_type() else {
-            return Ok(());
-        };
-        if is_bridged_type(db, ty)?.is_some() {
-            bail!(
-                "Can't format ADT as it has a generic type `{ty}` that is a \
-                    bridged type",
-            );
-        }
-        Ok(())
-    })?;
-    Ok(None)
 }
 
 /// Returns the contents of the `__crubit_annotate` attribute if type bridging
@@ -1118,7 +1288,40 @@ pub fn is_bridged_type<'tcx>(
                     Passing bridged types by pointer is not supported."
             )
         }
-        ty::TyKind::Adt(adt, substs) => is_bridged_adt(db, ty, adt, substs),
+        ty::TyKind::Adt(adt, substs) => {
+            if let Some(bridged_type) = is_manually_annotated_bridged_adt(db, ty)? {
+                return Ok(Some(bridged_type));
+            }
+
+            if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
+                // The ADT is either a Result or an Option, which are composable bridged types.
+                let crubit_abi_type_with_cc_prereqs =
+                    bridged_builtin.crubit_abi_type(db, substs)?;
+
+                let mut prereqs = bridged_builtin.prereqs();
+                let crubit_abi_type = crubit_abi_type_with_cc_prereqs.crubit_abi_type(&mut prereqs);
+
+                return Ok(Some(BridgedType::Composable(Box::new(BridgedTypeComposable {
+                    cpp_type: bridged_builtin.cpp_name(),
+                    prereqs,
+                    crubit_abi_type,
+                }))));
+            }
+
+            // It's neither of the above, so check that it doesn't have any bridged substs.
+
+            // The ADT does not need to be bridged, but check if it has generic types that
+            // need to be bridged e.g. Box<BridgedType> cannot be formated at
+            // the moment. If we encounter a type like this we return an error.
+            for subst in *substs {
+                if let Some(ty) = subst.as_type() {
+                    if is_bridged_type(db, ty)?.is_some() {
+                        bail!("Can't format ADT as it has a generic type `{ty}` that is a bridged type");
+                    }
+                }
+            }
+            Ok(None)
+        }
         _ => Ok(None),
     }
 }
