@@ -15,19 +15,7 @@ package(default_applicable_licenses = ["//:license"])
 
 filegroup(
     name = "extra_rs_srcs_for_cc_std",
-    srcs = glob(
-        [
-            "*.rs",
-        ],
-        exclude = [
-            "cpp_std_allocator.rs",
-            "vector.rs",
-            "vector_partial_eq.rs",
-            "unique_ptr.rs",
-            "string.rs",
-            "string_view.rs",
-        ],
-    ),
+    srcs = ["slice_ptr.rs"],
     compatible_with = [
         "//buildenv/target:non_prod",
     ],
