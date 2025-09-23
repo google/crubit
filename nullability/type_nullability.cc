@@ -686,9 +686,6 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
       case Type::DependentName:
         return getBoundTemplateArgsFromQualifiedType<DependentNameTypeLoc>(T,
                                                                            L);
-      case Type::DependentTemplateSpecialization:
-        return getBoundTemplateArgsFromQualifiedType<
-            DependentTemplateSpecializationTypeLoc>(T, L);
       case Type::Enum:
       case Type::InjectedClassName:
         return getBoundTemplateArgsFromQualifiedType<TagTypeLoc>(T, L);

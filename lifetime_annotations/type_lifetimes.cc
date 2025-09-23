@@ -766,31 +766,7 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
       }
       return std::nullopt;
     }
-  } else if (auto dependent_template_specialization_type_loc =
-                 type_loc
-                     .getAs<clang::DependentTemplateSpecializationTypeLoc>()) {
-    args.push_back({});
-    for (unsigned i = 0;
-         i < dependent_template_specialization_type_loc.getNumArgs(); ++i) {
-      args.back().push_back(
-          dependent_template_specialization_type_loc.getArgLoc(i)
-              .getTypeSourceInfo()
-              ->getTypeLoc());
-    }
-    // TODO(mboehme): Where does this occur exactly? Do we need to be handling
-    // it?
-    // AFAICT, this happens if we're looking at a dependent template name
-    // (https://en.cppreference.com/w/cpp/language/dependent_name), which
-    // probably means that this can only happen in template definitions (as
-    // opposed to template instantiations), and we aren't analyzing those for
-    // now. At the least, I haven't been able to trigger this case from a test.
-    // Triggering a fatal error here so that we notice this case if it does come
-    // up. We only trigger the fatal error _after_ we've done the processing
-    // above so that we don't get a warning about dead code.
-    llvm::report_fatal_error(
-        "Unexpectedly got a DependentSpecializationTypeLoc");
   }
-
   return args;
 }
 
