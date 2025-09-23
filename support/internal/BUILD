@@ -1,3 +1,4 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
