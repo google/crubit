@@ -963,12 +963,10 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for class 'absl::Span<const int>':
 // Can't generate bindings for absl::Span<const int>, because of missing required features (<internal link>):
-// @abseil-cpp//absl/types:span needs [//features:wrapper] for absl::Span<const int> (::span::absl::RawSpan<::core::ffi::c_int> is a template instantiation)
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::Span<const int> (::span::absl::RawSpan<::core::ffi::c_int> is a template instantiation)
 
 // Error while generating bindings for class 'absl::Span<std::basic_string_view<char, std::char_traits<char>>>':
 // Can't generate bindings for absl::Span<std::basic_string_view<char, std::char_traits<char>>>, because of missing required features (<internal link>):
-// @abseil-cpp//absl/types:span needs [//features:wrapper] for absl::Span<std::basic_string_view<char, std::char_traits<char>>> (::span::absl::RawSpanMut<cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE> is a template instantiation)
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::Span<std::basic_string_view<char, std::char_traits<char>>> (::span::absl::RawSpanMut<cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE> is a template instantiation)
 
 // Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::core::ffi::c_int])
