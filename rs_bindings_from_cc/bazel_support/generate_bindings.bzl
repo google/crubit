@@ -159,7 +159,7 @@ def generate_bindings(
                 ctx.executable._clang_format,
                 ctx.executable._rustfmt,
                 rs_bindings_from_cc_tool,
-            ] + ctx.files._rustfmt_cfg + [f for f, _ in extra_rs_srcs],
+            ] + ctx.files._rustfmt_cfg,
             transitive = [action_inputs],
         ),
         additional_outputs = [x for x in [rs_output, namespaces_output, error_report_output] if x != None],
