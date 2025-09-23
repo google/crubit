@@ -225,8 +225,10 @@ pub fn format_cc_type_name(name: &str) -> Result<TokenStream> {
 /// Panics if `ident` is empty or is otherwise an invalid identifier.
 pub fn make_rs_ident(ident: &str) -> Ident {
     // TODO(https://github.com/dtolnay/syn/pull/1098): Remove the hardcoded list once syn recognizes
-    // 2018 and 2021 keywords.
-    if matches!(ident, "async" | "await" | "try" | "dyn") {
+    // newly added keywords.
+    // NOTE: the above PR was accepted for 2021 and 2018 editions, but `try` still isn't escaped,
+    // so we may need to tweak something.
+    if matches!(ident, "gen" | "async" | "await" | "try" | "dyn") {
         return format_ident!("r#{}", ident);
     }
     match syn::parse_str::<syn::Ident>(ident) {
