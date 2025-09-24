@@ -384,10 +384,9 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<Ty<'tcx>>
     let impl_id = tcx.impl_of_method(def_id)?;
     #[rustversion::since(2025-07-29)]
     let impl_id = tcx.impl_of_assoc(def_id)?;
-    match tcx.impl_subject(impl_id).instantiate_identity() {
-        ty::ImplSubject::Inherent(ty) => Some(ty),
-        ty::ImplSubject::Trait(_) => panic!("Trait methods should be filtered by caller"),
-    }
+
+    assert!(tcx.impl_trait_ref(impl_id).is_none(), "Trait methods should be filtered by caller");
+    Some(tcx.type_of(impl_id).instantiate_identity())
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
