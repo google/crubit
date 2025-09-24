@@ -153,8 +153,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   NonCppMovable(::crubit::UnsafeRelocateTag, NonCppMovable&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/tuples/tuples.rs;l=59

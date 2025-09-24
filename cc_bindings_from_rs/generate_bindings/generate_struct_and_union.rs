@@ -1003,7 +1003,11 @@ fn generate_fields<'tcx>(
         struct CcFieldVisState {
             is_public: Option<bool>,
         }
+
         impl CcFieldVisState {
+            fn public() -> Self {
+                Self { is_public: Some(true) }
+            }
             /// Ensures the current field visibility matches `is_public` by returning tokens to
             /// switch from `private:` to `public:` or vice versa. If the current access specifier
             /// already matches the requested one, no specifier is returned.
@@ -1140,7 +1144,7 @@ fn generate_fields<'tcx>(
         // need to handle each variant separately.
         let fields = match adt_def.adt_kind() {
             ty::AdtKind::Struct | ty::AdtKind::Union => {
-                let mut current_visibility = CcFieldVisState::default();
+                let mut current_visibility = CcFieldVisState::public();
                 variants_fields
                     .into_iter()
                     .flatten()

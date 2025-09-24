@@ -38,8 +38,6 @@ ReprCUnion final {
   ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   // Generated from:
   // examples/rust/union/example.rs;l=7
   std::int32_t a;

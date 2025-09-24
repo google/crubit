@@ -104,7 +104,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=42
   std::uint8_t consume_self() const;
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/move_semantics/move.rs;l=31

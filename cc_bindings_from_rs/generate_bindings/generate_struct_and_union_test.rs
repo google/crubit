@@ -244,7 +244,6 @@ fn test_format_item_struct_with_fields() {
                         SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
                           memcpy(this, &value, sizeof(value));
                         }
-                    public:
                         union { ... std::int32_t x; };
                         union { ... std::int32_t y; };
                     private:
@@ -311,7 +310,6 @@ fn test_format_item_struct_with_tuple() {
                         TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
                           memcpy(this, &value, sizeof(value));
                         }
-                    public:
                         union { ... std::int32_t __field0; };
                         union { ... std::int32_t __field1; };
                     private:
@@ -372,7 +370,6 @@ fn test_format_item_struct_with_reordered_field_offsets() {
                     // The particular order below is not guaranteed,
                     // so we may need to adjust this test assertion
                     // (if Rust changes how it lays out the fields).
-                    public:
                         union { ... std::int32_t field2; };
                         union { ... std::int16_t field1; };
                         union { ... std::int16_t field3; };
@@ -460,7 +457,6 @@ fn test_format_item_struct_with_packed_layout() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] __attribute__((packed)) SomeStruct final {
                     ...
-                    public:
                         union { ... std::uint16_t field1; };
                         union { ... std::uint32_t field2; };
                     private:
@@ -516,7 +512,6 @@ fn test_format_item_struct_with_explicit_padding_in_generated_code() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                     ...
-                    public:
                         union { ... std::uint32_t f2; };
                         union { ... std::uint8_t f1; };
                     private: unsigned char __padding0[3];
@@ -572,7 +567,6 @@ fn test_format_item_struct_with_explicit_padding_on_private_field_in_generated_c
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                     ...
-                    public:
                         union { ... std::uint32_t f2; };
                     private:
                         union { ... std::uint8_t f1; };
@@ -815,7 +809,6 @@ fn test_format_item_unsupported_struct_with_some_zero_sized_type_fields() {
                 ...
                 struct ... SomeStruct final {
                     ...
-                    public:
                         union { ... std::int32_t successful_field; };
                     __COMMENT__ #broken_field_msg_zst1
                     __COMMENT__ #broken_field_msg_zst2

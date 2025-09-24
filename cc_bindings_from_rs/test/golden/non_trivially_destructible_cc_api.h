@@ -48,8 +48,6 @@ NonTriviallyDestructable final {
                            NonTriviallyDestructable&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=7

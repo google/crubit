@@ -43,8 +43,6 @@ Point final {
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=13
@@ -92,8 +90,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=34
@@ -143,8 +139,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=51
@@ -204,8 +198,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ZstFields(::crubit::UnsafeRelocateTag, ZstFields&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=83
@@ -552,8 +544,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=285
@@ -632,7 +622,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/structs.rs;l=337
   static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/structs.rs;l=333

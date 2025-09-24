@@ -69,7 +69,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   void shared_self_and_shared_ref_allows_alias(
       std::int32_t const& __param_1) const;
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=13

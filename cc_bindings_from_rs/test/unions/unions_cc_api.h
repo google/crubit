@@ -42,8 +42,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
   U(::crubit::UnsafeRelocateTag, U&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=12
   std::uint32_t x;
@@ -99,7 +97,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
   // cc_bindings_from_rs/test/unions/unions.rs;l=42
   std::uint32_t get_y() const;
 
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=24
   struct {
@@ -143,8 +140,6 @@ __attribute__((packed)) U final {
   U(::crubit::UnsafeRelocateTag, U&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=52
   std::uint32_t x;
@@ -184,8 +179,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   U(::crubit::UnsafeRelocateTag, U&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=65
   struct {
@@ -232,8 +225,6 @@ U final {
   U(::crubit::UnsafeRelocateTag, U&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=78
   std::uint32_t x;
@@ -282,7 +273,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/unions/unions.rs;l=112
   std::uint32_t get_x() const;
 
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=95
   struct {
@@ -321,8 +311,6 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   U(::crubit::UnsafeRelocateTag, U&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=123
   std::int32_t* x;
@@ -365,7 +353,6 @@ U final {
   // cc_bindings_from_rs/test/unions/unions.rs;l=161
   std::int32_t* get_x() const;
 
- public:
   // Generated from:
   // cc_bindings_from_rs/test/unions/unions.rs;l=142
   struct {

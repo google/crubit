@@ -41,8 +41,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
   Struct(::crubit::UnsafeRelocateTag, Struct&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // examples/rust/struct/example.rs;l=7

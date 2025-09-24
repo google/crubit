@@ -45,8 +45,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Type(::crubit::UnsafeRelocateTag, Type&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // examples/rust/use_declaration/example.rs;l=9

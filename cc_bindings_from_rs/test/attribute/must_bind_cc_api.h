@@ -48,7 +48,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   // cc_bindings_from_rs/test/attribute/must_bind.rs;l=14
   static ::must_bind::Original new_();
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/attribute/must_bind.rs;l=8

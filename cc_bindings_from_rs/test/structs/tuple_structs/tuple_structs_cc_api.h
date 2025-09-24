@@ -51,7 +51,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=12
   std::int32_t get_arg() const;
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=6
@@ -142,7 +141,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=41
   std::int32_t get_second_arg() const;
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=30

@@ -94,7 +94,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static std::int32_t into_i32(
       ::modules::impl_in_separate_private_module::Foo s);
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/modules/modules.rs;l=48

@@ -51,7 +51,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=17
   static ::function_pointers::HasFnPtrField with_add_ten();
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=13
@@ -123,8 +122,6 @@ CStruct final {
   CStruct(::crubit::UnsafeRelocateTag, CStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=58

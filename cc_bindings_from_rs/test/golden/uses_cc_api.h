@@ -189,8 +189,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=68

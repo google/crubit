@@ -41,8 +41,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- public:
   union {
     // Generated from:
     // examples/rust/non_trivial_struct/example.rs;l=7

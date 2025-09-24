@@ -48,7 +48,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   // cc_bindings_from_rs/test/attribute/cpp_name.rs;l=12
   static ::cpp_name::Replaced create();
 
- public:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/attribute/cpp_name.rs;l=7
