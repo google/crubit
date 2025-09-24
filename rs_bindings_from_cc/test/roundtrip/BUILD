@@ -9,6 +9,7 @@ crubit_test_cc_library(
     name = "roundtrip",
     hdrs = ["roundtrip.h"],
     deps = [
+        "//support:annotations",
         "//support/rs_std:char",
     ],
 )
