@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "gtest/gtest.h"
-#include "support/cc_std/test/string_view/string_view_rs_apis.h"
+#include "support/cc_std_impl/test/string_view/string_view_rs_apis.h"
 
 namespace {
 

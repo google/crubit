@@ -21,3 +21,13 @@ manually authored trait implementations that supplement the automated bindings.
 For example:
 
 -   `impl From<&'static str> for raw_string_view`
+
+## Versioning
+
+The source code for `cc_std` is a combination of the automatically generated
+bindings for the C++ standard library, and auxiliary Rust code which is
+live-at-head, and lives in the a parallel `cc_std_impl` directory.
+
+`cc_std` can be snapshotted and released as part of a release process.
+Backwards-incompatible changes which must go out with a release can be
+implemented as feature flags, but the actual source code is always read at head.

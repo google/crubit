@@ -1,8 +1,8 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_TEST_UNIQUE_PTR_TEST_HELPERS_H_
-#define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_TEST_UNIQUE_PTR_TEST_HELPERS_H_
+#ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_IMPL_TEST_UNIQUE_PTR_TEST_HELPERS_H_
+#define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_IMPL_TEST_UNIQUE_PTR_TEST_HELPERS_H_
 
 #include <memory>
 
@@ -17,4 +17,4 @@ CRUBIT_MUST_BIND inline void destroy_unique_ptr(std::unique_ptr<int>) {}
 
 }  // namespace unique_ptr_test
 
-#endif  // THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_TEST_UNIQUE_PTR_TEST_HELPERS_H_
+#endif  // THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_IMPL_TEST_UNIQUE_PTR_TEST_HELPERS_H_
