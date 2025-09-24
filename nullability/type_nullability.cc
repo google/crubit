@@ -79,13 +79,16 @@ static const CXXRecordDecl *absl_nullable getSmartPointerBaseClass(
         // return the `CXXRecordDecl` of the underlying template -- it's the
         // best we can do.
         if (BaseClass == nullptr) {
-          if (const auto *TST =
+          if (const auto* TST =
                   Base.getType()->getAs<TemplateSpecializationType>()) {
-            // If the base class is a template template parameter, we can
-            // retrieve the template decl, but not the templated decl, so don't
-            // assert presence during the cast.
-            BaseClass = dyn_cast_if_present<CXXRecordDecl>(
-                TST->getTemplateName().getAsTemplateDecl()->getTemplatedDecl());
+            // If the base class template name is a dependent name, the template
+            // decl will be null.
+            if (const auto* TD = TST->getTemplateName().getAsTemplateDecl())
+              // And, if the base class is a template template parameter, we can
+              // retrieve the template decl, but not the templated decl, so
+              // don't assert presence during the cast.
+              BaseClass =
+                  dyn_cast_if_present<CXXRecordDecl>(TD->getTemplatedDecl());
 
             // We need to be careful here: Once we start looking at underlying
             // templates, we may walk into cycles, as a template may derive from

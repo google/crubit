@@ -340,6 +340,26 @@ TEST_F(UnderlyingRawPointerTest, BaseClassIsTemplateTemplateParameter) {
   EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()), QualType());
 }
 
+TEST_F(UnderlyingRawPointerTest, BaseClassIsDependentOnUnresolvedParameter) {
+  // This is a crash repro for b/447116132.
+  TestAST AST(R"cc(
+    template <typename T>
+    struct Other {
+      template <typename U>
+      struct With {};
+    };
+
+    template <typename Base>
+    struct Derived : public Other<Base>::template With<Base> {
+      using Target = Derived;
+    };
+  )cc");
+
+  const auto* Target = selectFirst<TypeAliasDecl>(
+      "T", match(typeAliasDecl(hasName("Target")).bind("T"), AST.context()));
+  EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()), QualType());
+}
+
 TEST_F(UnderlyingRawPointerTest, BaseClassIsTemplateInstantation) {
   // This is a regression test. We did not recognize `target` as a smart pointer
   // type because we did not check the template argument of the smart pointer
