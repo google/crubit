@@ -30,30 +30,33 @@ unsafe impl ::cxx::ExternType for SomeClass {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'SomeClass::SomeClass':
-// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
+impl Default for SomeClass {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'SomeClass::SomeClass':
 // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'SomeClass::SomeClass':
 // Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeClass::operator=':
 // Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeClass::operator=':
 // Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 impl SomeClass {
@@ -90,6 +93,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
             __return: *mut ::core::ffi::c_void,
             initial_value_of_field: ::core::ffi::c_int,

@@ -39,30 +39,33 @@ unsafe impl ::cxx::ExternType for UserOfImportedType {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
-// Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __this (parameter #0): references are not supported)
+impl Default for UserOfImportedType {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
 // Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
 // Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'UserOfImportedType::operator=':
 // Can't generate bindings for UserOfImportedType::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'UserOfImportedType::operator=':
 // Can't generate bindings for UserOfImportedType::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 mod detail {
@@ -72,6 +75,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
             __return: *mut ::core::ffi::c_void,
             t: &mut trivial_type_cc::ns::Trivial,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
     }
 }

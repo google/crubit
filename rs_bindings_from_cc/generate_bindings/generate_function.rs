@@ -9,7 +9,7 @@ use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibil
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     check_by_value, format_generic_params, format_generic_params_replacing_by_self,
-    should_derive_clone, should_derive_copy, unique_lifetimes, ElisionOptions, Lifetime,
+    should_derive_clone, should_derive_copy, unique_lifetimes, Lifetime, LifetimeOptions,
     Mutability, RsTypeKind,
 };
 use database::BindingsGenerator;
@@ -982,7 +982,6 @@ fn adjust_param_types_for_trait_impl(
                 return Default::default();
             }
             *param_type = RsTypeKind::Reference {
-                option: false,
                 referent: Rc::new(param_type.clone()),
                 mutability: Mutability::Const,
                 lifetime: Lifetime::new("_"),
@@ -1178,10 +1177,14 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
     use ir::UnqualifiedIdentifier::*;
     match &func.rs_name {
         Destructor | Identifier(_) => return false,
-        Constructor => {}
+        Constructor => {
+            // Fallthrough
+        }
         Operator(op_name) => {
             match &*op_name.name {
-                "==" | "<=>" | "<" | "=" => {}
+                "==" | "<=>" | "<" | "=" => {
+                    // Fallthrough
+                }
                 // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
                 // creates conflicting libc++ impls for `long` and `long long`.
                 "<<" | ">>" => return false,
@@ -1230,21 +1233,45 @@ fn rs_type_kinds_for_func(
 ) -> Result<(Vec<RsTypeKind>, RsTypeKind)> {
 
     let errors = Errors::new();
-    let elide_references = db
+    let infer_lifetimes = db
         .ir()
         .target_crubit_features(&func.owning_target)
         .contains(crubit_feature::CrubitFeature::InferOperatorLifetimes)
         && func_should_infer_lifetimes_of_references(func);
+
     let param_types: Vec<RsTypeKind> = func
         .params
         .iter()
         .enumerate()
-        .filter_map(|(i, p)| {
+        .filter_map(|(i, param)| {
+            let mut param_type = param.type_.clone();
+            if i == 0 && func.is_instance_method() {
+                // `param_type` is a `this` pointer, but its semantics are really that of
+                // references. That is, `this` in these operators is non-null.
+                let CcTypeVariant::Pointer(PointerType { kind, lifetime, pointee_type: _ }) =
+                    &mut param_type.variant
+                else {
+                    panic!(
+                        "Expected first parameter of member function:\n`{func:?}`\n\
+                        to be a `this` pointer, got:\n{param_type:?}",
+                    )
+                };
+                if infer_lifetimes || lifetime.is_some() {
+                    match kind {
+                        PointerTypeKind::LValueRef | PointerTypeKind::RValueRef => {}
+                        // Fixup pointer-like `this` values to instead be reference-like.
+                        PointerTypeKind::Nullable | PointerTypeKind::NonNull => {
+                            *kind = PointerTypeKind::LValueRef;
+                        }
+                    }
+                }
+            }
+
             errors.consume_error(
                 db.rs_type_kind_with_lifetime_elision(
-                    p.type_.clone(),
-                    ElisionOptions {
-                        elide_references,
+                    param_type,
+                    LifetimeOptions {
+                        infer_lifetimes,
                         is_return_type: false,
 
                         // Only interesting for the return type.
@@ -1259,8 +1286,8 @@ fn rs_type_kinds_for_func(
     let return_type = errors.consume_error(
         db.rs_type_kind_with_lifetime_elision(
             func.return_type.clone(),
-            ElisionOptions {
-                elide_references,
+            LifetimeOptions {
+                infer_lifetimes,
                 is_return_type: true,
 
                 have_reference_param: param_types.iter().any(|pt| {

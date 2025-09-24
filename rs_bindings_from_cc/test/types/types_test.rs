@@ -18,6 +18,7 @@ macro_rules! struct_field_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {
     $(
     const _ : () = {
+      #[allow(dead_code)]
       fn test_struct_field_type(struct_value: $mod::$cc_name) {
         let _c = Cell::new(struct_value.field);
         let _: Cell<$rs_type> = _c;
@@ -30,6 +31,7 @@ macro_rules! function_return_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {
     $(
     const _ : () = {
+      #[allow(dead_code)]
       unsafe fn test_return_type() {
         let _c = Cell::new($mod::$cc_name::Function(unreachable!()));
         let _: Cell<$rs_type> = _c;
@@ -42,6 +44,7 @@ macro_rules! function_parameter_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {
     $(
     const _ : () = {
+      #[allow(dead_code)]
       unsafe fn test_param_type() {
         let f: unsafe fn(_) -> _ = $mod::$cc_name::Function;
         test_parameter_is::<$rs_type, _>(f);
@@ -220,33 +223,33 @@ struct_field_type_is!(
 );
 
 function_return_type_is!(types_inferred_lifetimes,
-    IntP => Option<&mut i32>,
-    ConstIntP => Option<&i32>,
+    IntP => *mut i32,
+    ConstIntP => *const i32,
     IntRef => &mut i32,
     ConstIntRef => &i32,
-    VoidP => Option<&mut c_void>,
-    ConstVoidP => Option<&c_void>,
+    VoidP => *mut c_void,
+    ConstVoidP => *const c_void,
     // TODO: b/436971180 - Why is this a pointer?
     VoidPP => *mut *mut c_void,
 
-    StructPtr => Option<&mut types_inferred_lifetimes::ExampleStruct>,
-    ConstStructPtr => Option<&types_inferred_lifetimes::ExampleStruct>,
+    StructPtr => *mut types_inferred_lifetimes::ExampleStruct,
+    ConstStructPtr => *const types_inferred_lifetimes::ExampleStruct,
     StructRef => &mut types_inferred_lifetimes::ExampleStruct,
     ConstStructRef => &types_inferred_lifetimes::ExampleStruct,
 );
 
 function_parameter_type_is!(types_inferred_lifetimes,
-    IntP => Option<&mut i32>,
-    ConstIntP => Option<&i32>,
+    IntP => *mut i32,
+    ConstIntP => *const i32,
     IntRef => &mut i32,
     ConstIntRef => &i32,
-    VoidP => Option<&mut c_void>,
-    ConstVoidP => Option<&c_void>,
+    VoidP => *mut c_void,
+    ConstVoidP => *const c_void,
     // TODO: b/436971180 - Why is this a pointer?
     VoidPP => *mut *mut c_void,
 
-    StructPtr => Option<&mut types_inferred_lifetimes::ExampleStruct>,
-    ConstStructPtr => Option<&types_inferred_lifetimes::ExampleStruct>,
+    StructPtr => *mut types_inferred_lifetimes::ExampleStruct,
+    ConstStructPtr => *const types_inferred_lifetimes::ExampleStruct,
     StructRef => &mut types_inferred_lifetimes::ExampleStruct,
     ConstStructRef => &types_inferred_lifetimes::ExampleStruct,
 );

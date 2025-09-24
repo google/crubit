@@ -22,7 +22,16 @@ static_assert(CRUBIT_SIZEOF(struct Derived2) == 24);
 static_assert(alignof(struct Derived2) == 8);
 static_assert(CRUBIT_OFFSET_OF(derived_1, struct Derived2) == 20);
 
+extern "C" void __rust_thunk___ZN8Derived2C1Ev(struct Derived2* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(CRUBIT_SIZEOF(class VirtualDerived2) == 32);
 static_assert(alignof(class VirtualDerived2) == 8);
+
+extern "C" void __rust_thunk___ZN15VirtualDerived2C1Ev(
+    class VirtualDerived2* __this) {
+  crubit::construct_at(__this);
+}
 
 #pragma clang diagnostic pop

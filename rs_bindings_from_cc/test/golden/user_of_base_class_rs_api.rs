@@ -6,7 +6,13 @@
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
+#![feature(
+    allocator_api,
+    cfg_sanitize,
+    custom_inner_attributes,
+    impl_trait_in_assoc_type,
+    negative_impls
+)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -33,30 +39,36 @@ unsafe impl ::cxx::ExternType for Derived2 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for constructor 'Derived2::Derived2':
-// Can't generate bindings for Derived2::Derived2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __this (parameter #0): references are not supported)
+impl ::ctor::CtorNew<()> for Derived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN8Derived2C1Ev(dest as *mut ::core::ffi::c_void);
+            })
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Derived2::Derived2':
 // Can't generate bindings for Derived2::Derived2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Derived2::Derived2':
 // Can't generate bindings for Derived2::Derived2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Derived2::operator=':
 // Can't generate bindings for Derived2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Derived2::operator=':
 // Can't generate bindings for Derived2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[::ctor::recursively_pinned]
@@ -72,31 +84,50 @@ unsafe impl ::cxx::ExternType for VirtualDerived2 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
-// Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __this (parameter #0): references are not supported)
+impl ::ctor::CtorNew<()> for VirtualDerived2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN15VirtualDerived2C1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
 // Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'VirtualDerived2::VirtualDerived2':
 // Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualDerived2::operator=':
 // Can't generate bindings for VirtualDerived2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualDerived2::operator=':
 // Can't generate bindings for VirtualDerived2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::Derived2>() == 24);

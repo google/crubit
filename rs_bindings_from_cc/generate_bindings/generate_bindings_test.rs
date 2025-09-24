@@ -6,7 +6,7 @@ use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{Mutability, RsTypeKind};
 use database::BindingsGenerator;
-use googletest::prelude::gtest;
+use googletest::{expect_eq, gtest};
 use ir_testing::{retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
 use quote::quote;
@@ -538,15 +538,10 @@ fn test_rs_type_kind_implements_copy() -> Result<()> {
         Test {
             cc: "const int*",
             lifetimes: true,
-            rs: "Option < & 'a :: core :: ffi :: c_int >",
+            rs: "* const :: core :: ffi :: c_int",
             is_copy: true,
         },
-        Test {
-            cc: "int*",
-            lifetimes: true,
-            rs: "Option < & 'a mut :: core :: ffi :: c_int >",
-            is_copy: false,
-        },
+        Test { cc: "int*", lifetimes: true, rs: "* mut :: core :: ffi :: c_int", is_copy: true },
         Test {
             cc: "const int*",
             lifetimes: false,
@@ -599,9 +594,8 @@ fn test_rs_type_kind_implements_copy() -> Result<()> {
         let t = db.rs_type_kind(f.params[0].type_.clone())?;
 
         let fmt = t.to_token_stream(&db).to_string();
-        assert_eq!(test.rs, fmt, "Testing: {}", test_name);
-
-        assert_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);
+        expect_eq!(test.rs, fmt, "Testing: {}", test_name);
+        expect_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);
     }
     Ok(())
 }
@@ -679,14 +673,14 @@ fn test_rs_type_kind_lifetimes() -> Result<()> {
     let f = db.rs_type_kind(func.params[5].type_.clone())?;
     let g = db.rs_type_kind(func.params[6].type_.clone())?;
 
-    assert_eq!(0, ret.lifetimes().count()); // No lifetimes on `void`.
-    assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int`.
-    assert_eq!(1, b.lifetimes().count()); // `&'a i32` has a single lifetime.
-    assert_eq!(1, c.lifetimes().count()); // `RvalueReference<'a, i32>` has a single lifetime.
-    assert_eq!(1, d.lifetimes().count()); // `Option<&'b i32>` has a single lifetime.
-    assert_eq!(2, e.lifetimes().count()); // `&'c Option<&'d i32>` has two lifetimes.
-    assert_eq!(1, f.lifetimes().count()); // Lifetime of underlying type should show through.
-    assert_eq!(0, g.lifetimes().count()); // No lifetimes on structs (yet).
+    expect_eq!(0, ret.lifetimes().count()); // No lifetimes on `void`.
+    expect_eq!(0, a.lifetimes().count()); // No lifetimes on `int`.
+    expect_eq!(1, b.lifetimes().count()); // `&'a i32` has a single lifetime.
+    expect_eq!(1, c.lifetimes().count()); // `RvalueReference<'a, i32>` has a single lifetime.
+    expect_eq!(0, d.lifetimes().count()); // `*mut i32` has no lifetimes.
+    expect_eq!(0, e.lifetimes().count()); // `*mut *mut i32` has no lifetimes.
+    expect_eq!(1, f.lifetimes().count()); // Lifetime of underlying type should show through.
+    expect_eq!(0, g.lifetimes().count()); // No lifetimes on structs (yet).
     Ok(())
 }
 

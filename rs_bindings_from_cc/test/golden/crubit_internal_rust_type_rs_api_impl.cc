@@ -30,4 +30,9 @@ static_assert(CRUBIT_OFFSET_OF(my_i8_alias,
                                struct ExistingRustTypeFieldTypes) == 3);
 static_assert(CRUBIT_OFFSET_OF(error, struct ExistingRustTypeFieldTypes) == 4);
 
+extern "C" void __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
+    struct ExistingRustTypeFieldTypes* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

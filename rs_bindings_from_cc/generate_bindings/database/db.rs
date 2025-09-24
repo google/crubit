@@ -6,7 +6,7 @@ use crate::code_snippet::{
     ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedTypeName, Visibility,
 };
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
-use crate::rs_snippet::{ElisionOptions, RsTypeKind};
+use crate::rs_snippet::{LifetimeOptions, RsTypeKind};
 use arc_anyhow::{anyhow, Result};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
@@ -70,7 +70,7 @@ memoized::query_group! {
         /// TODO(b/409128537): never return `Err` here, instead check `type_visibility`
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind_with_lifetime_elision
-        fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, elision_options: ElisionOptions) -> Result<RsTypeKind>;
+        fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, lifetime_options: LifetimeOptions) -> Result<RsTypeKind>;
 
         /// Returns the generated bindings for the given function.
         ///
@@ -175,7 +175,7 @@ memoized::query_group! {
         /// This differs from `rs_type_kind_with_lifetime_elision` in that it replaces references
         /// with missing lifetimes with pointer types.
         fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
-            self.rs_type_kind_with_lifetime_elision(cc_type, ElisionOptions::default())
+            self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
         }
 
         #[provided]

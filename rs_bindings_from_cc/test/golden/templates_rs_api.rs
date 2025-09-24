@@ -27,30 +27,33 @@ unsafe impl ::cxx::ExternType for DifferentScope {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'DifferentScope::DifferentScope':
-// Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
+impl Default for DifferentScope {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN14DifferentScopeC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'DifferentScope::DifferentScope':
 // Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'DifferentScope::DifferentScope':
 // Can't generate bindings for DifferentScope::DifferentScope, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::DifferentScope (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'DifferentScope::operator=':
 // Can't generate bindings for DifferentScope::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'DifferentScope::operator=':
 // Can't generate bindings for DifferentScope::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for DifferentScope::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 pub mod test_namespace_bindings {
@@ -82,30 +85,35 @@ pub mod test_namespace_bindings {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Error while generating bindings for constructor 'TemplateParam::TemplateParam':
-    // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
+    impl Default for TemplateParam {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
+                    &raw mut tmp as *mut _,
+                );
+                tmp.assume_init()
+            }
+        }
+    }
 
     // Error while generating bindings for constructor 'TemplateParam::TemplateParam':
     // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for constructor 'TemplateParam::TemplateParam':
     // Can't generate bindings for TemplateParam::TemplateParam, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::TemplateParam (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for function 'TemplateParam::operator=':
     // Can't generate bindings for TemplateParam::operator=, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for function 'TemplateParam::operator=':
     // Can't generate bindings for TemplateParam::operator=, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for TemplateParam::operator= (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for type alias 'TemplateWithStructTemplateParam':
@@ -172,8 +180,8 @@ pub mod test_namespace_bindings {
 
 // Error while generating bindings for function 'processForwardDeclaredSpecialization':
 // Can't generate bindings for processForwardDeclaredSpecialization, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper, //features:experimental] for processForwardDeclaredSpecialization (the type of i (parameter #0): error: Can't generate bindings for MyTopLevelTemplate<int>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<int> (incomplete type), references are not supported)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for processForwardDeclaredSpecialization (the type of i (parameter #0): error: Can't generate bindings for MyTopLevelTemplate<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for MyTopLevelTemplate<int> (incomplete type))
 
 pub mod template_template_params { // Error while generating bindings for class 'template_template_params::Policy':
                                    // Class templates are not supported yet
@@ -217,24 +225,20 @@ pub mod private_classes {
 
     // Error while generating bindings for constructor 'HasPrivateType::HasPrivateType':
     // Can't generate bindings for HasPrivateType::HasPrivateType, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for constructor 'HasPrivateType::HasPrivateType':
     // Can't generate bindings for HasPrivateType::HasPrivateType, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::HasPrivateType (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for function 'HasPrivateType::operator=':
     // Can't generate bindings for HasPrivateType::operator=, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for function 'HasPrivateType::operator=':
     // Can't generate bindings for HasPrivateType::operator=, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __this (parameter #0): references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for HasPrivateType::operator= (the type of __param_0 (parameter #1): references are not supported)
 }
 
@@ -292,6 +296,19 @@ pub mod private_classes {
 // Error while generating bindings for class 'forward_declared_template::ForwardDeclaredTemplate<int>':
 // Can't generate bindings for forward_declared_template::ForwardDeclaredTemplate<int>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for forward_declared_template::ForwardDeclaredTemplate<int> (incomplete type)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN14DifferentScopeC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::DifferentScope>() == 1);

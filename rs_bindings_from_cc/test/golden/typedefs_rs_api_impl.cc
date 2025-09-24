@@ -21,14 +21,31 @@
 static_assert(sizeof(struct SomeStruct) == 1);
 static_assert(alignof(struct SomeStruct) == 1);
 
+extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(SomeOtherStruct) == 1);
 static_assert(alignof(SomeOtherStruct) == 1);
+
+extern "C" void __rust_thunk___ZN15SomeOtherStructC1Ev(
+    SomeOtherStruct* __this) {
+  crubit::construct_at(__this);
+}
 
 static_assert(sizeof(union SomeUnion) == 1);
 static_assert(alignof(union SomeUnion) == 1);
 
+extern "C" void __rust_thunk___ZN9SomeUnionC1Ev(union SomeUnion* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(SomeOtherUnion) == 1);
 static_assert(alignof(SomeOtherUnion) == 1);
+
+extern "C" void __rust_thunk___ZN14SomeOtherUnionC1Ev(SomeOtherUnion* __this) {
+  crubit::construct_at(__this);
+}
 
 static_assert((SomeStruct::nested_type (*)())&FunctionUsingNestedType);
 

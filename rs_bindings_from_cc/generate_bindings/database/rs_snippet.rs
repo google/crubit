@@ -272,10 +272,10 @@ pub enum TypeLocation {
 
 /// Options for how lifetimes can be elided in function parameters.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct ElisionOptions {
-    /// If true, references will be elided. This option is only set for select function parameters
-    /// and return types.
-    pub elide_references: bool,
+pub struct LifetimeOptions {
+    /// If true, references lifetimes will be inferred. This option is only set for select function
+    /// parameters and return types.
+    pub infer_lifetimes: bool,
 
     /// Are there any reference parameters to the function whose return type we are interested in?
     pub have_reference_param: bool,
@@ -505,7 +505,6 @@ pub enum RsTypeKind {
         mutability: Mutability,
     },
     Reference {
-        option: bool,
         referent: Rc<RsTypeKind>,
         mutability: Mutability,
         lifetime: Lifetime,
@@ -1110,8 +1109,7 @@ impl RsTypeKind {
                     "`self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function."
                 )
             }
-            RsTypeKind::Reference { option, referent, lifetime, mutability } => {
-                assert!(!*option, "Optional self type is not valid, this should never happen");
+            RsTypeKind::Reference { referent, lifetime, mutability } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
@@ -1274,7 +1272,7 @@ impl RsTypeKind {
                     quote! {* #mutability #pointee_ }
                 }
             }
-            RsTypeKind::Reference { option, referent, mutability, lifetime } => {
+            RsTypeKind::Reference { referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 let referent_ = referent.to_token_stream_replacing_by_self(db, self_record);
@@ -1285,9 +1283,6 @@ impl RsTypeKind {
                     // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
                     // not implementing ToTokens, but instead some other interface.)
                     tokens = quote! {::core::pin::Pin< #tokens >};
-                }
-                if *option {
-                    tokens = quote! {Option< #tokens >};
                 }
                 tokens
             }
@@ -1392,7 +1387,7 @@ impl RsTypeKind {
                     quote! {* #mutability #pointee_tokens }
                 }
             }
-            RsTypeKind::Reference { option, referent, mutability, lifetime } => {
+            RsTypeKind::Reference { referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = lifetime.format_for_reference();
                 let referent_tokens = referent.to_token_stream(db);
@@ -1403,9 +1398,6 @@ impl RsTypeKind {
                     // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
                     // not implementing ToTokens, but instead some other interface.)
                     tokens = quote! { ::core::pin::Pin< #tokens > };
-                }
-                if *option {
-                    tokens = quote! { Option< #tokens > };
                 }
                 tokens
             }
@@ -1653,7 +1645,6 @@ mod tests {
     fn test_lifetime_elision_for_references() {
         let referent = Rc::new(make_existing_rust_type("T".into(), true));
         let reference = RsTypeKind::Reference {
-            option: false,
             referent,
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
@@ -1712,7 +1703,6 @@ mod tests {
         let no_types: &[RsTypeKind] = &[];
         let int = RsTypeKind::Primitive(Primitive::Int32T);
         let reference = RsTypeKind::Reference {
-            option: false,
             referent: Rc::new(int.clone()),
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),

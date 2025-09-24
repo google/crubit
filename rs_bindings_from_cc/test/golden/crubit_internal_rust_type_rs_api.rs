@@ -55,31 +55,46 @@ unsafe impl ::cxx::ExternType for ExistingRustTypeFieldTypes {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
-// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __this (parameter #0): references are not supported)
+impl Default for ExistingRustTypeFieldTypes {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
+                &raw mut tmp as *mut _,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
 // Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
 // Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ExistingRustTypeFieldTypes::operator=':
 // Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ExistingRustTypeFieldTypes::operator=':
 // Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<i8>() == 1);

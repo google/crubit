@@ -61,10 +61,10 @@ pub fn format_cpp_type_inner(
                 }
             }
         }
-        RsTypeKind::Reference { option, referent, mutability, .. } => {
+        RsTypeKind::Reference { referent, mutability, .. } => {
             let const_fragment = mutability.is_const().then(|| quote! { const });
             let nested_type = format_cpp_type_inner(referent, ir, references_ok)?;
-            let pointer_kind = if *option || !references_ok {
+            let pointer_kind = if !references_ok {
                 quote! { * }
             } else {
                 quote! { & }

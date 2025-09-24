@@ -6,7 +6,13 @@
 // //rs_bindings_from_cc/test/golden:inheritance_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
+#![feature(
+    allocator_api,
+    cfg_sanitize,
+    custom_inner_attributes,
+    impl_trait_in_assoc_type,
+    negative_impls
+)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -30,30 +36,33 @@ unsafe impl ::cxx::ExternType for Base0 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'Base0::Base0':
-// Can't generate bindings for Base0::Base0, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __this (parameter #0): references are not supported)
+impl Default for Base0 {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base0C1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Base0::Base0':
 // Can't generate bindings for Base0::Base0, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Base0::Base0':
 // Can't generate bindings for Base0::Base0, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::Base0 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Base0::operator=':
 // Can't generate bindings for Base0::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Base0::operator=':
 // Can't generate bindings for Base0::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base0::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -75,30 +84,33 @@ unsafe impl ::cxx::ExternType for Base1 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'Base1::Base1':
-// Can't generate bindings for Base1::Base1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __this (parameter #0): references are not supported)
+impl Default for Base1 {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base1C1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Base1::Base1':
 // Can't generate bindings for Base1::Base1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Base1::Base1':
 // Can't generate bindings for Base1::Base1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::Base1 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Base1::operator=':
 // Can't generate bindings for Base1::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Base1::operator=':
 // Can't generate bindings for Base1::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -117,30 +129,33 @@ unsafe impl ::cxx::ExternType for Base2 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'Base2::Base2':
-// Can't generate bindings for Base2::Base2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __this (parameter #0): references are not supported)
+impl Default for Base2 {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base2C1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Base2::Base2':
 // Can't generate bindings for Base2::Base2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Base2::Base2':
 // Can't generate bindings for Base2::Base2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::Base2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Base2::operator=':
 // Can't generate bindings for Base2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Base2::operator=':
 // Can't generate bindings for Base2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Base2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -157,30 +172,33 @@ unsafe impl ::cxx::ExternType for Derived {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'Derived::Derived':
-// Can't generate bindings for Derived::Derived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __this (parameter #0): references are not supported)
+impl Default for Derived {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Derived::Derived':
 // Can't generate bindings for Derived::Derived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Derived::Derived':
 // Can't generate bindings for Derived::Derived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::Derived (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Derived::operator=':
 // Can't generate bindings for Derived::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Derived::operator=':
 // Can't generate bindings for Derived::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[::ctor::recursively_pinned]
@@ -196,30 +214,38 @@ unsafe impl ::cxx::ExternType for VirtualBase1 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for constructor 'VirtualBase1::VirtualBase1':
-// Can't generate bindings for VirtualBase1::VirtualBase1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __this (parameter #0): references are not supported)
+impl ::ctor::CtorNew<()> for VirtualBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN12VirtualBase1C1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'VirtualBase1::VirtualBase1':
 // Can't generate bindings for VirtualBase1::VirtualBase1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'VirtualBase1::VirtualBase1':
 // Can't generate bindings for VirtualBase1::VirtualBase1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualBase1::operator=':
 // Can't generate bindings for VirtualBase1::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualBase1::operator=':
 // Can't generate bindings for VirtualBase1::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[::ctor::recursively_pinned]
@@ -235,30 +261,38 @@ unsafe impl ::cxx::ExternType for VirtualBase2 {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for constructor 'VirtualBase2::VirtualBase2':
-// Can't generate bindings for VirtualBase2::VirtualBase2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __this (parameter #0): references are not supported)
+impl ::ctor::CtorNew<()> for VirtualBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN12VirtualBase2C1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'VirtualBase2::VirtualBase2':
 // Can't generate bindings for VirtualBase2::VirtualBase2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'VirtualBase2::VirtualBase2':
 // Can't generate bindings for VirtualBase2::VirtualBase2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualBase2::operator=':
 // Can't generate bindings for VirtualBase2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualBase2::operator=':
 // Can't generate bindings for VirtualBase2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[::ctor::recursively_pinned]
@@ -274,30 +308,38 @@ unsafe impl ::cxx::ExternType for VirtualDerived {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for constructor 'VirtualDerived::VirtualDerived':
-// Can't generate bindings for VirtualDerived::VirtualDerived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __this (parameter #0): references are not supported)
+impl ::ctor::CtorNew<()> for VirtualDerived {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN14VirtualDerivedC1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'VirtualDerived::VirtualDerived':
 // Can't generate bindings for VirtualDerived::VirtualDerived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'VirtualDerived::VirtualDerived':
 // Can't generate bindings for VirtualDerived::VirtualDerived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualDerived::operator=':
 // Can't generate bindings for VirtualDerived::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'VirtualDerived::operator=':
 // Can't generate bindings for VirtualDerived::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[::ctor::recursively_pinned]
@@ -322,7 +364,6 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 // Error while generating bindings for function 'MyAbstractClass::operator=':
 // Can't generate bindings for MyAbstractClass::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MyAbstractClass::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MyAbstractClass::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MyAbstractClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 /// Method inheritance
@@ -339,48 +380,62 @@ unsafe impl ::cxx::ExternType for MethodBase1 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'MethodBase1::MethodBase1':
-// Can't generate bindings for MethodBase1::MethodBase1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __this (parameter #0): references are not supported)
+impl Default for MethodBase1 {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'MethodBase1::MethodBase1':
 // Can't generate bindings for MethodBase1::MethodBase1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'MethodBase1::MethodBase1':
 // Can't generate bindings for MethodBase1::MethodBase1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::MethodBase1 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'MethodBase1::operator=':
 // Can't generate bindings for MethodBase1::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'MethodBase1::operator=':
 // Can't generate bindings for MethodBase1::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'MethodBase1::Public':
-// Can't generate bindings for MethodBase1::Public, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::Public (the type of __this (parameter #0): references are not supported)
+impl MethodBase1 {
+    #[inline(always)]
+    pub fn Public<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
+    }
+}
 
-// Error while generating bindings for function 'MethodBase1::Equals':
-// Can't generate bindings for MethodBase1::Equals, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::Equals (the type of __this (parameter #0): references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::Equals (the type of __param_0 (parameter #1): references are not supported)
+impl MethodBase1 {
+    #[inline(always)]
+    pub unsafe fn Equals<'a>(&'a mut self, __param_0: *const Self) {
+        crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(self, __param_0)
+    }
+}
 
-// Error while generating bindings for function 'MethodBase1::Colliding1':
-// Can't generate bindings for MethodBase1::Colliding1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::Colliding1 (the type of __this (parameter #0): references are not supported)
+impl MethodBase1 {
+    #[inline(always)]
+    pub fn Colliding1<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
+    }
+}
 
-// Error while generating bindings for function 'MethodBase1::Colliding2':
-// Can't generate bindings for MethodBase1::Colliding2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::Colliding2 (the type of __this (parameter #0): references are not supported)
+impl MethodBase1 {
+    #[inline(always)]
+    pub fn Colliding2<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(self) }
+    }
+}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -395,39 +450,48 @@ unsafe impl ::cxx::ExternType for MethodBase2 {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'MethodBase2::MethodBase2':
-// Can't generate bindings for MethodBase2::MethodBase2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __this (parameter #0): references are not supported)
+impl Default for MethodBase2 {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'MethodBase2::MethodBase2':
 // Can't generate bindings for MethodBase2::MethodBase2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'MethodBase2::MethodBase2':
 // Can't generate bindings for MethodBase2::MethodBase2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::MethodBase2 (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'MethodBase2::operator=':
 // Can't generate bindings for MethodBase2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'MethodBase2::operator=':
 // Can't generate bindings for MethodBase2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'MethodBase2::Colliding1':
-// Can't generate bindings for MethodBase2::Colliding1, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::Colliding1 (the type of __this (parameter #0): references are not supported)
+impl MethodBase2 {
+    #[inline(always)]
+    pub fn Colliding1<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(self) }
+    }
+}
 
-// Error while generating bindings for function 'MethodBase2::Colliding2':
-// Can't generate bindings for MethodBase2::Colliding2, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::Colliding2 (the type of __this (parameter #0): references are not supported)
+impl MethodBase2 {
+    #[inline(always)]
+    pub fn Colliding2<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(self) }
+    }
+}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -442,31 +506,78 @@ unsafe impl ::cxx::ExternType for MethodDerived {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'MethodDerived::MethodDerived':
-// Can't generate bindings for MethodDerived::MethodDerived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __this (parameter #0): references are not supported)
+impl Default for MethodDerived {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13MethodDerivedC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'MethodDerived::MethodDerived':
 // Can't generate bindings for MethodDerived::MethodDerived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'MethodDerived::MethodDerived':
 // Can't generate bindings for MethodDerived::MethodDerived, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::MethodDerived (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'MethodDerived::operator=':
 // Can't generate bindings for MethodDerived::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'MethodDerived::operator=':
 // Can't generate bindings for MethodDerived::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN5Base0C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5Base1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev(__this: *mut ::core::ffi::c_void);
+        #[link_name = "_ZN11MethodBase16PublicEv"]
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
+            __this: &'a mut crate::MethodBase1,
+        );
+        #[link_name = "_ZN11MethodBase16EqualsEPKS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase16EqualsEPKS_<'a>(
+            __this: &'a mut crate::MethodBase1,
+            __param_0: *const crate::MethodBase1,
+        );
+        #[link_name = "_ZN11MethodBase110Colliding1Ev"]
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'a>(
+            __this: &'a mut crate::MethodBase1,
+        );
+        #[link_name = "_ZN11MethodBase110Colliding2Ev"]
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
+            __this: &'a mut crate::MethodBase1,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase2C1Ev(__this: *mut ::core::ffi::c_void);
+        #[link_name = "_ZN11MethodBase210Colliding1Ev"]
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'a>(
+            __this: &'a mut crate::MethodBase2,
+        );
+        #[link_name = "_ZN11MethodBase210Colliding2Ev"]
+        pub(crate) unsafe fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
+            __this: &'a mut crate::MethodBase2,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN13MethodDerivedC1Ev(__this: *mut ::core::ffi::c_void);
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::Base0>() == 1);

@@ -4,7 +4,7 @@
 
 use arc_anyhow::{anyhow, ensure, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
-use database::rs_snippet::{ElisionOptions, Lifetime, Mutability, RsTypeKind, RustPtrKind};
+use database::rs_snippet::{Lifetime, LifetimeOptions, Mutability, RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
 use ir::{CcType, CcTypeVariant, PointerTypeKind};
 use std::rc::Rc;
@@ -13,7 +13,7 @@ use std::rc::Rc;
 pub fn rs_type_kind_with_lifetime_elision(
     db: &dyn BindingsGenerator,
     ty: CcType,
-    elision_options: ElisionOptions,
+    lifetime_options: LifetimeOptions,
 ) -> Result<RsTypeKind> {
     ensure!(ty.unknown_attr.is_empty(), "unknown attribute(s): {}", ty.unknown_attr);
     match &ty.variant {
@@ -58,7 +58,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                     .get_lifetime(lifetime_id)
                     .map(Lifetime::from)
                     .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
-                None if elision_options.elide_references => Lifetime::elided(),
+                None if lifetime_options.infer_lifetimes => Lifetime::elided(),
                 None => {
                     return Ok(RsTypeKind::Pointer {
                         pointee,
@@ -67,16 +67,23 @@ pub fn rs_type_kind_with_lifetime_elision(
                     })
                 }
             };
-            if let PointerTypeKind::RValueRef = pointer.kind {
-                Ok(RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime })
-            } else {
-                Ok(RsTypeKind::Reference {
-                    option: matches!(pointer.kind, PointerTypeKind::Nullable),
-                    referent: pointee,
+            Ok(match pointer.kind {
+                PointerTypeKind::LValueRef => {
+                    RsTypeKind::Reference { referent: pointee, mutability, lifetime }
+                }
+                PointerTypeKind::RValueRef => {
+                    RsTypeKind::RvalueReference { referent: pointee, mutability, lifetime }
+                }
+                // Note: this conversion discards information about the nullability and lifetime
+                // of the pointer. In the future, we may wish to consume this information along
+                // with a user-provided annotation in order to convert some pointers into either
+                // references or optional references.
+                PointerTypeKind::NonNull | PointerTypeKind::Nullable => RsTypeKind::Pointer {
+                    pointee,
+                    kind: RustPtrKind::CcPtr(pointer.kind),
                     mutability,
-                    lifetime,
-                })
-            }
+                },
+            })
         }
         CcTypeVariant::FuncPointer { non_null, call_conv, param_and_return_types } => {
             let (return_type, param_types) = param_and_return_types
@@ -84,14 +91,14 @@ pub fn rs_type_kind_with_lifetime_elision(
                 .expect("In well-formed IR function pointers include at least the return type");
             let return_type = Rc::new(db.rs_type_kind_with_lifetime_elision(
                 return_type.clone(),
-                ElisionOptions::default(),
+                LifetimeOptions::default(),
             )?);
             let param_types = param_types
                 .iter()
                 .map(|param_type| {
                     db.rs_type_kind_with_lifetime_elision(
                         param_type.clone(),
-                        ElisionOptions::default(),
+                        LifetimeOptions::default(),
                     )
                 })
                 .collect::<Result<Rc<[_]>>>()?;
@@ -124,7 +131,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                     if !matches!(error, NoBindingsReason::MissingRequiredFeatures { .. }) {
                         return db.rs_type_kind_with_lifetime_elision(
                             alias.underlying_type.clone(),
-                            elision_options,
+                            lifetime_options,
                         );
                     }
                 }
@@ -145,8 +152,8 @@ pub fn rs_type_kind_with_lifetime_elision(
             RsTypeKind::from_item_raw(
                 db,
                 item.clone(),
-                elision_options.have_reference_param,
-                elision_options.is_return_type,
+                lifetime_options.have_reference_param,
+                lifetime_options.is_return_type,
             )
         }
     }

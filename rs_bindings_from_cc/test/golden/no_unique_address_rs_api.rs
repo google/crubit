@@ -6,7 +6,13 @@
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
+#![feature(
+    allocator_api,
+    cfg_sanitize,
+    custom_inner_attributes,
+    impl_trait_in_assoc_type,
+    negative_impls
+)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -40,30 +46,33 @@ unsafe impl ::cxx::ExternType for Struct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'Struct::Struct':
-// Can't generate bindings for Struct::Struct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __this (parameter #0): references are not supported)
+impl Default for Struct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN6StructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Struct::Struct':
 // Can't generate bindings for Struct::Struct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Struct::Struct':
 // Can't generate bindings for Struct::Struct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::Struct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Struct::operator=':
 // Can't generate bindings for Struct::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Struct::operator=':
 // Can't generate bindings for Struct::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 impl Struct {
@@ -106,30 +115,33 @@ unsafe impl ::cxx::ExternType for PaddingBetweenFields {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
-// Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __this (parameter #0): references are not supported)
+impl Default for PaddingBetweenFields {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
 // Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'PaddingBetweenFields::PaddingBetweenFields':
 // Can't generate bindings for PaddingBetweenFields::PaddingBetweenFields, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::PaddingBetweenFields (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'PaddingBetweenFields::operator=':
 // Can't generate bindings for PaddingBetweenFields::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'PaddingBetweenFields::operator=':
 // Can't generate bindings for PaddingBetweenFields::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 impl PaddingBetweenFields {
@@ -168,19 +180,29 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
     type Kind = ::cxx::kind::Opaque;
 }
 
-// Error while generating bindings for constructor 'FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct':
-// Can't generate bindings for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct (the type of __this (parameter #0): references are not supported)
+impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
+                    dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct':
 // Can't generate bindings for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::FieldInTailPadding_InnerStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'FieldInTailPadding_InnerStruct::operator=':
 // Can't generate bindings for FieldInTailPadding_InnerStruct::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding_InnerStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 /// User-defined destructor to make this struct non-POD for the purposes of
@@ -220,12 +242,10 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding {
 
 // Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
 // Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
 // Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __param_0 (parameter #1): references are not supported)
 
 impl ::ctor::PinnedDrop for FieldInTailPadding {
@@ -238,38 +258,68 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
 // Error while generating bindings for function 'FieldInTailPadding::operator=':
 // Can't generate bindings for FieldInTailPadding::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'FieldInTailPadding::operator=':
 // Can't generate bindings for FieldInTailPadding::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for constructor 'FieldInTailPadding::FieldInTailPadding':
-// Can't generate bindings for FieldInTailPadding::FieldInTailPadding, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::FieldInTailPadding (the type of __this (parameter #0): references are not supported)
+impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char)>
+    for FieldInTailPadding
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(
+        args: (::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char),
+    ) -> Self::CtorType {
+        let (mut inner_int, mut inner_char, mut outer_char) = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
+                    dest as *mut ::core::ffi::c_void,
+                    inner_int,
+                    inner_char,
+                    outer_char,
+                );
+            })
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN6StructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN6Struct4MakeEic(
             __return: *mut ::core::ffi::c_void,
             f1: ::core::ffi::c_int,
             f2: ::core::ffi::c_char,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
             __return: *mut ::core::ffi::c_void,
             f1: ::core::ffi::c_char,
             f2: ::core::ffi::c_int,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::FieldInTailPadding_InnerStruct>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::FieldInTailPadding>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingC1Eicc(
+            __this: *mut ::core::ffi::c_void,
+            inner_int: ::core::ffi::c_int,
+            inner_char: ::core::ffi::c_char,
+            outer_char: ::core::ffi::c_char,
         );
     }
 }

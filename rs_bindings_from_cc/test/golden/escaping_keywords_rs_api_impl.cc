@@ -22,6 +22,10 @@ static_assert(CRUBIT_SIZEOF(struct type) == 4);
 static_assert(alignof(struct type) == 4);
 static_assert(CRUBIT_OFFSET_OF(dyn, struct type) == 0);
 
+extern "C" void __rust_thunk___ZN4typeC1Ev(struct type* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert((void (*)(int))&impl);
 
 #pragma clang diagnostic pop

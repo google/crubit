@@ -22,19 +22,56 @@ static_assert(CRUBIT_SIZEOF(struct Nontrivial) == 4);
 static_assert(alignof(struct Nontrivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
 
+static_assert((void (::Nontrivial::*)())&Nontrivial::Unqualified);
+
+static_assert((void (::Nontrivial::*)() const) & Nontrivial::ConstQualified);
+
+static_assert((void (::Nontrivial::*)() &)&Nontrivial::LvalueRefQualified);
+
+static_assert((void (::Nontrivial::*)()
+                   const&)&Nontrivial::ConstLvalueRefQualified);
+
 static_assert(CRUBIT_SIZEOF(struct NontrivialInline) == 4);
 static_assert(alignof(struct NontrivialInline) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialInline) == 0);
+
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ev(
+    struct NontrivialInline* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ei(
+    struct NontrivialInline* __this, int field) {
+  crubit::construct_at(__this, field);
+}
+
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1Eii(
+    struct NontrivialInline* __this, int field, int unused) {
+  crubit::construct_at(__this, field, unused);
+}
 
 extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
     struct NontrivialInline* __this) {
   std::destroy_at(__this);
 }
 
+extern "C" void __rust_thunk___ZN16NontrivialInline14MemberFunctionEv(
+    struct NontrivialInline* __this) {
+  __this->MemberFunction();
+}
+
+static_assert(
+    (void (::NontrivialInline::*)())&NontrivialInline::MemberFunction);
+
 static_assert(CRUBIT_SIZEOF(struct NontrivialMembers) == 4);
 static_assert(alignof(struct NontrivialMembers) == 4);
 static_assert(CRUBIT_OFFSET_OF(nontrivial_member, struct NontrivialMembers) ==
               0);
+
+extern "C" void __rust_thunk___ZN17NontrivialMembersC1Ev(
+    struct NontrivialMembers* __this) {
+  crubit::construct_at(__this);
+}
 
 extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
     struct NontrivialMembers* __this) {
@@ -44,6 +81,8 @@ extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
 static_assert(CRUBIT_SIZEOF(struct NontrivialUnpin) == 4);
 static_assert(alignof(struct NontrivialUnpin) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialUnpin) == 0);
+
+static_assert((void (::NontrivialUnpin::*)())&NontrivialUnpin::MemberFunction);
 
 extern "C" void __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
     struct NontrivialUnpin* __return, struct NontrivialUnpin* nontrivial) {
@@ -58,5 +97,7 @@ static_assert(alignof(struct NontrivialByValue) == 1);
 
 static_assert(sizeof(struct Nonmovable) == 1);
 static_assert(alignof(struct Nonmovable) == 1);
+
+static_assert((void (::Nonmovable::*)())&Nonmovable::MemberFunction);
 
 #pragma clang diagnostic pop

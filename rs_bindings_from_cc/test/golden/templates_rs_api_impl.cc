@@ -21,8 +21,18 @@
 static_assert(sizeof(struct DifferentScope) == 1);
 static_assert(alignof(struct DifferentScope) == 1);
 
+extern "C" void __rust_thunk___ZN14DifferentScopeC1Ev(
+    struct DifferentScope* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct test_namespace_bindings::TemplateParam) == 1);
 static_assert(alignof(struct test_namespace_bindings::TemplateParam) == 1);
+
+extern "C" void __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
+    struct test_namespace_bindings::TemplateParam* __this) {
+  crubit::construct_at(__this);
+}
 
 static_assert(sizeof(class private_classes::HasPrivateType) == 1);
 static_assert(alignof(class private_classes::HasPrivateType) == 1);

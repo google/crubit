@@ -29,4 +29,9 @@ static_assert(CRUBIT_SIZEOF(struct UserOfImportedType) == 8);
 static_assert(alignof(struct UserOfImportedType) == 8);
 static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);
 
+extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
+    struct UserOfImportedType* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

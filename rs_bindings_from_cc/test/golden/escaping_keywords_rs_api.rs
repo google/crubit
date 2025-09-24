@@ -27,30 +27,33 @@ unsafe impl ::cxx::ExternType for r#type {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'type::type':
-// Can't generate bindings for type::type, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __this (parameter #0): references are not supported)
+impl Default for r#type {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN4typeC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'type::type':
 // Can't generate bindings for type::type, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'type::type':
 // Can't generate bindings for type::type, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'type::operator=':
 // Can't generate bindings for type::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'type::operator=':
 // Can't generate bindings for type::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
@@ -68,6 +71,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN4typeC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_Z4impli"]
         pub(crate) unsafe fn __rust_thunk___Z4impli(r#match: ::core::ffi::c_int);
     }

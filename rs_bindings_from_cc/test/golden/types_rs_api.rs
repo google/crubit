@@ -33,30 +33,33 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
+impl Default for SomeStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'SomeStruct::SomeStruct':
 // Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeStruct::operator=':
 // Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeStruct::operator=':
 // Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for struct 'ForwardDeclaredStruct':
@@ -124,20 +127,16 @@ unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
 
 // Error while generating bindings for constructor 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'FunctionTakingPointersAndReferences':
 // Can't generate bindings for FunctionTakingPointersAndReferences, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of const_ref_param (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of mut_ref_param (parameter #1): references are not supported)
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of const_ptr_param (parameter #2): references are not supported)
-// //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of mut_ptr_param (parameter #3): references are not supported)
 
 #[inline(always)]
 pub fn VoidReturningFunction() {
@@ -170,6 +169,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) unsafe fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
             unsafe extern "C" fn(

@@ -21,6 +21,11 @@
 static_assert(CRUBIT_SIZEOF(class PolymorphicBase) == 8);
 static_assert(alignof(class PolymorphicBase) == 8);
 
+extern "C" void __rust_thunk___ZN15PolymorphicBaseC1Ev(
+    class PolymorphicBase* __this) {
+  crubit::construct_at(__this);
+}
+
 extern "C" void __rust_thunk___ZN15PolymorphicBaseD1Ev(
     class PolymorphicBase* __this) {
   std::destroy_at(__this);
@@ -29,6 +34,18 @@ extern "C" void __rust_thunk___ZN15PolymorphicBaseD1Ev(
 static_assert(CRUBIT_SIZEOF(class PolymorphicBase2) == 8);
 static_assert(alignof(class PolymorphicBase2) == 8);
 
+extern "C" void __rust_thunk___ZN16PolymorphicBase2C1Ev(
+    class PolymorphicBase2* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN16PolymorphicBase23FooEv(
+    class PolymorphicBase2* __this) {
+  __this->Foo();
+}
+
+static_assert((void (::PolymorphicBase2::*)())&PolymorphicBase2::Foo);
+
 extern "C" void __rust_thunk___ZN16PolymorphicBase2D1Ev(
     class PolymorphicBase2* __this) {
   std::destroy_at(__this);
@@ -36,6 +53,11 @@ extern "C" void __rust_thunk___ZN16PolymorphicBase2D1Ev(
 
 static_assert(CRUBIT_SIZEOF(class PolymorphicDerived) == 16);
 static_assert(alignof(class PolymorphicDerived) == 8);
+
+extern "C" void __rust_thunk___ZN18PolymorphicDerivedC1Ev(
+    class PolymorphicDerived* __this) {
+  crubit::construct_at(__this);
+}
 
 extern "C" void __rust_thunk___ZN18PolymorphicDerivedD1Ev(
     class PolymorphicDerived* __this) {

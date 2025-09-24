@@ -37,30 +37,33 @@ unsafe impl ::cxx::ExternType for Foo {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'Foo::Foo':
-// Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __this (parameter #0): references are not supported)
+impl Default for Foo {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Foo::Foo':
 // Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Foo::Foo':
 // Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Foo::operator=':
 // Can't generate bindings for Foo::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Foo::operator=':
 // Can't generate bindings for Foo::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // TODO(rosica): This comment appears near fields of a struct, and
@@ -98,30 +101,33 @@ unsafe impl ::cxx::ExternType for Bar {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'Bar::Bar':
-// Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __this (parameter #0): references are not supported)
+impl Default for Bar {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3BarC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'Bar::Bar':
 // Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Bar::Bar':
 // Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Bar::operator=':
 // Can't generate bindings for Bar::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Bar::operator=':
 // Can't generate bindings for Bar::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 /// d
@@ -138,30 +144,33 @@ unsafe impl ::cxx::ExternType for HasNoComments {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Error while generating bindings for constructor 'HasNoComments::HasNoComments':
-// Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __this (parameter #0): references are not supported)
+impl Default for HasNoComments {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // Error while generating bindings for constructor 'HasNoComments::HasNoComments':
 // Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'HasNoComments::HasNoComments':
 // Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'HasNoComments::operator=':
 // Can't generate bindings for HasNoComments::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'HasNoComments::operator=':
 // Can't generate bindings for HasNoComments::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __this (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // e
@@ -170,7 +179,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z3foov();
+        pub(crate) unsafe fn __rust_thunk___ZN3BarC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN13HasNoCommentsC1Ev(__this: *mut ::core::ffi::c_void);
     }
 }
 

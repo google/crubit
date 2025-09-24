@@ -23,6 +23,10 @@ static_assert(alignof(struct Foo) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct Foo) == 0);
 static_assert(CRUBIT_OFFSET_OF(j, struct Foo) == 4);
 
+extern "C" void __rust_thunk___ZN3FooC1Ev(struct Foo* __this) {
+  crubit::construct_at(__this);
+}
+
 extern "C" void __rust_thunk___Z3foov() { foo(); }
 
 static_assert((void (*)())&foo);
@@ -31,8 +35,17 @@ static_assert(CRUBIT_SIZEOF(struct Bar) == 4);
 static_assert(alignof(struct Bar) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct Bar) == 0);
 
+extern "C" void __rust_thunk___ZN3BarC1Ev(struct Bar* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(CRUBIT_SIZEOF(struct HasNoComments) == 4);
 static_assert(alignof(struct HasNoComments) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct HasNoComments) == 0);
+
+extern "C" void __rust_thunk___ZN13HasNoCommentsC1Ev(
+    struct HasNoComments* __this) {
+  crubit::construct_at(__this);
+}
 
 #pragma clang diagnostic pop
