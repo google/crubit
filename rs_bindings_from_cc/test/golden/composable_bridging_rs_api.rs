@@ -527,7 +527,8 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_streambuf<wchar_t, std::char_traits<wchar_t>> (incomplete type)
 
 // Error while generating bindings for class 'std::fpos<__mbstate_t>':
-// Can't generate bindings for std::fpos<__mbstate_t> due to missing bindings for its dependency: Skipping generating bindings for '__mbstate_t' because it has a leading `__`
+// Can't generate bindings for std::fpos<__mbstate_t>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::fpos<__mbstate_t> (incomplete type)
 
 // Error while generating bindings for struct 'std::char_traits<char>':
 // Can't generate bindings for std::char_traits<char>, because of missing required features (<internal link>):
