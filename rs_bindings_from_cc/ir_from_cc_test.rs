@@ -366,6 +366,40 @@ fn test_function_template_not_supported_yet() {
 }
 
 #[gtest]
+fn test_function_template_with_deduction_guide_does_not_generate_ir() {
+    let ir = ir_from_cc(
+        r#"
+    template <typename T>
+    class SomeFunctionTemplateWithDeductionGuide {
+    public:
+      SomeFunctionTemplateWithDeductionGuide(T value) : value(value) {};
+
+    private:
+      T value;
+    };
+
+    template<typename T>
+    SomeFunctionTemplateWithDeductionGuide(T) -> SomeFunctionTemplateWithDeductionGuide<T>;
+    "#,
+    )
+    .unwrap();
+    // We should only generate bindings for the class template, not the deduction guide.
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "SomeFunctionTemplateWithDeductionGuide",
+            kind: Class,
+            path: Some(UnsupportedItemPath { ident: "SomeFunctionTemplateWithDeductionGuide", enclosing_item_id: None, }),
+            errors: [FormattedError {
+                fmt: "Class templates are not supported yet",
+                message: "Class templates are not supported yet",
+            }],
+            ...
+        }}
+    );
+}
+
+#[gtest]
 fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_no_lifetime(
 ) -> googletest::Result<()> {
     let ir = ir_from_cc("void f(int&& a) {};").unwrap();
