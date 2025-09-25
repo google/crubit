@@ -32,7 +32,7 @@ phf = { version = "0.11", features = [ "macros" ] }
 
 [workspace.package]
 
-edition = "2024"
+edition = "2021"
 license-file = "LICENSE"
 repository = "https://github.com/google/crubit"
 categories = ["development-tools::ffi"]
