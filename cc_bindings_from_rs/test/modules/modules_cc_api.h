@@ -73,6 +73,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   Foo() = delete;
 
+  // Synthesized tuple constructor
+  explicit Foo(std::int32_t __field0) : __field0(std::move(__field0)) {}
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~Foo() = default;
   Foo(Foo&&) = default;

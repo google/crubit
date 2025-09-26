@@ -299,6 +299,10 @@ fn test_format_item_struct_with_tuple() {
                         __COMMENT__ "`TupleStruct` doesn't implement the `Default` trait"
                         TupleStruct() = delete;
 
+                        __COMMENT__ "Synthesized tuple constructor"
+                        TupleStruct(std::int32_t __field0, std::int32_t __field1)
+                            : __field0(std::move(__field0)), __field1(std::move(__field1)) {}
+
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
                         ~TupleStruct() = default;
                         TupleStruct(TupleStruct&&) = default;

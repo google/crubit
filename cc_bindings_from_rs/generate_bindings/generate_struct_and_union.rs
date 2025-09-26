@@ -26,11 +26,13 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
-use rustc_hir::{self as hir, ItemKind};
+use rustc_hir::attrs::AttributeKind;
+use rustc_hir::{self as hir, Attribute, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
 use rustc_span::def_id::{DefId, LocalDefId};
+use rustc_span::symbol::sym;
 use std::collections::{BTreeSet, HashSet};
 use std::iter::once;
 use std::rc::Rc;
@@ -369,6 +371,8 @@ pub fn generate_adt<'tcx>(
 
     let relocating_ctor_snippets = generate_relocating_ctor(db, core.clone());
 
+    let tuple_struct_ctor = generate_tuple_struct_ctor(db, core.clone()).unwrap_or_default();
+
     let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = tcx
         .inherent_impls(core.def_id)
@@ -385,6 +389,7 @@ pub fn generate_adt<'tcx>(
         rs_details: public_functions_rs_details,
     } = [
         default_ctor_snippets,
+        tuple_struct_ctor,
         destructor_snippets,
         move_ctor_and_assignment_snippets,
         copy_ctor_and_assignment_snippets,
@@ -593,6 +598,158 @@ fn hir_fields_per_variant<'tcx>(
     }
 }
 
+struct IndexedVariantField<'tcx> {
+    index: usize,
+    field_def: &'tcx ty::FieldDef,
+    hir_field_ty: Option<&'tcx hir::Ty<'tcx>>,
+}
+
+/// Given ADT bindings, iterates over the variants of that ADT and the fields of each variant.
+/// For each field, iteration always provides the middle FieldDef and it's index within it's variant.
+/// The hir type of the field will optionally be included if it is available.
+fn variant_fields_iter<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> impl Iterator<Item = impl Iterator<Item = IndexedVariantField<'tcx>>> {
+    // If our underlying iterator is None, we produce an infinite stream of None.
+    // This exists to present one type with the desired behavior without boxing.
+    struct RepeatedNone<'tcx> {
+        underlying: Option<std::vec::IntoIter<&'tcx [hir::FieldDef<'tcx>]>>,
+    }
+    impl<'tcx> Iterator for RepeatedNone<'tcx> {
+        type Item = Option<&'tcx [hir::FieldDef<'tcx>]>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            match self.underlying {
+                Some(ref mut variant_iter) => Some(variant_iter.next()),
+                // If we don't have a variant iterator, we just want to produce an infinite stream of None, so we don't limit our zip below.
+                None => Some(None),
+            }
+        }
+    }
+    let hir_fields = core
+        .def_id
+        .as_local()
+        .map(|local_def_id| hir_fields_per_variant(tcx, local_def_id).into_iter());
+    core.self_ty
+        .ty_adt_def()
+        .expect("`core.def_id` needs to identify an ADT")
+        .variants()
+        .iter()
+        .zip(RepeatedNone { underlying: hir_fields })
+        .map(|(variant, hir_fields)| {
+            variant.fields.iter().enumerate().map(move |(index, field_def)| {
+                let hir_field_ty = hir_fields.map(|hir_fields| {
+                    let hir_field = hir_fields
+                        .get(index)
+                        .expect("HIR ADT had fewer fields than rustc_middle for this variant");
+                    assert!(field_def.did == hir_field.def_id.to_def_id());
+                    hir_field.ty
+                });
+                IndexedVariantField { index, field_def, hir_field_ty }
+            })
+        })
+}
+
+fn anonymous_field_ident(index: usize) -> Ident {
+    format_ident!("__field{index}")
+}
+
+fn generate_tuple_struct_ctor<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
+) -> Option<ApiSnippets> {
+    let tcx = db.tcx();
+    let TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
+        panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.self_ty)
+    };
+
+    if !adt_def.has_ctor() {
+        // If this is not a struct with a constructor, don't generate a C++ constructor.
+        return None;
+    }
+
+    if tcx
+        .get_all_attrs(core.def_id)
+        .iter()
+        .any(|attr| matches!(attr, Attribute::Parsed(AttributeKind::NonExhaustive(_))))
+    {
+        // If the definition is marked #[non_exhaustive], don't generate a C++ constructor.
+        // #[non_exhaustive] tuple structs do not have a public synthesized constructor.
+        return None;
+    }
+
+    let default_trait_id = tcx.get_diagnostic_item(sym::Default).expect("Default trait not found");
+    let clone_trait_id = tcx.lang_items().copy_trait().expect("Copy trait not found");
+    let unpin_trait_id = tcx.lang_items().unpin_trait().expect("Unpin trait not found");
+
+    let field_tys = variant_fields_iter(tcx, core.as_ref())
+        .next()
+        .expect("Tuple structs must have one variant")
+        .map(|IndexedVariantField { field_def, hir_field_ty, .. }| {
+            if field_def.vis != ty::Visibility::Public {
+                // If our synthesized constructor would have a non public visibility, don't generate it as
+                // we can't mirror that visibility in C++.
+                return None;
+            }
+            let ty = field_def.ty(tcx, adt_generic_args);
+
+            let is_default = query_compiler::does_type_implement_trait(tcx, ty, default_trait_id);
+            let is_clone = query_compiler::does_type_implement_trait(tcx, ty, clone_trait_id);
+            let is_unpin = query_compiler::does_type_implement_trait(tcx, ty, unpin_trait_id);
+            let is_movable_in_cpp = (is_default && is_unpin) || is_clone;
+            if !is_movable_in_cpp {
+                // If one of our fields isn't movable in C++, we can't generate a C++ constructor.
+                return None;
+            }
+
+            Some(SugaredTy::new(ty, hir_field_ty))
+        })
+        .collect::<Option<Vec<_>>>()?;
+
+    let explicit = (field_tys.len() == 1).then_some(quote! { explicit });
+
+    let mut main_api_prereqs = CcPrerequisites::default();
+    let adt_cc_name = &core.cc_short_name;
+    let initializer_list = (0..field_tys.len()).map(|i| {
+        let cc_name = anonymous_field_ident(i);
+        quote! { #cc_name ( std::move ( #cc_name ) ) }
+    });
+
+    // If we fail to convert a field type, don't generate a constructor.
+    // Our uncovertible fields will be replaced by a blob of bytes that we do not want to appear
+    // in our API, so opt to avoid presenting a constructor for types that contain a blob of
+    // bytes.
+    let main_api_params = field_tys
+        .into_iter()
+        .enumerate()
+        .map(|(i, field_ty)| {
+            let cpp_type = db.format_ty_for_cc(field_ty, TypeLocation::Other)?;
+            let cc_name = anonymous_field_ident(i);
+            let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
+            Ok(quote! { #cpp_type #cc_name })
+        })
+        .collect::<Result<Vec<TokenStream>>>()
+        .ok()?;
+
+    let mut prereqs = main_api_prereqs.clone();
+    prereqs.move_defs_to_fwd_decls();
+
+    Some(ApiSnippets {
+        main_api: CcSnippet {
+            prereqs,
+            tokens: quote! {
+              __NEWLINE__ __COMMENT__ "Synthesized tuple constructor"
+              #explicit #adt_cc_name (
+                  #( #main_api_params ),*
+              ) : #( #initializer_list ),* { }
+              __NEWLINE__
+            },
+        },
+        ..Default::default()
+    })
+}
+
 /// Returns the body of the C++ struct that represents the given ADT.
 fn generate_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
@@ -600,7 +757,7 @@ fn generate_fields<'tcx>(
     member_function_names: &HashSet<String>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
-    let ty::TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
+    let TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
         panic!("Attempted to generate fields for a non-ADT type: {:?}", core.self_ty)
     };
 
@@ -690,37 +847,12 @@ fn generate_fields<'tcx>(
 
         // Otherwise, get the fields and determine the memory layout.
         _ => {
-            let hir_fields = core
-                .def_id
-                .as_local()
-                .map(|local_def_id| hir_fields_per_variant(tcx, local_def_id));
-            let mut variants_fields = core
-                .self_ty
-                .ty_adt_def()
-                .expect("`core.def_id` needs to identify an ADT")
-                .variants()
-                .iter_enumerated()
-                .map(|(variant_index, variant)| {
-                    variant
-                        .fields
-                        .iter()
-                        .enumerate()
-                        .map(|(index, field_def)| {
-                            let hir_field_ty = hir_fields.as_ref().map(|hir_fields| {
-                                let hir_field = hir_fields
-                                    .get(variant_index.index())
-                                    .expect("HIR ADT had fewer variants than rustc_middle")
-                                    .get(index)
-                                    .expect(
-                                        "HIR ADT had fewer fields than rustc_middle for this variant",
-                                    );
-                                assert!(field_def.did == hir_field.def_id.to_def_id());
-                                hir_field.ty
-                            });
-                            let ty = SugaredTy::new(
-                                field_def.ty(tcx, adt_generic_args),
-                                hir_field_ty,
-                            );
+            let mut variants_fields = variant_fields_iter(tcx, core)
+                .map(|field_iter| {
+                    field_iter
+                        .map(|IndexedVariantField { index, field_def, hir_field_ty }| {
+                            let ty =
+                                SugaredTy::new(field_def.ty(tcx, adt_generic_args), hir_field_ty);
                             let size =
                                 get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
@@ -751,10 +883,8 @@ fn generate_fields<'tcx>(
                             } else {
                                 name.clone()
                             };
-                            let cc_name =
-                                format_cc_ident(db, cc_name.as_str()).unwrap_or_else(|_err| {
-                                    format_ident!("__field{index}")
-                                });
+                            let cc_name = format_cc_ident(db, cc_name.as_str())
+                                .unwrap_or_else(|_err| anonymous_field_ident(index));
                             let rs_name = {
                                 let name_starts_with_digit = name
                                     .as_str()

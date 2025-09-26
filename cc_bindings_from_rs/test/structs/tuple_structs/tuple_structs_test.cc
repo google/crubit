@@ -12,10 +12,22 @@
 namespace crubit {
 namespace {
 
+using ::tuple_structs::CloneNoDefault;
+using ::tuple_structs::CopyNoDefault;
+using ::tuple_structs::DefaultAndCloneNoUnpin;
+using ::tuple_structs::DefaultNoCopyNoClone;
 using ::tuple_structs::TupleStructOnePrivateArg;
 using ::tuple_structs::TupleStructOnePublicArg;
+using ::tuple_structs::TupleStructOnePublicArgOnePrivateArg;
 using ::tuple_structs::TupleStructTwoPrivateArgs;
 using ::tuple_structs::TupleStructTwoPublicArgs;
+using ::tuple_structs::TupleStructWithCloneNoDefault;
+using ::tuple_structs::TupleStructWithCppImmovableType;
+using ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin;
+using ::tuple_structs::TupleStructWithDefaultNoCopyNoClone;
+using ::tuple_structs::TupleStructWithInvalidArgumentType;
+using ::tuple_structs::TupleStructWithNoDefault;
+using ::tuple_structs::TupleStructWithNonExhaustiveCtor;
 
 template <typename T>
 concept HasFieldZero = requires(T t) { t.__field0; };
@@ -24,10 +36,7 @@ template <typename T>
 concept HasFieldOne = requires(T t) { t.__field1; };
 
 TEST(TupleStructsTest, TupleStructOnePublicArgIsConstructibleFromArg) {
-  // TODO: 438752078 - Add support for tuple struct ctors, then replace this
-  // assertion with a usage of the constructor.
-  static_assert(!std::is_constructible_v<TupleStructOnePublicArg, int32_t>);
-  TupleStructOnePublicArg arg = TupleStructOnePublicArg::create(5);
+  TupleStructOnePublicArg arg(5);
   EXPECT_EQ(arg.__field0, 5);
   static_assert(HasFieldZero<TupleStructOnePublicArg>);
 }
@@ -40,11 +49,7 @@ TEST(TupleStructsTest, TupleStructOnePrivateArg) {
 }
 
 TEST(TupleStructsTest, TupleStructTwoPublicArgsIsConstructibleFromArgs) {
-  // TODO: 438752078 - Add support for tuple struct ctors, then replace this
-  // assertion with a usage of the constructor.
-  static_assert(
-      !std::is_constructible_v<TupleStructTwoPublicArgs, int32_t, int32_t>);
-  TupleStructTwoPublicArgs arg = TupleStructTwoPublicArgs::create(5, 7);
+  TupleStructTwoPublicArgs arg(5, 7);
   EXPECT_EQ(arg.__field0, 5);
   EXPECT_EQ(arg.__field1, 7);
   static_assert(HasFieldZero<TupleStructTwoPublicArgs>);
@@ -59,6 +64,75 @@ TEST(TupleStructsTest, TupleStructTwoPrivateArgs) {
   EXPECT_EQ(arg.get_second_arg(), 7);
   static_assert(!HasFieldZero<TupleStructTwoPrivateArgs>);
   static_assert(!HasFieldOne<TupleStructTwoPrivateArgs>);
+}
+
+TEST(TupleStructsTest,
+     TupleStructWithInvalidArgumentTypeIsNotConstructableFromArg) {
+  static_assert(!std::is_constructible_v<TupleStructWithInvalidArgumentType,
+                                         std::tuple<int32_t, int32_t>>);
+  std::tuple<int32_t, int32_t> tuple(49, 144);
+  TupleStructWithInvalidArgumentType arg =
+      TupleStructWithInvalidArgumentType::create(tuple);
+  std::tuple<int32_t, int32_t> tuple_from_arg = arg.get_arg();
+  EXPECT_EQ(std::get<0>(tuple_from_arg), 49);
+  EXPECT_EQ(std::get<1>(tuple_from_arg), 144);
+}
+
+TEST(TupleStructsTest, TupleStructWithNonExhaustiveCtorIsNotConstructible) {
+  static_assert(!std::is_constructible_v<TupleStructWithNonExhaustiveCtor,
+                                         int32_t, int32_t>);
+  TupleStructWithNonExhaustiveCtor arg =
+      TupleStructWithNonExhaustiveCtor::create(5, 7);
+  EXPECT_EQ(arg.__field0, 5);
+  EXPECT_EQ(arg.__field1, 7);
+}
+
+TEST(TupleStructsTest, TupleStructOnePublicArgOnePrivateArgIsNotConstructible) {
+  static_assert(!std::is_constructible_v<TupleStructOnePublicArgOnePrivateArg,
+                                         int32_t, int32_t>);
+  TupleStructOnePublicArgOnePrivateArg arg =
+      TupleStructOnePublicArgOnePrivateArg::create(5, 7);
+  EXPECT_EQ(arg.__field0, 5);
+  EXPECT_EQ(arg.get_second_arg(), 7);
+  static_assert(!HasFieldOne<TupleStructOnePublicArgOnePrivateArg>);
+}
+
+TEST(TupleStructsTest, TupleStructWithCppImmovableTypeIsNotConstructible) {
+  static_assert(!std::is_constructible_v<TupleStructWithCppImmovableType,
+                                         int32_t, int32_t>);
+  TupleStructWithCppImmovableType arg =
+      TupleStructWithCppImmovableType::create(5, 7);
+  EXPECT_EQ(arg.get_first_arg(), 5);
+  EXPECT_EQ(arg.get_second_arg(), 7);
+}
+
+TEST(TupleStructsTest, TupleStructWithNoDefaultIsConstructible) {
+  CopyNoDefault copy_no_default = CopyNoDefault::create(732);
+  TupleStructWithNoDefault arg(copy_no_default);
+  EXPECT_EQ(arg.__field0.value, 732);
+}
+
+TEST(TupleStructsTest, TupleStructWithDefaultNoCopyNoCloneIsConstructible) {
+  DefaultNoCopyNoClone default_no_copy_no_clone;
+  TupleStructWithDefaultNoCopyNoClone arg(DefaultNoCopyNoClone{});
+  EXPECT_EQ(arg.__field0.value, 0);
+}
+
+TEST(TupleStructsTest, TupleStructWithCloneNoDefaultIsNotConstructible) {
+  static_assert(
+      !std::is_constructible_v<TupleStructWithCloneNoDefault, CloneNoDefault>);
+  TupleStructWithCloneNoDefault arg =
+      TupleStructWithCloneNoDefault::create(891);
+  EXPECT_EQ(arg.get_value(), 891);
+}
+
+TEST(TupleStructsTest,
+     TupleStructWithDefaultAndCloneNoUnpinIsNotConstructible) {
+  static_assert(!std::is_constructible_v<TupleStructWithDefaultAndCloneNoUnpin,
+                                         DefaultAndCloneNoUnpin>);
+  TupleStructWithDefaultAndCloneNoUnpin arg =
+      TupleStructWithDefaultAndCloneNoUnpin::create();
+  EXPECT_EQ(arg.__field0.value, 0);
 }
 
 }  // namespace

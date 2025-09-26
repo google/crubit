@@ -26,6 +26,9 @@ rust_library(
     aspect_hints = [
         "//features:supported",
     ],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
 )
 
 golden_test(
