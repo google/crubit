@@ -2,7 +2,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(negative_impls, vec_into_raw_parts, extern_types)]
-#![cfg_attr(feature = "unstable", allow(incomplete_features), feature(unsized_const_params))]
+#![cfg_attr(
+    feature = "unstable",
+    allow(incomplete_features),
+    feature(unsized_const_params, adt_const_params)
+)]
 
 //! This crate provides facilities for safely casting across multiple Rust types
 //! that represent the same C++ type.  This is needed because:

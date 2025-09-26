@@ -127,7 +127,7 @@ rust_library(
     crate_features = ["unstable"],
     proc_macro_deps = [":forward_declare_proc_macros"],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts,unsized_const_params"],
+    rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts,unsized_const_params,adt_const_params"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",

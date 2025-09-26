@@ -123,7 +123,7 @@ For each feature we use, we document the following:
     successfully, so we can delete the usage (keeping the `cfg_accessible` usage
     that is currently used, and deleting the other one). Same for the rest.
 
-### `unsized_const_params`
+### `unsized_const_params`, `adt_const_params`
 
 *   **Crubit feature:** `supported`
 *   **Use case:** Better error messages when you get a type error on forward
