@@ -1232,16 +1232,10 @@ impl Record {
     /// We special-case a handful of template specializations, such as `std::string_view`,
     /// AKA `basic_string_view<char>`, even though we do not make `basic_string_view` itself
     /// available to all.
-    pub fn is_disallowed_template_instantiation(&self) -> bool {
+    pub fn is_disallowed_template_instantiation(self: &Record) -> bool {
         self.template_specialization
             .as_ref()
             .is_some_and(|ts| !ts.is_string_view && !ts.is_wstring_view)
-    }
-
-    /// Returns true if this is a template instantiation of `std::string_view`, including
-    /// aliases to it like `absl::string_view`.
-    pub fn is_string_view(&self) -> bool {
-        self.template_specialization.as_ref().is_some_and(|ts| ts.is_string_view)
     }
 
     pub fn defining_target(&self) -> Option<&BazelLabel> {
