@@ -217,12 +217,12 @@ fn func_has_bindings(
                 return;
             }
             has_nonunpin = true;
-            // TODO(b/409128537): On next binary release, add `"wrapper"` to `:experimental`,
+            // TODO: b/446717938 - On next binary release, add `"non_unpin_ctor"` to `:wrapper` and
             // and then change this to:
-            //  `!enabled_features.contains(crubit_feature::CrubitFeature::Wrapper)`.
+            //  `!enabled_features.contains(crubit_feature::CrubitFeature::NonUnpinCtor)`.
             if !enabled_features.is_disjoint(
-                crubit_feature::CrubitFeature::Experimental
-                    | crubit_feature::CrubitFeature::Wrapper,
+                crubit_feature::CrubitFeature::Wrapper
+                    | crubit_feature::CrubitFeature::NonUnpinCtor,
             ) {
                 return;
             }
@@ -230,7 +230,7 @@ fn func_has_bindings(
             missing_features.push(RequiredCrubitFeature {
                 target: target.clone(),
                 item: func.debug_name(ir),
-                missing_features: crubit_feature::CrubitFeature::Wrapper.into(),
+                missing_features: crubit_feature::CrubitFeature::NonUnpinCtor.into(),
                 capability_description: format!(
                     "<internal link>_relocatable_error: {location} is not rust-movable"
                 )
@@ -275,7 +275,12 @@ fn func_has_bindings(
         });
     }
 
-    if has_nonunpin && !enabled_features.contains(crubit_feature::CrubitFeature::Experimental) {
+    if has_nonunpin
+        && enabled_features.is_disjoint(
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::NonUnpinCtor,
+        )
+    {
         visibility = Visibility::PubCrate;
     }
     Ok(BindingsInfo { visibility })
