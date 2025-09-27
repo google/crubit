@@ -96,6 +96,7 @@ cc_library(
     hdrs = ["function.h"],
     deps = [
         "//common:annotation_reader",
+        "//common:status_macros",
         "//lifetime_annotations",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:lifetime_error",
