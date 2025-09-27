@@ -13,7 +13,7 @@ flagset::flags! {
     /// deserialize it, and an `aspect_hint`, which is presented to users in error messages. If
     /// a function requires a feature flag, the users will be told to add the corresponding
     /// `aspect_hint`.
-    pub enum CrubitFeature : u16 {
+    pub enum CrubitFeature : u8 {
         Supported,
 
         Wrapper,
@@ -32,9 +32,6 @@ flagset::flags! {
 
         /// Enable the native Rust std::unique_ptr<T> reimplementation.
         StdUniquePtr,
-
-        /// Enable handling non-Unpin types with the `ctor` crate.
-        NonUnpinCtor,
 
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
@@ -57,7 +54,6 @@ impl CrubitFeature {
             Self::DoNotHardcodeStatusBridge => "do_not_hardcode_status_bridge",
             Self::StdVector => "std_vector",
             Self::StdUniquePtr => "std_unique_ptr",
-            Self::NonUnpinCtor => "non_unpin_ctor",
             Self::Experimental => "experimental",
         }
     }
@@ -78,7 +74,6 @@ impl CrubitFeature {
             }
             Self::StdVector => "//features:std_vector",
             Self::StdUniquePtr => "//features:std_unique_ptr",
-            Self::NonUnpinCtor => "//features:non_unpin_ctor",
             Self::Experimental => "//features:experimental",
         }
     }
@@ -95,7 +90,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"do_not_hardcode_status_bridge" => CrubitFeature::DoNotHardcodeStatusBridge.into(),
         b"std_vector" => CrubitFeature::StdVector.into(),
         b"std_unique_ptr" => CrubitFeature::StdUniquePtr.into(),
-        b"non_unpin_ctor" => CrubitFeature::NonUnpinCtor.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         _ => return None,
     };
@@ -204,7 +198,6 @@ mod tests {
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
-                | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
         );
     }
@@ -234,7 +227,6 @@ mod tests {
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
-                | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
         );
     }
@@ -252,7 +244,6 @@ mod tests {
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
-                | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
         );
     }
