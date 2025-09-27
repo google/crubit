@@ -289,8 +289,6 @@
 #define CRUBIT_UNSAFE_IGNORE_ATTR(name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr", #name)
 
-// TODO: b/12574907 - Finish implementing generation for these annotations.
-//
 // The CRUBIT_OWNED_POINTER AND CRUBIT_OWNED_POINTEE annotations work together
 // to map conventionally "owned" C++ pointer usages to a Rust type that provides
 // proper Rust-style ownership.
