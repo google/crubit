@@ -16,4 +16,4 @@
 
 // Error while generating bindings for function 'UseNontrivialCustomType':
 // Can't generate bindings for UseNontrivialCustomType, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_unsupported_cc needs [//features:wrapper] for UseNontrivialCustomType (<internal link>_relocatable_error: non_trivial_custom_type (parameter #0) is not rust-movable)
+// //rs_bindings_from_cc/test/golden:user_of_unsupported_cc needs [//features:non_unpin_ctor] for UseNontrivialCustomType (<internal link>_relocatable_error: non_trivial_custom_type (parameter #0) is not rust-movable)

@@ -121,7 +121,7 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
 
 // Error while generating bindings for function 'Nontrivial::operator=':
 // Can't generate bindings for Nontrivial::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for Nontrivial::operator= (<internal link>_relocatable_error: the return type is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for Nontrivial::operator= (<internal link>_relocatable_error: the return type is not rust-movable)
 
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
@@ -448,13 +448,13 @@ impl NontrivialUnpin {
 
 // Error while generating bindings for function 'TakesByValue':
 // Can't generate bindings for TakesByValue, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for TakesByValue (<internal link>_relocatable_error: the return type is not rust-movable)
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for TakesByValue (<internal link>_relocatable_error: nontrivial (parameter #0) is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValue (<internal link>_relocatable_error: the return type is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValue (<internal link>_relocatable_error: nontrivial (parameter #0) is not rust-movable)
 
 // Error while generating bindings for function 'TakesByValueInline':
 // Can't generate bindings for TakesByValueInline, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for TakesByValueInline (<internal link>_relocatable_error: the return type is not rust-movable)
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for TakesByValueInline (<internal link>_relocatable_error: nontrivial (parameter #0) is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValueInline (<internal link>_relocatable_error: the return type is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValueInline (<internal link>_relocatable_error: nontrivial (parameter #0) is not rust-movable)
 
 #[inline(always)]
 pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
@@ -542,7 +542,7 @@ unsafe impl ::cxx::ExternType for NontrivialByValue {
 
 // Error while generating bindings for function 'NontrivialByValue::operator=':
 // Can't generate bindings for NontrivialByValue::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for NontrivialByValue::operator= (<internal link>_relocatable_error: other (parameter #1) is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for NontrivialByValue::operator= (<internal link>_relocatable_error: other (parameter #1) is not rust-movable)
 
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nExpected first operator== param reference to be immutable, but found mutable reference: &'a mut crate::NontrivialByValue\ncomparison operator return type must be `bool`, found: crate::NontrivialByValue"
@@ -605,11 +605,11 @@ impl Nonmovable {
 
 // Error while generating bindings for function 'TakesNonmovableByValue':
 // Can't generate bindings for TakesNonmovableByValue, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for TakesNonmovableByValue (<internal link>_relocatable_error: nonmovable (parameter #0) is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesNonmovableByValue (<internal link>_relocatable_error: nonmovable (parameter #0) is not rust-movable)
 
 // Error while generating bindings for function 'ReturnsNonmovableByValue':
 // Can't generate bindings for ReturnsNonmovableByValue, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:wrapper] for ReturnsNonmovableByValue (<internal link>_relocatable_error: the return type is not rust-movable)
+// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for ReturnsNonmovableByValue (<internal link>_relocatable_error: the return type is not rust-movable)
 
 mod detail {
     #[allow(unused_imports)]
