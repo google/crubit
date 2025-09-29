@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/type_alias:type_alias
-// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, std_unique_ptr, std_vector, supported, unsafe_types, wrapper
+// Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, unsafe_types, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
