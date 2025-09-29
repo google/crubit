@@ -2,9 +2,6 @@
 
 # C++/Rust Protobuf interop
 
-WARNING: This page documents functionality that is currently internal to the
-Google monorepo.
-
 Protocol buffers are Google's language-neutral, platform-neutral, extensible
 mechanism for serializing structured data. Once you define how you want your
 data to be structured once, you can generate source code in a variety of

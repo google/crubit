@@ -2,9 +2,6 @@
 
 # `absl::Status` in Rust
 
-WARNING: This page documents functionality that is currently internal to the
-Google monorepo.
-
 NOTE: The APIs here have planned future backwards-incompatible changes, and you
 may see LSCs as we migrate to the end state API.
 
@@ -28,28 +25,33 @@ StatusError>`.)
 
 ## Calling C++ APIs using `Status` {#cpp}
 
-TODO: more narrative documentation, inline example code.
+C++ functions returning `Status`/`StatusOr` can be defined as normal:
 
-<!-- Need to submit examples first, then docs, to get working previews. -->
+```live-snippet
+cs/file:examples/types/absl_status/cpp_api.h content:ReturnsStatus
+```
 
-See examples/types/absl_status/rust_api.rs for an
-example definition, and
-examples/types/absl_status/user_of_rust_api.cc for
-how to call it from C++.
+...and will return a `Result`:
+
+```live-snippet
+cs/file:examples/types/absl_status/user_of_cpp_api.rs content:ReturnsStatus
+```
 
 ## Calling Rust APIs using `Status` {#rust}
 
-TODO: more narrative documentation, inline example code.
-
 Unlike when calling C++ APIs, currently you cannot directly call a Rust API
-returning a `Status`. Instead, it must use a workaround type, `StatusWrapper`.
+returning a `Status` or `StatusOr`. Instead, it must use a workaround type,
+`StatusWrapper`. This is tracked by b/441266536.
 
-<!-- Need to submit examples first, then docs, to get working previews. -->
+```live-snippet
+cs/file:examples/types/absl_status/rust_api.rs
+```
 
-See examples/types/absl_status/cpp_api.rs for an
-example definition, and
-examples/types/absl_status/user_of_cpp_api.rs for how
-to call it from Rust.
+The `StatusWrapper` type automatically becomes an `absl::Status` in C++:
+
+```live-snippet
+cs/file:examples/types/absl_status/user_of_rust_api.cc content:rust_api::ReturnsStatus
+```
 
 ## Future Evolution
 
