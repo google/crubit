@@ -135,6 +135,7 @@ pub fn new_database<'db>(
     fatal_errors: Rc<dyn ReportFatalError>,
     no_thunk_name_mangling: bool,
     h_out_include_guard: IncludeGuard,
+    show_warnings: bool,
 ) -> Database<'db> {
     Database::new(
         tcx,
@@ -149,6 +150,7 @@ pub fn new_database<'db>(
         fatal_errors,
         no_thunk_name_mangling,
         h_out_include_guard,
+        show_warnings,
         source_crate_num,
         support_header,
         repr_attrs_from_db,
@@ -215,8 +217,16 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
         });
     }
 
+    let allow_warnings = if !db.show_warnings() {
+        quote! { #![allow(warnings)] }
+    } else {
+        quote! {}
+    };
+
     let cc_api_impl = quote! {
         #top_comment
+
+        #allow_warnings
 
         #![allow(unused_unsafe)]
 
