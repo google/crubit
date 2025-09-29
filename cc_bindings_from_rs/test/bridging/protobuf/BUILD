@@ -38,33 +38,33 @@ cc_proto_library(
 )
 
 rust_library(
-    name = "foo_lib",
+    name = "rust_lib",
     testonly = True,
-    srcs = ["foo_lib.rs"],
+    srcs = ["rust_lib.rs"],
     aspect_hints = ["//features:experimental"],
     deps = [":foo_rust_proto"],
 )
 
 cc_bindings_from_rust(
-    name = "foo_lib_cc_api",
+    name = "rust_lib_cc_api",
     testonly = True,
-    crate = ":foo_lib",
+    crate = ":rust_lib",
 )
 
 golden_test(
-    name = "foo_lib_golden_test",
-    basename = "foo_lib",
-    golden_h = "foo_lib_cc_api.h",
-    golden_rs = "foo_lib_cc_api_impl.rs",
-    rust_library = "foo_lib",
+    name = "rust_lib_golden_test",
+    basename = "rust_lib",
+    golden_h = "rust_lib_cc_api.h",
+    golden_rs = "rust_lib_cc_api_impl.rs",
+    rust_library = "rust_lib",
 )
 
 crubit_cc_test(
-    name = "foo_lib_test",
-    srcs = ["foo_lib_test.cc"],
+    name = "user_of_rust_lib",
+    srcs = ["user_of_rust_lib.cc"],
     deps = [
         ":foo_cc_proto",
-        ":foo_lib_cc_api",
+        ":rust_lib_cc_api",
         "@googletest//:gtest_main",
     ],
 )

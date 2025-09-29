@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "cc_bindings_from_rs/test/bridging/protobuf/foo_lib.h"
+#include "cc_bindings_from_rs/test/bridging/protobuf/rust_lib.h"
 
 #include "gtest/gtest.h"
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
@@ -15,7 +15,7 @@ TEST(ProtoBridging, ViewAndMutTypes) {
   req.set_input("hello world");
   foo_service::FooResponse rsp;
 
-  foo_lib::FooService service;
+  rust_lib::FooService service;
   EXPECT_TRUE(service.handle_request(&req, &rsp));
 
   EXPECT_EQ(rsp.output(), req.input());
@@ -26,7 +26,7 @@ TEST(ProtoBridging, ViewAndMutTypes) {
 }
 
 TEST(ProtoBridging, OwnedMessages) {
-  foo_lib::FooService service;
+  rust_lib::FooService service;
 
   foo_service::FooRequestStats cloned_req_stats = service.clone_request_stats();
   EXPECT_EQ(cloned_req_stats.num_requests(), 0);

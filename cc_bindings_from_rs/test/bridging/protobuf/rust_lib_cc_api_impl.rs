@@ -3,32 +3,32 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// foo_lib_golden
+// rust_lib_golden
 // Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, unsafe_types, wrapper
 
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]
 
 extern crate foo_rust_proto as foo_proto;
-const _: () = assert!(::std::mem::size_of::<::foo_lib_golden::FooService>() == 8);
-const _: () = assert!(::std::mem::align_of::<::foo_lib_golden::FooService>() == 8);
+const _: () = assert!(::std::mem::size_of::<::rust_lib_golden::FooService>() == 8);
+const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::FooService>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::foo_lib_golden::FooService as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::foo_lib_golden::FooService).write(__rs_return_value);
+            <::rust_lib_golden::FooService as ::core::default::Default>::default();
+        (__ret_ptr as *mut ::rust_lib_golden::FooService).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_drop(
-    __self: &'static mut ::core::mem::MaybeUninit<::foo_lib_golden::FooService>,
+    __self: &'static mut ::core::mem::MaybeUninit<::rust_lib_golden::FooService>,
 ) {
     unsafe { __self.assume_init_drop() };
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_handle_urequest(
-    __self: &'static mut ::foo_lib_golden::FooService,
+    __self: &'static mut ::rust_lib_golden::FooService,
     req: *const core::ffi::c_void,
     rsp: *const core::ffi::c_void,
 ) -> bool {
@@ -43,26 +43,26 @@ unsafe extern "C" fn __crubit_thunk_handle_urequest(
             __crubit_temp.write(::core::mem::transmute(rsp));
             __crubit_temp.assume_init()
         };
-        ::foo_lib_golden::FooService::handle_request(__self, req, rsp)
+        ::rust_lib_golden::FooService::handle_request(__self, req, rsp)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_request_ustats(
-    __self: &'static ::foo_lib_golden::FooService,
+    __self: &'static ::rust_lib_golden::FooService,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::foo_lib_golden::FooService::request_stats(__self);
+        let __rs_return_value = ::rust_lib_golden::FooService::request_stats(__self);
         (__ret_ptr as*mut::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestStatsView<'static>).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_clone_urequest_ustats(
-    __self: &'static ::foo_lib_golden::FooService,
+    __self: &'static ::rust_lib_golden::FooService,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::foo_lib_golden::FooService::clone_request_stats(__self);
+        let __rs_return_value = ::rust_lib_golden::FooService::clone_request_stats(__self);
         proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_rust_to_cpp_converter(
             std::ptr::from_ref(&__rs_return_value) as *const core::ffi::c_void,
             __ret_ptr,
@@ -71,7 +71,7 @@ unsafe extern "C" fn __crubit_thunk_clone_urequest_ustats(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
-    __self: &'static mut ::foo_lib_golden::FooService,
+    __self: &'static mut ::rust_lib_golden::FooService,
     updated_stats: *const core::ffi::c_void,
 ) -> () {
     unsafe {
@@ -83,7 +83,7 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
             );
             __crubit_temp.assume_init()
         };
-        ::foo_lib_golden::FooService::update_request_stats(__self, updated_stats)
+        ::rust_lib_golden::FooService::update_request_stats(__self, updated_stats)
     }
 }
 extern "C" {

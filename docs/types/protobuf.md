@@ -53,7 +53,7 @@ TODO: more narrative documentation, inline example code.
 <!-- Need to submit examples first, then docs, to get working previews. -->
 
 See
-cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs
+cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs
 for an example definition, and
-cc_bindings_from_rs/test/bridging/protobuf/foo_lib_test.cc
+cc_bindings_from_rs/test/bridging/protobuf/user_of_rust_lib.cc
 for how to call it from Rust.

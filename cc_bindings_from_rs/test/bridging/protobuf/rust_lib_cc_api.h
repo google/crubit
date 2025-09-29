@@ -3,14 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated C++ bindings for the following Rust crate:
-// foo_lib_golden
+// rust_lib_golden
 // Features: do_not_hardcode_status_bridge, experimental,
 // infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector,
 // supported, unsafe_types, wrapper
 
 // clang-format off
-#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_FOO_LIB_GOLDEN
-#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_FOO_LIB_GOLDEN
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
 
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
@@ -21,11 +21,11 @@
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
 
-namespace foo_lib {
+namespace rust_lib {
 
 // Generated from:
-// cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=12
-struct CRUBIT_INTERNAL_RUST_TYPE(":: foo_lib_golden :: FooService") alignas(8)
+// cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=12
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
     [[clang::trivial_abi]] FooService final {
  public:
   // Default::default
@@ -45,21 +45,21 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: foo_lib_golden :: FooService") alignas(8)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=17
+  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=17
   bool handle_request(const ::foo_service::FooRequest* req,
                       ::foo_service::FooResponse* rsp);
 
   // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=24
+  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=24
   const ::foo_service::FooRequestStats* request_stats()
       const& [[clang::annotate_type("lifetime", "__anon1")]];
 
   // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=28
+  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=28
   ::foo_service::FooRequestStats clone_request_stats() const;
 
   // Generated from:
-  // cc_bindings_from_rs/test/bridging/protobuf/foo_lib.rs;l=32
+  // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=32
   void update_request_stats(::foo_service::FooRequestStats updated_stats);
 
  private:
@@ -79,13 +79,13 @@ static_assert(
     alignof(FooService) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_default(::foo_lib::FooService* __ret_ptr);
+extern "C" void __crubit_thunk_default(::rust_lib::FooService* __ret_ptr);
 }
 inline FooService::FooService() {
   __crubit_internal::__crubit_thunk_default(this);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_drop(::foo_lib::FooService&);
+extern "C" void __crubit_thunk_drop(::rust_lib::FooService&);
 }
 inline FooService::~FooService() {
   __crubit_internal::__crubit_thunk_drop(*this);
@@ -98,7 +98,7 @@ inline FooService& FooService::operator=(FooService&& other) {
   return *this;
 }
 namespace __crubit_internal {
-extern "C" bool __crubit_thunk_handle_urequest(::foo_lib::FooService&,
+extern "C" bool __crubit_thunk_handle_urequest(::rust_lib::FooService&,
                                                const ::foo_service::FooRequest*,
                                                ::foo_service::FooResponse*);
 }
@@ -110,7 +110,7 @@ inline bool FooService::handle_request(const ::foo_service::FooRequest* req,
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_request_ustats(
-    ::foo_lib::FooService const&,
+    ::rust_lib::FooService const&,
     const ::foo_service::FooRequestStats** __ret_ptr);
 }
 inline const ::foo_service::FooRequestStats* FooService::request_stats()
@@ -129,7 +129,7 @@ inline const ::foo_service::FooRequestStats* FooService::request_stats()
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_urequest_ustats(
-    ::foo_lib::FooService const&, ::foo_service::FooRequestStats* __ret_ptr);
+    ::rust_lib::FooService const&, ::foo_service::FooRequestStats* __ret_ptr);
 }
 inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
   auto&& self = *this;
@@ -146,7 +146,7 @@ inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_update_urequest_ustats(
-    ::foo_lib::FooService&, ::foo_service::FooRequestStats*);
+    ::rust_lib::FooService&, ::foo_service::FooRequestStats*);
 }
 inline void FooService::update_request_stats(
     ::foo_service::FooRequestStats updated_stats) {
@@ -157,5 +157,5 @@ inline void FooService::update_request_stats(
 inline void FooService::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(FooService, stats));
 }
-}  // namespace foo_lib
-#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_FOO_LIB_GOLDEN
+}  // namespace rust_lib
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
