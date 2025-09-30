@@ -413,6 +413,7 @@ cc_embed_data(
         "check_diagnostics_preamble.h",
         "new",
         "memory",
+        "optional",
         "type_traits",
         "utility",
     ],

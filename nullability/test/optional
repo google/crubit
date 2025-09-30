@@ -1,0 +1,21 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Mock of standard library <optional> header.
+
+#ifndef CRUBIT_NULLABILITY_TEST_OPTIONAL_
+#define CRUBIT_NULLABILITY_TEST_OPTIONAL_
+
+namespace std {
+template <class T>
+struct optional {
+  bool has_value() const;
+  T *operator->();
+  const T *operator->() const;
+  const T &operator*() const;
+  const T &value() const;
+};
+}  // namespace std
+
+#endif  // CRUBIT_NULLABILITY_TEST_OPTIONAL_

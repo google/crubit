@@ -5,21 +5,11 @@
 // Tests for function calls.
 
 #include <memory>
+#include <optional>
 
 #include "nullability_test.h"
 #include "pragma_none.h"
 #include "pragma_nonnull.h"
-
-namespace std {
-template <class T>
-struct optional {
-  bool has_value() const;
-  T *operator->();
-  const T *operator->() const;
-  const T &operator*() const;
-  const T &value() const;
-};
-}  // namespace std
 
 namespace absl {
 template <typename T>
