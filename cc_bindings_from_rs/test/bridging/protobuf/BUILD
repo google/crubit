@@ -41,7 +41,6 @@ rust_library(
     name = "rust_lib",
     testonly = True,
     srcs = ["rust_lib.rs"],
-    aspect_hints = ["//features:experimental"],
     deps = [":foo_rust_proto"],
 )
 
