@@ -9,14 +9,17 @@
 )]
 
 //! This crate provides facilities for safely casting across multiple Rust types
-//! that represent the same C++ type.  This is needed because:
+//! that represent the same C++ type. A `forward_declare::Incomplete<symbol!("Foo"), ...>`
+//! represents a C++ type `Foo` with an unknown size/alignment, and unknown destructor.
 //!
-//! - In C++ one can interchangably use references to a forward-declared
+//! This is needed because:
+//!
+//! * In C++ one can interchangably use references to a forward-declared
 //!   `struct` and references to the complete definition of the `struct`, but
 //!   Rust bindings represent them using separate types (see `Incomplete<Name,
 //!   Declarer>`).
 //!
-//! - In C++ one can interchangably use multiple independent C++ class template
+//! * In C++ one can interchangably use multiple independent C++ class template
 //!   instantiations, but Rust bindings may represent them using separate types.
 //!   This happens when the same class template is instantiated with the same
 //!   template arguments in 2 different Crubit-generated crates with C++
