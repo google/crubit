@@ -504,8 +504,9 @@ inline void public_function() {
 // test_crate
 // Features: <none>
 
-#![allow(unused_unsafe)]
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()

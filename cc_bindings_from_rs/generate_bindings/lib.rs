@@ -218,12 +218,13 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
     let cc_api_impl = quote! {
         #top_comment
 
-        #![allow(unused_unsafe)]
+        #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)] __NEWLINE__
 
         // `rust_builtin_type_abi_assumptions.md` documents why the generated
         // bindings need to relax the `improper_ctypes_definitions` warning
         // for `char` (and possibly for other built-in types in the future).
         #![allow(improper_ctypes_definitions)] __NEWLINE__
+        #![deny(warnings)]  __NEWLINE__
 
         __NEWLINE__
 
