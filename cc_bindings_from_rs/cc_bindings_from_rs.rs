@@ -43,8 +43,6 @@ fn new_db<'tcx>(
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
 ) -> Database<'tcx> {
-    let crubit_support_path_format = cmdline.crubit_support_path_format.as_str().into();
-
     let mut crate_name_to_include_paths = <HashMap<Rc<str>, Vec<CcInclude>>>::new();
     for (crate_name, include_path) in &cmdline.crate_headers {
         let paths = crate_name_to_include_paths.entry(crate_name.as_str().into()).or_default();
@@ -82,7 +80,7 @@ fn new_db<'tcx>(
     generate_bindings::new_database(
         tcx,
         cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
-        crubit_support_path_format,
+        cmdline.crubit_support_path_format.clone(),
         cmdline.default_crate_features,
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),

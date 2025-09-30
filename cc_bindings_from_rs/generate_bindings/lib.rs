@@ -125,7 +125,7 @@ fn source_crate_num(db: &dyn BindingsGenerator<'_>) -> CrateNum {
 pub fn new_database<'db>(
     tcx: TyCtxt<'db>,
     source_crate_name: Option<Rc<str>>,
-    crubit_support_path_format: Rc<str>,
+    crubit_support_path_format: dyn_format::Format<1>,
     default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
     crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,

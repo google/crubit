@@ -11,6 +11,8 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::rc::Rc;
 
+use dyn_format::Format;
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum CcConstQualifier {
     Mut,
@@ -373,7 +375,7 @@ pub enum CcInclude {
     /// Represents an `#include` for Crubit C++ support library headers: the
     /// format specifier for what comes after `#include` and path of the support
     /// library header.
-    SupportLibHeader(Rc<str>, Rc<str>),
+    SupportLibHeader(Format<1>, Rc<str>),
 }
 
 impl CcInclude {
@@ -444,7 +446,7 @@ impl CcInclude {
 
     /// Creates a support library header include based on the specified format.
     /// E.g., `\"{header}\"` and `hdr.h` produces `#include "hdr.h"`.
-    pub fn support_lib_header(format: Rc<str>, path: Rc<str>) -> Self {
+    pub fn support_lib_header(format: Format<1>, path: Rc<str>) -> Self {
         Self::SupportLibHeader(format, path)
     }
 }
@@ -463,7 +465,7 @@ impl ToTokens for CcInclude {
             }
             Self::SupportLibHeader(format, path) => {
                 let full_path: TokenStream = format
-                    .replace("{header}", path)
+                    .format(&[&*path])
                     .parse()
                     .expect("Failed to parse support lib `#include` path");
                 quote! { __HASH_TOKEN__ include #full_path __NEWLINE__ }.to_tokens(tokens)
@@ -741,10 +743,10 @@ pub mod tests {
         ];
 
         for (support_path_format, header, expected_output) in tests.iter() {
-            let header = CcInclude::support_lib_header(
-                support_path_format.to_string().into(),
-                header.to_string().into(),
-            );
+            let support_path_format =
+                Format::parse_with_metavars(support_path_format, &["header"]).unwrap();
+            let header =
+                CcInclude::support_lib_header(support_path_format, header.to_string().into());
             let mut actual_tokens = TokenStream::default();
             header.to_tokens(&mut actual_tokens);
 

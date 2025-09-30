@@ -17,7 +17,7 @@ pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
     let fatal_errors = FatalErrors::new();
     let tokens = generate_bindings_tokens(
         &ir,
-        "crubit/rs_bindings_support",
+        dyn_format::Format::parse_with_metavars("crubit/rs_bindings_support", &["unused"]).unwrap(),
         &error_report::IgnoreErrors,
         &fatal_errors,
         Environment::Production,

@@ -16,6 +16,8 @@ use rustc_middle::ty::TyCtxt;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use dyn_format::Format;
+
 /// Tests invoking `generate_item` on the item with the specified `name`
 /// from the given Rust `source`.  Returns the result of calling
 /// `test_function` with `generate_item`'s result as an argument.
@@ -70,7 +72,9 @@ fn bindings_db_for_tests_with_features(
     new_database(
         tcx,
         /* source_crate_name= */ None,
-        /* crubit_support_path_format= */ "<crubit/support/for/tests/{header}>".into(),
+        /* crubit_support_path_format= */
+        Format::parse_with_metavars("<crubit/support/for/tests/{header}>".into(), &["header"])
+            .unwrap(),
         /* default_features= */ Default::default(),
         /* crate_name_to_include_paths= */ Default::default(),
         /* crate_name_to_features= */

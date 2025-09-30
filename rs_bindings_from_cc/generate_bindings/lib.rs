@@ -30,6 +30,8 @@ use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
+use dyn_format::Format;
+
 /// Deserializes IR from `json` and generates bindings source code.
 pub fn generate_bindings(
     json: &[u8],
@@ -45,6 +47,9 @@ pub fn generate_bindings(
         let ir_string = String::from_utf8_lossy(json);
         format!("Failed to deserialize IR:\n{}", ir_string)
     })?;
+
+    let crubit_support_path_format =
+        Format::parse_with_metavars(crubit_support_path_format, &["header"])?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
         &ir,
@@ -297,7 +302,7 @@ pub fn new_database<'db>(
 /// Public for use in `generate_bindings_tokens_for_test`.
 pub fn generate_bindings_tokens(
     ir: &IR,
-    crubit_support_path_format: &str,
+    crubit_support_path_format: Format<1>,
     errors: &dyn ErrorReporting,
     fatal_errors: &dyn ReportFatalError,
     environment: Environment,
@@ -462,7 +467,10 @@ fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
     false
 }
 
-fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str) -> CppIncludes {
+fn generate_rs_api_impl_includes(
+    db: &Database,
+    crubit_support_path_format: Format<1>,
+) -> CppIncludes {
     let ir = db.ir();
 
     let mut internal_includes = BTreeSet::new();
@@ -470,7 +478,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
     if ir.records().next().is_some() {
         internal_includes.insert(CcInclude::cstddef());
         internal_includes.insert(CcInclude::SupportLibHeader(
-            crubit_support_path_format.into(),
+            crubit_support_path_format.clone(),
             "internal/sizeof.h".into(),
         ));
     };
@@ -480,7 +488,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
         // we can ignore it.
         if let Ok(Some(bridge_type)) = BridgeRsTypeKind::new(record, db) {
             internal_includes.insert(CcInclude::SupportLibHeader(
-                crubit_support_path_format.into(),
+                crubit_support_path_format.clone(),
                 if bridge_type.is_void_converters_bridge_type() {
                     "internal/lazy_init.h".into()
                 } else {
@@ -497,7 +505,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
                     || record.owning_target == "@abseil-cpp//absl/status:statusor".into())
             {
                 internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.into(),
+                    crubit_support_path_format.clone(),
                     "status_bridge.h".into(),
                 ));
             }
@@ -511,7 +519,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
 
         if let RsTypeKind::BridgeType { bridge_type, .. } = rs_type_kind.unalias() {
             internal_includes.insert(CcInclude::SupportLibHeader(
-                crubit_support_path_format.into(),
+                crubit_support_path_format.clone(),
                 if bridge_type.is_void_converters_bridge_type() {
                     "internal/lazy_init.h".into()
                 } else {
@@ -523,7 +531,7 @@ fn generate_rs_api_impl_includes(db: &Database, crubit_support_path_format: &str
 
     for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
         internal_includes.insert(CcInclude::SupportLibHeader(
-            crubit_support_path_format.into(),
+            crubit_support_path_format.clone(),
             crubit_header.into(),
         ));
     }

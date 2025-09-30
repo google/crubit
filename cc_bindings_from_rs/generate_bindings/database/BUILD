@@ -31,6 +31,7 @@ rust_library(
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
         "//common:crubit_feature",
+        "//common:dyn_format",
         "//common:error_report",
         "//common:memoized",
         "@crate_index//:flagset",

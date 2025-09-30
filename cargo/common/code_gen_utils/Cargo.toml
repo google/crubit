@@ -17,6 +17,7 @@ path = "../../../common/code_gen_utils.rs"
 
 [dependencies]
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
+dyn_format = { path = "../../../cargo/common/dyn_format"}
 heck.workspace = true
 phf.workspace = true
 proc-macro2.workspace = true

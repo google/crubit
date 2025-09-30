@@ -78,6 +78,7 @@ rust_library(
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//common:crubit_feature",
+        "//common:dyn_format",
         "@crate_index//:anyhow",
         "@crate_index//:clap",
         "@crate_index//:flagset",

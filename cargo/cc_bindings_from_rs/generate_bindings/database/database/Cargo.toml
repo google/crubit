@@ -20,6 +20,7 @@ crubit_attr = { path = "../../../../../cargo/cc_bindings_from_rs/crubit_attr"}
 crubit_abi_type = { path = "../../../../../cargo/common/crubit_abi_type"}
 arc_anyhow = { path = "../../../../../cargo/common/arc_anyhow"}
 code_gen_utils = { path = "../../../../../cargo/common/code_gen_utils"}
+dyn_format = { path = "../../../../../cargo/common/dyn_format"}
 crubit_feature = { path = "../../../../../cargo/common/crubit_feature"}
 error_report = { path = "../../../../../cargo/common/error_report"}
 memoized = { path = "../../../../../cargo/common/memoized"}

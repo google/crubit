@@ -28,6 +28,7 @@ arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 crubit_abi_type = { path = "../../../../cargo/common/crubit_abi_type"}
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+dyn_format = { path = "../../../../cargo/common/dyn_format"}
 error_report = { path = "../../../../cargo/common/error_report"}
 errors = { path = "../../../../cargo/common/errors"}
 ffi_types = { path = "../../../../cargo/common/ffi_types"}

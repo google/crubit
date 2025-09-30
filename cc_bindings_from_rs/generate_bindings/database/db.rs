@@ -14,6 +14,7 @@ use crate::sugared_ty::SugaredTy;
 use crate::type_location::TypeLocation;
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
+use dyn_format::Format;
 use error_report::{ErrorReporting, ReportFatalError};
 use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::{Ty, TyCtxt};
@@ -39,7 +40,7 @@ memoized::query_group! {
       /// using `{header}` as the place holder.  Example:
       /// `<crubit/support/{header}>` results in `#include
       /// <crubit/support/hdr.h>`.
-      fn crubit_support_path_format(&self) -> Rc<str>;
+      fn crubit_support_path_format(&self) -> Format<1>;
 
       #[input]
       /// The default features enabled on all crates, if not present in `crate_name_to_features`.

@@ -73,6 +73,7 @@ rust_library(
     srcs = ["code_gen_utils.rs"],
     deps = [
         ":arc_anyhow",
+        "//common:dyn_format",
         "@crate_index//:heck",
         "@crate_index//:phf",
         "@crate_index//:proc-macro2",
@@ -103,6 +104,23 @@ rust_library(
     deps = [
         "@crate_index//:flagset",
         "@crate_index//:serde",
+    ],
+)
+
+rust_library(
+    name = "dyn_format",
+    srcs = ["dyn_format.rs"],
+    deps = [
+        "@crate_index//:anyhow",
+    ],
+)
+
+rust_test(
+    name = "dyn_format_test",
+    srcs = ["dyn_format_test.rs"],
+    deps = [
+        ":dyn_format",
+        "@crate_index//:googletest",
     ],
 )
 
