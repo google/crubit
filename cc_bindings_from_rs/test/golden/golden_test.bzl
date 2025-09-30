@@ -81,12 +81,6 @@ def golden_test(
         flags = "--no-thunk-name-mangling",
     )
 
-    show_warning_cli_flag = "show_warning_" + rust_library
-    cc_bindings_from_rust_cli_flag(
-        name = show_warning_cli_flag,
-        flags = "--show-warnings",
-    )
-
     # Since we have patched the rust_library name, we need to keep the original crate
     # name as the namespace name otherwise users get confused.
     top_level_namespace = "top_level_namespace" + rust_library
@@ -104,7 +98,7 @@ def golden_test(
         args["aspect_hints"] = list(args["aspect_hints"])
     else:
         args["aspect_hints"] = []
-    args["aspect_hints"] += [":" + no_mangle_cli_flag, ":" + show_warning_cli_flag, ":" + top_level_namespace]
+    args["aspect_hints"] += [":" + no_mangle_cli_flag, ":" + top_level_namespace]
     rust_library_rule(
         **args
     )

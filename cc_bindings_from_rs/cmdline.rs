@@ -126,12 +126,6 @@ pub struct Cmdline {
     /// compiled via the provided `rustc_args`.
     #[clap(long, value_parser, value_name = "STRING")]
     pub source_crate_name: Option<String>,
-
-    /// This is for golden tests only. Toggles reporting of warnings in the generated rust code.
-    /// This flag has no impact on warning reporting in the provided rust source code (only what
-    /// crubit generates).
-    #[clap(long, value_parser, value_name = "BOOL")]
-    pub show_warnings: bool,
 }
 
 impl Cmdline {

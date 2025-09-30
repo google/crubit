@@ -85,9 +85,6 @@ memoized::query_group! {
       #[input]
       fn h_out_include_guard(&self) -> IncludeGuard;
 
-      #[input]
-      fn show_warnings(&self) -> bool;
-
       /// The `CrateNum` of the crate that the bindings should be generated for.
       /// This will be `LOCAL_CRATE` if no `source_crate_name` was provided.
       fn source_crate_num(&self) -> CrateNum;

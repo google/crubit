@@ -81,7 +81,6 @@ fn bindings_db_for_tests_with_features(
         /* fatal_errors= */ Rc::new(FatalErrors::new()),
         /* no_thunk_name_mangling= */ true,
         /* include_guard */ IncludeGuard::PragmaOnce,
-        /* show_warnings= */ true,
     )
 }
 

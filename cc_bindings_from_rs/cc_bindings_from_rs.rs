@@ -92,7 +92,6 @@ fn new_db<'tcx>(
         fatal_errors,
         cmdline.no_thunk_name_mangling,
         include_guard,
-        cmdline.show_warnings,
     )
 }
 
@@ -507,7 +506,6 @@ inline void public_function() {
 // test_crate
 // Features: <none>
 
-#![allow(warnings)]
 #![allow(unused_unsafe)]
 #![allow(improper_ctypes_definitions)]
 
