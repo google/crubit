@@ -6,7 +6,7 @@
 #![deny(rustc::internal)]
 
 use anyhow::Result;
-use crubit_attr::{get_attrs, CrubitAttrs};
+use crubit_attr::{get_attrs, Builtin, CrubitAttrs};
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::symbol::Symbol;
@@ -95,5 +95,22 @@ fn test_cpp_type_multi() {
     run_compiler_for_testing(test_src, |tcx| {
         let attr = attrs_for_named_def(tcx, "SomeStruct");
         assert!(attr.is_err());
+    });
+}
+
+#[test]
+fn test_builtin() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: builtin=absl_status_error"]
+            pub struct StatusError;
+        "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let attr = attrs_for_named_def(tcx, "StatusError").unwrap();
+        let expected_attrs = CrubitAttrs {
+            builtin: Some(Symbol::intern("absl_status_error")),
+            ..Default::default()
+        };
+        assert_eq!(attr, expected_attrs);
+        assert_eq!(attr.builtin().unwrap(), Builtin::AbslStatusError);
     });
 }

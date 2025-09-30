@@ -17,6 +17,7 @@ use anyhow::{bail, ensure, Result};
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
+use std::str::FromStr;
 
 #[rustversion::before(2025-05-26)]
 use rustc_span::symbol::kw;
@@ -114,6 +115,28 @@ pub struct CrubitAttrs {
     /// pub fn new() -> i32 {...}
     /// ```
     pub must_bind: bool,
+
+    /// An unique item that Crubit has builtin knowledge about. The motivating example of this
+    /// is the `status::absl::StatusError` type, such that when Crubit sees a
+    /// `Result<T, StatusError>` as a function input or output, it can generate C++ bindings that
+    /// bridge to a C++ `absl::Status` or `absl::StatusOr`.
+    pub builtin: Option<Symbol>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Builtin {
+    AbslStatusError,
+}
+
+impl FromStr for Builtin {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, ()> {
+        match s {
+            "absl_status_error" => Ok(Self::AbslStatusError),
+            _ => Err(()),
+        }
+    }
 }
 
 #[rustversion::before(2025-05-26)]
@@ -132,6 +155,7 @@ impl CrubitAttrs {
     pub const BRIDGE_ABI_RUST: &'static str = "bridge_abi_rust";
     pub const BRIDGE_ABI_CPP: &'static str = "bridge_abi_cpp";
     pub const MUST_BIND: &'static str = "must_bind";
+    pub const BUILTIN: &'static str = "builtin";
 
     fn get_attr(&self, name: &str) -> Result<Option<Symbol>> {
         Ok(match name {
@@ -145,6 +169,7 @@ impl CrubitAttrs {
             CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp,
             // MUST_BIND is a boolean attribute, so it does not have a Symbol value.
             CrubitAttrs::MUST_BIND => self.must_bind.then_some(EMPTY_SYMBOL),
+            CrubitAttrs::BUILTIN => self.builtin,
             _ => bail!("Invalid attribute name: \"{name}\""),
         })
     }
@@ -160,9 +185,14 @@ impl CrubitAttrs {
             CrubitAttrs::BRIDGE_ABI_RUST => self.bridge_abi_rust = symbol,
             CrubitAttrs::BRIDGE_ABI_CPP => self.bridge_abi_cpp = symbol,
             CrubitAttrs::MUST_BIND => self.must_bind = true,
+            CrubitAttrs::BUILTIN => self.builtin = symbol,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())
+    }
+
+    pub fn builtin(&self) -> Option<Builtin> {
+        self.builtin?.as_str().parse().ok()
     }
 
     /// Returns the Crubit attributes that specify a bridging strategy,
