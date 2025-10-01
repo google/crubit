@@ -10,19 +10,20 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
 
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 
 namespace crubit {
 
-SpecialMemberFunc GetCopyCtorSpecialMemberFunc(
-    const clang::RecordDecl& record_decl);
+SpecialMemberFunc GetCopyCtorSpecialMemberFunc(ImportContext& ictx,
+                                               clang::RecordDecl& record_decl);
 
-SpecialMemberFunc GetMoveCtorSpecialMemberFunc(
-    const clang::RecordDecl& record_decl);
+SpecialMemberFunc GetMoveCtorSpecialMemberFunc(ImportContext& ictx,
+                                               clang::RecordDecl& record_decl);
 
 SpecialMemberFunc GetDestructorSpecialMemberFunc(
-    const clang::RecordDecl& record_decl);
+    clang::RecordDecl& record_decl);
 
 }  // namespace crubit
 

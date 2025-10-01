@@ -358,6 +358,21 @@ pub fn generate_function_assertation(
     }
 }
 
+// Returns whether `func` is a copy constructor of `record_id`, assuming that `func` is a
+// constructor member function of `record_id`.
+// TODO: b/436870965 - do we need to distinguish between non-const and const ctors?
+fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
+    match &func.params[..] {
+    // We already know this is a constructor.
+    [FuncParam { type_: CcType { variant: CcTypeVariant::Pointer(_), ..}, .. },
+    // Match on any C([const] C&).
+     FuncParam { type_: CcType { variant: CcTypeVariant::Pointer(
+        PointerType {kind: PointerTypeKind::LValueRef, pointee_type: inner_type, ..}), ..}, .. }] =>
+        matches!(&**inner_type, CcType { variant: CcTypeVariant::Decl(rid), ..} if *rid == record_id),
+    _ => false
+  }
+}
+
 pub fn generate_function_thunk_impl(
     db: &dyn BindingsGenerator,
     func: &Func,
@@ -399,6 +414,17 @@ pub fn generate_function_thunk_impl(
         // using destroy_at, we avoid needing to determine or remember what the correct spelling
         // is. Similar arguments apply to `construct_at`.
         UnqualifiedIdentifier::Constructor => {
+            if let Some(meta) = func.member_func_metadata.as_ref() {
+                let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
+                if is_copy_constructor(func, record.id)
+                    && record.copy_constructor == SpecialMemberFunc::Unavailable
+                {
+                    bail!(
+                        "Would use an unavailable copy constructor for {}",
+                        record.cc_name.identifier.as_ref()
+                    );
+                }
+            }
             quote! { crubit::construct_at }
         }
         UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},

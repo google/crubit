@@ -140,6 +140,7 @@ cc_library(
     hdrs = ["ast_util.h"],
     visibility = ["//:__subpackages__"],
     deps = [
+        ":decl_importer",
         "//common:annotation_reader",
         "//common:status_macros",
         "@abseil-cpp//absl/algorithm:container",
@@ -508,11 +509,16 @@ cc_library(
     hdrs = ["ast_convert.h"],
     visibility = ["//:__subpackages__"],
     deps = [
+        ":ast_util",
         ":cc_ir",
+        ":decl_importer",
+        ":recording_diagnostic_consumer",
+        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/functional:function_ref",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:sema",
     ],
 )
 

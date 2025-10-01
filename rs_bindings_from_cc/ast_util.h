@@ -10,6 +10,7 @@
 
 #include "absl/functional/function_ref.h"
 #include "absl/status/statusor.h"
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
@@ -44,6 +45,32 @@ std::optional<std::string> CollectUnknownTypeAttrs(
 // Returns true if `decl` is non-null and refers to a (code-generated) proto2
 // message.
 bool IsProto2Message(const clang::Decl& decl);
+
+// An RAII guard that sets a fake TU scope for the duration of its lifetime
+// and restores the previous TU scope when it goes out of scope.
+class FakeTUScope {
+ public:
+  // Sets `ctx`'s `Sema`'s `TUScope` to a fake scope that points to the
+  // translation unit declaration.
+  explicit FakeTUScope(ImportContext& ctx)
+      : ctx_(ctx),
+        scope_(std::make_unique<clang::Scope>(nullptr, clang::Scope::DeclScope,
+                                              ctx_.sema_.getDiagnostics())),
+        old_tu_scope_(ctx_.sema_.TUScope) {
+    ctx_.sema_.TUScope = scope_.get();
+    ctx_.sema_.TUScope->setEntity(ctx_.ctx_.getTranslationUnitDecl());
+  }
+
+  ~FakeTUScope() {
+    ctx_.sema_.TUScope->setEntity(nullptr);
+    ctx_.sema_.TUScope = old_tu_scope_;
+  }
+
+ private:
+  ImportContext& ctx_;
+  std::unique_ptr<clang::Scope> scope_;
+  clang::Scope* old_tu_scope_;
+};
 
 }  // namespace crubit
 
