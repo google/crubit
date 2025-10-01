@@ -6,8 +6,9 @@
 // must_bind_golden
 // Features: supported, unsafe_types
 
-#![allow(unused_unsafe)]
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
 
 const _: () = assert!(::std::mem::size_of::<::must_bind_golden::Original>() == 4);
 const _: () = assert!(::std::mem::align_of::<::must_bind_golden::Original>() == 4);

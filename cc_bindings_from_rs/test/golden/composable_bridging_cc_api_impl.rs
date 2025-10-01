@@ -6,8 +6,9 @@
 // composable_bridging_rust_golden
 // Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, unsafe_types, wrapper
 
-#![allow(unused_unsafe)]
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_returns_usome_uint(__ret_ptr: *mut core::ffi::c_uchar) -> () {

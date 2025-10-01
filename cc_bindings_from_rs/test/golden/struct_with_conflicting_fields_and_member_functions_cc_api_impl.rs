@@ -6,8 +6,9 @@
 // struct_with_conflicting_fields_and_member_functions_rust_golden
 // Features: do_not_hardcode_status_bridge, experimental, infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, unsafe_types, wrapper
 
-#![allow(unused_unsafe)]
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
 
 const _: () = assert!(
     ::std::mem::size_of::<::struct_with_conflicting_fields_and_member_functions_rust_golden::X>()

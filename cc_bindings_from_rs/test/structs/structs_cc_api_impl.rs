@@ -6,8 +6,9 @@
 // structs_golden
 // Features: supported, unsafe_types
 
-#![allow(unused_unsafe)]
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
 
 const _: () = assert!(::std::mem::size_of::<::structs_golden::repr_c::Point>() == 8);
 const _: () = assert!(::std::mem::align_of::<::structs_golden::repr_c::Point>() == 4);
