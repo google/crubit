@@ -568,6 +568,8 @@ pub struct TraitThunks {
 pub fn generate_trait_thunks<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     trait_id: DefId,
+    // We do not support other generic args, yet.
+    type_args: &[Ty<'tcx>],
     adt: &AdtCoreBindings<'tcx>,
 ) -> Result<TraitThunks> {
     let tcx = db.tcx();
@@ -580,7 +582,12 @@ pub fn generate_trait_thunks<'tcx>(
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
         assert!(self_ty.needs_drop(tcx, post_analysis_typing_env(tcx, adt.def_id)));
-    } else if !does_type_implement_trait(tcx, self_ty, trait_id) {
+    } else if !does_type_implement_trait(
+        tcx,
+        self_ty,
+        trait_id,
+        type_args.iter().copied().map(ty::GenericArg::from),
+    ) {
         let trait_name = tcx.item_name(trait_id);
         bail!("`{self_ty}` doesn't implement the `{trait_name}` trait");
     }
@@ -588,11 +595,10 @@ pub fn generate_trait_thunks<'tcx>(
     let mut method_name_to_cc_thunk_name = HashMap::new();
     let mut cc_thunk_decls = CcSnippet::default();
     let mut rs_thunk_impls = RsSnippet::default();
-    let methods =
-        tcx.associated_items(trait_id).in_definition_order().filter(|item| match item.kind {
-            ty::AssocKind::Fn { name: _, has_self: _ } => true,
-            _ => false,
-        });
+    let methods = tcx
+        .associated_items(trait_id)
+        .in_definition_order()
+        .filter(|item| matches!(item.kind, ty::AssocKind::Fn { .. }));
     for method in methods {
         let substs = {
             let generics = tcx.generics_of(method.def_id);
@@ -607,12 +613,22 @@ pub fn generate_trait_thunks<'tcx>(
                 );
             }
             assert!(generics.has_self);
-            tcx.mk_args_trait(self_ty, std::iter::empty())
+            tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from))
         };
 
         let thunk_name = {
             if db.no_thunk_name_mangling() {
-                format!("__crubit_thunk_{}", &escape_non_identifier_chars(method.name().as_str()))
+                let print_types = type_args.iter().map(|ty| format!("{}", ty)).collect_vec();
+                let method_name = if print_types.is_empty() {
+                    escape_non_identifier_chars(method.name().as_str())
+                } else {
+                    escape_non_identifier_chars(&format!(
+                        "{}_{}",
+                        method.name().as_str(),
+                        print_types.join("_")
+                    ))
+                };
+                format!("__crubit_thunk_{}", method_name)
             } else {
                 #[rustversion::since(2025-05-06)]
                 let instance = ty::Instance::new_raw(method.def_id, substs);
@@ -667,7 +683,30 @@ pub fn generate_trait_thunks<'tcx>(
                     let fully_qualified_trait_name =
                         FullyQualifiedName::new(db, trait_id).format_for_rs();
                     let method_name = make_rs_ident(method.name().as_str());
-                    quote! { <#struct_name as #fully_qualified_trait_name>::#method_name }
+                    let args = type_args
+                        .iter()
+                        .map(|ty| {
+                            let static_ty = replace_all_regions_with_static(tcx, *ty);
+                            // Check our type has no variables.
+                            assert!(
+                                !static_ty.flags().contains(
+                                    ty::TypeFlags::HAS_PARAM
+                                        | ty::TypeFlags::HAS_INFER
+                                        | ty::TypeFlags::HAS_PLACEHOLDER
+                                        | ty::TypeFlags::HAS_FREE_REGIONS
+                                ),
+                                "Generic types are not supported in trait impls yet."
+                            );
+                            db.format_ty_for_rs(static_ty)
+                                .expect("We've replaced all types with static")
+                        })
+                        .collect_vec();
+                    let generics = if args.is_empty() {
+                        quote! {}
+                    } else {
+                        quote! { < #( #args ),* > }
+                    };
+                    quote! { <#struct_name as #fully_qualified_trait_name #generics >::#method_name }
                 };
                 generate_thunk_impl(
                     db,

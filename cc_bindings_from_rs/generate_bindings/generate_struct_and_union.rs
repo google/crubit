@@ -325,7 +325,7 @@ pub fn generate_adt<'tcx>(
             method_name_to_cc_thunk_name,
             mut cc_thunk_decls,
             rs_thunk_impls: rs_details,
-        } = generate_trait_thunks(db, drop_trait_id, &core)
+        } = generate_trait_thunks(db, drop_trait_id, &[], &core)
             .expect("`generate_adt_core` should have already validated `Drop` support");
         // Don't introduce additional feature prerequisites for the `Drop` trait impl, as this
         // will cause type generation to fail based on an API that isn't even user-accessible.
@@ -694,9 +694,10 @@ fn generate_tuple_struct_ctor<'tcx>(
             }
             let ty = field_def.ty(tcx, adt_generic_args);
 
-            let is_default = query_compiler::does_type_implement_trait(tcx, ty, default_trait_id);
-            let is_clone = query_compiler::does_type_implement_trait(tcx, ty, clone_trait_id);
-            let is_unpin = query_compiler::does_type_implement_trait(tcx, ty, unpin_trait_id);
+            let is_default =
+                query_compiler::does_type_implement_trait(tcx, ty, default_trait_id, []);
+            let is_clone = query_compiler::does_type_implement_trait(tcx, ty, clone_trait_id, []);
+            let is_unpin = query_compiler::does_type_implement_trait(tcx, ty, unpin_trait_id, []);
             let is_movable_in_cpp = (is_default && is_unpin) || is_clone;
             if !is_movable_in_cpp {
                 // If one of our fields isn't movable in C++, we can't generate a C++ constructor.

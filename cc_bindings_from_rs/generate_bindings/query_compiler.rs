@@ -21,7 +21,9 @@ use rustc_abi::{FieldIdx, FieldsShape, Integer, Layout, Primitive, Scalar, Varia
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_hir::attrs::IntType;
 use rustc_infer::infer::TyCtxtInferExt;
-use rustc_middle::ty::{self, IntTy, Region, Ty, TyCtxt, UintTy};
+use rustc_middle::ty::{
+    self, GenericArg, GenericArgKind, GenericParamDefKind, IntTy, Region, Ty, TyCtxt, UintTy,
+};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use rustc_trait_selection::infer::InferCtxtExt;
@@ -41,7 +43,7 @@ pub fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         ty::TyKind::RawPtr{..} |
         ty::TyKind::Ref{..} |
         ty::TyKind::FnPtr{..} => true,
-        ty::TyKind::Tuple(types) if types.len() == 0 => true,
+        ty::TyKind::Tuple(types) if types.is_empty() => true,
 
         // Crubit assumes that `char` is compatible with a certain `extern "C"` ABI.
         // See `rust_builtin_type_abi_assumptions.md` for more details.
@@ -317,17 +319,23 @@ pub fn does_type_implement_trait<'tcx>(
     tcx: TyCtxt<'tcx>,
     self_ty: Ty<'tcx>,
     trait_id: DefId,
+    generic_args: impl IntoIterator<Item = GenericArg<'tcx>>,
 ) -> bool {
     assert!(tcx.is_trait(trait_id));
 
     let generics = tcx.generics_of(trait_id);
     assert!(generics.has_self);
-    assert_eq!(
-        generics.count(),
-        1, // Only `Self`
-        "Generic traits are not supported yet (b/286941486)",
-    );
-    let substs = [self_ty];
+    // Self type must be first in our substitution.
+    let substs = std::iter::once(GenericArg::from(self_ty)).chain(generic_args).collect::<Vec<_>>();
+    // Assert we've provided the expected kind of args for each generic param.
+    // For example, we haven't passed a lifetime where a type is expected.
+    assert!(generics.own_params.len() == substs.len());
+    assert!(generics.own_params.iter().zip(substs.iter()).all(|(param, arg)| matches!(
+        (&param.kind, arg.kind()),
+        (GenericParamDefKind::Type { .. }, GenericArgKind::Type(_))
+            | (GenericParamDefKind::Lifetime, GenericArgKind::Lifetime(_))
+            | (GenericParamDefKind::Const { .. }, GenericArgKind::Const(_))
+    )));
 
     use rustc_middle::ty::TypingMode;
     tcx.infer_ctxt()
