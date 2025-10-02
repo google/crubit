@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // leaf_rs_lib_golden
-// Features: supported, unsafe_types
+// Features: supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN

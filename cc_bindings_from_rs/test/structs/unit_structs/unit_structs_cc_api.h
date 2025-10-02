@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // unit_structs_golden
-// Features: supported, unsafe_types
+// Features: supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_UNIT_STRUCTS_UNIT_STRUCTS_GOLDEN

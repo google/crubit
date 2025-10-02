@@ -6,7 +6,7 @@
 // function_pointers_golden
 // Features: do_not_hardcode_status_bridge, experimental,
 // infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector,
-// supported, unsafe_types, wrapper
+// supported, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTION_POINTERS_FUNCTION_POINTERS_GOLDEN

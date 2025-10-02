@@ -8,5 +8,4 @@ visibility(["//..."])
 
 SUPPORTED_FEATURES = [
     "supported",
-    "unsafe_types",
 ]

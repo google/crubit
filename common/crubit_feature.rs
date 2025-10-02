@@ -18,8 +18,6 @@ flagset::flags! {
 
         Wrapper,
 
-        UnsafeTypes,
-
         /// Enables inferring the lifetimes of arguments to special member functions and common
         /// operators.
         InferOperatorLifetimes,
@@ -53,7 +51,6 @@ impl CrubitFeature {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
             Self::InferOperatorLifetimes => "infer_operator_lifetimes",
-            Self::UnsafeTypes => "unsafe_types",
             Self::DoNotHardcodeStatusBridge => "do_not_hardcode_status_bridge",
             Self::StdVector => "std_vector",
             Self::StdUniquePtr => "std_unique_ptr",
@@ -72,7 +69,6 @@ impl CrubitFeature {
             Self::InferOperatorLifetimes => {
                 "//features:infer_operator_lifetimes"
             }
-            Self::UnsafeTypes => "//features:unsafe_types",
             Self::DoNotHardcodeStatusBridge => {
                 "//features:do_not_hardcode_status_bridge"
             }
@@ -91,7 +87,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
         b"infer_operator_lifetimes" => CrubitFeature::InferOperatorLifetimes.into(),
-        b"unsafe_types" => CrubitFeature::UnsafeTypes.into(),
         b"do_not_hardcode_status_bridge" => CrubitFeature::DoNotHardcodeStatusBridge.into(),
         b"std_vector" => CrubitFeature::StdVector.into(),
         b"std_unique_ptr" => CrubitFeature::StdUniquePtr.into(),
@@ -200,7 +195,6 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
-                | CrubitFeature::UnsafeTypes
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
@@ -230,7 +224,6 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
-                | CrubitFeature::UnsafeTypes
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
@@ -248,7 +241,6 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
-                | CrubitFeature::UnsafeTypes
                 | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
