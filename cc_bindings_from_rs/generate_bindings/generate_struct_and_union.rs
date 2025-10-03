@@ -30,12 +30,23 @@ use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, Attribute, ItemKind};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
-use rustc_middle::ty::{self, Ty, TyCtxt, TyKind};
-use rustc_span::def_id::{DefId, LocalDefId};
+use rustc_middle::ty::{self, Ty, TyCtxt, TyKind, TypeFlags};
+use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::sym;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
+
+fn has_type_or_const_vars() -> TypeFlags {
+    TypeFlags::HAS_TY_PARAM
+        | TypeFlags::HAS_CT_PARAM
+        | TypeFlags::HAS_TY_INFER
+        | TypeFlags::HAS_CT_INFER
+        | TypeFlags::HAS_TY_PLACEHOLDER
+        | TypeFlags::HAS_CT_PLACEHOLDER
+        | TypeFlags::HAS_TY_BOUND
+        | TypeFlags::HAS_CT_BOUND
+}
 
 pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
     bindings: &AdtCoreBindings<'tcx>,
@@ -299,6 +310,49 @@ fn generate_associated_item<'tcx>(
     }
 }
 
+fn erase_regions<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
+    #[rustversion::since(2025-09-10)]
+    return tcx.erase_and_anonymize_regions(ty);
+    #[rustversion::before(2025-09-10)]
+    return tcx.erase_regions(ty);
+}
+
+pub fn from_trait_impls_by_argument<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    crate_num: CrateNum,
+) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>> {
+    let tcx = db.tcx();
+    let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
+    let impls_iter: Box<dyn Iterator<Item = DefId>> = if crate_num == LOCAL_CRATE {
+        Box::new(tcx.local_trait_impls(from_trait).iter().map(|impl_id| impl_id.to_def_id()))
+    } else {
+        Box::new(
+            tcx.implementations_of_trait((crate_num, from_trait))
+                .iter()
+                .map(|(impl_id, _)| *impl_id),
+        )
+    };
+    let mut map: HashMap<Ty<'tcx>, Vec<DefId>> = HashMap::new();
+    for from_impl_id in impls_iter {
+        let middle_trait_header = tcx
+            .impl_trait_header(from_impl_id)
+            .expect("DefId for an `From` trait impl lacked a trait header");
+        let trait_ref = middle_trait_header.trait_ref.instantiate_identity();
+        let ty = trait_ref.args.type_at(1);
+        // We want to check if our type has type variables and constant variables, but not
+        // region variables. Region variables are fine and we'll replace them with 'static.
+        if ty.flags().contains(has_type_or_const_vars()) {
+            continue;
+        }
+
+        // We want to work in region-erased types because that's what we will be querying by
+        // for lookup.
+        let from_self_ty = erase_regions(tcx, ty);
+        map.entry(from_self_ty).or_default().push(from_impl_id);
+    }
+    Rc::new(map)
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `generate_adt_core` returns success we have committed to emitting C++
@@ -501,10 +555,7 @@ pub fn generate_adt_core<'tcx>(
     // Note: we erase regions in order to get bindings regardless of what lifetime parameters are
     // present. We want to generate bindings for functions regardless of their lifetime bounds, as
     // C++ cannot special-case the availability of a function based on lifetimes.
-    #[rustversion::since(2025-09-10)]
-    let self_ty = tcx.erase_and_anonymize_regions(tcx.type_of(def_id).instantiate_identity());
-    #[rustversion::before(2025-09-10)]
-    let self_ty = tcx.erase_regions(tcx.type_of(def_id).instantiate_identity());
+    let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
     assert!(self_ty.is_adt());
     assert!(is_public_or_supported_export(db, def_id), "Caller should verify");
 

@@ -214,6 +214,19 @@ memoized::query_group! {
       fn generate_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
 
       fn crubit_abi_type_from_ty(&self, ty: Ty<'tcx>) -> Result<CrubitAbiTypeWithCcPrereqs>;
+
+      /// Gathers all  `From` trait impls for the current crate and provides a mapping from the
+      /// argument type to the impl. This is useful for determining `From` impls of ADTs where the
+      /// ADT appears as an argument rather than a self type (i.e. `impl From<Adt> for i32`).
+      ///
+      /// It could make sense to expand this functionality to other single argument traits, but
+      /// there are open design questions if we want to support _any_ trait. How do we map from a
+      /// list of arguments to an implementation? For more complicated use cases it's probably
+      /// better to evoke the trait solver directly rather than going through this mapping. For that
+      /// reason, this function is currently limited to `From` specifically.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:local_from_trait_impls_by_argument
+      fn from_trait_impls_by_argument(&self, crate_num: CrateNum) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>>;
   }
   pub struct Database;
 }

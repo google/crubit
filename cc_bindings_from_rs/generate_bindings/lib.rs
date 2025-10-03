@@ -31,7 +31,9 @@ use crate::format_type::{
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
-use crate::generate_struct_and_union::{generate_adt, generate_adt_core, scalar_value_to_string};
+use crate::generate_struct_and_union::{
+    from_trait_impls_by_argument, generate_adt, generate_adt_core, scalar_value_to_string,
+};
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
@@ -166,6 +168,7 @@ pub fn new_database<'db>(
         generate_function,
         generate_adt_core,
         crubit_abi_type_from_ty,
+        from_trait_impls_by_argument,
     )
 }
 
