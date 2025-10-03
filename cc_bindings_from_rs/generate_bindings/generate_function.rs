@@ -597,7 +597,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let fn_never_returns = *rs_return_type.mid().kind() == ty::TyKind::Never;
     let main_api = {
         let doc_comment = {
-            let doc_comment = generate_doc_comment(tcx, def_id);
+            let doc_comment = generate_doc_comment(db, def_id);
             quote! { __NEWLINE__ #doc_comment }
         };
 

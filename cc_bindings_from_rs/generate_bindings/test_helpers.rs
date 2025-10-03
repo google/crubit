@@ -75,6 +75,7 @@ fn bindings_db_for_tests_with_features(
         /* crubit_support_path_format= */
         Format::parse_with_metavars("<crubit/support/for/tests/{header}>".into(), &["header"])
             .unwrap(),
+        /* crubit_debug_path_format= */ None,
         /* default_features= */ Default::default(),
         /* crate_name_to_include_paths= */ Default::default(),
         /* crate_name_to_features= */

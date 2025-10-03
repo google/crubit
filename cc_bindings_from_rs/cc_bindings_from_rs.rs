@@ -81,6 +81,7 @@ fn new_db<'tcx>(
         tcx,
         cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
         cmdline.crubit_support_path_format.clone(),
+        cmdline.crubit_debug_path_format.clone(),
         cmdline.default_crate_features,
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),

@@ -126,6 +126,7 @@ pub fn new_database<'db>(
     tcx: TyCtxt<'db>,
     source_crate_name: Option<Rc<str>>,
     crubit_support_path_format: dyn_format::Format<1>,
+    crubit_debug_path_format: Option<dyn_format::Format<2>>,
     default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
     crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,
@@ -140,6 +141,7 @@ pub fn new_database<'db>(
         tcx,
         source_crate_name,
         crubit_support_path_format,
+        crubit_debug_path_format,
         default_features,
         crate_name_to_include_paths,
         crate_name_to_features,
@@ -1157,7 +1159,8 @@ fn generate_fwd_decl(db: &Database<'_>, def_id: DefId) -> TokenStream {
     quote! { #keyword #cc_short_name; }
 }
 
-fn generate_source_location(tcx: TyCtxt, def_id: DefId) -> String {
+fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String {
+    let tcx = db.tcx();
     let def_span = tcx.def_span(def_id);
     let rustc_span::FileLines { file, lines } =
         match tcx.sess().source_map().span_to_lines(def_span) {
@@ -1165,21 +1168,27 @@ fn generate_source_location(tcx: TyCtxt, def_id: DefId) -> String {
             Err(_) => return "unknown location".to_string(),
         };
     let file_name = file.name.prefer_local().to_string();
-    // Note: line_index starts at 0, while CodeSearch starts indexing at 1.
-    let line_number = lines[0].line_index + 1;
+    // Note: line_index starts at 0, while most everything else starts indexing at 1.
+    let line_number = (lines[0].line_index + 1).to_string();
+    if let Some(path_format) = db.crubit_debug_path_format() {
+        if file.name.is_real() {
+            return path_format.format(&[file_name.as_str(), line_number.as_str()]);
+        }
+    }
     format!("{file_name};l={line_number}")
 }
 
 /// Formats the doc comment (if any) associated with the item identified by
 /// `local_def_id`, and appends the source location at which the item is
 /// defined.
-fn generate_doc_comment(tcx: TyCtxt, def_id: DefId) -> TokenStream {
-    let doc_comment = tcx
+fn generate_doc_comment(db: &dyn BindingsGenerator, def_id: DefId) -> TokenStream {
+    let doc_comment = db
+        .tcx()
         .get_all_attrs(def_id)
         .iter()
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
-        .chain(once(format!("Generated from: {}", generate_source_location(tcx, def_id))))
+        .chain(once(format!("Generated from: {}", generate_source_location(db, def_id))))
         .join("\n\n");
     quote! { __COMMENT__ #doc_comment}
 }
@@ -1286,7 +1295,7 @@ fn generate_unsupported_def(
 ) -> ApiSnippets {
     let tcx = db.tcx();
     db.errors().report(&err);
-    let source_loc = generate_source_location(tcx, def_id);
+    let source_loc = generate_source_location(db, def_id);
     let name = tcx.def_path_str(def_id);
 
     // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations

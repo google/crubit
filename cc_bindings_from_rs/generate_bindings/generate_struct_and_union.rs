@@ -228,7 +228,7 @@ fn generate_cpp_enum<'tcx>(
         })
         .collect();
 
-    let doc_comment = generate_doc_comment(tcx, core.def_id);
+    let doc_comment = generate_doc_comment(db, core.def_id);
     let keyword = &core.keyword;
     let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, core.def_id).unwrap();
     let underlying_cc_type = underlying_cc_type_snippet.tokens;
@@ -430,7 +430,7 @@ pub fn generate_adt<'tcx>(
             attributes.push(tag);
         }
 
-        let doc_comment = generate_doc_comment(tcx, core.def_id);
+        let doc_comment = generate_doc_comment(db, core.def_id);
         let keyword = &core.keyword;
 
         let mut prereqs = CcPrerequisites::default();
@@ -923,7 +923,7 @@ fn generate_fields<'tcx>(
                                 index,
                                 offset,
                                 offset_of_next_field,
-                                doc_comment: generate_doc_comment(tcx, field_def.did),
+                                doc_comment: generate_doc_comment(db, field_def.did),
                                 attributes,
                             }
                         })

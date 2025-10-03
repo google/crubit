@@ -43,6 +43,12 @@ memoized::query_group! {
       fn crubit_support_path_format(&self) -> Format<1>;
 
       #[input]
+      /// Format specifier for path cross-references in "Generated from" comments.
+      ///
+      /// Inputs are `{path}` and `{line}` respectively.
+      fn crubit_debug_path_format(&self) -> Option<Format<2>>;
+
+      #[input]
       /// The default features enabled on all crates, if not present in `crate_name_to_features`.
       fn default_features(&self) -> flagset::FlagSet<crubit_feature::CrubitFeature>;
 
