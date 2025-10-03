@@ -53,6 +53,6 @@ TEST void testClassCopyMove(Copyable<int *_Nullable> B) {
 
 TEST void testMoveForward(Copyable<int *_Nullable> A,
                           Movable<int *_Nullable> B) {
-  type<Copyable<int *_Nullable>>(std::forward<Copyable<int *> &>(A));
+  type<Copyable<int* _Nullable>>(std::forward<Copyable<int* _Nullable>>(A));
   type<Movable<int *_Nullable>>(std::move(B));
 }
