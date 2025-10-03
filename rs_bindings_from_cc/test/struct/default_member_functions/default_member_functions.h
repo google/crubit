@@ -19,10 +19,6 @@ class UncopyableDespiteDecl {
   UncopyableDespiteDecl() : vector_() {}
   // Copy ctor declared, but will fail to instantiate if called.
   UncopyableDespiteDecl(const UncopyableDespiteDecl&) = default;
-  // TODO: b/436870965 - we also need to handle impossible operator=
-  UncopyableDespiteDecl& operator=(const UncopyableDespiteDecl&) {
-    return *this;
-  }
 
  private:
   std::vector<Uncopyable> vector_;

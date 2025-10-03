@@ -42,6 +42,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/Error.h"
 
 namespace crubit {
@@ -304,6 +305,38 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (function_decl->isInvalidDecl()) {
     return unsupported(
         FormattedError::Static("Function declaration is considered invalid"));
+  }
+  // See DefineDefaultedFunction in SemaDeclCXX.cpp.
+  // TODO: b/436870965 - This is intentionally very narrow in scope (just for
+  // copy assignments) right now.
+  if (auto defaulted_kind = ictx_.sema_.getDefaultedFunctionKind(function_decl);
+      defaulted_kind.isSpecialMember()) {
+    auto special_member_kind = defaulted_kind.asSpecialMember();
+    if (special_member_kind == clang::CXXSpecialMemberKind::CopyAssignment &&
+        !function_decl->isDeleted() && function_decl->isImplicit() &&
+        !function_decl->doesThisDeclarationHaveABody()) {
+      crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+          crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
+            if (auto* mutable_method =
+                    dyn_cast<clang::CXXMethodDecl>(function_decl);
+                mutable_method != nullptr) {
+              FakeTUScope fake_tu_scope(ictx_);
+              clang::Sema::SynthesizedFunctionScope synthesized_function_scope(
+                  ictx_.sema_, mutable_method);
+              // TODO: b/436870965 - Strangely, clang has this flag set on
+              // an unused implicit default operator=. Should we undo the
+              // changes after running DefineImplicitCopyAssignment (i.e.,
+              // delete the body and restore the flag)?
+              mutable_method->setWillHaveBody(false);
+              ictx_.sema_.DefineImplicitCopyAssignment(
+                  function_decl->getLocation(), mutable_method);
+            }
+          });
+      if (diagnostic_recorder.getNumErrors() != 0) {
+        return unsupported(FormattedError::Static(
+            "Implicit copy assignment is considered invalid"));
+      }
+    }
   }
 
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
