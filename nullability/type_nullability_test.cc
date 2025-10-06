@@ -395,6 +395,30 @@ TEST_F(UnderlyingRawPointerTest, InscrutableDerivedSmartPointer) {
   EXPECT_EQ(underlyingRawPointerType(Target->getUnderlyingType()), QualType());
 }
 
+TEST_F(UnderlyingRawPointerTest, HiddenInSmartPointerBaseOfSmartPointer) {
+  // This is a regression test. We did not locate `int*` as the underlying raw
+  // pointer type because we considered SmartIntPtr to be the base smart pointer
+  // class and did not check its base class for an underlying raw pointer type
+  // when we failed to find one on SmartIntPtr.
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class unique_ptr {
+      using pointer = T*;
+    };
+    }  // namespace std
+
+    class _Nullable SmartIntPtr : public std::unique_ptr<int>{};
+    using Target = SmartIntPtr;
+  )cc");
+
+  const auto* Target = selectFirst<TypeAliasDecl>(
+      "T", match(typeAliasDecl(hasName("Target")).bind("T"), AST.context()));
+  EXPECT_EQ(
+      underlyingRawPointerType(Target->getUnderlyingType()).getCanonicalType(),
+      AST.context().getPointerType(AST.context().IntTy));
+}
+
 std::function<std::unique_ptr<FrontendAction>()> makeRegisterPragmasAction(
     NullabilityPragmas &Pragmas) {
   return [&Pragmas]() {

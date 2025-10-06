@@ -185,6 +185,19 @@ QualType underlyingRawPointerType(QualType T, AccessSpecifier BaseAccess) {
           dyn_cast<ClassTemplateSpecializationDecl>(SmartPtrDecl))
     return underlyingPointerTypeFromTemplateArg(*SmartPointerCTSD, ASTCtx);
 
+  if (SmartPtrDecl->hasDefinition()) {
+    for (const CXXBaseSpecifier& Base : SmartPtrDecl->bases()) {
+      if (Base.getAccessSpecifier() <= BaseAccess) {
+        QualType BaseType = Base.getType();
+        if (QualType UnderlyingBase =
+                underlyingRawPointerType(BaseType, BaseAccess);
+            !UnderlyingBase.isNull()) {
+          return UnderlyingBase;
+        }
+      }
+    }
+  }
+
   return QualType();
 }
 
