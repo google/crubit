@@ -5,6 +5,8 @@
 #ifndef CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_ANALYSIS_H_
 
+#include <functional>
+#include <memory>
 #include <optional>
 #include <utility>
 
@@ -15,12 +17,18 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
-#include "clang/AST/Type.h"
+#include "clang/AST/TypeBase.h"
+#include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
+#include "clang/Analysis/FlowSensitive/MatchSwitch.h"
+#include "clang/Analysis/FlowSensitive/Solver.h"
+#include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/FunctionExtras.h"
 
 namespace clang {
