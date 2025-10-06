@@ -422,10 +422,10 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
     None
 }
 
-struct Param<'tcx> {
-    cc_name: Ident,
-    cpp_type: TokenStream,
-    ty: SugaredTy<'tcx>,
+pub(crate) struct Param<'tcx> {
+    pub(crate) cc_name: Ident,
+    pub(crate) cpp_type: TokenStream,
+    pub(crate) ty: SugaredTy<'tcx>,
 }
 
 fn can_shared_refs_to_ty_alias_mut_refs<'tcx>(tcx: TyCtxt<'tcx>, target_ty: Ty<'tcx>) -> bool {
@@ -478,6 +478,102 @@ fn refs_to_check_for_aliasing<'tcx, 'a>(
         return None;
     }
     Some(refs)
+}
+
+/// Generates the wrapping code to call a thunk and return its result.
+/// This can be checking parameter invariants or creating a slot to pass as an output pointer.
+pub(crate) fn generate_thunk_call<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    def_id: DefId,
+    thunk_name: Ident,
+    rs_return_type: SugaredTy<'tcx>,
+    takes_self_by_copy: bool,
+    has_self_param: bool,
+    params: &[Param<'tcx>],
+) -> Result<CcSnippet> {
+    let mut prereqs = CcPrerequisites::default();
+    let mut tokens = TokenStream::new();
+
+    let mut thunk_args = params
+        .iter()
+        .enumerate()
+        .map(|(i, Param { cc_name, ty, .. })| {
+            if i == 0 && has_self_param {
+                if takes_self_by_copy {
+                    // Self-by-copy methods are `const` qualified. The Rust thunk does not
+                    // accept a const pointer, but we can just const_cast since underlying C++
+                    // object is not modified: Rust copies the object before passing it into
+                    // the by-value method.
+                    tokens.extend(quote! {
+                        auto& #cc_name = const_cast<
+                            std::remove_cvref_t<decltype(*this)>&>(*this);
+                    });
+                } else {
+                    tokens.extend(quote! { auto&& #cc_name = *this; });
+                }
+            }
+            let tcx = db.tcx();
+            cc_param_to_c_abi(
+                db,
+                cc_name.clone(),
+                *ty,
+                post_analysis_typing_env(tcx, def_id),
+                &mut prereqs.includes,
+                &mut tokens,
+            )
+        })
+        .collect::<Result<Vec<TokenStream>>>()?;
+
+    if let Some(refs_to_check) = refs_to_check_for_aliasing(db, params) {
+        let mut_cpp_tys = refs_to_check.mutable.iter().map(|param| &param.cpp_type);
+        let mut_cpp_names = refs_to_check.mutable.iter().map(|param| &param.cc_name);
+        let shared_cpp_tys = refs_to_check.shared.iter().map(|param| &param.cpp_type);
+        let shared_cpp_names = refs_to_check.shared.iter().map(|param| &param.cc_name);
+        prereqs.includes.insert(db.support_header("internal/check_no_mutable_aliasing.h"));
+        tokens.extend(quote! {
+            __NEWLINE__
+            crubit::internal::CheckNoMutableAliasing(
+                crubit::internal::AsMutPtrDatas<#( #mut_cpp_tys ),*>( #( #mut_cpp_names ),* ),
+                crubit::internal::AsPtrDatas<#( #shared_cpp_tys ),*>(
+                    #( #shared_cpp_names ),* )
+            );
+            __NEWLINE__
+        });
+    }
+
+    let return_body = if is_bridged_type(db, rs_return_type.mid())?.is_none()
+        && is_c_abi_compatible_by_value(rs_return_type.mid())
+    {
+        // C++ compilers can emit diagnostics if a function marked [[noreturn]] looks like it
+        // might return. In this scenario, we just call the (also [[noreturn]]) thunk.
+        let return_expr = if rs_return_type.is_never() {
+            quote! {}
+        } else {
+            quote! {return}
+        };
+        quote! {
+            #return_expr __crubit_internal::#thunk_name(#( #thunk_args ),*);
+        }
+    } else {
+        let ReturnConversion { storage_name, unpack_expr } = cc_return_value_from_c_abi(
+            db,
+            expect_format_cc_ident("return_value"),
+            rs_return_type,
+            &mut prereqs,
+            &mut tokens,
+            /*recursive=*/ false,
+        )?;
+        thunk_args.push(quote! { #storage_name });
+        // We don't have to worry about the [[noreturn]] situation described above because all
+        // [[noreturn]] functions will take that branch.
+        quote! {
+            __crubit_internal::#thunk_name(#( #thunk_args ),*);
+            return #unpack_expr;
+        }
+    };
+
+    tokens.extend(return_body);
+    Ok(CcSnippet { prereqs, tokens })
 }
 
 /// Implementation of `BindingsGenerator::generate_function`.
@@ -594,7 +690,6 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         .map(|Param { cc_name, cpp_type, .. }| quote! { #cpp_type #cc_name })
         .collect_vec();
     let rs_return_type = SugaredTy::fn_output(&sig_mid, sig_hir);
-    let fn_never_returns = *rs_return_type.mid().kind() == ty::TyKind::Never;
     let main_api = {
         let doc_comment = {
             let doc_comment = generate_doc_comment(db, def_id);
@@ -639,7 +734,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
             }
         }
         // Attribute: noreturn
-        if fn_never_returns {
+        if rs_return_type.is_never() {
             attributes.push(quote! {[[noreturn]]});
         }
 
@@ -681,83 +776,16 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         )?
         .into_tokens(&mut prereqs);
 
-        let mut statements = TokenStream::new();
-        let mut thunk_args = params
-            .iter()
-            .enumerate()
-            .map(|(i, Param { cc_name, ty, .. })| {
-                if i == 0 && function_kind.has_self_param() {
-                    if takes_self_by_copy {
-                        // Self-by-copy methods are `const` qualified. The Rust thunk does not
-                        // accept a const pointer, but we can just const_cast since underlying C++
-                        // object is not modified: Rust copies the object before passing it into
-                        // the by-value method.
-                        statements.extend(quote! {
-                            auto& #cc_name = const_cast<
-                                std::remove_cvref_t<decltype(*this)>&>(*this);
-                        });
-                    } else {
-                        statements.extend(quote! { auto&& #cc_name = *this; });
-                    }
-                }
-                cc_param_to_c_abi(
-                    db,
-                    cc_name.clone(),
-                    *ty,
-                    post_analysis_typing_env(tcx, def_id),
-                    &mut prereqs.includes,
-                    &mut statements,
-                )
-            })
-            .collect::<Result<Vec<TokenStream>>>()?;
-
-        if let Some(refs_to_check) = refs_to_check_for_aliasing(db, &params) {
-            let mut_cpp_tys = refs_to_check.mutable.iter().map(|param| &param.cpp_type);
-            let mut_cpp_names = refs_to_check.mutable.iter().map(|param| &param.cc_name);
-            let shared_cpp_tys = refs_to_check.shared.iter().map(|param| &param.cpp_type);
-            let shared_cpp_names = refs_to_check.shared.iter().map(|param| &param.cc_name);
-            prereqs.includes.insert(db.support_header("internal/check_no_mutable_aliasing.h"));
-            statements.extend(quote! {
-                __NEWLINE__
-                crubit::internal::CheckNoMutableAliasing(
-                    crubit::internal::AsMutPtrDatas<#( #mut_cpp_tys ),*>( #( #mut_cpp_names ),* ),
-                    crubit::internal::AsPtrDatas<#( #shared_cpp_tys ),*>(
-                        #( #shared_cpp_names ),* )
-                );
-                __NEWLINE__
-            });
-        }
-
-        let impl_body: TokenStream = if is_bridged_type(db, rs_return_type.mid())?.is_none()
-            && is_c_abi_compatible_by_value(rs_return_type.mid())
-        {
-            // C++ compilers can emit diagnostics if a function marked [[noreturn]] looks like it
-            // might return. In this scenario, we just call the (also [[noreturn]]) thunk.
-            let return_expr = if fn_never_returns {
-                quote! {}
-            } else {
-                quote! {return}
-            };
-            quote! {
-                #return_expr __crubit_internal::#thunk_name(#( #thunk_args ),*);
-            }
-        } else {
-            let ReturnConversion { storage_name, unpack_expr } = cc_return_value_from_c_abi(
-                db,
-                expect_format_cc_ident("return_value"),
-                rs_return_type,
-                &mut prereqs,
-                &mut statements,
-                /*recursive=*/ false,
-            )?;
-            thunk_args.push(quote! { #storage_name });
-            // We don't have to worry about the [[noreturn]] situation described above because all
-            // [[noreturn]] functions will take that branch.
-            quote! {
-                __crubit_internal::#thunk_name(#( #thunk_args ),*);
-                return #unpack_expr;
-            }
-        };
+        let impl_body = generate_thunk_call(
+            db,
+            def_id,
+            thunk_name,
+            rs_return_type,
+            takes_self_by_copy,
+            function_kind.has_self_param(),
+            &params,
+        )?
+        .into_tokens(&mut prereqs);
 
         CcSnippet {
             prereqs,
@@ -766,7 +794,6 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 #thunk_decl
                 inline #main_api_ret_type #struct_name #main_api_fn_name (
                         #( #main_api_params ),* ) #method_qualifiers {
-                    #statements
                     #impl_body
                 }
                 __NEWLINE__

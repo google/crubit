@@ -10,11 +10,12 @@ extern crate rustc_span;
 // TODO(b/381888123): Seperate out enum generation.
 use crate::format_cc_ident;
 use crate::generate_doc_comment;
+use crate::generate_function::{generate_thunk_call, Param};
 use crate::{
     crate_features, generate_const, generate_deprecated_tag, generate_must_use_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_bridged_type, is_exported, is_public_or_supported_export,
-    RsSnippet, SortedByDef, TraitThunks,
+    get_tag_size_with_padding, is_bridged_type, is_copy, is_exported,
+    is_public_or_supported_export, RsSnippet, SortedByDef, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
@@ -353,6 +354,126 @@ pub fn from_trait_impls_by_argument<'tcx>(
     Rc::new(map)
 }
 
+fn generate_into_impls<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets {
+    let tcx = db.tcx();
+    let cc_struct_name = &core.cc_short_name;
+
+    let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
+
+    let from_map = db.from_trait_impls_by_argument(core.def_id.krate);
+    let from_impls = from_map.get(&core.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(
+        |from_impl_id| {
+            let middle_trait_header = tcx
+                .impl_trait_header(*from_impl_id)
+                .expect("DefId for a `From` trait impl lacked a trait header");
+            let trait_ref = middle_trait_header.trait_ref.instantiate_identity();
+
+            let from_middle_ty = trait_ref.args.type_at(0);
+
+            // If our type contains type variables or constant variables (but not region variables),
+            // we can't generate an `into` impl.
+            if from_middle_ty.flags().contains(has_type_or_const_vars()) {
+                return None;
+            }
+            let sugar_ty = SugaredTy::missing_hir(from_middle_ty);
+            // We know that our type will always appear in FnReturn position for the `into` method.
+            // If our type isn't C++-compatible, we can't generate an `into` impl.
+            let cc_ty = db.format_ty_for_cc(sugar_ty, TypeLocation::FnReturn).ok()?;
+            Some((from_middle_ty, cc_ty, *from_impl_id))
+        },
+    );
+    let into_impls =
+        tcx.non_blanket_impls_for_ty(into_trait, core.self_ty).filter_map(|into_impl_id| {
+            let middle_trait_header = tcx
+                .impl_trait_header(into_impl_id)
+                .expect("DefId for an `Into` trait impl lacked a trait header");
+            // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
+            // into.
+            let into_middle_ty =
+                middle_trait_header.trait_ref.instantiate_identity().args.type_at(1);
+
+            let sugar_ty = SugaredTy::missing_hir(into_middle_ty);
+            // If our type isn't Cxx compatible, we can't generate an `into` impl.
+            let cc_ty = db.format_ty_for_cc(sugar_ty, TypeLocation::FnReturn).ok()?;
+
+            Some((into_middle_ty, cc_ty, into_impl_id))
+        });
+
+    from_impls
+        .chain(into_impls)
+        .filter_map(|(middle_ty, cc_ty, def_id)| {
+            let mut prereqs = CcPrerequisites::default();
+            let cc_ty = cc_ty.into_tokens(&mut prereqs);
+
+            // Delay converting this type until we've successfully generated the thunks.
+            // We generate thunks for `into` here. This relies on the blanket impls of for `Into` in the stdlib to work.
+            let TraitThunks {
+                method_name_to_cc_thunk_name,
+                cc_thunk_decls,
+                rs_thunk_impls: rs_details,
+            } = generate_trait_thunks(db, into_trait, &[middle_ty], core).ok()?;
+
+            let thunk_name = method_name_to_cc_thunk_name
+                .into_values()
+                .exactly_one()
+                .expect("Expecting a single `into` method");
+
+            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
+            let doc_comment = generate_doc_comment(db, def_id);
+
+            let sugar_self_ty = SugaredTy::missing_hir(core.self_ty);
+            let self_cpp_ty = db
+                .format_ty_for_cc(
+                    sugar_self_ty,
+                    TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
+                )
+                .expect(
+                    "ADT's self type should be C++-convertible after generate_adt_core succeeds",
+                );
+            let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
+            let impl_body = generate_thunk_call(
+                db,
+                def_id,
+                thunk_name.clone(),
+                SugaredTy::missing_hir(middle_ty),
+                /*takes_self_by_copy=*/ is_copy(tcx, def_id, core.self_ty),
+                /*has_self_param=*/ true,
+                &[Param {
+                    cc_name: format_ident!("self"),
+                    cpp_type: self_cpp_ty,
+                    ty: sugar_self_ty,
+                }],
+            )
+            .expect("Self type of `Into` impl should be bridgeable");
+
+            let impl_body_tokens = impl_body.into_tokens(&mut prereqs);
+            prereqs.move_defs_to_fwd_decls();
+
+            Some(ApiSnippets {
+                main_api: CcSnippet {
+                    tokens: quote! {
+                    __NEWLINE__ #doc_comment
+                    explicit operator #cc_ty ( ) ; __NEWLINE__
+                    __NEWLINE__
+                    },
+                    prereqs,
+                },
+                cc_details: CcSnippet::new(quote! {
+                    #cc_thunk_decls
+
+                    #cc_struct_name :: operator  #cc_ty ( ) {
+                        #impl_body_tokens
+                    }
+                }),
+                rs_details,
+            })
+        })
+        .collect()
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `generate_adt_core` returns success we have committed to emitting C++
@@ -437,6 +558,8 @@ pub fn generate_adt<'tcx>(
         .flat_map(|assoc_item| generate_associated_item(db, assoc_item, &mut member_function_names))
         .collect();
 
+    let into_operator_snippets = generate_into_impls(db, core.as_ref());
+
     let ApiSnippets {
         main_api: public_functions_main_api,
         cc_details: public_functions_cc_details,
@@ -449,6 +572,7 @@ pub fn generate_adt<'tcx>(
         copy_ctor_and_assignment_snippets,
         relocating_ctor_snippets,
         impl_items_snippets,
+        into_operator_snippets,
     ]
     .into_iter()
     .collect();

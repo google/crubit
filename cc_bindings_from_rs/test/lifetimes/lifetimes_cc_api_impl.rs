@@ -87,6 +87,26 @@ unsafe extern "C" fn __crubit_thunk_borrow_ufrom_ustatic_uself(
 ) -> &'static i32 {
     unsafe { ::lifetimes_golden::StructWithLifetime::borrow_from_static_self(__self) }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(
+    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
+) -> &'static i32 {
+    unsafe {
+        let __self = __self.assume_init_read();
+        <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<&'static i32>>::into(
+            __self,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_ui32(
+    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
+) -> i32 {
+    unsafe {
+        let __self = __self.assume_init_read();
+        <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<i32>>::into(__self)
+    }
+}
 const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );

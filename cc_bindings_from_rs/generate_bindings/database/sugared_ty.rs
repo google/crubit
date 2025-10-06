@@ -84,6 +84,11 @@ impl<'tcx> SugaredTy<'tcx> {
         });
         Some(SugaredTyList { tys, hir_tys })
     }
+
+    // TODO(b/449759899): Expand this to support all uninhabited types. Rename to `is_uninhabited`.
+    pub fn is_never(&self) -> bool {
+        *self.mid.kind() == ty::TyKind::Never
+    }
 }
 
 /// A list of `SugaredTy`s that can be created lazily from a list of `Ty` and

@@ -85,6 +85,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       "lifetime", "static")]] borrow_from_static_self()
       const& [[clang::annotate_type("lifetime", "static")]];
 
+  // Generated from:
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=19
+  explicit operator std::int32_t const& [[clang::annotate_type("lifetime",
+                                                               "a")]] ();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=25
+  explicit operator std::int32_t();
+
  private:
   // Field type has been replaced with a blob of bytes: Can't format `&i32`,
   // because references are only supported in function parameter types, return
@@ -255,6 +264,26 @@ inline std::int32_t const& [[clang::annotate_type(
     const& [[clang::annotate_type("lifetime", "static")]] {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_borrow_ufrom_ustatic_uself(self);
+}
+namespace __crubit_internal {
+extern "C" std::int32_t const& [[clang::annotate_type(
+    "lifetime",
+    "a")]] __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(::lifetimes::
+                                                                       StructWithLifetime*);
+}
+StructWithLifetime::operator std::int32_t const& [[clang::annotate_type(
+    "lifetime", "a")]] () {
+  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::
+      __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(&self);
+}
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_into_ui32(
+    ::lifetimes::StructWithLifetime*);
+}
+StructWithLifetime::operator std::int32_t() {
+  auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
+  return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithLifetime, field_with_lifetime));
