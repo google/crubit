@@ -579,8 +579,17 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           return true;
         } else if (clang::isa<clang::NoReturnAttr>(attr)) {
           return true;  // we call isNoReturn below, instead
-        } else if (clang::isa<clang::NoThrowAttr>(attr)) {
-          // nothrow attributes don't affect Rust.
+        } else if (clang::isa<clang::UnsafeBufferUsageAttr>(attr)) {
+          return true;  // Handled in `GetSafetyAnnotation()`
+        } else if (clang::isa<clang::AsmLabelAttr>(attr) ||
+                   clang::isa<clang::ConstAttr>(attr) ||
+                   clang::isa<clang::ExcludeFromExplicitInstantiationAttr>(
+                       attr) ||
+                   clang::isa<clang::NoThrowAttr>(attr) ||
+                   clang::isa<clang::OverrideAttr>(attr) ||
+                   clang::isa<clang::PureAttr>(attr) ||
+                   clang::isa<clang::ReinitializesAttr>(attr)) {
+          // These attributes don't affect Rust.
           return true;
         }
         return false;

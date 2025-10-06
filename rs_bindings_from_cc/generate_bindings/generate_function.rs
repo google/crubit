@@ -2016,6 +2016,18 @@ fn function_signature(
         thunk_args[0] = quote! { oops::UnsafeUpcast::<_>::unsafe_upcast(#arg_this) };
     }
 
+    // Unknown attributes could affect ABI and should suppress bindings by default. Note that these
+    // can be annotated around with `CRUBIT_UNSAFE_IGNORE_ATTR()`
+    if let Some(unknown_attr) = func.unknown_attr.as_deref() {
+        let target = &func.owning_target;
+        let enabled_features = db.ir().target_crubit_features(target);
+        ensure!(
+            enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
+            "unknown function attributes are only supported with experimental features enabled on \
+            {target}\nUnknown attribute: {unknown_attr}`",
+        );
+    }
+
     Ok(BindingsSignature {
         lifetimes,
         params: api_params,

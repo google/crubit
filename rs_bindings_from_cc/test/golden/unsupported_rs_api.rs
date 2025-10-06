@@ -91,6 +91,18 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 //
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 
+// Error while generating bindings for struct 'TypeWithUnknownAttribute':
+// Can't generate bindings for TypeWithUnknownAttribute, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TypeWithUnknownAttribute (unknown attribute(s): gnu::abi_tag)
+
+// Error while generating bindings for function 'FuncWithUnknownAttribute':
+// unknown function attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:unsupported_cc
+// Unknown attribute: gnu::abi_tag`
+
+// Error while generating bindings for function 'ParamWithUnknownAttribute':
+// Can't generate bindings for ParamWithUnknownAttribute, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for ParamWithUnknownAttribute (param i has unknown attribute(s): gnu::abi_tag)
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;

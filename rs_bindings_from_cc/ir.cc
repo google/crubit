@@ -333,6 +333,7 @@ llvm::json::Value Func::ToJson() const {
       {"is_consteval", is_consteval},
       {"nodiscard", nodiscard},
       {"deprecated", deprecated},
+      {"unknown_attr", unknown_attr},
       {"has_c_calling_convention", has_c_calling_convention},
       {"is_member_or_descendant_of_class_template",
        is_member_or_descendant_of_class_template},
