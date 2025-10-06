@@ -29,7 +29,28 @@ impl DynFuture {
 
     /// Creates a new `DynFuture` from a Rust `Future`.
     pub fn from_future(future: impl Future<Output = ()> + Send + 'static) -> Self {
-        Self(Some(Box::pin(future)))
+        // Safety: we know the DynFuture won't outlive 'static, because nothing does.
+        unsafe { Self::from_future_unchecked(future) }
+    }
+
+    /// Creates a new `DynFuture` from a Rust `Future` that may bind references of arbitrary
+    /// lifetimes.
+    ///
+    /// # Safety
+    ///
+    /// The caller is required to ensure that the `DynFuture` does not outlive the lifetime `'a`.
+    //
+    // TODO(b/449475779): get rid of this in favor of DynFuture being generic over lifetime.
+    pub unsafe fn from_future_unchecked<'a>(future: impl Future<Output = ()> + Send + 'a) -> Self {
+        // Smuggle the 'a future into a boxed 'static future.
+        //
+        // Safety: there is no difference in memory layout (lifetimes aren't used in generated
+        // code), and it's on the user to ensure that the future embedded within the DynFuture
+        // doesn't live too long.
+        let raw = Box::into_raw(Box::new(future));
+        let future = Box::from_raw(raw as *mut (dyn Future<Output = ()> + Send + 'static));
+
+        Self(Some(Box::into_pin(future)))
     }
 
     /// Attempts to complete the future by polling it. Returns `true` if the future became ready.
