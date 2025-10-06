@@ -163,7 +163,7 @@
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
                                __VA_ARGS__)
 
-// Marks a type as unsafely implementing a marker trait.
+// Marks a type as unsafely implementing one or more marker traits.
 //
 // This can be applied to a struct, class, or enum.
 //
@@ -171,7 +171,7 @@
 //
 // ```c++
 // struct
-//   CRUBIT_UNSAFE_IMPL("Send") MyStruct {
+//   CRUBIT_UNSAFE_IMPL("Send", "Sync") MyStruct {
 //     bool enable_foo;
 // };
 // ```
@@ -184,6 +184,7 @@
 // }
 //
 // unsafe impl Send for MyStruct {}
+// unsafe impl Sync for MyStruct {}
 // ```
 #define CRUBIT_UNSAFE_IMPL(...)                                         \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_unsafe_impl" __VA_OPT__(, ) \
