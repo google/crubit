@@ -148,7 +148,12 @@ def generate_and_compile_bindings(
         depset(
             direct = [
                 # Bindings depend on the thunks at link time.
-                DepVariantInfo(cc_info = cc_info),
+                DepVariantInfo(
+                    cc_info = cc_info,
+                    dep_info = None,
+                    crate_info = None,
+                    build_info = None,
+                ),
             ],
             transitive = [deps_for_rs_file],
         ),
