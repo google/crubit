@@ -365,7 +365,7 @@ impl UniformReprTemplateType {
         let Some(template_specialization) = template_specialization else {
             return Ok(None);
         };
-        let type_arg = |template_arg: &TemplateArg| -> Result<RsTypeKind> {
+        let type_arg = |template_arg: &TemplateArg, may_bridge: bool| -> Result<RsTypeKind> {
             let arg_type = match &template_arg.type_ {
                 Ok(arg_type) => arg_type.clone(),
                 Err(e) => bail!("{e}"),
@@ -373,7 +373,7 @@ impl UniformReprTemplateType {
             // Importantly, `is_return_type` is not propagated through inner types.
             let arg_type_kind = db.rs_type_kind(arg_type)?;
             ensure!(
-                !arg_type_kind.is_bridge_type(),
+                may_bridge || !arg_type_kind.is_bridge_type(),
                 "Bridge types cannot be used as template arguments"
             );
             // We don't do this in required_crubit_features() because it doesn't know which
@@ -391,7 +391,7 @@ impl UniformReprTemplateType {
         ) {
             ("std::unique_ptr", [t, deleter]) => {
                 let has_std_deleter = is_default_delete(db, t, deleter)?;
-                let t = type_arg(t)?;
+                let t = type_arg(t, /*may_bridge=*/ false)?;
                 ensure!(t.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", t.display(db));
                 ensure!(t.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
                 if !has_std_deleter {
@@ -404,7 +404,7 @@ impl UniformReprTemplateType {
             }
             ("std::vector", [t, allocator]) => {
                 let has_std_allocator = is_std_allocator(db, t, allocator)?;
-                let t = type_arg(t)?;
+                let t = type_arg(t, /*may_bridge=*/ false)?;
                 ensure!(t.is_destructible(), "Rust std::vector<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
                 if !has_std_allocator {
                     return Ok(None);
@@ -421,7 +421,7 @@ impl UniformReprTemplateType {
             }
             ("absl::Span", [t]) => {
                 // Revisit the CcType of _t to see if it is const.
-                let element_type = type_arg(t)?;
+                let element_type = type_arg(t, /*may_bridge=*/ false)?;
                 let is_const = t.type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
                 Self::AbslSpan {
                     is_const,
@@ -444,7 +444,7 @@ impl UniformReprTemplateType {
                 // If all else fails, it's some unknown template type. Read any errors from the
                 // template arguments.
                 for t in &template_specialization.template_args {
-                    type_arg(t)?;
+                    type_arg(t, /*may_bridge=*/ false)?;
                 }
                 return Ok(None);
             }
