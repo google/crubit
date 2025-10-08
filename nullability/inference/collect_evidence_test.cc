@@ -3428,8 +3428,8 @@ TEST(SmartPointerCollectEvidenceFromDefinitionTest, ArraySubscript) {
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARRAY_SUBSCRIPT)));
 }
 
-// Evidence for return type nonnull-ness should flow only from derived to base,
-// so we collect evidence for the base but not the derived.
+// Evidence for return type nonnull-ness should flow only from base to derived,
+// so we collect evidence for the derived but not the base.
 TEST(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
