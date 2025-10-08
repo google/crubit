@@ -8,4 +8,6 @@ visibility(["//..."])
 
 SUPPORTED_FEATURES = [
     "supported",
+    "std_vector",
+    "std_unique_ptr",
 ]

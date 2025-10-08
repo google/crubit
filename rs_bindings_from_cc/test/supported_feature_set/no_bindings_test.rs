@@ -91,9 +91,9 @@ fn test_incomplete_type() {
 
 #[gtest]
 fn test_std_vector() {
-    assert!(!value_exists!(no_bindings::UseVectorByValue));
-    assert!(!value_exists!(no_bindings::UseVectorByReference));
-    assert!(!value_exists!(no_bindings::UseVectorByPointer));
+    assert!(!value_exists!(no_bindings::UseSetByValue));
+    assert!(!value_exists!(no_bindings::UseSetByReference));
+    assert!(!value_exists!(no_bindings::UseSetByPointer));
 }
 
 #[gtest]

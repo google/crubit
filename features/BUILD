@@ -53,7 +53,7 @@ crubit_feature_hint(
 # See <internal link>
 crubit_feature_hint(
     name = "std_vector",
-    crubit_features = SUPPORTED_FEATURES + ["std_vector"],
+    crubit_features = SUPPORTED_FEATURES,
     visibility = ["//visibility:public"],
 )
 

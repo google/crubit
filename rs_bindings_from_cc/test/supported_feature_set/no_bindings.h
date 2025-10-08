@@ -7,7 +7,7 @@
 
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_NO_BINDINGS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_NO_BINDINGS_H_
-#include <vector>
+#include <set>
 namespace crubit::no_bindings {
 
 struct Nontrivial {
@@ -69,9 +69,9 @@ inline void crubit_invoke_callback(void (*f)(InstantiatedTemplatedStruct* x)) {
 using UnknownTypeAttribute = __attribute__((noderef)) int*;
 inline void crubit_unknown_type_attribute(__attribute__((noderef)) int*) {}
 
-inline void UseVectorByValue(std::vector<int> v) {}
-inline void UseVectorByReference(const std::vector<int>& v) {}
-inline void UseVectorByPointer(std::vector<int>* v) {}
+inline void UseSetByValue(std::set<int> v) {}
+inline void UseSetByReference(const std::set<int>& v) {}
+inline void UseSetByPointer(std::set<int>* v) {}
 
 // It is an error for consteval to NOT be evaluated at compile time, so its not
 // possible to expose these to Rust.
