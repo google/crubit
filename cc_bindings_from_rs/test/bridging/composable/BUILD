@@ -4,6 +4,11 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+
+# load(
+#     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
+#     "golden_test",
+# )
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
@@ -27,6 +32,17 @@ rust_library(
         "//support:bridge_rust",
     ],
 )
+
+# Disabled because the golden test generates third_party/crosstool/v18 includes.
+# Instead, it should only generate includes for the libraries we actually rely on.
+#
+# golden_test(
+#     name = "composable_bridging_golden_test",
+#     basename = "composable_bridging",
+#     golden_h = "composable_bridging_cc_api.h",
+#     golden_rs = "composable_bridging_cc_api_impl.rs",
+#     rust_library = "composable_bridging",
+# )
 
 cc_bindings_from_rust(
     name = "composable_bridging_cc_api",

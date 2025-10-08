@@ -19,6 +19,18 @@ pub fn maybe_int_slice() -> Option<*const [i32]> {
     Some(&[1, 2, 3][..] as *const [_])
 }
 
+pub fn assert_none(x: Option<i32>) {
+    assert_eq!(x, None);
+}
+
+pub fn assert_some_5(x: Option<i32>) {
+    assert_eq!(x, Some(5));
+}
+
+pub fn assert_some_some_5(x: Option<Option<i32>>) {
+    assert_eq!(x, Some(Some(5)));
+}
+
 #[crubit_annotate::cpp_bridge(
     cpp_type = "std::optional",
     bridge_abi_cpp = "crubit::OptionalAbi",

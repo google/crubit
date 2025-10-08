@@ -69,12 +69,18 @@ pub fn generate_thunk_decl<'tcx>(
             .zip(cpp_types.into_iter())
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
                 let cpp_type = cpp_type.into_tokens(&mut prereqs);
-                if is_bridged_type(db, ty)?.is_some() {
-                    match code_gen_utils::is_cpp_pointer_type(cpp_type.clone()) {
-                        Some(CcConstQualifier::Mut) | Some(CcConstQualifier::Const) => {
-                            Ok(quote! { #cpp_type })
+                let bridged_type_opt = is_bridged_type(db, ty)?;
+                if let Some(bridged_type) = bridged_type_opt {
+                    match bridged_type {
+                        BridgedType::Legacy { .. } => {
+                            match code_gen_utils::is_cpp_pointer_type(cpp_type.clone()) {
+                                Some(CcConstQualifier::Mut) | Some(CcConstQualifier::Const) => {
+                                    Ok(quote! { #cpp_type })
+                                }
+                                None => Ok(quote! { #cpp_type* }),
+                            }
                         }
-                        None => Ok(quote! { #cpp_type* }),
+                        BridgedType::Composable(_) => Ok(quote! { unsigned char* }),
                     }
                 } else if is_c_abi_compatible_by_value(ty) {
                     Ok(quote! { #cpp_type })

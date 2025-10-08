@@ -36,5 +36,12 @@ TEST(ComposableBridging, MaybeIntSlice) {
   EXPECT_EQ(int_slice_span[2], 3);
 }
 
+TEST(ComposableBridging, Parameters) {
+  composable_bridging::assert_none(std::nullopt);
+  composable_bridging::assert_some_5(std::make_optional(5));
+  composable_bridging::assert_some_some_5(
+      std::make_optional(std::make_optional(5)));
+}
+
 }  // namespace
 }  // namespace crubit

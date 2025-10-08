@@ -142,7 +142,7 @@ fn cc_param_to_c_abi<'tcx>(
                 // what we sent to Rust across the C ABI.
                 statements.extend(quote! {
                     unsigned char #buffer_name[#crubit_abi_type::kSize];
-                    ::crubit::internal::Encode<#crubit_abi_type>(#buffer_name, #cc_ident)
+                    ::crubit::internal::Encode<#crubit_abi_type>(#buffer_name, #cc_ident);
                 });
                 quote! { #buffer_name }
             }

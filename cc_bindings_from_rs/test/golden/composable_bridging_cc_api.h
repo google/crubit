@@ -78,20 +78,18 @@ inline std::optional<std::int32_t> returns_no_int() {
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_unwrap_uor_uzero(
-    std::optional<std::int32_t>*);
+extern "C" std::int32_t __crubit_thunk_unwrap_uor_uzero(unsigned char*);
 }
 inline std::int32_t unwrap_or_zero(std::optional<std::int32_t> x) {
   unsigned char x_buffer
       [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
   ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      x_buffer,
-      x) return __crubit_internal::__crubit_thunk_unwrap_uor_uzero(x_buffer);
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(x_buffer, x);
+  return __crubit_internal::__crubit_thunk_unwrap_uor_uzero(x_buffer);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_option_uincrements(std::optional<std::int32_t>*,
+extern "C" void __crubit_thunk_option_uincrements(unsigned char*,
                                                   unsigned char* __ret_ptr);
 }
 inline std::optional<std::int32_t> option_increments(
@@ -99,8 +97,8 @@ inline std::optional<std::int32_t> option_increments(
   unsigned char x_buffer
       [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
   ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
-      x_buffer, x) unsigned char __return_value_storage
+      ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(x_buffer, x);
+  unsigned char __return_value_storage
       [::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>::kSize];
   __crubit_internal::__crubit_thunk_option_uincrements(x_buffer,
                                                        __return_value_storage);
