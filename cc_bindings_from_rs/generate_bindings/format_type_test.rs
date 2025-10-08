@@ -296,6 +296,22 @@ fn test_format_ty_for_cc_successes() {
             cc: "std::tuple<std::int32_t, std::int32_t>",
             includes: ["<cstdint>", "<tuple>"]
         ),
+        // TyKind::Array
+        case!(
+            rs: "*mut [i32; 42]",
+            cc: "std::array<std::int32_t, 42> *",
+            includes: ["<array>", "<cstdint>"]
+        ),
+        case!(
+            rs: "*const [i32; 42]",
+            cc: "std::array<std::int32_t, 42> const *",
+            includes: ["<array>", "<cstdint>"]
+        ),
+        case!(
+            rs: "[i32; 42]",
+            cc: "std::array<std::int32_t, 42>",
+            includes: ["<array>", "<cstdint>"]
+        ),
     ];
     let preamble = quote! {
         #![allow(unused_parens)]
@@ -434,10 +450,6 @@ fn test_format_ty_for_cc_failures() {
             "Generic function pointers are not supported yet (b/259749023)",
         ),
         (
-            "[i32; 42]", // TyKind::Array
-            "The following Rust type is not supported yet: [i32; 42]",
-        ),
-        (
             // Check that the failure for slices is about not being supported and not failed
             // asserts about ABI and layout.
             "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
@@ -549,6 +561,7 @@ fn test_format_ty_for_rs_successes() {
         ("char", "char"),
         ("!", "!"),
         ("()", "()"),
+        ("[i32; 2]", "[i32; 2]"),
         // ADTs:
         ("SomeStruct", "::rust_out::SomeStruct"),
         ("SomeEnum", "::rust_out::SomeEnum"),
@@ -618,10 +631,6 @@ fn test_format_ty_for_rs_failures() {
     // `Err(...)`.
     let testcases = [
         // ( <Rust type>, <expected error message> )
-        (
-            "[i32; 42]", // TyKind::Array
-            "The following Rust type is not supported yet: [i32; 42]",
-        ),
         (
             "impl Eq", // TyKind::Alias
             "The following Rust type is not supported yet: impl Eq",

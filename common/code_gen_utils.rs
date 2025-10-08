@@ -379,6 +379,13 @@ pub enum CcInclude {
 }
 
 impl CcInclude {
+    /// Creates a `CcInclude` that represents `#include <array>` and provides
+    /// C++ types like `std::array`.
+    /// https://en.cppreference.com/w/cpp/header/array
+    pub fn array() -> Self {
+        Self::SystemHeader("array".into())
+    }
+
     /// Creates a `CcInclude` that represents `#include <cstddef>` and provides
     /// C++ types like `std::size_t` or `std::ptrdiff_t`.  See
     /// https://en.cppreference.com/w/cpp/header/cstddef

@@ -75,10 +75,12 @@ pub fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         ty::TyKind::Tuple{..} |  // An empty tuple (`()` - the unit type) is handled above.
         ty::TyKind::Adt{..} => false,
 
+        // Arrays are explicitly not ABI-compatible (though they are layout-compatible).
+        ty::TyKind::Array{..} => false,
+
         // These kinds of reference-related types are not implemented yet - `is_c_abi_compatible_by_value`
         // should never need to handle them, because `format_ty_for_cc` fails for such types.
-        ty::TyKind::Str |
-        ty::TyKind::Array{..} => unimplemented!(),
+        ty::TyKind::Str => unimplemented!(),
 
         // `format_ty_for_cc` is expected to fail for other kinds of types
         // and therefore `is_c_abi_compatible_by_value` should never be called for

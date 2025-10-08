@@ -24,7 +24,7 @@ use database::code_snippet::{CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrer
 use database::BindingsGenerator;
 use database::{FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 use rustc_hir::def::Res;
@@ -242,6 +242,38 @@ pub fn format_ty_for_cc<'tcx>(
                 }
                 CcSnippet { prereqs, tokens: quote! { std::tuple<#(#cc_types),*> } }
             }
+        }
+        ty::TyKind::Array(element_type, length) => {
+            // TODO: b/260128806 - We should be able to support constant arrays.
+            if location == TypeLocation::Const {
+                bail!("{ty}: constant arrays are not currently supported.");
+            }
+            let mut prereqs = CcPrerequisites::default();
+            prereqs.includes.insert(CcInclude::array());
+            // We need to be able to handle expressions at the type level that are not simple
+            // numeric literals.
+            let normalized = match db.tcx().try_normalize_erasing_regions(
+                ty::TypingEnv {
+                    typing_mode: ty::TypingMode::PostAnalysis,
+                    param_env: ty::ParamEnv::empty(),
+                },
+                *length,
+            ) {
+                Ok(normalized) => normalized,
+                Err(_) => {
+                    panic!("Unable to normalize array length {{length}}.")
+                }
+            };
+            let Some(target_usize) = normalized.try_to_target_usize(db.tcx()) else {
+                panic!(
+                    "Unable to get array length from normalized type ({length} => {normalized})."
+                )
+            };
+            let sugared_element_type = SugaredTy::missing_hir(*element_type);
+            let cc_element_ty =
+                db.format_ty_for_cc(sugared_element_type, location)?.into_tokens(&mut prereqs);
+            let c_int = Literal::u64_unsuffixed(target_usize);
+            CcSnippet { prereqs, tokens: quote! { std::array<#cc_element_ty, #c_int> } }
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#bool documents
@@ -818,6 +850,26 @@ pub fn format_ty_for_rs<'tcx>(
                 .map(|ty| db.format_ty_for_rs(ty))
                 .collect::<Result<Vec<TokenStream>>>()?;
             quote! { (#(#rs_types,)*) }
+        }
+        ty::TyKind::Array(element_type, length) => {
+            let rs_element_type = db.format_ty_for_rs(*element_type)?;
+            let normalized_length = match db.tcx().try_normalize_erasing_regions(
+                ty::TypingEnv {
+                    typing_mode: ty::TypingMode::PostAnalysis,
+                    param_env: ty::ParamEnv::empty(),
+                },
+                *length,
+            ) {
+                Ok(normalized) => normalized,
+                Err(_) => {
+                    panic!("Unable to normalize array length {{length}}.")
+                }
+            };
+            let Some(target_usize) = normalized_length.try_to_target_usize(db.tcx()) else {
+                panic!("Unable to get array length from normalized type ({length} => {normalized_length}).")
+            };
+            let unsuffixed_length = Literal::u64_unsuffixed(target_usize);
+            quote! { [ #rs_element_type; #unsuffixed_length ] }
         }
         ty::TyKind::Adt(adt, substs) => {
             let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
