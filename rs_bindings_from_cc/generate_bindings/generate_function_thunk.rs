@@ -492,7 +492,9 @@ pub fn generate_function_thunk_impl(
                 CcTypeVariant::Pointer(pointer) => match pointer.kind {
                     PointerTypeKind::RValueRef => Ok(quote! { std::move(*#ident) }),
                     PointerTypeKind::LValueRef => Ok(quote! { *#ident }),
-                    PointerTypeKind::Nullable | PointerTypeKind::NonNull => Ok(quote! { #ident }),
+                    PointerTypeKind::Nullable
+                    | PointerTypeKind::NonNull
+                    | PointerTypeKind::Owned => Ok(quote! { #ident }),
                 },
                 CcTypeVariant::FuncPointer { non_null, .. } => {
                     if *non_null {
