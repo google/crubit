@@ -193,6 +193,7 @@ cc_library(
     name = "cmdline",
     srcs = ["cmdline.cc"],
     hdrs = ["cmdline.h"],
+    visibility = ["//google_internal/explorer:__subpackages__"],
     deps = [
         ":bazel_types",
         ":cc_ir",
