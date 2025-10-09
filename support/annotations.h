@@ -289,4 +289,43 @@
 #define CRUBIT_UNSAFE_IGNORE_ATTR(name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr", #name)
 
+// TODO: b/12574907 - Finish implementing generation for these annotations.
+//
+// The CRUBIT_OWNED_PTR AND CRUBIT_OWNED_PTR_TYPE annotations work together to
+// map conventionally "owned" C++ pointer usages to a Rust type that provides
+// proper Rust-style ownership.
+//
+// Types annotated with `CRUBIT_OWNED_PTR` are considered "owned": for example,
+// in the return position, they indicate that the function is passing ownership
+// of the pointed-to object to the caller. Similarly, in a parameter position,
+// the callee receiving ownership of the pointed-to object.
+//
+// The annotation is only meaningful on pointer types. When a pointer is
+// annotated with `CRUBIT_OWNED_PTR`, the pointee type must also be annotated
+// with `CRUBIT_OWNED_PTR_TYPE`, indicating the Rust type that will manage the
+// ownership of the object in Rust bindings.
+//
+// The annotation pair is meant to associate Rust types that simply contain a
+// pointer to the associated C++ type.
+//
+// For example:
+//
+// ```c++
+// struct CRUBIT_OWNED_PTR_TYPE("some_crate::MyRustType") MyType;
+//
+// MyType* CRUBIT_OWNED_PTR ReturnOwnedPtr() { ... }
+// void AcceptOwnedPtr(MyType* CRUBIT_OWNED_PTR owned_ptr) { ... }
+// ```
+//
+// This assumes that the `MyRustType` struct is defined in `some_crate` as:
+//
+// ```rust
+// #[repr(transparent)]
+// struct MyRustType { ptr: std::ptr::NonNull<std::ffi::c_void> }
+// ```
+
+#define CRUBIT_OWNED_PTR CRUBIT_INTERNAL_ANNOTATE_TYPE("crubit_owned_ptr")
+#define CRUBIT_OWNED_PTR_TYPE(name) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_owned_ptr_type", name)
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

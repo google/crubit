@@ -1354,6 +1354,7 @@ fn rs_type_kinds_for_func(
                         PointerTypeKind::Nullable | PointerTypeKind::NonNull => {
                             *kind = PointerTypeKind::LValueRef;
                         }
+                        PointerTypeKind::Owned => panic!("owned `this` pointers are not supported"),
                     }
                 }
             }
