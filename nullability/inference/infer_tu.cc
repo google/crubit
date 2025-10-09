@@ -98,10 +98,10 @@ class InferenceManager {
     FunctionSummariesAndEvidence Result;
 
     VirtualMethodIndex VMI = getVirtualMethodIndex(Ctx, USRCache);
-    // Test the that we can properly round-trip parts of the VMI
-    // with saveVirtualMethodsMap and loadVirtualMethodsMap.
-    *Result.Summary.mutable_overrides_to_bases() =
-        saveVirtualMethodsMap(VMI.Bases);
+    // Exercise round-tripping parts of the VMI with saveVirtualMethodsIndex and
+    // loadVirtualMethodsIndex.
+    *Result.Summary.mutable_virtual_method_index() =
+        saveVirtualMethodsIndex(VMI);
 
     Result.BaseToOverrides = VMI.Overrides;
 
@@ -137,9 +137,8 @@ class InferenceManager {
     std::vector<Evidence> AllEvidence =
         SummariesAndEvidence.DeclarationsEvidence;
 
-    VirtualMethodIndex VMI;
-    VMI.Bases = loadVirtualMethodsMap(
-        SummariesAndEvidence.Summary.overrides_to_bases());
+    VirtualMethodIndex VMI = loadVirtualMethodsIndex(
+        SummariesAndEvidence.Summary.virtual_method_index());
     VMI.Overrides = SummariesAndEvidence.BaseToOverrides;
 
     // Collect evidence from summaries.

@@ -85,6 +85,13 @@ constexpr llvm::StringRef CheckMacroDefinitions = R"cc(
 #define CHECK_NE(A, B) (A, B)
 )cc";
 
+constexpr llvm::StringRef GtestMacroDefinitions = R"cc(
+  // Minimal macro definitions to mimic GoogleTest.
+#define GTEST_TEST(test_suite_name, test_name) \
+    void test_suite_name##_##test_name()
+#define ASSERT_NE
+)cc";
+
 }  // namespace
 
 namespace {
@@ -144,6 +151,93 @@ TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
                                          USRSet({DFooUSR, DDFooUSR}))),
           IsStringMapEntry(DFooUSR, methodSummary(llvm::SmallVector<int>{0, 3},
                                                   USRSet({DDFooUSR})))));
+
+  // For TUs that don't have any GoogleTest macros,
+  // IsDefinedInTest should be empty (as an optimization, vs a map with
+  // entries that are all trivial).
+  EXPECT_THAT(Index.IsDefinedInTest, IsEmpty());
+}
+
+TEST(GetVirtualMethodIndexTest, TracksCrossingTestToNontestCode) {
+  using USRSet = llvm::StringSet<>;
+
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+    struct TestToNontestDerived : public Derived {
+      int* foo() override { return nullptr; };
+    };
+
+    struct TestBase : public Base {
+      int* foo() override { return new int(42); };
+    };
+
+    struct TestToTestDerived : public TestBase {
+      int* foo() override { return nullptr; };
+    };
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    struct Base {
+      virtual int* foo() { return new int(42); }
+    };
+
+    struct Derived : public Base {
+      int* foo() override;
+    };
+  )cc";
+
+  clang::TestAST AST(Inputs);
+  const Decl* BaseFoo =
+      dataflow::test::findValueDecl(AST.context(), "Base::foo");
+  const Decl* DFoo =
+      dataflow::test::findValueDecl(AST.context(), "Derived::foo");
+  const Decl* TtoNTDFoo =
+      dataflow::test::findValueDecl(AST.context(), "TestToNontestDerived::foo");
+  const Decl* TBaseFoo =
+      dataflow::test::findValueDecl(AST.context(), "TestBase::foo");
+  const Decl* TtoTDFoo =
+      dataflow::test::findValueDecl(AST.context(), "TestToTestDerived::foo");
+
+  USRCache UC;
+  std::string_view BaseFooUSR = getOrGenerateUSR(UC, *BaseFoo);
+  std::string_view DFooUSR = getOrGenerateUSR(UC, *DFoo);
+  std::string_view TtoNTDFooUSR = getOrGenerateUSR(UC, *TtoNTDFoo);
+  std::string_view TBaseFooUSR = getOrGenerateUSR(UC, *TBaseFoo);
+  std::string_view TtoTDFooUSR = getOrGenerateUSR(UC, *TtoTDFoo);
+
+  auto Index = getVirtualMethodIndex(AST.context(), UC);
+
+  EXPECT_THAT(
+      Index.Bases,
+      UnorderedElementsAre(
+          IsStringMapEntry(DFooUSR, USRSet({BaseFooUSR})),
+          IsStringMapEntry(TtoNTDFooUSR, USRSet({DFooUSR, BaseFooUSR})),
+          IsStringMapEntry(TBaseFooUSR, USRSet({BaseFooUSR})),
+          IsStringMapEntry(TtoTDFooUSR, USRSet({TBaseFooUSR, BaseFooUSR}))));
+
+  EXPECT_THAT(
+      Index.Overrides,
+      UnorderedElementsAre(
+          IsStringMapEntry(BaseFooUSR,
+                           methodSummary(llvm::SmallVector<int>{0},
+                                         USRSet({DFooUSR, TtoNTDFooUSR,
+                                                 TBaseFooUSR, TtoTDFooUSR}))),
+          IsStringMapEntry(DFooUSR, methodSummary(llvm::SmallVector<int>{0},
+                                                  USRSet({TtoNTDFooUSR}))),
+          IsStringMapEntry(TBaseFooUSR, methodSummary(llvm::SmallVector<int>{0},
+                                                      USRSet({TtoTDFooUSR})))));
+
+  // We don't filter test -> nontest here. We only track the metadata
+  // to enable filtering elsewhere.
+  EXPECT_THAT(Index.IsDefinedInTest,
+              UnorderedElementsAre(IsStringMapEntry(TtoNTDFooUSR, _),
+                                   IsStringMapEntry(TBaseFooUSR, _),
+                                   IsStringMapEntry(TtoTDFooUSR, _)));
 }
 
 // TODO: b/440317964 -- Expand SummarizeDefinitionTest to cover all summarized
@@ -4405,6 +4499,379 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       EXPECT_THAT(Results, IsEmpty());
     }
   }
+}
+
+TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCallFromTestToNontestCode) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+    int* testCallee(int* P);
+
+    GTEST_TEST(UserInTestFile, WithNull) {
+      int* P = nullptr;
+      // Test -> Test uses should not be ignored.
+      int* Q = testCallee(P);
+      *Q = 1;
+
+      // but Test -> NonTest uses should be ignored.
+      Q = nontestCallee(P);
+      *Q = 2;
+    }
+
+    int G = 0;
+    // Similar, but what happens in global inits instead of function scope.
+    int* _Nonnull InitWithTestCallee = testCallee(&G);
+    int* _Nonnull InitWithNonTestCallee = nontestCallee(&G);
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    int* nontestCallee(int* P);
+
+    // Also have a non-test use of nontestCallee.
+    void nontestCaller() {
+      int X = 10;
+      int* Y = nontestCallee(&X);
+      *Y = 1;
+    }
+  )cc";
+
+  TestAST AST(Inputs);
+  const Decl& TestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "UserInTestFile_WithNull");
+  const Decl& TestInitWithTestCalleeDecl =
+      *dataflow::test::findValueDecl(AST.context(), "InitWithTestCallee");
+  const Decl& TestInitWithNonTestCalleeDecl =
+      *dataflow::test::findValueDecl(AST.context(), "InitWithNonTestCallee");
+  const Decl& NontestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
+
+  // The non-test caller should produce evidence for nontestCallee's return slot
+  // and parameter slot.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("nontestCallee")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                                    localVarNamed("Y", "nontestCaller")),
+                           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    functionNamed("nontestCallee"))));
+
+  // However, the test caller should NOT produce evidence for nontestCallee's
+  // return slot and parameter slot. It should only produce evidence for
+  // testCallee.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   localVarNamed("P", "UserInTestFile_WithNull")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                   localVarNamed("Q", "UserInTestFile_WithNull")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                   localVarNamed("Q", "UserInTestFile_WithNull")),
+          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                   functionNamed("testCallee")),
+          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   functionNamed("testCallee"))));
+
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestInitWithTestCalleeDecl, Pragmas,
+                            getMode()),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    functionNamed("testCallee")),
+                           evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("testCallee"))));
+
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestInitWithNonTestCalleeDecl,
+                            Pragmas, getMode()),
+      IsEmpty());
+}
+
+TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCtorFromTestToNontestCode) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+
+    struct TestClass {
+      TestClass(int* P);
+      int* P;
+    };
+
+    GTEST_TEST(UserInTestFile, WithNull) {
+      int* P = nullptr;
+      // Test -> Test constructor calls should not be ignored.
+      TestClass TC(P);
+
+      // but Test -> NonTest constructor calls should be ignored.
+      NontestClass NTC(P);
+    }
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    struct NontestClass {
+      NontestClass(int* P);
+      int* P;
+    };
+
+    // Also have a non-test use of NontestClass.
+    void nontestCaller() {
+      int X = 10;
+      NontestClass C(&X);
+    }
+  )cc";
+
+  TestAST AST(Inputs);
+  const Decl& TestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "UserInTestFile_WithNull");
+  const Decl& NontestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
+
+  // The non-test caller should produce evidence for NontestClass's ctor param.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("NontestClass"))));
+
+  // However, the test caller should NOT produce evidence for NontestClass's
+  // ctor param. It should only produce evidence for TestClass.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   localVarNamed("P", "UserInTestFile_WithNull")),
+          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                   functionNamed("TestClass"))));
+}
+
+TEST_P(CollectEvidenceFromDefinitionTest,
+       IgnoreMemberVarFromTestToNontestCode) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+
+    struct TestClass {
+      int* P;
+    };
+    TestClass getTestClass();
+
+    GTEST_TEST(UserInTestFile, WithNull) {
+      int* P = nullptr;
+      // Test -> Test member var uses should not be ignored.
+      TestClass TC;
+      TC.P = P;
+      TestClass TC2 = {P};
+      TestClass TC3 = getTestClass();
+      *TC3.P;
+
+      // but Test -> NonTest member var uses should be ignored.
+      NontestClass NTC;
+      NTC.P = P;
+      NontestClass NTC2 = {P};
+      NontestClass NTC3 = getNontestClass();
+      *NTC3.P;
+    }
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    struct NontestClass {
+      int* P;
+    };
+    NontestClass getNontestClass();
+
+    // Also have a non-test use of NontestClass.
+    void nontestCaller() {
+      int X = 10;
+      NontestClass C;
+      C.P = &X;
+      NontestClass C2 = {&X};
+      NontestClass C3 = getNontestClass();
+      *C3.P;
+    }
+  )cc";
+
+  TestAST AST(Inputs);
+  const Decl& TestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "UserInTestFile_WithNull");
+  const Decl& NontestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
+
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    fieldNamed("NontestClass::P")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    fieldNamed("NontestClass::P")),
+                           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                                    fieldNamed("NontestClass::P"))));
+
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   localVarNamed("P", "UserInTestFile_WithNull")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   fieldNamed("TestClass::P")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   fieldNamed("TestClass::P")),
+          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   fieldNamed("TestClass::P"))));
+}
+
+TEST_P(CollectEvidenceFromDefinitionTest,
+       IgnoreGlobalOrStaticMemberVarFromTestToNontestCode) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+
+    int* TestGlobal = nullptr;
+    struct TestClass {
+      static int* TestStatic;
+    };
+    int* TestClass::TestStatic = nullptr;
+
+    GTEST_TEST(UserInTestFile, WithNull) {
+      int* P = nullptr;
+      // Test -> Test uses should not be ignored.
+      *TestGlobal;
+      TestGlobal = P;
+      TestClass::TestStatic = P;
+
+      // but Test -> NonTest uses should be ignored.
+      *NontestGlobal;
+      NontestGlobal = P;
+      NontestClass::TestStatic = P;
+    }
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    void foo();
+
+    // Want to see if the test can introduce evidence for NontestClass's member.
+    struct NontestClass {
+      static int* TestStatic;
+    };
+    int* NontestGlobal;
+    int* NontestClass::TestStatic = nullptr;
+
+    // Also have a non-test use of NontestClass.
+    void nontestCaller() {
+      int X = 10;
+      *NontestGlobal;
+      NontestGlobal = &X;
+      NontestClass::TestStatic = {&X};
+    }
+  )cc";
+
+  TestAST AST(Inputs);
+  const Decl& TestTargetDecl =
+      *dataflow::test::findValueDecl(AST.context(), "UserInTestFile_WithNull");
+  const Decl& NontestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
+
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   globalVarNamed("NontestGlobal")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                   globalVarNamed("NontestGlobal")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                   staticFieldNamed("NontestClass::TestStatic"))));
+
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestTargetDecl, Pragmas, getMode()),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   localVarNamed("P", "UserInTestFile_WithNull")),
+          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   globalVarNamed("TestGlobal")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   globalVarNamed("TestGlobal")),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   staticFieldNamed("TestClass::TestStatic"))));
+}
+
+TEST_P(CollectEvidenceFromDefinitionTest,
+       IgnoreTestToNontestFromVirtualDerivedForReturn) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+
+    struct TestToNontestDerived : public Base {
+      int* foo() override { return nullptr; }
+    };
+
+    struct TestBase : public Base {
+      int* foo() override { return new int(0); }
+    };
+
+    struct TestToTestDerived : public TestBase {
+      int* foo() override { return nullptr; }
+    };
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    struct Base {
+      virtual int* foo();
+    };
+
+    struct Derived : public Base {
+      int* foo() override { return nullptr; }
+    };
+  )cc";
+
+  clang::TestAST AST(Inputs);
+  const Decl& NontestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "Derived::foo");
+  const Decl& TestToNontestTargetDecl = *dataflow::test::findValueDecl(
+      AST.context(), "TestToNontestDerived::foo");
+  const Decl& TestToTestTargetDecl =
+      *dataflow::test::findValueDecl(AST.context(), "TestToTestDerived::foo");
+
+  // In the non-test case, we can propagate from Derived::foo to Base::foo.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                   functionNamed("Derived@F@foo")),
+          evidencePropagatedFrom(functionNamed("Derived@F@foo"),
+                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                 functionNamed("Base@F@foo"))));
+
+  // In the test case, we only propagate from TestToTestDerived::foo to
+  // TestBase::foo, not TestToNontestDerived::foo to Base::foo,
+  // or TestToTestDerived::foo to Base::foo.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestToTestTargetDecl, Pragmas,
+                            getMode()),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                   functionNamed("TestToTestDerived@F@foo")),
+          evidencePropagatedFrom(functionNamed("TestToTestDerived@F@foo"),
+                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                 functionNamed("TestBase@F@foo"))));
+
+  EXPECT_THAT(collectFromDefinition(AST.context(), TestToNontestTargetDecl,
+                                    Pragmas, getMode()),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                           functionNamed("TestToNontestDerived@F@foo"))));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
