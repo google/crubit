@@ -177,14 +177,14 @@ static_assert(std::is_trivially_move_assignable_v<Opaque>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(::from::Opaque*);
 }
-Opaque::operator std::int32_t() {
+inline Opaque::operator std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 namespace __crubit_internal {
 extern "C" std::int64_t __crubit_thunk_into_ui64(::from::Opaque*);
 }
-Opaque::operator std::int64_t() {
+inline Opaque::operator std::int64_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }
@@ -192,7 +192,7 @@ namespace __crubit_internal {
 extern "C" rs_std::StrRef
 __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(::from::Opaque*);
 }
-Opaque::operator rs_std::StrRef() {
+inline Opaque::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(&self);
@@ -200,7 +200,7 @@ Opaque::operator rs_std::StrRef() {
 namespace __crubit_internal {
 extern "C" std::int16_t __crubit_thunk_into_ui16(::from::Opaque*);
 }
-Opaque::operator std::int16_t() {
+inline Opaque::operator std::int16_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui16(&self);
 }
@@ -209,7 +209,7 @@ extern "C" void
 __crubit_thunk_into_uOpaqueRef_x0000003c_x00000027static_x0000003e(
     ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
 }
-Opaque::operator ::from::OpaqueRef() {
+inline Opaque::operator ::from::OpaqueRef() {
   auto&& self = *this;
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -252,7 +252,7 @@ namespace __crubit_internal {
 extern "C" rs_std::StrRef
 __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(::from::OpaqueRef*);
 }
-OpaqueRef::operator rs_std::StrRef() {
+inline OpaqueRef::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(&self);
@@ -281,7 +281,7 @@ inline ::from::NotFfiSafe NotFfiSafe::create() {
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(::from::NotFfiSafe*);
 }
-NotFfiSafe::operator std::int32_t() {
+inline NotFfiSafe::operator std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }

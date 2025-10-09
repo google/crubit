@@ -464,7 +464,7 @@ fn generate_into_impls<'tcx>(
                 cc_details: CcSnippet::new(quote! {
                     #cc_thunk_decls
 
-                    #cc_struct_name :: operator  #cc_ty ( ) {
+                    inline #cc_struct_name :: operator  #cc_ty ( ) {
                         #impl_body_tokens
                     }
                 }),

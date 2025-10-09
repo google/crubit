@@ -210,14 +210,14 @@ static_assert(std::is_trivially_move_assignable_v<Convert>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(::into::Convert*);
 }
-Convert::operator std::int32_t() {
+inline Convert::operator std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 namespace __crubit_internal {
 extern "C" std::int64_t __crubit_thunk_into_ui64(::into::Convert*);
 }
-Convert::operator std::int64_t() {
+inline Convert::operator std::int64_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }
@@ -225,7 +225,7 @@ namespace __crubit_internal {
 extern "C" rs_std::StrRef
 __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(::into::Convert*);
 }
-Convert::operator rs_std::StrRef() {
+inline Convert::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027static_x00000020str(&self);
@@ -233,7 +233,7 @@ Convert::operator rs_std::StrRef() {
 namespace __crubit_internal {
 extern "C" std::int16_t __crubit_thunk_into_ui16(::into::Convert*);
 }
-Convert::operator std::int16_t() {
+inline Convert::operator std::int16_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui16(&self);
 }
@@ -275,7 +275,7 @@ namespace __crubit_internal {
 extern "C" rs_std::StrRef
 __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(::into::ConvertRef*);
 }
-ConvertRef::operator rs_std::StrRef() {
+inline ConvertRef::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(&self);
@@ -284,7 +284,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_into_uConvert(::into::ConvertRef*,
                                              ::into::Convert* __ret_ptr);
 }
-ConvertRef::operator ::into::Convert() {
+inline ConvertRef::operator ::into::Convert() {
   auto&& self = *this;
   crubit::Slot<::into::Convert> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -319,14 +319,14 @@ static_assert(std::is_trivially_move_assignable_v<ConvertModule>);
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(::into::ConvertModule*);
 }
-ConvertModule::operator std::int32_t() {
+inline ConvertModule::operator std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
 namespace __crubit_internal {
 extern "C" std::int64_t __crubit_thunk_into_ui64(::into::ConvertModule*);
 }
-ConvertModule::operator std::int64_t() {
+inline ConvertModule::operator std::int64_t() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_into_ui64(&self);
 }

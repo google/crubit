@@ -271,7 +271,7 @@ extern "C" std::int32_t const& [[clang::annotate_type(
     "a")]] __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(::lifetimes::
                                                                        StructWithLifetime*);
 }
-StructWithLifetime::operator std::int32_t const& [[clang::annotate_type(
+inline StructWithLifetime::operator std::int32_t const& [[clang::annotate_type(
     "lifetime", "a")]] () {
   auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
@@ -281,7 +281,7 @@ namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_into_ui32(
     ::lifetimes::StructWithLifetime*);
 }
-StructWithLifetime::operator std::int32_t() {
+inline StructWithLifetime::operator std::int32_t() {
   auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_into_ui32(&self);
 }
