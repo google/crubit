@@ -48,6 +48,7 @@ cc_test(
         ":inference_cc_proto",
         ":slot_fingerprint",
         ":usr_cache",
+        "//nullability:pointer_nullability_analysis",
         "//nullability:pragma",
         "//nullability:proto_matchers",
         "@llvm-project//clang:analysis",

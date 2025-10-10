@@ -1775,7 +1775,7 @@ static llvm::Expected<PointerNullState> loadPointerNullState(
   }
   const Formula *IsNull = nullptr;
   if (Proto.has_is_null()) {
-    llvm::Expected<const Formula*> Loaded =
+    llvm::Expected<const Formula *> Loaded =
         parseFormula(Proto.is_null().serialized(), Arena, AtomMap);
     if (!Loaded) return Loaded.takeError();
     IsNull = *Loaded;
@@ -1961,6 +1961,211 @@ class SummaryCollector {
   llvm::DenseSet<Atom> &UsedTokens;
   const Environment &Env;
 };
+
+class SummaryEvidenceCollector {
+ public:
+  static llvm::Error collectEvidenceFromBehaviorSummary(
+      const std::vector<InferableSlot> &InferableSlots,
+      const Formula &InferableSlotsConstraint, const Environment &Env,
+      const dataflow::Solver &Solver,
+      const NullabilityBehaviorSummary &BehaviorSummary,
+      llvm::function_ref<EvidenceEmitter> Emit,
+      llvm::DenseMap<unsigned, dataflow::Atom> &AtomMap) {
+    SummaryEvidenceCollector Collector(InferableSlots, InferableSlotsConstraint,
+                                       Emit, Env, Solver, AtomMap);
+    return Collector.collectEvidenceFromBehaviorSummary(BehaviorSummary);
+  }
+
+ private:
+  SummaryEvidenceCollector(const std::vector<InferableSlot> &InferableSlots,
+                           const Formula &InferableSlotsConstraint,
+                           llvm::function_ref<EvidenceEmitter> Emit,
+                           const Environment &Env,
+                           const dataflow::Solver &Solver,
+                           llvm::DenseMap<unsigned, dataflow::Atom> &AtomMap)
+      : Collector(InferableSlots, InferableSlotsConstraint, Env, Solver, Emit),
+        Arena(Env.arena()),
+        AtomMap(AtomMap) {}
+
+  llvm::Error collectEvidenceFromBehaviorSummary(
+      const NullabilityBehaviorSummary &BehaviorSummary) {
+    switch (BehaviorSummary.behavior_case()) {
+      case NullabilityBehaviorSummary::kRequiresAnnotation:
+        return collectRequiresAnnotation(BehaviorSummary.requires_annotation());
+      case NullabilityBehaviorSummary::kValueAssigned:
+        return collectValueAssignedToType(BehaviorSummary.value_assigned());
+      case NullabilityBehaviorSummary::kAssignmentFromValue:
+        return collectAssignmentFromValue(
+            BehaviorSummary.assignment_from_value());
+      case NullabilityBehaviorSummary::kArgumentBinding:
+        return collectArgumentBinding(BehaviorSummary.argument_binding());
+      case NullabilityBehaviorSummary::kAbortIfEqual:
+        return collectAbortIfEqual(BehaviorSummary.abort_if_equal());
+      case NullabilityBehaviorSummary::kReturned:
+        return collectReturn(BehaviorSummary.returned());
+      case NullabilityBehaviorSummary::kOnExit:
+        return collectExitBlock(BehaviorSummary.on_exit());
+
+      case NullabilityBehaviorSummary::BEHAVIOR_NOT_SET:
+        return llvm::createStringError(llvm::errc::invalid_argument,
+                                       "No NullabilityBehaviorSummary set");
+    }
+    return llvm::createStringError(
+        llvm::errc::invalid_argument,
+        "Unexpected NullabilityBehaviorSummary case");
+  }
+
+  llvm::Error collectRequiresAnnotation(
+      const RequiresAnnotationSummary &Summary) {
+    llvm::Expected<const Formula *> MustBeTrue =
+        parseFormula(Summary.formula().serialized(), Arena, AtomMap);
+    if (!MustBeTrue) return MustBeTrue.takeError();
+
+    SerializedSrcLoc Loc = {Summary.location()};
+    Evidence::Kind EvidenceKind = Summary.evidence_kind();
+
+    switch (Summary.required_annotation()) {
+      case Nullability::NONNULL:
+        Collector.mustBeTrueByMarkingNonnull(**MustBeTrue, Loc, EvidenceKind);
+        break;
+      case Nullability::NULLABLE:
+        Collector.mustBeTrueByMarkingNullable(**MustBeTrue, Loc, EvidenceKind);
+        break;
+      default:
+        return llvm::createStringError(llvm::errc::invalid_argument,
+                                       "Unsupported RequiredAnnotation in "
+                                       "collectRequiresAnnotation");
+    }
+    return llvm::Error::success();
+  }
+
+  llvm::Error collectValueAssignedToType(
+      const ValueAssignedToTypeSummary &Summary) {
+    llvm::Expected<PointerTypeNullability> LHSTypeNullability =
+        loadPointerTypeNullability(Summary.lhs_type_nullability(), Arena,
+                                   AtomMap);
+    if (!LHSTypeNullability) return LHSTypeNullability.takeError();
+
+    std::optional<PointerTypeNullability> RHSTypeNullability;
+    if (Summary.has_rhs_type_nullability()) {
+      llvm::Expected<PointerTypeNullability> Loaded =
+          loadPointerTypeNullability(Summary.rhs_type_nullability(), Arena,
+                                     AtomMap);
+      if (!Loaded) return Loaded.takeError();
+      RHSTypeNullability = *std::move(Loaded);
+    }
+
+    llvm::Expected<PointerNullState> RHSValueNullability =
+        loadPointerNullState(Summary.rhs_value_nullability(), Arena, AtomMap);
+    if (!RHSValueNullability) return RHSValueNullability.takeError();
+
+    Collector.collectAssignmentToType(
+        Summary.lhs_is_non_reference_const(), *LHSTypeNullability,
+        RHSTypeNullability, *RHSValueNullability, {Summary.rhs_loc()});
+    return llvm::Error::success();
+  }
+
+  llvm::Error collectAssignmentFromValue(
+      const AssignmentFromValueSummary &Summary) {
+    llvm::Expected<PointerTypeNullability> LHSTypeNullability =
+        loadPointerTypeNullability(Summary.lhs_type_nullability(), Arena,
+                                   AtomMap);
+    if (!LHSTypeNullability) return LHSTypeNullability.takeError();
+
+    std::optional<PointerNullState> RHSNullState;
+    if (Summary.has_rhs_null_state()) {
+      llvm::Expected<PointerNullState> Loaded =
+          loadPointerNullState(Summary.rhs_null_state(), Arena, AtomMap);
+      if (!Loaded) return Loaded.takeError();
+      RHSNullState = *std::move(Loaded);
+    }
+
+    Collector.collectAssignmentFromValue(*LHSTypeNullability, RHSNullState,
+                                         {Summary.rhs_loc()},
+                                         Summary.evidence_kind());
+    return llvm::Error::success();
+  }
+
+  llvm::Error collectArgumentBinding(const BindingSummary &Summary) {
+    std::optional<PointerNullState> ArgNullState;
+    if (Summary.has_null_state()) {
+      llvm::Expected<PointerNullState> Loaded =
+          loadPointerNullState(Summary.null_state(), Arena, AtomMap);
+      if (!Loaded) return Loaded.takeError();
+      ArgNullState = *std::move(Loaded);
+    }
+
+    Collector.collectArgBinding(
+        Summary.function_symbol().usr(), static_cast<Slot>(Summary.slot()),
+        {Summary.type_is_lvalue_ref(), Summary.type_is_const()}, ArgNullState,
+        {Summary.location()});
+    return llvm::Error::success();
+  }
+
+  llvm::Error collectAbortIfEqual(const AbortIfEqualSummary &Summary) {
+    llvm::Expected<const Formula *> ParsedFormula =
+        parseFormula(Summary.first_is_null().serialized(), Arena, AtomMap);
+    if (!ParsedFormula) return ParsedFormula.takeError();
+    // If parsing succeeds, we expect the pointer is nonnull. But, we have no
+    // guarantee so we check to be safe.
+    if (*ParsedFormula == nullptr)
+      return llvm::createStringError(
+          llvm::errc::invalid_argument,
+          "Error in formula parsing: null formula returned");
+    const Formula &FirstIsNull = **ParsedFormula;
+
+    ParsedFormula =
+        parseFormula(Summary.second_is_null().serialized(), Arena, AtomMap);
+    if (!ParsedFormula) return ParsedFormula.takeError();
+    // If parsing succeeds, we expect the pointer is nonnull. But, we have no
+    // guarantee so we check to be safe.
+    if (*ParsedFormula == nullptr)
+      return llvm::createStringError(
+          llvm::errc::invalid_argument,
+          "Error in formula parsing: null formula returned");
+    const Formula &SecondIsNull = **ParsedFormula;
+
+    Collector.collectAbortIfEqual(FirstIsNull, {Summary.first_loc()},
+                                  SecondIsNull, {Summary.second_loc()});
+    return llvm::Error::success();
+  }
+
+  llvm::Error collectReturn(const BindingSummary &Summary) {
+    llvm::Expected<PointerNullState> ReturnNullState =
+        loadPointerNullState(Summary.null_state(), Arena, AtomMap);
+    if (!ReturnNullState) return ReturnNullState.takeError();
+
+    Collector.collectReturn(
+        Summary.function_symbol().usr(),
+        {Summary.type_is_lvalue_ref(), Summary.type_is_const()},
+        *ReturnNullState, {Summary.location()});
+    return llvm::Error::success();
+  }
+
+  llvm::Error collectExitBlock(const ExitBlockSummary &Summary) {
+    for (const auto &InitOnExit : Summary.ctor_inits_on_exit()) {
+      llvm::Expected<PointerNullState> NullState =
+          loadPointerNullState(InitOnExit.null_state(), Arena, AtomMap);
+      if (!NullState) return NullState.takeError();
+
+      Collector.collectConstructorExitBlock(
+          InitOnExit.field().usr(), *NullState, {InitOnExit.location()});
+    }
+    for (const auto &InitOnExit : Summary.late_inits_on_exit()) {
+      llvm::Expected<PointerNullState> NullState =
+          loadPointerNullState(InitOnExit.null_state(), Arena, AtomMap);
+      if (!NullState) return NullState.takeError();
+
+      Collector.collectSupportedLateInitializerExitBlock(
+          InitOnExit.field().usr(), *NullState, {InitOnExit.location()});
+    }
+    return llvm::Error::success();
+  }
+
+  EvidenceCollector Collector;
+  dataflow::Arena &Arena;
+  llvm::DenseMap<unsigned, dataflow::Atom> &AtomMap;
+};
 }  // namespace
 
 // Convenience override for functions that follow. Handles translation from AST
@@ -2119,8 +2324,7 @@ static void processConstructorExitBlock(const clang::Decl &MaybeConstructor,
 // LEFT_NULLABLE_BY_CONSTRUCTOR evidence for such a field.
 static void processSupportedLateInitializerExitBlock(
     const clang::Decl &MaybeLateInitializationMethod,
-    const Environment &ExitEnv, USRCache &USRCache,
-    EBInitHandler InitHandler) {
+    const Environment &ExitEnv, USRCache &USRCache, EBInitHandler InitHandler) {
   auto *Method = dyn_cast<CXXMethodDecl>(&MaybeLateInitializationMethod);
   if (!Method || !Method->isVirtual() || Method->getNumParams() != 0) return;
   if (IdentifierInfo *Identifier = Method->getIdentifier();
@@ -2481,6 +2685,7 @@ llvm::Error collectEvidenceFromDefinition(
     return Error;
 
   if (Results.empty()) return llvm::Error::success();
+
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
     EvidenceCollector Collector(InferableSlots, InferableSlotsConstraint,
@@ -2563,13 +2768,9 @@ llvm::Expected<CFGSummary> summarizeDefinition(
                               .moveInto(Results))
     return Error;
 
-  if (Solver->reachedLimit()) {
-    return llvm::createStringError(llvm::errc::interrupted,
-                                   "SAT solver reached iteration limit");
-  }
-
   // When `Results` are empty, the post-analysis callbacks should not have been
-  // called. But, to be sure, explicitly return an empty summary.
+  // called, so `Summary` should be empty. But, to be sure, explicitly return a
+  // fresh empty summary.
   if (Results.empty()) return CFGSummary();
 
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
@@ -2593,7 +2794,47 @@ llvm::Expected<CFGSummary> summarizeDefinition(
   *Summary.mutable_logical_context() =
       saveLogicalContext(std::move(UsedTokens), AnalysisContext);
 
+  if (Solver->reachedLimit()) {
+    return llvm::createStringError(llvm::errc::interrupted,
+                                   "SAT solver reached iteration limit");
+  }
+
   return Summary;
+}
+
+llvm::Error collectEvidenceFromSummary(
+    const CFGSummary &Summary, llvm::function_ref<EvidenceEmitter> Emit,
+    const PreviousInferences &PreviousInferences,
+    const SolverFactory &MakeSolver) {
+  std::unique_ptr<dataflow::Solver> Solver = MakeSolver();
+  DataflowAnalysisContext AnalysisContext(*Solver);
+  llvm::DenseMap<unsigned, dataflow::Atom> AtomMap;
+  llvm::Expected<dataflow::SimpleLogicalContext> Ctx = loadLogicalContext(
+      Summary.logical_context(), AnalysisContext.arena(), AtomMap);
+  if (!Ctx) return Ctx.takeError();
+  AnalysisContext.initLogicalContext(*std::move(Ctx));
+  dataflow::Arena &Arena = AnalysisContext.arena();
+  std::vector<InferableSlot> InferableSlots =
+      loadInferableSlots(Summary.inferable_slots(), Arena, AtomMap);
+
+  const auto &InferableSlotsConstraint =
+      getConstraintsOnInferableSlots(InferableSlots, PreviousInferences, Arena);
+
+  for (const auto &BehaviorSummary : Summary.behavior_summaries()) {
+    Environment Env(AnalysisContext,
+                    getAtom(BehaviorSummary.block_atom(), Arena, AtomMap));
+    if (llvm::Error Err =
+            SummaryEvidenceCollector::collectEvidenceFromBehaviorSummary(
+                InferableSlots, InferableSlotsConstraint, Env, *Solver,
+                BehaviorSummary, Emit, AtomMap))
+      return Err;
+    if (Solver->reachedLimit()) {
+      return llvm::createStringError(llvm::errc::interrupted,
+                                     "SAT solver reached iteration limit");
+    }
+  }
+
+  return llvm::Error::success();
 }
 
 static void collectEvidenceFromDefaultArgument(

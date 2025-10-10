@@ -20,10 +20,8 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
-#include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
-#include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringSet.h"
@@ -174,6 +172,11 @@ llvm::Error collectEvidenceFromDefinition(
 llvm::Expected<CFGSummary> summarizeDefinition(
     const Decl& Definition, USRCache& USRCache,
     const NullabilityPragmas& Pragmas,
+    const SolverFactory& MakeSolver = makeDefaultSolverForInference);
+
+llvm::Error collectEvidenceFromSummary(
+    const CFGSummary& Summary, llvm::function_ref<EvidenceEmitter> Emit,
+    const PreviousInferences& PreviousInferences,
     const SolverFactory& MakeSolver = makeDefaultSolverForInference);
 
 /// Gathers evidence of a symbol's nullability from a declaration of it.
