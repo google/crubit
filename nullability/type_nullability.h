@@ -106,6 +106,10 @@ class PointerTypeNullability {
   // A owns the underlying SAT variables nonnullAtom() and nullableAtom().
   static PointerTypeNullability createSymbolic(dataflow::Arena &A);
 
+  // Creates a symbolic nullability variable with exactly the atoms specified.
+  static PointerTypeNullability createSymbolic(dataflow::Atom Nonnull,
+                                               dataflow::Atom Nullable);
+
   // Returns the concrete nullability, or Unspecified if symbolic.
   NullabilityKind concrete() const { return NK; }
 

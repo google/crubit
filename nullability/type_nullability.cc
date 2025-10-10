@@ -27,6 +27,7 @@
 #include "clang/AST/TypeLoc.h"
 #include "clang/AST/TypeVisitor.h"
 #include "clang/Analysis/FlowSensitive/Arena.h"
+#include "clang/Analysis/FlowSensitive/Formula.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
@@ -207,6 +208,15 @@ PointerTypeNullability PointerTypeNullability::createSymbolic(
   Symbolic.Symbolic = true;
   Symbolic.Nonnull = A.makeAtom();
   Symbolic.Nullable = A.makeAtom();
+  return Symbolic;
+}
+
+PointerTypeNullability PointerTypeNullability::createSymbolic(
+    dataflow::Atom Nonnull, dataflow::Atom Nullable) {
+  PointerTypeNullability Symbolic;
+  Symbolic.Symbolic = true;
+  Symbolic.Nonnull = Nonnull;
+  Symbolic.Nullable = Nullable;
   return Symbolic;
 }
 

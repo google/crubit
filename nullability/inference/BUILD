@@ -35,6 +35,7 @@ cc_library(
         "@llvm-project//clang:basic",
         "@llvm-project//clang:index",
         "@llvm-project//llvm:Support",
+        "@protobuf:protobuf_lite",
     ],
 )
 

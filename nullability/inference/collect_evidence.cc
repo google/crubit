@@ -66,6 +66,7 @@
 #include "clang/Basic/Specifiers.h"
 #include "clang/Index/USRGeneration.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
@@ -75,6 +76,7 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include "google/protobuf/repeated_ptr_field.h"
 
 namespace clang::tidy::nullability {
 using ::clang::dataflow::Atom;
@@ -1680,8 +1682,8 @@ static LogicalContext saveLogicalContext(llvm::DenseSet<Atom> UsedTokens,
   return CtxProto;
 }
 
-// TODO: b/440317964 -- lift this function out into a common library and share
-// with eligible_ranges.
+// TODO: b/440317964 -- lift these next two functions out into a common library
+// and share with eligible_ranges.
 static Nullability toProtoNullability(NullabilityKind Kind) {
   switch (Kind) {
     case NullabilityKind::NonNull:
@@ -1693,6 +1695,18 @@ static Nullability toProtoNullability(NullabilityKind Kind) {
       return Nullability::UNKNOWN;
   }
   llvm_unreachable("Unhandled NullabilityKind");
+}
+
+static NullabilityKind fromProtoNullability(Nullability N) {
+  switch (N) {
+    case Nullability::NONNULL:
+      return NullabilityKind::NonNull;
+    case Nullability::NULLABLE:
+      return NullabilityKind::Nullable;
+    case Nullability::UNKNOWN:
+      return NullabilityKind::Unspecified;
+  }
+  llvm_unreachable("Unsupported nullability value");
 }
 
 static PointerTypeNullabilityProto savePointerTypeNullability(
@@ -1729,6 +1743,89 @@ static InferableSlotProto saveInferableSlot(const InferableSlot &IS) {
   Proto.set_slot(IS.getTargetSlot());
   Proto.mutable_symbol()->set_usr(IS.getInferenceTargetUSR());
   return Proto;
+}
+
+// Gets the Atom associated with `AtomNumber`, creating a new one if needed.
+static Atom getAtom(unsigned AtomNumber, dataflow::Arena &Arena,
+                    llvm::DenseMap<unsigned, Atom> &AtomMap) {
+  auto [It, Inserted] = AtomMap.try_emplace(AtomNumber, Arena.makeAtom());
+  return It->second;
+}
+
+static llvm::Expected<PointerTypeNullability> loadPointerTypeNullability(
+    const PointerTypeNullabilityProto &Proto, dataflow::Arena &Arena,
+    llvm::DenseMap<unsigned, Atom> &AtomMap) {
+  if (Proto.has_symbolic()) {
+    return PointerTypeNullability::createSymbolic(
+        getAtom(Proto.symbolic().nonnull_atom(), Arena, AtomMap),
+        getAtom(Proto.symbolic().nullable_atom(), Arena, AtomMap));
+  }
+  return PointerTypeNullability(fromProtoNullability(Proto.concrete()));
+}
+
+static llvm::Expected<PointerNullState> loadPointerNullState(
+    const PointerNullStateProto &Proto, dataflow::Arena &Arena,
+    llvm::DenseMap<unsigned, Atom> &AtomMap) {
+  const Formula *FromNullable = nullptr;
+  if (Proto.has_from_nullable()) {
+    llvm::Expected<const Formula *> Loaded =
+        parseFormula(Proto.from_nullable().serialized(), Arena, AtomMap);
+    if (!Loaded) return Loaded.takeError();
+    FromNullable = *Loaded;
+  }
+  const Formula *IsNull = nullptr;
+  if (Proto.has_is_null()) {
+    llvm::Expected<const Formula*> Loaded =
+        parseFormula(Proto.is_null().serialized(), Arena, AtomMap);
+    if (!Loaded) return Loaded.takeError();
+    IsNull = *Loaded;
+  }
+  return PointerNullState{FromNullable, IsNull};
+}
+
+static std::vector<InferableSlot> loadInferableSlots(
+    const proto2::RepeatedPtrField<InferableSlotProto> &Protos,
+    dataflow::Arena &Arena, llvm::DenseMap<unsigned, Atom> &AtomMap) {
+  std::vector<InferableSlot> InferableSlots;
+  for (const auto &ISProto : Protos) {
+    InferableSlots.emplace_back(
+        PointerTypeNullability::createSymbolic(
+            getAtom(ISProto.nonnull_atom(), Arena, AtomMap),
+            getAtom(ISProto.nullable_atom(), Arena, AtomMap)),
+        static_cast<Slot>(ISProto.slot()), ISProto.symbol().usr());
+  }
+  return InferableSlots;
+}
+
+static llvm::Expected<dataflow::SimpleLogicalContext> loadLogicalContext(
+    const LogicalContext &LC, dataflow::Arena &Arena,
+    llvm::DenseMap<unsigned, Atom> &AtomMap) {
+  dataflow::SimpleLogicalContext Ctx;
+
+  if (LC.has_invariant()) {
+    llvm::Expected<const Formula *> Invariant =
+        parseFormula(LC.invariant().serialized(), Arena, AtomMap);
+    if (!Invariant) return Invariant.takeError();
+    Ctx.Invariant = *Invariant;
+  } else {
+    Ctx.Invariant = nullptr;
+  }
+
+  for (const auto &[AtomNumber, FProto] : LC.atom_defs()) {
+    llvm::Expected<const Formula *> Formula =
+        parseFormula(FProto.serialized(), Arena, AtomMap);
+    if (!Formula) return Formula.takeError();
+    Ctx.TokenDefs[getAtom(AtomNumber, Arena, AtomMap)] = *Formula;
+  }
+
+  for (const auto &[AtomNumber, DepSet] : LC.atom_deps()) {
+    llvm::DenseSet<Atom> Deps;
+    for (uint32_t DepAtomNumber : DepSet.atoms())
+      Deps.insert(getAtom(DepAtomNumber, Arena, AtomMap));
+    Ctx.TokenDeps[getAtom(AtomNumber, Arena, AtomMap)] = std::move(Deps);
+  }
+
+  return Ctx;
 }
 
 namespace {
@@ -2352,7 +2449,7 @@ llvm::Error collectEvidenceFromDefinition(
       Analysis, AnalysisContext.arena(), USRCache);
 
   // Here, we overlay new knowledge from past iterations over the symbolic
-  // entities for the InferableSlots (whose symbols are invariant across
+  // entities for the `InferableSlots` (whose symbols are invariant across
   // inference iterations).
   const auto &InferableSlotsConstraint = getConstraintsOnInferableSlots(
       InferableSlots, PreviousInferences, AnalysisContext.arena());
