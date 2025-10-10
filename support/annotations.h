@@ -209,15 +209,15 @@
 // )
 //
 // rust_library(
-//     name = "example_rs",
-//     srcs = ["example.rs"],
+//     name = "user",
+//     srcs = ["user.rs"],
 //     cc_deps = [":example"],
 // )
 // ```
 //
 // There are two main targets: :example and :additional_example_src. If the Rust
 // side of the bridge type isn't provided by Rust std, then it must be provided
-// in the additional_rust_srcs_for_crubit_bindings. :example_rs is simply a Rust
+// in the additional_rust_srcs_for_crubit_bindings. :user is simply a Rust
 // library that shows how a Rust library can consume the C++ bindings and its
 // bridge type.
 //
@@ -248,7 +248,7 @@
 // and methods that use the bridge type in Rust.
 //
 // ```rust
-// // example.rs
+// // user.rs
 // pub fn print_foo() {
 //   let s: example::MyRustStruct = example::foo();
 //   println!("{}", s.name);
