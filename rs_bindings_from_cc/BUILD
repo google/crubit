@@ -90,6 +90,9 @@ cc_library(
     name = "generate_bindings_and_metadata",
     srcs = ["generate_bindings_and_metadata.cc"],
     hdrs = ["generate_bindings_and_metadata.h"],
+    visibility = [
+        "//cargo:__subpackages__",
+    ],
     deps = [
         ":cc_collect_instantiations",
         ":cc_ir",
@@ -193,7 +196,9 @@ cc_library(
     name = "cmdline",
     srcs = ["cmdline.cc"],
     hdrs = ["cmdline.h"],
-    visibility = ["//google_internal/explorer:__subpackages__"],
+    visibility = [
+        "//cargo:__subpackages__",
+    ],
     deps = [
         ":bazel_types",
         ":cc_ir",
