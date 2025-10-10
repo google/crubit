@@ -642,8 +642,13 @@ class EvidenceCollector {
   /// * `RHSValueNullability` is the value nullability of the RHS expression.
   ///
   /// * `RHSLoc` is the beginning source location of the RHS expression.
+  ///
+  /// The (unused) fingerprint argument is only included in the signature
+  /// because this method implements the abstract interface required by
+  /// `NullabilityBehaviorVisitor`.
   void collectAssignmentToType(
       bool IsLHSTypeConst, const PointerTypeNullability &LHSTopLevel,
+      std::optional<SlotFingerprint> /* UNUSED */,
       const std::optional<PointerTypeNullability> &RHSTypeNullability,
       const PointerNullState &RHSValueNullability,
       const SerializedSrcLoc &RHSLoc) {
@@ -948,10 +953,14 @@ class NullabilityBehaviorVisitor {
 
   // Summarizes an assignment to a pointer-typed declaration, to extract
   // nullability constraints on the RHS (potentially both its type and value)
-  // stemming from the declaration's Nullability.  `LHSType` should be a pointer
-  // type or a reference to a pointer type.
+  // stemming from the declaration's Nullability. `LHSType` should be a pointer
+  // type or a reference to a pointer type. `LHSDecl` identifies the ValueDecl
+  // of the LHS whose type annotation may be overridden by future rounds of
+  // inference. When the ValueDecl doesn't take part in inference, nullptr
+  // should be passed.
   void visitAssignmentToType(QualType LHSType,
                              const TypeNullability &LHSTypeNullability,
+                             const ValueDecl *absl_nullable LHSDecl,
                              const Expr &RHSExpr,
                              const SerializedSrcLoc &RHSLoc) {
     // TODO: Account for variance and each layer of nullability when we handle
@@ -962,8 +971,21 @@ class NullabilityBehaviorVisitor {
     if (!PointerValue) return;
     PointerNullState RHSNullState = getPointerNullStateOrDie(*PointerValue);
     EvidenceTypeProperties LHSTyProps = getEvidenceTypeProperties(LHSType);
-    std::optional<PointerTypeNullability> RHSTopLevel;
 
+    std::optional<SlotFingerprint> LHSFingerprint;
+    if (LHSDecl != nullptr) {
+      Slot S = SLOT_RETURN_TYPE;
+      if (auto *PD = dyn_cast<ParmVarDecl>(LHSDecl)) {
+        if (auto *Parent = dyn_cast_or_null<FunctionDecl>(
+                PD->getParentFunctionOrMethod())) {
+          LHSDecl = Parent;
+          S = paramSlot(PD->getFunctionScopeIndex());
+        }
+      }
+      LHSFingerprint = fingerprint(getOrGenerateUSR(USRCache, *LHSDecl), S);
+    }
+
+    std::optional<PointerTypeNullability> RHSTopLevel;
     if (LHSTyProps.IsLValueRef) {
       const TypeNullability *RHSTypeNullability =
           Lattice.getTypeNullability(&RHSExpr);
@@ -974,8 +996,8 @@ class NullabilityBehaviorVisitor {
     }
 
     Consumer.collectAssignmentToType(LHSTyProps.IsNonReferenceConst,
-                                     LHSTopLevel, RHSTopLevel, RHSNullState,
-                                     RHSLoc);
+                                     LHSTopLevel, LHSFingerprint, RHSTopLevel,
+                                     RHSNullState, RHSLoc);
   }
 
   template <typename CallOrConstructExpr>
@@ -1030,7 +1052,7 @@ class NullabilityBehaviorVisitor {
         // Summarize potential constraints that the parameter's nullability
         // places on the argument's nullability.
         visitAssignmentToType(Iter.param().getType(), ParamNullability,
-                              Iter.arg(), ArgLoc);
+                              &Iter.param(), Iter.arg(), ArgLoc);
       }
 
       if (SummarizeCallee &&
@@ -1075,13 +1097,18 @@ class NullabilityBehaviorVisitor {
           << "Unsupported argument " << I
           << " type: " << Expr.getArg(I)->getType().getAsString();
 
-      // TODO: when we infer function pointer/reference parameters'
-      // nullabilities, check for overrides from previous inference iterations.
-      auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
-
       // Summarize potential constraints that the parameter's nullability places
       // on the argument's nullability.
-      visitAssignmentToType(ParamType, ParamNullability, *Expr.getArg(I),
+      //
+      // TODO: when we infer function pointer/reference parameters'
+      // nullabilities, we'll need to check for overrides from previous
+      // inference iterations. That will affect both
+      // `getNullabilityAnnotationsFromType` (which doesn't account for
+      // overrides) and in `visitAssignmentToType`, which will require the
+      // relevant `LHSDecl` argument.
+      auto ParamNullability = getNullabilityAnnotationsFromType(ParamType);
+      visitAssignmentToType(ParamType, ParamNullability,
+                            /*LHSDecl*/ nullptr, *Expr.getArg(I),
                             serializeLoc(SM, Expr.getArg(I)->getExprLoc()));
     }
   }
@@ -1351,22 +1378,27 @@ class NullabilityBehaviorVisitor {
     // Potentially infer back from the return type to returned expressions.
     TypeNullability ReturnTypeNullability =
         getReturnTypeNullabilityAnnotationsWithOverrides(*CurrentFunc, Lattice);
+    // The FunctionDecl is the key used for overrides for the return type.
     visitAssignmentToType(CurrentFunc->getReturnType(), ReturnTypeNullability,
-                          *ReturnExpr,
+                          CurrentFunc, *ReturnExpr,
                           serializeLoc(SM, ReturnExpr->getExprLoc()));
   }
 
   /// Summarizes an assignment of RHS to an expression with type LHSType and
   /// nullability LHSNullability, through a direct assignment statement,
-  /// aggregate initialization, etc.
+  /// aggregate initialization, etc. `LHSDecl` identifies the ValueDecl of the
+  /// LHS whose type annotation may be overridden by future rounds of
+  /// inference. When the ValueDecl doesn't take part in inference, nullptr
+  /// should be passed.
   void visitAssignmentLike(
-      QualType LHSType, const TypeNullability &LHSNullability, const Expr &RHS,
+      QualType LHSType, const TypeNullability &LHSNullability,
+      const ValueDecl *absl_nullable LHSDecl, const Expr &RHS,
       const SerializedSrcLoc &Loc,
       Evidence::Kind EvidenceKindForAssignmentFromNullable =
           Evidence::ASSIGNED_FROM_NULLABLE) {
     const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
     if (!PV && !RHS.getType()->isNullPtrType()) return;
-    visitAssignmentToType(LHSType, LHSNullability, RHS, Loc);
+    visitAssignmentToType(LHSType, LHSNullability, LHSDecl, RHS, Loc);
 
     // Summarize potential constraints on the LHS.
     if (LHSNullability.empty()) return;
@@ -1384,8 +1416,8 @@ class NullabilityBehaviorVisitor {
           Evidence::ASSIGNED_FROM_NULLABLE) {
     visitAssignmentLike(
         LHSDecl.getType(),
-        getNullabilityAnnotationsFromDeclAndOverrides(LHSDecl, Lattice), RHS,
-        Loc, EvidenceKindForAssignmentFromNullable);
+        getNullabilityAnnotationsFromDeclAndOverrides(LHSDecl, Lattice),
+        &LHSDecl, RHS, Loc, EvidenceKindForAssignmentFromNullable);
   }
 
   /// Summarizes direct assignment statements, e.g. `p = nullptr`, whether
@@ -1452,7 +1484,11 @@ class NullabilityBehaviorVisitor {
         isa<ConditionalOperator>(dataflow::ignoreCFGOmittedNodes(*LHS)))
       return;
     CHECK(TypeNullability);
-    visitAssignmentLike(LHSType, *TypeNullability, *RHS,
+    // No value in passing the LHSDecl for overriding, because any relevant decl
+    // will already be an element of InferableSlots, whose nullability is never
+    // directly overridden. Instead, InferableSlots have symbolic nullability,
+    // which is constrained (logically) by previous inferences.
+    visitAssignmentLike(LHSType, *TypeNullability, /*LHSDecl*/ nullptr, *RHS,
                         serializeLoc(SM, *Loc));
   }
 
@@ -1745,6 +1781,52 @@ static InferableSlotProto saveInferableSlot(const InferableSlot &IS) {
   return Proto;
 }
 
+// When collecting evidence from summaries, there are two means by which we can
+// take previous inferences into account:
+//
+// 1. InferableSlots -- these are represented symbolically in the summary, and
+// we directly tie the symbols to any information learned about them in previous
+// inference rounds.
+//
+// 2. Explicitly identified declarations -- these are declarations for which we
+// infer Nullability, but are not referred to by name in the context they are
+// used and therefore do not have a corresponding InferableSlot. These only
+// occur in the case of ValueAssignedToType and are identified explicitly with a
+// fingerprint of the corresponding symbol.
+//
+// For the latter case, we maintain a map from fingerprints to Nullability
+// information, if available.
+using FingerprintNullabilityMap =
+    absl::flat_hash_map<SlotFingerprint, std::optional<PointerTypeNullability>>;
+
+// A nullability overlay function specifically for the declarations tracked in
+// the FingerprintNullabilityMap (see corresponding comments).
+using NullabilityOverlay = llvm::function_ref<
+    const PointerTypeNullability *absl_nullable(SlotFingerprint)>;
+
+// Creates a NullabilityOverlay that captures previous inferences. Uses
+// `NullabilityMap` to back the overlay. The map is updated on demand as calls
+// are made to the overlay. `NullabilityMap` must outlive the returned lambda.
+static auto getUsrBasedNullabilityOverlay(
+    FingerprintNullabilityMap &NullabilityMap,
+    const PreviousInferences &PreviousInferences) {
+  return [&](SlotFingerprint Fingerprint)
+             -> const PointerTypeNullability *absl_nullable {
+    auto [It, Inserted] = NullabilityMap.try_emplace(Fingerprint);
+    if (Inserted) {
+      if (PreviousInferences.Nullable->contains(Fingerprint)) {
+        It->second.emplace(NullabilityKind::Nullable);
+      } else if (PreviousInferences.Nonnull->contains(Fingerprint)) {
+        It->second.emplace(NullabilityKind::NonNull);
+      } else {
+        It->second = std::nullopt;
+      }
+    }
+    if (!It->second) return nullptr;
+    return &*It->second;
+  };
+}
+
 // Gets the Atom associated with `AtomNumber`, creating a new one if needed.
 static Atom getAtom(unsigned AtomNumber, dataflow::Arena &Arena,
                     llvm::DenseMap<unsigned, Atom> &AtomMap) {
@@ -1860,8 +1942,15 @@ class SummaryCollector {
 
   // `IsLHSTypeConst` indicates whether the LHS type is const, after stripping
   // away any potential outer reference type.
+  //
+  // `LHSFingerprint` provides the fingerprint of the LHS decl, when necessary
+  // for tracking potential overrides from previous rounds of inference. This
+  // specifically applies to decls that can be overridden but are not inferable
+  // slots. Currently, that covers return types and callee parameters (which are
+  // not named at call sites).
   void collectAssignmentToType(
       bool IsLHSTypeConst, const PointerTypeNullability &LHSTypeNullability,
+      std::optional<SlotFingerprint> LHSFingerprint,
       const std::optional<PointerTypeNullability> &RHSTypeNullability,
       const PointerNullState &RHSValueNullability,
       const SerializedSrcLoc &RHSLoc) {
@@ -1869,6 +1958,7 @@ class SummaryCollector {
     S.set_lhs_is_non_reference_const(IsLHSTypeConst);
     *S.mutable_lhs_type_nullability() =
         savePointerTypeNullability(LHSTypeNullability);
+    if (LHSFingerprint) S.set_lhs_decl_fingerprint(*LHSFingerprint);
     if (RHSTypeNullability) {
       *S.mutable_rhs_type_nullability() =
           savePointerTypeNullability(*RHSTypeNullability);
@@ -1969,10 +2059,12 @@ class SummaryEvidenceCollector {
       const Formula &InferableSlotsConstraint, const Environment &Env,
       const dataflow::Solver &Solver,
       const NullabilityBehaviorSummary &BehaviorSummary,
+      const NullabilityOverlay &NullabilityOverlay,
       llvm::function_ref<EvidenceEmitter> Emit,
       llvm::DenseMap<unsigned, dataflow::Atom> &AtomMap) {
     SummaryEvidenceCollector Collector(InferableSlots, InferableSlotsConstraint,
-                                       Emit, Env, Solver, AtomMap);
+                                       Emit, Env, Solver, AtomMap,
+                                       NullabilityOverlay);
     return Collector.collectEvidenceFromBehaviorSummary(BehaviorSummary);
   }
 
@@ -1982,10 +2074,12 @@ class SummaryEvidenceCollector {
                            llvm::function_ref<EvidenceEmitter> Emit,
                            const Environment &Env,
                            const dataflow::Solver &Solver,
-                           llvm::DenseMap<unsigned, dataflow::Atom> &AtomMap)
+                           llvm::DenseMap<unsigned, dataflow::Atom> &AtomMap,
+                           const NullabilityOverlay &NullabilityOverlay)
       : Collector(InferableSlots, InferableSlotsConstraint, Env, Solver, Emit),
         Arena(Env.arena()),
-        AtomMap(AtomMap) {}
+        AtomMap(AtomMap),
+        NullabilityOverlay(NullabilityOverlay) {}
 
   llvm::Error collectEvidenceFromBehaviorSummary(
       const NullabilityBehaviorSummary &BehaviorSummary) {
@@ -2041,9 +2135,15 @@ class SummaryEvidenceCollector {
 
   llvm::Error collectValueAssignedToType(
       const ValueAssignedToTypeSummary &Summary) {
-    llvm::Expected<PointerTypeNullability> LHSTypeNullability =
-        loadPointerTypeNullability(Summary.lhs_type_nullability(), Arena,
-                                   AtomMap);
+    auto LHSTypeNullability = [&]() -> llvm::Expected<PointerTypeNullability> {
+      if (Summary.has_lhs_decl_fingerprint()) {
+        if (const PointerTypeNullability *absl_nullable O =
+                NullabilityOverlay(Summary.lhs_decl_fingerprint()))
+          return *O;
+      }
+      return loadPointerTypeNullability(Summary.lhs_type_nullability(), Arena,
+                                        AtomMap);
+    }();
     if (!LHSTypeNullability) return LHSTypeNullability.takeError();
 
     std::optional<PointerTypeNullability> RHSTypeNullability;
@@ -2059,9 +2159,12 @@ class SummaryEvidenceCollector {
         loadPointerNullState(Summary.rhs_value_nullability(), Arena, AtomMap);
     if (!RHSValueNullability) return RHSValueNullability.takeError();
 
+    // Callee doesn't use the `LHSFingerprint` argument -- it is only included
+    // because the signature is required by `SummaryCollector`.
     Collector.collectAssignmentToType(
         Summary.lhs_is_non_reference_const(), *LHSTypeNullability,
-        RHSTypeNullability, *RHSValueNullability, {Summary.rhs_loc()});
+        /*LHSFingerprint*/ std::nullopt, RHSTypeNullability,
+        *RHSValueNullability, {Summary.rhs_loc()});
     return llvm::Error::success();
   }
 
@@ -2165,6 +2268,7 @@ class SummaryEvidenceCollector {
   EvidenceCollector Collector;
   dataflow::Arena &Arena;
   llvm::DenseMap<unsigned, dataflow::Atom> &AtomMap;
+  const NullabilityOverlay &NullabilityOverlay;
 };
 }  // namespace
 
@@ -2182,12 +2286,6 @@ static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
 
   std::string_view USR = getOrGenerateUSR(USRCache, Target);
   if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, serializeLoc(SM, Loc).Loc));
-}
-
-static void wrappedEmit(llvm::function_ref<EvidenceEmitter> Emit,
-                        std::string_view USR, Slot S, Evidence::Kind Kind,
-                        const SerializedSrcLoc &Loc) {
-  if (!USR.empty()) Emit(makeEvidence(USR, S, Kind, Loc.Loc));
 }
 
 /// Returns a function that the analysis can use to override Decl nullability
@@ -2820,13 +2918,17 @@ llvm::Error collectEvidenceFromSummary(
   const auto &InferableSlotsConstraint =
       getConstraintsOnInferableSlots(InferableSlots, PreviousInferences, Arena);
 
+  FingerprintNullabilityMap NullabilityMap;
+  auto NullabilityOverlay =
+      getUsrBasedNullabilityOverlay(NullabilityMap, PreviousInferences);
+
   for (const auto &BehaviorSummary : Summary.behavior_summaries()) {
     Environment Env(AnalysisContext,
                     getAtom(BehaviorSummary.block_atom(), Arena, AtomMap));
     if (llvm::Error Err =
             SummaryEvidenceCollector::collectEvidenceFromBehaviorSummary(
                 InferableSlots, InferableSlotsConstraint, Env, *Solver,
-                BehaviorSummary, Emit, AtomMap))
+                BehaviorSummary, NullabilityOverlay, Emit, AtomMap))
       return Err;
     if (Solver->reachedLimit()) {
       return llvm::createStringError(llvm::errc::interrupted,

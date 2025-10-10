@@ -281,11 +281,15 @@ message RequiresAnnotationSummary {
 message ValueAssignedToTypeSummary {
   optional bool lhs_is_non_reference_const = 1;
   optional PointerTypeNullabilityProto lhs_type_nullability = 2;
+  // optional. When a decl is available for the LHS, lhs_type_nullability may be
+  // overridden during inference. `fingerprint` identifies this decl. When
+  // populated, the fingerprint should be checked for an override.
+  optional uint64 lhs_decl_fingerprint = 3;
   // This field is genuinely optional and should be provided only if the LHS has
   // reference type.
-  optional PointerTypeNullabilityProto rhs_type_nullability = 3;
-  optional PointerNullStateProto rhs_value_nullability = 4;
-  optional string rhs_loc = 5;
+  optional PointerTypeNullabilityProto rhs_type_nullability = 4;
+  optional PointerNullStateProto rhs_value_nullability = 5;
+  optional string rhs_loc = 6;
 }
 
 // Encodes properties of an assignment relevant to collecting evidence for the

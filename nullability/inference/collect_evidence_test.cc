@@ -1296,15 +1296,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
-// TODO: b/440317964 -- Parameterize by collection mode.
-TEST(CollectEvidenceFromDefinitionTest,
+TEST_P(CollectEvidenceFromDefinitionTest,
      FromPreviouslyInferredReturnAnnotation) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* A) { return A; }
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(
-          Src, CollectionMode::kTestDirectly,
+          Src, GetMode(),
           {.Nonnull = std::make_shared<SortedFingerprintVector>(
                std::vector<SlotFingerprint>{
                    fingerprint("c:@F@target#*I#", 0)})}),
@@ -4441,8 +4440,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                     IsSupersetOf(ExpectedNewResultsPerRound.at(3))));
 }
 
-// TODO: b/440317964 -- Parameterize by collection mode.
-TEST(CollectEvidenceFromDefinitionTest,
+TEST_P(CollectEvidenceFromDefinitionTest,
      PreviousInferencesOfNonFocusParameterNullabilitiesPropagate) {
   static constexpr llvm::StringRef Src = R"cc(
     void takesToBeNonnull(int* A);
@@ -4455,7 +4453,7 @@ TEST(CollectEvidenceFromDefinitionTest,
   // This test confirms that we use that information when collecting from
   // target's definition.
   EXPECT_THAT(collectFromTargetFuncDefinition(
-                  Src, CollectionMode::kTestDirectly,
+                  Src, GetMode(),
                   {.Nonnull = std::make_shared<SortedFingerprintVector>(
                        std::vector<SlotFingerprint>{
                            fingerprint(TakesToBeNonnullUsr, paramSlot(0))})}),
