@@ -3,9 +3,9 @@
 [![Build status](https://badge.buildkite.com/7a57a14e68aa3a0ab70972cbf2a35fd79d342ba152fee4a5b4.svg)](https://buildkite.com/bazel/crubit)
 
 NOTE: Crubit currently expects deep integration with the build system, and is
-difficult to deploy to environments dissimilar to Google's monorepo. We do not
-have our tooling set up to accept external contributions at this time. Both
-of these are being worked on, see
+difficult to deploy to environments dissimilar to Google's monorepo. External
+contributions are accepted, but may in some cases be difficult to integrate
+for tooling reasons. See [CONTRIBUTING](CONTRIBUTING). Both of these are being worked on, see
 https://github.com/google/crubit/blob/main/docs/overview/status.md#usage-outside-of-google
 
 Crubit is a bidirectional bindings generator for C++ and Rust, with the goal of
