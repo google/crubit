@@ -170,6 +170,26 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
   return std::move(W.Index);
 }
 
+RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap &M) {
+  RelatedSymbols Result;
+  auto &RelatedMethods = *Result.mutable_related_symbols();
+  for (auto &[KeyMethod, MethodSet] : M) {
+    RelatedSymbols::SymbolSet &Methods = RelatedMethods[KeyMethod];
+    for (auto &Method : MethodSet)
+      Methods.add_symbols()->set_usr(Method.getKey());
+  }
+  return Result;
+}
+
+RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols &R) {
+  RelatedVirtualMethodsMap Related;
+  for (const auto &[KeyMethod, Methods] : R.related_symbols()) {
+    llvm::StringSet<> &RelatedMethods = Related[KeyMethod];
+    for (auto &Symbol : Methods.symbols()) RelatedMethods.insert(Symbol.usr());
+  }
+  return Related;
+}
+
 VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
                                                     bool ForReturnSlot) {
   switch (Kind) {

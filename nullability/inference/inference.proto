@@ -385,3 +385,18 @@ message CFGSummary {
   optional LogicalContext logical_context = 2;
   repeated NullabilityBehaviorSummary behavior_summaries = 3;
 }
+
+// A generic serialization format for a relation between symbols. Currently,
+// used as for the `RelatedVirtualMethodsMap` type.
+//
+// TODO: b/440317964 - design a compact representation. For example, we could
+// represent Symbols by integers, and separately maintain a map from integers to
+// USRs.
+message RelatedSymbols {
+  message SymbolSet {
+    repeated Symbol symbols = 1;
+  }
+  // Since map keys cannot be message fields, we use strings directly for the
+  // key. These must be USRs.
+  map<string, SymbolSet> related_symbols = 1;
+}

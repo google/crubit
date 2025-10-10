@@ -75,6 +75,9 @@ struct VirtualMethodIndex {
 /// Index the relationships between virtual methods in the TU.
 VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC);
 
+RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap &M);
+RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols &R);
+
 class SortedFingerprintVector {
  public:
   SortedFingerprintVector() = default;

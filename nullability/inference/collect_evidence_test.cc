@@ -205,14 +205,19 @@ collectFromDefinitionViaSummaryWithErrors(
   if (!Summary) return {Summary.takeError(), Results};
 
   // In the context of a pipeline, the index would be created from the AST and
-  // then serialized to proto, along with the summaries. We use it directly
-  // here, to simulate.
+  // then serialized to proto, along with the summaries. We round-trip the index
+  // here to ensure proper testing of the full save/restore flow.
   VirtualMethodIndex VMI = getVirtualMethodIndex(AST.context(), UsrCache);
+  RelatedSymbols VMIProto = saveVirtualMethodsMap(VMI.Bases);
+
+  VirtualMethodIndex PostVMI;
+  PostVMI.Overrides = std::move(VMI.Overrides);
+  PostVMI.Bases = loadVirtualMethodsMap(VMIProto);
   return {collectEvidenceFromSummary(
               *Summary,
               evidenceEmitterWithPropagation(
                   [&Results](const Evidence& E) { Results.push_back(E); },
-                  std::move(VMI)),
+                  std::move(PostVMI)),
               InputInferences, MakeSolver),
           Results};
 }
