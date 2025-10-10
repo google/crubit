@@ -168,6 +168,14 @@ llvm::Error collectEvidenceFromDefinition(
     const PreviousInferences &PreviousInferences = {},
     const SolverFactory &MakeSolver = makeDefaultSolverForInference);
 
+// Summarizes Nullability-relevant behaviors in `Definition`. If the resulting
+// summary has no `behavior_summaries`, the analysis succeeded, but there's no
+// relevant content.
+llvm::Expected<CFGSummary> summarizeDefinition(
+    const Decl& Definition, USRCache& USRCache,
+    const NullabilityPragmas& Pragmas,
+    const SolverFactory& MakeSolver = makeDefaultSolverForInference);
+
 /// Gathers evidence of a symbol's nullability from a declaration of it.
 ///
 /// These are trivial "inferences" of what's already written in the code. e.g:

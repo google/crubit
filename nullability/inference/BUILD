@@ -48,6 +48,7 @@ cc_test(
         ":slot_fingerprint",
         ":usr_cache",
         "//nullability:pragma",
+        "//nullability:proto_matchers",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",

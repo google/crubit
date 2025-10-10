@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -32,7 +33,6 @@
 #include "nullability/type_nullability.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
-#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -54,6 +54,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Formula.h"
+#include "clang/Analysis/FlowSensitive/FormulaSerialization.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
@@ -76,6 +77,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
+using ::clang::dataflow::Atom;
 using ::clang::dataflow::DataflowAnalysisContext;
 using ::clang::dataflow::Environment;
 using ::clang::dataflow::Formula;
@@ -529,12 +531,12 @@ static SerializedSrcLoc serializeLoc(const SourceManager &SM,
 
 namespace {
 // Collects nullability evidence from data summarized from the AST.
-class Collector {
+class EvidenceCollector {
  public:
-  Collector(const std::vector<InferableSlot> &InferableSlots,
-            const Formula &InferableSlotsConstraint,
-            llvm::function_ref<EvidenceEmitter> Emit, const Environment &Env,
-            const dataflow::Solver &Solver)
+  EvidenceCollector(const std::vector<InferableSlot> &InferableSlots,
+                    const Formula &InferableSlotsConstraint,
+                    const Environment &Env, const dataflow::Solver &Solver,
+                    llvm::function_ref<EvidenceEmitter> Emit)
       : Env(Env),
         InferableSlots(InferableSlots),
         InferableSlotsConstraint(InferableSlotsConstraint),
@@ -645,9 +647,12 @@ class Collector {
       const SerializedSrcLoc &RHSLoc) {
     dataflow::Arena &A = Env.arena();
     if (RHSTypeNullability) {
-      // If the LHS declaration's type is a reference to either a (mutable or
-      // const) Nonnull pointer or a mutable Nullable pointer, emit evidence
-      // that makes `RHSTypeNullability` match `LHSTopLevel`.
+      // The RHS type nullability is only provided when the LHS is a reference.
+      // If the reference is either to a (mutable or const) Nonnull pointer or
+      // to a mutable Nullable pointer, emit evidence that makes the top level
+      // type nullability of `RHSExpr` match the top level of
+      // `LHSTypeNullability`. This is distinct from the value nullability of
+      // `RHSExpr` being constrained, which is handled below.
       if (LHSTopLevel.concrete() == NullabilityKind::NonNull ||
           (LHSTopLevel.isSymbolic() &&
            Env.proves(A.makeImplies(InferableSlotsConstraint,
@@ -691,10 +696,10 @@ class Collector {
   /// call sites. Considers two distinct cases, based on the setting of
   /// `ArgNullState` -- when populated, the argument is a pointer value; when
   /// nullopt, the argument is a nullptr literal.
-  void collectArgEvidence(std::string_view FunctionUSR, Slot ParamSlot,
-                          EvidenceTypeProperties ParamTyProps,
-                          std::optional<PointerNullState> ArgNullState,
-                          const SerializedSrcLoc &ArgLoc) {
+  void collectArgBinding(std::string_view FunctionUSR, Slot ParamSlot,
+                         EvidenceTypeProperties ParamTyProps,
+                         std::optional<PointerNullState> ArgNullState,
+                         const SerializedSrcLoc &ArgLoc) {
     // Calculate the parameter's nullability, using InferableSlotsConstraint to
     // reflect the current knowledge of the annotations from previous inference
     // rounds, and not all possible annotations for them.
@@ -835,6 +840,22 @@ class Collector {
     }
   }
 
+  void collectConstructorExitBlock(std::string_view USR,
+                                   PointerNullState NullState,
+                                   const SerializedSrcLoc &Loc) {
+    if (isNullable(NullState, Env, &InferableSlotsConstraint)) {
+      emit(USR, Slot(0), Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR, Loc);
+    }
+  }
+
+  void collectSupportedLateInitializerExitBlock(std::string_view USR,
+                                                PointerNullState NullState,
+                                                const SerializedSrcLoc &Loc) {
+    if (!isNullable(NullState, Env, &InferableSlotsConstraint)) {
+      emit(USR, Slot(0), Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER, Loc);
+    }
+  }
+
  private:
   const Environment &Env;
   const std::vector<InferableSlot> &InferableSlots;
@@ -843,50 +864,53 @@ class Collector {
   const dataflow::Solver &Solver;
 };
 
-class SummarizerAndCollector {
+template <typename BehaviorConsumer>
+class NullabilityBehaviorVisitor {
  public:
-  // Instantiate the class only in this static function, to restrict the
-  // lifetime of the object, which holds reference parameters.
-  static void collect(const std::vector<InferableSlot> &InferableSlots,
-                      const Formula &InferableSlotsConstraint,
-                      llvm::function_ref<EvidenceEmitter> Emit,
-                      USRCache &USRCache, const CFGElement &CFGElem,
-                      const PointerNullabilityLattice &Lattice,
-                      const Environment &Env, const dataflow::Solver &Solver,
-                      const SourceManager &SM) {
-    SummarizerAndCollector SAC(InferableSlots, InferableSlotsConstraint, Emit,
-                               USRCache, Lattice, Env, Solver, SM);
-    if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
-      const Stmt *S = CFGStmt->getStmt();
-      if (!S) return;
-      SAC.summarizeDereference(*S);
-      SAC.summarizeCallExpr(*S);
-      SAC.summarizeConstructExpr(*S);
-      SAC.summarizeReturn(*S);
-      SAC.summarizeAssignment(*S);
-      SAC.summarizeArithmetic(*S);
-      SAC.summarizeAggregateInitialization(*S);
-      SAC.summarizeArraySubscript(*S);
-    } else if (auto CFGInit = CFGElem.getAs<clang::CFGInitializer>()) {
-      SAC.summarizeCFGInitializer(*CFGInit);
-    }
+  // `Consumer` is an in/out parameter, because it may accumulate state that the
+  // caller later needs to access.
+  //
+  // Instantiate the class only in this function, to restrict the lifetime of
+  // the object, which holds reference parameters.
+  static void visit(const std::vector<InferableSlot> &InferableSlots,
+                    USRCache &USRCache,
+                    const PointerNullabilityLattice &Lattice,
+                    const Environment &Env, const SourceManager &SM,
+                    const CFGElement &CFGElem, BehaviorConsumer &BC) {
+    NullabilityBehaviorVisitor<BehaviorConsumer> Visitor(
+        InferableSlots, USRCache, Lattice, Env, SM, BC);
+    Visitor.visit(CFGElem);
   }
 
  private:
-  SummarizerAndCollector(const std::vector<InferableSlot> &InferableSlots,
-                         const Formula &InferableSlotsConstraint,
-                         llvm::function_ref<EvidenceEmitter> Emit,
-                         USRCache &USRCache,
-                         const PointerNullabilityLattice &Lattice,
-                         const Environment &Env, const dataflow::Solver &Solver,
-                         const SourceManager &SM)
-      : EvidenceCollector(InferableSlots, InferableSlotsConstraint, Emit, Env,
-                          Solver),
+  NullabilityBehaviorVisitor(const std::vector<InferableSlot> &InferableSlots,
+                             USRCache &USRCache,
+                             const PointerNullabilityLattice &Lattice,
+                             const Environment &Env, const SourceManager &SM,
+                             BehaviorConsumer &BC)
+      : Consumer(BC),
         Env(Env),
         HasInferableSlots(!InferableSlots.empty()),
         USRCache(USRCache),
         Lattice(Lattice),
         SM(SM) {}
+
+  void visit(const CFGElement &CFGElem) {
+    if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
+      const Stmt *S = CFGStmt->getStmt();
+      if (!S) return;
+      visitDereference(*S);
+      visitCallExpr(*S);
+      visitConstructExpr(*S);
+      visitReturn(*S);
+      visitAssignment(*S);
+      visitArithmetic(*S);
+      visitAggregateInitialization(*S);
+      visitArraySubscript(*S);
+    } else if (auto CFGInit = CFGElem.getAs<clang::CFGInitializer>()) {
+      visitCFGInitializer(*CFGInit);
+    }
+  }
 
   /// Captures the necessity that `NullState` is nonnull.  It may be because the
   /// associated value was dereferenced, passed as a nonnull param, etc, per
@@ -898,7 +922,7 @@ class SummarizerAndCollector {
     if (IsNull == nullptr) return;
     auto &A = Env.arena();
     const Formula &F = A.makeNot(*IsNull);
-    EvidenceCollector.mustBeTrueByMarkingNonnull(F, Loc, EvidenceKind);
+    Consumer.mustBeTrueByMarkingNonnull(F, Loc, EvidenceKind);
   }
 
   PointerNullState getPointerNullStateOrDie(
@@ -909,7 +933,7 @@ class SummarizerAndCollector {
     return getPointerNullState(Value);
   }
 
-  void summarizeDereference(const Stmt &S) {
+  void visitDereference(const Stmt &S) {
     auto [Target, Loc] = describeDereference(S);
     if (!Target || !isSupportedPointerType(Target->getType())) return;
 
@@ -920,14 +944,14 @@ class SummarizerAndCollector {
                   serializeLoc(SM, Loc), Evidence::UNCHECKED_DEREFERENCE);
   }
 
-  // Summarize an assignment to a pointer-typed declaration, to extract
+  // Summarizes an assignment to a pointer-typed declaration, to extract
   // nullability constraints on the RHS (potentially both its type and value)
   // stemming from the declaration's Nullability.  `LHSType` should be a pointer
   // type or a reference to a pointer type.
-  void summarizeAssignmentToType(QualType LHSType,
-                                 const TypeNullability &LHSTypeNullability,
-                                 const Expr &RHSExpr,
-                                 const SerializedSrcLoc &RHSLoc) {
+  void visitAssignmentToType(QualType LHSType,
+                             const TypeNullability &LHSTypeNullability,
+                             const Expr &RHSExpr,
+                             const SerializedSrcLoc &RHSLoc) {
     // TODO: Account for variance and each layer of nullability when we handle
     // more than top-level pointers.
     if (LHSTypeNullability.empty()) return;
@@ -947,15 +971,15 @@ class SummarizerAndCollector {
       }
     }
 
-    EvidenceCollector.collectAssignmentToType(LHSTyProps.IsNonReferenceConst,
-                                              LHSTopLevel, RHSTopLevel,
-                                              RHSNullState, RHSLoc);
+    Consumer.collectAssignmentToType(LHSTyProps.IsNonReferenceConst,
+                                     LHSTopLevel, RHSTopLevel, RHSNullState,
+                                     RHSLoc);
   }
 
   template <typename CallOrConstructExpr>
-  void summarizeArgsAndParams(const FunctionDecl &CalleeDecl,
-                              const CallOrConstructExpr &Expr,
-                              bool MayBeMissingImplicitConversion) {
+  void visitArgsAndParams(const FunctionDecl &CalleeDecl,
+                          const CallOrConstructExpr &Expr,
+                          bool MayBeMissingImplicitConversion) {
     bool SummarizeCallee = isInferenceTarget(CalleeDecl);
     bool SummarizeCaller = HasInferableSlots;
 
@@ -1003,8 +1027,8 @@ class SummarizerAndCollector {
 
         // Summarize potential constraints that the parameter's nullability
         // places on the argument's nullability.
-        summarizeAssignmentToType(Iter.param().getType(), ParamNullability,
-                                  Iter.arg(), ArgLoc);
+        visitAssignmentToType(Iter.param().getType(), ParamNullability,
+                              Iter.arg(), ArgLoc);
       }
 
       if (SummarizeCallee &&
@@ -1016,13 +1040,13 @@ class SummarizerAndCollector {
               getTypeNullability(Iter.param(), Lattice.defaults()))) {
         dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
         if (PV != nullptr) {
-          EvidenceCollector.collectArgEvidence(
+          Consumer.collectArgBinding(
               getOrGenerateUSR(USRCache, CalleeDecl),
               paramSlot(Iter.paramIdx()),
               getEvidenceTypeProperties(Iter.param().getType()),
               getPointerNullState(*PV), ArgLoc);
         } else if (ArgIsNullPtrT) {
-          EvidenceCollector.collectArgEvidence(
+          Consumer.collectArgBinding(
               getOrGenerateUSR(USRCache, CalleeDecl),
               paramSlot(Iter.paramIdx()),
               getEvidenceTypeProperties(Iter.param().getType()),
@@ -1038,8 +1062,8 @@ class SummarizerAndCollector {
   /// TODO: When we summarize more complex slots than just top-level pointers,
   /// summarize the function parameter's nullability as a slot in the
   /// appropriate declaration.
-  void summarizeFunctionProtoTypeCall(const FunctionProtoType &CalleeType,
-                                      const CallExpr &Expr) {
+  void visitFunctionProtoTypeCall(const FunctionProtoType &CalleeType,
+                                  const CallExpr &Expr) {
     // For each pointer parameter of the function, ...
     for (unsigned I = 0; I < CalleeType.getNumParams(); ++I) {
       const auto ParamType = CalleeType.getParamType(I);
@@ -1055,16 +1079,16 @@ class SummarizerAndCollector {
 
       // Summarize potential constraints that the parameter's nullability places
       // on the argument's nullability.
-      summarizeAssignmentToType(ParamType, ParamNullability, *Expr.getArg(I),
-                                serializeLoc(SM, Expr.getArg(I)->getExprLoc()));
+      visitAssignmentToType(ParamType, ParamNullability, *Expr.getArg(I),
+                            serializeLoc(SM, Expr.getArg(I)->getExprLoc()));
     }
   }
 
   /// Summarizes call expressions involving function pointers, noting that the
   /// function pointer was dereferenced and matches up parameter/argument
   /// nullabilities.
-  void summarizeFunctionPointerCallExpr(const Type &CalleeFunctionType,
-                                        const CallExpr &Expr) {
+  void visitFunctionPointerCallExpr(const Type &CalleeFunctionType,
+                                    const CallExpr &Expr) {
     if (!HasInferableSlots) return;
     if (const auto *Callee = Expr.getCallee()) {
       // Function pointers are only ever raw pointers.
@@ -1078,7 +1102,7 @@ class SummarizerAndCollector {
     auto *CalleeFunctionProtoType =
         CalleeFunctionType.getAs<FunctionProtoType>();
     CHECK(CalleeFunctionProtoType);
-    summarizeFunctionProtoTypeCall(*CalleeFunctionProtoType, Expr);
+    visitFunctionProtoTypeCall(*CalleeFunctionProtoType, Expr);
   }
 
   /// Summarizes a call to a function without a FunctionDecl, e.g. the function
@@ -1096,11 +1120,11 @@ class SummarizerAndCollector {
   ///
   /// With `CalleeDecl` in this case not being a FunctionDecl as in most
   /// CallExpr cases, distinct handling is needed.
-  void summarizeCallExprWithoutFunctionCalleeDecl(const Decl &CalleeDecl,
-                                                  const CallExpr &Expr) {
+  void visitCallExprWithoutFunctionCalleeDecl(const Decl &CalleeDecl,
+                                              const CallExpr &Expr) {
     if (CalleeDecl.isFunctionPointerType()) {
       if (auto *FuncType = CalleeDecl.getFunctionType()) {
-        summarizeFunctionPointerCallExpr(*FuncType, Expr);
+        visitFunctionPointerCallExpr(*FuncType, Expr);
       } else {
         llvm::errs() << "Unsupported case of a function pointer type, for "
                         "which we aren't retrieving a valid FunctionType. \n";
@@ -1127,7 +1151,7 @@ class SummarizerAndCollector {
     // can collect evidence from arguments assigned to parameter types.
     if (auto *FuncType = CalleeDecl.getFunctionType()) {
       if (auto *FuncProtoType = FuncType->getAs<FunctionProtoType>()) {
-        summarizeFunctionProtoTypeCall(*FuncProtoType, Expr);
+        visitFunctionProtoTypeCall(*FuncProtoType, Expr);
         return;
       }
     }
@@ -1138,7 +1162,7 @@ class SummarizerAndCollector {
             dyn_cast<clang::ValueDecl>(&CalleeDecl)) {
       if (QualType CalleeType = CalleeAsValueDecl->getType();
           CalleeType.getNonReferenceType()->isFunctionPointerType()) {
-        summarizeFunctionPointerCallExpr(
+        visitFunctionPointerCallExpr(
             *(CalleeType.getNonReferenceType()->getPointeeType()), Expr);
         return;
       }
@@ -1158,7 +1182,7 @@ class SummarizerAndCollector {
   /// single-argument capture function, to extract constraints on the argument.
   ///
   /// e.g. From `CHECK(x)`, we constrain `x` to not be null.
-  void summarizeAbortIfFalseMacroCall(const CallExpr &CallExpr) {
+  void visitAbortIfFalseMacroCall(const CallExpr &CallExpr) {
     CHECK_EQ(CallExpr.getNumArgs(), 1);
     const Expr *Arg = CallExpr.getArg(0);
     if (!Arg) return;
@@ -1173,9 +1197,9 @@ class SummarizerAndCollector {
       const dataflow::BoolValue *BV = Env.get<dataflow::BoolValue>(*Arg);
       if (!BV || BV->getKind() == dataflow::BoolValue::Kind::TopBool) return;
 
-      EvidenceCollector.mustBeTrueByMarkingNonnull(
-          BV->formula(), serializeLoc(SM, Arg->getExprLoc()),
-          Evidence::ABORT_IF_NULL);
+      Consumer.mustBeTrueByMarkingNonnull(BV->formula(),
+                                          serializeLoc(SM, Arg->getExprLoc()),
+                                          Evidence::ABORT_IF_NULL);
     }
   }
 
@@ -1184,7 +1208,7 @@ class SummarizerAndCollector {
   /// constraints between the macro arguments.
   ///
   /// For example, from `CHECK_NE(x, nullptr)`, we constrain `x` to not be null.
-  void summarizeAbortIfEqualMacroCall(const CallExpr &CallExpr) {
+  void visitAbortIfEqualMacroCall(const CallExpr &CallExpr) {
     CHECK_EQ(CallExpr.getNumArgs(), 2);
     const Expr *First = CallExpr.getArg(0);
     const Expr *Second = CallExpr.getArg(1);
@@ -1233,13 +1257,13 @@ class SummarizerAndCollector {
           getPointerNullState(*SecondPV).IsNull;
       if (!SecondIsNull) return;
 
-      EvidenceCollector.collectAbortIfEqual(
+      Consumer.collectAbortIfEqual(
           *FirstIsNull, serializeLoc(SM, First->getExprLoc()), *SecondIsNull,
           serializeLoc(SM, Second->getExprLoc()));
     }
   }
 
-  void summarizeCallExpr(const Stmt &S) {
+  void visitCallExpr(const Stmt &S) {
     auto *CallExpr = dyn_cast<clang::CallExpr>(&S);
     if (!CallExpr) return;
     auto *CalleeDecl = CallExpr->getCalleeDecl();
@@ -1248,22 +1272,22 @@ class SummarizerAndCollector {
       if (CalleeFunctionDecl->getDeclName().isIdentifier()) {
         llvm::StringRef Name = CalleeFunctionDecl->getName();
         if (Name == ArgCaptureAbortIfFalse) {
-          summarizeAbortIfFalseMacroCall(*CallExpr);
+          visitAbortIfFalseMacroCall(*CallExpr);
           return;
         }
         if (Name == ArgCaptureAbortIfEqual) {
-          summarizeAbortIfEqualMacroCall(*CallExpr);
+          visitAbortIfEqualMacroCall(*CallExpr);
           return;
         }
         if (const Expr *Initializer =
                 getUnderlyingInitExprInStdMakeUnique(*CalleeFunctionDecl)) {
           if (const auto *CE = dyn_cast<CXXConstructExpr>(Initializer)) {
-            summarizeArgsAndParams(*CE->getConstructor(), *CallExpr,
-                                   /*MayBeMissingImplicitConversion=*/true);
+            visitArgsAndParams(*CE->getConstructor(), *CallExpr,
+                               /*MayBeMissingImplicitConversion=*/true);
             return;
           }
           if (const auto *PLI = dyn_cast<CXXParenListInitExpr>(Initializer)) {
-            summarizeMakeUniqueFieldInits(RecordInitListHelper(PLI), *CallExpr);
+            visitMakeUniqueFieldInits(RecordInitListHelper(PLI), *CallExpr);
             return;
           }
           if (const auto *ImpCast = dyn_cast<ImplicitCastExpr>(Initializer);
@@ -1279,25 +1303,25 @@ class SummarizerAndCollector {
           }
         }
       }
-      summarizeArgsAndParams(*CalleeFunctionDecl, *CallExpr,
-                             /*MayBeMissingImplicitConversion=*/false);
+      visitArgsAndParams(*CalleeFunctionDecl, *CallExpr,
+                         /*MayBeMissingImplicitConversion=*/false);
     } else {
-      summarizeCallExprWithoutFunctionCalleeDecl(*CalleeDecl, *CallExpr);
+      visitCallExprWithoutFunctionCalleeDecl(*CalleeDecl, *CallExpr);
     }
   }
 
-  void summarizeConstructExpr(const Stmt &S) {
+  void visitConstructExpr(const Stmt &S) {
     auto *ConstructExpr = dyn_cast<clang::CXXConstructExpr>(&S);
     if (!ConstructExpr) return;
     auto *ConstructorDecl = dyn_cast_or_null<clang::CXXConstructorDecl>(
         ConstructExpr->getConstructor());
     if (!ConstructorDecl) return;
 
-    summarizeArgsAndParams(*ConstructorDecl, *ConstructExpr,
-                           /*MayBeMissingImplicitConversion=*/false);
+    visitArgsAndParams(*ConstructorDecl, *ConstructExpr,
+                       /*MayBeMissingImplicitConversion=*/false);
   }
 
-  void summarizeReturn(const Stmt &S) {
+  void visitReturn(const Stmt &S) {
     // Is this CFGElement a return statement?
     auto *ReturnStmt = dyn_cast<clang::ReturnStmt>(&S);
     if (!ReturnStmt) return;
@@ -1316,7 +1340,7 @@ class SummarizerAndCollector {
         !evidenceKindFromDeclaredReturnType(*CurrentFunc, Lattice.defaults())) {
       const dataflow::PointerValue *PV = getPointerValue(ReturnExpr, Env);
       if (!PV) return;
-      EvidenceCollector.collectReturn(
+      Consumer.collectReturn(
           getOrGenerateUSR(USRCache, *CurrentFunc),
           getEvidenceTypeProperties(CurrentFunc->getReturnType()),
           getPointerNullState(*PV), serializeLoc(SM, ReturnExpr->getExprLoc()));
@@ -1325,39 +1349,38 @@ class SummarizerAndCollector {
     // Potentially infer back from the return type to returned expressions.
     TypeNullability ReturnTypeNullability =
         getReturnTypeNullabilityAnnotationsWithOverrides(*CurrentFunc, Lattice);
-    summarizeAssignmentToType(CurrentFunc->getReturnType(),
-                              ReturnTypeNullability, *ReturnExpr,
-                              serializeLoc(SM, ReturnExpr->getExprLoc()));
+    visitAssignmentToType(CurrentFunc->getReturnType(), ReturnTypeNullability,
+                          *ReturnExpr,
+                          serializeLoc(SM, ReturnExpr->getExprLoc()));
   }
 
   /// Summarizes an assignment of RHS to an expression with type LHSType and
   /// nullability LHSNullability, through a direct assignment statement,
   /// aggregate initialization, etc.
-  void summarizeAssignmentLike(
+  void visitAssignmentLike(
       QualType LHSType, const TypeNullability &LHSNullability, const Expr &RHS,
       const SerializedSrcLoc &Loc,
       Evidence::Kind EvidenceKindForAssignmentFromNullable =
           Evidence::ASSIGNED_FROM_NULLABLE) {
     const dataflow::PointerValue *PV = getPointerValue(&RHS, Env);
     if (!PV && !RHS.getType()->isNullPtrType()) return;
-    summarizeAssignmentToType(LHSType, LHSNullability, RHS, Loc);
+    visitAssignmentToType(LHSType, LHSNullability, RHS, Loc);
 
     // Summarize potential constraints on the LHS.
     if (LHSNullability.empty()) return;
     std::optional<PointerNullState> NullState =
         PV ? std::make_optional(getPointerNullState(*PV)) : std::nullopt;
-    EvidenceCollector.collectAssignmentFromValue(
-        LHSNullability[0], NullState, Loc,
-        EvidenceKindForAssignmentFromNullable);
+    Consumer.collectAssignmentFromValue(LHSNullability[0], NullState, Loc,
+                                        EvidenceKindForAssignmentFromNullable);
   }
 
   /// Summarizes an assignment of RHS to LHSDecl, through a direct assignment
   /// statement, aggregate initialization, etc.
-  void summarizeAssignmentLike(
+  void visitAssignmentLike(
       const ValueDecl &LHSDecl, const Expr &RHS, const SerializedSrcLoc &Loc,
       Evidence::Kind EvidenceKindForAssignmentFromNullable =
           Evidence::ASSIGNED_FROM_NULLABLE) {
-    summarizeAssignmentLike(
+    visitAssignmentLike(
         LHSDecl.getType(),
         getNullabilityAnnotationsFromDeclAndOverrides(LHSDecl, Lattice), RHS,
         Loc, EvidenceKindForAssignmentFromNullable);
@@ -1365,7 +1388,7 @@ class SummarizerAndCollector {
 
   /// Summarizes direct assignment statements, e.g. `p = nullptr`, whether
   /// initializing a new declaration or re-assigning to an existing declaration.
-  void summarizeAssignment(const Stmt &S) {
+  void visitAssignment(const Stmt &S) {
     if (!HasInferableSlots) return;
 
     // Initialization of new decl.
@@ -1383,7 +1406,7 @@ class SummarizerAndCollector {
                          << VarDecl->getInit()->getType() << "\n";
             return;
           }
-          summarizeAssignmentLike(
+          visitAssignmentLike(
               *VarDecl, *VarDecl->getInit(),
               serializeLoc(SM, VarDecl->getInit()->getExprLoc()));
         }
@@ -1427,11 +1450,11 @@ class SummarizerAndCollector {
         isa<ConditionalOperator>(dataflow::ignoreCFGOmittedNodes(*LHS)))
       return;
     CHECK(TypeNullability);
-    summarizeAssignmentLike(LHSType, *TypeNullability, *RHS,
-                            serializeLoc(SM, *Loc));
+    visitAssignmentLike(LHSType, *TypeNullability, *RHS,
+                        serializeLoc(SM, *Loc));
   }
 
-  void summarizeArithmeticArg(const Expr *Arg, const SerializedSrcLoc &Loc) {
+  void visitArithmeticArg(const Expr *Arg, const SerializedSrcLoc &Loc) {
     // No support needed for smart pointers, which do not support arithmetic
     // operations.
     if (!Arg || !isSupportedRawPointerType(Arg->getType())) return;
@@ -1439,7 +1462,7 @@ class SummarizerAndCollector {
       mustBeNonnull(getPointerNullStateOrDie(*PV), Loc, Evidence::ARITHMETIC);
   }
 
-  void summarizeArithmetic(const Stmt &S) {
+  void visitArithmetic(const Stmt &S) {
     // A nullptr can be added to 0 and nullptr can be subtracted from nullptr
     // without hitting UB. But for now, we skip handling these special cases and
     // assume all pointers involved in these operations must be nonnull.
@@ -1453,8 +1476,8 @@ class SummarizerAndCollector {
             return;
           case BO_AddAssign:
           case BO_SubAssign:
-            summarizeArithmeticArg(Op->getLHS(),
-                                   serializeLoc(SM, Op->getExprLoc()));
+            visitArithmeticArg(Op->getLHS(),
+                               serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
@@ -1465,10 +1488,10 @@ class SummarizerAndCollector {
             return;
           case BO_Add:
           case BO_Sub:
-            summarizeArithmeticArg(Op->getLHS(),
-                                   serializeLoc(SM, Op->getExprLoc()));
-            summarizeArithmeticArg(Op->getRHS(),
-                                   serializeLoc(SM, Op->getExprLoc()));
+            visitArithmeticArg(Op->getLHS(),
+                               serializeLoc(SM, Op->getExprLoc()));
+            visitArithmeticArg(Op->getRHS(),
+                               serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
@@ -1481,15 +1504,15 @@ class SummarizerAndCollector {
           case UO_PreInc:
           case UO_PostDec:
           case UO_PreDec:
-            summarizeArithmeticArg(Op->getSubExpr(),
-                                   serializeLoc(SM, Op->getExprLoc()));
+            visitArithmeticArg(Op->getSubExpr(),
+                               serializeLoc(SM, Op->getExprLoc()));
         }
         break;
       }
     }
   }
 
-  void summarizeCFGInitializer(const CFGInitializer &CFGInit) {
+  void visitCFGInitializer(const CFGInitializer &CFGInit) {
     const CXXCtorInitializer *Initializer = CFGInit.getInitializer();
     if (!Initializer) {
       // We expect this not to be the case, but not to a production-crash-worthy
@@ -1523,26 +1546,26 @@ class SummarizerAndCollector {
         IsDefaultInitializer && isOrIsConstructedFromNullPointerConstant(
                                     InitExpr, Field->getASTContext());
 
-    summarizeAssignmentLike(
+    visitAssignmentLike(
         *Field, *InitExpr, serializeLoc(SM, InitExpr->getExprLoc()),
         NullptrDefaultInit ? Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER
                            : Evidence::ASSIGNED_FROM_NULLABLE);
   }
 
-  void summarizeFieldInits(const RecordInitListHelper &Helper) {
+  void visitFieldInits(const RecordInitListHelper &Helper) {
     // Any initialization of base classes/fields will be collected from the
     // InitListExpr for the base initialization, so we only need to summarize
     // here the field inits.
     for (auto [Field, InitExpr] : Helper.field_inits()) {
       if (!isSupportedPointerType(Field->getType())) continue;
 
-      summarizeAssignmentLike(*Field, *InitExpr,
-                              serializeLoc(SM, InitExpr->getExprLoc()));
+      visitAssignmentLike(*Field, *InitExpr,
+                          serializeLoc(SM, InitExpr->getExprLoc()));
     }
   }
 
-  void summarizeMakeUniqueFieldInits(const RecordInitListHelper &Helper,
-                                     const CallExpr &MakeUniqueCall) {
+  void visitMakeUniqueFieldInits(const RecordInitListHelper &Helper,
+                                 const CallExpr &MakeUniqueCall) {
     // Skip through the base inits to get to the field inits. Any initialization
     // of base classes/fields will be collected from the InitListExpr for the
     // base initialization.
@@ -1564,26 +1587,25 @@ class SummarizerAndCollector {
         ++I;
         continue;
       }
-      summarizeAssignmentLike(*Field, *Arg,
-                              serializeLoc(SM, Arg->getExprLoc()));
+      visitAssignmentLike(*Field, *Arg, serializeLoc(SM, Arg->getExprLoc()));
       ++I;
     }
   }
 
-  void summarizeAggregateInitialization(const Stmt &S) {
+  void visitAggregateInitialization(const Stmt &S) {
     if (auto *InitList = dyn_cast<clang::InitListExpr>(&S);
         InitList && InitList->getType()->isRecordType() &&
         !(InitList->isSemanticForm() && InitList->isTransparent())) {
-      summarizeFieldInits(RecordInitListHelper(InitList));
+      visitFieldInits(RecordInitListHelper(InitList));
       return;
     }
     if (auto *ParenListInit = dyn_cast<clang::CXXParenListInitExpr>(&S);
         ParenListInit && ParenListInit->getType()->isRecordType()) {
-      summarizeFieldInits(RecordInitListHelper(ParenListInit));
+      visitFieldInits(RecordInitListHelper(ParenListInit));
     }
   }
 
-  void summarizeArraySubscript(const Stmt &S) {
+  void visitArraySubscript(const Stmt &S) {
     // For raw pointers, we see an ArraySubscriptExpr.
     if (auto *Op = dyn_cast<clang::ArraySubscriptExpr>(&S)) {
       const Expr *Base = Op->getBase();
@@ -1607,7 +1629,8 @@ class SummarizerAndCollector {
     }
   }
 
-  Collector EvidenceCollector;
+ private:
+  BehaviorConsumer &Consumer;
   const Environment &Env;
   // Whether the definition being analyzed has any inferable slots. Lack of
   // inferable slots simplifies the analysis.
@@ -1615,6 +1638,231 @@ class SummarizerAndCollector {
   USRCache &USRCache;
   const PointerNullabilityLattice &Lattice;
   const SourceManager &SM;
+};
+}  // namespace
+
+// TODO: b/440317964 -- move this function to upstream, where Atoms are defined.
+static unsigned getAtomNumber(Atom A) {
+  return static_cast<std::underlying_type_t<Atom>>(A);
+}
+
+static FormulaProto saveFormula(const dataflow::Formula &F) {
+  FormulaProto Proto;
+  llvm::raw_string_ostream OS(*Proto.mutable_serialized());
+  serializeFormula(F, OS);
+  return Proto;
+}
+
+static LogicalContext saveLogicalContext(llvm::DenseSet<Atom> UsedTokens,
+                                         const DataflowAnalysisContext &AC) {
+  clang::dataflow::SimpleLogicalContext Ctx =
+      AC.exportLogicalContext(std::move(UsedTokens));
+
+  LogicalContext CtxProto;
+
+  if (Ctx.Invariant != nullptr)
+    *CtxProto.mutable_invariant() = saveFormula(*Ctx.Invariant);
+
+  auto &AtomDefs = *CtxProto.mutable_atom_defs();
+  for (auto [A, F] : Ctx.TokenDefs) {
+    CHECK(F != nullptr);
+    AtomDefs[getAtomNumber(A)] = saveFormula(*F);
+  }
+
+  auto &AtomDeps = *CtxProto.mutable_atom_deps();
+  for (auto &[A, Deps] : Ctx.TokenDeps) {
+    LogicalContext::AtomSet &DepSet = AtomDeps[getAtomNumber(A)];
+    for (Atom Dep : Deps) {
+      DepSet.add_atoms(getAtomNumber(Dep));
+    }
+  }
+
+  return CtxProto;
+}
+
+// TODO: b/440317964 -- lift this function out into a common library and share
+// with eligible_ranges.
+static Nullability toProtoNullability(NullabilityKind Kind) {
+  switch (Kind) {
+    case NullabilityKind::NonNull:
+      return Nullability::NONNULL;
+    case NullabilityKind::Nullable:
+    case NullabilityKind::NullableResult:
+      return Nullability::NULLABLE;
+    case NullabilityKind::Unspecified:
+      return Nullability::UNKNOWN;
+  }
+  llvm_unreachable("Unhandled NullabilityKind");
+}
+
+static PointerTypeNullabilityProto savePointerTypeNullability(
+    const PointerTypeNullability &PTN) {
+  PointerTypeNullabilityProto Proto;
+
+  if (PTN.isSymbolic()) {
+    auto &S = *Proto.mutable_symbolic();
+    S.set_nonnull_atom(getAtomNumber(PTN.nonnullAtom()));
+    S.set_nullable_atom(getAtomNumber(PTN.nullableAtom()));
+    return Proto;
+  }
+
+  Proto.set_concrete(toProtoNullability(PTN.concrete()));
+
+  return Proto;
+}
+
+static PointerNullStateProto savePointerNullState(
+    const PointerNullState &NullState) {
+  PointerNullStateProto Proto;
+  if (NullState.FromNullable)
+    *Proto.mutable_from_nullable() = saveFormula(*NullState.FromNullable);
+  if (NullState.IsNull)
+    *Proto.mutable_is_null() = saveFormula(*NullState.IsNull);
+  return Proto;
+}
+
+static InferableSlotProto saveInferableSlot(const InferableSlot &IS) {
+  InferableSlotProto Proto;
+  const PointerTypeNullability &PTN = IS.getSymbolicNullability();
+  Proto.set_nonnull_atom(getAtomNumber(PTN.nonnullAtom()));
+  Proto.set_nullable_atom(getAtomNumber(PTN.nullableAtom()));
+  Proto.set_slot(IS.getTargetSlot());
+  Proto.mutable_symbol()->set_usr(IS.getInferenceTargetUSR());
+  return Proto;
+}
+
+namespace {
+// Collects nullability summaries and outputs them as protobufs.
+class SummaryCollector {
+ public:
+  static llvm::SmallVector<NullabilityBehaviorSummary> summarizeElement(
+      llvm::ArrayRef<InferableSlot> InferableSlots,
+      llvm::DenseSet<Atom> &UsedTokens, USRCache &USRCache,
+      const PointerNullabilityLattice &Lattice, const Environment &Env,
+      const SourceManager &SM, const CFGElement &CFGElem) {
+    SummaryCollector SCollector(Env, UsedTokens);
+    NullabilityBehaviorVisitor<SummaryCollector>::visit(
+        InferableSlots, USRCache, Lattice, Env, SM, CFGElem, SCollector);
+    // Consume the summaries generated in this visit.
+    return std::move(SCollector.Summaries);
+  }
+
+  void mustBeTrueByMarkingNonnull(const Formula &MustBeTrue,
+                                  const SerializedSrcLoc &Loc,
+                                  Evidence::Kind EvidenceKind) {
+    addRequiresAnnotationSummary(Nullability::NONNULL, MustBeTrue, Loc,
+                                 EvidenceKind);
+  }
+
+  void mustBeTrueByMarkingNullable(const Formula &MustBeTrue,
+                                   const SerializedSrcLoc &Loc,
+                                   Evidence::Kind EvidenceKind) {
+    addRequiresAnnotationSummary(Nullability::NULLABLE, MustBeTrue, Loc,
+                                 EvidenceKind);
+  }
+
+  // `IsLHSTypeConst` indicates whether the LHS type is const, after stripping
+  // away any potential outer reference type.
+  void collectAssignmentToType(
+      bool IsLHSTypeConst, const PointerTypeNullability &LHSTypeNullability,
+      const std::optional<PointerTypeNullability> &RHSTypeNullability,
+      const PointerNullState &RHSValueNullability,
+      const SerializedSrcLoc &RHSLoc) {
+    ValueAssignedToTypeSummary &S = *addSummary().mutable_value_assigned();
+    S.set_lhs_is_non_reference_const(IsLHSTypeConst);
+    *S.mutable_lhs_type_nullability() =
+        savePointerTypeNullability(LHSTypeNullability);
+    if (RHSTypeNullability) {
+      *S.mutable_rhs_type_nullability() =
+          savePointerTypeNullability(*RHSTypeNullability);
+    }
+    *S.mutable_rhs_value_nullability() =
+        savePointerNullState(RHSValueNullability);
+    S.set_rhs_loc(RHSLoc.Loc);
+  }
+
+  void collectAssignmentFromValue(
+      PointerTypeNullability TypeNullability,
+      std::optional<PointerNullState> ValueNullState,
+      const SerializedSrcLoc &ValueLoc,
+      Evidence::Kind EvidenceKindForAssignmentFromNullable) {
+    AssignmentFromValueSummary &S =
+        *addSummary().mutable_assignment_from_value();
+    *S.mutable_lhs_type_nullability() =
+        savePointerTypeNullability(TypeNullability);
+    if (ValueNullState)
+      *S.mutable_rhs_null_state() = savePointerNullState(*ValueNullState);
+    S.set_rhs_loc(ValueLoc.Loc);
+    S.set_evidence_kind(EvidenceKindForAssignmentFromNullable);
+  }
+
+  void collectArgBinding(std::string_view FunctionUSR, Slot ParamSlot,
+                         EvidenceTypeProperties ParamTyProps,
+                         std::optional<PointerNullState> ArgNullState,
+                         const SerializedSrcLoc &ArgLoc) {
+    BindingSummary &S = *addSummary().mutable_argument_binding();
+    S.mutable_function_symbol()->set_usr(FunctionUSR);
+    S.set_slot(ParamSlot);
+    S.set_type_is_lvalue_ref(ParamTyProps.IsLValueRef);
+    S.set_type_is_const(ParamTyProps.IsNonReferenceConst);
+    if (ArgNullState)
+      *S.mutable_null_state() = savePointerNullState(*ArgNullState);
+    S.set_location(ArgLoc.Loc);
+  }
+
+  void collectAbortIfEqual(const dataflow::Formula &FirstIsNull,
+                           const SerializedSrcLoc &FirstLoc,
+                           const dataflow::Formula &SecondIsNull,
+                           const SerializedSrcLoc &SecondLoc) {
+    AbortIfEqualSummary &S = *addSummary().mutable_abort_if_equal();
+    *S.mutable_first_is_null() = saveFormula(FirstIsNull);
+    S.set_first_loc(FirstLoc.Loc);
+    *S.mutable_second_is_null() = saveFormula(SecondIsNull);
+    S.set_second_loc(SecondLoc.Loc);
+  }
+
+  void collectReturn(std::string_view FunctionUSR,
+                     EvidenceTypeProperties ReturnTyProps,
+                     PointerNullState ReturnNullState,
+                     const SerializedSrcLoc &ReturnLoc) {
+    BindingSummary &S = *addSummary().mutable_returned();
+    S.mutable_function_symbol()->set_usr(FunctionUSR);
+    S.set_slot(SLOT_RETURN_TYPE);
+    S.set_type_is_lvalue_ref(ReturnTyProps.IsLValueRef);
+    S.set_type_is_const(ReturnTyProps.IsNonReferenceConst);
+    *S.mutable_null_state() = savePointerNullState(ReturnNullState);
+    S.set_location(ReturnLoc.Loc);
+  }
+
+ private:
+  // Constructed object retains all reference parameters. They must outlive
+  // it. `UsedTokens` is considered an in/out parameter -- it may be non-empty
+  // on entry to the function.
+  SummaryCollector(const Environment &Env, llvm::DenseSet<Atom> &UsedTokens)
+      : UsedTokens(UsedTokens), Env(Env) {}
+
+  NullabilityBehaviorSummary &addSummary() {
+    Atom A = Env.getFlowConditionToken();
+    UsedTokens.insert(A);
+    NullabilityBehaviorSummary &S = Summaries.emplace_back();
+    S.set_block_atom(getAtomNumber(A));
+    return S;
+  }
+
+  void addRequiresAnnotationSummary(Nullability N, const Formula &MustBeTrue,
+                                    const SerializedSrcLoc &Loc,
+                                    Evidence::Kind EvidenceKind) {
+    RequiresAnnotationSummary &RAS =
+        *addSummary().mutable_requires_annotation();
+    RAS.set_required_annotation(N);
+    *RAS.mutable_formula() = saveFormula(MustBeTrue);
+    RAS.set_location(Loc.Loc);
+    RAS.set_evidence_kind(EvidenceKind);
+  }
+
+  llvm::SmallVector<NullabilityBehaviorSummary> Summaries;
+  llvm::DenseSet<Atom> &UsedTokens;
+  const Environment &Env;
 };
 }  // namespace
 
@@ -1702,25 +1950,18 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
 }
 
-static void collectConstructorExitBlock(
-    std::string_view USR, PointerNullState NullState,
-    const SerializedSrcLoc &Loc, const Environment &ExitEnv,
-    const Formula &InferableSlotsConstraint,
-    llvm::function_ref<EvidenceEmitter> Emit) {
-  if (isNullable(NullState, ExitEnv, &InferableSlotsConstraint)) {
-    wrappedEmit(Emit, USR, Slot(0), Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
-                Loc);
-  }
-}
+using EBInitHandler =
+    llvm::function_ref<void(std::string_view USR, PointerNullState NullState,
+                            const SerializedSrcLoc &Loc)>;
 
 // If D is a constructor definition, summarizes cases of potential
 // LEFT_NULLABLE_BY_CONSTRUCTOR evidence for smart pointer fields implicitly
 // default-initialized and left nullable in the exit block of the constructor
 // body.
-static void summarizeConstructorExitBlock(
-    const clang::Decl &MaybeConstructor, const Environment &ExitEnv,
-    const Formula &InferableSlotsConstraint,
-    llvm::function_ref<EvidenceEmitter> Emit, USRCache &USRCache) {
+static void processConstructorExitBlock(const clang::Decl &MaybeConstructor,
+                                        const Environment &ExitEnv,
+                                        USRCache &USRCache,
+                                        EBInitHandler InitHandler) {
   auto *Ctor = dyn_cast<CXXConstructorDecl>(&MaybeConstructor);
   if (!Ctor) return;
   for (auto *Initializer : Ctor->inits()) {
@@ -1770,19 +2011,8 @@ static void summarizeConstructorExitBlock(
     std::string_view USR = getOrGenerateUSR(USRCache, *Field);
     SerializedSrcLoc Loc = serializeLoc(
         SM, Ctor->isImplicit() ? Field->getBeginLoc() : Ctor->getBeginLoc());
-    collectConstructorExitBlock(USR, NullState, Loc, ExitEnv,
-                                InferableSlotsConstraint, Emit);
+    InitHandler(USR, NullState, Loc);
   }
-}
-
-static void collectSupportedLateInitializerExitBlock(
-    std::string_view USR, PointerNullState NullState,
-    const SerializedSrcLoc &Loc, const Environment &ExitEnv,
-    const Formula &InferableSlotsConstraint,
-    llvm::function_ref<EvidenceEmitter> Emit) {
-  if (!isNullable(NullState, ExitEnv, &InferableSlotsConstraint))
-    wrappedEmit(Emit, USR, Slot(0),
-                Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER, Loc);
 }
 
 // Supported late initializers are no-argument SetUp methods of classes that
@@ -1790,10 +2020,10 @@ static void collectSupportedLateInitializerExitBlock(
 // collect LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER evidence for smart pointer
 // fields that are not nullable. This allows ignoring the
 // LEFT_NULLABLE_BY_CONSTRUCTOR evidence for such a field.
-static void summarizeSupportedLateInitializerExitBlock(
+static void processSupportedLateInitializerExitBlock(
     const clang::Decl &MaybeLateInitializationMethod,
-    const Environment &ExitEnv, const Formula &InferableSlotsConstraint,
-    llvm::function_ref<EvidenceEmitter> Emit, USRCache &USRCache) {
+    const Environment &ExitEnv, USRCache &USRCache,
+    EBInitHandler InitHandler) {
   auto *Method = dyn_cast<CXXMethodDecl>(&MaybeLateInitializationMethod);
   if (!Method || !Method->isVirtual() || Method->getNumParams() != 0) return;
   if (IdentifierInfo *Identifier = Method->getIdentifier();
@@ -1829,10 +2059,65 @@ static void summarizeSupportedLateInitializerExitBlock(
       SerializedSrcLoc Loc =
           serializeLoc(Method->getParentASTContext().getSourceManager(),
                        Method->getBeginLoc());
-      collectSupportedLateInitializerExitBlock(USR, NullState, Loc, ExitEnv,
-                                               InferableSlotsConstraint, Emit);
+      InitHandler(USR, NullState, Loc);
     }
   }
+}
+
+static void collectEvidenceFromConstructorExitBlock(
+    const clang::Decl &MaybeConstructor, const Environment &ExitEnv,
+    USRCache &USRCache, EvidenceCollector &Collector) {
+  processConstructorExitBlock(
+      MaybeConstructor, ExitEnv, USRCache,
+      [&Collector](std::string_view USR, PointerNullState NullState,
+                   const SerializedSrcLoc &Loc) {
+        Collector.collectConstructorExitBlock(USR, NullState, Loc);
+      });
+}
+
+static void collectEvidenceFromSupportedLateInitializerExitBlock(
+    const clang::Decl &MaybeLateInitializationMethod,
+    const Environment &ExitEnv, USRCache &USRCache,
+    EvidenceCollector &Collector) {
+  processSupportedLateInitializerExitBlock(
+      MaybeLateInitializationMethod, ExitEnv, USRCache,
+      [&Collector](std::string_view USR, PointerNullState NullState,
+                   const SerializedSrcLoc &Loc) {
+        Collector.collectSupportedLateInitializerExitBlock(USR, NullState, Loc);
+      });
+}
+
+// `EBSummary` is an out-parameter for accumulating results.
+static void summarizeConstructorExitBlock(const clang::Decl &MaybeConstructor,
+                                          const Environment &ExitEnv,
+                                          USRCache &USRCache,
+                                          ExitBlockSummary &EBSummary) {
+  processConstructorExitBlock(
+      MaybeConstructor, ExitEnv, USRCache,
+      [&EBSummary](std::string_view USR, PointerNullState NullState,
+                   const SerializedSrcLoc &Loc) {
+        InitOnExitSummary &InitSummary = *EBSummary.add_ctor_inits_on_exit();
+        InitSummary.mutable_field()->set_usr(USR);
+        *InitSummary.mutable_null_state() = savePointerNullState(NullState);
+        InitSummary.set_location(Loc.Loc);
+      });
+}
+
+// `EBSummary` is an out-parameter for accumulating results.
+static void summarizeSupportedLateInitializerExitBlock(
+    const clang::Decl &MaybeLateInitializationMethod,
+    const Environment &ExitEnv, USRCache &USRCache,
+    ExitBlockSummary &EBSummary) {
+  processSupportedLateInitializerExitBlock(
+      MaybeLateInitializationMethod, ExitEnv, USRCache,
+      [&EBSummary](std::string_view USR, PointerNullState NullState,
+                   const SerializedSrcLoc &Loc) {
+        InitOnExitSummary &LateInitSummary =
+            *EBSummary.add_late_inits_on_exit();
+        LateInitSummary.mutable_field()->set_usr(USR);
+        *LateInitSummary.mutable_null_state() = savePointerNullState(NullState);
+        LateInitSummary.set_location(Loc.Loc);
+      });
 }
 
 // Checks the "last layer" forwarding functions called from the given statement.
@@ -1957,8 +2242,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
-      const ParmVarDecl* Param = Parameters[I];
-      const TypeSourceInfo* TSI = Param->getTypeSourceInfo();
+      const ParmVarDecl *Param = Parameters[I];
+      const TypeSourceInfo *TSI = Param->getTypeSourceInfo();
       if (hasInferable(Param->getType()) &&
           (!TSI ||
            !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
@@ -1970,7 +2255,7 @@ static std::vector<InferableSlot> gatherInferableSlots(
   }
 
   for (const FieldDecl *Field : ReferencedDecls.Fields) {
-    const TypeSourceInfo* TSI = Field->getTypeSourceInfo();
+    const TypeSourceInfo *TSI = Field->getTypeSourceInfo();
     if (isInferenceTarget(*Field) &&
         (!TSI ||
          !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
@@ -1980,7 +2265,7 @@ static std::vector<InferableSlot> gatherInferableSlots(
     }
   }
   for (const VarDecl *Global : ReferencedDecls.Globals) {
-    const TypeSourceInfo* TSI = Global->getTypeSourceInfo();
+    const TypeSourceInfo *TSI = Global->getTypeSourceInfo();
     if (isInferenceTarget(*Global) &&
         (!TSI ||
          !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
@@ -1990,7 +2275,7 @@ static std::vector<InferableSlot> gatherInferableSlots(
     }
   }
   for (const VarDecl *Local : ReferencedDecls.Locals) {
-    const TypeSourceInfo* TSI = Local->getTypeSourceInfo();
+    const TypeSourceInfo *TSI = Local->getTypeSourceInfo();
     if (isInferenceTarget(*Local) &&
         (!TSI ||
          !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
@@ -2011,7 +2296,7 @@ static std::vector<InferableSlot> gatherInferableSlots(
   for (const ParmVarDecl *Param : ReferencedDecls.LambdaCapturedParams) {
     CHECK_EQ(Param->getFunctionScopeDepth(), 0)
         << "Not expecting lambda capture of anything with depth > 0.";
-    if (const auto* ContainingFunction =
+    if (const auto *ContainingFunction =
             dyn_cast<FunctionDecl>(Param->getParentFunctionOrMethod());
         ContainingFunction && isInferenceTarget(*ContainingFunction) &&
         hasInferable(Param->getType()) &&
@@ -2086,9 +2371,12 @@ llvm::Error collectEvidenceFromDefinition(
           const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
               &State) {
         if (Solver->reachedLimit()) return;
-        SummarizerAndCollector::collect(
-            InferableSlots, InferableSlotsConstraint, Emit, USRCache, Element,
-            State.Lattice, State.Env, *Solver, Ctx.getSourceManager());
+
+        EvidenceCollector Collector(InferableSlots, InferableSlotsConstraint,
+                                    State.Env, *Solver, Emit);
+        NullabilityBehaviorVisitor<EvidenceCollector>::visit(
+            InferableSlots, USRCache, State.Lattice, State.Env,
+            Ctx.getSourceManager(), Element, Collector);
       };
   if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
                                                         PostAnalysisCallbacks)
@@ -2098,11 +2386,12 @@ llvm::Error collectEvidenceFromDefinition(
   if (Results.empty()) return llvm::Error::success();
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
-    summarizeConstructorExitBlock(Definition, ExitBlockResult->Env,
-                                  InferableSlotsConstraint, Emit, USRCache);
-    summarizeSupportedLateInitializerExitBlock(Definition, ExitBlockResult->Env,
-                                               InferableSlotsConstraint, Emit,
-                                               USRCache);
+    EvidenceCollector Collector(InferableSlots, InferableSlotsConstraint,
+                                ExitBlockResult->Env, *Solver, Emit);
+    collectEvidenceFromConstructorExitBlock(Definition, ExitBlockResult->Env,
+                                            USRCache, Collector);
+    collectEvidenceFromSupportedLateInitializerExitBlock(
+        Definition, ExitBlockResult->Env, USRCache, Collector);
   }
 
   if (Solver->reachedLimit()) {
@@ -2111,6 +2400,103 @@ llvm::Error collectEvidenceFromDefinition(
   }
 
   return llvm::Error::success();
+}
+
+llvm::Expected<CFGSummary> summarizeDefinition(
+    const Decl &Definition, USRCache &USRCache,
+    const NullabilityPragmas &Pragmas, const SolverFactory &MakeSolver) {
+  std::optional<DeclStmt> DeclStmtForVarDecl;
+  llvm::Expected<Stmt *absl_nonnull> T =
+      getTarget(Definition, DeclStmtForVarDecl);
+  if (!T) return T.takeError();
+  Stmt &TargetStmt = **T;
+
+  const auto *absl_nullable TargetFunc = dyn_cast<FunctionDecl>(&Definition);
+  dataflow::ReferencedDecls ReferencedDecls =
+      TargetFunc != nullptr ? dataflow::getReferencedDecls(*TargetFunc)
+                            : dataflow::getReferencedDecls(TargetStmt);
+  collectReferencesFromForwardingFunctions(TargetStmt, ReferencedDecls);
+
+  CFGSummary Summary;
+  // TODO: b/416755108 -- We should be able to check functions as
+  // well (and therefore drop the `!TargetFunc` filter), but we're missing some
+  // Referenced constructors, so `hasAnyInferenceTargets` will fail for certain
+  // functions.
+  if (!TargetFunc && !isInferenceTarget(Definition) &&
+      !hasAnyInferenceTargets(ReferencedDecls))
+    return Summary;
+
+  ASTContext &Ctx = Definition.getASTContext();
+  llvm::Expected<dataflow::AdornedCFG> ACFG =
+      dataflow::AdornedCFG::build(Definition, TargetStmt, Ctx);
+  if (!ACFG) return ACFG.takeError();
+
+  std::unique_ptr<dataflow::Solver> Solver = MakeSolver();
+  DataflowAnalysisContext AnalysisContext(*Solver);
+  Environment Env = TargetFunc ? Environment(AnalysisContext, *TargetFunc)
+                               : Environment(AnalysisContext, TargetStmt);
+  PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
+
+  std::vector<InferableSlot> InferableSlots = gatherInferableSlots(
+      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, ReferencedDecls,
+      Analysis, AnalysisContext.arena(), USRCache);
+
+  for (const auto &IS : InferableSlots) {
+    *Summary.add_inferable_slots() = saveInferableSlot(IS);
+  }
+
+  llvm::DenseSet<Atom> UsedTokens;
+  std::vector<
+      std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>>
+      Results;
+  dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
+  PostAnalysisCallbacks.Before =
+      [&](const CFGElement &Element,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
+              &State) {
+        if (Solver->reachedLimit()) return;
+        for (NullabilityBehaviorSummary &S : SummaryCollector::summarizeElement(
+                 InferableSlots, UsedTokens, USRCache, State.Lattice, State.Env,
+                 Ctx.getSourceManager(), Element)) {
+          *Summary.add_behavior_summaries() = std::move(S);
+        }
+      };
+  if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
+                                                        PostAnalysisCallbacks)
+                              .moveInto(Results))
+    return Error;
+
+  if (Solver->reachedLimit()) {
+    return llvm::createStringError(llvm::errc::interrupted,
+                                   "SAT solver reached iteration limit");
+  }
+
+  // When `Results` are empty, the post-analysis callbacks should not have been
+  // called. But, to be sure, explicitly return an empty summary.
+  if (Results.empty()) return CFGSummary();
+
+  if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
+          &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
+    ExitBlockSummary EBSummary;
+    summarizeConstructorExitBlock(Definition, ExitBlockResult->Env, USRCache,
+                                  EBSummary);
+    summarizeSupportedLateInitializerExitBlock(Definition, ExitBlockResult->Env,
+                                               USRCache, EBSummary);
+    if (EBSummary.ctor_inits_on_exit_size() > 0 ||
+        EBSummary.late_inits_on_exit_size() > 0) {
+      Atom A = ExitBlockResult->Env.getFlowConditionToken();
+      UsedTokens.insert(A);
+
+      NullabilityBehaviorSummary &NBS = *Summary.add_behavior_summaries();
+      NBS.set_block_atom(getAtomNumber(A));
+      *NBS.mutable_on_exit() = std::move(EBSummary);
+    }
+  }
+
+  *Summary.mutable_logical_context() =
+      saveLogicalContext(std::move(UsedTokens), AnalysisContext);
+
+  return Summary;
 }
 
 static void collectEvidenceFromDefaultArgument(
@@ -2201,7 +2587,7 @@ void collectEvidenceFromTargetDeclaration(
 
     for (unsigned I = 0; I < Fn->param_size(); ++I) {
       const ParmVarDecl *ParamDecl = Fn->getParamDecl(I);
-      const TypeSourceInfo* TSI = ParamDecl->getTypeSourceInfo();
+      const TypeSourceInfo *TSI = ParamDecl->getTypeSourceInfo();
       if (!TSI) continue;
       if (auto K =
               evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) {
@@ -2238,14 +2624,14 @@ void collectEvidenceFromTargetDeclaration(
       }
     }
   } else if (const auto *Field = dyn_cast<clang::FieldDecl>(&D)) {
-    const TypeSourceInfo* TSI = Field->getTypeSourceInfo();
+    const TypeSourceInfo *TSI = Field->getTypeSourceInfo();
     if (!TSI) return;
     if (auto K = evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) {
       wrappedEmit(Emit, USRCache, *Field, Slot(0), *K,
                   Field->getTypeSpecStartLoc());
     }
   } else if (const auto *Var = dyn_cast<clang::VarDecl>(&D)) {
-    const TypeSourceInfo* TSI = Var->getTypeSourceInfo();
+    const TypeSourceInfo *TSI = Var->getTypeSourceInfo();
     if (!TSI) return;
     if (auto K = evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) {
       wrappedEmit(Emit, USRCache, *Var, Slot(0), *K,

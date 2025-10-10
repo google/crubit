@@ -222,3 +222,162 @@ message SlotRange {
   // annotation for this range.
   repeated RemovalRange existing_annotation_removal_range = 5;
 }
+
+// Summary-related messages.
+//
+// The protos that follow collectively define the format for Nullability
+// summaries used by inference. They are generated from the AST and then used as
+// (stable) input to each inference iteration.
+
+// Encodes type Formula.
+message FormulaProto {
+  // A compact serialization of a formula. Serialization and deserialization
+  // (parsing) is handled by the dataflow framework. The grammar is:
+  //
+  // bool ::= "F" (false) | "T" (true)
+  // atom ::= "V" n (n is a positive integer)
+  // op ::= "&" (and)
+  //    |   "|" (or)
+  //    |   ">" (implication)
+  //    |   "="  (equality)
+  // F ::=  bool | atom | "!" F | op F1 F2
+  //
+  // The corresponding serialization/deserialization API is
+  // https://github.com/llvm/llvm-project/blob/main/clang/include/clang/Analysis/FlowSensitive/FormulaSerialization.h
+  optional string serialized = 1;
+}
+
+// Encodes type PointerTypeNullability.
+message PointerTypeNullabilityProto {
+  message SymbolicNullability {
+    optional uint32 nonnull_atom = 1;
+    optional uint32 nullable_atom = 2;
+  }
+  oneof nullability {
+    Nullability concrete = 1;
+    SymbolicNullability symbolic = 2;
+  }
+}
+
+// Encodes type PointerNullState.
+message PointerNullStateProto {
+  // Both fields are optional.
+  optional FormulaProto from_nullable = 1;
+  optional FormulaProto is_null = 2;
+}
+
+// Encodes a potential requirement for an annotation, specifically -- when
+// `formula` is true in the surrounding context.
+message RequiresAnnotationSummary {
+  // In practice, only Nonnull or Nullable make sense for this field.
+  optional Nullability required_annotation = 1;
+  optional FormulaProto formula = 2;
+  optional string location = 3;
+  optional Evidence.Kind evidence_kind = 4;
+}
+
+// Encodes properties of an assignment relevant to collecting evidence for the
+// assignment's RHS.
+message ValueAssignedToTypeSummary {
+  optional bool lhs_is_non_reference_const = 1;
+  optional PointerTypeNullabilityProto lhs_type_nullability = 2;
+  // This field is genuinely optional and should be provided only if the LHS has
+  // reference type.
+  optional PointerTypeNullabilityProto rhs_type_nullability = 3;
+  optional PointerNullStateProto rhs_value_nullability = 4;
+  optional string rhs_loc = 5;
+}
+
+// Encodes properties of an assignment relevant to collecting evidence for the
+// assignment's LHS; that is, the assignee.
+message AssignmentFromValueSummary {
+  optional PointerTypeNullabilityProto lhs_type_nullability = 1;
+  // Genuinely optional: not populated when RHS is a nullptr literal.
+  optional PointerNullStateProto rhs_null_state = 2;
+  optional string rhs_loc = 3;
+  optional Evidence.Kind evidence_kind = 4;
+}
+
+message AbortIfEqualSummary {
+  optional FormulaProto first_is_null = 1;
+  optional string first_loc = 2;
+  optional FormulaProto second_is_null = 3;
+  optional string second_loc = 4;
+}
+
+// Covers argument binding and "binding" to the returned value.
+message BindingSummary {
+  optional Symbol function_symbol = 1;
+  optional uint32 slot = 2;
+  // Whether the type is:
+  // a) a reference, and ...
+  optional bool type_is_lvalue_ref = 3;
+  // b) const, after stripping any reference qualifier.
+  optional bool type_is_const = 4;
+  // Genuinely optional: not populated when the value is a nullptr literal.
+  optional PointerNullStateProto null_state = 5;
+  optional string location = 6;
+}
+
+// For initialization functions -- constructors and "late" initializers -- we
+// collect the state of fields at function exit. We may judge the nullability of
+// the field based on this exit state rather than strictly on initial state.
+message InitOnExitSummary {
+  optional Symbol field = 1;
+  optional PointerNullStateProto null_state = 2;
+  optional string location = 3;
+}
+
+// Covers behaviors learned specifically from particular function exit blocks --
+// constructors and (late) initializers.
+message ExitBlockSummary {
+  repeated InitOnExitSummary ctor_inits_on_exit = 2;
+  repeated InitOnExitSummary late_inits_on_exit = 3;
+}
+
+message NullabilityBehaviorSummary {
+  // The numerical ID of the atom representing the flow condition (aka. flow
+  // condition token) of the block from which this behavior was summarized.
+  optional uint32 block_atom = 8;
+  oneof behavior {
+    RequiresAnnotationSummary requires_annotation = 1;
+    ValueAssignedToTypeSummary value_assigned = 2;
+    AssignmentFromValueSummary assignment_from_value = 3;
+    BindingSummary argument_binding = 4;
+    AbortIfEqualSummary abort_if_equal = 5;
+    BindingSummary returned = 6;
+    ExitBlockSummary on_exit = 7;
+  }
+}
+
+message InferableSlotProto {
+  optional uint32 nonnull_atom = 1;
+  optional uint32 nullable_atom = 2;
+  optional uint32 slot = 3;
+  optional Symbol symbol = 4;
+}
+
+// The logical context for a function definition.
+message LogicalContext {
+  // optional, string-encoded formula providing an invariant across all formulas
+  // represented in this logical context.
+  optional FormulaProto invariant  = 1;
+
+  // Int-encoded atoms and their definitions as formulas.
+  map<uint32, FormulaProto> atom_defs = 2;
+
+  message AtomSet {
+    repeated uint32 atoms = 1 [packed = true];
+  }
+  // The dependencies of the atoms used in the function.
+  // The key is the atom, and the value is the set of atoms that the key atom
+  // depends on.
+  map<uint32, AtomSet> atom_deps = 3;
+}
+
+// Summarizes Nullability-relevant "behaviors" and relevant context from a CFG.
+message CFGSummary {
+  repeated InferableSlotProto inferable_slots = 1;
+  optional LogicalContext logical_context = 2;
+  repeated NullabilityBehaviorSummary behavior_summaries = 3;
+}

@@ -15,6 +15,7 @@
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/pragma.h"
+#include "nullability/proto_matchers.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -165,8 +166,7 @@ std::vector<Evidence> collectFromDefinitionNamed(
 }
 
 /// Provides a default function-name-cased value for TargetName in
-/// collectEvidenceFromDefinitionNamed, which puts TargetName first for
-/// readability.
+/// collectFromDefinitionNamed, which puts TargetName first for readability.
 std::vector<Evidence> collectFromTargetFuncDefinition(
     llvm::StringRef Source, PreviousInferences InputInferences = {}) {
   return collectFromDefinitionNamed("target", Source, InputInferences);
@@ -181,6 +181,30 @@ std::vector<Evidence> collectFromDefinitionMatching(
   const Decl& Definition =
       *selectFirst<Decl>("d", match(Matcher.bind("d"), AST.context()));
   return collectFromDefinition(AST, Definition, Pragmas, InputInferences);
+}
+
+llvm::Expected<CFGSummary> summarizeDefinitionForTest(
+    clang::TestAST& AST, const Decl& Definition,
+    const NullabilityPragmas& Pragmas) {
+  USRCache UsrCache;
+  return summarizeDefinition(Definition, UsrCache, Pragmas);
+}
+
+llvm::Expected<CFGSummary> summarizeDefinitionNamed(llvm::StringRef TargetName,
+                                                    llvm::StringRef Source) {
+  NullabilityPragmas Pragmas;
+  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
+  const Decl& Definition =
+      *dataflow::test::findValueDecl(AST.context(), TargetName);
+  return summarizeDefinitionForTest(AST, Definition, Pragmas);
+}
+
+/// Provides a default function-name-cased value for TargetName in
+/// collectEvidenceFromDefinitionNamed, which puts TargetName first for
+/// readability.
+llvm::Expected<CFGSummary> summarizeTargetFuncDefinition(
+    llvm::StringRef Source) {
+  return summarizeDefinitionNamed("target", Source);
 }
 
 std::vector<Evidence> collectFromDecl(llvm::StringRef Source,
@@ -260,6 +284,115 @@ TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
           IsStringMapEntry(BaseFooUSR,
                            methodSummary(1, USRSet({DFooUSR, DDFooUSR}))),
           IsStringMapEntry(DFooUSR, methodSummary(1, USRSet({DDFooUSR})))));
+}
+
+// TODO: b/440317964 -- Expand SummarizeDefinitionTest to cover all summarized
+// behaviors and the logical context.
+//
+// The two SummarizeDefinitionTest tests that follow are only a bare minimum to
+// verify that the summarization mechanisms are functioning. We should expand
+// these to include at least one test per `behavior` in
+// NullabilityBehaviorSummary. Additionally, we should test that logical
+// contexts are written correctly with direct tests from a specified logical
+// context, rather than indirectly through a code snippet. Finally, we need to
+// find a way to meaningfully test data related to atoms, such that a reader can
+// understand and verify the connection between inputs and outputs at an API
+// level, rather than from a deep knowledge of the code.
+
+TEST(SummarizeDefinitionTest, Deref) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void target(int *P0, int *P1) {
+      int A = *P0;
+      if (P1 != nullptr) {
+        int B = *P1;
+      }
+    }
+  )cc";
+  // See the proto message for documentation of the serialized-formula grammar.
+  static constexpr llvm::StringRef Proto = R"pb(
+    logical_context { invariant { serialized: "&>V1!V9>V3!V10" } }
+    inferable_slots {
+      nonnull_atom: 1
+      nullable_atom: 2
+      slot: 1
+      symbol { usr: "c:@F@target#*I#S0_#" }
+    }
+    inferable_slots {
+      nonnull_atom: 3
+      nullable_atom: 4
+      slot: 2
+      symbol { usr: "c:@F@target#*I#S0_#" }
+    }
+    behavior_summaries {
+      requires_annotation {
+        required_annotation: NONNULL
+        formula { serialized: "!V10" }
+        location: "input.cc:5:17"
+        evidence_kind: UNCHECKED_DEREFERENCE
+      }
+      block_atom: 31
+    }
+    behavior_summaries {
+      requires_annotation {
+        required_annotation: NONNULL
+        formula { serialized: "!V9" }
+        location: "input.cc:3:15"
+        evidence_kind: UNCHECKED_DEREFERENCE
+      }
+      block_atom: 39
+    }
+  )pb";
+
+  auto Summary = summarizeTargetFuncDefinition(Src);
+  ASSERT_THAT_EXPECTED(Summary, llvm::Succeeded());
+  // Given our reliance on particular atoms, we verify that the atom maps are
+  // not empty. It is difficult to meaningfully connect the input code to more
+  // detailed aspects of these maps.
+  EXPECT_THAT(Summary->logical_context().atom_defs(), Not(IsEmpty()));
+  Summary->mutable_logical_context()->clear_atom_defs();
+
+  EXPECT_THAT(Summary->logical_context().atom_deps(), Not(IsEmpty()));
+  Summary->mutable_logical_context()->clear_atom_deps();
+
+  EXPECT_THAT(*Summary, EqualsProto(Proto));
+}
+
+TEST(SummarizeDefinitionTest, NullableArgPassed) {
+  static constexpr llvm::StringRef Src = R"cc(
+    void callee(int placeholder, int *Q);
+    void target(Nullable<int *> P) { callee(3, P); }
+  )cc";
+
+  static constexpr llvm::StringRef Proto = R"pb(
+    logical_context {}
+    behavior_summaries {
+      argument_binding {
+        function_symbol { usr: "c:@F@callee#I#*I#" }
+        slot: 2
+        type_is_lvalue_ref: false
+        type_is_const: false
+        null_state {
+          from_nullable { serialized: "T" }
+          is_null { serialized: "V5" }
+        }
+        location: "input.cc:3:48"
+      }
+      block_atom: 17
+    }
+  )pb";
+
+  auto Summary = summarizeTargetFuncDefinition(Src);
+  ASSERT_THAT_EXPECTED(Summary, llvm::Succeeded());
+  // Given our reliance on particular atoms, we verify that the atom maps are
+  // not empty. It is difficult to meaningfully connect the input code to more
+  // detailed aspects of these maps.
+  EXPECT_THAT(Summary->logical_context().atom_defs(), Not(IsEmpty()));
+  Summary->mutable_logical_context()->clear_atom_defs();
+
+  EXPECT_THAT(Summary->logical_context().atom_deps(), Not(IsEmpty()));
+  Summary->mutable_logical_context()->clear_atom_deps();
+
+  EXPECT_THAT(*Summary, EqualsProto(Proto));
 }
 
 TEST(CollectEvidenceFromDefinitionTest, Location) {
