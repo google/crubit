@@ -33,7 +33,10 @@ def _add_prefix(strings, prefix):
     return [prefix + s for s in strings]
 
 def _bindings_for_toolchain_headers_impl(ctx):
-    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
+    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
+    if toolchain == None:
+        return RustToolchainHeadersInfo(headers = depset())
+    toolchain = toolchain.rs_bindings_from_cc_toolchain_info
     builtin_headers = toolchain.builtin_headers
 
     stl_headers = depset(toolchain.stl_headers + ctx.files.extra_hdrs)
@@ -117,7 +120,7 @@ bindings_for_toolchain_headers = rule(
     toolchains = [
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
-        "@@//rs_bindings_from_cc/bazel_support:toolchain_type",
+        config_common.toolchain_type("@@//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
     ],
     fragments = ["cpp", "google_cpp"],
 )

@@ -164,30 +164,42 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
         crubit_args.add("--crate-rename", mapping.crate_name + "=" + mapping.old_crate_name)
     for flag in collect_cc_bindings_from_rust_cli_flags(target, ctx):
         crubit_args.add(flag)
-    toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"].cc_bindings_from_rs_toolchain_info
-    ctx.actions.run(
-        outputs = outputs,
-        inputs = depset(
-            [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
-            transitive = [inputs],
-        ),
-        env = rustc_env,
-        tools = [toolchain.binary],
-        executable = ctx.executable._process_wrapper,
-        mnemonic = "CcBindingsFromRust",
-        progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
-        # We don't use `args.all` here, because we want to do a couple of things:
-        #
-        # 1. specifically separate the crubit_args from the rustc_args, via `--`, putting crubit
-        #    args first.
-        # 2. change the rustc path to instead point to crubit.
-        #
-        # That said, if we passed arguments to crubit via environment variables or via flags that
-        # can be interleaved with rustc flags in any order, and if we used toolchain.binary
-        # as the tool_path for construct_arguments, then this could be `args.all` instead.
-        arguments = [args.process_wrapper_flags, "--", toolchain.binary.path, crubit_args, "--", args.rustc_flags],
-        toolchain = "//cc_bindings_from_rs/bazel_support:toolchain_type",
-    )
+    toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
+    if toolchain == None:
+        ctx.actions.run_shell(
+            command = (
+                "echo 'Crubit (cc_bindings_from_rs) is not available on this platform\n" +
+                "To debug, rerun with --toolchain_resolution_debug=//cc_bindings_from_rs/bazel_support:toolchain_type'" +
+                " && false"
+            ),
+            outputs = outputs,
+            mnemonic = "CcBindingsFromRustUnsupported",
+        )
+    else:
+        toolchain = toolchain.cc_bindings_from_rs_toolchain_info
+        ctx.actions.run(
+            outputs = outputs,
+            inputs = depset(
+                [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
+                transitive = [inputs],
+            ),
+            env = rustc_env,
+            tools = [toolchain.binary],
+            executable = ctx.executable._process_wrapper,
+            mnemonic = "CcBindingsFromRust",
+            progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
+            # We don't use `args.all` here, because we want to do a couple of things:
+            #
+            # 1. specifically separate the crubit_args from the rustc_args, via `--`, putting crubit
+            #    args first.
+            # 2. change the rustc path to instead point to crubit.
+            #
+            # That said, if we passed arguments to crubit via environment variables or via flags that
+            # can be interleaved with rustc flags in any order, and if we used toolchain.binary
+            # as the tool_path for construct_arguments, then this could be `args.all` instead.
+            arguments = [args.process_wrapper_flags, "--", toolchain.binary.path, crubit_args, "--", args.rustc_flags],
+            toolchain = "//cc_bindings_from_rs/bazel_support:toolchain_type",
+        )
 
     generated_bindings_info = GeneratedBindingsInfo(
         h_file = h_out_file,
@@ -455,7 +467,7 @@ cc_bindings_from_rust_aspect = aspect(
     },
     toolchains = [
         "@rules_rust//rust:toolchain_type",
-        "//cc_bindings_from_rs/bazel_support:toolchain_type",
+        config_common.toolchain_type("//cc_bindings_from_rs/bazel_support:toolchain_type", mandatory = False),
     ] + use_cpp_toolchain(),
     fragments = ["cpp"],
 )

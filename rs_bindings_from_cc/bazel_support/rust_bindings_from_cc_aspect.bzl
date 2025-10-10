@@ -222,9 +222,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
-    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"].rs_bindings_from_cc_toolchain_info
-    generator = toolchain.binary
-    if generator.basename == "fake_rust_bindings_from_cc":
+    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
+    if toolchain != None:
+        toolchain = toolchain.rs_bindings_from_cc_toolchain_info
+    if toolchain != None and toolchain.binary.basename == "fake_rust_bindings_from_cc":
         return []
 
     # If this target already provides bindings, we don't need to run the bindings generator.
@@ -339,7 +340,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = public_hdrs,
         header_includes = header_includes,
         action_inputs = depset(
-            direct = public_hdrs + toolchain.builtin_headers,
+            direct = public_hdrs + (toolchain.builtin_headers if toolchain != None else []),
             transitive = [
                 ctx.attr._std[RustToolchainHeadersInfo].headers,
             ],
@@ -391,7 +392,10 @@ rust_bindings_from_cc_aspect = aspect(
     toolchains = [
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
-        "@@//rs_bindings_from_cc/bazel_support:toolchain_type",
+        # "optional" dependency on the Crubit toolchain. We'll still fail, but fail during
+        # execution, not toolchain resolution, so that additional_rust_srcs can depend on targets
+        # that use Crubit and Nothing Bad Happens.
+        config_common.toolchain_type("@@//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
     ],
     fragments = ["cpp", "google_cpp"],
 )
