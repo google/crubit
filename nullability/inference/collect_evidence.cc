@@ -2095,11 +2095,6 @@ llvm::Error collectEvidenceFromDefinition(
                               .moveInto(Results))
     return Error;
 
-  if (Solver->reachedLimit()) {
-    return llvm::createStringError(llvm::errc::interrupted,
-                                   "SAT solver reached iteration limit");
-  }
-
   if (Results.empty()) return llvm::Error::success();
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
@@ -2108,6 +2103,11 @@ llvm::Error collectEvidenceFromDefinition(
     summarizeSupportedLateInitializerExitBlock(Definition, ExitBlockResult->Env,
                                                InferableSlotsConstraint, Emit,
                                                USRCache);
+  }
+
+  if (Solver->reachedLimit()) {
+    return llvm::createStringError(llvm::errc::interrupted,
+                                   "SAT solver reached iteration limit");
   }
 
   return llvm::Error::success();
