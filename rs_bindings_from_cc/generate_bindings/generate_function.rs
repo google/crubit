@@ -239,6 +239,38 @@ fn type_by_value_or_under_const_ref<'a>(
     }
 }
 
+fn api_func_shape_for_operator_ne(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    param_types: &mut [RsTypeKind],
+    errors: &Errors,
+) -> ErrorsOr<(Ident, ImplKind)> {
+    // If operator== is present, don't generate ne, rely on rust's default ne.
+    let eq_binding = db.get_binding(
+        UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
+        param_types.to_vec(),
+    );
+    if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) = eq_binding {
+        bail_to_errors!(errors, "operator== is present, skipping bindings for operator!=");
+    }
+    // C++ requires that operator!= is binary.
+    let [param_1, param_2] = param_types else {
+        panic!("Expected operator!= to have exactly two parameters. Found: {func:?}");
+    };
+    let lhs_ty = type_by_value_or_under_const_ref(db, param_1, "first operator!= param", errors);
+    let rhs_ty = type_by_value_or_under_const_ref(db, param_2, "second operator!= param", errors);
+    let ((_, lhs_record), (param, _)) = (lhs_ty?, rhs_ty?);
+    let param = Rc::new(param.clone());
+    let func_name = make_rs_ident("ne");
+    let impl_kind = ImplKind::new_trait(
+        TraitName::PartialEq { param },
+        lhs_record.clone(),
+        /* format_first_param_as_self= */ true,
+        /* force_const_reference_params= */ true,
+    );
+    Ok((func_name, impl_kind))
+}
+
 fn api_func_shape_for_operator_eq(
     db: &dyn BindingsGenerator,
     func: &Func,
@@ -505,6 +537,7 @@ fn api_func_shape_for_operator(
     }
     match op.name.as_ref() {
         "==" => api_func_shape_for_operator_eq(db, func, param_types, errors).ok(),
+        "!=" => api_func_shape_for_operator_ne(db, func, param_types, errors).ok(),
         "<=>" => {
             errors.add(anyhow!("Three-way comparison operator not yet supported (b/219827738)"));
             None
@@ -1281,7 +1314,7 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
         }
         Operator(op_name) => {
             match &*op_name.name {
-                "==" | "<=>" | "<" | "=" => {
+                "==" | "!=" | "<=>" | "<" | "=" => {
                     // Fallthrough
                 }
                 // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
@@ -1501,7 +1534,7 @@ pub fn generate_function(
             generate_func_body(
                 db,
                 &impl_kind,
-                crate_root_path,
+                crate_root_path.clone(),
                 &return_type,
                 &param_value_adjustments,
                 thunk_ident,
@@ -1601,13 +1634,31 @@ pub fn generate_function(
             quote! {}
         };
 
-        quote! {
+        let func_def = quote! {
             #[inline(always)]
             #pub_ #unsafe_ fn #func_name #fn_generic_params(
                     #( #api_params ),* ) #arrow #function_return_type #where_clause {
                 #func_body
             }
-        }
+        };
+        let maybe_eq_func_def = if let ImplKind::Trait { .. } = &impl_kind {
+            if func_name == "ne" && reportable_status.is_ok() {
+                let second_param_ident =
+                    param_idents.get(1).expect("operator!= should have 2 params");
+                Some(quote! {
+                    #[inline(always)]
+                    #pub_ #unsafe_ fn eq #fn_generic_params (
+                        #( #api_params ),* ) #arrow #function_return_type #where_clause {
+                        !self.ne(#second_param_ident)
+                    }
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        quote! {#func_def #maybe_eq_func_def}
     };
 
     let doc_comment =
@@ -1695,6 +1746,7 @@ pub fn generate_function(
             // NOTE: `trait_generic_params` may include lifetimes!
             let formatted_trait_generic_params =
                 format_generic_params(trait_lifetime_params, &*trait_generic_params);
+
             let extra_items = match &trait_name {
                 TraitName::CtorNew(params) if params.len() == 1 => {
                     let single_param_ = format_tuple_except_singleton_replacing_by_self(
