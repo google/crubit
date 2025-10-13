@@ -8,20 +8,78 @@
 #include <string>
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/log/check.h"
+#include "absl/log/log.h"
+#include "absl/strings/ascii.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
 
 namespace crubit {
+namespace {
+
+std::string ProtoMessageToRustModName(absl::string_view message_name) {
+  std::string mod_name = "";
+  for (char c : message_name) {
+    if (absl::ascii_isupper(c) && !mod_name.empty()) {
+      absl::StrAppend(&mod_name, "_");
+    }
+    // StrAppend doesn't accept `char`. :'(
+    c = absl::ascii_tolower(static_cast<unsigned char>(c));
+    absl::StrAppend(&mod_name, absl::string_view(&c, 1));
+  }
+  return mod_name;
+}
+
+// Returns the relative name of a Rust Proto Enum corresponding to the
+// C++ Proto Enum. For example, the C++ enum `MyMessage::MyEnum` would become
+// `my_message::MyEnum`.
+std::string ProtoEnumToRustName(clang::NamedDecl& decl) {
+  std::vector<std::string> mod_chain;
+  for (clang::DeclContext* decl_context = decl.getDeclContext();
+       decl_context->isRecord(); decl_context = decl_context->getParent()) {
+    auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context);
+    mod_chain.push_back(ProtoMessageToRustModName(record_decl->getName()));
+  }
+  absl::c_reverse(mod_chain);
+  mod_chain.push_back(std::string(decl.getName()));
+  return absl::StrJoin(mod_chain, "::");
+}
+}  // namespace
 
 std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     clang::NamedDecl* decl) {
+  // Special-case proto enums. We handle them under the alias, rather than
+  // the enum declaration, because the enum declaration gives no useful
+  // way to obtain the message names that it is a part of unless/until
+  // `_` is forbidden in enum identifiers.
+  if (auto* alias_decl = clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
+    if (ictx_.IsFromProtoTarget(*alias_decl) &&
+        alias_decl->getUnderlyingType()->isEnumeralType()) {
+      ictx_.MarkAsSuccessfullyImported(decl);
+      return ExistingRustType{
+          .rs_name = ProtoEnumToRustName(*decl),
+          .cc_name = decl->getQualifiedNameAsString(),
+          .type_parameters = {},
+          .owning_target = ictx_.GetOwningTarget(decl),
+          .size_align = std::nullopt,
+          // To be paranoid, assume Rust proto enums are not ABI compatible.
+          .is_same_abi = false,
+          .id = ictx_.GenerateItemId(decl),
+      };
+    }
+  }
+
   clang::DeclContext* decl_context = decl->getDeclContext();
   clang::QualType underlying_qualtype;
   if (auto* typedef_name_decl = clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
