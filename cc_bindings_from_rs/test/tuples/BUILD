@@ -41,6 +41,6 @@ crubit_cc_test(
     srcs = ["tuples_test.cc"],
     deps = [
         ":tuples_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

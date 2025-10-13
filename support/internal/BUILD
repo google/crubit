@@ -15,6 +15,7 @@ cc_library(
         "sizeof.h",
         "slot.h",
     ],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
@@ -35,7 +36,7 @@ cc_test(
     srcs = ["check_no_mutable_aliasing_test.cc"],
     deps = [
         ":bindings_support",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -44,7 +45,7 @@ crubit_cc_test(
     srcs = ["memswap_test.cc"],
     deps = [
         ":bindings_support",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -53,7 +54,7 @@ crubit_cc_test(
     srcs = ["offsetof_test.cc"],
     deps = [
         ":bindings_support",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -62,9 +63,9 @@ crubit_cc_test(
     srcs = ["slot_test.cc"],
     deps = [
         ":bindings_support",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/log:check",
-        "@googletest//:gtest_main",
     ],
 )
 
@@ -73,6 +74,6 @@ crubit_cc_test(
     srcs = ["sizeof_test.cc"],
     deps = [
         ":bindings_support",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

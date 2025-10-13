@@ -29,6 +29,6 @@ crubit_cc_test(
     srcs = ["type_aliases_test.cc"],
     deps = [
         ":type_aliases_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

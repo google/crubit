@@ -17,6 +17,7 @@ exports_files(
 rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     crate_features = ["unstable"],
     proc_macro_deps = [":ctor_proc_macros"],
     # LINT.IfChange
@@ -41,6 +42,7 @@ rust_proc_macro(
 cc_library(
     name = "annotations",
     hdrs = ["annotations.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
@@ -52,6 +54,7 @@ cc_library(
 cc_library(
     name = "annotations_internal",
     hdrs = ["annotations_internal.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
@@ -124,6 +127,7 @@ rust_test(
 rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     crate_features = ["unstable"],
     proc_macro_deps = [":forward_declare_proc_macros"],
     # LINT.IfChange
@@ -169,6 +173,7 @@ rust_test(
 rust_library(
     name = "oops",
     srcs = ["oops.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
@@ -191,6 +196,7 @@ rust_test(
 rust_library(
     name = "bridge_rust",
     srcs = ["bridge.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
@@ -207,6 +213,7 @@ rust_test(
 cc_library(
     name = "bridge_cpp",
     hdrs = ["bridge.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
@@ -217,7 +224,7 @@ cc_test(
     srcs = ["bridge_test.cc"],
     deps = [
         ":bridge_cpp",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -225,6 +232,7 @@ cc_library(
     name = "status_bridge_cpp",
     srcs = ["status_bridge.cc"],
     hdrs = ["status_bridge.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
@@ -242,9 +250,9 @@ cc_test(
     deps = [
         ":bridge_cpp",
         ":status_bridge_cpp",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
-        "@googletest//:gtest_main",
     ],
 )
 

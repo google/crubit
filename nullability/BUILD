@@ -270,11 +270,11 @@ cc_library(
     hdrs = ["proto_matchers.h"],
     visibility = [":__subpackages__"],
     deps = [
+        "//third_party/protobuf",
         "@abseil-cpp//absl/base:nullability",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
-        "@protobuf",
     ],
 )
 

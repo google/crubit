@@ -236,12 +236,12 @@ crubit_cc_test(
         "//common:cc_ffi_types",
         "//common:status_macros",
         "//common:status_test_matchers",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@googletest//:gtest_main",
     ],
 )
 
@@ -345,9 +345,9 @@ crubit_cc_test(
         ":cc_ir",
         ":ir_from_cc",
         "//common:status_test_matchers",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
-        "@googletest//:gtest_main",
     ],
 )
 
@@ -607,7 +607,7 @@ crubit_cc_test(
         ":cc_collect_instantiations",
         "//common:status_test_matchers",
         "//common:test_utils",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -659,10 +659,10 @@ crubit_cc_test(
         ":cc_ir",
         ":collect_namespaces",
         ":ir_from_cc",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
-        "@googletest//:gtest_main",
     ],
 )

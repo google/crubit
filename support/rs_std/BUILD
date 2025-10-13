@@ -19,6 +19,7 @@ cc_library(
     hdrs = ["char.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 
     # It is important to be thoughtful when adding new dependencies for `char`
@@ -76,6 +77,7 @@ rust_library(
     cc_deps = [
         ":cpp_waker",
     ],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
 
@@ -91,6 +93,7 @@ cc_library(
     hdrs = ["slice_ref.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
@@ -124,6 +127,7 @@ cc_library(
     hdrs = ["str_ref.h"],
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],

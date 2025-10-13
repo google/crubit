@@ -47,6 +47,6 @@ crubit_cc_test(
     srcs = ["structs_test.cc"],
     deps = [
         ":structs_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

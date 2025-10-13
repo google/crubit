@@ -31,7 +31,7 @@ cc_test(
     srcs = ["builtin.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -40,7 +40,7 @@ cc_test(
     srcs = ["lifetime_params.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -49,7 +49,7 @@ cc_test(
     srcs = ["virtual_functions.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -58,7 +58,7 @@ cc_test(
     srcs = ["casts.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -67,7 +67,7 @@ cc_test(
     srcs = ["callbacks.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -76,7 +76,7 @@ cc_test(
     srcs = ["initializers.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -85,7 +85,7 @@ cc_test(
     srcs = ["recursion.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -94,7 +94,7 @@ cc_test(
     srcs = ["function_templates.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -103,7 +103,7 @@ cc_test(
     srcs = ["function_calls.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -112,7 +112,7 @@ cc_test(
     srcs = ["execution_order.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -121,7 +121,7 @@ cc_test(
     srcs = ["control_flow.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -130,7 +130,7 @@ cc_test(
     srcs = ["basic.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -139,7 +139,7 @@ cc_test(
     srcs = ["static_lifetime.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -148,7 +148,7 @@ cc_test(
     srcs = ["arrays.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -157,7 +157,7 @@ cc_test(
     srcs = ["records.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -166,7 +166,7 @@ cc_test(
     srcs = ["inheritance.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -175,7 +175,7 @@ cc_test(
     srcs = ["class_templates.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -184,7 +184,7 @@ cc_test(
     srcs = ["initialization.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -193,7 +193,7 @@ cc_test(
     srcs = ["expr.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -202,6 +202,6 @@ cc_test(
     srcs = ["defaulted_functions.cc"],
     deps = [
         ":lifetime_analysis_test",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

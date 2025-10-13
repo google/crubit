@@ -50,6 +50,6 @@ crubit_cc_test(
     srcs = ["tuple_structs_test.cc"],
     deps = [
         ":tuple_structs_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

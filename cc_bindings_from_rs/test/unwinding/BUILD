@@ -27,6 +27,6 @@ crubit_cc_test(
     srcs = ["unwinding_test.cc"],
     deps = [
         ":panic_function_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

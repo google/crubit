@@ -64,6 +64,6 @@ crubit_cc_test(
     deps = [
         ":foo_cc_proto",
         ":rust_lib_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

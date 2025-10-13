@@ -30,6 +30,6 @@ crubit_cc_test(
     srcs = ["needs_feature_test.cc"],
     deps = [
         ":needs_feature_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

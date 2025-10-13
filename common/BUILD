@@ -53,9 +53,9 @@ crubit_cc_test(
         ":annotation_reader",
         ":status_test_matchers",
         ":string_view_conversion",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/strings:string_view",
-        "@googletest//:gtest_main",
         "@llvm-project//clang:testing",
     ],
 )

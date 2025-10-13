@@ -85,12 +85,12 @@ cc_test(
         ":inference_cc_proto",
         ":merge",
         "//nullability:proto_matchers",
+        "//third_party/protobuf",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
-        "@protobuf",
     ],
 )
 

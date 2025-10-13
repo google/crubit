@@ -38,6 +38,6 @@ crubit_cc_test(
     srcs = ["core_bindings_test.cc"],
     deps = [
         ":core_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

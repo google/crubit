@@ -7,6 +7,7 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "is_utf8",
     hdrs = ["is_utf8.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],

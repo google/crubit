@@ -29,6 +29,6 @@ crubit_cc_test(
     srcs = ["crate_name_test.cc"],
     deps = [
         ":custom_crate_name_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

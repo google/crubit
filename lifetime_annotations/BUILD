@@ -28,7 +28,7 @@ crubit_cc_test(
     srcs = ["lifetime_test.cc"],
     deps = [
         ":lifetime",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -86,11 +86,11 @@ crubit_cc_test(
         "//common:status_test_matchers",
         "//lifetime_annotations/test:named_func_lifetimes",
         "//lifetime_annotations/test:run_on_code",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
-        "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:tooling",
@@ -115,7 +115,7 @@ crubit_cc_test(
     deps = [
         ":lifetime",
         ":lifetime_substitutions",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -135,7 +135,7 @@ crubit_cc_test(
     deps = [
         ":lifetime",
         ":lifetime_symbol_table",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 

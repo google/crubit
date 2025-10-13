@@ -48,7 +48,7 @@ crubit_cc_test(
     srcs = ["enums_test.cc"],
     deps = [
         ":enums_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
 
@@ -79,6 +79,6 @@ crubit_cc_test(
     srcs = ["cpp_enums_test.cc"],
     deps = [
         ":cpp_enums_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

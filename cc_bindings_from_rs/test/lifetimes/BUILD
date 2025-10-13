@@ -41,6 +41,6 @@ crubit_cc_test(
     srcs = ["lifetimes_test.cc"],
     deps = [
         ":lifetimes_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

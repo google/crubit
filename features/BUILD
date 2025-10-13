@@ -23,6 +23,7 @@ _EXPERIMENTAL_CLIENTS = [
 # See <internal link>
 crubit_feature_hint(
     name = "supported",
+    compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES,
     visibility = ["//visibility:public"],
 )
@@ -35,6 +36,7 @@ _WRAPPER_FEATURES = ["wrapper"]
 # See <internal link>
 crubit_feature_hint(
     name = "wrapper",
+    compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES + _WRAPPER_FEATURES,
     visibility = _EXPERIMENTAL_CLIENTS,
 )
@@ -44,6 +46,7 @@ crubit_feature_hint(
 # See <internal link>
 crubit_feature_hint(
     name = "infer_operator_lifetimes",
+    compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES + ["infer_operator_lifetimes"],
     visibility = ["//visibility:public"],
 )
@@ -53,6 +56,7 @@ crubit_feature_hint(
 # See <internal link>
 crubit_feature_hint(
     name = "std_vector",
+    compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES,
     visibility = ["//visibility:public"],
 )
@@ -62,6 +66,7 @@ crubit_feature_hint(
 # See <internal link>
 crubit_feature_hint(
     name = "std_unique_ptr",
+    compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES + ["std_unique_ptr"],
     visibility = ["//visibility:public"],
 )
@@ -72,6 +77,7 @@ crubit_feature_hint(
 # See <internal link>
 crubit_feature_hint(
     name = "experimental",
+    compatible_with = ["//buildenv/target:non_prod"],
     # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
     crubit_features = ["all"],
     visibility = _EXPERIMENTAL_CLIENTS,

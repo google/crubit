@@ -47,6 +47,6 @@ crubit_cc_test(
     srcs = ["unions_test.cc"],
     deps = [
         ":unions_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

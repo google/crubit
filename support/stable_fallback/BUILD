@@ -8,6 +8,7 @@ rust_library(
     name = "forward_declare",
     testonly = True,
     srcs = ["//support:forward_declare.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     crate_features = [],
     proc_macro_deps = ["//support:forward_declare_proc_macros"],
     # LINT.IfChange

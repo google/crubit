@@ -11,6 +11,7 @@ load(
 # A feature set with a stable expansion, only for use in Bazel unit tests.
 crubit_feature_hint(
     name = "testonly_supported",
+    compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = ["supported"],
     visibility = ["//:__subpackages__"],
 )
@@ -18,6 +19,7 @@ crubit_feature_hint(
 # A feature set with a stable expansion, only for use in Bazel unit tests.
 crubit_feature_hint(
     name = "testonly_experimental",
+    compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = ["experimental"],
     visibility = ["//:__subpackages__"],
 )

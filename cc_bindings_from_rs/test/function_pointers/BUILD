@@ -42,6 +42,6 @@ crubit_cc_test(
     srcs = ["function_pointers_test.cc"],
     deps = [
         ":function_pointers_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )

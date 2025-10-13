@@ -71,9 +71,9 @@ cc_test(
     deps = [
         ":rs_from_cc_lib",
         "//common:status_test_matchers",
+        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings:string_view",
-        "@googletest//:gtest_main",
         "@llvm-project//clang:ast",
     ],
 )

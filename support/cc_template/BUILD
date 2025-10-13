@@ -23,6 +23,7 @@ rust_proc_macro(
 rust_library(
     name = "cc_template_impl",
     srcs = ["cc_template_impl.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
     deps = [
         "@crate_index//:anyhow",
         "@crate_index//:proc-macro2",

@@ -27,6 +27,6 @@ crubit_cc_test(
     srcs = ["env_test.cc"],
     deps = [
         ":env_cc_api",
-        "@googletest//:gtest_main",
+        "//testing/base/public:gunit_main",
     ],
 )
