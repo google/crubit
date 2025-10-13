@@ -111,9 +111,39 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   }
 
   if (ictx_.IsFromProtoTarget(*enum_decl)) {
-    // TODO(b/406221412): Proto enums aren't at the expected location.
-    return unsupported(
-        FormattedError::Static("b/406221412: Proto enums are not supported"));
+    // Supporting a top-level `Foo_Bar_Baz` enum is hard! It could be any of
+    // these four things:
+    // * A top-level `enum Foo_Bar_Baz`
+    // * A nested `message Foo { enum Bar_Baz }`
+    // * A differently nested `message Foo_Bar { enum Baz }`
+    // * A deeply nested `message Foo { message Bar { message Baz } }`
+    //
+    // There is no signal on the enum itself to distinguish, so we would need to
+    // iterate over all the records in the header file to find any aliases that
+    // refer to this enum, and from that, learn the name.
+    //
+    // At least for now, we're going to forgo that exercise. If the name does
+    // not contain an underscore, then we know it's the first case.
+    // If the name does contain an underscore, but is retrieved via the alias,
+    // then we can know the case above perfectly, and can handle this
+    // in type_alias.cc. But if the name contains an underscore, and is
+    // accessed at the top level: give up!
+    if (enum_decl->getName().contains('_')) {
+      return unsupported(FormattedError::Static(
+          "b/406221412: Proto enums with underscores are not supported "
+          "except via Message::Enum syntax."));
+    }
+    ictx_.MarkAsSuccessfullyImported(enum_decl);
+    return ExistingRustType{
+        .rs_name = std::string(enum_decl->getName()),
+        .cc_name = enum_decl->getQualifiedNameAsString(),
+        .type_parameters = {},
+        .owning_target = ictx_.GetOwningTarget(enum_decl),
+        .size_align = std::nullopt,
+        // To be paranoid, assume Rust proto enums are not ABI compatible.
+        .is_same_abi = false,
+        .id = ictx_.GenerateItemId(enum_decl),
+    };
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);
