@@ -34,8 +34,8 @@ rust_proc_macro(
     compatible_with = ["//buildenv/target:non_prod"],
     deps = [
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
     ],
 )
 
@@ -72,8 +72,8 @@ rust_proc_macro(
     ],
     deps = [
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
     ],
 )
 
@@ -148,8 +148,8 @@ rust_proc_macro(
     ],
     deps = [
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
     ],
 )
 

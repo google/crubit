@@ -16,7 +16,7 @@ rust_proc_macro(
     ],
     deps = [
         ":cc_template_impl",
-        "@crate_index//:syn",
+        "@crate_index//:syn",  # v1
     ],
 )
 
@@ -25,11 +25,11 @@ rust_library(
     srcs = ["cc_template_impl.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     deps = [
-        "@crate_index//:anyhow",
+        "@crate_index//:anyhow",  # v1
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:serde_json",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:serde_json",  # v1
+        "@crate_index//:syn",  # v1
     ],
 )
 
@@ -43,6 +43,6 @@ crubit_rust_test(
     crate = ":cc_template_impl",
     deps = [
         "@crate_index//:googletest",
-        "@crate_index//:maplit",
+        "@crate_index//:maplit",  # v1
     ],
 )

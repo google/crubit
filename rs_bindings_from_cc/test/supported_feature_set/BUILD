@@ -30,7 +30,7 @@ crubit_rust_test(
     deps = [
         "//support:oops",
         "@crate_index//:googletest",
-        "@crate_index//:static_assertions",
+        "@crate_index//:static_assertions",  # v1
     ],
 )
 

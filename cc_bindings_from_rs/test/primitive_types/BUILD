@@ -17,7 +17,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
-    deps = ["@crate_index//:libc"],
+    deps = ["@crate_index//:libc"],  # v0_2
 )
 
 cc_bindings_from_rust(

@@ -24,7 +24,7 @@ rust_library(
         "lib.rs",
     ],
     proc_macro_deps = [
-        "@crate_index//:rustversion",
+        "@crate_index//:rustversion",  # v1
     ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
@@ -41,11 +41,11 @@ rust_library(
         "//common:crubit_feature",
         "//common:dyn_format",
         "//common:error_report",
-        "@crate_index//:flagset",
-        "@crate_index//:itertools",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
     ],
 )
 
@@ -60,7 +60,7 @@ crubit_rust_test(
         "//common:code_gen_utils",
         "//common:token_stream_matchers",
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
+        "@crate_index//:quote",  # v1
     ],
 )
 
@@ -75,7 +75,7 @@ crubit_rust_test(
         "//common:token_stream_matchers",
         "//common:token_stream_printer",
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
+        "@crate_index//:quote",  # v1
     ],
 )
 
@@ -87,9 +87,9 @@ crubit_rust_test(
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:token_stream_matchers",
-        "@crate_index//:flagset",
+        "@crate_index//:flagset",  # v0_4
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
+        "@crate_index//:quote",  # v1
     ],
 )
 
@@ -99,7 +99,7 @@ crubit_rust_test(
     deps = [
         ":test_helpers",
         "//common:token_stream_matchers",
-        "@crate_index//:quote",
+        "@crate_index//:quote",  # v1
     ],
 )
 
@@ -123,7 +123,7 @@ rust_library(
         "//common:crubit_feature",
         "//common:dyn_format",
         "//common:error_report",
-        "@crate_index//:flagset",
+        "@crate_index//:flagset",  # v0_4
     ],
 )
 

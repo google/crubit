@@ -18,6 +18,6 @@ crubit_rust_test(
     ],
     deps = [
         "@crate_index//:googletest",
-        "@crate_index//:rstest",
+        "@crate_index//:rstest",  # v0_16
     ],
 )

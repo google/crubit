@@ -30,13 +30,13 @@ rust_library(
         "//common:memoized",
         "//common:token_stream_printer",
         "//rs_bindings_from_cc:ir",
-        "@crate_index//:flagset",
-        "@crate_index//:heck",
-        "@crate_index//:itertools",
+        "@crate_index//:flagset",  # v0_4
+        "@crate_index//:heck",  # v0_5
+        "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:serde_json",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:serde_json",  # v1
+        "@crate_index//:syn",  # v1
     ],
 )
 

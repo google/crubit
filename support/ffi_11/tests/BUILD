@@ -7,6 +7,6 @@ crubit_rust_test(
     srcs = ["conversion_test.rs"],
     deps = [
         "//support/ffi_11",
-        "@crate_index//:static_assertions",
+        "@crate_index//:static_assertions",  # v1
     ],
 )

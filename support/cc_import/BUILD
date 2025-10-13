@@ -19,7 +19,7 @@ rust_proc_macro(
     deps = [
         ":cc_import_internal",
         "@crate_index//:proc-macro2",
-        "@crate_index//:syn",
+        "@crate_index//:syn",  # v1
     ],
 )
 
@@ -32,9 +32,9 @@ rust_library(
     deps = [
         ":merged_namespaces",
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:serde_json",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:serde_json",  # v1
+        "@crate_index//:syn",  # v1
         "@rules_rust//util/import:import_internal",
     ],
 )
@@ -45,10 +45,10 @@ rust_library(
     compatible_with = ["//buildenv/target:non_prod"],
     deps = [
         "@crate_index//:proc-macro2",
-        "@crate_index//:quote",
-        "@crate_index//:serde",
-        "@crate_index//:serde_json",
-        "@crate_index//:syn",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:serde",  # v1
+        "@crate_index//:serde_json",  # v1
+        "@crate_index//:syn",  # v1
         "@rules_rust//util/import:import_internal",
     ],
 )
