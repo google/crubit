@@ -510,6 +510,15 @@ fn generate_rs_api_impl_includes(
                 ));
             }
         }
+
+        if let Ok(rs_type_kind) = db.rs_type_kind((&**record).into()) {
+            if rs_type_kind.as_c9_co().is_some() {
+                internal_includes
+                    .insert(CcInclude::user_header("util/c9/internal/rust/co_vtable.h".into()));
+                internal_includes
+                    .insert(CcInclude::user_header("util/c9/internal/pass_key.h".into()));
+            }
+        };
     }
 
     for type_alias in ir.type_aliases() {

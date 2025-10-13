@@ -818,6 +818,17 @@ impl RsTypeKind {
         matches!(self.unalias(), RsTypeKind::BridgeType { .. })
     }
 
+    pub fn as_c9_co(&self) -> Option<&RsTypeKind> {
+        let RsTypeKind::Record { uniform_repr_template_type, .. } = &self.unalias() else {
+            return None;
+        };
+
+        match uniform_repr_template_type.as_ref()?.as_ref() {
+            UniformReprTemplateType::C9Co { result_type, .. } => Some(result_type),
+            _ => None,
+        }
+    }
+
     pub fn is_pointer_bridge_type(&self) -> bool {
         matches!(
             self.unalias(),
@@ -1206,6 +1217,10 @@ impl RsTypeKind {
 
     pub fn is_bool(&self) -> bool {
         matches!(self.unalias(), RsTypeKind::Primitive(Primitive::Bool))
+    }
+
+    pub fn is_void(&self) -> bool {
+        matches!(self.unalias(), RsTypeKind::Primitive(Primitive::Void))
     }
 
     pub fn is_complete(&self) -> bool {

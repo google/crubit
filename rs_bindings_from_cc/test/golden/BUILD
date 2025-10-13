@@ -49,6 +49,7 @@ DEPS = {
     ],
     "uses_not_crubit_exposed": ["not_crubit_exposed"],
     "depends_on_nested_types": ["nested_types"],
+    "coroutines": ["//rs_bindings_from_cc/test/c9:co"],
 }
 
 TAGS = {}
@@ -64,7 +65,7 @@ rust_bindings_from_cc_cli_flag(
     aspect_hints = [
         "//features:infer_operator_lifetimes",
         ":disable_source_location_in_doc_comment",
-    ],
+    ] + (["//features:wrapper"] if name == "coroutines" else []),
     deps = [
         ((d + "_cc") if d in TESTS else d)
         for d in (DEPS[name] if name in DEPS else [])
@@ -85,6 +86,8 @@ NON_BUILDABLE_TEST = [
     "bridge_type",
     # We can't support additional Rust srcs so we can't run the test.
     "composable_bridging",
+    # Cannot be built because we use a mock c9::Co impl to keep the goldens small.
+    "coroutines",
 ]
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]
