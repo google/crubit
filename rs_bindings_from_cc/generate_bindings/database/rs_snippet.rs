@@ -1495,31 +1495,16 @@ impl RsTypeKind {
                 Primitive::Uint64T | Primitive::StdUint64T => quote! { u64 },
             },
             RsTypeKind::BridgeType { bridge_type, original_type } => {
-                let make_path = |rust_name: &str| {
-                    let is_absolute_path = rust_name.starts_with("::");
-                    // If the name starts with "::", then it is an absolute path. In this case, we
-                    // need to skip the first part of the split, since it returns the empty string.
-                    let name_parts =
-                        rust_name.split("::").skip(is_absolute_path as usize).map(make_rs_ident);
-                    let target =
-                        original_type.defining_target().unwrap_or(&original_type.owning_target);
-
-                    let prefix = if is_absolute_path {
-                        quote! {}
-                    } else if db.ir().is_current_target(target) {
-                        quote! { crate }
-                    } else {
-                        let ident = make_rs_ident(target.target_name());
-                        quote! { :: #ident }
-                    };
-                    quote! { #prefix :: #(#name_parts)::* }
-                };
                 match bridge_type {
                     BridgeRsTypeKind::BridgeVoidConverters { rust_name, .. } => {
-                        make_path(rust_name)
+                        fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
                     }
                     BridgeRsTypeKind::Bridge { rust_name, generic_types, .. } => {
-                        let path = make_path(rust_name);
+                        let path = fully_qualify_type(
+                            db,
+                            ir::Item::Record(original_type.clone()),
+                            rust_name,
+                        );
 
                         // If there are no generic types, then we're done.
                         if generic_types.is_empty() {
@@ -1530,7 +1515,9 @@ impl RsTypeKind {
                             generic_types.iter().map(|t| t.to_token_stream(db));
                         quote! { #path < #(#generic_types_tokens),* > }
                     }
-                    BridgeRsTypeKind::ProtoMessageBridge { rust_name, .. } => make_path(rust_name),
+                    BridgeRsTypeKind::ProtoMessageBridge { rust_name, .. } => {
+                        fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
+                    }
                     BridgeRsTypeKind::StdOptional(inner) => {
                         let inner = inner.to_token_stream(db);
                         quote! { ::core::option::Option< #inner > }
@@ -1549,11 +1536,102 @@ impl RsTypeKind {
                     }
                 }
             }
-            RsTypeKind::ExistingRustType(existing_rust_type) => {
-                existing_rust_type.rs_name.parse().expect("Invalid RsType::name in the IR")
-            }
+            RsTypeKind::ExistingRustType(existing_rust_type) => fully_qualify_type(
+                db,
+                ir::Item::ExistingRustType(existing_rust_type.clone()),
+                &existing_rust_type.rs_name,
+            ),
         }
     }
+}
+
+/// Take a user defined path, like `foo` or `::bar`, and convert it to
+/// an absolute path, like `crate::foo` or `::bar` respectively.
+///
+/// The path is taken to be relative to crate defining the item.
+///
+/// This has _very_ limited support for other type expressions, like `&T`,
+/// and special-cases well known builtin types like `char`.
+fn fully_qualify_type(
+    db: &dyn BindingsGenerator,
+    item: ir::Item,
+    type_expression: &str,
+) -> TokenStream {
+    let root_crate = || {
+        let target = item.defining_target().cloned().or_else(|| item.owning_target()).unwrap();
+        if db.ir().is_current_target(&target) {
+            quote! { crate }
+        } else {
+            let ident = make_rs_ident(target.target_name());
+            quote! { :: #ident }
+        }
+    };
+    fully_qualify_type_impl(type_expression, root_crate)
+}
+
+/// Broken out for testing :/
+fn fully_qualify_type_impl(
+    type_expression: &str,
+    root_crate: impl Fn() -> TokenStream,
+) -> TokenStream {
+    let mut type_expression_suffix = type_expression;
+    'fix: loop {
+        type_expression_suffix = type_expression_suffix.trim_start();
+        for prefix in ["&", "*", "const", "mut"] {
+            if let Some(suffix) = type_expression_suffix.strip_prefix(prefix) {
+                type_expression_suffix = suffix;
+                continue 'fix;
+            }
+        }
+        break;
+    }
+
+    let prefix = &type_expression[..type_expression.len() - type_expression_suffix.len()];
+    let prefix: TokenStream = prefix.parse().unwrap();
+
+    // Primitive types are special-cased.
+    if matches!(
+        type_expression_suffix.trim(),
+        "char"
+            | "bool"
+            | "i8"
+            | "u8"
+            | "i16"
+            | "u16"
+            | "i32"
+            | "u32"
+            | "i64"
+            | "u64"
+            | "i128"
+            | "u128"
+            | "isize"
+            | "usize"
+            | "str"
+            | "f32"
+            | "f64"
+    ) {
+        let suffix: TokenStream = type_expression_suffix.parse().unwrap();
+        return quote! { #prefix #suffix };
+    }
+
+    // Otherwise, we assume it's a path.
+    let is_absolute_path = type_expression_suffix.starts_with("::");
+    // If the name starts with "::", then it is an absolute path. In this case, we
+    // need to skip the first part of the split, since it returns the empty string.
+    // Note: Crubit can generate poorly formatted names, like `:: foo :: bar`, so we also
+    // need to trim whitespace to create valid identifiers.
+    let name_parts = type_expression_suffix
+        .split("::")
+        .skip(is_absolute_path as usize)
+        .map(str::trim)
+        .map(make_rs_ident);
+
+    let top_level_crate = if is_absolute_path {
+        quote! {}
+    } else {
+        root_crate()
+    };
+    quote! { #prefix  #top_level_crate :: #(#name_parts)::* }
 }
 
 struct RsTypeKindIter<'ty> {
@@ -1630,9 +1708,9 @@ mod tests {
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = make_existing_rust_type("A".into(), true);
-            let b = make_existing_rust_type("B".into(), true);
-            let c = make_existing_rust_type("C".into(), true);
+            let a = make_existing_rust_type("::A".into(), true);
+            let b = make_existing_rust_type("::B".into(), true);
+            let c = make_existing_rust_type("::C".into(), true);
             RsTypeKind::FuncPtr {
                 option: false,
                 cc_calling_conv: CcCallingConv::C,
@@ -1650,7 +1728,7 @@ mod tests {
                 _ => unreachable!("Only FuncPtr and ExistingRustType kinds are used in this test"),
             })
             .collect_vec();
-        assert_eq!(vec!["fn", "A", "B", "C"], dfs_names);
+        assert_eq!(vec!["fn", "::A", "::B", "::C"], dfs_names);
     }
 
     struct EmptyDatabase;
@@ -1658,18 +1736,18 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let referent = Rc::new(make_existing_rust_type("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
         let reference = RsTypeKind::Reference {
             referent,
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
         };
-        assert_rs_matches!(reference.to_token_stream(&EmptyDatabase), quote! {&T});
+        assert_rs_matches!(reference.to_token_stream(&EmptyDatabase), quote! {&::T});
     }
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let referent = Rc::new(make_existing_rust_type("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1677,13 +1755,13 @@ mod tests {
         };
         assert_rs_matches!(
             reference.to_token_stream(&EmptyDatabase),
-            quote! {RvalueReference<'_, T>}
+            quote! {RvalueReference<'_, ::T>}
         );
     }
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -1697,7 +1775,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,
@@ -1850,5 +1928,35 @@ mod tests {
         let void_ptr = RsTypeKind::Primitive(Primitive::Void);
         expect_that!(void_ptr.allowed_behind_single_element_ptr(), eq(true));
         expect_that!(void_ptr.allowed_behind_multi_element_ptr(), eq(false));
+    }
+
+    #[gtest]
+    fn test_fully_qualify_type() {
+        assert_rs_matches!(
+            fully_qualify_type_impl("A", || {
+                quote! {crate}
+            }),
+            quote! {crate::A},
+        );
+    }
+
+    #[gtest]
+    fn test_fully_qualify_i32() {
+        assert_rs_matches!(
+            fully_qualify_type_impl("i32", || {
+                quote! {crate}
+            }),
+            quote! {i32},
+        );
+    }
+
+    #[gtest]
+    fn test_fully_qualify_ref() {
+        assert_rs_matches!(
+            fully_qualify_type_impl("&mut *const X", || {
+                quote! {crate}
+            }),
+            quote! {&mut *const crate::X},
+        );
     }
 }
