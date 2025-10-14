@@ -513,10 +513,16 @@ fn generate_rs_api_impl_includes(
 
         if let Ok(rs_type_kind) = db.rs_type_kind((&**record).into()) {
             if rs_type_kind.as_c9_co().is_some() {
-                internal_includes
-                    .insert(CcInclude::user_header("util/c9/internal/rust/co_vtable.h".into()));
-                internal_includes
-                    .insert(CcInclude::user_header("util/c9/internal/pass_key.h".into()));
+                let includes = [
+                    "util/c9/internal/rust/co_vtable.h",
+                    "util/c9/internal/rust/destroy_coroutine_frame_from_rust.h",
+                    "util/c9/internal/rust/start_coroutine_from_rust.h",
+                    "util/c9/internal/pass_key.h",
+                ];
+
+                for file in includes {
+                    internal_includes.insert(CcInclude::user_header(file.into()));
+                }
             }
         };
     }

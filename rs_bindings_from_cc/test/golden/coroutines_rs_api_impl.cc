@@ -14,6 +14,8 @@
 
 #include "util/c9/internal/pass_key.h"
 #include "util/c9/internal/rust/co_vtable.h"
+#include "util/c9/internal/rust/destroy_coroutine_frame_from_rust.h"
+#include "util/c9/internal/rust/start_coroutine_from_rust.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/coroutines.h"
