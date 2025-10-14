@@ -589,19 +589,15 @@ pub fn generate_function_thunk_impl(
     let return_stmt = if let Some(result_type_kind) = return_type_kind.as_c9_co() {
         // The result_type_kind is the T in Co<T>
         let start_coroutine_from_rust = if result_type_kind.is_void() {
-            // For coroutines that return void, we use StartCoroutineFromRust directly.
-            // This function is the most basic way to start a coroutine in Rust, and does _not_
-            // populate the cpp_encode_result_in_buffer_fn field because the result is void.
-            quote! { &c9::internal::rust::StartCoroutineFromRust<void> }
+            // For coroutines that return void, we use the non-templated version.
+            quote! { &c9::internal::rust::StartCoroutineFromRust }
         } else {
             let result_type_crubit_abi_type = db.crubit_abi_type(result_type_kind.clone())?;
             let result_type_crubit_abi_type_tokens =
                 CrubitAbiTypeToCppTokens(&result_type_crubit_abi_type);
-            // For coroutines that return a non-void value, we use
-            // StartCoroutineFromRustReturnsValue. This is a wrapper around StartCoroutineFromRust,
-            // except it also populates the cpp_encode_result_in_buffer_fn field with a template
-            // instantiation of the EncodeResultInBuffer<Abi> function.
-            quote! { &c9::internal::rust::StartCoroutineFromRustReturnsValue<#result_type_crubit_abi_type_tokens> }
+
+            // For coroutines that return a non-void value, we use the templated version.
+            quote! { &c9::internal::rust::StartCoroutineFromRust<#result_type_crubit_abi_type_tokens> }
         };
         let out_param = &param_idents[0];
         let result_type_cpp_spelling = cpp_type_name::format_cpp_type(result_type_kind, ir)?;

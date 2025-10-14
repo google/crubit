@@ -30,7 +30,7 @@ extern "C" void __rust_thunk___ZN2c97SetBoolERb(
   __return_co_vtable->destroy_coroutine_frame_from_rust =
       &c9::internal::rust::DestroyCoroutineFrameFromRust<void>;
   __return_co_vtable->start_coroutine_from_rust =
-      &c9::internal::rust::StartCoroutineFromRust<void>;
+      &c9::internal::rust::StartCoroutineFromRust;
   ;
 }
 
@@ -43,8 +43,7 @@ extern "C" void __rust_thunk___ZN2c99ReturnIntEv(
   __return_co_vtable->destroy_coroutine_frame_from_rust =
       &c9::internal::rust::DestroyCoroutineFrameFromRust<int>;
   __return_co_vtable->start_coroutine_from_rust =
-      &c9::internal::rust::StartCoroutineFromRustReturnsValue<
-          ::crubit::TransmuteAbi<int>>;
+      &c9::internal::rust::StartCoroutineFromRust<::crubit::TransmuteAbi<int>>;
   ;
 }
 
