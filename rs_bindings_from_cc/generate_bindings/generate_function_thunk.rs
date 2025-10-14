@@ -163,7 +163,7 @@ pub fn generate_function_thunk(
         out_param_ident = Some(param_idents.next().unwrap().clone());
     } else if return_type.as_c9_co().is_some() {
         // Returning a Co involves passing a CoVTable out ptr.
-        out_param = Some(quote! { *mut ::co_vtable::c9::internal::CoVTable });
+        out_param = Some(quote! { *mut ::co_vtable::c9::internal::rust::CoVTable });
         out_param_ident = Some(make_rs_ident("__return_co_vtable"));
         return_type_fragment = None;
     } else if return_type.is_crubit_abi_bridge_type() {
@@ -530,7 +530,7 @@ pub fn generate_function_thunk_impl(
 
     let return_type_name = if return_type_kind.as_c9_co().is_some() {
         param_idents.insert(0, expect_format_cc_ident("__return_co_vtable"));
-        param_types.insert(0, quote! { c9::internal::CoVTable* });
+        param_types.insert(0, quote! { c9::internal::rust::CoVTable* });
         quote! {void}
     } else if return_type_kind.is_crubit_abi_bridge_type() {
         param_idents.insert(0, expect_format_cc_ident("__return_abi_buffer"));
@@ -592,7 +592,7 @@ pub fn generate_function_thunk_impl(
             // For coroutines that return void, we use StartCoroutineFromRust directly.
             // This function is the most basic way to start a coroutine in Rust, and does _not_
             // populate the cpp_encode_result_in_buffer_fn field because the result is void.
-            quote! { &c9::internal::StartCoroutineFromRust<void> }
+            quote! { &c9::internal::rust::StartCoroutineFromRust<void> }
         } else {
             let result_type_crubit_abi_type = db.crubit_abi_type(result_type_kind.clone())?;
             let result_type_crubit_abi_type_tokens =
@@ -601,13 +601,13 @@ pub fn generate_function_thunk_impl(
             // StartCoroutineFromRustReturnsValue. This is a wrapper around StartCoroutineFromRust,
             // except it also populates the cpp_encode_result_in_buffer_fn field with a template
             // instantiation of the EncodeResultInBuffer<Abi> function.
-            quote! { &c9::internal::StartCoroutineFromRustReturnsValue<#result_type_crubit_abi_type_tokens> }
+            quote! { &c9::internal::rust::StartCoroutineFromRustReturnsValue<#result_type_crubit_abi_type_tokens> }
         };
         let out_param = &param_idents[0];
         let result_type_cpp_spelling = cpp_type_name::format_cpp_type(result_type_kind, ir)?;
         quote! {
             #out_param->addr = #return_expr.release_handle(c9::internal::PassKey()).address();
-            #out_param->destroy_coroutine_frame_from_rust = &c9::internal::DestroyCoroutineFrameFromRust<#result_type_cpp_spelling>;
+            #out_param->destroy_coroutine_frame_from_rust = &c9::internal::rust::DestroyCoroutineFrameFromRust<#result_type_cpp_spelling>;
             #out_param->start_coroutine_from_rust = #start_coroutine_from_rust;
         }
     } else if return_type_kind.is_crubit_abi_bridge_type() {

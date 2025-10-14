@@ -22,26 +22,26 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 extern "C" void __rust_thunk___ZN2c97SetBoolERb(
-    c9::internal::CoVTable* __return_co_vtable, bool* b) {
+    c9::internal::rust::CoVTable* __return_co_vtable, bool* b) {
   __return_co_vtable->addr =
       c9::SetBool(*b).release_handle(c9::internal::PassKey()).address();
   __return_co_vtable->destroy_coroutine_frame_from_rust =
-      &c9::internal::DestroyCoroutineFrameFromRust<void>;
+      &c9::internal::rust::DestroyCoroutineFrameFromRust<void>;
   __return_co_vtable->start_coroutine_from_rust =
-      &c9::internal::StartCoroutineFromRust<void>;
+      &c9::internal::rust::StartCoroutineFromRust<void>;
   ;
 }
 
 static_assert((struct c9::Co<void> (*)(bool&))&c9::SetBool);
 
 extern "C" void __rust_thunk___ZN2c99ReturnIntEv(
-    c9::internal::CoVTable* __return_co_vtable) {
+    c9::internal::rust::CoVTable* __return_co_vtable) {
   __return_co_vtable->addr =
       c9::ReturnInt().release_handle(c9::internal::PassKey()).address();
   __return_co_vtable->destroy_coroutine_frame_from_rust =
-      &c9::internal::DestroyCoroutineFrameFromRust<int>;
+      &c9::internal::rust::DestroyCoroutineFrameFromRust<int>;
   __return_co_vtable->start_coroutine_from_rust =
-      &c9::internal::StartCoroutineFromRustReturnsValue<
+      &c9::internal::rust::StartCoroutineFromRustReturnsValue<
           ::crubit::TransmuteAbi<int>>;
   ;
 }

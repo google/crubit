@@ -1075,7 +1075,7 @@ fn generate_func_body(
                     quote! {
                         // TODO(b/274177296): When C structs can be passed by value in function
                         // pointers, make the thunk just return a CoVTable by value.
-                        let mut __co_vtable_slot = ::co_vtable::c9::internal::CoVTable {
+                        let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVTable {
                             addr: ::core::ptr::null_mut(),
                             destroy_coroutine_frame_from_rust: None,
                             start_coroutine_from_rust: None,

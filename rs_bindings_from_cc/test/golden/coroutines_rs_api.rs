@@ -21,7 +21,7 @@ pub mod c9 {
     /// (Sometimes) change threads, then set the supplied bool and finish.
     #[inline(always)]
     pub unsafe fn SetBool(b: *mut bool) -> ::co::Co<'static, ()> {
-        let mut __co_vtable_slot = ::co_vtable::c9::internal::CoVTable {
+        let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVTable {
             addr: ::core::ptr::null_mut(),
             destroy_coroutine_frame_from_rust: None,
             start_coroutine_from_rust: None,
@@ -34,7 +34,7 @@ pub mod c9 {
     #[inline(always)]
     pub fn ReturnInt() -> ::co::Co<'static, ::core::ffi::c_int> {
         unsafe {
-            let mut __co_vtable_slot = ::co_vtable::c9::internal::CoVTable {
+            let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVTable {
                 addr: ::core::ptr::null_mut(),
                 destroy_coroutine_frame_from_rust: None,
                 start_coroutine_from_rust: None,
@@ -60,11 +60,11 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN2c97SetBoolERb(
-            __return_co_vtable: *mut ::co_vtable::c9::internal::CoVTable,
+            __return_co_vtable: *mut ::co_vtable::c9::internal::rust::CoVTable,
             b: *mut bool,
         );
         pub(crate) unsafe fn __rust_thunk___ZN2c99ReturnIntEv(
-            __return_co_vtable: *mut ::co_vtable::c9::internal::CoVTable,
+            __return_co_vtable: *mut ::co_vtable::c9::internal::rust::CoVTable,
         );
     }
 }
