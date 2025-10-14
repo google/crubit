@@ -10,7 +10,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Stmt.h"
-#include "clang/AST/Type.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/ASTMatchers/ASTMatchersInternal.h"
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
 #include "clang/Basic/LLVM.h"
@@ -88,6 +88,7 @@ ast_matchers::internal::Matcher<Stmt> isSmartPointerComparisonOpCall();
 ast_matchers::internal::Matcher<Stmt> isSharedPtrCastCall();
 ast_matchers::internal::Matcher<Stmt> isWeakPtrLockCall();
 ast_matchers::internal::Matcher<Stmt> isSupportedPointerAccessorCall();
+ast_matchers::internal::Matcher<Stmt> isStatusOrValueOrCall();
 
 AST_MATCHER(Stmt, isNullPointerDefaultInit) {
   const auto* DefaultInit = dyn_cast<CXXDefaultInitExpr>(&Node);

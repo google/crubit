@@ -7,7 +7,6 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
-#include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchersInternal.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -62,7 +61,6 @@ using ast_matchers::isInStdNamespace;
 using ast_matchers::isInteger;
 using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
-using ast_matchers::ofClass;
 using ast_matchers::parameterCountIs;
 using ast_matchers::pointee;
 using ast_matchers::pointerType;
@@ -222,6 +220,13 @@ Matcher<Stmt> isSupportedPointerAccessorCall() {
               memberExpr(has(ignoringParenImpCasts(cxxThisExpr())),
                          hasType(isSupportedRawPointer()),
                          hasDeclaration(decl().bind("member-decl"))))))))))))));
+}
+
+Matcher<Stmt> isStatusOrValueOrCall() {
+  return cxxMemberCallExpr(
+      thisPointerType(qualType(hasCanonicalType(qualType(
+          hasDeclaration(cxxRecordDecl(hasName("::absl::StatusOr"))))))),
+      callee(cxxMethodDecl(hasName("value_or"))));
 }
 
 }  // namespace clang::tidy::nullability

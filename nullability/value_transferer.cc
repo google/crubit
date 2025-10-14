@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <functional>
+#include <optional>
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
@@ -40,6 +41,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
 using ast_matchers::MatchFinder;
@@ -961,6 +963,16 @@ static void modelCheckNE(const CallExpr& CE, Environment& Env) {
     Env.assume(Env.arena().makeEquals(Val->formula(), *IsNull));
 }
 
+static bool isMethodOfAbslStatusOr(const FunctionDecl* F) {
+  const auto* Method = dyn_cast<CXXMethodDecl>(F);
+  if (!Method) return false;
+  const CXXRecordDecl* Parent = Method->getParent();
+  if (!Parent) return false;
+  const CXXRecordDecl* CanonicalParent = Parent->getCanonicalDecl();
+  if (!CanonicalParent) return false;
+  return CanonicalParent->getQualifiedNameAsString() == "absl::StatusOr";
+}
+
 static void transferCallExpr(const CallExpr* absl_nonnull CE,
                              const MatchFinder::MatchResult& Result,
                              TransferState<PointerNullabilityLattice>& State) {
@@ -969,9 +981,9 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
   // function calls and handle value creation for certain types.
 
   const auto* FuncDecl = CE->getDirectCallee();
+  const IdentifierInfo* FunII = nullptr;
   if (FuncDecl != nullptr) {
-    if (const IdentifierInfo* FunII =
-            FuncDecl->getDeclName().getAsIdentifierInfo()) {
+    if ((FunII = FuncDecl->getDeclName().getAsIdentifierInfo())) {
       if (FunII->isStr("__assert_nullability")) return;
 
       // This is part of the implementation of `CHECK_NE`.
@@ -1037,11 +1049,10 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
   if (CE->isCallToStdMove() || FuncDecl == nullptr) return;
 
   // Don't treat parameters of our macro replacement argument-capture functions
-  // as output parameters.
-  if (const IdentifierInfo* FunII =
-          FuncDecl->getDeclName().getAsIdentifierInfo();
-      FunII && (FunII->isStr(ArgCaptureAbortIfFalse) ||
-                FunII->isStr(ArgCaptureAbortIfEqual)))
+  // or of absl::StatusOr::value_or as output parameters.
+  if (FunII && (FunII->isStr(ArgCaptureAbortIfFalse) ||
+                FunII->isStr(ArgCaptureAbortIfEqual) ||
+                (FunII->isStr("value_or") && isMethodOfAbslStatusOr(FuncDecl))))
     return;
   // Make output parameters (with unknown nullability) initialized to unknown.
   for (ParamAndArgIterator<CallExpr> Iter(*FuncDecl, *CE); Iter; ++Iter)
@@ -1244,6 +1255,111 @@ static void transferNonConstMemberOperatorCall(
   handleNonConstMemberCall(OCE, RecordLoc, Result, State);
 }
 
+static void transferStatusOrValueOrCall(
+    const CXXMemberCallExpr* absl_nonnull MCE,
+    const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  // Some overloads are const, some are not. Start with default handling as
+  // appropriate for constness. Do this first so that the result value will be
+  // initialized for us; we don't mind that the const method cache is cleared
+  // before we proceed if this is a non-const call.
+  if (auto* MethodDecl = MCE->getMethodDecl();
+      MethodDecl && !MethodDecl->isConst()) {
+    transferNonConstMemberCall(MCE, Result, State);
+  } else {
+    transferCallExpr(MCE, Result, State);
+  }
+
+  // absl::StatusOr::value_or can take any argument convertible to the template
+  // argument type, and claims to return the template argument type. But it
+  // considers a nullable value or type to be convertible to a nonnull type.
+  // Rather than warn on an actually non-convertible argument to value_or, we
+  // model the return value as having the null state of potentially either of
+  // the argument or the StatusOr's contained pointer, depending on the
+  // untracked internal state of the StatusOr, and warn on any incompatible
+  // usage later.
+  if (!isSupportedPointerType(MCE->getType()) ||
+      // getNumArgs does not count the implicit *this argument.
+      MCE->getNumArgs() != 1)
+    return;
+  Arena& A = State.Env.arena();
+
+  PointerValue* ResultPV = getPointerValue(MCE, State.Env);
+  if (!ResultPV) return;
+  PointerNullState ResultState = getPointerNullState(*ResultPV);
+
+  // Get the null state of the value_or argument.
+  const Expr* ArgExpr = MCE->getArg(0);
+  if (!ArgExpr) return;
+  PointerValue* Arg = getPointerValue(ArgExpr, State.Env);
+  std::optional<PointerNullState> ArgState;
+  if (Arg) {
+    ArgState = getPointerNullState(*Arg);
+  } else if (ArgExpr->getType()->isNullPtrType() &&
+             isReachableNullptrLiteral(State.Env)) {
+    ArgState = PointerNullState{.FromNullable = &A.makeLiteral(true),
+                                .IsNull = &A.makeLiteral(true)};
+  } else {
+    // This is never expected to happen, so always log, and assert-fail when
+    // enabled.
+    llvm::errs() << "Unable to determine PointerNullState for an argument to "
+                    "absl::StatusOr<SupportedPointerType>::value_or. Please "
+                    "file a bug at <internal link> if you see this.\n";
+    assert(false);
+    return;
+  }
+
+  // The null state corresponding to the StatusOr's template argument type is
+  // captured as the current null state of the call's result. Re-assign the null
+  // state properties of the call's result to be fresh atoms implied by the
+  // untracked state of the StatusOr, also modeled as a fresh atom, to be equal
+  // to the null state properties drawn from either the template argument type
+  // or the value_or argument.
+  //
+  // value_or creates copies of the contained pointer or the argument, so only
+  // the current null states are relevant; we don't need to account for later
+  // modification of e.g. a referenced decl.
+  const Formula& StatusOrIsOk = A.makeAtomRef(A.makeAtom());
+  DataflowAnalysisContext& DACtx = State.Env.getDataflowAnalysisContext();
+  if (ResultState.FromNullable != nullptr) {
+    if (ArgState->FromNullable == nullptr) {
+      ResultState.FromNullable = nullptr;
+    } else {
+      const Formula& OldResultFromNullable = *ResultState.FromNullable;
+      ResultState.FromNullable = &A.makeAtomRef(A.makeAtom());
+      DACtx.addInvariant(A.makeImplies(
+          StatusOrIsOk,
+          A.makeEquals(*ResultState.FromNullable, OldResultFromNullable)));
+      DACtx.addInvariant(A.makeImplies(
+          A.makeNot(StatusOrIsOk),
+          A.makeEquals(*ResultState.FromNullable, *ArgState->FromNullable)));
+    }
+  }
+  if (ResultState.IsNull != nullptr) {
+    if (ArgState->IsNull == nullptr) {
+      ResultState.IsNull = nullptr;
+    } else {
+      const Formula& OldResultIsNull = *ResultState.IsNull;
+      ResultState.IsNull = &A.makeAtomRef(A.makeAtom());
+      DACtx.addInvariant(A.makeImplies(
+          StatusOrIsOk, A.makeEquals(*ResultState.IsNull, OldResultIsNull)));
+      DACtx.addInvariant(
+          A.makeImplies(A.makeNot(StatusOrIsOk),
+                        A.makeEquals(*ResultState.IsNull, *ArgState->IsNull)));
+    }
+  }
+
+  auto& NewPointerVal =
+      State.Env.create<PointerValue>(ResultPV->getPointeeLoc());
+  initPointerNullState(NewPointerVal, DACtx, ResultState);
+  if (isSupportedRawPointerType(MCE->getType())) {
+    State.Env.setValue(*MCE, NewPointerVal);
+  } else if (isSupportedSmartPointerType(MCE->getType())) {
+    setSmartPointerValue(State.Env.getResultObjectLocation(*MCE),
+                         &NewPointerVal, State.Env);
+  }
+}
+
 dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
 buildValueTransferer() {
   // The value transfer functions must establish:
@@ -1340,6 +1456,8 @@ buildValueTransferer() {
                 CE, getImplicitObjectLocation(*CE, State.Env), State,
                 initCallbackForStorageLocationIfSmartPointer(CE, State.Env));
           })
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isStatusOrValueOrCall(),
+                                        transferStatusOrValueOrCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isZeroParamConstMemberCall(),
                                         transferConstMemberCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isZeroParamConstMemberOperatorCall(),
