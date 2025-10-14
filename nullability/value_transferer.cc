@@ -1002,9 +1002,9 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
     }
   }
 
+  // Create a pointer value for any supported pointer type so that we can attach
+  // nullability to it and have the nullability propagate with the pointer.
   if (isSupportedRawPointerType(CE->getType())) {
-    // Create a pointer so that we can attach nullability to it and have the
-    // nullability propagate with the pointer.
     auto* PointerVal = getRawPointerValue(CE, State.Env);
     if (!PointerVal) {
       PointerVal = cast<PointerValue>(State.Env.createValue(CE->getType()));
@@ -1018,6 +1018,20 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
       // `Loc` is set iff `CE` is a glvalue, so we know here that it must
       // be a prvalue.
       State.Env.setValue(*CE, *PointerVal);
+  } else if (isSupportedSmartPointerType(CE->getType())) {
+    if (Loc == nullptr) {
+      // `CE` must be a prvalue; see above.
+      Loc = &State.Env.getResultObjectLocation(*CE);
+    }
+    StorageLocation& PtrLoc =
+        cast<RecordStorageLocation>(Loc)->getSyntheticField(PtrField);
+    auto* Val = State.Env.get<PointerValue>(PtrLoc);
+    if (Val == nullptr) {
+      Val = cast<PointerValue>(State.Env.createValue(PtrLoc.getType()));
+      State.Env.setValue(PtrLoc, *Val);
+    }
+
+    initPointerFromTypeNullability(*Val, CE, State);
   }
 
   if (CE->isCallToStdMove() || FuncDecl == nullptr) return;
