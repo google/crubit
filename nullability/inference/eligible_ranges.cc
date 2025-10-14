@@ -85,6 +85,7 @@ static bool isQualifierPositionAnnotation(StringRef Identifier) {
       .Case(AbslMacroNullable, true)
       .Case(AbslMacroNonnull, true)
       .Case(AbslMacroUnknown, true)
+      .Case(AbslMacroConflict, true)
       .Default(false);
 }
 

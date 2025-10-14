@@ -1455,6 +1455,18 @@ TEST(RemovalRangesTest, AbslMacroWithFunctionPointer) {
                       removalRanges({Input.range("")})))));
 }
 
+TEST(RemovalRangesTest, AbslMacroConflict) {
+  auto Input = Annotations(R"(
+  void target(int *$conflict^$conflict_removal[[ absl_nullability_conflict]] P);
+  )");
+  EXPECT_THAT(
+      getFunctionRanges(Input.code()),
+      AllOf(Each(AllOf(hasPath(MainFileName), hasNoPragmaNullability())),
+            UnorderedElementsAre(
+                AllOf(eligibleRange(1, Input.point("conflict")),
+                      removalRanges({Input.range("conflict_removal")})))));
+}
+
 TEST(RemovalRangesTest, SimpleAlias) {
   auto Input = Annotations(R"(
   using IntPtr = int *;

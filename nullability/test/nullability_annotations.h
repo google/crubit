@@ -15,3 +15,4 @@ using NullabilityUnknown [[clang::annotate("Nullability_Unspecified")]] =
 #define absl_nullable _Nullable
 #define absl_nonnull _Nonnull
 #define absl_nullability_unknown _Null_unspecified
+#define absl_nullability_conflict _Null_unspecified

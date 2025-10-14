@@ -16,6 +16,8 @@ inline constexpr llvm::StringLiteral AbslMacroNullable = "absl_nullable";
 inline constexpr llvm::StringLiteral AbslMacroNonnull = "absl_nonnull";
 inline constexpr llvm::StringLiteral AbslMacroUnknown =
     "absl_nullability_unknown";
+inline constexpr llvm::StringLiteral AbslMacroConflict =
+    "absl_nullability_conflict";
 }  // namespace clang::tidy::nullability
 
 #endif  // THIRD_PARTY_CRUBIT_NULLABILITY_ANNOTATIONS_H_
