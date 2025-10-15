@@ -4,7 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // leaf_rs_lib_golden
-// Features: std_unique_ptr, std_vector, supported
+// Features: do_not_hardcode_status_bridge, std_unique_ptr, std_vector,
+// supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN

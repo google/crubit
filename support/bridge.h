@@ -5,6 +5,10 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_H_
 
+// Allow others to check #ifdef CRUBIT_BRIDGE_ENABLED
+#if !defined(SWIG) && defined(__clang__) && __cplusplus >= 202002L
+#define CRUBIT_BRIDGE_ENABLED
+
 #include <concepts>
 #include <cstddef>
 #include <cstring>
@@ -376,4 +380,5 @@ typename Abi::Value Decode(const unsigned char* buf) {
 
 }  // namespace crubit
 
+#endif  // CRUBIT_BRIDGE_ENABLED
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_H_

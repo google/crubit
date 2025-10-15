@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // from_golden
-// Features: std_unique_ptr, std_vector, supported
+// Features: do_not_hardcode_status_bridge, std_unique_ptr, std_vector, supported
 
 #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]

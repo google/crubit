@@ -10,4 +10,5 @@ SUPPORTED_FEATURES = [
     "supported",
     "std_vector",
     "std_unique_ptr",
+    "do_not_hardcode_status_bridge",
 ]

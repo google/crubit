@@ -40,7 +40,6 @@ deps_for_bindings(
     deps_for_generated_cc_file = [
         "//support/public:bindings_support",
         "//support:bridge_cpp",
-        "//support:status_bridge_cpp",
     ],
     deps_for_generated_rs_file = [
         "//support:ctor",

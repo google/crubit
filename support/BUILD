@@ -228,34 +228,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "status_bridge_cpp",
-    srcs = ["status_bridge.cc"],
-    hdrs = ["status_bridge.h"],
-    compatible_with = ["//buildenv/target:non_prod"],
-    visibility = [
-        "//visibility:public",
-    ],
-    deps = [
-        ":bridge_cpp",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings:string_view",
-    ],
-)
-
-cc_test(
-    name = "status_bridge_cpp_test",
-    srcs = ["status_bridge_test.cc"],
-    deps = [
-        ":bridge_cpp",
-        ":status_bridge_cpp",
-        "//testing/base/public:gunit_main",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-    ],
-)
-
 # Used to fix SWIG syntax errors when you see Crubit annotations.
 filegroup(
     name = "annotations_swig",
