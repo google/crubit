@@ -21,10 +21,10 @@ pub mod c9 {
     /// (Sometimes) change threads, then set the supplied bool and finish.
     #[inline(always)]
     pub unsafe fn SetBool(b: *mut bool) -> ::co::Co<'static, ()> {
-        let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVTable {
+        let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVtable {
             addr: ::core::ptr::null_mut(),
-            destroy_coroutine_frame_from_rust: None,
-            start_coroutine_from_rust: None,
+            destroy_at_initial_suspend: None,
+            start_coroutine: None,
         };
         crate::detail::__rust_thunk___ZN2c97SetBoolERb(&raw mut __co_vtable_slot, b);
         ::co::Co::from_raw(__co_vtable_slot, ::co_lib::internal::consume_void)
@@ -34,10 +34,10 @@ pub mod c9 {
     #[inline(always)]
     pub fn ReturnInt() -> ::co::Co<'static, ::core::ffi::c_int> {
         unsafe {
-            let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVTable {
+            let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVtable {
                 addr: ::core::ptr::null_mut(),
-                destroy_coroutine_frame_from_rust: None,
-                start_coroutine_from_rust: None,
+                destroy_at_initial_suspend: None,
+                start_coroutine: None,
             };
             crate::detail::__rust_thunk___ZN2c99ReturnIntEv(&raw mut __co_vtable_slot);
             ::co::Co::from_raw(
@@ -60,11 +60,11 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN2c97SetBoolERb(
-            __return_co_vtable: *mut ::co_vtable::c9::internal::rust::CoVTable,
+            __return_co_vtable: *mut ::co_vtable::c9::internal::rust::CoVtable,
             b: *mut bool,
         );
         pub(crate) unsafe fn __rust_thunk___ZN2c99ReturnIntEv(
-            __return_co_vtable: *mut ::co_vtable::c9::internal::rust::CoVTable,
+            __return_co_vtable: *mut ::co_vtable::c9::internal::rust::CoVtable,
         );
     }
 }
