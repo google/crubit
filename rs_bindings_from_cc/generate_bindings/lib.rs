@@ -434,6 +434,10 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
             BridgeRsTypeKind::StdString { .. } => false,
         },
         RsTypeKind::Record { record, .. } => is_record_unsafe(db, &record),
+        RsTypeKind::C9Co { result_type, .. } => {
+            // A Co<T> logically produces a T, so it is unsafe iff T is unsafe.
+            db.is_rs_type_kind_unsafe(result_type.as_ref().clone())
+        }
     }
 }
 

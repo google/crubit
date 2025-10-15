@@ -359,13 +359,12 @@ impl UniformReprTemplateType {
     fn new(
         db: &dyn BindingsGenerator,
         template_specialization: Option<&TemplateSpecialization>,
-        have_reference_param: bool,
         is_return_type: bool,
     ) -> Result<Option<Rc<Self>>> {
         let Some(template_specialization) = template_specialization else {
             return Ok(None);
         };
-        let type_arg = |template_arg: &TemplateArg, may_bridge: bool| -> Result<RsTypeKind> {
+        let type_arg = |template_arg: &TemplateArg| -> Result<RsTypeKind> {
             let arg_type = match &template_arg.type_ {
                 Ok(arg_type) => arg_type.clone(),
                 Err(e) => bail!("{e}"),
@@ -373,7 +372,7 @@ impl UniformReprTemplateType {
             // Importantly, `is_return_type` is not propagated through inner types.
             let arg_type_kind = db.rs_type_kind(arg_type)?;
             ensure!(
-                may_bridge || !arg_type_kind.is_bridge_type(),
+                !arg_type_kind.is_bridge_type(),
                 "Bridge types cannot be used as template arguments"
             );
             // We don't do this in required_crubit_features() because it doesn't know which
@@ -391,7 +390,7 @@ impl UniformReprTemplateType {
         ) {
             ("std::unique_ptr", [t, deleter]) => {
                 let has_std_deleter = is_default_delete(db, t, deleter)?;
-                let t = type_arg(t, /*may_bridge=*/ false)?;
+                let t = type_arg(t)?;
                 ensure!(t.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", t.display(db));
                 ensure!(t.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
                 if !has_std_deleter {
@@ -404,7 +403,7 @@ impl UniformReprTemplateType {
             }
             ("std::vector", [t, allocator]) => {
                 let has_std_allocator = is_std_allocator(db, t, allocator)?;
-                let t = type_arg(t, /*may_bridge=*/ false)?;
+                let t = type_arg(t)?;
                 ensure!(t.is_destructible(), "Rust std::vector<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
                 if !has_std_allocator {
                     return Ok(None);
@@ -421,7 +420,7 @@ impl UniformReprTemplateType {
             }
             ("absl::Span", [t]) => {
                 // Revisit the CcType of _t to see if it is const.
-                let element_type = type_arg(t, /*may_bridge=*/ false)?;
+                let element_type = type_arg(t)?;
                 let is_const = t.type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
                 Self::AbslSpan {
                     is_const,
@@ -444,7 +443,7 @@ impl UniformReprTemplateType {
                 // If all else fails, it's some unknown template type. Read any errors from the
                 // template arguments.
                 for t in &template_specialization.template_args {
-                    type_arg(t, /*may_bridge=*/ false)?;
+                    type_arg(t)?;
                 }
                 return Ok(None);
             }
@@ -552,6 +551,39 @@ pub enum RsTypeKind {
     /// which is used on types like `SliceRef`, `StrRef`, and C++ types generated from Rust
     /// types by cc_bindings_from_rs.
     ExistingRustType(Rc<ExistingRustType>),
+    /// c9::Co<T>
+    C9Co {
+        have_reference_param: bool,
+        result_type: Rc<RsTypeKind>,
+        original_type: Rc<Record>,
+    },
+}
+
+fn new_c9_co_record(
+    have_reference_param: bool,
+    record: Rc<Record>,
+    db: &dyn BindingsGenerator,
+) -> Result<Option<RsTypeKind>> {
+    let Some(ts) = record.template_specialization.as_ref() else {
+        return Ok(None);
+    };
+    if ts.template_name.as_ref() != "c9::Co" {
+        return Ok(None);
+    }
+    let arg_type = ts.template_args[0]
+        .type_
+        .as_ref()
+        .map_err(|e: &String| anyhow!("c9::Co T argument is not Crubit compatible: {e}"))?
+        .clone();
+    let arg_type_kind = db.rs_type_kind(arg_type)?;
+    if let RsTypeKind::Error { error, .. } = arg_type_kind {
+        return Err(error);
+    };
+    Ok(Some(RsTypeKind::C9Co {
+        have_reference_param,
+        result_type: Rc::new(arg_type_kind),
+        original_type: record,
+    }))
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -720,6 +752,11 @@ impl RsTypeKind {
         if let Some(bridge_type) = BridgeRsTypeKind::new(&record, db)? {
             return Ok(RsTypeKind::BridgeType { bridge_type, original_type: record });
         }
+
+        if let Some(c9_co) = new_c9_co_record(have_reference_param, Rc::clone(&record), db)? {
+            return Ok(c9_co);
+        }
+
         let crate_path = Rc::new(CratePath::new(
             ir,
             ir.namespace_qualifier(&record),
@@ -729,7 +766,6 @@ impl RsTypeKind {
             uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
                 record.template_specialization.as_ref(),
-                have_reference_param,
                 is_return_type,
             )?,
             record,
@@ -819,12 +855,8 @@ impl RsTypeKind {
     }
 
     pub fn as_c9_co(&self) -> Option<&RsTypeKind> {
-        let RsTypeKind::Record { uniform_repr_template_type, .. } = &self.unalias() else {
-            return None;
-        };
-
-        match uniform_repr_template_type.as_ref()?.as_ref() {
-            UniformReprTemplateType::C9Co { result_type, .. } => Some(result_type),
+        match self.unalias() {
+            RsTypeKind::C9Co { result_type, .. } => Some(result_type),
             _ => None,
         }
     }
@@ -990,6 +1022,7 @@ impl RsTypeKind {
                     }
                 }
                 RsTypeKind::ExistingRustType(_) => require_feature(CrubitFeature::Supported, None),
+                RsTypeKind::C9Co { .. } => require_feature(CrubitFeature::Supported, None),
             }
         }
         (missing_features, reasons.into_iter().join(", "))
@@ -999,6 +1032,11 @@ impl RsTypeKind {
     /// thunks.
     pub fn is_c_abi_compatible_by_value(&self) -> bool {
         match self.unalias() {
+            RsTypeKind::Error { .. } => true,
+            RsTypeKind::Pointer { .. } => true,
+            RsTypeKind::Reference { .. } => true,
+            RsTypeKind::RvalueReference { .. } => true,
+            RsTypeKind::FuncPtr { .. } => true,
             RsTypeKind::IncompleteRecord { .. } => {
                 // Incomplete record (forward declaration) as parameter type or return type is
                 // unusual but it's a valid cc_library and such a header can be made to work
@@ -1015,9 +1053,12 @@ impl RsTypeKind {
             // TODO(b/274177296): Return `true` for structs where bindings replicate the type of
             // all the fields.
             RsTypeKind::Record { .. } => false,
+            RsTypeKind::Enum { .. } => true,
+            RsTypeKind::TypeAlias { .. } => unreachable!(),
+            RsTypeKind::Primitive(_) => true,
             RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::ExistingRustType(existing_rust_type) => existing_rust_type.is_same_abi,
-            _ => true,
+            RsTypeKind::C9Co { .. } => false,
         }
     }
 
@@ -1073,6 +1114,7 @@ impl RsTypeKind {
             RsTypeKind::Primitive(_) => true,
             RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::ExistingRustType(_) => true,
+            RsTypeKind::C9Co { .. } => false,
         }
     }
 
@@ -1179,6 +1221,7 @@ impl RsTypeKind {
                 BridgeRsTypeKind::StdString { .. } => false,
             },
             RsTypeKind::ExistingRustType(_) => true,
+            RsTypeKind::C9Co { .. } => false,
         }
     }
 
@@ -1541,6 +1584,19 @@ impl RsTypeKind {
                 ir::Item::ExistingRustType(existing_rust_type.clone()),
                 &existing_rust_type.rs_name,
             ),
+            RsTypeKind::C9Co { have_reference_param, result_type, .. } => {
+                let result_type_tokens = if result_type.is_void() {
+                    quote! { () }
+                } else {
+                    result_type.to_token_stream(db)
+                };
+                // When there are reference parameters, the coroutine must finish before they are
+                // invalidated (http://shortn/_XPma06AwZh).
+                match have_reference_param {
+                    false => quote! { ::co::Co<'static, #result_type_tokens> },
+                    true => quote! { ::co::Co<'_, #result_type_tokens> },
+                }
+            }
         }
     }
 }
@@ -1677,6 +1733,9 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                         BridgeRsTypeKind::StdString { .. } => {}
                     },
                     RsTypeKind::ExistingRustType(_) => {}
+                    RsTypeKind::C9Co { result_type, .. } => {
+                        self.todo.push(result_type);
+                    }
                 };
                 Some(curr)
             }
