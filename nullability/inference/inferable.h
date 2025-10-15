@@ -7,6 +7,7 @@
 
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
+#include "llvm/ADT/SmallVector.h"
 
 namespace clang::tidy::nullability {
 
@@ -19,8 +20,15 @@ bool isInferenceTarget(const Decl &);
 /// The number of nullability slots in this symbol's type which can be inferred.
 ///
 /// This may not be all the slots in the type: e.g. `int** X` has outer and
-/// inner nullability, we may support only inferring outer.
+/// inner nullability; we may support only inferring outer.
 int countInferableSlots(const clang::Decl &);
+
+/// The indices of nullability slots in this symbol's type which can be
+/// inferred.
+///
+/// This may not be all the slots in the type: e.g. `int** X` has outer and
+/// inner nullability; we may support only inferring outer.
+llvm::SmallVector<int> getInferableSlotIndices(const clang::Decl&);
 
 }  // namespace clang::tidy::nullability
 

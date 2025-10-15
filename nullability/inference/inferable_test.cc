@@ -15,10 +15,10 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
+#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
-namespace {
 using ::clang::ast_matchers::anything;
 using ::clang::ast_matchers::equalsNode;
 using ::clang::ast_matchers::functionDecl;
@@ -30,19 +30,21 @@ using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::namedDecl;
 using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::unless;
+using ::testing::IsEmpty;
+using ::testing::UnorderedElementsAre;
 
 template <class T = NamedDecl>
-const T &lookup(llvm::StringRef Name, ASTContext &Ctx,
-                const Decl *DeclContext = nullptr) {
-  const auto &ContextMatcher =
+static const T& lookup(llvm::StringRef Name, ASTContext& Ctx,
+                       const Decl* DeclContext = nullptr) {
+  const auto& ContextMatcher =
       DeclContext ? hasDeclContext(equalsNode(DeclContext)) : anything();
-  const auto &BoundNodes =
+  const auto& BoundNodes =
       match(namedDecl(hasName(Name), ContextMatcher, unless(isImplicit()))
                 .bind("decl"),
             Ctx);
-  const T *Match = nullptr;
-  for (const auto &N : BoundNodes) {
-    if (const auto *NAsT = N.getNodeAs<T>("decl")) {
+  const T* Match = nullptr;
+  for (const auto& N : BoundNodes) {
+    if (const auto* NAsT = N.getNodeAs<T>("decl")) {
       if (Match)
         ADD_FAILURE() << "Found more than one matching node for " << Name;
       Match = NAsT;
@@ -52,6 +54,7 @@ const T &lookup(llvm::StringRef Name, ASTContext &Ctx,
   return *Match;
 }
 
+namespace {
 constexpr llvm::StringRef SmartPointerHeader = R"cc(
   namespace std {
   template <typename T>
@@ -386,7 +389,8 @@ TEST(InferableTest, InnerPointersNotInferable) {
     int*** ThreePointersOneInferable;
   )cc");
   auto &Ctx = AST.context();
-  EXPECT_EQ(1, countInferableSlots(lookup("ThreePointersOneInferable", Ctx)));
+  EXPECT_THAT(getInferableSlotIndices(lookup("ThreePointersOneInferable", Ctx)),
+              UnorderedElementsAre(0));
 }
 
 TEST(InferableTest, TemplateArgumentPointersNotInferable) {
@@ -628,6 +632,53 @@ TEST(InferableTest, TypeInsideTemplateTypeParamIsNotInferable) {
     ASSERT_NE(ReturnsPtr, nullptr);
     EXPECT_TRUE(hasInferable(ReturnsPtr->getReturnType()));
   }
+}
+
+TEST(InferableTest, GetInferableSlotIndices) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                void f1(int**, int, char, char*);
+                int* f2(bool, bool*);
+                void f3(std::unique_ptr<int>);
+                void f4(custom_smart_ptr<int>);
+
+                int v1;
+                int* v2;
+                int** v3;
+
+                class C {
+                  int field1;
+                  int* field2;
+                  int** field3;
+
+                  int* method(bool, bool*);
+                };
+              )cc")
+                  .str());
+  auto& Ctx = AST.context();
+
+  EXPECT_THAT(getInferableSlotIndices(lookup("f1", Ctx)),
+              UnorderedElementsAre(1, 4));
+  EXPECT_THAT(getInferableSlotIndices(lookup("f2", Ctx)),
+              UnorderedElementsAre(0, 2));
+  EXPECT_THAT(getInferableSlotIndices(lookup("f3", Ctx)),
+              UnorderedElementsAre(1));
+  EXPECT_THAT(getInferableSlotIndices(lookup("f4", Ctx)),
+              UnorderedElementsAre(1));
+
+  EXPECT_THAT(getInferableSlotIndices(lookup("v1", Ctx)), IsEmpty());
+  EXPECT_THAT(getInferableSlotIndices(lookup("v2", Ctx)),
+              UnorderedElementsAre(0));
+  EXPECT_THAT(getInferableSlotIndices(lookup("v3", Ctx)),
+              UnorderedElementsAre(0));
+
+  EXPECT_THAT(getInferableSlotIndices(lookup("field1", Ctx)), IsEmpty());
+  EXPECT_THAT(getInferableSlotIndices(lookup("field2", Ctx)),
+              UnorderedElementsAre(0));
+  EXPECT_THAT(getInferableSlotIndices(lookup("field3", Ctx)),
+              UnorderedElementsAre(0));
+
+  EXPECT_THAT(getInferableSlotIndices(lookup("method", Ctx)),
+              UnorderedElementsAre(0, 2));
 }
 
 }  // namespace

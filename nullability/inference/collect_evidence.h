@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -22,10 +23,15 @@
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
+#include "llvm/ADT/FunctionExtras.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/ScopedPrinter.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
@@ -51,9 +57,23 @@ using RelatedVirtualMethodsMap = llvm::StringMap<llvm::StringSet<>>;
 // Summarizes a method for the purpose of aligning evidence across
 // virtual-method overrides.
 struct MethodSummary {
-  int SlotCount;
+  llvm::SmallVector<int> SlotIndices;
   // USRs of all methods that (transitively) override this method.
   llvm::StringSet<> OverridingUSRs;
+
+  // Enable llvm StringMap testing utilities to print MethodSummary to ease
+  // debugging of tests.
+  friend std::ostream& operator<<(std::ostream& OS,
+                                  const MethodSummary& Summary) {
+    OS << "{\nSlotIndices: {"
+       << llvm::join(
+              llvm::map_range(Summary.SlotIndices,
+                              [](int Index) { return llvm::to_string(Index); }),
+              ", ")
+       << "},\n";
+    return OS << "OverridingUSRs: {"
+              << llvm::join(Summary.OverridingUSRs.keys(), ", ") << "}\n}\n";
+  }
 };
 
 struct VirtualMethodIndex {
@@ -86,7 +106,7 @@ class SortedFingerprintVector {
   SortedFingerprintVector &operator=(const SortedFingerprintVector &) = delete;
   explicit SortedFingerprintVector(std::vector<SlotFingerprint> &&V)
       : Vector(std::move(V)) {
-    if (!std::is_sorted(Vector.begin(), Vector.end())) {
+    if (!llvm::is_sorted(Vector)) {
       // Performance is much improved if the incoming vector is already sorted,
       // but this is not a requirement.
       llvm::errs() << "Previous inferences are not sorted. Performance may be "
@@ -116,12 +136,12 @@ class SortedFingerprintVector {
         }
       }
       // Remove the duplicates before continuing.
-      Vector.erase(std::unique(Vector.begin(), Vector.end()), Vector.end());
+      Vector.erase(llvm::unique(Vector), Vector.end());
     }
   }
 
   bool contains(SlotFingerprint Fingerprint) const {
-    return std::binary_search(Vector.begin(), Vector.end(), Fingerprint);
+    return llvm::binary_search(Vector, Fingerprint);
   }
 
  private:

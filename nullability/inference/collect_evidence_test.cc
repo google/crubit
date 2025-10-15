@@ -31,6 +31,7 @@
 #include "clang/Testing/TestAST.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -38,7 +39,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Testing/ADT/StringMapEntry.h"
 #include "llvm/Testing/Support/Error.h"
-#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"  // IWYU pragma: keep
+#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
@@ -304,8 +305,8 @@ auto collectFromTargetFuncDecl(llvm::StringRef Source) {
   return collectFromDecl(Source, "target");
 }
 
-MATCHER_P2(methodSummary, SlotCount, USRs, "") {
-  return arg.SlotCount == SlotCount && arg.OverridingUSRs == USRs;
+MATCHER_P2(methodSummary, SlotIndices, USRs, "") {
+  return arg.SlotIndices == SlotIndices && arg.OverridingUSRs == USRs;
 }
 
 TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
@@ -313,7 +314,7 @@ TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
 
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
-      virtual int* foo() { return nullptr; }
+      virtual int* foo(char, bool, int**) { return nullptr; }
 
       // A Nullability-irrelevant method - verify omitted.
       virtual int irrelevant() { return 4; }
@@ -323,12 +324,12 @@ TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
     };
 
     struct Derived : public Base {
-      int* foo() override;
+      int* foo(char, bool, int**) override;
       int irrelevant() override { return 5; }
     };
 
     struct DerivedDerived : public Derived {
-      int* foo() override { return nullptr; };
+      int* foo(char, bool, int**) override { return nullptr; };
     };
   )cc";
 
@@ -356,8 +357,10 @@ TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
       Index.Overrides,
       UnorderedElementsAre(
           IsStringMapEntry(BaseFooUSR,
-                           methodSummary(1, USRSet({DFooUSR, DDFooUSR}))),
-          IsStringMapEntry(DFooUSR, methodSummary(1, USRSet({DDFooUSR})))));
+                           methodSummary(llvm::SmallVector<int>{0, 3},
+                                         USRSet({DFooUSR, DDFooUSR}))),
+          IsStringMapEntry(DFooUSR, methodSummary(llvm::SmallVector<int>{0, 3},
+                                                  USRSet({DDFooUSR})))));
 }
 
 // TODO: b/440317964 -- Expand SummarizeDefinitionTest to cover all summarized

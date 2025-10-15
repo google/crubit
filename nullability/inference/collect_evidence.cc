@@ -141,19 +141,19 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
         // Filter for Nullability relevance. Optimization note: we filter
         // *after* calling getOverridden on the assumption that, for irrelevant
         // methods, it is cheaper, on average, to call `getOverridden` than
-        // `countInferableSlots`. But, no data informed this choice.
-        int SlotCount = countInferableSlots(*MD);
+        // `getInferableSlotIndices`. But, no data informed this choice.
+        llvm::SmallVector<int> SlotIndices = getInferableSlotIndices(*MD);
         // No slots -> irrelevant method.
-        if (SlotCount == 0) return true;
+        if (SlotIndices.empty()) return true;
 
         std::string_view USR = getOrGenerateUSR(USRCache, *MD);
         if (USR.empty()) return true;
 
         for (auto &O : Overridden) {
           auto &S = Index.Overrides[O.getKey()];
-          // SlotCount of MD must equal that of any methods it overrides, so we
-          // can use it set their SlotCount.
-          S.SlotCount = SlotCount;
+          // MD must have the same inferable slot indices as any methods it
+          // overrides, so we can set their SlotIndices from MD's.
+          S.SlotIndices = SlotIndices;
           S.OverridingUSRs.insert(USR);
         }
         Index.Bases[USR] = std::move(Overridden);

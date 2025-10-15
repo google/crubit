@@ -99,6 +99,7 @@ cc_library(
     srcs = ["inferable.cc"],
     hdrs = ["inferable.h"],
     deps = [
+        ":inference_cc_proto",
         "//nullability:type_nullability",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
@@ -116,6 +117,7 @@ cc_test(
         "@llvm-project//clang:basic",
         "@llvm-project//clang:testing",
         "@llvm-project//llvm:Support",
+        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

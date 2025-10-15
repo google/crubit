@@ -7,6 +7,7 @@
 #include <cassert>
 #include <optional>
 
+#include "nullability/inference/inference.proto.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -17,6 +18,7 @@
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -196,6 +198,31 @@ int countInferableSlots(const Decl& D) {
     return hasInferable(Var->getType()) ? 1 : 0;
   }
   return 0;
+}
+
+llvm::SmallVector<int> getInferableSlotIndices(const Decl& D) {
+  if (const auto* Func = dyn_cast<FunctionDecl>(&D)) {
+    llvm::SmallVector<int> Slots;
+    if (hasInferable(Func->getReturnType())) Slots.push_back(SLOT_RETURN_TYPE);
+    // Intentionally match the iteration pattern evidence collection uses over
+    // function parameters when gathering inferable slots, to avoid any subtle
+    // differences for complex function contexts.
+    auto Parameters = Func->parameters();
+    for (auto I = 0; I < Parameters.size(); ++I) {
+      const ParmVarDecl* Param = Parameters[I];
+      if (hasInferable(Param->getType())) Slots.push_back(I + SLOT_PARAM);
+    }
+    return Slots;
+  }
+  if (const auto* Field = dyn_cast<FieldDecl>(&D)) {
+    if (hasInferable(Field->getType())) return {0};
+    return {};
+  }
+  if (const auto* Var = dyn_cast<VarDecl>(&D)) {
+    if (hasInferable(Var->getType())) return {0};
+    return {};
+  }
+  return {};
 }
 
 bool isInferenceTarget(const Decl& D) {
