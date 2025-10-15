@@ -27,10 +27,10 @@ extern "C" void __rust_thunk___ZN2c97SetBoolERb(
     c9::internal::rust::CoVtable* __return_co_vtable, bool* b) {
   __return_co_vtable->addr =
       c9::SetBool(*b).release_handle(c9::internal::PassKey()).address();
-  __return_co_vtable->destroy_at_initial_suspend =
-      &c9::internal::rust::DestroyCoroutineFrameFromRust<void>;
   __return_co_vtable->start_coroutine =
       &c9::internal::rust::StartCoroutineFromRust;
+  __return_co_vtable->destroy_at_initial_suspend =
+      &c9::internal::rust::DestroyCoroutineFrameFromRust<void>;
   ;
 }
 
@@ -40,10 +40,10 @@ extern "C" void __rust_thunk___ZN2c99ReturnIntEv(
     c9::internal::rust::CoVtable* __return_co_vtable) {
   __return_co_vtable->addr =
       c9::ReturnInt().release_handle(c9::internal::PassKey()).address();
-  __return_co_vtable->destroy_at_initial_suspend =
-      &c9::internal::rust::DestroyCoroutineFrameFromRust<int>;
   __return_co_vtable->start_coroutine =
       &c9::internal::rust::StartCoroutineFromRust<::crubit::TransmuteAbi<int>>;
+  __return_co_vtable->destroy_at_initial_suspend =
+      &c9::internal::rust::DestroyCoroutineFrameFromRust<int>;
   ;
 }
 

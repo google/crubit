@@ -23,8 +23,8 @@ pub mod c9 {
     pub unsafe fn SetBool(b: *mut bool) -> ::co::Co<'static, ()> {
         let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVtable {
             addr: ::core::ptr::null_mut(),
-            destroy_at_initial_suspend: None,
             start_coroutine: None,
+            destroy_at_initial_suspend: None,
         };
         crate::detail::__rust_thunk___ZN2c97SetBoolERb(&raw mut __co_vtable_slot, b);
         ::co::Co::from_raw(__co_vtable_slot, ::co_lib::internal::consume_void)
@@ -36,8 +36,8 @@ pub mod c9 {
         unsafe {
             let mut __co_vtable_slot = ::co_vtable::c9::internal::rust::CoVtable {
                 addr: ::core::ptr::null_mut(),
-                destroy_at_initial_suspend: None,
                 start_coroutine: None,
+                destroy_at_initial_suspend: None,
             };
             crate::detail::__rust_thunk___ZN2c99ReturnIntEv(&raw mut __co_vtable_slot);
             ::co::Co::from_raw(

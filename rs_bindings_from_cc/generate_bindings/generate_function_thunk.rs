@@ -603,8 +603,8 @@ pub fn generate_function_thunk_impl(
         let result_type_cpp_spelling = cpp_type_name::format_cpp_type(result_type_kind, ir)?;
         quote! {
             #out_param->addr = #return_expr.release_handle(c9::internal::PassKey()).address();
-            #out_param->destroy_at_initial_suspend = &c9::internal::rust::DestroyCoroutineFrameFromRust<#result_type_cpp_spelling>;
             #out_param->start_coroutine = #start_coroutine;
+            #out_param->destroy_at_initial_suspend = &c9::internal::rust::DestroyCoroutineFrameFromRust<#result_type_cpp_spelling>;
         }
     } else if return_type_kind.is_crubit_abi_bridge_type() {
         let out_param = &param_idents[0];
