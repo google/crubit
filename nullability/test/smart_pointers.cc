@@ -414,6 +414,43 @@ TEST void makeUnique() {
   nonnull(std::make_unique_for_overwrite<int[]>(5));
 }
 
+namespace absl {
+template <typename T>
+std::unique_ptr<T> WrapUnique(T* P) {
+  return std::unique_ptr<T>(P);
+}
+}  // namespace absl
+
+TEST void abslWrapUnique() {
+  nonnull(absl::WrapUnique(makeNonnullRaw()));
+  nullable(absl::WrapUnique(makeNullableRaw()));
+  unknown(absl::WrapUnique(makeUnknownRaw()));
+}
+
+template <typename T>
+std::unique_ptr<T> WrapUnique(T* P) {
+  return std::unique_ptr<T>(P);
+}
+
+TEST void customWrapUnique() {
+  unknown(WrapUnique(makeNonnullRaw()));
+  unknown(WrapUnique(makeNullableRaw()));
+  unknown(WrapUnique(makeUnknownRaw()));
+}
+
+namespace util {
+template <typename T>
+std::unique_ptr<T> WrapUnique(T* P) {
+  return std::unique_ptr<T>(P);
+}
+}  // namespace util
+
+TEST void nonAbslNamespaceWrapUnique() {
+  unknown(util::WrapUnique(makeNonnullRaw()));
+  unknown(util::WrapUnique(makeNullableRaw()));
+  unknown(util::WrapUnique(makeUnknownRaw()));
+}
+
 TEST void makeShared() {
   nonnull(std::make_shared<int>());
   nonnull(std::make_shared<int>(42));

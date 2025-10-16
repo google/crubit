@@ -181,6 +181,12 @@ Matcher<Stmt> isSmartPointerFactoryCall() {
                      "allocate_shared_for_overwrite"))));
 }
 
+Matcher<Stmt> isWrapUniqueCall() {
+  return callExpr(
+      hasType(isSupportedSmartPointer()),
+      callee(functionDecl(hasName("WrapUnique"), isInAbslNamespace())));
+}
+
 Matcher<Stmt> isSmartPointerComparisonOpCall() {
   return cxxOperatorCallExpr(
       hasAnyOverloadedOperatorName("==", "!="), argumentCountIs(2),

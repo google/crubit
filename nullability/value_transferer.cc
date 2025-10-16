@@ -552,6 +552,21 @@ static void transferSmartPointerFactoryCall(
   }
 }
 
+static void transferWrapUniqueCall(
+    const CallExpr* CE, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
+  if (CE->getNumArgs() != 1) {
+    return;
+  }
+  const Expr* Arg = CE->getArg(0);
+  RecordStorageLocation& Loc = State.Env.getResultObjectLocation(*CE);
+  if (isSupportedRawPointerType(Arg->getType()) &&
+      isPointerTypeConvertible(Arg->getType(),
+                               underlyingRawPointerTypeFromSmartPointer(Loc))) {
+    setSmartPointerValue(Loc, getRawPointerValue(Arg, State.Env), State.Env);
+  }
+}
+
 static void transferSmartPointerComparisonOpCall(
     const CXXOperatorCallExpr* OpCall, const MatchFinder::MatchResult& Result,
     TransferState<PointerNullabilityLattice>& State) {
@@ -1409,6 +1424,7 @@ buildValueTransferer() {
                                           transferSmartPointerOperatorArrow)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFactoryCall(),
                                transferSmartPointerFactoryCall)
+      .CaseOfCFGStmt<CallExpr>(isWrapUniqueCall(), transferWrapUniqueCall)
       .CaseOfCFGStmt<CXXOperatorCallExpr>(isSmartPointerComparisonOpCall(),
                                           transferSmartPointerComparisonOpCall)
       .CaseOfCFGStmt<CallExpr>(isSharedPtrCastCall(), transferSharedPtrCastCall)
