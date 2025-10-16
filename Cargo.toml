@@ -15,20 +15,20 @@ resolver = "2"
 # will be decided from here.
 [workspace.dependencies]
 anyhow = "1"
+clap = { version = "4", features = [ "derive" ] }
+either = "1"
 flagset = "0.4"
+heck = "0.5"
 itertools = "0.13"
+phf = { version = "0.11", features = [ "macros" ] }
 proc-macro2 = "1"
+quote = "1"
 regex = "1"
+rustversion = "1"
 serde = { version = "1", features = [ "derive", "rc" ] }
 serde_json = "1"
 syn = { version = "2", features = [ "extra-traits" ] }
-quote = "1"
 unicode-ident = "1"
-either = "1"
-clap = { version = "4", features = [ "derive" ] }
-rustversion = "1"
-heck = "0.5"
-phf = { version = "0.11", features = [ "macros" ] }
 
 [workspace.package]
 
