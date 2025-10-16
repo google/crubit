@@ -499,20 +499,6 @@ fn generate_rs_api_impl_includes(
                     "bridge.h".into()
                 },
             ));
-
-            // TODO(b/436862191): Remove this once the migration is complete.
-            if !db
-                .ir()
-                .target_crubit_features(&record.owning_target)
-                .contains(crubit_feature::CrubitFeature::DoNotHardcodeStatusBridge)
-                && (record.owning_target == "@abseil-cpp//absl/status".into()
-                    || record.owning_target == "@abseil-cpp//absl/status:statusor".into())
-            {
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    "status_bridge.h".into(),
-                ));
-            }
         }
 
         if let Ok(rs_type_kind) = db.rs_type_kind((&**record).into()) {
