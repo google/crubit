@@ -122,6 +122,9 @@ crates_repository(
         "tempfile": crate.spec(
             version = "=3.4.0",
         ),
+        "tracing": crate.spec(
+            version = ">=0.1.41",
+        ),
         "unicode-ident": crate.spec(
             version = ">0.0.0",
         ),
