@@ -27,7 +27,7 @@ pub mod c9 {
             destroy_at_initial_suspend: None,
         };
         crate::detail::__rust_thunk___ZN2c97SetBoolERb(&raw mut __co_vtable_slot, b);
-        ::co::Co::from_raw(__co_vtable_slot, ::co_lib::internal::consume_void)
+        ::co::Co::from_raw(__co_vtable_slot, ::co_lib::internal::consume_void_result)
     }
 
     /// Return 17, sometimes changing threads first.
