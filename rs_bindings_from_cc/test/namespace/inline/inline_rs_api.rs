@@ -38,18 +38,19 @@ pub mod foo {
 
         // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
         // Error while generating bindings for constructor 'MyStruct::MyStruct':
+        // Default constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::inline1::MyStruct
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::inline1::MyStruct
 
         // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
         // Error while generating bindings for constructor 'MyStruct::MyStruct':
-        // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+        // Move and copy constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::inline1::MyStruct
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::inline1::MyStruct
 
         // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
         // Error while generating bindings for constructor 'MyStruct::MyStruct':
-        // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+        // Move and copy constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::inline1::MyStruct
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::inline1::MyStruct
 

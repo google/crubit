@@ -40,18 +40,19 @@ unsafe impl ::cxx::ExternType for SomeStruct {
 
 // Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
 // Error while generating bindings for constructor 'SomeStruct::SomeStruct':
+// Default constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeStruct
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::SomeStruct
 
 // Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
 // Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeStruct
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::SomeStruct
 
 // Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
 // Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeStruct
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::SomeStruct
 

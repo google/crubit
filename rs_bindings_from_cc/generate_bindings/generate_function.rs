@@ -573,14 +573,32 @@ fn api_func_shape_for_operator(
 }
 
 fn api_func_shape_for_identifier(
+    db: &dyn BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
     id: &Identifier,
-    is_unsafe: bool,
 ) -> (Ident, ImplKind) {
+    let is_unsafe = match func.safety_annotation {
+        SafetyAnnotation::Unannotated => {
+            let mut param_type_iter = param_types.iter();
+            if func.cc_name.is_constructor() {
+                // This is a renamed constructor.
+                //
+                // Discard the `this` parameter, as constructors of unsafe types are not
+                // automatically considered unsafe. Similarly to Rust's raw pointer types, creating
+                // an unsafe type is safe, but using one is not.
+                let _ = param_type_iter.next();
+            }
+            param_type_iter.any(|p| db.is_rs_type_kind_unsafe(p.clone()))
+        }
+        SafetyAnnotation::Unsafe => true,
+        SafetyAnnotation::DisableUnsafe => false,
+    };
+
     let func_name = make_rs_ident(&id.identifier);
     let Some(record) = maybe_record else { return (func_name, ImplKind::None { is_unsafe }) };
+    let is_renamed_unpin_constructor = func.cc_name.is_constructor() && record.is_unpin();
     let format_first_param_as_self = if func.is_instance_method() {
         let Some(first_param) = param_types.first() else {
             panic!("Missing `__this` parameter in an instance method: {:?}", func);
@@ -589,7 +607,6 @@ fn api_func_shape_for_identifier(
     } else {
         false
     };
-    let is_renamed_unpin_constructor = func.cc_name.is_constructor() && record.is_unpin();
     (
         func_name,
         ImplKind::Struct {
@@ -660,11 +677,75 @@ fn api_func_shape_for_destructor(
     }
 }
 
+/// Issue any errors related to unsafe constructors being unsupported.
+fn issue_unsafe_constructor_errors(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    record: &Record,
+    param_types: &[RsTypeKind],
+    errors: &Errors,
+) {
+    match func.safety_annotation {
+        SafetyAnnotation::DisableUnsafe => {}
+        SafetyAnnotation::Unsafe => {
+            errors.add(anyhow!(
+                "Constructors cannot be `unsafe`, but an explicit unsafe annotation was provided. See b/216648347."));
+        }
+        SafetyAnnotation::Unannotated => {
+            // Move and copy constructors are excepted from this check, as Google C++ style
+            // disallows move and copy constructors which require invariants to hold on public
+            // fields of the source object.
+            let is_move_or_copy_ctor = matches!(param_types, [_this, arg] if arg.is_ref_to(record));
+            if is_move_or_copy_ctor {
+                return;
+            }
+
+            // TODO: b/452726517 - remove this special case once we infer lifetimes of default
+            // constructors by default.
+            let is_lifetimeless_default_ctor = matches!(param_types, [this] if this.is_pointer());
+            if is_lifetimeless_default_ctor {
+                errors
+                    .add(anyhow!("Default constructors do yet receive bindings. See b/452726517."));
+                return;
+            }
+
+            // TODO: b/452726517 - remove this special case once we infer lifetimes of copy and move
+            // constructors by default.
+            let is_lifetimeless_move_or_copy_ctor =
+                matches!(param_types, [_this, arg] if arg.is_pointer_to(record));
+            if is_lifetimeless_move_or_copy_ctor {
+                errors.add(anyhow!(
+                    "Move and copy constructors do yet receive bindings. See b/452726517."
+                ));
+                return;
+            }
+
+            // We skip the first parameter because it's the implicit `this` parameter.
+            // Constructors of unsafe types are not automatically considered unsafe.
+            let param_names = func.params.iter().map(|p| &p.identifier);
+            let unsafe_params = param_names
+                .zip(param_types)
+                .skip(1)
+                .filter(|(_name, p_type)| db.is_rs_type_kind_unsafe((*p_type).clone()))
+                .map(|(param_name, param_type)| {
+                    format!("\n    `{param_name}` of unsafe type `{}`", param_type.display(db))
+                })
+                .collect::<Vec<String>>()
+                .join("");
+            if !unsafe_params.is_empty() {
+                errors.add(anyhow!(
+                    "Constructors cannot be `unsafe`, but this constructor accepts:{unsafe_params}"
+                ));
+            }
+        }
+    }
+}
+
 fn api_func_shape_for_constructor(
+    db: &dyn BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
-    is_unsafe: bool,
     errors: &Errors,
 ) -> Option<(Ident, ImplKind)> {
     let Some(record) = maybe_record else {
@@ -674,6 +755,8 @@ fn api_func_shape_for_constructor(
         errors.add(err);
     }
     materialize_ctor_in_caller(func, param_types);
+    issue_unsafe_constructor_errors(db, func, record, param_types, errors);
+
     if !record.is_unpin() {
         let func_name = make_rs_ident("ctor_new");
         let [_this, params @ ..] = param_types else {
@@ -738,19 +821,6 @@ fn api_func_shape_for_constructor(
                 // generate move constructor bindings explicitly.
                 return None;
             }
-
-            // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
-            // translating C++ constructors into static methods in Rust).
-            //
-            // Note: move and copy constructors are excepted from this check, as Google C++ style
-            // disallows move and copy constructors which require invariants to hold on public
-            // fields of the source object.
-            if is_unsafe && !param_types[1].is_ref_to(record) {
-                errors.add(anyhow!(
-                    "Unsafe constructors (e.g. with no elided or explicit lifetimes) \
-                    are intentionally not supported. See b/216648347."
-                ));
-            }
             let param_type = &param_types[1];
             let func_name = make_rs_ident("from");
             let impl_kind = ImplKind::new_trait(
@@ -808,35 +878,18 @@ fn api_func_shape(
         return None;
     }
 
-    let is_unsafe = match func.safety_annotation {
-        SafetyAnnotation::Unannotated => {
-            let mut params_iter = param_types.iter();
-            let has_unsafe_self = func.cc_name.is_constructor()
-                && params_iter
-                    .next()
-                    .map(|this_arg| {
-                        let Some(self_type) = this_arg.referent() else { return false };
-                        db.is_rs_type_kind_unsafe(self_type.clone())
-                    })
-                    .unwrap_or(false);
-            has_unsafe_self || params_iter.any(|p| db.is_rs_type_kind_unsafe(p.clone()))
-        }
-        SafetyAnnotation::Unsafe => true,
-        SafetyAnnotation::DisableUnsafe => false,
-    };
-
     match &func.rs_name {
         UnqualifiedIdentifier::Operator(op) => {
             api_func_shape_for_operator(db, func, maybe_record, param_types, op, errors)
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            Some(api_func_shape_for_identifier(func, maybe_record, param_types, id, is_unsafe))
+            Some(api_func_shape_for_identifier(db, func, maybe_record, param_types, id))
         }
         UnqualifiedIdentifier::Destructor => {
             api_func_shape_for_destructor(db, func, maybe_record, param_types)
         }
         UnqualifiedIdentifier::Constructor => {
-            api_func_shape_for_constructor(func, maybe_record, param_types, is_unsafe, errors)
+            api_func_shape_for_constructor(db, func, maybe_record, param_types, errors)
         }
     }
 }

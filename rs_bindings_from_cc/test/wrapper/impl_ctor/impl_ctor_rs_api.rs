@@ -44,6 +44,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::N
 
 // Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=11
 // Error while generating bindings for constructor 'Nontrivial::Nontrivial':
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::Nontrivial
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::Nontrivial
 

@@ -1225,6 +1225,17 @@ impl RsTypeKind {
         }
     }
 
+    pub fn is_pointer(&self) -> bool {
+        matches!(self.unalias(), RsTypeKind::Pointer { .. })
+    }
+
+    pub fn is_pointer_to(&self, expected_record: &Record) -> bool {
+        match self.unalias() {
+            RsTypeKind::Pointer { pointee, .. } => pointee.is_record(expected_record),
+            _ => false,
+        }
+    }
+
     pub fn is_ref_to(&self, expected_record: &Record) -> bool {
         match self.unalias() {
             RsTypeKind::Reference { referent, .. } => referent.is_record(expected_record),

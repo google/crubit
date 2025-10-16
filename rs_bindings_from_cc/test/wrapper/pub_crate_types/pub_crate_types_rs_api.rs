@@ -42,18 +42,19 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
 // Error while generating bindings for constructor 'CompoundDataType::CompoundDataType':
+// Default constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
 // Error while generating bindings for constructor 'CompoundDataType::CompoundDataType':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::CompoundDataType
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
 // Error while generating bindings for constructor 'CompoundDataType::CompoundDataType':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::CompoundDataType
 
@@ -140,18 +141,19 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template2<int>::Template2<int>':
+// Default constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst9Template2IiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst9Template2IiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst9Template2IiE
 
@@ -179,18 +181,19 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template<int>::Template<int>':
+// Default constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst8TemplateIiE
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+// Move and copy constructors do yet receive bindings. See b/452726517.
 // Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
 // Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst8TemplateIiE
 

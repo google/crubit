@@ -38,18 +38,19 @@ pub mod repro {
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     // Error while generating bindings for constructor 'Interval::Interval':
+    // Default constructors do yet receive bindings. See b/452726517.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
     // Expected first reference parameter `__this` to have a lifetime, found *mut crate::repro::Interval
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     // Error while generating bindings for constructor 'Interval::Interval':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Move and copy constructors do yet receive bindings. See b/452726517.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
     // Expected first reference parameter `__this` to have a lifetime, found *mut crate::repro::Interval
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     // Error while generating bindings for constructor 'Interval::Interval':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347.
+    // Move and copy constructors do yet receive bindings. See b/452726517.
     // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
     // Expected first reference parameter `__this` to have a lifetime, found *mut crate::repro::Interval
 

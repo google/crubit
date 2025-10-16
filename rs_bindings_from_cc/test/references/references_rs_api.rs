@@ -30,7 +30,7 @@ unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr` of unsafe type `*mut::core::ffi::c_int`"
 )]
 pub trait BindingFailedFor_ZN22TypeWithPtrConstructorC1EPi {}
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=10
@@ -63,7 +63,7 @@ unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nUnsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported. See b/216648347."
+    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr` of unsafe type `*mut::core::ffi::c_int`"
 )]
 pub trait BindingFailedFor_ZN29TypeWithNonNullPtrConstructorC1EPi {}
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=15
