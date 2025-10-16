@@ -252,27 +252,11 @@ pub fn format_ty_for_cc<'tcx>(
             prereqs.includes.insert(CcInclude::array());
             // We need to be able to handle expressions at the type level that are not simple
             // numeric literals.
-            let normalized = match db.tcx().try_normalize_erasing_regions(
-                ty::TypingEnv {
-                    typing_mode: ty::TypingMode::PostAnalysis,
-                    param_env: ty::ParamEnv::empty(),
-                },
-                *length,
-            ) {
-                Ok(normalized) => normalized,
-                Err(_) => {
-                    panic!("Unable to normalize array length {{length}}.")
-                }
-            };
-            let Some(target_usize) = normalized.try_to_target_usize(db.tcx()) else {
-                panic!(
-                    "Unable to get array length from normalized type ({length} => {normalized})."
-                )
-            };
+            let target_size = evaluate_const_as_u64(db.tcx(), *length);
             let sugared_element_type = SugaredTy::missing_hir(*element_type);
             let cc_element_ty =
                 db.format_ty_for_cc(sugared_element_type, location)?.into_tokens(&mut prereqs);
-            let c_int = Literal::u64_unsuffixed(target_usize);
+            let c_int = Literal::u64_unsuffixed(target_size);
             CcSnippet { prereqs, tokens: quote! { std::array<#cc_element_ty, #c_int> } }
         }
 
@@ -853,22 +837,8 @@ pub fn format_ty_for_rs<'tcx>(
         }
         ty::TyKind::Array(element_type, length) => {
             let rs_element_type = db.format_ty_for_rs(*element_type)?;
-            let normalized_length = match db.tcx().try_normalize_erasing_regions(
-                ty::TypingEnv {
-                    typing_mode: ty::TypingMode::PostAnalysis,
-                    param_env: ty::ParamEnv::empty(),
-                },
-                *length,
-            ) {
-                Ok(normalized) => normalized,
-                Err(_) => {
-                    panic!("Unable to normalize array length {{length}}.")
-                }
-            };
-            let Some(target_usize) = normalized_length.try_to_target_usize(db.tcx()) else {
-                panic!("Unable to get array length from normalized type ({length} => {normalized_length}).")
-            };
-            let unsuffixed_length = Literal::u64_unsuffixed(target_usize);
+            let target_size = evaluate_const_as_u64(db.tcx(), *length);
+            let unsuffixed_length = Literal::u64_unsuffixed(target_size);
             quote! { [ #rs_element_type; #unsuffixed_length ] }
         }
         ty::TyKind::Adt(adt, substs) => {
@@ -1376,4 +1346,22 @@ pub fn is_bridged_type<'tcx>(
         }
         _ => Ok(None),
     }
+}
+
+// Evaluates a constant (such as the length of an array type).
+pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) -> u64 {
+    // It would be nice if we knew that these types were already fully normalized.
+    let normalized = tcx
+        .try_normalize_erasing_regions(
+            ty::TypingEnv {
+                typing_mode: ty::TypingMode::PostAnalysis,
+                param_env: ty::ParamEnv::empty(),
+            },
+            cst,
+        )
+        .unwrap_or_else(|_| panic!("Unable to normalize type constant {{cst}}."));
+    let Some(target_u64) = normalized.try_to_target_usize(tcx) else {
+        panic!("Unable to get size from normalized type constant ({cst} => {normalized}).")
+    };
+    target_u64
 }

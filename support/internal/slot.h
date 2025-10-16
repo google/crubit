@@ -7,6 +7,8 @@
 #ifndef CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
 #define CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
 
+#include <array>
+#include <cstddef>
 #include <memory>
 #include <utility>
 
@@ -130,6 +132,49 @@ class Slot {
 template <typename T>
 Slot(T) -> Slot<T>;
 
+template <typename T, std::size_t N, std::size_t... I>
+constexpr std::array<T, N> unsafe_move_array(T* ptr,
+                                             std::index_sequence<I...>) {
+  return {{T(UnsafeRelocateTag{}, std::move(ptr[I]))...}};
+}
+
+// TODO: b/451981992 - This works for single-level arrays, but we'd like to
+// support arbitrary composite types that include arrays in Slot.
+template <typename UT, unsigned S>
+class Slot<std::array<UT, S>> {
+ public:
+  using T = std::array<UT, S>;
+  Slot() {}
+  explicit constexpr Slot(T&& x) {
+    if constexpr (requires(UT x) { UT(UnsafeRelocateTag{}, std::move(x)); }) {
+      memcpy(value_.data(), x.data(), sizeof(UT) * S);
+    } else {
+      value_ = std::move(x);
+    }
+  }
+  T* Get() { return &value_; }
+  T AssumeInitAndTakeValue() && {
+    if constexpr (requires(UT x) { UT(UnsafeRelocateTag{}, std::move(x)); }) {
+      return unsafe_move_array<UT, S>(value_.data(),
+                                      std::make_index_sequence<S>());
+    } else {
+      T return_value(std::move(value_));
+      std::destroy_at(&value_);
+      return return_value;
+    }
+  }
+  Slot(Slot&& other) { value_ = std::move(other.value_); }
+  ~Slot() {}
+
+  Slot(const Slot&) = delete;
+  Slot& operator=(const Slot&) = delete;
+  Slot& operator=(Slot&&) = delete;
+
+ private:
+  union {
+    T value_;
+  };
+};
 }  // namespace crubit
 
 #endif  // CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_

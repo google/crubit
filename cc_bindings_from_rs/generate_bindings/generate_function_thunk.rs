@@ -50,6 +50,20 @@ fn tuple_c_abi_rs_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
     Some(quote! { *const [*const core::ffi::c_void; #num_elements] })
 }
 
+/// Returns a C ABI-compatible C type to pass a [inner_ty; _].
+///
+/// Layout-compatible arrays are passed through memory.
+fn array_c_abi_c_type(inner_ty: &ty::Ty) -> Result<TokenStream> {
+    // TODO: b/451981992 - Is this test enough to avoid nested by-value arrays?
+    // This is also more conservative than what we probably need here, which is to exclude
+    // nested arrays containing types that are Drop but not Default (as these don't behave
+    // well in std::arrays; we currently treat single-level arrays as a special case).
+    match inner_ty.kind() {
+        ty::TyKind::Array(..) => bail!("b/260128806 - nested array {inner_ty} is not supported"),
+        _ => Ok(quote! { void* }),
+    }
+}
+
 /// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.
 pub fn generate_thunk_decl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
@@ -86,6 +100,8 @@ pub fn generate_thunk_decl<'tcx>(
                     Ok(quote! { #cpp_type })
                 } else if let Some(tuple_abi) = tuple_c_abi_c_type(ty) {
                     Ok(tuple_abi)
+                } else if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
+                    array_c_abi_c_type(inner_ty)
                 } else if let Some(adt_def) = ty.ty_adt_def() {
                     let core = db.generate_adt_core(adt_def.did())?;
                     db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
@@ -106,6 +122,10 @@ pub fn generate_thunk_decl<'tcx>(
     } else if let Some(tuple_abi) = tuple_c_abi_c_type(sig_mid.output()) {
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #tuple_abi __ret_ptr });
+    } else if let ty::TyKind::Array(inner_ty, _) = sig_mid.output().kind() {
+        let c_type = array_c_abi_c_type(inner_ty)?;
+        thunk_ret_type = quote! { void };
+        thunk_params.push(quote! { #c_type __ret_ptr });
     } else if let Some(BridgedType::Composable(_)) = is_bridged_type(db, sig_mid.output())? {
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { unsigned char * __ret_ptr });
@@ -404,6 +424,8 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
             #unpack
             #write_elements
         }
+    } else if let ty::TyKind::Array { .. } = rs_type.kind() {
+        write_directly()?
     } else if rs_type.ty_adt_def().is_some() {
         write_directly()?
     } else {

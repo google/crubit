@@ -23,4 +23,46 @@ TEST(ArraysTest, ArrayStructInOut) {
             array_struct.array);
 }
 
+TEST(ArraysTest, ArrayValueInOut) {
+  std::array<int32_t, 2> array = {1, 2};
+  EXPECT_EQ(arrays::function_with_array_id(array), array);
+}
+
+TEST(ArraysTest, TupleOfArraysValueInOut) {
+  std::tuple<std::array<int32_t, 2>, std::array<int32_t, 2>> array_tup{{1, 2},
+                                                                       {3, 4}};
+  EXPECT_EQ(arrays::function_with_array_tuple_id(array_tup), array_tup);
+}
+
+TEST(ArraysTest, DropOut) {
+  auto out = arrays::function_with_has_drop_ret_only();
+  EXPECT_EQ(out[0].x, 1);
+  EXPECT_EQ(out[1].x, 2);
+}
+
+TEST(ArraysTest, DropInOut) {
+  auto out = arrays::function_with_has_drop_array_id(
+      {arrays::HasDrop::new_(1), arrays::HasDrop::new_(2)});
+  EXPECT_EQ(out[0].x, 1);
+  EXPECT_EQ(out[1].x, 2);
+}
+
+TEST(ArraysTest, DropAndDefaultInOut) {
+  arrays::HasDropAndDefault a;
+  arrays::HasDropAndDefault b;
+  a.x = 1;
+  b.x = 2;
+  std::array<arrays::HasDropAndDefault, 2> array{std::move(a), std::move(b)};
+  EXPECT_EQ(array[0].x, 1);
+  EXPECT_EQ(array[1].x, 2);
+  auto out =
+      arrays::function_with_has_drop_and_default_array_id(std::move(array));
+  EXPECT_EQ(out[0].x, 1);
+  EXPECT_EQ(out[1].x, 2);
+}
+
+TEST(ArraysTest, EmptyArrayInOut) {
+  std::array<int32_t, 0> array;
+  EXPECT_EQ(arrays::function_with_empty_array(array), array);
+}
 }  // namespace
