@@ -85,11 +85,6 @@ constexpr llvm::StringRef CheckMacroDefinitions = R"cc(
 #define CHECK_NE(A, B) (A, B)
 )cc";
 
-MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
-  return SlotMatcher.Matches(static_cast<Slot>(arg.slot())) &&
-         KindMatcher.Matches(arg.kind()) && SymbolMatcher.Matches(arg.symbol());
-}
-
 MATCHER_P(functionNamed, Name, "") {
   return llvm::StringRef(arg.usr()).contains(
       ("@" + llvm::Twine(Name) + "#").str());
@@ -134,10 +129,29 @@ auto localVarNamed(llvm::StringRef VarName,
   return localVarNamedImpl(VarName, FunctionName);
 }
 
+MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
+  return SlotMatcher.Matches(static_cast<Slot>(arg.slot())) &&
+         KindMatcher.Matches(arg.kind()) && SymbolMatcher.Matches(arg.symbol());
+}
+
+MATCHER(notPropagated, "") { return !arg.has_propagated_from(); }
+
 testing::Matcher<const Evidence&> evidence(
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
     testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
-  return isEvidenceMatcher(S, Kind, SymbolMatcher);
+  return AllOf(isEvidenceMatcher(S, Kind, SymbolMatcher), notPropagated());
+}
+
+MATCHER_P(propagatedFrom, PropagatedFromMatcher, "") {
+  return PropagatedFromMatcher.Matches(arg.propagated_from());
+}
+
+testing::Matcher<const Evidence&> evidencePropagatedFrom(
+    testing::Matcher<const Symbol&> PropagatedFromMatcher,
+    testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
+    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
+  return AllOf(isEvidenceMatcher(S, Kind, SymbolMatcher),
+               propagatedFrom(PropagatedFromMatcher));
 }
 
 enum class CollectionMode {
@@ -3739,12 +3753,13 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNullable) {
       int* foo() override { return nullptr; }
     };
   )cc";
-  EXPECT_THAT(
-      collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("Derived@F@foo")),
-                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("Base@F@foo"))));
+  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                           functionNamed("Derived@F@foo")),
+                  evidencePropagatedFrom(
+                      functionNamed("Derived@F@foo"), SLOT_RETURN_TYPE,
+                      Evidence::NULLABLE_RETURN, functionNamed("Base@F@foo"))));
 
   // We don't currently have any evidence kinds that can force a non-reference
   // top-level pointer return type to be nullable from its usage, so no other
@@ -3769,17 +3784,21 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src, GetMode()),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("Derived@F@foo")),
-                           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("Base@F@foo"))));
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
+                   functionNamed("Derived@F@foo")),
+          evidencePropagatedFrom(functionNamed("Derived@F@foo"), paramSlot(0),
+                                 Evidence::NONNULL_ARGUMENT,
+                                 functionNamed("Base@F@foo"))));
 
-  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
-                           functionNamed("Derived@F@foo")),
-                  evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
-                           functionNamed("Base@F@foo"))));
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   functionNamed("Derived@F@foo")),
+          evidencePropagatedFrom(functionNamed("Derived@F@foo"), paramSlot(0),
+                                 Evidence::UNCHECKED_DEREFERENCE,
+                                 functionNamed("Base@F@foo"))));
 }
 
 // Evidence for parameter nullable-ness should flow only from base to derived,
@@ -3830,17 +3849,21 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
   )cc";
   EXPECT_THAT(
       collectFromDefinitionNamed("Base::foo", Src, GetMode()),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
-                                    functionNamed("Base@F@foo")),
-                           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
-                                    functionNamed("Derived@F@foo"))));
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
+                   functionNamed("Base@F@foo")),
+          evidencePropagatedFrom(functionNamed("Base@F@foo"), SLOT_RETURN_TYPE,
+                                 Evidence::NONNULL_RETURN,
+                                 functionNamed("Derived@F@foo"))));
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
-              UnorderedElementsAre(
-                  evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
-                           functionNamed("Base@F@foo")),
-                  evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
-                           functionNamed("Derived@F@foo"))));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition(Src, GetMode()),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                   functionNamed("Base@F@foo")),
+          evidencePropagatedFrom(functionNamed("Base@F@foo"), SLOT_RETURN_TYPE,
+                                 Evidence::UNCHECKED_DEREFERENCE,
+                                 functionNamed("Derived@F@foo"))));
 }
 
 // Evidence for return type nullable-ness should flow only from derived to base,
@@ -3911,17 +3934,21 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(Src, GetMode()),
-      UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("Base@F@foo")),
-                           evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("Derived@F@foo"))));
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                   functionNamed("Base@F@foo")),
+          evidencePropagatedFrom(functionNamed("Base@F@foo"), paramSlot(0),
+                                 Evidence::NULLABLE_ARGUMENT,
+                                 functionNamed("Derived@F@foo"))));
 
-  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src, GetMode()),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                           functionNamed("Base@F@foo")),
-                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                           functionNamed("Derived@F@foo"))));
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Base::foo", Src, GetMode()),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   functionNamed("Base@F@foo")),
+          evidencePropagatedFrom(functionNamed("Base@F@foo"), paramSlot(0),
+                                 Evidence::ASSIGNED_FROM_NULLABLE,
+                                 functionNamed("Derived@F@foo"))));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
@@ -3941,12 +3968,15 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
 
   EXPECT_THAT(
       collectFromDefinitionNamed("DerivedDerived::foo", Src, GetMode()),
-      UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("DerivedDerived@F@foo")),
-                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("Derived@F@foo")),
-                           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                    functionNamed("Base@F@foo"))));
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                   functionNamed("DerivedDerived@F@foo")),
+          evidencePropagatedFrom(functionNamed("DerivedDerived@F@foo"),
+                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                 functionNamed("Derived@F@foo")),
+          evidencePropagatedFrom(functionNamed("DerivedDerived@F@foo"),
+                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                 functionNamed("Base@F@foo"))));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
@@ -3964,14 +3994,17 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
     };
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src, GetMode()),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                           functionNamed("DerivedDerived@F@foo")),
-                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                           functionNamed("Derived@F@foo")),
-                  evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                           functionNamed("Base@F@foo"))));
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Base::foo", Src, GetMode()),
+      UnorderedElementsAre(
+          evidencePropagatedFrom(functionNamed("Base@F@foo"), paramSlot(0),
+                                 Evidence::ASSIGNED_FROM_NULLABLE,
+                                 functionNamed("DerivedDerived@F@foo")),
+          evidencePropagatedFrom(functionNamed("Base@F@foo"), paramSlot(0),
+                                 Evidence::ASSIGNED_FROM_NULLABLE,
+                                 functionNamed("Derived@F@foo")),
+          evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   functionNamed("Base@F@foo"))));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
@@ -4999,6 +5032,8 @@ TEST(EvidenceSitesTest, FastMode) {
     struct Action : public SyntaxOnlyAction {
       NullabilityPragmas& Pragmas;
       Action(NullabilityPragmas& Pragmas) : Pragmas(Pragmas) {}
+
+     protected:
       std::unique_ptr<ASTConsumer> CreateASTConsumer(
           CompilerInstance& CI, llvm::StringRef File) override {
         registerPragmaHandler(CI.getPreprocessor(), Pragmas);

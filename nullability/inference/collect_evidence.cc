@@ -511,6 +511,7 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
     std::vector<std::string_view> Targets =
         getAdditionalTargetsForVirtualMethod(
             E.symbol().usr(), E.kind(), E.slot() == SLOT_RETURN_TYPE, Index);
+    *E.mutable_propagated_from() = E.symbol();
     for (std::string_view USR : Targets) {
       E.mutable_symbol()->set_usr(USR);
       Emit(E);

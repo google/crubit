@@ -48,6 +48,9 @@ message Evidence {
   optional Kind kind = 3;
   // Source location: file:line:col. Optional, for debugging only.
   optional string location = 4;
+  // If set, this evidence was originally collected from the virtual or override
+  // function identified by this symbol and propagated to `symbol`.
+  optional Symbol propagated_from = 5;
 
   // A pattern in the code that might help us determine nullability.
   enum Kind {
@@ -365,7 +368,7 @@ message InferableSlotProto {
 message LogicalContext {
   // optional, string-encoded formula providing an invariant across all formulas
   // represented in this logical context.
-  optional FormulaProto invariant  = 1;
+  optional FormulaProto invariant = 1;
 
   // Int-encoded atoms and their definitions as formulas.
   map<uint32, FormulaProto> atom_defs = 2;
