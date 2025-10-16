@@ -123,12 +123,14 @@ MATCHER_P2(localVarNamedImpl, VarName, FunctionName, "") {
              ("@F@" + llvm::Twine(FunctionName) + "#").str()) &&
          arg.usr().ends_with(("@" + llvm::Twine(VarName)).str());
 }
+}  // namespace
 
-auto localVarNamed(llvm::StringRef VarName,
-                   llvm::StringRef FunctionName = "target") {
+static auto localVarNamed(llvm::StringRef VarName,
+                          llvm::StringRef FunctionName = "target") {
   return localVarNamedImpl(VarName, FunctionName);
 }
 
+namespace {
 MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
   return SlotMatcher.Matches(static_cast<Slot>(arg.slot())) &&
          KindMatcher.Matches(arg.kind()) && SymbolMatcher.Matches(arg.symbol());
@@ -136,17 +138,18 @@ MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
 
 MATCHER(notPropagated, "") { return !arg.has_propagated_from(); }
 
-testing::Matcher<const Evidence&> evidence(
+MATCHER_P(propagatedFrom, PropagatedFromMatcher, "") {
+  return PropagatedFromMatcher.Matches(arg.propagated_from());
+}
+}  // namespace
+
+static testing::Matcher<const Evidence&> evidence(
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
     testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
   return AllOf(isEvidenceMatcher(S, Kind, SymbolMatcher), notPropagated());
 }
 
-MATCHER_P(propagatedFrom, PropagatedFromMatcher, "") {
-  return PropagatedFromMatcher.Matches(arg.propagated_from());
-}
-
-testing::Matcher<const Evidence&> evidencePropagatedFrom(
+static testing::Matcher<const Evidence&> evidencePropagatedFrom(
     testing::Matcher<const Symbol&> PropagatedFromMatcher,
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
     testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
@@ -154,13 +157,15 @@ testing::Matcher<const Evidence&> evidencePropagatedFrom(
                propagatedFrom(PropagatedFromMatcher));
 }
 
+namespace {
 enum class CollectionMode {
   kTestWithSummaries,
   kTestDirectly,
 };
+}  // namespace
 
 // Helper to get a string representation of the CollectionMode for test names.
-std::string printToString(CollectionMode Mode) {
+static std::string printToString(CollectionMode Mode) {
   switch (Mode) {
     case CollectionMode::kTestWithSummaries:
       return "WithSummaries";
@@ -170,7 +175,7 @@ std::string printToString(CollectionMode Mode) {
   llvm_unreachable("Unknown CollectionMode");
 }
 
-std::vector<Evidence> collectFromDefinitionDirectly(
+static std::vector<Evidence> collectFromDefinitionDirectly(
     clang::TestAST& AST, const Decl& Definition,
     const NullabilityPragmas& Pragmas,
     PreviousInferences InputInferences = {}) {
@@ -188,8 +193,8 @@ std::vector<Evidence> collectFromDefinitionDirectly(
   return Results;
 }
 
-llvm::Expected<CFGSummary> summarizeDefinitionNamed(llvm::StringRef TargetName,
-                                                    llvm::StringRef Source) {
+static llvm::Expected<CFGSummary> summarizeDefinitionNamed(
+    llvm::StringRef TargetName, llvm::StringRef Source) {
   USRCache UsrCache;
   NullabilityPragmas Pragmas;
   clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
@@ -201,14 +206,14 @@ llvm::Expected<CFGSummary> summarizeDefinitionNamed(llvm::StringRef TargetName,
 /// Provides a default function-name-cased value for TargetName in
 /// collectEvidenceFromDefinitionNamed, which puts TargetName first for
 /// readability.
-llvm::Expected<CFGSummary> summarizeTargetFuncDefinition(
+static llvm::Expected<CFGSummary> summarizeTargetFuncDefinition(
     llvm::StringRef Source) {
   return summarizeDefinitionNamed("target", Source);
 }
 
 // Returns both an error and a vector to represent partial computations -- those
 // that fail after producing some results.
-std::pair<llvm::Error, std::vector<Evidence>>
+static std::pair<llvm::Error, std::vector<Evidence>>
 collectFromDefinitionViaSummaryWithErrors(
     clang::TestAST& AST, const Decl& Definition,
     const NullabilityPragmas& Pragmas,
@@ -237,7 +242,7 @@ collectFromDefinitionViaSummaryWithErrors(
           Results};
 }
 
-std::vector<Evidence> collectFromDefinitionViaSummary(
+static std::vector<Evidence> collectFromDefinitionViaSummary(
     clang::TestAST& AST, const Decl& Definition,
     const NullabilityPragmas& Pragmas, PreviousInferences InputInferences) {
   auto [Err, Results] = collectFromDefinitionViaSummaryWithErrors(
@@ -252,7 +257,7 @@ std::vector<Evidence> collectFromDefinitionViaSummary(
 }
 
 // Dispatcher to collect evidence based on the CollectionMode.
-std::vector<Evidence> collectFromDefinition(
+static std::vector<Evidence> collectFromDefinition(
     clang::TestAST& AST, const Decl& Definition,
     const NullabilityPragmas& Pragmas, CollectionMode Mode,
     PreviousInferences InputInferences = {}) {
@@ -267,7 +272,7 @@ std::vector<Evidence> collectFromDefinition(
   llvm_unreachable("Unexpected collection mode");
 }
 
-std::vector<Evidence> collectFromDefinitionNamed(
+static std::vector<Evidence> collectFromDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source, CollectionMode Mode,
     PreviousInferences InputInferences = {}) {
   NullabilityPragmas Pragmas;
@@ -279,14 +284,14 @@ std::vector<Evidence> collectFromDefinitionNamed(
 
 /// Provides a default function-name-cased value for TargetName in
 /// collectFromDefinitionNamed, which puts TargetName first for readability.
-std::vector<Evidence> collectFromTargetFuncDefinition(
+static std::vector<Evidence> collectFromTargetFuncDefinition(
     llvm::StringRef Source, CollectionMode Mode,
     PreviousInferences InputInferences = {}) {
   return collectFromDefinitionNamed("target", Source, Mode, InputInferences);
 }
 
 template <typename MatcherT>
-std::vector<Evidence> collectFromDefinitionMatching(
+static std::vector<Evidence> collectFromDefinitionMatching(
     MatcherT Matcher, llvm::StringRef Source, CollectionMode Mode,
     PreviousInferences InputInferences = {}) {
   NullabilityPragmas Pragmas;
@@ -296,8 +301,8 @@ std::vector<Evidence> collectFromDefinitionMatching(
   return collectFromDefinition(AST, Definition, Pragmas, Mode, InputInferences);
 }
 
-std::vector<Evidence> collectFromDecl(llvm::StringRef Source,
-                                      llvm::StringRef DeclName) {
+static std::vector<Evidence> collectFromDecl(llvm::StringRef Source,
+                                             llvm::StringRef DeclName) {
   std::vector<Evidence> Results;
   NullabilityPragmas Pragmas;
   clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
@@ -311,14 +316,15 @@ std::vector<Evidence> collectFromDecl(llvm::StringRef Source,
   return Results;
 }
 
-auto collectFromTargetVarDecl(llvm::StringRef Source) {
+static auto collectFromTargetVarDecl(llvm::StringRef Source) {
   return collectFromDecl(Source, "Target");
 }
 
-auto collectFromTargetFuncDecl(llvm::StringRef Source) {
+static auto collectFromTargetFuncDecl(llvm::StringRef Source) {
   return collectFromDecl(Source, "target");
 }
 
+namespace {
 MATCHER_P2(methodSummary, SlotIndices, USRs, "") {
   return arg.SlotIndices == SlotIndices && arg.OverridingUSRs == USRs;
 }
