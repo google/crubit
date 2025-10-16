@@ -489,7 +489,7 @@ TEST(SummarizeDefinitionTest, NullableArgPassed) {
 class CollectEvidenceFromDefinitionTest
     : public testing::TestWithParam<CollectionMode> {
  protected:
-  CollectionMode GetMode() const { return GetParam(); }
+  CollectionMode getMode() const { return GetParam(); }
 };
 
 INSTANTIATE_TEST_SUITE_P(
@@ -517,7 +517,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Location) {
   //                      12345678901234567890123456
   //                      0        1         2
 
-  auto Evidence = collectFromTargetFuncDefinition(Code, GetMode());
+  auto Evidence = collectFromTargetFuncDefinition(Code, getMode());
   ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
                                              Evidence::UNCHECKED_DEREFERENCE)));
   EXPECT_EQ("input.cc:1:23", Evidence.front().location());
@@ -529,7 +529,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, Location) {
   //                      123456789012345678901234567890123456789012
   //                      0        1         2         3         4
 
-  auto Evidence = collectFromTargetFuncDefinition(Code, GetMode());
+  auto Evidence = collectFromTargetFuncDefinition(Code, getMode());
   ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
                                              Evidence::UNCHECKED_DEREFERENCE)));
   EXPECT_EQ("input.cc:2:39", Evidence.front().location());
@@ -539,14 +539,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, NoParams) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() {}
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, OneParamUnused) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {}
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, OneParamUsedWithoutRestriction) {
@@ -555,7 +555,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, OneParamUsedWithoutRestriction) {
 
     void target(int *P) { takesUnknown(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -568,7 +568,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Deref) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -584,7 +584,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefArrow) {
       B->y();
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
@@ -603,7 +603,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, Deref) {
       P->y();
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
@@ -616,7 +616,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefOfNonnull) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
@@ -628,7 +628,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
@@ -640,7 +640,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignment) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, Evidence::UNCHECKED_DEREFERENCE))));
 }
 
@@ -656,7 +656,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("target")))));
 }
@@ -670,7 +670,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefOfPtrRef) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -687,7 +687,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnrelatedCondition) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE),
@@ -707,7 +707,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LaterDeref) {
       int A = *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -721,7 +721,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefBeforeGuardedDeref) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -740,7 +740,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefAndOrCheckOfCopiedPtr) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
@@ -765,7 +765,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
       *A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
@@ -785,7 +785,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -799,7 +799,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, EarlyReturn) {
       int A = *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, UnreachableCode) {
@@ -819,7 +819,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnreachableCode) {
       int A = *P3;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -837,7 +837,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberField) {
   // Pointers to members are not supported pointer types, so no evidence is
   // collected. If they become a supported pointer type, this test should start
   // failing.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
@@ -854,7 +854,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
   // Pointers to members are not supported pointer types, so no evidence is
   // collected. If they become a supported pointer type, this test should start
   // failing.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
@@ -873,7 +873,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
   // test should start failing.
   // TODO(b/309625642) We should still collect evidence for the use of `Q` as an
   // argument for param `I`.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, CheckMacro) {
@@ -903,7 +903,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CheckMacro) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      GetMode()),
+                                      getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -925,7 +925,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      GetMode()),
+                                      getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL)));
@@ -945,7 +945,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   functionDecl(hasName("Target")),
-                  (CheckMacroDefinitions + BaseSrc).str(), GetMode()),
+                  (CheckMacroDefinitions + BaseSrc).str(), getMode()),
               IsSupersetOf({(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                       fieldNamed("Target::Shared")),
                              evidence(paramSlot(0), Evidence::ABORT_IF_NULL,
@@ -976,7 +976,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      GetMode()),
+                                      getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -999,7 +999,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      GetMode()),
+                                      getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
@@ -1010,7 +1010,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NullableArgPassed) {
     void callee(int *Q);
     void target(Nullable<int *> P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -1020,7 +1020,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NonnullArgPassed) {
     void callee(int *Q);
     void target(Nonnull<int *> P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -1030,7 +1030,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnknownArgPassed) {
     void callee(int *Q);
     void target(int *P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -1044,7 +1044,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullArgPassed) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -1056,7 +1056,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CheckedArgPassed) {
       if (P) callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                 functionNamed("callee"))));
 }
@@ -1071,7 +1071,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NullptrPassed) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("callee")),
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
@@ -1085,7 +1085,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
     void callee(int Q);
     void target(int P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, LValueReferenceArgsPassed) {
@@ -1098,7 +1098,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LValueReferenceArgsPassed) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
                    functionNamed("constCallee")),
@@ -1128,7 +1128,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
       universalRef(std::move(q));  // Nonnull
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   // RValue references don't have the same invariance as lvalue
                   // references, because accesses through the reference and
@@ -1149,7 +1149,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       return callee(P, Q, R);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
@@ -1165,7 +1165,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       AllOf(IsSupersetOf(
                 {evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
                           functionNamed("target")),
@@ -1197,14 +1197,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       hasDefaultExpressionOfVariable();
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, NullableReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target() { return nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN)));
 }
@@ -1218,7 +1218,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NullableButCheckedReturn) {
       // compiles, as the lack of return in a path is only a warning.
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
@@ -1229,7 +1229,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NonnullReturn) {
       return P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
@@ -1238,7 +1238,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnknownReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* P) { return P; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
 }
@@ -1253,7 +1253,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullReturn) {
       // compiles, as the lack of return in a path is only a warning.
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN)));
 }
@@ -1266,7 +1266,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, MultipleReturns) {
       return P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
@@ -1282,7 +1282,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, MutableReferenceReturns) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_REFERENCE_RETURN),
           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_REFERENCE_RETURN),
@@ -1299,7 +1299,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstReferenceReturns) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_REFERENCE_RETURN),
           evidence(SLOT_RETURN_TYPE,
@@ -1313,7 +1313,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
       return A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
@@ -1325,7 +1325,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(
-          Src, GetMode(),
+          Src, getMode(),
           {.Nonnull = std::make_shared<SortedFingerprintVector>(
                std::vector<SlotFingerprint>{
                    fingerprint("c:@F@target#*I#", 0)})}),
@@ -1350,7 +1350,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromAutoReturnAnnotationByPragma) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -1363,7 +1363,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromReturnInAttributedFunction) {
     };
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("target"))));
 }
@@ -1382,7 +1382,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN),
@@ -1402,7 +1402,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
           // evidence for the move constructor, which we don't care much about.
@@ -1415,7 +1415,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallDereferenced) {
     void target() { *makePtr(); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -1430,7 +1430,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -1445,7 +1445,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       Not(Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                             functionNamed("makePtr")))));
 }
@@ -1460,7 +1460,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -1475,7 +1475,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallDereferencedWithArrow) {
     void target() { makePtr()->member(); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
@@ -1486,14 +1486,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     Nonnull<int*> makeNonnullPtr();
     void target() { *makeNonnullPtr(); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, FunctionPointerCall) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(void (*F)()) { F(); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
@@ -1519,7 +1519,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // Ideally, we would see the Nonnull from `P`'s template parameter and collect
   // ASSIGNED_TO_NONNULL evidence for `I`, but the sugar doesn't carry through
   // the BindingDecl's `auto` type.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
@@ -1535,7 +1535,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest,
@@ -1552,7 +1552,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest,
@@ -1571,7 +1571,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("accessor"))));
@@ -1589,7 +1589,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("operator()"))));
 }
@@ -1601,7 +1601,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, MemberOperatorCall) {
     };
     void target() { S{} + nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("operator+"))));
 }
@@ -1612,7 +1612,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NonMemberOperatorCall) {
     bool operator+(const S&, int*);
     void target() { S{} + nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("operator+"))));
 }
@@ -1623,7 +1623,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, VarArgs) {
     void target() { callee(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("callee"))));
 }
@@ -1636,7 +1636,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, MemberOperatorCallVarArgs) {
     void target() { S{}(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("operator()"))));
 }
@@ -1649,7 +1649,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstructorCall) {
     void target(int* P) { S AnS(P, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
@@ -1665,7 +1665,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstructorCallThroughMakeUnique) {
     void target(int* P) { std::make_unique<S>(P, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
@@ -1681,7 +1681,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
       Target(int *I) : TakeNonnull(I) {}
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                 functionNamed("Target"))));
 }
@@ -1697,7 +1697,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          functionDecl(hasName("Target"), parameterCountIs(0)), Src, GetMode()),
+          functionDecl(hasName("Target"), parameterCountIs(0)), Src, getMode()),
       Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                         functionNamed("Target"))));
 }
@@ -1710,7 +1710,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
     void target(int* P, int* Q) { S AnS(P, Q); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -1725,7 +1725,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* P, int* Q) { std::make_unique<S>(P, Q); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -1743,7 +1743,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     };
     void target(int* P) { S AnS(ConvertibleToIntPtr{P}); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("operator int *")),
@@ -1771,7 +1771,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // evidence. However, we collect the evidence from the make_unique
   // instantiation and will do inference from that.
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("ConvertibleToIntPtr"))));
 }
@@ -1795,7 +1795,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(Bar b) { std::make_unique<Foo>(b); }
       )cc";
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest,
@@ -1807,7 +1807,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("Target"))));
 }
@@ -1820,7 +1820,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullptr) {
     };
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(isDefaultConstructor()), Src, GetMode()),
+                  cxxConstructorDecl(isDefaultConstructor()), Src, getMode()),
               UnorderedElementsAre(evidence(
                   Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
                   fieldNamed("Target::I"))));
@@ -1836,7 +1836,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullable) {
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(cxxConstructorDecl(isDefaultConstructor()),
-                                    Src, GetMode()),
+                                    Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Target::I"))));
 }
@@ -1852,7 +1852,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("Target"))));
 }
@@ -1873,7 +1873,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   cxxConstructorDecl(isDefaultConstructor(), hasName("Target")),
-                  Src, GetMode()),
+                  Src, getMode()),
               UnorderedElementsAre(evidence(
                   Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
                   fieldNamed("Target@Sa::I"))));
@@ -1887,7 +1887,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Target::I"))));
 }
@@ -1905,7 +1905,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnionFieldInitializedWithNullable) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("UnionType::I"))));
 }
@@ -1918,7 +1918,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
       Nonnull<int*> I;
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("getIntPtr")),
@@ -1940,7 +1940,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     Target T;
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(isDefaultConstructor()), Src, GetMode()),
+                  cxxConstructorDecl(isDefaultConstructor()), Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("getIntPtr")),
@@ -1961,7 +1961,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          GetMode()),
+          getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                    functionNamed("Target")),
@@ -1982,7 +1982,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          GetMode()),
+          getMode()),
       UnorderedElementsAre(
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    fieldNamed("Target::I")),
@@ -2004,7 +2004,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   cxxConstructorDecl(isDefaultConstructor(), hasName("Target")),
-                  Src, GetMode()),
+                  Src, getMode()),
               UnorderedElementsAre(evidence(
                   Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
                   fieldNamed("Target::I"))));
@@ -2024,7 +2024,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   cxxConstructorDecl(isDefaultConstructor(), hasName("Target")),
-                  Src, GetMode()),
+                  Src, getMode()),
               // By the end of the constructor body, the field is still only
               // default-initialized, which for smart pointers means it is null.
               UnorderedElementsAre(
@@ -2044,7 +2044,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          GetMode()),
+          getMode()),
       // Evidence collected from constructor body, which assigns a Nonnull
       // value, but no evidence collected from *implicit* member initializer
       // which default constructs to null.
@@ -2071,7 +2071,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          GetMode()),
+          getMode()),
       // By the end of the constructor body, the field is still potentially
       // default-initialized, which for smart pointers means it may be null.
       // We also collect from the Nonnull value assignment in the body, though
@@ -2101,7 +2101,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          GetMode()),
+          getMode()),
       // By the end of the constructor body, the field is no longer default
       // initialized to null, but is assigned from an unknown.
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
@@ -2127,7 +2127,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   cxxConstructorDecl(unless(isImplicit()), hasName("Target")),
-                  Src, GetMode()),
+                  Src, getMode()),
               IsEmpty());
 }
 
@@ -2147,7 +2147,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   cxxConstructorDecl(unless(isImplicit()), hasName("Target")),
-                  Src, GetMode()),
+                  Src, getMode()),
               IsEmpty());
 }
 
@@ -2172,7 +2172,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LateInitializerDirectlyForTest) {
   EXPECT_THAT(
       collectFromDefinitionMatching(
           cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))), Src,
-          GetMode()),
+          getMode()),
       AllOf(Contains(evidence(Slot(0),
                               Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
                               fieldNamed("Target::FieldInitializedInSetUp"))),
@@ -2204,7 +2204,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LateInitializerThroughAliasForTest) {
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
                   cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))),
-                  Src, GetMode()),
+                  Src, getMode()),
               Contains(evidence(
                   Slot(0), Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
                   fieldNamed("Target::FieldInitializedInSetUp"))));
@@ -2217,7 +2217,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
     void target(int* P) { callee(P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -2229,7 +2229,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnullRef) {
     void target(int* P, int* Q) { callee(P, Q); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL_REFERENCE,
                    functionNamed("target")),
@@ -2249,7 +2249,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnullInMemberFunction) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -2261,7 +2261,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       Callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("target")),
@@ -2280,7 +2280,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                    functionNamed("target")),
@@ -2300,7 +2300,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* P) { MyStruct().Callee(P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
@@ -2315,7 +2315,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* P) { (&callee)(P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -2328,7 +2328,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
@@ -2340,7 +2340,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       Callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("target")),
@@ -2355,7 +2355,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallPassedToNonnull) {
 
     void target() { callee(makeIntPtr()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::ASSIGNED_TO_NONNULL,
                                             functionNamed("makeIntPtr"))));
@@ -2368,7 +2368,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 
     void target(void (*Callee)(Nonnull<int*> I)) { Callee(makeIntPtr()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("makeIntPtr")),
@@ -2382,7 +2382,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNullable) {
 
     void target(int* P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -2392,7 +2392,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNullableRef) {
 
     void target(int* P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                            functionNamed("target"))));
@@ -2409,7 +2409,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   // The object taken by reference (P) needs to be nullable, not
                   // necessarily the source of its value (producer).
@@ -2426,7 +2426,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
 
     void target() { callee(producer()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(evidence(
                   SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                   functionNamed("producer"))));
@@ -2438,7 +2438,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToPtrToNullable) {
     void target(int* P) { callee(&P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       AllOf(UnorderedElementsAre(evidence(paramSlot(0),
                                           Evidence::NONNULL_ARGUMENT,
                                           functionNamed("callee"))),
@@ -2457,7 +2457,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       A = R;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL),
@@ -2472,7 +2472,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       A = B ? R : S;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
   // TODO(b/293609145) When value nullability for conditional operators is
   // carried through for glvalues, this should collect the following:
   // UnorderedElementsAre(evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL),
@@ -2502,7 +2502,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
       Nonnull<std::unique_ptr<int>> nonnull = std::move(T);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL),
@@ -2526,7 +2526,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL_REFERENCE),
           // `A = Q;` copies Q into P; it doesn't make a reference to Q,
@@ -2545,7 +2545,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       Q = R;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(1), Evidence::ASSIGNED_FROM_UNKNOWN),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
@@ -2562,7 +2562,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       A = Q;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)
                   // `A = Q;` copies Q into P; it doesn't make a reference to Q,
@@ -2578,7 +2578,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
       Nullable<std::unique_ptr<int>>& A = P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                            functionNamed("target"))));
@@ -2590,7 +2590,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, InitializationOfNullableRefFromRef) {
       Nullable<int*>& A = P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(evidence(
                   paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
 }
@@ -2607,7 +2607,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE),
           evidence(paramSlot(1), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
@@ -2619,7 +2619,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullptr) {
       P = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
@@ -2631,7 +2631,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullptrIndirect) {
       P = A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
@@ -2642,7 +2642,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromZero) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) { P = 0; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
@@ -2652,7 +2652,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullable) {
     Nullable<int*> getNullable();
     void target(int* P) { P = getNullable(); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
@@ -2665,7 +2665,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromLocalNullable) {
       P = A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
@@ -2678,7 +2678,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
 
     void target(S AnS) { AnS.getPtrRef() = nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("getPtrRef"))));
@@ -2691,7 +2691,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *&P = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
@@ -2709,7 +2709,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       P = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNonnull) {
@@ -2719,7 +2719,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNonnull) {
       P = &A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NONNULL)));
 }
@@ -2730,7 +2730,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromUnknown) {
       P = Q;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_UNKNOWN)));
 }
@@ -2751,7 +2751,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       // From the constructor call constructing an S; no evidence from
       // assignments or initializations.
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -2768,7 +2768,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConditionalOperatorAssignment) {
   // Could in theory collect evidence for both A and B as nullable, but we don't
   // track null state through the conditional operator, so we don't collect
   // evidence for either.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, Arithmetic) {
@@ -2786,7 +2786,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Arithmetic) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARITHMETIC),
                            evidence(paramSlot(1), Evidence::ARITHMETIC),
                            evidence(paramSlot(2), Evidence::ARITHMETIC),
@@ -2827,7 +2827,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Fields) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      GetMode()),
+                                      getMode()),
       IsSupersetOf(
           {evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                     fieldNamed("S::Deref")),
@@ -2878,7 +2878,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      GetMode()),
+                                      getMode()),
       IsSupersetOf(
           {evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                     staticFieldNamed("MyStruct::Deref")),
@@ -2928,7 +2928,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Globals) {
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      GetMode()),
+                                      getMode()),
       IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                              globalVarNamed("Deref")),
                     evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
@@ -2956,7 +2956,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalInit) {
     int* Target = static_cast<int*>(getNullableFromNonnull(getPtr()));
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("getPtr")),
@@ -2969,7 +2969,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitFromGlobalAnnotation) {
     int* foo();
     Nonnull<int*> Target = foo();
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::ASSIGNED_TO_NONNULL,
                                             functionNamed("foo"))));
@@ -2982,7 +2982,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartImplicitInit) {
     std::unique_ptr<int> Target;
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Target"))));
 }
@@ -2993,7 +2993,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartExplicitInit) {
     std::unique_ptr<int> Target = nullptr;
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Target"))));
 }
@@ -3011,7 +3011,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitWithCtor) {
     S Target(&GInt, AssignedToNonnull);
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                     functionNamed("S")),
                            evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
@@ -3031,7 +3031,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartInitWithMakeUniqueCtor) {
     std::unique_ptr<S> Target = std::make_unique<S>(&GInt, AssignedToNonnull);
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                     globalVarNamed("Target")),
                            evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
@@ -3055,7 +3055,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     std::unique_ptr<S> Target = std::make_unique<S>(&GInt, AssignedToNonnull);
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                     globalVarNamed("Target")),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
@@ -3071,7 +3071,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, StaticInitInClass) {
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, GetMode()),
+      collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     staticFieldNamed("MyStruct::Target"))));
 }
@@ -3086,7 +3086,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, StaticInitOutOfClass) {
     int* MyStruct::Target = nullptr;
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionMatching(varDecl(hasInit()), Src, GetMode()),
+      collectFromDefinitionMatching(varDecl(hasInit()), Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     staticFieldNamed("MyStruct::Target"))));
 }
@@ -3098,7 +3098,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LocalVariable) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     localVarNamed("P"))));
 }
@@ -3118,7 +3118,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT),
                            evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT)));
@@ -3132,7 +3132,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, OutputParameterPointerToPointer) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -3144,7 +3144,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, OutputParameterReferenceToPointer) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -3157,7 +3157,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
@@ -3172,7 +3172,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       **P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -3185,7 +3185,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
@@ -3200,7 +3200,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -3215,7 +3215,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassAsOutputParameterOrDereference) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
@@ -3231,7 +3231,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
            // dereference safe, so we do not collect evidence for P.
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
@@ -3242,7 +3242,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromGlobalLabmdaBodyForGlobal) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, GetMode()),
+      collectFromDefinitionNamed("operator()", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     globalVarNamed("P"))));
 }
@@ -3257,7 +3257,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, GetMode()),
+      collectFromDefinitionNamed("operator()", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("P", "foo"))));
 }
@@ -3272,7 +3272,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, GetMode()),
+      collectFromDefinitionNamed("operator()", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("P", "foo"))));
 }
@@ -3289,7 +3289,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("foo")),
@@ -3326,7 +3326,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("foo")),
@@ -3357,7 +3357,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForField) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, GetMode()),
+      collectFromDefinitionNamed("operator()", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     fieldNamed("A::P")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
@@ -3375,7 +3375,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("bar")),
@@ -3399,7 +3399,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
               UnorderedElementsAre(
                   evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                            fieldNamed("S::F")),
@@ -3425,7 +3425,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
               UnorderedElementsAre(
                   evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                            fieldNamed("S::F")),
@@ -3453,7 +3453,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromNestedLambdaBody) {
       collectFromDefinitionMatching(
           cxxMethodDecl(hasName("operator()"),
                         hasAncestor(lambdaExpr(hasAncestor(lambdaExpr())))),
-          Src, GetMode()),
+          Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("A", "foo")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
@@ -3469,7 +3469,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaInitCapture) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, GetMode()),
+      collectFromDefinitionNamed("operator()", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("Q", "operator()"))));
 }
@@ -3482,7 +3482,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaInitCaptureFromInit) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionMatching(varDecl(hasName("Q")), Src, GetMode()),
+      collectFromDefinitionMatching(varDecl(hasName("Q")), Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     localVarNamed("Q", "operator()"))));
 }
@@ -3495,7 +3495,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
     };
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                            functionNamed("operator()")),
@@ -3542,9 +3542,9 @@ TEST_P(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("MyStruct::B")));
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(BracesAggInit, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(BracesAggInit, getMode()),
               ExpectedEvidenceMatcher);
-  EXPECT_THAT(collectFromTargetFuncDefinition(ParensAggInit, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(ParensAggInit, getMode()),
               ExpectedEvidenceMatcher);
 }
 
@@ -3570,7 +3570,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
 
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Base::BaseB")),
                            evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
@@ -3596,7 +3596,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* Int) { S AnS(ConvertibleToIntPtr{Int}); }
   )cc";
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("operator int *")),
@@ -3624,7 +3624,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // evidence. However, we collect the evidence from the make_unique
   // instantiation and will do inference from that.
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("ConvertibleToIntPtr"))));
 }
@@ -3644,7 +3644,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    fieldNamed("MyStruct::P")),
@@ -3662,7 +3662,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NonRecordInitListExpr) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() { int A[3] = {}; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest,
@@ -3673,7 +3673,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void foo(int*);
     void target(Nullable<std::unique_ptr<int>> P) { foo(P.get()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("foo"))));
 }
@@ -3688,7 +3688,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, TransparentInitListExpr) {
 
     void target() { foo({get()}); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, ArraySubscript) {
@@ -3696,7 +3696,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ArraySubscript) {
     void target(int* P) { P[0]; }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARRAY_SUBSCRIPT)));
 }
 
@@ -3708,7 +3708,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArraySubscript) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARRAY_SUBSCRIPT)));
 }
 
@@ -3733,11 +3733,11 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
+      collectFromDefinitionNamed("Derived::foo", Src, getMode()),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
                                     functionNamed("Derived@F@foo"))));
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("Derived@F@foo"))));
@@ -3753,7 +3753,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNullable) {
       int* foo() override { return nullptr; }
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, getMode()),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                            functionNamed("Derived@F@foo")),
@@ -3783,7 +3783,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                    functionNamed("Derived@F@foo")),
@@ -3792,7 +3792,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
                                  functionNamed("Base@F@foo"))));
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
+      collectFromDefinitionNamed("Derived::foo", Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                    functionNamed("Derived@F@foo")),
@@ -3819,11 +3819,11 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNullable) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("Derived@F@foo"))));
 
-  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, getMode()),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("Derived@F@foo"))));
@@ -3848,7 +3848,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, GetMode()),
+      collectFromDefinitionNamed("Base::foo", Src, getMode()),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
                    functionNamed("Base@F@foo")),
@@ -3857,7 +3857,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
                                  functionNamed("Derived@F@foo"))));
 
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                    functionNamed("Base@F@foo")),
@@ -3879,7 +3879,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNullable) {
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, GetMode()),
+      collectFromDefinitionNamed("Base::foo", Src, getMode()),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("Base@F@foo"))));
 
@@ -3907,11 +3907,11 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                     functionNamed("Base@F@foo"))));
 
-  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src, getMode()),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("Base@F@foo"))));
@@ -3933,7 +3933,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, GetMode()),
+      collectFromTargetFuncDefinition(Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                    functionNamed("Base@F@foo")),
@@ -3942,7 +3942,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
                                  functionNamed("Derived@F@foo"))));
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, GetMode()),
+      collectFromDefinitionNamed("Base::foo", Src, getMode()),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    functionNamed("Base@F@foo")),
@@ -3967,7 +3967,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("DerivedDerived::foo", Src, GetMode()),
+      collectFromDefinitionNamed("DerivedDerived::foo", Src, getMode()),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                    functionNamed("DerivedDerived@F@foo")),
@@ -3995,7 +3995,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, GetMode()),
+      collectFromDefinitionNamed("Base::foo", Src, getMode()),
       UnorderedElementsAre(
           evidencePropagatedFrom(functionNamed("Base@F@foo"), paramSlot(0),
                                  Evidence::ASSIGNED_FROM_NULLABLE,
@@ -4021,7 +4021,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("usage", Src, GetMode()),
+      collectFromDefinitionNamed("usage", Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("tmpl<#I>")),
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
@@ -4034,21 +4034,21 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
   EXPECT_THAT(
       collectFromDefinitionMatching(
           functionDecl(hasTemplateArgument(0, refersToType(asString("int")))),
-          Src, GetMode()),
+          Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0),
                                     Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("tmpl<#I>"))));
   EXPECT_THAT(
       collectFromDefinitionMatching(
           functionDecl(hasTemplateArgument(0, refersToType(booleanType()))),
-          Src, GetMode()),
+          Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0),
                                     Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("tmpl<#b>"))));
   EXPECT_THAT(
       collectFromDefinitionMatching(functionDecl(hasTemplateArgument(
                                         0, refersToType(asString("char *")))),
-                                    Src, GetMode()),
+                                    Src, getMode()),
       UnorderedElementsAre(evidence(paramSlot(0),
                                     Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("tmpl<#*C>"))));
@@ -4071,7 +4071,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void usage() { tmpl<int*>(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("usage", Src, GetMode()),
+      collectFromDefinitionNamed("usage", Src, getMode()),
       // Evidence is emitted for the explicit specialization, not the template.
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("tmpl<#*I>")),
@@ -4080,7 +4080,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           functionDecl(hasTemplateArgument(0, refersToType(asString("int *")))),
-          Src, GetMode()),
+          Src, getMode()),
       // Evidence is emitted for the explicit specialization, not the template.
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
@@ -4101,7 +4101,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LocalVariableInFunctionTemplate) {
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(functionDecl(isTemplateInstantiation()),
-                                    Src, GetMode()),
+                                    Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     localVarNamed("A", "tmpl<#I>")),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
@@ -4129,7 +4129,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplate) {
       CCharPtr.method(nullptr);
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4147,7 +4147,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplate) {
   EXPECT_THAT(collectFromDefinitionMatching(
                   functionDecl(isTemplateInstantiation(),
                                hasParameter(0, hasType(asString("int *")))),
-                  Src, GetMode()),
+                  Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            AllOf(functionNamed("method"),
@@ -4181,7 +4181,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
       CBoolPtr.method(nullptr);
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4203,7 +4203,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
   EXPECT_THAT(collectFromDefinitionMatching(
                   functionDecl(isTemplateInstantiation(),
                                hasParameter(0, hasType(asString("int *")))),
-                  Src, GetMode()),
+                  Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            AllOf(functionNamed("method"),
@@ -4240,7 +4240,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplateExplicitSpecialization) {
       CInt.Field = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4275,7 +4275,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplatePartialSpecialization) {
       CIntBool.Field = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, GetMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4294,7 +4294,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalVariableTemplate) {
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(varDecl(isTemplateInstantiation()), Src,
-                                    GetMode()),
+                                    getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Global>#I"))));
 }
@@ -4315,7 +4315,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          varDecl(isVarTemplateCompleteSpecializationDecl()), Src, GetMode()),
+          varDecl(isVarTemplateCompleteSpecializationDecl()), Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Global>#I"))));
 }
@@ -4333,7 +4333,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          varDecl(isVarTemplateCompleteSpecializationDecl()), Src, GetMode()),
+          varDecl(isVarTemplateCompleteSpecializationDecl()), Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Global>#I#b"))));
 }
@@ -4369,14 +4369,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, PropagatesPreviousInferences) {
   // results contain the evidence needed to produce our expected inferences and
   // do not contain the evidence only found from propagating inferences from the
   // first round.
-  auto FirstRoundResults = collectFromTargetFuncDefinition(Src, GetMode());
+  auto FirstRoundResults = collectFromTargetFuncDefinition(Src, getMode());
   ASSERT_THAT(FirstRoundResults, IsSupersetOf(ExpectedBothRoundResults));
   for (const auto& E : ExpectedSecondRoundResults) {
     ASSERT_THAT(FirstRoundResults, Not(Contains(E)));
   }
 
   EXPECT_THAT(collectFromTargetFuncDefinition(
-                  Src, GetMode(),
+                  Src, getMode(),
                   {.Nullable = std::make_shared<SortedFingerprintVector>(
                        std::vector<SlotFingerprint>{
                            fingerprint(TargetUsr, paramSlot(0))}),
@@ -4430,7 +4430,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 
   // Assert first round results because they don't rely on previous inference
   // propagation at all and in this case are test setup and preconditions.
-  auto FirstRoundResults = collectFromTargetFuncDefinition(Src, GetMode());
+  auto FirstRoundResults = collectFromTargetFuncDefinition(Src, getMode());
   ASSERT_THAT(FirstRoundResults,
               IsSupersetOf(ExpectedNewResultsPerRound.at(0)));
   for (const auto& E : ExpectedNewResultsPerRound.at(1)) {
@@ -4438,7 +4438,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   }
 
   auto SecondRoundResults = collectFromTargetFuncDefinition(
-      Src, GetMode(),
+      Src, getMode(),
       {.Nonnull = std::make_shared<SortedFingerprintVector>(
            std::vector<SlotFingerprint>{
                fingerprint(TargetUsr, paramSlot(0))})});
@@ -4450,7 +4450,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   }
 
   auto ThirdRoundResults = collectFromTargetFuncDefinition(
-      Src, GetMode(),
+      Src, getMode(),
       {.Nonnull = std::make_shared<SortedFingerprintVector>(
            std::vector<SlotFingerprint>{
                fingerprint(TargetUsr, paramSlot(0)),
@@ -4464,7 +4464,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   }
 
   auto FourthRoundResults = collectFromTargetFuncDefinition(
-      Src, GetMode(),
+      Src, getMode(),
       {.Nonnull = std::make_shared<SortedFingerprintVector>(
            std::vector<SlotFingerprint>{
                fingerprint(TargetUsr, paramSlot(0)),
@@ -4494,7 +4494,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // This test confirms that we use that information when collecting from
   // target's definition.
   EXPECT_THAT(collectFromTargetFuncDefinition(
-                  Src, GetMode(),
+                  Src, getMode(),
                   {.Nonnull = std::make_shared<SortedFingerprintVector>(
                        std::vector<SlotFingerprint>{
                            fingerprint(TakesToBeNonnullUsr, paramSlot(0))})}),
@@ -4509,7 +4509,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Pragma) {
       return P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
@@ -4521,7 +4521,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PragmaLocalTopLevelPointer) {
       int* local_top_level_pointer = P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, GetMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
@@ -4536,7 +4536,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
     }
   )cc";
   EXPECT_THAT(collectFromTargetFuncDefinition(
-                  (CheckMacroDefinitions + BaseSrc).str(), GetMode()),
+                  (CheckMacroDefinitions + BaseSrc).str(), getMode()),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
@@ -4566,7 +4566,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   auto& Decl = *selectFirst<VarTemplateSpecializationDecl>(
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
 
-  switch (GetMode()) {
+  switch (getMode()) {
     case CollectionMode::kTestWithSummaries:
       EXPECT_THAT_EXPECTED(
           summarizeDefinition(Decl, UsrCache, Pragmas),
@@ -4616,7 +4616,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   auto& Decl = *selectFirst<VarTemplateSpecializationDecl>(
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
 
-  switch (GetMode()) {
+  switch (getMode()) {
     case CollectionMode::kTestWithSummaries:
       EXPECT_THAT_EXPECTED(
           summarizeDefinition(Decl, UsrCache, Pragmas),
@@ -4655,7 +4655,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
     return std::make_unique<dataflow::WatchedLiteralsSolver>(
         /*MaxSATIterations=*/100);
   };
-  switch (GetMode()) {
+  switch (getMode()) {
     case CollectionMode::kTestWithSummaries: {
       auto [Err, Results] = collectFromDefinitionViaSummaryWithErrors(
           AST, Decl, Pragmas,
