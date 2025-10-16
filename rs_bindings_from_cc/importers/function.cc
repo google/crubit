@@ -589,7 +589,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::OverrideAttr>(attr) ||
                    clang::isa<clang::PureAttr>(attr) ||
                    clang::isa<clang::ReinitializesAttr>(attr) ||
-                   clang::isa<clang::UnusedAttr>(attr)) {
+                   clang::isa<clang::UnusedAttr>(attr) ||
+                   clang::isa<clang::AlwaysInlineAttr>(attr)) {
           // These attributes don't affect Rust.
           return true;
         }
