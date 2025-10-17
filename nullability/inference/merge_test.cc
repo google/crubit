@@ -15,29 +15,31 @@
 #include "google/protobuf/text_format.h"
 
 namespace clang::tidy::nullability {
-namespace {
-
 template <typename T>
-T proto(llvm::StringRef Text) {
+static T proto(llvm::StringRef Text) {
   T Result;
   CHECK(google::protobuf::TextFormat::ParseFromString(Text, &Result));
   return Result;
 }
 
+namespace {
 TEST(PartialFromEvidenceTest, ContainsEvidenceInfo) {
-  EXPECT_THAT(partialFromEvidence(proto<Evidence>(R"pb(
-                symbol { usr: "func" }
-                slot: 1
-                kind: UNCHECKED_DEREFERENCE
-                location: "foo.cc:42"
-              )pb")),
-              EqualsProto(R"pb(
-                kind_count { key: 3 value: 1 }
-                kind_samples {
-                  key: 3
-                  value { location: "foo.cc:42" }
-                }
-              )pb"));
+  EXPECT_THAT(
+      partialFromEvidence(proto<Evidence>(R"pb(
+        symbol { usr: "func" }
+        slot: 1
+        kind: UNCHECKED_DEREFERENCE
+        location: "foo.cc:42"
+      )pb")),
+      EqualsProto(R"pb(
+        kind_count { key: 3 value: 1 }
+        kind_samples {
+          key: 3
+          value {
+            evidence { kind: UNCHECKED_DEREFERENCE location: "foo.cc:42" }
+          }
+        }
+      )pb"));
 }
 
 TEST(MergePartialsTest, BothContainEvidence) {
@@ -46,7 +48,10 @@ TEST(MergePartialsTest, BothContainEvidence) {
     kind_count { key: 0 value: 2 }
     kind_samples {
       key: 0
-      value { location: "a" location: "b" }
+      value {
+        evidence { kind: ANNOTATED_UNKNOWN location: "a" }
+        evidence { kind: ANNOTATED_UNKNOWN location: "b" }
+      }
     }
   )pb");
   auto R = proto<SlotPartial>(
@@ -54,7 +59,11 @@ TEST(MergePartialsTest, BothContainEvidence) {
            kind_count { key: 0 value: 2 }
            kind_samples {
              key: 0
-             value { location: "c" location: "a" location: "d" }
+             value {
+               evidence { kind: ANNOTATED_UNKNOWN location: "c" }
+               evidence { kind: ANNOTATED_UNKNOWN location: "a" }
+               evidence { kind: ANNOTATED_UNKNOWN location: "d" }
+             }
            })pb");
 
   mergePartials(L, R);
@@ -64,7 +73,11 @@ TEST(MergePartialsTest, BothContainEvidence) {
                 kind_count { key: 1 value: 1 }
                 kind_samples {
                   key: 0
-                  value { location: "a" location: "b" location: "c" }
+                  value {
+                    evidence { kind: ANNOTATED_UNKNOWN location: "a" }
+                    evidence { kind: ANNOTATED_UNKNOWN location: "b" }
+                    evidence { kind: ANNOTATED_UNKNOWN location: "c" }
+                  }
                 }
               )pb"));
 }
@@ -84,24 +97,25 @@ TEST(MergePartialsTest, LeftEmpty) {
 }
 
 TEST(FinalizeTest, ConflictingAnnotations) {
-  EXPECT_THAT(finalize(proto<SlotPartial>(R"pb(
-                kind_count { key: 1 value: 1 }  # ANNOTATED_NULLABLE
-                kind_count { key: 2 value: 1 }  # ANNOTATED_NONNULL
-                kind_samples {
-                  key: 1
-                  value { location: "decl" }
-                }
-                kind_samples {
-                  key: 2
-                  value { location: "def" }
-                }
-              )pb")),
-              EqualsProto(R"pb(
-                nullability: UNKNOWN
-                conflict: true
-                sample_evidence { kind: ANNOTATED_NULLABLE location: "decl" }
-                sample_evidence { kind: ANNOTATED_NONNULL location: "def" }
-              )pb"));
+  EXPECT_THAT(
+      finalize(proto<SlotPartial>(R"pb(
+        kind_count { key: 1 value: 1 }  # ANNOTATED_NULLABLE
+        kind_count { key: 2 value: 1 }  # ANNOTATED_NONNULL
+        kind_samples {
+          key: 1
+          value { evidence { kind: ANNOTATED_NULLABLE location: "decl" } }
+        }
+        kind_samples {
+          key: 2
+          value { evidence { kind: ANNOTATED_NONNULL location: "def" } }
+        }
+      )pb")),
+      EqualsProto(R"pb(
+        nullability: UNKNOWN
+        conflict: true
+        sample_evidence { kind: ANNOTATED_NULLABLE location: "decl" }
+        sample_evidence { kind: ANNOTATED_NONNULL location: "def" }
+      )pb"));
 }
 
 TEST(FinalizeTest, Empty) {

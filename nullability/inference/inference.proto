@@ -186,11 +186,11 @@ message SlotInference {
 message SlotPartial {
   map</*Kind*/ uint32, uint32> kind_count = 1;
 
-  message SampleLocations {
-    // A bounded number of locations are stored.
-    repeated string location = 1;
+  message SampleEvidence {
+    // A bounded number of evidence pieces are stored.
+    repeated Evidence evidence = 1;
   }
-  map</*Kind*/ uint32, SampleLocations> kind_samples = 2;
+  map</*Kind*/ uint32, SampleEvidence> kind_samples = 2;
 
   // Slot identifiers for which this partial is relevant. Used only for
   // debugging information.

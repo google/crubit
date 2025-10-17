@@ -6,35 +6,42 @@
 
 #include <array>
 #include <optional>
-#include <utility>
+#include <string>
 
 #include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 
 namespace clang::tidy::nullability {
-namespace {
 
-static void mergeSampleLocations(SlotPartial::SampleLocations &LHS,
-                                 const SlotPartial::SampleLocations &RHS) {
+static void mergeSampleEvidence(SlotPartial::SampleEvidence& LHS,
+                                const SlotPartial::SampleEvidence& RHS) {
   static constexpr unsigned Limit = 3;
-  // We don't care which we pick, but they should be unique.
+  // We don't care which we pick, but their locations should be unique.
   // Multiple instantiations of the same template are not interesting.
-  for (const auto &Loc : RHS.location()) {
-    if (LHS.location_size() >= Limit) break;
-    // Linear scan is fine because Limit is tiny.
-    if (!llvm::is_contained(LHS.location(), Loc)) LHS.add_location(Loc);
+  // Linear scans are fine because Limit is tiny.
+  llvm::SmallVector<std::string, Limit> LHSEvidenceLocations(llvm::map_range(
+      LHS.evidence(), [](const Evidence& E) { return E.location(); }));
+  for (const auto& E : RHS.evidence()) {
+    if (LHS.evidence_size() >= Limit) break;
+    if (!llvm::is_contained(LHSEvidenceLocations, E.location()))
+      *LHS.add_evidence() = E;
   }
 }
-
-}  // namespace
 
 SlotPartial partialFromEvidence(const Evidence &E) {
   SlotPartial P;
   ++(*P.mutable_kind_count())[E.kind()];
-  if (E.has_location())
-    (*P.mutable_kind_samples())[E.kind()].add_location(E.location());
+  // Save the evidence as a sample, only if it has a location.
+  if (E.has_location()) {
+    Evidence& Sample = *(*P.mutable_kind_samples())[E.kind()].add_evidence();
+    Sample = E;
+    // Clear the symbol and slot, which are extraneous for debugging samples.
+    Sample.clear_symbol();
+    Sample.clear_slot();
+  }
   return P;
 }
 
@@ -42,7 +49,7 @@ void mergePartials(SlotPartial &LHS, const SlotPartial &RHS) {
   for (auto [Kind, Count] : RHS.kind_count())
     (*LHS.mutable_kind_count())[Kind] += Count;
   for (const auto &[Kind, Samples] : RHS.kind_samples())
-    mergeSampleLocations((*LHS.mutable_kind_samples())[Kind], Samples);
+    mergeSampleEvidence((*LHS.mutable_kind_samples())[Kind], Samples);
 }
 
 // Form a nullability conclusion from a set of evidence.
@@ -50,12 +57,9 @@ SlotInference finalize(const SlotPartial &P, bool EnableSoftRules) {
   SlotInference Inference;
   if (P.kind_count_size() == 0) return Inference;
 
-  // Reconstitute samples, if we have them.
   for (const auto &[Kind, Samples] : P.kind_samples()) {
-    for (const auto &Loc : Samples.location()) {
-      auto *Sample = Inference.add_sample_evidence();
-      Sample->set_location(Loc);
-      Sample->set_kind(static_cast<Evidence::Kind>(Kind));
+    for (const auto& Sample : Samples.evidence()) {
+      *Inference.add_sample_evidence() = Sample;
     }
   }
   llvm::stable_sort(*Inference.mutable_sample_evidence(),
@@ -73,9 +77,8 @@ SlotInference finalize(const SlotPartial &P, bool EnableSoftRules) {
   return Inference;
 }
 
-namespace {
-void update(std::optional<InferResult> &Result,
-            Nullability ImpliedNullability) {
+static void update(std::optional<InferResult>& Result,
+                   Nullability ImpliedNullability) {
   if (!Result) {
     Result = {ImpliedNullability};
     return;
@@ -84,7 +87,6 @@ void update(std::optional<InferResult> &Result,
     // Leave the existing Nullability.
     Result->Conflict = true;
 }
-}  // namespace
 
 InferResult infer(llvm::ArrayRef<unsigned> Counts, bool EnableSoftRules) {
   CHECK_EQ(Counts.size(), Evidence::Kind_MAX + 1);
