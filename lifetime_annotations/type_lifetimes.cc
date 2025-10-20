@@ -759,7 +759,7 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
   } else if (auto record_type_loc = type_loc.getAs<clang::RecordTypeLoc>()) {
     if (auto specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
-                record_type_loc.getOriginalDecl())) {
+                record_type_loc.getDecl())) {
       if (specialization_decl->getTemplateArgsAsWritten()) {
         return GetTemplateArgs(
             specialization_decl->getTemplateArgsAsWritten()->arguments());
