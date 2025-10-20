@@ -186,7 +186,7 @@ pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
         return None;
     };
 
-    if !matches_qualified_name(db, adt.did(), ":: core :: mem :: maybe_uninit :: MaybeUninit")
+    if !matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"])
         || substs.len() != 1
     {
         return None;
@@ -742,7 +742,7 @@ pub fn format_transparent_pointee<'tcx>(
     ty: &Ty<'tcx>,
 ) -> Result<TokenStream> {
     if let ty::TyKind::Adt(adt, substs) = ty.kind() {
-        if matches_qualified_name(db, adt.did(), ":: core :: mem :: maybe_uninit :: MaybeUninit") {
+        if matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"]) {
             let generic_ty = db.format_ty_for_rs(substs[0].expect_ty())?;
             return Ok(quote! { std::mem::MaybeUninit<#generic_ty> });
         }

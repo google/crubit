@@ -461,15 +461,22 @@ fn reexported_symbol_canonical_name_mapping(
     name_map
 }
 
-/// Checks whether a definition matches a specific qualified name.
-fn matches_qualified_name(
-    db: &dyn BindingsGenerator<'_>,
-    item_did: DefId,
-    name_to_compare: &str,
-) -> bool {
-    // TODO(b/372153103): Compare the name via `tcx.def_path(adt.did())`.
-    let type_name = FullyQualifiedName::new(db, item_did);
-    type_name.format_for_rs().to_string() == name_to_compare
+/// Checks whether a definition matches a specific qualified name by matching it's definition path
+/// against `name`. Name must include the crate in it's path.
+fn matches_qualified_name(db: &dyn BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {
+    let tcx = db.tcx();
+    let path = tcx.def_path(item_did);
+    if path.data.len() + 1 != name.len() {
+        return false;
+    }
+    // This will always return false for anonymous path data because the caller won't be able to
+    // specify the `disambiguator` that gets inserted into the symbol. That's fine. It is expected
+    // this function will only be called to check for non-anonymous paths.
+    [tcx.crate_name(path.krate)]
+        .into_iter()
+        .chain(path.data.into_iter().map(|seg| seg.as_sym(/*verbose=*/ false)))
+        .zip(name.iter().map(|s| Symbol::intern(s)))
+        .all(|(sym, expected)| sym == expected)
 }
 
 /// Checks that `ty` has the same ABI as `rs_std::SliceRef`.
