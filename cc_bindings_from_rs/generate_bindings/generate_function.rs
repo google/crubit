@@ -385,6 +385,9 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<Ty<'tcx>>
     #[rustversion::since(2025-07-29)]
     let impl_id = tcx.impl_of_assoc(def_id)?;
 
+    #[rustversion::since(2025-10-17)]
+    assert!(!tcx.impl_is_of_trait(impl_id), "Trait methods should be filtered by caller");
+    #[rustversion::before(2025-10-17)]
     assert!(tcx.impl_trait_ref(impl_id).is_none(), "Trait methods should be filtered by caller");
     Some(tcx.type_of(impl_id).instantiate_identity())
 }

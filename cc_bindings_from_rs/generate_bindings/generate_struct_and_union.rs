@@ -335,6 +335,9 @@ pub fn from_trait_impls_by_argument<'tcx>(
     };
     let mut map: HashMap<Ty<'tcx>, Vec<DefId>> = HashMap::new();
     for from_impl_id in impls_iter {
+        #[rustversion::since(2025-10-17)]
+        let middle_trait_header = tcx.impl_trait_header(from_impl_id);
+        #[rustversion::before(2025-10-17)]
         let middle_trait_header = tcx
             .impl_trait_header(from_impl_id)
             .expect("DefId for an `From` trait impl lacked a trait header");
@@ -366,6 +369,9 @@ fn generate_into_impls<'tcx>(
     let from_map = db.from_trait_impls_by_argument(core.def_id.krate);
     let from_impls = from_map.get(&core.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(
         |from_impl_id| {
+            #[rustversion::since(2025-10-17)]
+            let middle_trait_header = tcx.impl_trait_header(*from_impl_id);
+            #[rustversion::before(2025-10-17)]
             let middle_trait_header = tcx
                 .impl_trait_header(*from_impl_id)
                 .expect("DefId for a `From` trait impl lacked a trait header");
@@ -387,6 +393,9 @@ fn generate_into_impls<'tcx>(
     );
     let into_impls =
         tcx.non_blanket_impls_for_ty(into_trait, core.self_ty).filter_map(|into_impl_id| {
+            #[rustversion::since(2025-10-17)]
+            let middle_trait_header = tcx.impl_trait_header(into_impl_id);
+            #[rustversion::before(2025-10-17)]
             let middle_trait_header = tcx
                 .impl_trait_header(into_impl_id)
                 .expect("DefId for an `Into` trait impl lacked a trait header");
