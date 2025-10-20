@@ -20,6 +20,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -28,15 +29,42 @@ namespace {
 
 class InferenceManager {
  public:
-  InferenceManager(ASTContext& Ctx, unsigned Iterations,
+  InferenceManager(ASTContext& Ctx, bool UseSummaries, unsigned Iterations,
                    llvm::function_ref<bool(const Decl&)> Filter,
                    const NullabilityPragmas& Pragmas)
-      : Ctx(Ctx), Iterations(Iterations), Filter(Filter), Pragmas(Pragmas) {}
+      : Ctx(Ctx),
+        UseSummaries(UseSummaries),
+        Iterations(Iterations),
+        Filter(Filter),
+        Pragmas(Pragmas) {}
 
-  InferenceResults inferenceRound(
+  InferenceResults groupAndMergeEvidence(
+      std::vector<Evidence> AllEvidence) const {
+    // Group by symbol and then slot number.
+    llvm::sort(AllEvidence, [&](const Evidence& L, const Evidence& R) {
+      if (L.symbol().usr() != R.symbol().usr())
+        return L.symbol().usr() < R.symbol().usr();
+      return L.slot() < R.slot();
+    });
+    // For each symbol, for each slot, combine evidence into an inference.
+    llvm::ArrayRef<Evidence> RemainingEvidence = AllEvidence;
+
+    InferenceResults AllInference;
+    while (!RemainingEvidence.empty()) {
+      auto Batch = RemainingEvidence.take_while([&](const Evidence& E) {
+        return E.symbol().usr() == RemainingEvidence.front().symbol().usr() &&
+               E.slot() == RemainingEvidence.front().slot();
+      });
+      RemainingEvidence = RemainingEvidence.drop_front(Batch.size());
+      AllInference[Batch.front().symbol().usr()][Slot(Batch.front().slot())] =
+          mergeEvidence(Batch);
+    }
+    return AllInference;
+  }
+
+  InferenceResults inferenceRoundWithAST(
       EvidenceSites Sites, USRCache USRCache,
       const PreviousInferences& InferencesFromLastRound) const {
-    InferenceResults AllInference;
     std::vector<Evidence> AllEvidence;
 
     // Collect all evidence.
@@ -55,25 +83,78 @@ class InferenceManager {
                      << toString(std::move(Err)) << "\n";
       }
     }
-    // Group by symbol and then slot number.
-    llvm::sort(AllEvidence, [&](const Evidence& L, const Evidence& R) {
-      if (L.symbol().usr() != R.symbol().usr())
-        return L.symbol().usr() < R.symbol().usr();
-      return L.slot() < R.slot();
-    });
-    // For each symbol, for each slot, combine evidence into an inference.
-    llvm::ArrayRef<Evidence> RemainingEvidence = AllEvidence;
 
-    while (!RemainingEvidence.empty()) {
-      auto Batch = RemainingEvidence.take_while([&](const Evidence& E) {
-        return E.symbol().usr() == RemainingEvidence.front().symbol().usr() &&
-               E.slot() == RemainingEvidence.front().slot();
-      });
-      RemainingEvidence = RemainingEvidence.drop_front(Batch.size());
-      AllInference[Batch.front().symbol().usr()][Slot(Batch.front().slot())] =
-          mergeEvidence(Batch);
+    return groupAndMergeEvidence(std::move(AllEvidence));
+  }
+
+  struct FunctionSummariesAndEvidence {
+    TUSummary Summary;
+    std::vector<Evidence> DeclarationsEvidence;
+    llvm::StringMap<MethodSummary> BaseToOverrides;
+  };
+
+  FunctionSummariesAndEvidence summarizeFromEvidenceSites(
+      const EvidenceSites& Sites, USRCache& USRCache) const {
+    FunctionSummariesAndEvidence Result;
+
+    VirtualMethodIndex VMI = getVirtualMethodIndex(Ctx, USRCache);
+    // Test the that we can properly round-trip parts of the VMI
+    // with saveVirtualMethodsMap and loadVirtualMethodsMap.
+    *Result.Summary.mutable_overrides_to_bases() =
+        saveVirtualMethodsMap(VMI.Bases);
+
+    Result.BaseToOverrides = VMI.Overrides;
+
+    // Collect evidence for decls, and summaries for definitions.
+    auto DeclEmitter = evidenceEmitterWithPropagation(
+        [&](Evidence E) { Result.DeclarationsEvidence.push_back(E); },
+        std::move(VMI));
+    for (const auto* Decl : Sites.Declarations) {
+      if (Filter && !Filter(*Decl)) continue;
+      collectEvidenceFromTargetDeclaration(*Decl, DeclEmitter, USRCache,
+                                           Pragmas);
     }
-    return AllInference;
+    if (auto MainFile = Ctx.getSourceManager().getFileEntryRefForID(
+            Ctx.getSourceManager().getMainFileID()))
+      *Result.Summary.mutable_path() = MainFile->getName().str();
+    for (const auto* Impl : Sites.Definitions) {
+      if (Filter && !Filter(*Impl)) continue;
+
+      if (llvm::Expected<CFGSummary> Summary =
+              summarizeDefinition(*Impl, USRCache, Pragmas)) {
+        *Result.Summary.add_cfg_summaries() = *std::move(Summary);
+      } else {
+        llvm::errs() << "Error summarizing definition: " << Summary.takeError()
+                     << "\n";
+      }
+    }
+    return Result;
+  }
+
+  InferenceResults inferenceRoundWithSummaries(
+      const FunctionSummariesAndEvidence& SummariesAndEvidence,
+      const PreviousInferences& InferencesFromLastRound) const {
+    std::vector<Evidence> AllEvidence =
+        SummariesAndEvidence.DeclarationsEvidence;
+
+    VirtualMethodIndex VMI;
+    VMI.Bases = loadVirtualMethodsMap(
+        SummariesAndEvidence.Summary.overrides_to_bases());
+    VMI.Overrides = SummariesAndEvidence.BaseToOverrides;
+
+    // Collect evidence from summaries.
+    auto Emitter = evidenceEmitterWithPropagation(
+        [&](Evidence E) { AllEvidence.push_back(E); }, std::move(VMI));
+    for (const auto& FuncSummary :
+         SummariesAndEvidence.Summary.cfg_summaries()) {
+      if (llvm::Error Err = collectEvidenceFromSummary(
+              FuncSummary, Emitter, InferencesFromLastRound)) {
+        llvm::errs() << "Error collecting evidence from summary "
+                     << llvm::toString(std::move(Err)) << "\n";
+      }
+    }
+
+    return groupAndMergeEvidence(std::move(AllEvidence));
   }
 
   InferenceResults iterativelyInfer() const {
@@ -89,9 +170,13 @@ class InferenceManager {
     auto Sites = EvidenceSites::discover(Ctx);
     USRCache USRCache;
 
-    InferenceResults AllInference = inferenceRound(Sites, USRCache, {});
+    InferenceResults AllInference;
+    FunctionSummariesAndEvidence SummariesAndEvidence;
+    if (UseSummaries) {
+      SummariesAndEvidence = summarizeFromEvidenceSites(Sites, USRCache);
+    }
 
-    for (unsigned Iteration = 1; Iteration < Iterations; ++Iteration) {
+    for (unsigned Iteration = 0; Iteration < Iterations; ++Iteration) {
       std::vector<SlotFingerprint> NullableFromLastRound;
       std::vector<SlotFingerprint> NonnullFromLastRound;
 
@@ -111,18 +196,28 @@ class InferenceManager {
         }
       }
 
-      AllInference =
-          inferenceRound(Sites, USRCache,
-                         {.Nullable = std::make_shared<SortedFingerprintVector>(
-                              std::move(NullableFromLastRound)),
-                          .Nonnull = std::make_shared<SortedFingerprintVector>(
-                              std::move(NonnullFromLastRound))});
+      if (UseSummaries) {
+        AllInference = inferenceRoundWithSummaries(
+            SummariesAndEvidence,
+            {.Nullable = std::make_shared<SortedFingerprintVector>(
+                 std::move(NullableFromLastRound)),
+             .Nonnull = std::make_shared<SortedFingerprintVector>(
+                 std::move(NonnullFromLastRound))});
+      } else {
+        AllInference = inferenceRoundWithAST(
+            Sites, USRCache,
+            {.Nullable = std::make_shared<SortedFingerprintVector>(
+                 std::move(NullableFromLastRound)),
+             .Nonnull = std::make_shared<SortedFingerprintVector>(
+                 std::move(NonnullFromLastRound))});
+      }
     }
     return AllInference;
   }
 
  private:
   ASTContext& Ctx;
+  bool UseSummaries;
   unsigned Iterations;
   llvm::function_ref<bool(const Decl&)> Filter;
   const NullabilityPragmas& Pragmas;
@@ -130,9 +225,10 @@ class InferenceManager {
 }  // namespace
 
 InferenceResults inferTU(ASTContext& Ctx, const NullabilityPragmas& Pragmas,
-                         unsigned Iterations,
+                         bool UseSummaries, unsigned Iterations,
                          llvm::function_ref<bool(const Decl&)> Filter) {
-  return InferenceManager(Ctx, Iterations, Filter, Pragmas).iterativelyInfer();
+  return InferenceManager(Ctx, UseSummaries, Iterations, Filter, Pragmas)
+      .iterativelyInfer();
 }
 
 }  // namespace clang::tidy::nullability

@@ -22,6 +22,7 @@
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
@@ -62,7 +63,28 @@ MATCHER_P2(inferenceMatcher, USR, SlotsMatcher, "") {
 
 AST_MATCHER(Decl, isCanonical) { return Node.isCanonicalDecl(); }
 
-class InferTUTest : public ::testing::Test {
+// TODO: b/417692223 remove the parameterization once summaries are the default.
+enum class InferenceMode {
+  kTestWithSummaries,
+  kTestDirectly,
+};
+
+}  // namespace
+
+// Helper to get a string representation of the InferenceMode for test names.
+static std::string printToString(InferenceMode Mode) {
+  switch (Mode) {
+    case InferenceMode::kTestWithSummaries:
+      return "WithSummaries";
+    case InferenceMode::kTestDirectly:
+      return "Directly";
+  }
+  llvm_unreachable("Unknown InferenceMode");
+}
+
+namespace {
+
+class InferTUTest : public testing::TestWithParam<InferenceMode> {
  protected:
   std::optional<TestAST> AST;
   NullabilityPragmas Pragmas;
@@ -71,7 +93,10 @@ class InferTUTest : public ::testing::Test {
     AST.emplace(getAugmentedTestInputs(Code, Pragmas));
   }
 
-  auto infer() { return inferTU(AST->context(), Pragmas); }
+  auto infer() {
+    return inferTU(AST->context(), Pragmas,
+                   GetParam() == InferenceMode::kTestWithSummaries);
+  }
 
   // Returns a matcher for an InferenceResults entry.
   // The DeclMatcher should uniquely identify the symbol being described.
@@ -95,7 +120,14 @@ class InferTUTest : public ::testing::Test {
   }
 };
 
-TEST_F(InferTUTest, UncheckedDeref) {
+INSTANTIATE_TEST_SUITE_P(InferTUTests, InferTUTest,
+                         testing::Values(InferenceMode::kTestWithSummaries,
+                                         InferenceMode::kTestDirectly),
+                         [](const testing::TestParamInfo<InferenceMode>& Info) {
+                           return printToString(Info.param);
+                         });
+
+TEST_P(InferTUTest, UncheckedDeref) {
   build(R"cc(
     void target(int *P, bool Cond) {
       if (Cond) *P;
@@ -111,7 +143,7 @@ TEST_F(InferTUTest, UncheckedDeref) {
                                     {inferredSlot(1, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, Samples) {
+TEST_P(InferTUTest, Samples) {
   llvm::StringRef Code =
       "void target(int * P) { *P + *P; }\n"
       "void another(int X) { target(&X); }";
@@ -133,7 +165,7 @@ TEST_F(InferTUTest, Samples) {
                                    kind: UNCHECKED_DEREFERENCE)pb")));
 }
 
-TEST_F(InferTUTest, Annotations) {
+TEST_P(InferTUTest, Annotations) {
   build(R"cc(
     int *_Nonnull target(int *A, int *B);
     int *_Nonnull target(int *A, int *_Nullable P) { *P; }
@@ -147,7 +179,7 @@ TEST_F(InferTUTest, Annotations) {
                                     })));
 }
 
-TEST_F(InferTUTest, AnnotationsConflict) {
+TEST_P(InferTUTest, AnnotationsConflict) {
   build(R"cc(
     int *_Nonnull target();
     int *_Nullable target();
@@ -158,7 +190,7 @@ TEST_F(InferTUTest, AnnotationsConflict) {
                                     {inferredSlot(0, Nullability::UNKNOWN)})));
 }
 
-TEST_F(InferTUTest, ParamsFromCallSite) {
+TEST_P(InferTUTest, ParamsFromCallSite) {
   build(R"cc(
     void callee(int *P, int *Q, int *R);
     void target(int *A, int *_Nonnull B, int *_Nullable C) { callee(A, B, C); }
@@ -173,7 +205,7 @@ TEST_F(InferTUTest, ParamsFromCallSite) {
                                  })));
 }
 
-TEST_F(InferTUTest, ReturnTypeNullable) {
+TEST_P(InferTUTest, ReturnTypeNullable) {
   build(R"cc(
     int* target() { return nullptr; }
   )cc");
@@ -182,7 +214,7 @@ TEST_F(InferTUTest, ReturnTypeNullable) {
                                     {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, ReturnTypeNonnull) {
+TEST_P(InferTUTest, ReturnTypeNonnull) {
   build(R"cc(
     int *_Nonnull providesNonnull();
     int *target() { return providesNonnull(); }
@@ -192,7 +224,7 @@ TEST_F(InferTUTest, ReturnTypeNonnull) {
                                  {inferredSlot(0, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
+TEST_P(InferTUTest, ReturnTypeNonnullAndUnknown) {
   build(R"cc(
     int *_Nonnull providesNonnull();
     int *target(bool B, int *Q) {
@@ -205,7 +237,7 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndUnknown) {
                                  {inferredSlot(0, Nullability::UNKNOWN)})));
 }
 
-TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
+TEST_P(InferTUTest, ReturnTypeNonnullAndNullable) {
   build(R"cc(
     int *_Nonnull providesNonnull();
     int *target(bool B) {
@@ -218,7 +250,7 @@ TEST_F(InferTUTest, ReturnTypeNonnullAndNullable) {
                                  {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, ReturnTypeDereferenced) {
+TEST_P(InferTUTest, ReturnTypeDereferenced) {
   build(R"cc(
     struct S {
       void member();
@@ -232,7 +264,7 @@ TEST_F(InferTUTest, ReturnTypeDereferenced) {
                                     {inferredSlot(0, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, PassedToNonnull) {
+TEST_P(InferTUTest, PassedToNonnull) {
   build(R"cc(
     void takesNonnull(int *_Nonnull);
     void target(int *P) { takesNonnull(P); }
@@ -242,7 +274,7 @@ TEST_F(InferTUTest, PassedToNonnull) {
                                  {inferredSlot(1, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, PassedToMutableNullableRef) {
+TEST_P(InferTUTest, PassedToMutableNullableRef) {
   build(R"cc(
     void takesMutableNullableRef(int *_Nullable &);
     void target(int *P) { takesMutableNullableRef(P); }
@@ -252,7 +284,7 @@ TEST_F(InferTUTest, PassedToMutableNullableRef) {
                                  {inferredSlot(1, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, AssignedFromNullable) {
+TEST_P(InferTUTest, AssignedFromNullable) {
   build(R"cc(
     void target(int* P) { P = nullptr; }
   )cc");
@@ -261,7 +293,7 @@ TEST_F(InferTUTest, AssignedFromNullable) {
                                  {inferredSlot(1, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, CHECKMacro) {
+TEST_P(InferTUTest, CHECKMacro) {
   build(R"cc(
     // macro must use the parameter, but otherwise body doesn't matter
 #define CHECK(X) X
@@ -272,7 +304,7 @@ TEST_F(InferTUTest, CHECKMacro) {
                                  {inferredSlot(1, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, CHECKNEMacro) {
+TEST_P(InferTUTest, CHECKNEMacro) {
   build(R"cc(
     // macro must use the first parameter, but otherwise body doesn't matter
 #define CHECK_NE(X, Y) X
@@ -295,7 +327,7 @@ TEST_F(InferTUTest, CHECKNEMacro) {
            inference(hasName("A"), {inferredSlot(0, Nullability::NULLABLE)})}));
 }
 
-TEST_F(InferTUTest, Fields) {
+TEST_P(InferTUTest, Fields) {
   build(R"cc(
     int* getIntPtr();
     struct S {
@@ -353,7 +385,7 @@ TEST_F(InferTUTest, Fields) {
                     {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorNeverUsed) {
+TEST_P(InferTUTest, FieldsImplicitlyDeclaredConstructorNeverUsed) {
   build(R"cc(
     bool *_Nullable getNullable();
     struct S {
@@ -373,7 +405,7 @@ TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorNeverUsed) {
                           Not(Contains(inference(hasName("C"), {_}))))));
 }
 
-TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorUsed) {
+TEST_P(InferTUTest, FieldsImplicitlyDeclaredConstructorUsed) {
   build(R"cc(
     bool *_Nullable getNullable();
     struct S {
@@ -394,7 +426,7 @@ TEST_F(InferTUTest, FieldsImplicitlyDeclaredConstructorUsed) {
            inference(hasName("C"), {inferredSlot(0, Nullability::NULLABLE)})}));
 }
 
-TEST_F(InferTUTest, ConstructorCallThroughMakeUnique) {
+TEST_P(InferTUTest, ConstructorCallThroughMakeUnique) {
   build(R"cc(
 #include <memory>
     struct S {
@@ -414,7 +446,7 @@ TEST_F(InferTUTest, ConstructorCallThroughMakeUnique) {
               }));
 }
 
-TEST_F(InferTUTest, ConstructorCallWithConversionOperator) {
+TEST_P(InferTUTest, ConstructorCallWithConversionOperator) {
   build(R"cc(
 #include <memory>
     struct S {
@@ -437,7 +469,7 @@ TEST_F(InferTUTest, ConstructorCallWithConversionOperator) {
               }));
 }
 
-TEST_F(InferTUTest, ConstructorCallThroughMakeUniqueWithConversionOperator) {
+TEST_P(InferTUTest, ConstructorCallThroughMakeUniqueWithConversionOperator) {
   build(R"cc(
 #include <memory>
     struct S {
@@ -460,7 +492,7 @@ TEST_F(InferTUTest, ConstructorCallThroughMakeUniqueWithConversionOperator) {
               }));
 }
 
-TEST_F(InferTUTest, GlobalVariables) {
+TEST_P(InferTUTest, GlobalVariables) {
   build(R"cc(
     int* getIntPtr();
 
@@ -482,7 +514,7 @@ TEST_F(InferTUTest, GlobalVariables) {
                     {inferredSlot(0, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, StaticMemberVariables) {
+TEST_P(InferTUTest, StaticMemberVariables) {
   build(R"cc(
     struct S {
       static int* SI;
@@ -501,7 +533,7 @@ TEST_F(InferTUTest, StaticMemberVariables) {
           inference(hasName("SB"), {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, Locals) {
+TEST_P(InferTUTest, Locals) {
   build(R"cc(
     void target() {
       int* A = nullptr;
@@ -515,20 +547,22 @@ TEST_F(InferTUTest, Locals) {
           inference(hasName("B"), {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, Filter) {
+TEST_P(InferTUTest, Filter) {
   build(R"cc(
     int* target1() { return nullptr; }
     int* target2() { return nullptr; }
   )cc");
-  EXPECT_THAT(inferTU(AST->context(), Pragmas, /*Iterations=*/1,
-                      [&](const Decl &D) {
+  EXPECT_THAT(inferTU(AST->context(), Pragmas,
+                      GetParam() == InferenceMode::kTestWithSummaries,
+                      /*Iterations=*/1,
+                      [&](const Decl& D) {
                         return cast<NamedDecl>(D).getNameAsString() !=
                                "target2";
                       }),
               ElementsAre(inference(hasName("target1"), {_})));
 }
 
-TEST_F(InferTUTest, AutoNoStarType) {
+TEST_P(InferTUTest, AutoNoStarType) {
   build(R"cc(
     int *_Nullable getNullable();
     int *_Nonnull getNonnull();
@@ -592,7 +626,7 @@ TEST_F(InferTUTest, AutoNoStarType) {
               {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, AutoStarType) {
+TEST_P(InferTUTest, AutoStarType) {
   build(R"cc(
     int *_Nullable getNullable();
 
@@ -657,7 +691,7 @@ TEST_F(InferTUTest, AutoStarType) {
                     {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUTest, IterationsPropagateInferences) {
+TEST_P(InferTUTest, IterationsPropagateInferences) {
   build(R"cc(
     void takesToBeNonnull(int* X) { *X; }
     int* returnsToBeNonnull(int* A) { return A; }
@@ -668,8 +702,10 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
       return returnsToBeNonnull(P);
     }
   )cc");
+  bool UseSummaries = GetParam() == InferenceMode::kTestWithSummaries;
   EXPECT_THAT(
-      inferTU(AST->context(), Pragmas, /*Iterations=*/1),
+      inferTU(AST->context(), Pragmas, UseSummaries,
+              /*Iterations=*/1),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
                                         inferredSlot(1, Nullability::NONNULL),
@@ -680,7 +716,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
-      inferTU(AST->context(), Pragmas, /*Iterations=*/2),
+      inferTU(AST->context(), Pragmas, UseSummaries, /*Iterations=*/2),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
                                         inferredSlot(1, Nullability::NONNULL),
@@ -691,7 +727,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
-      inferTU(AST->context(), Pragmas, /*Iterations=*/3),
+      inferTU(AST->context(), Pragmas, UseSummaries, /*Iterations=*/3),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::UNKNOWN),
                                         inferredSlot(1, Nullability::NONNULL),
@@ -703,7 +739,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
           inference(hasName("takesToBeNonnull"),
                     {inferredSlot(1, Nullability::NONNULL)})));
   EXPECT_THAT(
-      inferTU(AST->context(), Pragmas, /*Iterations=*/4),
+      inferTU(AST->context(), Pragmas, UseSummaries, /*Iterations=*/4),
       UnorderedElementsAre(
           inference(hasName("target"), {inferredSlot(0, Nullability::NONNULL),
                                         inferredSlot(1, Nullability::NONNULL),
@@ -718,7 +754,7 @@ TEST_F(InferTUTest, IterationsPropagateInferences) {
 
 // This tests a case where the initial analysis before inference queries the SAT
 // solver (when doing a Join).
-TEST_F(InferTUTest, MultipleIterationsWithJoinAndDeadCode) {
+TEST_P(InferTUTest, MultipleIterationsWithJoinAndDeadCode) {
   build(R"cc(
     int* otherFunction(int* P) {
       *P = 0;
@@ -744,7 +780,9 @@ TEST_F(InferTUTest, MultipleIterationsWithJoinAndDeadCode) {
     void caller(int X) { target(&X, nullptr); }
   )cc");
   EXPECT_THAT(
-      inferTU(AST->context(), Pragmas, /*Iterations=*/3),
+      inferTU(AST->context(), Pragmas,
+              GetParam() == InferenceMode::kTestWithSummaries,
+              /*Iterations=*/3),
       UnorderedElementsAre(inference(hasName("otherFunction"),
                                      {inferredSlot(0, Nullability::NONNULL),
                                       inferredSlot(1, Nullability::NONNULL)}),
@@ -758,7 +796,7 @@ TEST_F(InferTUTest, MultipleIterationsWithJoinAndDeadCode) {
                                      {inferredSlot(0, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUTest, Pragma) {
+TEST_P(InferTUTest, Pragma) {
   build(R"cc(
 #pragma nullability file_default nonnull
     void target(int *DefaultNonnull, int *_Null_unspecified InferredNonnull,
@@ -790,7 +828,7 @@ TEST_F(InferTUTest, Pragma) {
                   })));
 }
 
-TEST_F(InferTUTest, FunctionTemplate) {
+TEST_P(InferTUTest, FunctionTemplate) {
   build(R"cc(
     template <typename T>
     T functionTemplate(int *P, int *_Nullable Q, T *R, T *_Nullable S, T U) {
@@ -837,7 +875,7 @@ TEST_F(InferTUTest, FunctionTemplate) {
                       inferredSlot(4, Nullability::NULLABLE)})}));
 }
 
-TEST_F(InferTUTest, LambdaWithCaptureInit) {
+TEST_P(InferTUTest, LambdaWithCaptureInit) {
   build(R"cc(
     void foo() {
       int* P;
@@ -845,7 +883,9 @@ TEST_F(InferTUTest, LambdaWithCaptureInit) {
     }
   )cc");
   EXPECT_THAT(
-      inferTU(AST->context(), Pragmas, /*Iterations=*/2),
+      inferTU(AST->context(), Pragmas,
+              GetParam() == InferenceMode::kTestWithSummaries,
+              /*Iterations=*/2),
       UnorderedElementsAre(
           inference(hasName("P"), {inferredSlot(0, Nullability::NONNULL)}),
           inference(hasName("Q"), {inferredSlot(0, Nullability::NONNULL)})));
@@ -853,7 +893,14 @@ TEST_F(InferTUTest, LambdaWithCaptureInit) {
 
 using InferTUSmartPointerTest = InferTUTest;
 
-TEST_F(InferTUSmartPointerTest, Annotations) {
+INSTANTIATE_TEST_SUITE_P(InferTUSmartPointerTests, InferTUSmartPointerTest,
+                         testing::Values(InferenceMode::kTestWithSummaries,
+                                         InferenceMode::kTestDirectly),
+                         [](const testing::TestParamInfo<InferenceMode>& Info) {
+                           return printToString(Info.param);
+                         });
+
+TEST_P(InferTUSmartPointerTest, Annotations) {
   build(R"cc(
 #include <memory>
     _Nonnull std::unique_ptr<int> target(std::unique_ptr<int> A,
@@ -872,7 +919,7 @@ TEST_F(InferTUSmartPointerTest, Annotations) {
                                  })));
 }
 
-TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
+TEST_P(InferTUSmartPointerTest, ParamsFromCallSite) {
   build(R"cc(
 #include <memory>
 #include <utility>
@@ -893,7 +940,7 @@ TEST_F(InferTUSmartPointerTest, ParamsFromCallSite) {
                                  })));
 }
 
-TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
+TEST_P(InferTUSmartPointerTest, ReturnTypeNullable) {
   build(R"cc(
 #include <memory>
     std::unique_ptr<int> target() { return std::unique_ptr<int>(); }
@@ -903,7 +950,7 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNullable) {
                                  {inferredSlot(0, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
+TEST_P(InferTUSmartPointerTest, ReturnTypeNonnull) {
   build(R"cc(
 #include <memory>
     std::unique_ptr<int> target() { return std::make_unique<int>(0); }
@@ -913,7 +960,7 @@ TEST_F(InferTUSmartPointerTest, ReturnTypeNonnull) {
                                  {inferredSlot(0, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUSmartPointerTest,
+TEST_P(InferTUSmartPointerTest,
        DefaultFieldInitializersAbsentSomeLateInitializationInTestSetUp) {
   build(R"cc(
 #include <memory>
@@ -979,7 +1026,14 @@ TEST_F(InferTUSmartPointerTest,
 
 using InferTUVirtualMethodsTest = InferTUTest;
 
-TEST_F(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
+INSTANTIATE_TEST_SUITE_P(InferTUVirtualMethodsTests, InferTUVirtualMethodsTest,
+                         testing::Values(InferenceMode::kTestWithSummaries,
+                                         InferenceMode::kTestDirectly),
+                         [](const testing::TestParamInfo<InferenceMode>& Info) {
+                           return printToString(Info.param);
+                         });
+
+TEST_P(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
   build(R"cc(
     struct Base {
       virtual int* foo(int* P) {
@@ -1007,7 +1061,7 @@ TEST_F(InferTUVirtualMethodsTest, SafeVarianceNoConflicts) {
                              inferredSlot(1, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
+TEST_P(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
   build(R"cc(
     struct Base {
       virtual int *_Nonnull foo(int *P) {
@@ -1032,7 +1086,7 @@ TEST_F(InferTUVirtualMethodsTest, BaseConstrainsDerived) {
                              inferredSlot(1, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUVirtualMethodsTest, DerivedConstrainsBase) {
+TEST_P(InferTUVirtualMethodsTest, DerivedConstrainsBase) {
   build(R"cc(
     struct Base {
       virtual int* foo(int* P);
@@ -1055,7 +1109,7 @@ TEST_F(InferTUVirtualMethodsTest, DerivedConstrainsBase) {
                                       inferredSlot(1, Nullability::NONNULL)})));
 }
 
-TEST_F(InferTUVirtualMethodsTest, Conflict) {
+TEST_P(InferTUVirtualMethodsTest, Conflict) {
   build(R"cc(
     struct Base {
       virtual int* foo(int* P);
@@ -1089,7 +1143,7 @@ TEST_F(InferTUVirtualMethodsTest, Conflict) {
                inferredSlot(1, Nullability::NONNULL, /*Conflict*/ true)})));
 }
 
-TEST_F(InferTUVirtualMethodsTest, MultipleDerived) {
+TEST_P(InferTUVirtualMethodsTest, MultipleDerived) {
   build(R"cc(
     struct Base {
       virtual void foo(int* P) { P = nullptr; }
@@ -1113,7 +1167,7 @@ TEST_F(InferTUVirtualMethodsTest, MultipleDerived) {
                             {inferredSlot(1, Nullability::NULLABLE)})));
 }
 
-TEST_F(InferTUVirtualMethodsTest, MultipleBase) {
+TEST_P(InferTUVirtualMethodsTest, MultipleBase) {
   build(R"cc(
     struct BaseA {
       virtual void foo(int* P);

@@ -26,10 +26,13 @@ using InferenceResults =
 // useful in observing the behavior of the inference system.
 // It also lets us write tests for the whole inference system.
 //
+// If UseSummaries is true, generates the AST only once to produce a Summary
+// and then uses that Summary for iteration.
 // If Filter is provided, only considers decls that return true.
 InferenceResults inferTU(
-    ASTContext &, const NullabilityPragmas &, unsigned Iterations = 1,
-    llvm::function_ref<bool(const Decl &)> Filter = nullptr);
+    ASTContext&, const NullabilityPragmas&, bool UseSummaries,
+    unsigned Iterations = 1,
+    llvm::function_ref<bool(const Decl&)> Filter = nullptr);
 
 }  // namespace clang::tidy::nullability
 
