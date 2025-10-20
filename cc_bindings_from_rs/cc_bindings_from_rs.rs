@@ -112,15 +112,17 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     }
 
     {
-        let cc_api = cc_tokens_to_formatted_string(cc_api, &cmdline.clang_format_exe_path)?;
+        let cc_api =
+            cc_tokens_to_formatted_string(cc_api, cmdline.clang_format_exe_path.as_deref())?;
         let cc_api = turn_off_clang_format(cc_api);
         write_file(&cmdline.h_out, &cc_api)?;
     }
 
     {
-        let rustfmt_config =
-            RustfmtConfig::new(&cmdline.rustfmt_exe_path, cmdline.rustfmt_config_path.as_deref());
-        let cc_api_impl = rs_tokens_to_formatted_string(cc_api_impl, &rustfmt_config)?;
+        let rustfmt_config = cmdline.rustfmt_exe_path.as_ref().map(|rustfmt_path| {
+            RustfmtConfig::new(rustfmt_path, cmdline.rustfmt_config_path.as_deref())
+        });
+        let cc_api_impl = rs_tokens_to_formatted_string(cc_api_impl, rustfmt_config.as_ref())?;
         write_file(&cmdline.rs_out, &cc_api_impl)?;
     }
 

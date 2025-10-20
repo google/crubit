@@ -44,25 +44,6 @@ function test::cmd_line_api() {
       --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
-      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" | \
-      grep 'please specify --clang_format_exe_path' > /dev/null" \
-    "generator should show help message for --clang_format_exe_path"
-
-  EXPECT_SUCCEED \
-    "\"${RS_BINDINGS_FROM_CC}\" \
-      --target=//:target \
-      --rs_out=\"${rs_out}\" \
-      --cc_out=\"${cc_out}\" 2>&1 \
-      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
-      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" | \
-      grep 'please specify --rustfmt_exe_path' > /dev/null" \
-    "generator should show help message for --rustfmt_exe_path"
-
-  EXPECT_SUCCEED \
-    "\"${RS_BINDINGS_FROM_CC}\" \
-      --target=//:target \
-      --rs_out=\"${rs_out}\" \
-      --cc_out=\"${cc_out}\" 2>&1 \
       --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" | \
@@ -100,6 +81,30 @@ EOT
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
       --target_args=\"$(echo "${json}" | quote_escape)\""
+
+  EXPECT_FILE_NOT_EMPTY "${rs_out}"
+  EXPECT_FILE_NOT_EMPTY "${cc_out}"
+}
+
+function test::optional_formatting_paths() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+  local hdr="no_such_file.h"
+  local json
+  json="$(cat <<-EOT
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+EOT
+)"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" 2>&1 \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
+      --public_headers=\"${hdr}\" \
+      --target_args=\"$(echo "${json}" | quote_escape)\" \
+      --do_nothing"
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
   EXPECT_FILE_NOT_EMPTY "${cc_out}"

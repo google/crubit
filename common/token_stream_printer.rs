@@ -74,16 +74,20 @@ impl RustfmtConfig {
 /// Like `tokens_to_string` but also runs the result through `rustfmt`.
 pub fn rs_tokens_to_formatted_string(
     tokens: TokenStream,
-    config: &RustfmtConfig,
+    config: Option<&RustfmtConfig>,
 ) -> Result<String> {
-    let tokens_string = tokens_to_string(tokens)?
+    let mut tokens_string = tokens_to_string(tokens)?
         // NOTE: This is a terrible hack. `rustfmt` became more strict about appearances of `...`
         // (the `DotDotDot` token) at some point in the past. This is not a precise or general
         // solution, but rewriting this token to a comment produces formattable code in some cases,
         // making test failure messages better.
         .replace("...", "/*...*/");
-    let err = format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}");
-    rustfmt(tokens_string, config).context(err)
+    if let Some(config) = config {
+        tokens_string = rustfmt(tokens_string.clone(), config).with_context(|| {
+            format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}")
+        })?;
+    }
+    Ok(tokens_string)
 }
 
 /// Like `rs_tokens_to_formatted_string`, but always using a Crubit-internal,
@@ -91,15 +95,19 @@ pub fn rs_tokens_to_formatted_string(
 /// should support custom `rustfmt.toml` and take the path to `rustfmt` binary
 /// as a cmdline argument.
 pub fn rs_tokens_to_formatted_string_for_tests(input: TokenStream) -> Result<String> {
-    rs_tokens_to_formatted_string(input, &RustfmtConfig::for_testing())
+    rs_tokens_to_formatted_string(input, Some(&RustfmtConfig::for_testing()))
 }
 
 /// Like `tokens_to_string` but also runs the result through `clang-format`.
 pub fn cc_tokens_to_formatted_string(
     tokens: TokenStream,
-    clang_format_exe_path: &Path,
+    clang_format_exe_path: Option<&Path>,
 ) -> Result<String> {
-    clang_format(tokens_to_string(tokens)?, clang_format_exe_path)
+    let mut result = tokens_to_string(tokens)?;
+    if let Some(clang_format_exe_path) = clang_format_exe_path {
+        result = clang_format(result, clang_format_exe_path)?;
+    }
+    Ok(result)
 }
 
 /// Like `cc_tokens_to_formatted_string`, but always using a hardcoded path to
@@ -470,7 +478,7 @@ fn bar() {}
             fn bar() {}
             fn foo(x: i32, y: i32) -> i32 { x + y }
         };
-        let output = rs_tokens_to_formatted_string(input, &cfg).unwrap();
+        let output = rs_tokens_to_formatted_string(input, Some(&cfg)).unwrap();
         assert_eq!(
             output,
             r#"fn bar() {}
@@ -498,7 +506,7 @@ fn foo(x: i32, y: i32) -> i32 {
             fn foo(x: i32, y: i32) -> i32 { x + y }
         };
 
-        let output = rs_tokens_to_formatted_string(input, &cfg).unwrap();
+        let output = rs_tokens_to_formatted_string(input, Some(&cfg)).unwrap();
         assert_eq!(
             output,
             r#"fn bar() {}

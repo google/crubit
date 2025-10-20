@@ -336,17 +336,13 @@ TEST(CmdlineTest, IrOutEmpty) {
 TEST(CmdlineTest, ClangFormatExePathEmpty) {
   ASSERT_OK_AND_ASSIGN(CmdlineArgs args, TestCmdlineArgs());
   args.clang_format_exe_path = "";
-  EXPECT_THAT(Cmdline::Create(std::move(args)),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("please specify --clang_format_exe_path")));
+  EXPECT_OK(Cmdline::Create(std::move(args)));
 }
 
 TEST(CmdlineTest, RustfmtExePathEmpty) {
   ASSERT_OK_AND_ASSIGN(CmdlineArgs args, TestCmdlineArgs());
   args.rustfmt_exe_path = "";
-  EXPECT_THAT(Cmdline::Create(std::move(args)),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("please specify --rustfmt_exe_path")));
+  EXPECT_OK(Cmdline::Create(std::move(args)));
 }
 
 TEST(CmdlineTest, SupportPathEmpty) {

@@ -59,16 +59,25 @@ pub fn generate_bindings(
         environment,
     )?;
     let rs_api = {
-        let rustfmt_exe_path = Path::new(rustfmt_exe_path);
+        let rustfmt_exe_path =
+            if rustfmt_exe_path.is_empty() { None } else { Some(Path::new(rustfmt_exe_path)) };
         let rustfmt_config_path = if rustfmt_config_path.is_empty() {
             None
         } else {
             Some(Path::new(rustfmt_config_path))
         };
-        let rustfmt_config = RustfmtConfig::new(rustfmt_exe_path, rustfmt_config_path);
-        rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
+        let rustfmt_config =
+            rustfmt_exe_path.map(|path| RustfmtConfig::new(path, rustfmt_config_path));
+        rs_tokens_to_formatted_string(rs_api, rustfmt_config.as_ref())?
     };
-    let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl, Path::new(clang_format_exe_path))?;
+    let rs_api_impl = {
+        let clang_format_exe_path = if clang_format_exe_path.is_empty() {
+            None
+        } else {
+            Some(Path::new(clang_format_exe_path))
+        };
+        cc_tokens_to_formatted_string(rs_api_impl, clang_format_exe_path)?
+    };
 
     let top_level_comment = generate_top_level_comment(&ir, environment);
     // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
