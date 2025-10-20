@@ -1414,7 +1414,7 @@ buildValueTransferer() {
           transferSmartPointerMemberSwapCall)
       .CaseOfCFGStmt<CallExpr>(isSmartPointerFreeSwapCall(),
                                transferSmartPointerFreeSwapCall)
-      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("get"),
+      .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerMethodCall("get", "Get"),
                                         transferSmartPointerGetCall)
       .CaseOfCFGStmt<CXXMemberCallExpr>(isSmartPointerBoolConversionCall(),
                                         transferSmartPointerBoolConversionCall)
