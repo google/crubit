@@ -312,8 +312,8 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     )
 
     dep_info, build_info, linkstamps = collect_deps(
-        deps = crate_info.deps,
-        proc_macro_deps = crate_info.proc_macro_deps,
+        deps = crate_info.deps.to_list(),
+        proc_macro_deps = crate_info.proc_macro_deps.to_list(),
         aliases = crate_info.aliases,
     )
 
