@@ -8,7 +8,7 @@ package(default_applicable_licenses = ["//:license"])
 crubit_test_cc_library(
     name = "nonunpin",
     hdrs = ["nonunpin.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = ["//features:non_unpin_ctor"],
     deps = ["@abseil-cpp//absl/log:check"],
 )
 
@@ -16,6 +16,26 @@ crubit_rust_test(
     name = "nonunpin_test",
     srcs = ["nonunpin_test.rs"],
     cc_deps = [":nonunpin"],
+    # LINT.IfChange
+    rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    deps = [
+        "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
+    name = "nonunpin_experimental",
+    hdrs = ["nonunpin.h"],
+    aspect_hints = ["//features:experimental"],
+    deps = ["@abseil-cpp//absl/log:check"],
+)
+
+crubit_rust_test(
+    name = "nonunpin_experimental_test",
+    srcs = ["nonunpin_experimental_test.rs"],
+    cc_deps = [":nonunpin_experimental"],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=negative_impls"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
