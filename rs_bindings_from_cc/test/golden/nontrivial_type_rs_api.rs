@@ -119,9 +119,20 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
 // Can't generate bindings for Nontrivial::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator= (return type: references are not supported)
 
-// Error while generating bindings for function 'Nontrivial::operator=':
-// Can't generate bindings for Nontrivial::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for Nontrivial::operator= (<internal link>_relocatable_error: the return type is not rust-movable)
+impl ::ctor::Assign<f32> for Nontrivial {
+    #[inline(always)]
+    fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: f32) {
+        unsafe {
+            let _ = ::ctor::emplace!(::ctor::FnCtor::new(move |dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NontrivialaSEf(
+                    dest as *mut ::core::ffi::c_void,
+                    self,
+                    __param_0,
+                );
+            }));
+        }
+    }
+}
 
 impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
@@ -446,15 +457,33 @@ impl NontrivialUnpin {
     }
 }
 
-// Error while generating bindings for function 'TakesByValue':
-// Can't generate bindings for TakesByValue, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValue (<internal link>_relocatable_error: the return type is not rust-movable)
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValue (<internal link>_relocatable_error: nontrivial (parameter #0) is not rust-movable)
+#[inline(always)]
+pub fn TakesByValue(
+    nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
+) -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> {
+    unsafe {
+        ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
+            crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
+                dest as *mut ::core::ffi::c_void,
+                ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+            );
+        })
+    }
+}
 
-// Error while generating bindings for function 'TakesByValueInline':
-// Can't generate bindings for TakesByValueInline, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValueInline (<internal link>_relocatable_error: the return type is not rust-movable)
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesByValueInline (<internal link>_relocatable_error: nontrivial (parameter #0) is not rust-movable)
+#[inline(always)]
+pub fn TakesByValueInline(
+    nontrivial: impl ::ctor::Ctor<Output = crate::NontrivialInline, Error = ::ctor::Infallible>,
+) -> impl ::ctor::Ctor<Output = crate::NontrivialInline, Error = ::ctor::Infallible> {
+    unsafe {
+        ::ctor::FnCtor::new(move |dest: *mut crate::NontrivialInline| {
+            crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
+                dest as *mut ::core::ffi::c_void,
+                ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+            );
+        })
+    }
+}
 
 #[inline(always)]
 pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
@@ -540,9 +569,22 @@ unsafe impl ::cxx::ExternType for NontrivialByValue {
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::operator= (the type of other (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'NontrivialByValue::operator=':
-// Can't generate bindings for NontrivialByValue::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for NontrivialByValue::operator= (<internal link>_relocatable_error: other (parameter #1) is not rust-movable)
+impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivial>>
+    for NontrivialByValue
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, other: ::ctor::RvalueReference<'other, crate::Nontrivial>) {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN17NontrivialByValueaSE10Nontrivial(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                self,
+                other,
+            );
+            __return.assume_init();
+        }
+    }
+}
 
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nExpected first operator== param reference to be immutable, but found mutable reference: &'a mut crate::NontrivialByValue\ncomparison operator return type must be `bool`, found: crate::NontrivialByValue"
@@ -603,13 +645,34 @@ impl Nonmovable {
     }
 }
 
-// Error while generating bindings for function 'TakesNonmovableByValue':
-// Can't generate bindings for TakesNonmovableByValue, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for TakesNonmovableByValue (<internal link>_relocatable_error: nonmovable (parameter #0) is not rust-movable)
+#[diagnostic::on_unimplemented(
+    message = "binding generation for function failed\nNon-movable, non-trivial_abi type 'crate::Nonmovable' is not supported by value as parameter #0"
+)]
+pub trait BindingFailedFor_Z22TakesNonmovableByValue10Nonmovable {}
+#[inline(always)]
+pub fn TakesNonmovableByValue<'error>(
+    nonmovable: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
+) where
+    &'error (): BindingFailedFor_Z22TakesNonmovableByValue10Nonmovable,
+{
+    #![allow(unused_variables)]
+    unreachable!(
+        "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+    )
+}
 
-// Error while generating bindings for function 'ReturnsNonmovableByValue':
-// Can't generate bindings for ReturnsNonmovableByValue, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:non_unpin_ctor] for ReturnsNonmovableByValue (<internal link>_relocatable_error: the return type is not rust-movable)
+#[inline(always)]
+pub fn ReturnsNonmovableByValue(
+) -> impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible> {
+    unsafe {
+        ::ctor::FnCtor::new(move |dest: *mut crate::Nonmovable| {
+            crate::detail::__rust_thunk___Z24ReturnsNonmovableByValuev(
+                dest as *mut ::core::ffi::c_void,
+            );
+        })
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -627,6 +690,11 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             field: ::core::ffi::c_int,
             unused: ::core::ffi::c_int,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEf<'a>(
+            __return: *mut ::core::ffi::c_void,
+            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+            __param_0: f32,
         );
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
@@ -689,9 +757,22 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv<'a>(
             __this: &'a mut crate::NontrivialUnpin,
         );
+        pub(crate) unsafe fn __rust_thunk___Z12TakesByValue10Nontrivial(
+            __return: *mut ::core::ffi::c_void,
+            nontrivial: &mut crate::Nontrivial,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z18TakesByValueInline16NontrivialInline(
+            __return: *mut ::core::ffi::c_void,
+            nontrivial: &mut crate::NontrivialInline,
+        );
         pub(crate) unsafe fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
             __return: *mut ::core::ffi::c_void,
             nontrivial: &mut crate::NontrivialUnpin,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial<'a, 'other>(
+            __return: *mut ::core::ffi::c_void,
+            __this: &'a mut crate::NontrivialByValue,
+            other: ::ctor::RvalueReference<'other, crate::Nontrivial>,
         );
         #[link_name = "_ZN10NonmovableC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(__this: *mut ::core::ffi::c_void);
@@ -702,6 +783,9 @@ mod detail {
         #[link_name = "_ZN10Nonmovable14MemberFunctionEv"]
         pub(crate) unsafe fn __rust_thunk___ZN10Nonmovable14MemberFunctionEv<'a>(
             __this: ::core::pin::Pin<&'a mut crate::Nonmovable>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z24ReturnsNonmovableByValuev(
+            __return: *mut ::core::ffi::c_void,
         );
     }
 }

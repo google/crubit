@@ -51,6 +51,12 @@ DEPS = {
     "depends_on_nested_types": ["nested_types"],
 }
 
+# Maps a test to the list of additional aspect hints it needs.
+ASPECT_HINTS = {
+    "nontrivial_type": ["//features:non_unpin_ctor"],
+    "user_of_unsupported": ["//features:non_unpin_ctor"],
+}
+
 TAGS = {}
 
 rust_bindings_from_cc_cli_flag(
@@ -64,7 +70,7 @@ rust_bindings_from_cc_cli_flag(
     aspect_hints = [
         "//features:infer_operator_lifetimes",
         ":disable_source_location_in_doc_comment",
-    ],
+    ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []),
     deps = [
         ((d + "_cc") if d in TESTS else d)
         for d in (DEPS[name] if name in DEPS else [])

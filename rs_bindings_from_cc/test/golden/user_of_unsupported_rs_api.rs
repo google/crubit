@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:user_of_unsupported_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, impl_trait_in_assoc_type)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -14,6 +14,26 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
-// Error while generating bindings for function 'UseNontrivialCustomType':
-// Can't generate bindings for UseNontrivialCustomType, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_unsupported_cc needs [//features:non_unpin_ctor] for UseNontrivialCustomType (<internal link>_relocatable_error: non_trivial_custom_type (parameter #0) is not rust-movable)
+#[inline(always)]
+pub fn UseNontrivialCustomType(
+    non_trivial_custom_type: impl ::ctor::Ctor<
+        Output = unsupported_cc::NontrivialCustomType,
+        Error = ::ctor::Infallible,
+    >,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
+            ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(non_trivial_custom_type)),
+        )
+    }
+}
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
+            non_trivial_custom_type: &mut unsupported_cc::NontrivialCustomType,
+        );
+    }
+}

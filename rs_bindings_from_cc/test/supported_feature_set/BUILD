@@ -15,7 +15,10 @@ crubit_test_cc_library(
 crubit_test_cc_library(
     name = "no_bindings",
     hdrs = ["no_bindings.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:non_unpin_ctor",
+    ],
 )
 
 crubit_rust_test(

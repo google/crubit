@@ -11,16 +11,6 @@ fn test_deprecated_alias() {
     assert!(!type_exists!(no_bindings::DeprecatedAlias));
 }
 
-#[gtest]
-fn test_accepts_nontrivial_value() {
-    assert!(!value_exists!(no_bindings::crubit_accepts_nontrivial_value));
-}
-
-#[gtest]
-fn test_returns_nontrivial_value() {
-    assert!(!value_exists!(no_bindings::crubit_returns_nontrivial_value));
-}
-
 // vectorcall attribute is outright ignored on e.g. ARM -- so on that platform,
 // this isn't actually a different calling convention, and we'd expect bindings
 // to exist after all.

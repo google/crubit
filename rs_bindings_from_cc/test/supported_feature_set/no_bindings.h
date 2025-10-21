@@ -10,11 +10,6 @@
 #include <set>
 namespace crubit::no_bindings {
 
-struct Nontrivial {
-  ~Nontrivial() {}  // NOLINT(modernize-use-equals-default)
-};
-
-using NontrivialAlias = Nontrivial;
 using DeprecatedAlias [[deprecated]] = int;
 
 // This struct would receive bindings, if it weren't for the unrecognized
@@ -37,9 +32,6 @@ struct TemplatedStruct {
 };
 
 using InstantiatedTemplatedStruct = TemplatedStruct<int>;
-
-inline void crubit_accepts_nontrivial_value(Nontrivial) {}
-inline Nontrivial crubit_returns_nontrivial_value() { return {}; }
 
 [[clang::vectorcall]] inline void crubit_vectorcall() {}
 

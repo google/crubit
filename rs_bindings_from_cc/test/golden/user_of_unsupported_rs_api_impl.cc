@@ -18,4 +18,11 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+extern "C" void __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
+    struct NontrivialCustomType* non_trivial_custom_type) {
+  UseNontrivialCustomType(std::move(*non_trivial_custom_type));
+}
+
+static_assert((void (*)(struct NontrivialCustomType))&UseNontrivialCustomType);
+
 #pragma clang diagnostic pop
