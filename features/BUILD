@@ -28,7 +28,10 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-_WRAPPER_FEATURES = ["wrapper"]
+_WRAPPER_FEATURES = [
+    "wrapper",
+    "non_unpin_ctor",
+]
 
 # A feature set containing wrapper-library Crubit features, in addition to the officially supported
 # features.
@@ -68,6 +71,16 @@ crubit_feature_hint(
     name = "std_unique_ptr",
     compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES + ["std_unique_ptr"],
+    visibility = ["//visibility:public"],
+)
+
+# A feature set which specifically enables non-`Unpin` type handling with the `ctor` crate.
+#
+# See <internal link>
+crubit_feature_hint(
+    name = "non_unpin_ctor",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["non_unpin_ctor"],
     visibility = ["//visibility:public"],
 )
 

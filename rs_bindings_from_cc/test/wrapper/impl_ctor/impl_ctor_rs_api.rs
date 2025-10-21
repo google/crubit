@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/impl_ctor:impl_ctor
-// Features: do_not_hardcode_status_bridge, std_unique_ptr, std_vector, supported, wrapper
+// Features: do_not_hardcode_status_bridge, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(
@@ -62,8 +62,7 @@ impl ::ctor::PinnedDrop for Nontrivial {
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=16
 #[inline(always)]
-pub(crate) fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>
-{
+pub fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
             crate::detail::__rust_thunk___Z6Createv(dest as *mut ::core::ffi::c_void);
@@ -73,7 +72,7 @@ pub(crate) fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = 
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=18
 #[inline(always)]
-pub(crate) fn Read(
+pub fn Read(
     nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
 ) -> ::core::ffi::c_int {
     unsafe {
