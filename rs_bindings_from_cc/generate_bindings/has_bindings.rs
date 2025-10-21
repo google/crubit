@@ -217,13 +217,7 @@ fn func_has_bindings(
                 return;
             }
             has_nonunpin = true;
-            // TODO: b/446717938 - On next binary release, add `"non_unpin_ctor"` to `:wrapper` and
-            // and then change this to:
-            //  `!enabled_features.contains(crubit_feature::CrubitFeature::NonUnpinCtor)`.
-            if !enabled_features.is_disjoint(
-                crubit_feature::CrubitFeature::Wrapper
-                    | crubit_feature::CrubitFeature::NonUnpinCtor,
-            ) {
+            if enabled_features.contains(crubit_feature::CrubitFeature::NonUnpinCtor) {
                 return;
             }
             let location = location();
