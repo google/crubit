@@ -151,6 +151,28 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarr
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_unested_uarrays(
+    array: &'static mut ::core::mem::MaybeUninit<[[i32; 2]; 2]>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array = array.assume_init_read();
+        let __rs_return_value = ::arrays_golden::function_with_nested_arrays(array);
+        (__ret_ptr as *mut [[i32; 2]; 2]).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
+    array: &'static mut ::core::mem::MaybeUninit<[[::arrays_golden::HasDropAndDefault; 2]; 2]>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array = array.assume_init_read();
+        let __rs_return_value = ::arrays_golden::function_with_nested_drop_default_arrays(array);
+        (__ret_ptr as *mut [[::arrays_golden::HasDropAndDefault; 2]; 2]).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uempty_uarray(
     array: &'static mut ::core::mem::MaybeUninit<[i32; 0]>,
     __ret_ptr: *mut core::ffi::c_void,

@@ -65,4 +65,36 @@ TEST(ArraysTest, EmptyArrayInOut) {
   std::array<int32_t, 0> array;
   EXPECT_EQ(arrays::function_with_empty_array(array), array);
 }
+
+TEST(ArraysTest, NestedArraysInOut) {
+  std::array<int32_t, 2> a = {1, 2};
+  std::array<int32_t, 2> b = {3, 4};
+  std::array<std::array<int32_t, 2>, 2> array{std::move(a), std::move(b)};
+  EXPECT_EQ(arrays::function_with_nested_arrays(array), array);
+}
+
+TEST(ArraysTest, NestedDropDefaultArraysInOut) {
+  arrays::HasDropAndDefault a;
+  arrays::HasDropAndDefault b;
+  arrays::HasDropAndDefault c;
+  arrays::HasDropAndDefault d;
+  a.x = 1;
+  b.x = 2;
+  c.x = 3;
+  d.x = 4;
+  std::array<arrays::HasDropAndDefault, 2> a_b{std::move(a), std::move(b)};
+  std::array<arrays::HasDropAndDefault, 2> c_d{std::move(c), std::move(d)};
+  std::array<std::array<arrays::HasDropAndDefault, 2>, 2> array{std::move(a_b),
+                                                                std::move(c_d)};
+  EXPECT_EQ(array[0][0].x, 1);
+  EXPECT_EQ(array[0][1].x, 2);
+  EXPECT_EQ(array[1][0].x, 3);
+  EXPECT_EQ(array[1][1].x, 4);
+  auto out = arrays::function_with_nested_drop_default_arrays(std::move(array));
+  EXPECT_EQ(out[0][0].x, 1);
+  EXPECT_EQ(out[0][1].x, 2);
+  EXPECT_EQ(out[1][0].x, 3);
+  EXPECT_EQ(out[1][1].x, 4);
+}
+
 }  // namespace

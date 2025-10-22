@@ -23,7 +23,7 @@ use quote::format_ident;
 use quote::quote;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
-use rustc_span::symbol::{kw, Symbol};
+use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
 use std::ops::AddAssign;
@@ -50,16 +50,31 @@ fn tuple_c_abi_rs_type(possibly_tuple_ty: ty::Ty) -> Option<TokenStream> {
     Some(quote! { *const [*const core::ffi::c_void; #num_elements] })
 }
 
+fn is_drop_not_default<'tcx>(tcx: ty::TyCtxt<'tcx>, ty: ty::Ty<'tcx>) -> bool {
+    if !ty.needs_drop(
+        tcx,
+        ty::TypingEnv {
+            typing_mode: ty::TypingMode::PostAnalysis,
+            param_env: ty::ParamEnv::empty(),
+        },
+    ) {
+        return false;
+    }
+    let trait_id =
+        tcx.get_diagnostic_item(sym::Default).expect("Couldn't find `core::default::Default`");
+    !does_type_implement_trait(tcx, ty, trait_id, [])
+}
+
 /// Returns a C ABI-compatible C type to pass a [inner_ty; _].
 ///
 /// Layout-compatible arrays are passed through memory.
-fn array_c_abi_c_type(inner_ty: &ty::Ty) -> Result<TokenStream> {
-    // TODO: b/451981992 - Is this test enough to avoid nested by-value arrays?
-    // This is also more conservative than what we probably need here, which is to exclude
-    // nested arrays containing types that are Drop but not Default (as these don't behave
-    // well in std::arrays; we currently treat single-level arrays as a special case).
+fn array_c_abi_c_type<'tcx>(tcx: ty::TyCtxt<'tcx>, inner_ty: ty::Ty<'tcx>) -> Result<TokenStream> {
+    // TODO: b/451981992 - Nested arrays containing types that are Drop but not Default do not
+    // behave well in std::arrays.
     match inner_ty.kind() {
-        ty::TyKind::Array(..) => bail!("b/260128806 - nested array {inner_ty} is not supported"),
+        ty::TyKind::Array(ty, _) if is_drop_not_default(tcx, *ty) => {
+            bail!("b/260128806 - nested array {inner_ty} is not supported because it contains a type that implements Drop but not Default")
+        }
         _ => Ok(quote! { void* }),
     }
 }
@@ -101,7 +116,7 @@ pub fn generate_thunk_decl<'tcx>(
                 } else if let Some(tuple_abi) = tuple_c_abi_c_type(ty) {
                     Ok(tuple_abi)
                 } else if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
-                    array_c_abi_c_type(inner_ty)
+                    array_c_abi_c_type(db.tcx(), *inner_ty)
                 } else if let Some(adt_def) = ty.ty_adt_def() {
                     let core = db.generate_adt_core(adt_def.did())?;
                     db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
@@ -123,7 +138,7 @@ pub fn generate_thunk_decl<'tcx>(
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #tuple_abi __ret_ptr });
     } else if let ty::TyKind::Array(inner_ty, _) = sig_mid.output().kind() {
-        let c_type = array_c_abi_c_type(inner_ty)?;
+        let c_type = array_c_abi_c_type(db.tcx(), *inner_ty)?;
         thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #c_type __ret_ptr });
     } else if let Some(BridgedType::Composable(_)) = is_bridged_type(db, sig_mid.output())? {

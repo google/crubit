@@ -24,35 +24,43 @@
 
 namespace arrays {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=8
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=11
 std::array<std::int32_t, 2> const* function_with_const_array_ptr_id(
     std::array<std::int32_t, 2> const* array_ptr);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=12
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=16
 std::array<std::int32_t, 2> function_with_array_id(
     std::array<std::int32_t, 2> array);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=16
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=21
 std::tuple<std::array<std::int32_t, 2>, std::array<std::int32_t, 2>>
 function_with_array_tuple_id(
     std::tuple<std::array<std::int32_t, 2>, std::array<std::int32_t, 2>>
         array_tup);
 
 // Error generating bindings for `function_with_tuple_array_id` defined at
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=22:
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=27:
 // Tuple types cannot be used inside of compound data types, because std::tuple
 // is not layout-compatible with a Rust tuple.
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=27
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=34
 std::array<std::int32_t, 3> const* function_with_mut_array_named_size_ptr_id(
     std::array<std::int32_t, 3> const* array_ptr);
 
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=34
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=41
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
     [[clang::trivial_abi]] ArrayStruct final {
  public:
@@ -73,7 +81,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/arrays/arrays.rs;l=35
+    // cc_bindings_from_rs/test/arrays/arrays.rs;l=42
     std::array<std::int32_t, 2> array;
   };
 
@@ -81,13 +89,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=38
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=46
 ::arrays::ArrayStruct function_with_array_struct_id(
     ::arrays::ArrayStruct array_struct);
 
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=42
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=50
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
     [[clang::trivial_abi]] HasDrop final {
  public:
@@ -109,12 +119,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/arrays/arrays.rs;l=47
+  // cc_bindings_from_rs/test/arrays/arrays.rs;l=55
   static ::arrays::HasDrop new_(std::int32_t x);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/arrays/arrays.rs;l=43
+    // cc_bindings_from_rs/test/arrays/arrays.rs;l=51
     std::int32_t x;
   };
 
@@ -122,17 +132,21 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=56
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=65
 std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
     std::array<::arrays::HasDrop, 2> array);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=62
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=72
 std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only();
 
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=67
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=77
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: arrays_golden :: HasDropAndDefault") alignas(4) [[clang::trivial_abi]]
 HasDropAndDefault final {
@@ -154,7 +168,7 @@ HasDropAndDefault final {
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/arrays/arrays.rs;l=68
+    // cc_bindings_from_rs/test/arrays/arrays.rs;l=78
     std::int32_t x;
   };
 
@@ -162,22 +176,44 @@ HasDropAndDefault final {
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=75
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=86
 std::array<::arrays::HasDropAndDefault, 2>
 function_with_has_drop_and_default_array_id(
     std::array<::arrays::HasDropAndDefault, 2> array);
 
-// Error generating bindings for `function_with_nested_arrays` defined at
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=82:
-// b/260128806 - nested array [i32; 2] is not supported
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=93
+std::array<std::array<std::int32_t, 2>, 2> function_with_nested_arrays(
+    std::array<std::array<std::int32_t, 2>, 2> array);
 
 // Error generating bindings for `function_with_nested_droponly_arrays` defined
-// at cc_bindings_from_rs/test/arrays/arrays.rs;l=87:
-// b/260128806 - nested array [HasDrop; 2] is not supported
+// at cc_bindings_from_rs/test/arrays/arrays.rs;l=98:
+// b/260128806 - nested array [HasDrop; 2] is not supported because it contains
+// a type that implements Drop but not Default
 
+// Error generating bindings for `function_with_nested_nested_droponly_arrays`
+// defined at
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=104:
+// b/260128806 - nested array [[HasDrop; 2]; 2] is not supported because it
+// contains a type that implements Drop but not Default
+
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=91
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=111
+std::array<std::array<::arrays::HasDropAndDefault, 2>, 2>
+function_with_nested_drop_default_arrays(
+    std::array<std::array<::arrays::HasDropAndDefault, 2>, 2> array);
+
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=118
 std::array<std::int32_t, 0> function_with_empty_array(
     std::array<std::int32_t, 0> array);
 
@@ -369,6 +405,37 @@ function_with_has_drop_and_default_array_id(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
       __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarray_uid(
+          array_slot.Get(), __return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_function_uwith_unested_uarrays(void*,
+                                                              void* __ret_ptr);
+}
+inline std::array<std::array<std::int32_t, 2>, 2> function_with_nested_arrays(
+    std::array<std::array<std::int32_t, 2>, 2> array) {
+  crubit::Slot<std::array<std::array<std::int32_t, 2>, 2>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_function_uwith_unested_uarrays(
+      &array, __return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
+    void*, void* __ret_ptr);
+}
+inline std::array<std::array<::arrays::HasDropAndDefault, 2>, 2>
+function_with_nested_drop_default_arrays(
+    std::array<std::array<::arrays::HasDropAndDefault, 2>, 2> array) {
+  crubit::Slot array_slot((std::move(array)));
+  crubit::Slot<std::array<std::array<::arrays::HasDropAndDefault, 2>, 2>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
           array_slot.Get(), __return_value_storage);
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

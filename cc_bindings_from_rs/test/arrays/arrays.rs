@@ -5,14 +5,19 @@
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
 //! generated C++ bindings are then tested via `arrays_test.cc`.
 
+use crubit_annotate::must_bind;
+
+#[must_bind]
 pub fn function_with_const_array_ptr_id(array_ptr: *const [i32; 2]) -> *const [i32; 2] {
     array_ptr
 }
 
+#[must_bind]
 pub fn function_with_array_id(array: [i32; 2]) -> [i32; 2] {
     array
 }
 
+#[must_bind]
 pub fn function_with_array_tuple_id(array_tup: ([i32; 2], [i32; 2])) -> ([i32; 2], [i32; 2]) {
     array_tup
 }
@@ -24,6 +29,8 @@ pub fn function_with_tuple_array_id(tup_array: [(i32, i32); 2]) -> [(i32, i32); 
 }
 
 const NAMED_SIZE: usize = 3;
+
+#[must_bind]
 pub fn function_with_mut_array_named_size_ptr_id(
     array_ptr: *const [i32; NAMED_SIZE],
 ) -> *const [i32; NAMED_SIZE] {
@@ -35,6 +42,7 @@ pub struct ArrayStruct {
     pub array: [i32; 2],
 }
 
+#[must_bind]
 pub fn function_with_array_struct_id(array_struct: ArrayStruct) -> ArrayStruct {
     array_struct
 }
@@ -53,12 +61,14 @@ impl Drop for HasDrop {
     fn drop(&mut self) {}
 }
 
+#[must_bind]
 pub fn function_with_has_drop_array_id(array: [HasDrop; 2]) -> [HasDrop; 2] {
     dbg!(array[0].x);
     dbg!(array[1].x);
     array
 }
 
+#[must_bind]
 pub fn function_with_has_drop_ret_only() -> [HasDrop; 2] {
     [HasDrop::new(1), HasDrop::new(2)]
 }
@@ -72,13 +82,14 @@ impl Drop for HasDropAndDefault {
     fn drop(&mut self) {}
 }
 
+#[must_bind]
 pub fn function_with_has_drop_and_default_array_id(
     array: [HasDropAndDefault; 2],
 ) -> [HasDropAndDefault; 2] {
     array
 }
 
-// TODO: b/260128806 - we conservatively reject nested arrays.
+#[must_bind]
 pub fn function_with_nested_arrays(array: [[i32; 2]; 2]) -> [[i32; 2]; 2] {
     array
 }
@@ -88,6 +99,22 @@ pub fn function_with_nested_droponly_arrays(array: [[HasDrop; 2]; 2]) -> [[HasDr
     array
 }
 
+// TODO: b/451981992 - we don't support nested arrays with types that are Drop but not Default.
+// (Here, we test that the check on nested array payloads works recursively.)
+pub fn function_with_nested_nested_droponly_arrays(
+    array: [[[HasDrop; 2]; 2]; 2],
+) -> [[[HasDrop; 2]; 2]; 2] {
+    array
+}
+
+#[must_bind]
+pub fn function_with_nested_drop_default_arrays(
+    array: [[HasDropAndDefault; 2]; 2],
+) -> [[HasDropAndDefault; 2]; 2] {
+    array
+}
+
+#[must_bind]
 pub fn function_with_empty_array(array: [i32; 0]) -> [i32; 0] {
     array
 }
