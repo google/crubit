@@ -1306,22 +1306,31 @@ static void transferStatusOrValueOrCall(
   // Get the null state of the value_or argument.
   const Expr* ArgExpr = MCE->getArg(0);
   if (!ArgExpr) return;
-  PointerValue* Arg = getPointerValue(ArgExpr, State.Env);
   std::optional<PointerNullState> ArgState;
-  if (Arg) {
-    ArgState = getPointerNullState(*Arg);
+  if (isSupportedPointerType(ArgExpr->getType())) {
+    PointerValue* Arg = getPointerValue(ArgExpr, State.Env);
+    if (Arg) {
+      ArgState = getPointerNullState(*Arg);
+    } else {
+      // This is never expected to happen, so always log, and assert-fail when
+      // enabled.
+      llvm::errs() << "Unable to determine PointerNullState for an argument to "
+                      "absl::StatusOr<SupportedPointerType>::value_or. Please "
+                      "file a bug at <internal link> if you see this.\n";
+      assert(false);
+      return;
+    }
   } else if (ArgExpr->getType()->isNullPtrType() &&
              isReachableNullptrLiteral(State.Env)) {
     ArgState = PointerNullState{.FromNullable = &A.makeLiteral(true),
                                 .IsNull = &A.makeLiteral(true)};
   } else {
-    // This is never expected to happen, so always log, and assert-fail when
-    // enabled.
-    llvm::errs() << "Unable to determine PointerNullState for an argument to "
-                    "absl::StatusOr<SupportedPointerType>::value_or. Please "
-                    "file a bug at <internal link> if you see this.\n";
-    assert(false);
-    return;
+    // There are cases where a non-pointer argument type is convertible to the
+    // pointer type held by the StatusOr. We can't track the nullability of the
+    // converted pointer in these cases (without perhaps digging up the
+    // conversion operator or similar), so assume it is unknown.
+    ArgState = PointerNullState{.FromNullable = &A.makeLiteral(false),
+                                .IsNull = &A.makeAtomRef(A.makeAtom())};
   }
 
   // The null state corresponding to the StatusOr's template argument type is
