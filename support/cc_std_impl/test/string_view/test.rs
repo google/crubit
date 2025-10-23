@@ -8,6 +8,7 @@ use googletest::prelude::*;
 use std::sync::LazyLock;
 use string_view_cc_apis::crubit_string_view::GetDefault;
 use string_view_cc_apis::crubit_string_view::GetHelloWorld;
+use string_view_cc_apis::crubit_string_view::GetInvalidUTF;
 
 /// Converts a raw_string_view to a &'static str.
 ///
@@ -119,4 +120,15 @@ fn exercise_as_static_live() {
         }
         Err(e) => panic!("Failed to convert static string_view to &str: {}", e),
     }
+}
+
+#[gtest]
+fn test_invalid_utf8() {
+    let rsv = GetInvalidUTF();
+    let sv = unsafe { rsv.to_str() };
+    assert_eq!(sv.is_err(), true);
+    assert_that!(
+        sv.err().unwrap().to_string(),
+        contains_substring("utf-8").ignoring_unicode_case()
+    );
 }
