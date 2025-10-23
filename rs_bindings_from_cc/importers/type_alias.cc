@@ -31,7 +31,15 @@ namespace {
 std::string ProtoMessageToRustModName(absl::string_view message_name) {
   std::string mod_name = "";
   for (char c : message_name) {
-    if (absl::ascii_isupper(c) && !mod_name.empty()) {
+    // Underscore in MessageName implies nested item which maps to a nested
+    // namespace in Rust.
+    // If someone actually used an underscore in a proto message name, this
+    // heuristic will fail. Whoops.
+    if (c == '_' && !mod_name.empty()) {
+      absl::StrAppend(&mod_name, "::");
+      continue;
+    } else if (absl::ascii_isupper(c) && !mod_name.empty() &&
+               mod_name.back() != ':') {
       absl::StrAppend(&mod_name, "_");
     }
     // StrAppend doesn't accept `char`. :'(
@@ -49,6 +57,7 @@ std::string ProtoEnumToRustName(clang::NamedDecl& decl) {
   for (clang::DeclContext* decl_context = decl.getDeclContext();
        decl_context->isRecord(); decl_context = decl_context->getParent()) {
     auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl_context);
+
     mod_chain.push_back(ProtoMessageToRustModName(record_decl->getName()));
   }
   absl::c_reverse(mod_chain);
