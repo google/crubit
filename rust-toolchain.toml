@@ -1,0 +1,3 @@
+[toolchain]
+channel = "nightly"
+components = ["rustc-dev", "llvm-tools"]
