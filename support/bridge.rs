@@ -208,7 +208,12 @@ impl Decoder {
 }
 
 /// A [`CrubitAbi`] for encoding a value by transmuting it into the buffer.
-pub struct TransmuteAbi<T>(PhantomData<T>);
+pub struct TransmuteAbi<T>(pub PhantomData<T>);
+
+/// Shorthand for constructiong a new [`TransmuteAbi<T>`].
+pub fn transmute_abi<T>() -> TransmuteAbi<T> {
+    TransmuteAbi(PhantomData)
+}
 
 // Every T can be passed by value.
 // SAFETY: The ABI contract for `TransmuteAbi<T>` is that the raw bytes of the value `T` are memcpyd
@@ -240,10 +245,12 @@ unsafe impl<T> CrubitAbi for TransmuteAbi<T> {
     }
 }
 
-/// A [`CrubitAbi`] for encoding a tuple by encoding each element in order with its corresponding
-/// `CrubitAbi`.
+// TODO(okabayashi): TupleAbi only exists for backwards compatibility. Remove it once Crubit is
+// released in Crosstool, where we use a tuple directly.
 pub struct TupleAbi<A>(PhantomData<A>);
 
+// TODO(okabayashi): TupleAbi only exists for backwards compatibility. Remove it once Crubit is
+// released in Crosstool, where we use a tuple directly.
 macro_rules! unsafe_impl_crubit_abi_for_tuple_abi {
     { $( unsafe impl CrubitAbi for TupleAbi<( $($A:ident,)*)>; )* } => {
         $(
@@ -275,9 +282,8 @@ macro_rules! unsafe_impl_crubit_abi_for_tuple_abi {
     }
 }
 
-// Every tuple can be passed by bridge. Add more impls here if needed.
-// SAFETY: The ABI contract for `TupleAbi<T>` is that the elements of the tuple are encoded in order
-// with the corresponding `CrubitAbi`s.
+// TODO(okabayashi): TupleAbi only exists for backwards compatibility. Remove it once Crubit is
+// released in Crosstool, where we use a tuple directly.
 unsafe_impl_crubit_abi_for_tuple_abi! {
     unsafe impl CrubitAbi for TupleAbi<()>;
     unsafe impl CrubitAbi for TupleAbi<(A1,)>;
@@ -292,6 +298,56 @@ unsafe_impl_crubit_abi_for_tuple_abi! {
     unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10,)>;
     unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11,)>;
     unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12,)>;
+}
+
+macro_rules! unsafe_impl_crubit_abi_for_tuple {
+    { $( unsafe impl CrubitAbi for ( $($a:ident : $A:ident,)*); )* } => {
+        $(
+            // SAFETY: The bridge schema for a tuple is the same in C++: each element of the tuple
+            // is encoded in order with the corresponding schema.
+            unsafe impl<$($A: CrubitAbi),*> CrubitAbi for ($($A,)*) {
+                type Value = ( $($A::Value,)* );
+
+                const SIZE: usize = 0 $( + $A::SIZE )*;
+
+                 fn encode(( $($A,)* ): Self::Value, encoder: &mut Encoder) {
+                    #![allow(non_snake_case)]
+                    #![allow(unused_variables)] // for `encoder` in () case
+                    $(
+                        encoder.encode::<$A>($A);
+                    )*
+                }
+
+                unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+                    #![allow(clippy::unused_unit)] // for () case
+                    #![allow(unused_variables)] // for `decoder` in () case
+
+                    // SAFETY: the caller guarantees that the buffer contains each element of
+                    // the tuple with the correct schema.
+                    ( $( unsafe { decoder.decode::<$A>() },)* )
+                }
+            }
+        )*
+    }
+}
+
+// Every tuple can be passed by bridge. Add more impls here if needed.
+// SAFETY: The ABI contract for `(A1, A2, ..., An)` is that the elements of the tuple are encoded in order
+// with the corresponding `CrubitAbi`s.
+unsafe_impl_crubit_abi_for_tuple! {
+    unsafe impl CrubitAbi for ();
+    unsafe impl CrubitAbi for (a1: A1,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6, a7: A7,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6, a7: A7, a8: A8,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6, a7: A7, a8: A8, a9: A9,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6, a7: A7, a8: A8, a9: A9, a10: A10,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6, a7: A7, a8: A8, a9: A9, a10: A10, a11: A11,);
+    unsafe impl CrubitAbi for (a1: A1, a2: A2, a3: A3, a4: A4, a5: A5, a6: A6, a7: A7, a8: A8, a9: A9, a10: A10, a11: A11, a12: A12,);
 }
 
 /// A [`CrubitAbi`] for encoding an `Option` by encoding a bool followed by the value if the bool
@@ -371,6 +427,12 @@ pub mod internal {
 // Crubit team.
 #[macro_export]
 macro_rules! unstable_encode {
+    {@ $crubit_abi_expr:expr, $crubit_abi:ty, $expr:expr} => {{
+        // TODO(okabayashi): This arm matches the new codegen in Crubit that is going to hit
+        // Crosstool release, but today it just delegates to the old invocation. Once this appears
+        // in Crosstool, I can update the implementation.
+        $crate::unstable_encode!($crubit_abi, $expr)
+    }};
     {$crubit_abi:ty, $expr:expr} => {{
         let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::CrubitAbi>::SIZE];
         let __crubit_tmp_value = $expr;
@@ -382,7 +444,7 @@ macro_rules! unstable_encode {
             );
         }
         __crubit_tmp_buffer
-    }}
+    }};
 }
 
 // This cannot be a function because it errors with "constant expression depends on a generic
@@ -391,6 +453,12 @@ macro_rules! unstable_encode {
 // Crubit team.
 #[macro_export]
 macro_rules! unstable_return {
+    {@ $crubit_abi_expr:expr, $crubit_abi:ty, $cb:expr} => {{
+        // TODO(okabayashi): This arm matches the new codegen in Crubit that is going to hit
+        // Crosstool release, but today it just delegates to the old invocation. Once this appears
+        // in Crosstool, I can update the implementation.
+        $crate::unstable_return!($crubit_abi, $cb)
+    }};
     {$crubit_abi:ty, $cb:expr} => {{
         let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::CrubitAbi>::SIZE];
         ($cb)(__crubit_tmp_buffer.as_mut_ptr() as *mut u8);
@@ -398,7 +466,7 @@ macro_rules! unstable_return {
         unsafe {
             $crate::internal::decode::<$crubit_abi>(__crubit_tmp_buffer.as_ptr() as *const u8)
         }
-    }}
+    }};
 }
 
 #[cfg(test)]
@@ -414,7 +482,10 @@ mod tests {
 
         // SAFETY: the buffer contains a T encoded as Abi.
         let value = unsafe {
-            internal::decode::<Abi>(unstable_encode!(Abi, original).as_ptr() as *const u8)
+            internal::decode::<Abi>(
+                unstable_encode!(@ (transmute_abi(), transmute_abi()), Abi, original).as_ptr()
+                    as *const u8,
+            )
         };
         expect_eq!(value, original);
     }
@@ -430,7 +501,17 @@ mod tests {
 
         // SAFETY: the buffer contains a T encoded as Abi.
         let value = unsafe {
-            internal::decode::<Abi>(unstable_encode!(Abi, original).as_ptr() as *const u8)
+            internal::decode::<Abi>(
+                unstable_encode!(@
+                    (
+                        OptionAbi((transmute_abi(), transmute_abi())),
+                        (transmute_abi(), transmute_abi())
+                    ),
+                    Abi,
+                    original
+                )
+                .as_ptr() as *const u8,
+            )
         };
         expect_eq!(value, original);
     }

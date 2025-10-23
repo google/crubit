@@ -4,7 +4,7 @@
 
 use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::make_rs_ident;
-use crubit_abi_type::CrubitAbiTypeToRustTokens;
+use crubit_abi_type::{CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens};
 use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
@@ -1147,8 +1147,10 @@ fn generate_func_body(
                 } else if return_type.is_crubit_abi_bridge_type() {
                     let crubit_abi_type = db.crubit_abi_type(return_type.clone())?;
                     let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
+                    let crubit_abi_type_expr_tokens =
+                        CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                     quote! {
-                        ::bridge_rust::unstable_return!(#crubit_abi_type_tokens, |__return_abi_buffer| {
+                        ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |__return_abi_buffer| {
                             #crate_root_path::detail::#thunk_ident(
                                 __return_abi_buffer,
                                 #(#clone_prefixes #thunk_args #clone_suffixes ),*

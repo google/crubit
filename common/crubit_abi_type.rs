@@ -106,6 +106,9 @@ impl CrubitAbiType {
 /// tokens.
 pub struct CrubitAbiTypeToRustTokens<'a>(pub &'a CrubitAbiType);
 
+/// A [`ToTokens`] implementation for [`CrubitAbiType`] to construct an instance of the type.
+pub struct CrubitAbiTypeToRustExprTokens<'a>(pub &'a CrubitAbiType);
+
 /// A [`ToTokens`] implementation for [`CrubitAbiType`] to format the schema as C++
 /// tokens.
 pub struct CrubitAbiTypeToCppTokens<'a>(pub &'a CrubitAbiType);
@@ -149,9 +152,7 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
             CrubitAbiType::Pair(first, second) => {
                 let first_tokens = Self(first);
                 let second_tokens = Self(second);
-                // std::pair maps to the Rust's TupleAbi
-                quote! { ::bridge_rust::TupleAbi<(#first_tokens, #second_tokens)> }
-                    .to_tokens(tokens);
+                quote! { (#first_tokens, #second_tokens) }.to_tokens(tokens);
             }
             CrubitAbiType::StdString { in_cc_std } => {
                 let root = if *in_cc_std {
@@ -169,6 +170,47 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                 if !type_args.is_empty() {
                     let type_args_tokens = type_args.iter().map(Self);
                     quote! { < #(#type_args_tokens),* > }.to_tokens(tokens);
+                }
+            }
+        }
+    }
+}
+
+impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self.0 {
+            CrubitAbiType::SignedChar
+            | CrubitAbiType::UnsignedChar
+            | CrubitAbiType::UnsignedShort
+            | CrubitAbiType::UnsignedInt
+            | CrubitAbiType::UnsignedLong
+            | CrubitAbiType::LongLong
+            | CrubitAbiType::UnsignedLongLong
+            | CrubitAbiType::Ptr { .. } => {
+                quote! { ::bridge_rust::transmute_abi() }.to_tokens(tokens);
+            }
+            CrubitAbiType::Pair(first, second) => {
+                let first_tokens = Self(first);
+                let second_tokens = Self(second);
+                quote! { (#first_tokens, #second_tokens) }.to_tokens(tokens);
+            }
+            CrubitAbiType::StdString { in_cc_std } => {
+                let root = if *in_cc_std {
+                    quote! { crate }
+                } else {
+                    quote! { ::cc_std }
+                };
+                quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
+            }
+            CrubitAbiType::Transmute { .. } => {
+                quote! { ::bridge_rust::transmute_abi() }.to_tokens(tokens);
+            }
+            CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
+                rust_abi_path.to_tokens(tokens);
+                if !type_args.is_empty() {
+                    let type_args_tokens = type_args.iter().map(Self);
+                    // We expect that the user's type is a tuple struct with public fields.
+                    quote! { ( #(#type_args_tokens),* ) }.to_tokens(tokens);
                 }
             }
         }
@@ -274,13 +316,7 @@ mod tests {
         let rust_tokens = CrubitAbiTypeToRustTokens(&abi).to_token_stream().to_string();
         expect_eq!(
             rust_tokens,
-            quote! {
-                ::bridge_rust::TupleAbi<(
-                    ::bridge_rust::TransmuteAbi<i32>,
-                    crate::StatusAbi
-                )>
-            }
-            .to_string()
+            quote! { (::bridge_rust::TransmuteAbi<i32>, crate::StatusAbi) }.to_string()
         );
 
         let cpp_tokens = CrubitAbiTypeToCppTokens(&abi).to_token_stream().to_string();
