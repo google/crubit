@@ -4,6 +4,9 @@
 
 #include "nullability/inference/inferable.h"
 
+#include <string>
+#include <vector>
+
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -21,17 +24,13 @@
 namespace clang::tidy::nullability {
 using ::clang::ast_matchers::anything;
 using ::clang::ast_matchers::equalsNode;
-using ::clang::ast_matchers::functionDecl;
 using ::clang::ast_matchers::hasDeclContext;
 using ::clang::ast_matchers::hasName;
 using ::clang::ast_matchers::isImplicit;
-using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
 using ::clang::ast_matchers::namedDecl;
-using ::clang::ast_matchers::selectFirst;
 using ::clang::ast_matchers::unless;
-using ::testing::IsEmpty;
-using ::testing::UnorderedElementsAre;
+using ::testing::UnorderedElementsAreArray;
 
 template <class T = NamedDecl>
 static const T& lookup(llvm::StringRef Name, ASTContext& Ctx,
@@ -71,150 +70,567 @@ constexpr llvm::StringRef SmartPointerHeader = R"cc(
   class _Nullable custom_smart_int_ptr { using pointer = int*; };
 )cc";
 
-TEST(IsInferenceTargetTest, GlobalVariables) {
-  TestAST AST((SmartPointerHeader + R"cc(
-                int* Pointer;
-                std::unique_ptr<int> StdSmartPointer;
-                custom_smart_ptr<int> CustomSmartPointer;
-                custom_smart_int_ptr CustomSmartIntPointer;
-                int NotPointer;
-              )cc")
-                  .str());
-
-  auto &Ctx = AST.context();
-  EXPECT_TRUE(isInferenceTarget(lookup("Pointer", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartPointer", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartPointer", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartIntPointer", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", Ctx)));
+TEST(IsInferenceTargetTest, GlobalRawPointer) {
+  TestAST AST(R"cc(
+    int* Pointer;
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(lookup("Pointer", AST.context())));
 }
 
-TEST(IsInferenceTargetTest, Functions) {
+TEST(IsInferenceTargetTest, GlobalStdSmartPointer) {
   TestAST AST((SmartPointerHeader + R"cc(
-                int* func(int* Param, int** NestedParam,
-                          std::unique_ptr<int> StdSmartParam,
-                          custom_smart_ptr<int> CustomSmartParam) {
-                  int* Local;
-                  static int* StaticLocal;
-                  std::unique_ptr<int> StdSmartLocal;
-                  custom_smart_ptr<int> CustomSmartLocal;
-                }
-                void empty() {}
-                auto Lambda = []() {};
-                auto LambdaWithPtr = [](int*) {};
+                std::unique_ptr<int> StdSmartPointer;
               )cc")
                   .str());
+  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartPointer", AST.context())));
+}
 
-  auto &Ctx = AST.context();
+TEST(IsInferenceTargetTest, GlobalCustomSmartPointer) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                custom_smart_ptr<int> CustomSmartPointer;
+              )cc")
+                  .str());
+  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartPointer", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, GlobalCustomSmartIntPointer) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                custom_smart_int_ptr CustomSmartIntPointer;
+              )cc")
+                  .str());
+  EXPECT_TRUE(
+      isInferenceTarget(lookup("CustomSmartIntPointer", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, GlobalNonPointer) {
+  TestAST AST(R"cc(
+    int NotPointer;
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(lookup("NotPointer", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, FunctionWithoutPointersIsNotTarget) {
+  TestAST AST(R"cc(
+    void func() {}
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(lookup("func", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, FunctionWithPointerReturnIsTarget) {
+  TestAST AST(R"cc(
+    int* func();
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(lookup("func", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, FunctionWithPointerParamIsTargetButParamIsNot) {
+  TestAST AST(R"cc(
+    void func(int* Param);
+  )cc");
+  ASTContext& Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(lookup("func", Ctx)));
   EXPECT_FALSE(isInferenceTarget(lookup("Param", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("NestedParam", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("StdSmartParam", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("CustomSmartParam", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("Local", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("StaticLocal", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartLocal", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartLocal", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("empty", Ctx)));
-  auto &Lambda = lookup<VarDecl>("Lambda", Ctx);
-  auto *LambdaCtx = cast<LambdaExpr>(Lambda.getInit())->getLambdaClass();
+}
+
+TEST(IsInferenceTargetTest, FunctionLocalPointerIsTarget) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                void func() { int* Local; }
+              )cc")
+                  .str());
+  EXPECT_TRUE(isInferenceTarget(lookup("Local", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, StaticFunctionLocalPointerIsTarget) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                void func() {
+                  static int* StaticLocal;
+                }
+              )cc")
+                  .str());
+  EXPECT_TRUE(isInferenceTarget(lookup("StaticLocal", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, FunctionLocalStdSmartPointerIsTarget) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                void func() {
+                  std::unique_ptr<int> StdSmartLocal;
+                }
+              )cc")
+                  .str());
+  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartLocal", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, FunctionLocalCustomSmartPointerIsTarget) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                void func() {
+                  custom_smart_ptr<int> CustomSmartLocal;
+                }
+              )cc")
+                  .str());
+  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartLocal", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, LambdaWithoutPointerIsNotTarget) {
+  TestAST AST(R"cc(
+    auto Lambda = []() {};
+  )cc");
+  ASTContext& Ctx = AST.context();
+  auto& Lambda = lookup<VarDecl>("Lambda", Ctx);
+  CXXRecordDecl* LambdaCtx =
+      cast<LambdaExpr>(Lambda.getInit())->getLambdaClass();
   EXPECT_FALSE(isInferenceTarget(Lambda));
   EXPECT_FALSE(isInferenceTarget(lookup("operator()", Ctx, LambdaCtx)));
-  auto &LambdaWithPtr = lookup<VarDecl>("LambdaWithPtr", Ctx);
-  auto *LambdaWithPtrCtx =
+}
+
+TEST(IsInferenceTargetTest, LambdaWithPointerIsTarget) {
+  TestAST AST(R"cc(
+    auto LambdaWithPtr = [](int*) {};
+  )cc");
+  ASTContext& Ctx = AST.context();
+  auto& LambdaWithPtr = lookup<VarDecl>("LambdaWithPtr", Ctx);
+  CXXRecordDecl* LambdaWithPtrCtx =
       cast<LambdaExpr>(LambdaWithPtr.getInit())->getLambdaClass();
   EXPECT_FALSE(isInferenceTarget(LambdaWithPtr));
   EXPECT_TRUE(isInferenceTarget(lookup("operator()", Ctx, LambdaWithPtrCtx)));
 }
 
-TEST(IsInferenceTargetTest, ClassAndMembers) {
+TEST(IsInferenceTargetTest, ClassDeclIsNotTarget) {
+  TestAST AST(R"cc(
+    class C {};
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(lookup<CXXRecordDecl>("C", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, MethodWithoutPointerIsNotTarget) {
+  TestAST AST(R"cc(
+    class C {
+      void method();
+    };
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(lookup("method", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, MethodWithPointerIsTarget) {
+  TestAST AST(R"cc(
+    class C {
+      int* methodWithPtr();
+    };
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(lookup("methodWithPtr", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, StaticMethodWithPointerIsTarget) {
+  TestAST AST(R"cc(
+    class C {
+      static int* staticMethodWithPtr();
+    };
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(lookup("staticMethodWithPtr", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, NonPointerFieldIsNotTarget) {
+  TestAST AST(R"cc(
+    class C {
+      int NonPtrField;
+    };
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, PointerFieldIsTarget) {
+  TestAST AST(R"cc(
+    class C {
+      int* PtrField;
+    };
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(lookup("PtrField", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, StaticPointerFieldIsTarget) {
+  TestAST AST(R"cc(
+    class C {
+      static int* StaticField;
+    };
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(lookup("StaticField", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, StdSmartPointerFieldIsTarget) {
   TestAST AST((SmartPointerHeader + R"cc(
                 class C {
-                  void method();
-                  int* methodWithPtr();
-                  int NonPtrField;
-                  int* PtrField;
-                  static int* StaticField;
                   std::unique_ptr<int> StdSmartField;
+                };
+              )cc")
+                  .str());
+  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartField", AST.context())));
+}
+
+TEST(IsInferenceTargetTest, CustomSmartPointerFieldIsTarget) {
+  TestAST AST((SmartPointerHeader + R"cc(
+                class C {
                   custom_smart_ptr<int> CustomSmartField;
                 };
               )cc")
                   .str());
-
-  auto &Ctx = AST.context();
-  EXPECT_FALSE(isInferenceTarget(lookup<CXXRecordDecl>("C", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("method", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("methodWithPtr", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("NonPtrField", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("PtrField", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("StaticField", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("StdSmartField", Ctx)));
-  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartField", Ctx)));
+  EXPECT_TRUE(isInferenceTarget(lookup("CustomSmartField", AST.context())));
 }
 
-TEST(IsInferenceTargetTest, FunctionTemplate) {
+TEST(IsInferenceTargetTest, FunctionTemplateDeclIsNotTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {}
+
+    // To demonstrate that the existence of an instantiation is not a factor.
+    void instantiate() { funcTmpl<0>(nullptr); }
+  )cc");
+  const FunctionTemplateDecl& FuncTmpl =
+      lookup<FunctionTemplateDecl>("funcTmpl", AST.context());
+  EXPECT_FALSE(isInferenceTarget(FuncTmpl));
+  EXPECT_FALSE(isInferenceTarget(*FuncTmpl.getTemplatedDecl()));
+}
+
+TEST(IsInferenceTargetTest, LocalInFunctionTemplateDeclIsNotTarget) {
   TestAST AST(R"cc(
     template <int X>
     void funcTmpl(int*) {
       int* LocalInTmpl;
+    }
 
+    // To demonstrate that the existence of an instantiation is not a factor.
+    void instantiate() { funcTmpl<0>(nullptr); }
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const FunctionTemplateDecl& FuncTmpl =
+      lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("LocalInTmpl", Ctx, FuncTmpl.getTemplatedDecl())));
+}
+
+TEST(IsInferenceTargetTest, MethodInFunctionTemplateDeclIsNotTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {
       struct StructInTmpl {
-        void funcInStructInTmpl(int* P) { int* LocalInStructInTmpl; }
+        void funcInStructInTmpl(int* P) {}
+      };
+    }
+
+    // To demonstrate that the existence of an instantiation is not a factor.
+    void instantiate() { funcTmpl<0>(nullptr); }
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const FunctionTemplateDecl& FuncTmpl =
+      lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
+  auto* StructInTmpl =
+      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, FuncTmpl.getTemplatedDecl());
+  const NamedDecl& FuncInStructInTmpl =
+      lookup("funcInStructInTmpl", Ctx, StructInTmpl);
+  EXPECT_FALSE(isInferenceTarget(FuncInStructInTmpl));
+}
+
+TEST(IsInferenceTargetTest, LocalInMethodInFunctionTemplateDeclIsNotTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {
+      struct StructInTmpl {
+        void funcInStructInTmpl() { int* LocalInStructInTmpl; }
+      };
+    }
+
+    // To demonstrate that the existence of an instantiation is not a factor.
+    void instantiate() { funcTmpl<0>(nullptr); }
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const FunctionTemplateDecl& FuncTmpl =
+      lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
+  auto* StructInTmpl =
+      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, FuncTmpl.getTemplatedDecl());
+  const NamedDecl& FuncInStructInTmpl =
+      lookup("funcInStructInTmpl", Ctx, StructInTmpl);
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("LocalInStructInTmpl", Ctx, &FuncInStructInTmpl)));
+}
+
+TEST(IsInferenceTargetTest, FieldInFunctionTemplateDeclIsNotTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {
+      struct StructInTmpl {
+        int* FieldInStructInTmpl;
+      };
+    }
+
+    // To demonstrate that the existence of an instantiation is not a factor.
+    void instantiate() { funcTmpl<0>(nullptr); }
+  )cc");
+  ASTContext& Ctx = AST.context();
+  auto& FuncTmpl = lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
+  auto* StructInTmpl =
+      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, FuncTmpl.getTemplatedDecl());
+  EXPECT_FALSE(
+      isInferenceTarget(lookup("FieldInStructInTmpl", Ctx, StructInTmpl)));
+}
+
+TEST(IsInferenceTargetTest, FunctionTemplateInstantiationIsTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {}
+
+    auto& FuncTmplInst = funcTmpl<2>;
+  )cc");
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(lookup<VarDecl>("FuncTmplInst", AST.context())
+                             .getInit()
+                             ->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_TRUE(isInferenceTarget(Instantiation));
+}
+
+TEST(IsInferenceTargetTest, LocalInFunctionTemplateInstantiationIsTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {
+      int* LocalInTmpl;
+    }
+
+    auto& FuncTmplInst = funcTmpl<2>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_TRUE(isInferenceTarget(lookup("LocalInTmpl", Ctx, &Instantiation)));
+}
+
+TEST(IsInferenceTargetTest, MethodInFunctionTemplateInstantiationIsTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {
+      struct StructInTmpl {
+        void funcInStructInTmpl(int* P) {}
+      };
+    }
+
+    auto& FuncTmplInst = funcTmpl<2>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  auto* StructInInstantiation =
+      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, &Instantiation);
+  const NamedDecl& FuncInStructInInstantiation =
+      lookup("funcInStructInTmpl", Ctx, StructInInstantiation);
+  EXPECT_TRUE(isInferenceTarget(FuncInStructInInstantiation));
+}
+
+TEST(IsInferenceTargetTest,
+     LocalInMethodInFunctionTemplateInstantiationIsTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {
+      struct StructInTmpl {
+        void funcInStructInTmpl() { int* LocalInStructInTmpl; }
+      };
+    }
+
+    auto& FuncTmplInst = funcTmpl<2>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  auto* StructInInstantiation =
+      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, &Instantiation);
+  const NamedDecl& FuncInStructInInstantiation =
+      lookup("funcInStructInTmpl", Ctx, StructInInstantiation);
+  EXPECT_TRUE(isInferenceTarget(
+      lookup("LocalInStructInTmpl", Ctx, &FuncInStructInInstantiation)));
+}
+
+TEST(IsInferenceTargetTest, FieldInFunctionTemplateInstantiationIsTarget) {
+  TestAST AST(R"cc(
+    template <int X>
+    void funcTmpl(int*) {
+      struct StructInTmpl {
         int* FieldInStructInTmpl;
       };
     }
 
     auto& FuncTmplInst = funcTmpl<2>;
   )cc");
-
-  auto &Ctx = AST.context();
-  // A function template is not an inference target, nor are functions or fields
-  // or local variables contained within.
-  const FunctionTemplateDecl &FuncTmpl =
-      lookup<FunctionTemplateDecl>("funcTmpl", Ctx);
-  EXPECT_FALSE(isInferenceTarget(FuncTmpl));
-  EXPECT_FALSE(isInferenceTarget(*FuncTmpl.getTemplatedDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("LocalInTmpl", Ctx, FuncTmpl.getTemplatedDecl())));
-  auto *StructInTmpl =
-      &lookup<CXXRecordDecl>("StructInTmpl", Ctx, FuncTmpl.getTemplatedDecl());
-  EXPECT_FALSE(
-      isInferenceTarget(lookup("FieldInStructInTmpl", Ctx, StructInTmpl)));
-  auto &FuncInStructInTmpl = lookup("funcInStructInTmpl", Ctx, StructInTmpl);
-  EXPECT_FALSE(isInferenceTarget(FuncInStructInTmpl));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("LocalInStructInTmpl", Ctx, &FuncInStructInTmpl)));
-  // The function template instantiation *is* an inference target, as are
-  // functions, fields, and local variables within.
-  const ValueDecl &Instantiation =
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
       *cast<DeclRefExpr>(
            lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
            ->getDecl();
-  EXPECT_TRUE(isInferenceTarget(Instantiation));
-  EXPECT_TRUE(isInferenceTarget(lookup("LocalInTmpl", Ctx, &Instantiation)));
-  auto *StructInInstantiation =
+  auto* StructInInstantiation =
       &lookup<CXXRecordDecl>("StructInTmpl", Ctx, &Instantiation);
   EXPECT_TRUE(isInferenceTarget(
       lookup("FieldInStructInTmpl", Ctx, StructInInstantiation)));
-  auto &FuncInStructInInstantiation =
-      lookup("funcInStructInTmpl", Ctx, StructInInstantiation);
-  EXPECT_TRUE(isInferenceTarget(FuncInStructInInstantiation));
-  EXPECT_TRUE(isInferenceTarget(
-      lookup("LocalInStructInTmpl", Ctx, &FuncInStructInInstantiation)));
 }
 
-TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
+TEST(IsInferenceTargetTest, ClassTemplateDeclIsNotTarget) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {};
+
+    // To demonstrate that the existence of an instantiation is not a factor.
+    ClassTemplate<int*> Instantiation;
+  )cc");
+  auto& ClassTemplate =
+      lookup<ClassTemplateDecl>("ClassTemplate", AST.context());
+  EXPECT_FALSE(isInferenceTarget(ClassTemplate));
+  EXPECT_FALSE(isInferenceTarget(*ClassTemplate.getTemplatedDecl()));
+}
+
+// We do not exhaustively test all the possible decls that can be inside a class
+// template, as this would be repetitive with the function template test cases
+// above.
+TEST(IsInferenceTargetTest, FieldInClassTemplateDeclIsNotTarget) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
+      T* PtrField;
+    };
+
+    // To demonstrate that the existence of an instantiation is not a factor.
+    ClassTemplate<int*> Instantiation;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  auto& ClassTemplate = lookup<ClassTemplateDecl>("ClassTemplate", Ctx);
+  EXPECT_FALSE(isInferenceTarget(
+      lookup("PtrField", Ctx, ClassTemplate.getTemplatedDecl())));
+}
+
+TEST(IsInferenceTargetTest, ClassTemplateInstantiationWithNonPointer) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {};
+
+    ClassTemplate<int> Instantiation;
+  )cc");
+  EXPECT_FALSE(
+      isInferenceTarget(*lookup<VarDecl>("Instantiation", AST.context())
+                             .getType()
+                             ->getAsRecordDecl()));
+}
+
+TEST(IsInferenceTargetTest, NonPointerFieldInClassTemplateInstantiation) {
   TestAST AST(R"cc(
     template <typename T>
     struct ClassTemplate {
       T NonPtrField;
+    };
+
+    ClassTemplate<int> Instantiation;
+    int Field = Instantiation.NonPtrField;
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(IsInferenceTargetTest, PointerFieldInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
       T* PtrField;
+    };
+
+    ClassTemplate<int> Instantiation;
+    int* Field = Instantiation.PtrField;
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(IsInferenceTargetTest, StaticPointerFieldInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
       static T* StaticField;
+    };
+
+    ClassTemplate<int> Instantiation;
+    int* Field = Instantiation.StaticField;
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(IsInferenceTargetTest, MethodWithoutPointersInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
       T method();
+    };
+
+    ClassTemplate<int> Instantiation;
+    int MethodResult = Instantiation.method();
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<CXXMemberCallExpr>(lookup<VarDecl>("MethodResult", AST.context())
+                                   .getInit()
+                                   ->IgnoreImplicit())
+           ->getMethodDecl()));
+}
+
+TEST(IsInferenceTargetTest, MethodWithPointerInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
       T* methodWithPtr();
+    };
+
+    ClassTemplate<int> Instantiation;
+    int* MethodResult = Instantiation.methodWithPtr();
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<CXXMemberCallExpr>(lookup<VarDecl>("MethodResult", AST.context())
+                                   .getInit()
+                                   ->IgnoreImplicit())
+           ->getMethodDecl()));
+}
+
+TEST(IsInferenceTargetTest,
+     PointerFieldInNestedStructInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
       struct Nested {
         struct NestedTwo {
           T* NestedStructPtrField;
+        };
+        NestedTwo NestedStructTwo;
+      };
+      Nested NestedStruct;
+    };
+
+    ClassTemplate<int> Instantiation;
+    int* Field = Instantiation.NestedStruct.NestedStructTwo.NestedStructPtrField;
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(IsInferenceTargetTest,
+     MethodWithNonDependentPointerInNestedStructInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
+      struct Nested {
+        struct NestedTwo {
           bool* nestedStructMethod();
         };
         NestedTwo NestedStructTwo;
@@ -222,383 +638,590 @@ TEST(IsInferenceTargetTest, ClassTemplateAndMembers) {
       Nested NestedStruct;
     };
 
-    ClassTemplate<int> IntClass;
-    int IntA = IntClass.NonPtrField;
-    int* IntB = IntClass.PtrField;
-    int* IntC = IntClass.StaticField;
-    int IntD = IntClass.method();
-    int* IntE = IntClass.methodWithPtr();
-    int* IntF = IntClass.NestedStruct.NestedStructTwo.NestedStructPtrField;
-    bool* IntG = IntClass.NestedStruct.NestedStructTwo.nestedStructMethod();
-
-    ClassTemplate<int*> IntStarClass;
-    int* IntStarA = IntStarClass.NonPtrField;
-    int** IntStarB = IntStarClass.PtrField;
-    int** IntStarC = IntStarClass.StaticField;
-    int* IntStarD = IntStarClass.method();
-    int** IntStarE = IntStarClass.methodWithPtr();
-    int** IntStarF = IntStarClass.NestedStruct.NestedStructTwo.NestedStructPtrField;
-    bool* IntStarG = IntStarClass.NestedStruct.NestedStructTwo.nestedStructMethod();
+    ClassTemplate<int> Instantiation;
+    bool* MethodResult =
+        Instantiation.NestedStruct.NestedStructTwo.nestedStructMethod();
   )cc");
-
-  auto &Ctx = AST.context();
-  // Class templates and fields and functions inside them are not inference
-  // targets.
-  auto &ClassTemplate = lookup<ClassTemplateDecl>("ClassTemplate", Ctx);
-  EXPECT_FALSE(isInferenceTarget(ClassTemplate));
-  EXPECT_FALSE(isInferenceTarget(*ClassTemplate.getTemplatedDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("NonPtrField", Ctx, ClassTemplate.getTemplatedDecl())));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("PtrField", Ctx, ClassTemplate.getTemplatedDecl())));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("StaticField", Ctx, ClassTemplate.getTemplatedDecl())));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("method", Ctx, ClassTemplate.getTemplatedDecl())));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("methodWithPtr", Ctx, ClassTemplate.getTemplatedDecl())));
-  auto *NestedTwoInClassTemplate = &lookup<CXXRecordDecl>(
-      "NestedTwo", Ctx,
-      &lookup<CXXRecordDecl>("Nested", Ctx, ClassTemplate.getTemplatedDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("NestedStructPtrField", Ctx, NestedTwoInClassTemplate)));
-  EXPECT_FALSE(isInferenceTarget(
-      lookup("nestedStructMethod", Ctx, NestedTwoInClassTemplate)));
-
-  // Class template instantiations are inference targets, as are fields
-  // and functions inside, if they have inferable types, i.e. they are pointers
-  // and the pointer-ness is specified by the template.
-  // For the int template argument:
-  EXPECT_FALSE(isInferenceTarget(
-      *lookup<VarDecl>("IntClass", Ctx).getType()->getAsRecordDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntA", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
   EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntB", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntC", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("IntD", Ctx).getInit()->IgnoreImplicit())
-           ->getMethodDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("IntE", Ctx).getInit()->IgnoreImplicit())
-           ->getMethodDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntF", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("IntG", Ctx).getInit()->IgnoreImplicit())
-           ->getMethodDecl()));
-
-  // For the int* template argument, notably, we get the same results, even
-  // though the canonical types of more fields are pointers:
-  EXPECT_FALSE(isInferenceTarget(
-      *lookup<VarDecl>("IntStarClass", Ctx).getType()->getAsRecordDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntStarA", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntStarB", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntStarC", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("IntStarD", Ctx).getInit()->IgnoreImplicit())
-           ->getMethodDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("IntStarE", Ctx).getInit()->IgnoreImplicit())
-           ->getMethodDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("IntStarF", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<CXXMemberCallExpr>(
-           lookup<VarDecl>("IntStarG", Ctx).getInit()->IgnoreImplicit())
+      *cast<CXXMemberCallExpr>(lookup<VarDecl>("MethodResult", AST.context())
+                                   .getInit()
+                                   ->IgnoreImplicit())
            ->getMethodDecl()));
 }
 
-TEST(InferableTest, CountInferableSlots) {
-  TestAST AST((SmartPointerHeader + R"cc(
-                using Pointer = int *;
-                template <class T>
-                struct S;
-                struct T;
-
-                void f1(int *);
-                void f2(Pointer);
-                void f3(int **);
-                void f4(Pointer *);
-                void f5(int *&);
-                void f6(int (*)());  // function pointer
-                void f7(std::unique_ptr<int>);
-                void f8(custom_smart_ptr<int>);
-
-                int *g1(int);
-                Pointer g2(int);
-                std::unique_ptr<int> g3(int);
-                custom_smart_ptr<int> g4(int);
-
-                void h1(S<int *>);
-                void h2(int T::*);      // pointer to data member
-                void h3(int (T::*)());  // pointer to member function
-              )cc")
-                  .str());
-  auto &Ctx = AST.context();
-
-  // All the 'f's have a single pointer arg.
-  EXPECT_EQ(1, countInferableSlots(lookup("f1", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f2", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f3", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f4", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f5", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f6", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f7", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("f8", Ctx)));
-
-  // All the 'g's have a pointer return.
-  EXPECT_EQ(1, countInferableSlots(lookup("g1", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("g2", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("g3", Ctx)));
-  EXPECT_EQ(1, countInferableSlots(lookup("g4", Ctx)));
-
-  // The 'h's have types that aren't really pointers.
-  EXPECT_EQ(0, countInferableSlots(lookup("h1", Ctx)));
-  EXPECT_EQ(0, countInferableSlots(lookup("h2", Ctx)));
-  EXPECT_EQ(0, countInferableSlots(lookup("h3", Ctx)));
-}
-
-TEST(InferableTest, InnerPointersNotInferable) {
-  TestAST AST(R"cc(
-    int*** ThreePointersOneInferable;
-  )cc");
-  auto &Ctx = AST.context();
-  EXPECT_THAT(getInferableSlotIndices(lookup("ThreePointersOneInferable", Ctx)),
-              UnorderedElementsAre(0));
-}
-
-TEST(InferableTest, TemplateArgumentPointersNotInferable) {
+TEST(IsInferenceTargetTest, ClassTemplateInstantiationWithPointer) {
   TestAST AST(R"cc(
     template <typename T>
-    struct S {};
+    struct ClassTemplate {};
 
-    S<int*> NotInferable;
+    ClassTemplate<int*> Instantiation;
   )cc");
-  auto &Ctx = AST.context();
-  EXPECT_EQ(0, countInferableSlots(lookup("NotInferable", Ctx)));
-  EXPECT_FALSE(isInferenceTarget(lookup("NotInferable", Ctx)));
+  EXPECT_FALSE(
+      isInferenceTarget(*lookup<VarDecl>("Instantiation", AST.context())
+                             .getType()
+                             ->getAsRecordDecl()));
 }
 
-TEST(InferableTest, TemplateInstantiationOnlyArgWithStarIsInferable) {
-  TestAST AST((SmartPointerHeader + R"cc(
-                template <typename T>
-                struct S {
-                  T* Inferable;
-                  T NotInferable;
-                  using U = T;
-                  U NotInferableThroughAlias;
-                };
-
-                S<int*> AnS;
-                int** FromTStarField = AnS.Inferable;
-                int* FromTField = AnS.NotInferable;
-                int* FromTFieldAlias = AnS.NotInferableThroughAlias;
-
-                S<std::unique_ptr<int>> AnSSmart;
-                std::unique_ptr<int>* FromTStarFieldSmart = AnSSmart.Inferable;
-                std::unique_ptr<int>& FromTFieldSmart = AnSSmart.NotInferable;
-                std::unique_ptr<int>& FromTFieldAliasSmart = AnSSmart.NotInferableThroughAlias;
-              )cc")
-                  .str());
-  auto &Ctx = AST.context();
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("FromTStarField", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("FromTField", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("FromTFieldAlias", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("FromTStarFieldSmart", Ctx)
-                            .getInit()
-                            ->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("FromTFieldSmart", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("FromTFieldAliasSmart", Ctx)
-                            .getInit()
-                            ->IgnoreImplicit())
-           ->getMemberDecl()));
-}
-
-TEST(InferableTest, TypeAliasTemplate) {
+TEST(IsInferenceTargetTest,
+     FieldMadePointerOnlyByTemplateArgumentInClassTemplateInstantiation) {
   TestAST AST(R"cc(
     template <typename T>
-    using PtrAlias = T*;
+    struct ClassTemplate {
+      T Field;
+    };
+
+    ClassTemplate<int*> Instantiation;
+    int* F = Instantiation.Field;
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("F", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(
+    IsInferenceTargetTest,
+    MethodContainingPointerOnlyByTemplateArgumentInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
+      T method();
+    };
+
+    ClassTemplate<int*> Instantiation;
+    int* MethodResult = Instantiation.method();
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<CXXMemberCallExpr>(lookup<VarDecl>("MethodResult", AST.context())
+                                   .getInit()
+                                   ->IgnoreImplicit())
+           ->getMethodDecl()));
+}
+
+TEST(IsInferenceTargetTest,
+     FieldMadePointerThroughAliasToTemplateArgInClassTemplateInstantiation) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct ClassTemplate {
+      using U = T;
+      U NotInferableThroughAlias;
+    };
+
+    ClassTemplate<int*> Instantiation;
+    int* F = Instantiation.NotInferableThroughAlias;
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("F", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(IsInferenceTargetTest,
+     TypeAliasTemplateUsedWithPointerPresentInClassTemplate) {
+  TestAST AST(R"cc(
     template <typename T>
     using Alias = T;
 
     template <typename U>
-    struct S {
-      Alias<U*> Inferable;
-      Alias<U> NotInferable;
-      PtrAlias<U> InferablePointerInAlias;
+    struct ClassTemplate {
+      Alias<U*> FieldOfAliasTypeWithPointerInClassTemplate;
     };
 
-    S<int*> AnS;
-    int** FromInferable = AnS.Inferable;
-    int* FromNotInferable = AnS.NotInferable;
-    int** FromInferablePointerInAlias = AnS.InferablePointerInAlias;
+    ClassTemplate<int> Instantiation;
+    int* Field = Instantiation.FieldOfAliasTypeWithPointerInClassTemplate;
   )cc");
-  auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(
       *cast<MemberExpr>(
-           lookup<VarDecl>("FromInferable", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("FromNotInferable", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("FromInferablePointerInAlias", Ctx)
-                            .getInit()
-                            ->IgnoreImplicit())
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
 }
 
-TEST(InferableTest, NestedTemplates) {
+TEST(IsInferenceTargetTest,
+     TypeAliasTemplateUsedWithPointerInClassTemplateArgument) {
   TestAST AST(R"cc(
     template <typename T>
-    struct S {
+    using Alias = T;
+
+    template <typename U>
+    struct ClassTemplate {
+      Alias<U> FieldOfAliasTypeWithoutPointerInClassTemplate;
+    };
+
+    ClassTemplate<int*> Instantiation;
+    int* Field = Instantiation.FieldOfAliasTypeWithoutPointerInClassTemplate;
+  )cc");
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(IsInferenceTargetTest, TypeAliasTemplateWithPointerInAliasTemplate) {
+  TestAST AST(R"cc(
+    template <typename T>
+    using PtrAlias = T*;
+
+    template <typename U>
+    struct ClassTemplate {
+      PtrAlias<U> FieldOfAliasTypeWithPointerInAlias;
+    };
+
+    ClassTemplate<int> Instantiation;
+    int* Field = Instantiation.FieldOfAliasTypeWithPointerInAlias;
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+TEST(IsInferenceTargetTest, NestedTemplatesWithPointerInNestedTemplate) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct Outer {
       template <typename U>
-      struct Nested {
-        U* InferableU;
-        U NotInferableU;
-        T* InferableT;
-        T NotInferableT;
+      struct Inner {
+        U* FieldWithPointerInNestedTemplate;
       };
-      Nested<bool*> ANested;
+      Inner<bool> AnInner;
     };
 
-    S<int*> AnS;
-    bool** FromInferableU = AnS.ANested.InferableU;
-    bool* FromNotInferableU = AnS.ANested.NotInferableU;
-    int** FromInferableT = AnS.ANested.InferableT;
-    int* FromNotInferableT = AnS.ANested.NotInferableT;
+    Outer<int> AnOuter;
+    bool* Field = AnOuter.AnInner.FieldWithPointerInNestedTemplate;
   )cc");
-  auto &Ctx = AST.context();
   EXPECT_TRUE(isInferenceTarget(
       *cast<MemberExpr>(
-           lookup<VarDecl>("FromInferableU", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("FromNotInferableU", Ctx)
-                            .getInit()
-                            ->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_TRUE(isInferenceTarget(
-      *cast<MemberExpr>(
-           lookup<VarDecl>("FromInferableT", Ctx).getInit()->IgnoreImplicit())
-           ->getMemberDecl()));
-  EXPECT_FALSE(isInferenceTarget(
-      *cast<MemberExpr>(lookup<VarDecl>("FromNotInferableT", Ctx)
-                            .getInit()
-                            ->IgnoreImplicit())
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
            ->getMemberDecl()));
 }
 
-TEST(InferableTest, TemplateParamTypedDeclsInFunctionTemplate) {
+TEST(IsInferenceTargetTest,
+     NestedTemplatesWithPointerInNestedTemplateArgument) {
   TestAST AST(R"cc(
     template <typename T>
-    void func(T* ParamStar, T Param) {
-      T* LocalStar;
-      T Local;
-    }
+    struct Outer {
+      template <typename U>
+      struct Inner {
+        U FieldWithoutPointerInNestedTemplate;
+      };
+      Inner<bool*> AnInner;
+    };
 
-    template <typename T>
-    T* returnStar() {}
-
-    template <typename T>
-    T returnNoStar() {}
-
-    void instantiate() {
-      func<int*>(nullptr, nullptr);
-      returnStar<bool*>();
-      returnNoStar<char*>();
-    }
+    Outer<int> AnOuter;
+    bool* Field = AnOuter.AnInner.FieldWithoutPointerInNestedTemplate;
   )cc");
-
-  auto& Ctx = AST.context();
-
-  {
-    const FunctionDecl* FuncInstantiation = selectFirst<FunctionDecl>(
-        "func_instantiation",
-        match(functionDecl(isTemplateInstantiation(), hasName("func"))
-                  .bind("func_instantiation"),
-              Ctx));
-    ASSERT_NE(FuncInstantiation, nullptr);
-    EXPECT_TRUE(hasInferable(FuncInstantiation->getParamDecl(0)->getType()));
-    EXPECT_FALSE(hasInferable(FuncInstantiation->getParamDecl(1)->getType()));
-
-    const VarDecl& LocalStar =
-        lookup<VarDecl>("LocalStar", Ctx, FuncInstantiation);
-    EXPECT_TRUE(hasInferable(LocalStar.getType()));
-    const VarDecl& Local = lookup<VarDecl>("Local", Ctx, FuncInstantiation);
-    EXPECT_FALSE(hasInferable(Local.getType()));
-  }
-
-  {
-    const FunctionDecl* ReturnStarInstantiation = selectFirst<FunctionDecl>(
-        "returnStar_instantiation",
-        match(functionDecl(isTemplateInstantiation(), hasName("returnStar"))
-                  .bind("returnStar_instantiation"),
-              Ctx));
-    ASSERT_NE(ReturnStarInstantiation, nullptr);
-    EXPECT_TRUE(hasInferable(ReturnStarInstantiation->getReturnType()));
-  }
-
-  {
-    const FunctionDecl* ReturnNoStarInstantiation = selectFirst<FunctionDecl>(
-        "returnNoStar_instantiation",
-        match(functionDecl(isTemplateInstantiation(), hasName("returnNoStar"))
-                  .bind("returnNoStar_instantiation"),
-              Ctx));
-    ASSERT_NE(ReturnNoStarInstantiation, nullptr);
-    EXPECT_FALSE(hasInferable(ReturnNoStarInstantiation->getReturnType()));
-  }
+  EXPECT_FALSE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
 }
 
-TEST(InferableTest, TypeInsideTemplateTypeParamIsNotInferable) {
+TEST(IsInferenceTargetTest,
+     NestedTemplatesWithPointerUsingOuterTemplateParameter) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct Outer {
+      template <typename U>
+      struct Inner {
+        T* FieldwithPointerUsingOuterTemplateParameter;
+      };
+      Inner<bool> AnInner;
+    };
+
+    Outer<int> AnOuter;
+    int* Field = AnOuter.AnInner.FieldwithPointerUsingOuterTemplateParameter;
+  )cc");
+  EXPECT_TRUE(isInferenceTarget(
+      *cast<MemberExpr>(
+           lookup<VarDecl>("Field", AST.context()).getInit()->IgnoreImplicit())
+           ->getMemberDecl()));
+}
+
+struct CountInferableSlotsTestInput {
+  std::string TestCaseName;
+  std::string InputCode;
+  int ExpectedSlots;
+  std::string TargetName = "target";
+};
+
+class CountInferableSlotsTest
+    : public testing::TestWithParam<CountInferableSlotsTestInput> {};
+
+TEST_P(CountInferableSlotsTest, CountsInferableSlots) {
+  TestAST AST(GetParam().InputCode);
+  EXPECT_EQ(countInferableSlots(lookup(GetParam().TargetName, AST.context())),
+            GetParam().ExpectedSlots);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CountInferableSlotsTests, CountInferableSlotsTest,
+    testing::Values(
+        CountInferableSlotsTestInput{.TestCaseName = "ParamRawPointer",
+                                     .InputCode = R"cc(
+                                       void target(int*);
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ParamAlias",
+                                     .InputCode = R"cc(
+                                       using Pointer = int*;
+                                       void target(Pointer);
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ParamNested",
+                                     .InputCode = R"cc(
+                                       void target(int**);
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ParamAliasNested",
+                                     .InputCode = R"cc(
+                                       using Pointer = int*;
+                                       void target(Pointer*);
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ParamReference",
+                                     .InputCode = R"cc(
+                                       void target(int*&);
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ParamFunctionPointer",
+                                     .InputCode = R"cc(
+                                       void target(int (*)());
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{
+            .TestCaseName = "ParamStdSmartPointer",
+            .InputCode = (SmartPointerHeader + R"cc(
+                           void target(std::unique_ptr<int>);
+                         )cc")
+                             .str(),
+            .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{
+            .TestCaseName = "ParamCustomSmartPointer",
+            .InputCode = (SmartPointerHeader + R"cc(
+                           void target(custom_smart_ptr<int>);
+                         )cc")
+                             .str(),
+            .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ReturnRawPointer",
+                                     .InputCode = R"cc(
+                                       int* target();
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ReturnAlias",
+                                     .InputCode = R"cc(
+                                       using Pointer = int*;
+                                       Pointer target();
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ReturnNested",
+                                     .InputCode = R"cc(
+                                       int** target();
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ReturnAliasNested",
+                                     .InputCode = R"cc(
+                                       using Pointer = int*;
+                                       Pointer* target();
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ReturnReference",
+                                     .InputCode = R"cc(
+                                       int*& target();
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "ReturnFunctionPointer",
+                                     .InputCode = R"cc(
+                                       using FnPtr = int (*)();
+                                       FnPtr target();
+                                     )cc",
+                                     .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{
+            .TestCaseName = "ReturnStdSmartPointer",
+            .InputCode = (SmartPointerHeader + R"cc(
+                           std::unique_ptr<int> target();
+                         )cc")
+                             .str(),
+            .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{
+            .TestCaseName = "ReturnCustomSmartPointer",
+            .InputCode = (SmartPointerHeader + R"cc(
+                           custom_smart_ptr<int> target();
+                         )cc")
+                             .str(),
+            .ExpectedSlots = 1},
+        CountInferableSlotsTestInput{.TestCaseName = "TemplateOfPointer",
+                                     .InputCode = R"cc(
+                                       template <typename T>
+                                       struct S {};
+                                       S<int*> Target;
+                                     )cc",
+                                     .ExpectedSlots = 0,
+                                     .TargetName = "Target"},
+        CountInferableSlotsTestInput{.TestCaseName = "PointerToDataMember",
+                                     .InputCode = R"cc(
+                                       struct T;
+                                       int T::* Target;
+                                     )cc",
+                                     .ExpectedSlots = 0,
+                                     .TargetName = "Target"},
+        CountInferableSlotsTestInput{.TestCaseName = "PointerToMemberFunction",
+                                     .InputCode = R"cc(
+                                       struct T;
+                                       int (T::*Target)();
+                                     )cc",
+                                     .ExpectedSlots = 0,
+                                     .TargetName = "Target"}),
+    [](testing::TestParamInfo<CountInferableSlotsTestInput> Info) {
+      return Info.param.TestCaseName;
+    });
+
+struct GetInferableSlotIndicesTestInput {
+  std::string TestCaseName;
+  std::string InputCode;
+  std::vector<int> ExpectedSlotIndices;
+  std::string TargetName = "target";
+};
+
+class GetInferableSlotIndicesTest
+    : public testing::TestWithParam<GetInferableSlotIndicesTestInput> {};
+
+TEST_P(GetInferableSlotIndicesTest, GetsInferableSlotIndices) {
+  TestAST AST(GetParam().InputCode);
+  EXPECT_THAT(
+      getInferableSlotIndices(lookup(GetParam().TargetName, AST.context())),
+      UnorderedElementsAreArray(GetParam().ExpectedSlotIndices));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    GetInferableSlotIndicesTest, GetInferableSlotIndicesTest,
+    testing::Values(
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "PointerAndNonPointerParams",
+            .InputCode = R"cc(
+              void target(int**, int, char, char*);
+            )cc",
+            .ExpectedSlotIndices = {1, 4},
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "PointerReturnWithPointerAndNonPointerParams",
+            .InputCode = R"cc(
+              int* target(bool, bool*);
+            )cc",
+            .ExpectedSlotIndices = {0, 2},
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "StdSmartPointerParam",
+            .InputCode = (SmartPointerHeader + R"cc(
+                           void target(std::unique_ptr<int>);
+                         )cc")
+                             .str(),
+            .ExpectedSlotIndices = {1},
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "CustomSmartPointerParam",
+            .InputCode = (SmartPointerHeader + R"cc(
+                           void target(custom_smart_ptr<int>);
+                         )cc")
+                             .str(),
+            .ExpectedSlotIndices = {1},
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "NonPointerVariable",
+            .InputCode = R"cc(
+              int Target;
+            )cc",
+            .ExpectedSlotIndices = {},
+            .TargetName = "Target",
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "PointerVariable",
+            .InputCode = R"cc(
+              int* Target;
+            )cc",
+            .ExpectedSlotIndices = {0},
+            .TargetName = "Target",
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "NestedPointerVariable",
+            .InputCode = R"cc(
+              int** Target;
+            )cc",
+            .ExpectedSlotIndices = {0},
+            .TargetName = "Target",
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "NonPointerClassMember",
+            .InputCode = R"cc(
+              class C {
+                int Target;
+              };
+            )cc",
+            .ExpectedSlotIndices = {},
+            .TargetName = "Target",
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "PointerClassMember",
+            .InputCode = R"cc(
+              class C {
+                int* Target;
+              };
+            )cc",
+            .ExpectedSlotIndices = {0},
+            .TargetName = "Target",
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "NestedPointerClassMember",
+            .InputCode = R"cc(
+              class C {
+                int** Target;
+              };
+            )cc",
+            .ExpectedSlotIndices = {0},
+            .TargetName = "Target",
+        },
+        GetInferableSlotIndicesTestInput{
+            .TestCaseName = "PointerContainingClassMemberFunction",
+            .InputCode = R"cc(
+              class C {
+                int* target(bool, bool*);
+              };
+            )cc",
+            .ExpectedSlotIndices = {0, 2},
+        }),
+    [](testing::TestParamInfo<GetInferableSlotIndicesTestInput> Info) {
+      return Info.param.TestCaseName;
+    });
+
+TEST(HasInferableTest,
+     LocalInFunctionTemplateInstantiationWithTemplateArgumentType) {
+  TestAST AST(R"cc(
+    template <typename T>
+    void funcTmpl() {
+      T LocalInTmpl;
+    }
+
+    auto& FuncTmplInst = funcTmpl<int*>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_FALSE(hasInferable(
+      lookup<VarDecl>("LocalInTmpl", Ctx, &Instantiation).getType()));
+}
+
+TEST(HasInferableTest,
+     LocalInFunctionTemplateInstantiationWithPointerToTemplateArgumentType) {
+  TestAST AST(R"cc(
+    template <typename T>
+    void funcTmpl() {
+      T* LocalInTmpl;
+    }
+
+    auto& FuncTmplInst = funcTmpl<int>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_TRUE(hasInferable(
+      lookup<VarDecl>("LocalInTmpl", Ctx, &Instantiation).getType()));
+}
+
+TEST(HasInferableTest,
+     ParamInFunctionTemplateInstantiationWithTemplateArgumentType) {
+  TestAST AST(R"cc(
+    template <typename T>
+    void funcTmpl(T ParamInTmpl) {}
+
+    auto& FuncTmplInst = funcTmpl<int*>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_FALSE(hasInferable(
+      lookup<ParmVarDecl>("ParamInTmpl", Ctx, &Instantiation).getType()));
+}
+
+TEST(HasInferableTest,
+     ParamInFunctionTemplateInstantiationWithPointerToTemplateArgumentType) {
+  TestAST AST(R"cc(
+    template <typename T>
+    void funcTmpl(T* ParamInTmpl) {}
+
+    auto& FuncTmplInst = funcTmpl<int>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& Instantiation =
+      *cast<DeclRefExpr>(
+           lookup<VarDecl>("FuncTmplInst", Ctx).getInit()->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_TRUE(hasInferable(
+      lookup<ParmVarDecl>("ParamInTmpl", Ctx, &Instantiation).getType()));
+}
+
+TEST(HasInferableTest,
+     FunctionTemplateInstantiationReturnOfTemplateArgumentType) {
+  TestAST AST(R"cc(
+    template <typename T>
+    T funcTmpl() {}
+
+    auto& FuncTmplInst = funcTmpl<int*>;
+  )cc");
+  const FunctionDecl* Instantiation = cast<FunctionDecl>(
+      cast<DeclRefExpr>(lookup<VarDecl>("FuncTmplInst", AST.context())
+                            .getInit()
+                            ->IgnoreImplicit())
+          ->getDecl());
+  EXPECT_FALSE(hasInferable(Instantiation->getReturnType()));
+}
+
+TEST(HasInferableTest,
+     FunctionTemplateInstantiationReturnOfPointerToTemplateArgumentType) {
+  TestAST AST(R"cc(
+    template <typename T>
+    T* funcTmpl() {}
+
+    auto& FuncTmplInst = funcTmpl<int*>;
+  )cc");
+  const FunctionDecl* Instantiation = cast<FunctionDecl>(
+      cast<DeclRefExpr>(lookup<VarDecl>("FuncTmplInst", AST.context())
+                            .getInit()
+                            ->IgnoreImplicit())
+          ->getDecl());
+  EXPECT_TRUE(hasInferable(Instantiation->getReturnType()));
+}
+
+TEST(HasInferableTest, TypeInsideTemplateTypeParamIsNotInferableBecauseOfName) {
   TestAST AST(R"cc(
     template <class T>
     // Being named Ptr does not guarantee that the return type will always be a
     // pointer. So, we still don't annotate unless the pointer-ness is part of
     // the template declaration.
     T::Ptr ReturnsTypeNamedPtr();
+
+    class S {
+     public:
+      typedef const char* Ptr;
+    };
+
+    auto& FuncTmplInst = ReturnsTypeNamedPtr<S>;
+  )cc");
+  const FunctionDecl* Instantiation = cast<FunctionDecl>(
+      cast<DeclRefExpr>(lookup<VarDecl>("FuncTmplInst", AST.context())
+                            .getInit()
+                            ->IgnoreImplicit())
+          ->getDecl());
+  EXPECT_FALSE(hasInferable(Instantiation->getReturnType()));
+}
+
+TEST(HasInferableTest,
+     TypeInsideTemplateTypeParamIsInferableIfPointerIsInsideTemplate) {
+  TestAST AST(R"cc(
     template <class T>
     T::Ptr* ReturnsPtr();
 
@@ -607,78 +1230,14 @@ TEST(InferableTest, TypeInsideTemplateTypeParamIsNotInferable) {
       typedef const char* Ptr;
     };
 
-    int main() {
-      ReturnsTypeNamedPtr<S>();
-      ReturnsPtr<S>();
-    }
+    auto& FuncTmplInst = ReturnsPtr<S>;
   )cc");
-
-  {
-    const FunctionDecl* ReturnsTypeNamedPtr = selectFirst<FunctionDecl>(
-        "func", match(functionDecl(isTemplateInstantiation(),
-                                   hasName("ReturnsTypeNamedPtr"))
-                          .bind("func"),
-                      AST.context()));
-    ASSERT_NE(ReturnsTypeNamedPtr, nullptr);
-    EXPECT_FALSE(hasInferable(ReturnsTypeNamedPtr->getReturnType()));
-  }
-
-  {
-    const FunctionDecl* ReturnsPtr = selectFirst<FunctionDecl>(
-        "func",
-        match(functionDecl(isTemplateInstantiation(), hasName("ReturnsPtr"))
-                  .bind("func"),
-              AST.context()));
-    ASSERT_NE(ReturnsPtr, nullptr);
-    EXPECT_TRUE(hasInferable(ReturnsPtr->getReturnType()));
-  }
-}
-
-TEST(InferableTest, GetInferableSlotIndices) {
-  TestAST AST((SmartPointerHeader + R"cc(
-                void f1(int**, int, char, char*);
-                int* f2(bool, bool*);
-                void f3(std::unique_ptr<int>);
-                void f4(custom_smart_ptr<int>);
-
-                int v1;
-                int* v2;
-                int** v3;
-
-                class C {
-                  int field1;
-                  int* field2;
-                  int** field3;
-
-                  int* method(bool, bool*);
-                };
-              )cc")
-                  .str());
-  auto& Ctx = AST.context();
-
-  EXPECT_THAT(getInferableSlotIndices(lookup("f1", Ctx)),
-              UnorderedElementsAre(1, 4));
-  EXPECT_THAT(getInferableSlotIndices(lookup("f2", Ctx)),
-              UnorderedElementsAre(0, 2));
-  EXPECT_THAT(getInferableSlotIndices(lookup("f3", Ctx)),
-              UnorderedElementsAre(1));
-  EXPECT_THAT(getInferableSlotIndices(lookup("f4", Ctx)),
-              UnorderedElementsAre(1));
-
-  EXPECT_THAT(getInferableSlotIndices(lookup("v1", Ctx)), IsEmpty());
-  EXPECT_THAT(getInferableSlotIndices(lookup("v2", Ctx)),
-              UnorderedElementsAre(0));
-  EXPECT_THAT(getInferableSlotIndices(lookup("v3", Ctx)),
-              UnorderedElementsAre(0));
-
-  EXPECT_THAT(getInferableSlotIndices(lookup("field1", Ctx)), IsEmpty());
-  EXPECT_THAT(getInferableSlotIndices(lookup("field2", Ctx)),
-              UnorderedElementsAre(0));
-  EXPECT_THAT(getInferableSlotIndices(lookup("field3", Ctx)),
-              UnorderedElementsAre(0));
-
-  EXPECT_THAT(getInferableSlotIndices(lookup("method", Ctx)),
-              UnorderedElementsAre(0, 2));
+  const FunctionDecl* Instantiation = cast<FunctionDecl>(
+      cast<DeclRefExpr>(lookup<VarDecl>("FuncTmplInst", AST.context())
+                            .getInit()
+                            ->IgnoreImplicit())
+          ->getDecl());
+  EXPECT_TRUE(hasInferable(Instantiation->getReturnType()));
 }
 
 }  // namespace
