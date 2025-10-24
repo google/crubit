@@ -30,16 +30,16 @@ template <typename Abi>
 struct Vec3Abi {
   using Value = Vec3<typename Abi::Value>;
   static constexpr size_t kSize = Abi::kSize * 3;
-  static void Encode(Value value, crubit::Encoder& encoder) {
-    encoder.Encode<Abi>(std::move(value.x));
-    encoder.Encode<Abi>(std::move(value.y));
-    encoder.Encode<Abi>(std::move(value.z));
+  void Encode(Value value, crubit::Encoder& encoder) && {
+    abi.Encode(std::move(value.x), encoder);
+    abi.Encode(std::move(value.y), encoder);
+    abi.Encode(std::move(value.z), encoder);
   }
-  static Value Decode(crubit::Decoder& decoder) {
+  Value Decode(crubit::Decoder& decoder) && {
     return {
-        .x = decoder.Decode<Abi>(),
-        .y = decoder.Decode<Abi>(),
-        .z = decoder.Decode<Abi>(),
+        .x = abi.Decode(decoder),
+        .y = abi.Decode(decoder),
+        .z = abi.Decode(decoder),
     };
   }
 
