@@ -35,5 +35,15 @@ TEST(UsesTest, RexportExternCrateStruct) {
 
   EXPECT_TRUE((std::is_same_v<uses::Alias, uses::Original>));
 }
+
+TEST(UsesTest, DocHidden) {
+  EXPECT_EQ(uses::doc_hidden_test::hidden::private_fn(), 14568);
+  EXPECT_EQ(uses::doc_hidden_test::visible::private_fn(), 14568);
+}
+
+TEST(UsesTest, PrivateModuleInMiddleOfPath) {
+  EXPECT_EQ(uses::a::c::private_middle_path(), 742);
+}
+
 }  // namespace
 }  // namespace crubit

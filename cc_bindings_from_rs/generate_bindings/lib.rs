@@ -24,10 +24,10 @@ mod generate_function_thunk;
 mod generate_struct_and_union;
 
 use crate::format_type::{
-    create_canonical_name_from_foreign_path, crubit_abi_type_from_ty, ensure_ty_is_pointer_like,
-    format_cc_ident, format_cc_ident_symbol, format_param_types_for_cc,
-    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
-    is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
+    crubit_abi_type_from_ty, ensure_ty_is_pointer_like, format_cc_ident, format_cc_ident_symbol,
+    format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
+    format_top_level_ns_for_crate, is_bridged_type, BridgedBuiltin, BridgedType,
+    BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
@@ -38,8 +38,8 @@ use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
 use database::{
-    AdtCoreBindings, BindingsGenerator, FineGrainedFeature, FullyQualifiedName, SugaredTy,
-    TypeLocation,
+    AdtCoreBindings, BindingsGenerator, ExportedPath, FineGrainedFeature, FullyQualifiedName,
+    SugaredTy, TypeLocation,
 };
 pub use database::{Database, IncludeGuard};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
@@ -55,6 +55,7 @@ use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{self as hir, Item, ItemKind, Node, UseKind, UsePath};
 use rustc_middle::dep_graph::DepContext;
+use rustc_middle::metadata::ModChild;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
@@ -156,7 +157,8 @@ pub fn new_database<'db>(
         source_crate_num,
         support_header,
         repr_attrs_from_db,
-        reexported_symbol_canonical_name_mapping,
+        symbol_canonical_name,
+        public_paths_by_def_id,
         format_cc_ident_symbol,
         format_top_level_ns_for_crate,
         format_type::format_ty_for_cc,
@@ -301,87 +303,179 @@ fn format_with_cc_body(
     Ok(tokens)
 }
 
-fn symbols_from_extern_crate(db: &dyn BindingsGenerator<'_>) -> Vec<(DefId, FullyQualifiedName)> {
-    use rustc_hir::intravisit::Visitor;
+/// Implementation of `BindingsGenerator::public_paths_by_def_id`.
+fn public_paths_by_def_id(
+    db: &dyn BindingsGenerator<'_>,
+    crate_num: CrateNum,
+) -> HashMap<DefId, Vec<ExportedPath>> {
+    /// This is retooled logic from rustc's `visible_parent_map` function. Except where that only
+    /// selects the shortest visible path, we track all paths and defer selecting the correct one
+    /// to callers.
+    use rustc_middle::metadata::ModChild;
+    use rustc_span::kw;
+    use std::collections::vec_deque::VecDeque;
+
     let tcx = db.tcx();
-    struct ForeignSymbols<'a, 'tcx> {
-        pub symbols: Vec<(DefId, FullyQualifiedName)>,
-        pub db: &'a dyn BindingsGenerator<'tcx>,
+    let mut visible_parent_map: HashMap<DefId, Vec<ExportedPath>> = Default::default();
+
+    let bfs_queue = &mut VecDeque::new();
+    let mut module_seen_set = HashSet::new();
+
+    struct ModLikeDef {
+        path_so_far: Vec<Symbol>,
+        is_doc_hidden: bool,
+        def_id: DefId,
     }
 
-    impl<'tcx> Visitor<'tcx> for ForeignSymbols<'_, '_> {
-        fn visit_path(&mut self, path: &rustc_hir::Path<'tcx>, _id: rustc_hir::HirId) {
-            let db = self.db;
-            if let Some((def_id, fully_qualified_name)) =
-                create_canonical_name_from_foreign_path(db, path.segments, &path.res)
-            {
-                self.symbols.push((def_id, fully_qualified_name));
+    bfs_queue.push_back(ModLikeDef {
+        path_so_far: vec![],
+        is_doc_hidden: false,
+        def_id: crate_num.as_def_id(),
+    });
+
+    let mut add_child = |bfs_queue: &mut VecDeque<_>,
+                         child: &ModChild,
+                         mut parent: Vec<Symbol>,
+                         is_doc_hidden: bool| {
+        // Underscores do not create paths that are valid to spell, so we can exclude them from our
+        // traversal.
+        if !child.vis.is_public() || child.ident.name == kw::Underscore {
+            return;
+        }
+
+        let Some(mut def_id) = child.res.opt_def_id() else {
+            return;
+        };
+        // Map type aliases to their underlying type.
+        let mut type_alias_def_id = None;
+        if tcx.def_kind(def_id) == DefKind::TyAlias {
+            let underlying_type = tcx.type_of(def_id).instantiate_identity();
+            if let crate::ty::TyKind::Adt(def, _) = underlying_type.kind() {
+                type_alias_def_id = Some(def_id);
+                def_id = def.did();
             }
         }
-    }
 
-    let mut visitor = ForeignSymbols { symbols: Vec::new(), db };
-    // TODO: b/433286909 - Support adding aliases to the name map even if they aren't used by the
-    // local crate.
-    tcx.hir_visit_all_item_likes_in_crate(&mut visitor);
+        let item_name = tcx.opt_item_name(def_id);
+        let alias = match item_name {
+            // If this mod child's name is the same as the definition it refers to,
+            // don't record an alias.
+            Some(name) if name == child.ident.name => None,
+            _ => Some(child.ident.name),
+        };
 
-    visitor.symbols
-}
-
-#[derive(Debug)]
-struct AliasInfo {
-    using_name: String,
-    local_def_id: LocalDefId,
-    type_def_id: DefId,
-    def_kind: DefKind,
-}
-
-fn create_canonical_name(
-    db: &dyn BindingsGenerator<'_>,
-    name_map: &HashMap<DefId, FullyQualifiedName>,
-    alias_info: &AliasInfo,
-) -> Option<FullyQualifiedName> {
-    let alias_name = &alias_info.using_name;
-    let alias_local_def_id = alias_info.local_def_id;
-    let aliased_entity_def_id = alias_info.type_def_id;
-    let rs_name = Symbol::intern(alias_name);
-    if let Some(canonical_name) = name_map.get(&aliased_entity_def_id) {
-        // We keep the lexicographically smallest name.
-        if canonical_name.rs_name.unwrap().as_str() < rs_name.as_str() {
-            return None;
+        visible_parent_map.entry(def_id).or_default().push(ExportedPath {
+            path: parent.clone(),
+            alias,
+            type_alias_def_id,
+            is_doc_hidden,
+        });
+        if child.res.mod_def_id().is_some() && module_seen_set.insert(def_id) {
+            parent.push(child.ident.name);
+            bfs_queue.push_back(ModLikeDef { path_so_far: parent, is_doc_hidden, def_id });
         }
-    }
-    let def_id = alias_local_def_id.to_def_id();
-    let tcx = db.tcx();
-
-    // We only handle local reexported private symbols for `pub use`.
-    if !tcx.effective_visibilities(()).is_directly_public(alias_local_def_id) // not pub use
-            || !aliased_entity_def_id.is_local() // symbols from other crates
-            || tcx.effective_visibilities(()).is_directly_public(aliased_entity_def_id.expect_local())
-    {
-        return None;
-    }
-    let item_name = tcx.opt_item_name(aliased_entity_def_id)?;
-    let krate = tcx.crate_name(def_id.krate);
-    let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
-    let parent_def_key = tcx.def_key(def_id).parent?;
-    let parent_def_id = DefId::local(parent_def_key);
-
-    // If the parent is being aliased, we use its canonical name and we always
-    // process parents before their children.
-    let full_path_strs: Vec<Rc<str>> = if let Some(con_name) = name_map.get(&parent_def_id) {
-        con_name.rs_mod_path.parts().cloned().collect()
-    } else {
-        let mut full_path = tcx.def_path(def_id).data; // mod_path + name
-        full_path.pop().expect("At least the use exists");
-        full_path
-            .into_iter()
-            .filter_map(|p| p.data.get_opt_name())
-            .map(|s| Rc::<str>::from(s.as_str()))
-            .collect()
     };
 
-    if krate.as_str() == "polars_plan" && matches!(rs_name.as_str(), "date_range" | "time_range") {
+    while let Some(mod_like) = bfs_queue.pop_front() {
+        let module_children = module_children(tcx, mod_like.def_id);
+        let is_doc_hidden = mod_like.is_doc_hidden || tcx.is_doc_hidden(mod_like.def_id);
+        for child in module_children.iter() {
+            add_child(bfs_queue, child, mod_like.path_so_far.clone(), is_doc_hidden);
+        }
+    }
+
+    visible_parent_map
+}
+
+fn module_children(tcx: TyCtxt<'_>, parent: DefId) -> &[ModChild] {
+    match parent.as_local() {
+        None => tcx.module_children(parent),
+        // Local `module_children` does not use the query due to perf impacts.
+        Some(local_def_id) => tcx.module_children_local(local_def_id),
+    }
+}
+
+fn resolve_if_use(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Option<DefId> {
+    let tcx = db.tcx();
+    let DefKind::Use = tcx.def_kind(def_id) else {
+        return None;
+    };
+
+    let parent = tcx.opt_parent(def_id).expect("Expected use to have a parent");
+    let module_children = module_children(tcx, parent);
+    for child in module_children.iter() {
+        if child.reexport_chain.first().and_then(|reexport| reexport.id()) == Some(def_id) {
+            return child.res.opt_def_id();
+        }
+    }
+    None
+}
+
+/// Implementation of `BindingsGenerator::symbol_canonical_name`.
+fn symbol_canonical_name(
+    db: &dyn BindingsGenerator<'_>,
+    def_id: DefId,
+) -> Option<FullyQualifiedName> {
+    let tcx = db.tcx();
+
+    // TODO: b/433286909 - We shouldn't pass DefKind::Use to this method and instead should keep what our use
+    // is pointing at alongside the use as we generate_items and pass that when we want to determine
+    // canonical name.
+    let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
+    let item_name = tcx.opt_item_name(def_id).unwrap_or_else(|| {
+        panic!("Expected {def_id:?} of symbol_canonical_name to have an item name")
+    });
+
+    let (full_path_strs, item_name, type_alias_def_id) = {
+        // If our definition is at a path that can't be spelled, we have to pick a path from our
+        // aliases.
+        let paths = db.public_paths_by_def_id(def_id.krate);
+
+        // If our definition has no public spellings, we can't give it a canonical name.
+        let paths = paths.get(&def_id)?;
+
+        // Select a canonical path for this symbol from available paths.
+        // We use sort_by, rather than a PartialOrd on ExportedPath, so that we have access to item_name for picking our canonical path.
+        let canonical_path = paths.iter().min_by(|a, b| {
+            // Prefer paths that are do not contain an item marked #[doc(hidden)].
+            let prefer_not_doc_hidden = a.is_doc_hidden.cmp(&b.is_doc_hidden);
+            // Prefer the longest path.
+            // TODO: b/454721444 - We pick the longest path here to match existing behavior, but we
+            // should prefer the shorter path overall. Before that we need to update `generate_use`
+            // to support generating using statements that point at a type in a higher namespace.
+            let prefer_longest_path = a.path.len().cmp(&b.path.len()).reverse();
+            prefer_not_doc_hidden
+                .then(prefer_longest_path)
+                // Between two paths of the same length, prefer the one that is not a type alias.
+                .then_with(|| match (a.type_alias_def_id, b.type_alias_def_id) {
+                    (Some(_), None) => Ordering::Greater,
+                    (None, Some(_)) => Ordering::Less,
+                    _ => Ordering::Equal,
+                })
+                .then_with(|| {
+                    // If the paths are the same length, choose the lexicographically smallest alias.
+                    let a_alias = a.alias.unwrap_or(item_name);
+                    let b_alias = b.alias.unwrap_or(item_name);
+                    a_alias.as_str().cmp(b_alias.as_str())
+                })
+                // Failing all else, choose the lexicographically smallest path.
+                .then_with(|| a.path.cmp(&b.path))
+        })?;
+
+        // If the use is in the same scope as the canonical path, we want to use the original
+        // name of the symbol, not the alias.
+        (
+            canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
+            canonical_path.alias.unwrap_or(item_name),
+            canonical_path.type_alias_def_id,
+        )
+    };
+
+    let rs_name = Some(item_name);
+
+    let krate = tcx.crate_name(def_id.krate);
+    if krate.as_str() == "polars_plan" && matches!(item_name.as_str(), "date_range" | "time_range")
+    {
         // Short-circuit `polars_plan::dsl::{date_range, time_range}`.
         //
         // These two paths are the result of a pathological chain of ambiguous reexports that is
@@ -395,70 +489,39 @@ fn create_canonical_name(
     }
 
     let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
+    let cpp_ns_path = NamespaceQualifier::new(full_path_strs);
 
-    let cpp_ns_path =
-        NamespaceQualifier::new(full_path_strs.into_iter().chain([Rc::from("__crubit_internal")]));
-    let attributes = crubit_attr::get_attrs(tcx, aliased_entity_def_id).unwrap();
+    // If our canonical definition is a type alias, use the attributes on that type alias, if available, otherwise use the attributes on the underlying definition.
+    let attributes = type_alias_def_id
+        .and_then(|id| {
+            use crubit_attr::CrubitAttrs;
+            let attrs = crubit_attr::get_attrs(tcx, id).unwrap();
+            (attrs != CrubitAttrs::default()).then_some(attrs)
+        })
+        .unwrap_or_else(|| crubit_attr::get_attrs(tcx, def_id).unwrap());
     let cpp_type = attributes.cpp_type;
+    let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
+    let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or_else(|| {
+        // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
+        // This prevents silly Rust names like "reinterpret_cast" from trying to be named
+        // "reinterpret_cast" in C++, which would be an error.
+        // If the user has opted in to one of these reserved names by setting cpp_name, however,
+        // we should _not_ implicitly change it, and should instead given them an error.
+        // Hence, this unkeywording behavior only happens in the case where we implicitly
+        // delegate to the Rust name.
+        rs_name.map(|rs_name| {
+            Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
+        })
+    });
     Some(FullyQualifiedName {
-        cpp_name: Some(item_name),
+        cpp_name,
         cpp_ns_path,
-        rs_name: Some(rs_name),
+        rs_name,
         krate,
         cpp_top_level_ns,
         rs_mod_path,
         cpp_type,
     })
-}
-
-/// Implementation of `BindingsGenerator::reexported_symbol_canonical_name_mapping`.
-// TODO(b/350772554): Don't generate bindings for ambiguous symbols.
-fn reexported_symbol_canonical_name_mapping(
-    db: &dyn BindingsGenerator<'_>,
-) -> HashMap<DefId, FullyQualifiedName> {
-    let tcx = db.tcx();
-    let mut name_map: HashMap<DefId, FullyQualifiedName> =
-        symbols_from_extern_crate(db).into_iter().collect();
-
-    let aliases = tcx
-        .hir_free_items()
-        .filter_map(|item_id| {
-            let local_def_id: LocalDefId = item_id.owner_id.def_id;
-            let Item { kind: kind @ ItemKind::Use(use_path, use_kind), .. } =
-                tcx.hir_expect_item(local_def_id)
-            else {
-                return None;
-            };
-            let ident_str = &kind.ident().map_or("".to_owned(), |ident| ident.as_str().to_owned());
-            // TODO(b/350772554): Preserve the errors.
-            collect_alias_from_use(db, ident_str, use_path, use_kind).ok().map(|aliases| {
-                aliases.into_iter().map(move |(using_name, type_def_id, def_kind)| AliasInfo {
-                    using_name,
-                    local_def_id,
-                    type_def_id,
-                    def_kind,
-                })
-            })
-        })
-        .flatten()
-        .collect::<Vec<AliasInfo>>();
-
-    // TODO(b/350772554): Support mod.
-    // We should process the aliases in the path order: mod -> struct ->
-    // function/etc. Otherwise, for example, the function will still use the
-    // private fully qualified name as it doesn't know the canonical struct name
-    // yet.
-    let (struct_like_aliases, other_aliases): (Vec<AliasInfo>, Vec<AliasInfo>) =
-        aliases.into_iter().partition(|AliasInfo { def_kind, .. }| {
-            matches!(*def_kind, DefKind::Struct | DefKind::Enum | DefKind::Union)
-        });
-    for alias_info in struct_like_aliases.into_iter().chain(other_aliases.into_iter()) {
-        if let Some(canonical_name) = create_canonical_name(db, &name_map, &alias_info) {
-            name_map.insert(alias_info.type_def_id, canonical_name);
-        }
-    }
-
-    name_map
 }
 
 /// Checks whether a definition matches a specific qualified name by matching it's definition path
@@ -649,6 +712,7 @@ struct DefInfo {
     ident: Ident,
     def_id: DefId,
     def_kind: DefKind,
+    reexport_of: Option<DefId>,
 }
 
 enum PublicOnly {
@@ -662,11 +726,7 @@ fn defs_in_mod<'tcx>(
     def_id: DefId,
     public_only: PublicOnly,
 ) -> impl Iterator<Item = DefInfo> + use<'tcx> {
-    let module_children = match def_id.as_local() {
-        None => tcx.module_children(def_id),
-        // Local `module_children` does not use the query due to perf impacts.
-        Some(local_def_id) => tcx.module_children_local(local_def_id),
-    };
+    let module_children = module_children(tcx, def_id);
     module_children.iter().filter_map(move |mod_child| {
         if matches!(public_only, PublicOnly::Yes) && !mod_child.vis.is_public() {
             return None;
@@ -677,10 +737,12 @@ fn defs_in_mod<'tcx>(
             return None;
         };
 
+        let mut reexport_of: Option<DefId> = None;
         // For re-exported items, we want to return the ID of the re-export itself, not the ID of
         // the re-export target.
         if let Some(&reexport) = mod_child.reexport_chain.first() {
             if let Some(reexport_id) = reexport.id() {
+                reexport_of = Some(item_def_id);
                 item_def_id = reexport_id;
                 item_def_kind = tcx.def_kind(reexport_id);
             }
@@ -698,7 +760,12 @@ fn defs_in_mod<'tcx>(
             return None;
         }
 
-        Some(DefInfo { ident: mod_child.ident, def_id: item_def_id, def_kind: item_def_kind })
+        Some(DefInfo {
+            ident: mod_child.ident,
+            def_id: item_def_id,
+            def_kind: item_def_kind,
+            reexport_of,
+        })
     })
 }
 
@@ -746,14 +813,18 @@ fn collect_alias_from_use(
         bail!("`use` of a module (`{}`) is not yet supported", debug_print_use_path(use_path))
     }
 
+    let tcx = db.tcx();
     let mut aliases = vec![];
     if def_kind == DefKind::Mod {
-        for DefInfo { ident, def_id: item_def_id, def_kind: item_def_kind } in
+        for DefInfo { ident, def_id: item_def_id, def_kind: item_def_kind, reexport_of } in
             defs_in_mod(db.tcx(), def_id, PublicOnly::Yes)
         {
             // TODO(b/350772554): Support export Enum fields.
             if !ident.name.is_empty() {
-                aliases.push((ident.name.to_string(), item_def_id, item_def_kind));
+                let (def_id, def_kind) = reexport_of
+                    .map(|reexport_id| (reexport_id, tcx.def_kind(reexport_id)))
+                    .unwrap_or((item_def_id, item_def_kind));
+                aliases.push((ident.name.to_string(), def_id, def_kind));
             }
         }
     } else {
@@ -896,9 +967,10 @@ fn create_type_alias<'tcx>(
 }
 
 fn is_public_or_supported_export(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> bool {
-    is_directly_public(db.tcx(), def_id)
-        || ((is_exported(db.tcx(), def_id) || !def_id.is_local())
-            && db.reexported_symbol_canonical_name_mapping().contains_key(&def_id))
+    (def_id.krate != db.source_crate_num())
+        || is_directly_public(db.tcx(), def_id)
+        // If we have a private symbol in this crate that is publicly re-exported, then it is supported.
+        || (is_exported(db.tcx(), def_id) && db.symbol_canonical_name(def_id).is_some())
 }
 
 /// Implementation of `BindingsGenerator::generate_default_ctor`.
@@ -1236,12 +1308,16 @@ fn generate_item_impl(
     def_id: DefId,
 ) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
-
-    // TODO(b/350772554): Support `use` mod.
-    if !is_public_or_supported_export(db, def_id) {
+    let should_generate = match resolve_if_use(db, def_id) {
+        Some(res_def_id) => {
+            // Only generate a binding if the use is public and points as something exported.
+            is_directly_public(tcx, def_id) && is_public_or_supported_export(db, res_def_id)
+        }
+        None => is_public_or_supported_export(db, def_id),
+    };
+    if !should_generate {
         return Ok(None);
     }
-
     let item = match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
             let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
@@ -1518,7 +1594,26 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
             .chain(cc_details)
             .map(|(def_id, tokens)| {
                 let ns_def_id = tcx.opt_parent(def_id);
-                let mod_path = FullyQualifiedName::new(db, def_id).cpp_ns_path;
+                let mod_path = if tcx.def_kind(def_id) == DefKind::Use {
+                    // We don't want to use Fully Qualified Name here because for uses that will
+                    // point at the used definition but for namespace generation we want the path
+                    // the use appears at.
+                    NamespaceQualifier::new(
+                        ns_def_id
+                            .map(|parent_id| {
+                                let def_path = tcx.def_path(parent_id);
+                                def_path
+                                    .data
+                                    .into_iter()
+                                    .filter_map(|part| part.data.get_opt_name())
+                                    .map(|s| Rc::<str>::from(s.as_str()))
+                                    .collect()
+                            })
+                            .unwrap_or(vec![]),
+                    )
+                } else {
+                    FullyQualifiedName::new(db, def_id).cpp_ns_path
+                };
                 (ns_def_id, mod_path, tokens)
             })
             .collect_vec();

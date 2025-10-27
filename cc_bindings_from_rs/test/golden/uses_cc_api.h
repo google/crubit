@@ -72,8 +72,6 @@ using X1 CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_rust_golden :: test_use_glob :: X1") =
     ::uses_rust::test_use_glob::X1;
 
-namespace __crubit_internal {
-
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=32
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
@@ -127,11 +125,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/uses.rs;l=41
-  static ::uses_rust::__crubit_internal::Foo create();
+  static ::uses_rust::Foo create();
 
   // Generated from:
   // cc_bindings_from_rs/test/golden/uses.rs;l=45
-  static ::uses_rust::__crubit_internal::Bar bar();
+  static ::uses_rust::Bar bar();
 
  private:
   union {
@@ -144,7 +142,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=37
-    ::uses_rust::__crubit_internal::Bar bar_;
+    ::uses_rust::Bar bar_;
   };
 
  private:
@@ -159,16 +157,12 @@ std::int32_t g1();
 // cc_bindings_from_rs/test/golden/uses.rs;l=58
 std::int32_t g2();
 
-}  // namespace __crubit_internal
-
 using Bar CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") =
-    ::uses_rust::__crubit_internal::Bar;
+    ::uses_rust::Bar;
 using Foo CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") =
-    ::uses_rust::__crubit_internal::Foo;
-using ::uses_rust::__crubit_internal::g1;
-using ::uses_rust::__crubit_internal::g2;
-
-namespace __crubit_internal {
+    ::uses_rust::Foo;
+using ::uses_rust::g1;
+using ::uses_rust::g2;
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=67
@@ -199,10 +193,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace __crubit_internal
-
 using InnerX CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") =
-    ::uses_rust::__crubit_internal::InnerX;
+    ::uses_rust::InnerX;
 
 namespace test_use_glob {
 
@@ -230,8 +222,6 @@ inline void X1::__crubit_field_offset_assertions() {
 }
 }  // namespace test_use_glob
 
-namespace __crubit_internal {
-
 static_assert(
     sizeof(Bar) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -254,24 +244,20 @@ static_assert(std::is_trivially_destructible_v<Foo>);
 static_assert(std::is_trivially_move_constructible_v<Foo>);
 static_assert(std::is_trivially_move_assignable_v<Foo>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(
-    ::uses_rust::__crubit_internal::Foo* __ret_ptr);
+extern "C" void __crubit_thunk_create(::uses_rust::Foo* __ret_ptr);
 }
-inline ::uses_rust::__crubit_internal::Foo Foo::create() {
-  crubit::Slot<::uses_rust::__crubit_internal::Foo>
-      __return_value_ret_val_holder;
+inline ::uses_rust::Foo Foo::create() {
+  crubit::Slot<::uses_rust::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(__return_value_storage);
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_bar(
-    ::uses_rust::__crubit_internal::Bar* __ret_ptr);
+extern "C" void __crubit_thunk_bar(::uses_rust::Bar* __ret_ptr);
 }
-inline ::uses_rust::__crubit_internal::Bar Foo::bar() {
-  crubit::Slot<::uses_rust::__crubit_internal::Bar>
-      __return_value_ret_val_holder;
+inline ::uses_rust::Bar Foo::bar() {
+  crubit::Slot<::uses_rust::Bar> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_bar(__return_value_storage);
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
@@ -290,10 +276,6 @@ extern "C" std::int32_t __crubit_thunk_g2();
 }
 inline std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
-}  // namespace __crubit_internal
-
-namespace __crubit_internal {
-
 static_assert(
     sizeof(InnerX) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -306,7 +288,6 @@ static_assert(std::is_trivially_move_assignable_v<InnerX>);
 inline void InnerX::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(InnerX, field));
 }
-}  // namespace __crubit_internal
 
 }  // namespace uses_rust
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN

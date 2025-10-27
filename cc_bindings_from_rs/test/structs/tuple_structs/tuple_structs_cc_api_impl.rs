@@ -176,7 +176,7 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value=<::tuple_structs_golden::TupleStructWithInvalidArgumentType as::core::default::Default>::default();
+        let __rs_return_value=<::tuple_structs_golden::TupleStructWithInvalidArgumentType as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithInvalidArgumentType)
             .write(__rs_return_value);
     }
@@ -231,7 +231,7 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value=<::tuple_structs_golden::TupleStructWithNonExhaustiveCtor as::core::default::Default>::default();
+        let __rs_return_value=<::tuple_structs_golden::TupleStructWithNonExhaustiveCtor as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor)
             .write(__rs_return_value);
     }
@@ -328,8 +328,7 @@ const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::DefaultNoCo
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            <::tuple_structs_golden::DefaultNoCopyNoClone as ::core::default::Default>::default();
+        let __rs_return_value=<::tuple_structs_golden::DefaultNoCopyNoClone as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::tuple_structs_golden::DefaultNoCopyNoClone).write(__rs_return_value);
     }
 }
@@ -359,7 +358,9 @@ unsafe extern "C" fn __crubit_thunk_clone(
 ) -> () {
     unsafe {
         let __rs_return_value =
-            <::tuple_structs_golden::CloneNoDefault as ::core::clone::Clone>::clone(__self);
+            <::tuple_structs_golden::CloneNoDefault as ::core::prelude::rust_2015::Clone>::clone(
+                __self,
+            );
         (__ret_ptr as *mut ::tuple_structs_golden::CloneNoDefault).write(__rs_return_value);
     }
 }
@@ -369,7 +370,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::tuple_structs_golden::CloneNoDefault,
 ) -> () {
     unsafe {
-        <::tuple_structs_golden::CloneNoDefault as ::core::clone::Clone>::clone_from(__self, source)
+        <::tuple_structs_golden::CloneNoDefault as ::core::prelude::rust_2015::Clone>::clone_from(
+            __self, source,
+        )
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuple_structs_golden::CloneNoDefault, value) == 0);
@@ -408,8 +411,7 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::default::Default>::default();
+        let __rs_return_value=<::tuple_structs_golden::DefaultAndCloneNoUnpin as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::tuple_structs_golden::DefaultAndCloneNoUnpin).write(__rs_return_value);
     }
 }
@@ -419,8 +421,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::clone::Clone>::clone(__self);
+        let __rs_return_value=<::tuple_structs_golden::DefaultAndCloneNoUnpin as::core::prelude::rust_2015::Clone>::clone(__self);
         (__ret_ptr as *mut ::tuple_structs_golden::DefaultAndCloneNoUnpin).write(__rs_return_value);
     }
 }
@@ -430,9 +431,7 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::tuple_structs_golden::DefaultAndCloneNoUnpin,
 ) -> () {
     unsafe {
-        <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::clone::Clone>::clone_from(
-            __self, source,
-        )
+        <::tuple_structs_golden::DefaultAndCloneNoUnpin as::core::prelude::rust_2015::Clone>::clone_from(__self,source)
     }
 }
 const _: () =

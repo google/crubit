@@ -282,7 +282,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat as::core::clone::Clone>::clone(__self);
+        let __rs_return_value=<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat as::core::prelude::rust_2015::Clone>::clone(__self);
         (__ret_ptr as *mut ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat)
             .write(__rs_return_value);
     }
@@ -293,7 +293,7 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
 ) -> () {
     unsafe {
-        <::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat as::core::clone::Clone>::clone_from(__self,source)
+        <::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat as::core::prelude::rust_2015::Clone>::clone_from(__self,source)
     }
 }
 #[unsafe(no_mangle)]
@@ -349,7 +349,7 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value=<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct as::core::default::Default>::default();
+        let __rs_return_value=<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct)
             .write(__rs_return_value);
     }
@@ -373,7 +373,7 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value=<::structs_golden::interior_mutability::SomeStruct as::core::default::Default>::default();
+        let __rs_return_value=<::structs_golden::interior_mutability::SomeStruct as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::structs_golden::interior_mutability::SomeStruct)
             .write(__rs_return_value);
     }
@@ -387,9 +387,7 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            <::structs_golden::unsupported_types::SomeStruct as ::core::default::Default>::default(
-            );
+        let __rs_return_value=<::structs_golden::unsupported_types::SomeStruct as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::structs_golden::unsupported_types::SomeStruct)
             .write(__rs_return_value);
     }

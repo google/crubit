@@ -20,7 +20,7 @@ const _: () = assert!(::std::mem::align_of::<::never_golden::NeverStruct>() == 4
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::never_golden::NeverStruct as ::core::default::Default>::default();
+            <::never_golden::NeverStruct as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::never_golden::NeverStruct).write(__rs_return_value);
     }
 }

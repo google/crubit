@@ -17,7 +17,7 @@ const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::FooService>() ==
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::rust_lib_golden::FooService as ::core::default::Default>::default();
+            <::rust_lib_golden::FooService as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::rust_lib_golden::FooService).write(__rs_return_value);
     }
 }

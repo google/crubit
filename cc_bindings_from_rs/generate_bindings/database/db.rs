@@ -8,7 +8,7 @@ extern crate rustc_span;
 
 use crate::adt_core_bindings::AdtCoreBindings;
 use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
-use crate::fully_qualified_name::FullyQualifiedName;
+use crate::fully_qualified_name::{ExportedPath, FullyQualifiedName};
 use crate::include_guard::IncludeGuard;
 use crate::sugared_ty::SugaredTy;
 use crate::type_location::TypeLocation;
@@ -109,11 +109,39 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/query_compiler.rs?q=function:repr_attrs
       fn repr_attrs(&self, did: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]>;
 
-      /// Computes a mapping from a `DefId` to a `FullyQualifiedName` for all
-      /// not-directly-public symbols that are reexported by a `use` statement.
+      /// Computes the canonical name of the symbol identified by `def_id`. For cases, this
+      /// will be the fully qualified path to the definition `def_id` references. However, some
+      /// definitions are private and may not be referenced by the path they are defined at. This
+      /// will pick a path that can be referenced publicly and treat it as the canonical name for
+      /// that definition. For example, if we have a rust module:
+      /// ```
+      /// pub mod foo {
+      ///   mod private {
+      ///     pub struct Bar {
+      ///       pub x: i32,
+      ///     }
+      ///   }
+      ///   pub use private::Bar;
+      /// }
+      /// pub use foo::*;
+      /// ```
+      /// Bar's defining path `foo::private::Bar` is not publicly visible, but it can be referenced
+      /// at either `Bar` or `foo::Bar` due to our `use` statements. This method would give `Bar`
+      /// the canonical name `foo::Bar`, preferring the more specific of our two available paths.
       ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:reexported_symbol_canonical_name_mapping
-      fn reexported_symbol_canonical_name_mapping(&self) -> HashMap<DefId, FullyQualifiedName>;
+      /// If no canonical name can be determined, `None` is returned. This will occur when our
+      /// `def_id` has no publicly visible paths, for example.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:symbol_canonical_name
+      fn symbol_canonical_name(&self, def_id: DefId) -> Option<FullyQualifiedName>;
+
+      /// Computes a mapping from a `DefId` to a list of public paths that reference it in a given
+      /// crate. This accounts for `use` statements that reexport, and optionally alias, the same
+      /// DefId. This will not account for paths available in the entire forest of crates, unlike
+      /// visible_parent_map(), strictly those within the provided crate.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:public_paths_by_def_id
+      fn public_paths_by_def_id(&self, crate_num: CrateNum) -> HashMap<DefId, Vec<ExportedPath>>;
 
       /// Formats a C++ identifier, if possible.
       ///

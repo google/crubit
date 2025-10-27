@@ -42,6 +42,7 @@ pub fn return_x() -> X {
     X { field: 42 }
 }
 
+#[crubit_annotate::must_bind]
 pub fn return_y() -> ::extern_crate::Y {
     ::extern_crate::Y { field: 42 }
 }
@@ -53,3 +54,32 @@ pub struct Original {
 pub type Alias = Original;
 
 pub use Alias as Alias2;
+
+pub mod doc_hidden_test {
+    mod private_mod {
+        pub fn private_fn() -> i32 {
+            14568
+        }
+    }
+
+    #[doc(hidden)]
+    pub mod hidden {
+        pub use super::private_mod::private_fn;
+    }
+
+    pub mod visible {
+        pub use super::private_mod::private_fn;
+    }
+}
+
+pub mod a {
+    mod b {
+        pub mod c {
+            pub fn private_middle_path() -> i32 {
+                742
+            }
+        }
+    }
+
+    pub use b::*;
+}

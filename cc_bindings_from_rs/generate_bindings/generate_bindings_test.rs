@@ -543,10 +543,10 @@ fn test_format_item_reexport_private_type() {
             bindings.cc_api,
             quote! {
                 ...
-                namespace __crubit_internal {
+                namespace rust_out {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") alignas(4)
-                [[clang::trivial_abi]] ReExportedStruct final
+                [[clang::trivial_abi]] X final
                 ...
                 }
             }
@@ -1797,12 +1797,12 @@ fn test_format_item_struct_with_default_constructor() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(
+                unsafe extern "C" fn __crubit_thunk_default(
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
                         let __rs_return_value =
-                            <::rust_out::Point as ::core::default::Default>::default();
+                            <::rust_out::Point as ::core::prelude::rust_2015::Default>::default();
                         (__ret_ptr as *mut ::rust_out::Point).write(__rs_return_value);
                     }
                 }
@@ -1919,22 +1919,22 @@ fn test_format_item_struct_with_clone_trait() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(
+                unsafe extern "C" fn __crubit_thunk_clone(
                     __self: &'static ::rust_out::Point,
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
                         let __rs_return_value =
-                            <::rust_out::Point as ::core::clone::Clone>::clone(__self);
+                            <::rust_out::Point as ::core::prelude::rust_2015::Clone>::clone(__self);
                         (__ret_ptr as *mut ::rust_out::Point).write(__rs_return_value);
                     }
                 }
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(
+                unsafe extern "C" fn __crubit_thunk_clone_ufrom(
                     __self: &'static mut ::rust_out::Point,
                     source: &'static ::rust_out::Point
                 ) -> () {
-                    unsafe { <::rust_out::Point as ::core::clone::Clone>::clone_from(__self, source) }
+                    unsafe { <::rust_out::Point as ::core::prelude::rust_2015::Clone>::clone_from(__self, source) }
                 }
             }
         );
@@ -2386,11 +2386,11 @@ fn test_format_item_unsupported_struct_with_custom_drop_and_default_and_nonunpin
             quote! {
                 ...
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(
+                unsafe extern "C" fn __crubit_thunk_default(
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = <::rust_out::SomeStruct as ::core::default::Default>::default();
+                        let __rs_return_value = <::rust_out::SomeStruct as ::core::prelude::rust_2015::Default>::default();
                         (__ret_ptr as *mut ::rust_out::SomeStruct).write(__rs_return_value);
                     }
                 }
@@ -2818,21 +2818,21 @@ fn test_repr_c_union_fields_impl_clone() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(
+                unsafe extern "C" fn __crubit_thunk_clone(
                     __self: &'static ::rust_out::SomeUnion,
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = <::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self);
+                        let __rs_return_value = <::rust_out::SomeUnion as ::core::prelude::rust_2015::Clone>::clone(__self);
                         (__ret_ptr as *mut ::rust_out::SomeUnion).write(__rs_return_value);
                     }
                 }
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(
+                unsafe extern "C" fn __crubit_thunk_clone_ufrom(
                     __self: &'static mut ::rust_out::SomeUnion,
                     source: &'static ::rust_out::SomeUnion
                 ) -> () {
-                    unsafe { <::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source) }
+                    unsafe { <::rust_out::SomeUnion as ::core::prelude::rust_2015::Clone>::clone_from(__self, source) }
                 }
             }
         );

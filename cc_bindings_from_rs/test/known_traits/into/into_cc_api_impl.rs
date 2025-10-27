@@ -18,7 +18,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 ) -> i32 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::into_golden::Convert as ::core::convert::Into<i32>>::into(__self)
+        <::into_golden::Convert as ::core::prelude::rust_2015::Into<i32>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -27,7 +27,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui64(
 ) -> i64 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::into_golden::Convert as ::core::convert::Into<i64>>::into(__self)
+        <::into_golden::Convert as ::core::prelude::rust_2015::Into<i64>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -36,7 +36,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027static_x00000020st
 ) -> &'static str {
     unsafe {
         let __self = __self.assume_init_read();
-        <::into_golden::Convert as ::core::convert::Into<&'static str>>::into(__self)
+        <::into_golden::Convert as ::core::prelude::rust_2015::Into<&'static str>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -45,7 +45,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui16(
 ) -> i16 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::into_golden::Convert as ::core::convert::Into<i16>>::into(__self)
+        <::into_golden::Convert as ::core::prelude::rust_2015::Into<i16>>::into(__self)
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::into_golden::Convert, 0) == 0);
@@ -78,7 +78,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
 ) -> &'static str {
     unsafe {
         let __self = __self.assume_init_read();
-        <::into_golden::ConvertRef as ::core::convert::Into<&'static str>>::into(__self)
+        <::into_golden::ConvertRef as ::core::prelude::rust_2015::Into<&'static str>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -88,7 +88,7 @@ unsafe extern "C" fn __crubit_thunk_into_uConvert(
 ) -> () {
     unsafe {
         let __self = __self.assume_init_read();
-        let __rs_return_value = <::into_golden::ConvertRef as ::core::convert::Into<
+        let __rs_return_value = <::into_golden::ConvertRef as ::core::prelude::rust_2015::Into<
             ::into_golden::Convert,
         >>::into(__self);
         (__ret_ptr as *mut ::into_golden::Convert).write(__rs_return_value);
@@ -104,7 +104,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 ) -> i32 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::into_golden::ConvertModule as ::core::convert::Into<i32>>::into(__self)
+        <::into_golden::ConvertModule as ::core::prelude::rust_2015::Into<i32>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -113,7 +113,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui64(
 ) -> i64 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::into_golden::ConvertModule as ::core::convert::Into<i64>>::into(__self)
+        <::into_golden::ConvertModule as ::core::prelude::rust_2015::Into<i64>>::into(__self)
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::into_golden::ConvertModule, 0) == 0);

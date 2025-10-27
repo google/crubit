@@ -38,7 +38,7 @@ const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::CStruct
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::function_pointers_golden::CStruct as ::core::default::Default>::default();
+            <::function_pointers_golden::CStruct as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::function_pointers_golden::CStruct).write(__rs_return_value);
     }
 }

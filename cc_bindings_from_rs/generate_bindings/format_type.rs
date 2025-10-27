@@ -70,61 +70,6 @@ pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<Ident>
     }
 }
 
-pub fn create_canonical_name_from_foreign_path(
-    db: &dyn BindingsGenerator<'_>,
-    path_segments: &[rustc_hir::PathSegment<'_>],
-    res: &Res,
-) -> Option<(DefId, FullyQualifiedName)> {
-    let tcx = db.tcx();
-    let Res::Def(_, def_id) = res else {
-        return None;
-    };
-    if def_id.is_local() {
-        return None;
-    }
-    let mut segments = path_segments.to_vec();
-    if segments.is_empty() {
-        return None;
-    }
-
-    // The starting `::` will become `{{root}}` and should be removed.
-    if segments[0].ident.name.as_str() == "{{root}}" {
-        segments.remove(0);
-    }
-    let segment_len = segments.len();
-    if segment_len < 2 {
-        return None;
-    }
-
-    let krate = tcx.crate_name(def_id.krate);
-    // If the crate name is different from the first segment, the path is using an
-    // local alias.
-    if krate.as_str() != segments[0].ident.name.as_str() {
-        return None;
-    }
-    let item_name = tcx.opt_item_name(*def_id)?;
-    let rs_name = Some(item_name);
-    let cpp_name = rs_name;
-    let rs_mod_path = NamespaceQualifier::new(
-        segments[1..segment_len - 1].iter().map(|s| Rc::<str>::from(s.ident.name.as_str())),
-    );
-    let cpp_ns_path = rs_mod_path.clone();
-    let attributes = crubit_attr::get_attrs(tcx, *def_id).unwrap();
-    let cpp_type = attributes.cpp_type;
-    Some((
-        *def_id,
-        FullyQualifiedName {
-            krate,
-            rs_name,
-            rs_mod_path,
-            cpp_top_level_ns: format_top_level_ns_for_crate(db, def_id.krate),
-            cpp_ns_path,
-            cpp_name,
-            cpp_type,
-        },
-    ))
-}
-
 pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     pointee: SugaredTy<'tcx>,

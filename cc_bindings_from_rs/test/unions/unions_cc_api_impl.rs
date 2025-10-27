@@ -85,7 +85,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
 ) -> () {
     unsafe {
         let __rs_return_value =
-            <::unions_golden::repr_c_clone::U as ::core::clone::Clone>::clone(__self);
+            <::unions_golden::repr_c_clone::U as ::core::prelude::rust_2015::Clone>::clone(__self);
         (__ret_ptr as *mut ::unions_golden::repr_c_clone::U).write(__rs_return_value);
     }
 }
@@ -95,7 +95,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::unions_golden::repr_c_clone::U,
 ) -> () {
     unsafe {
-        <::unions_golden::repr_c_clone::U as ::core::clone::Clone>::clone_from(__self, source)
+        <::unions_golden::repr_c_clone::U as ::core::prelude::rust_2015::Clone>::clone_from(
+            __self, source,
+        )
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_c_clone::U, x) == 0);
@@ -115,7 +117,9 @@ unsafe extern "C" fn __crubit_thunk_clone(
 ) -> () {
     unsafe {
         let __rs_return_value =
-            <::unions_golden::repr_rust_clone::U as ::core::clone::Clone>::clone(__self);
+            <::unions_golden::repr_rust_clone::U as ::core::prelude::rust_2015::Clone>::clone(
+                __self,
+            );
         (__ret_ptr as *mut ::unions_golden::repr_rust_clone::U).write(__rs_return_value);
     }
 }
@@ -125,7 +129,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::unions_golden::repr_rust_clone::U,
 ) -> () {
     unsafe {
-        <::unions_golden::repr_rust_clone::U as ::core::clone::Clone>::clone_from(__self, source)
+        <::unions_golden::repr_rust_clone::U as ::core::prelude::rust_2015::Clone>::clone_from(
+            __self, source,
+        )
     }
 }
 #[unsafe(no_mangle)]
@@ -155,7 +161,7 @@ const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_c_drop::U>() 
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::unions_golden::repr_c_drop::U as ::core::default::Default>::default();
+            <::unions_golden::repr_c_drop::U as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::unions_golden::repr_c_drop::U).write(__rs_return_value);
     }
 }
@@ -172,7 +178,7 @@ const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_rust_drop::U>
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::unions_golden::repr_rust_drop::U as ::core::default::Default>::default();
+            <::unions_golden::repr_rust_drop::U as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::unions_golden::repr_rust_drop::U).write(__rs_return_value);
     }
 }

@@ -32,8 +32,7 @@ const _: () = assert!(::std::mem::align_of::<::aliasing_references_golden::SomeS
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            <::aliasing_references_golden::SomeStruct as ::core::default::Default>::default();
+        let __rs_return_value=<::aliasing_references_golden::SomeStruct as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::aliasing_references_golden::SomeStruct).write(__rs_return_value);
     }
 }
@@ -76,8 +75,7 @@ const _: () = assert!(::std::mem::align_of::<::aliasing_references_golden::NonFr
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            <::aliasing_references_golden::NonFreezeType as ::core::default::Default>::default();
+        let __rs_return_value=<::aliasing_references_golden::NonFreezeType as::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::aliasing_references_golden::NonFreezeType).write(__rs_return_value);
     }
 }

@@ -93,9 +93,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(
 ) -> &'static i32 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<&'static i32>>::into(
-            __self,
-        )
+        <::lifetimes_golden::StructWithLifetime as::core::prelude::rust_2015::Into<&'static i32>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -104,7 +102,9 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 ) -> i32 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<i32>>::into(__self)
+        <::lifetimes_golden::StructWithLifetime as ::core::prelude::rust_2015::Into<i32>>::into(
+            __self,
+        )
     }
 }
 const _: () = assert!(

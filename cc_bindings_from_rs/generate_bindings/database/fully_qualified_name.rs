@@ -71,9 +71,10 @@ impl FullyQualifiedName {
     ///
     /// May panic if `def_id` is an invalid id.
     // TODO(b/259724276): This function's results should be memoized.
+    // TODO: b/455648721 - Replace this with direct calls to `symbol_canonical_name`.
     pub fn new(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Self {
-        if let Some(canonical_name) = db.reexported_symbol_canonical_name_mapping().get(&def_id) {
-            return canonical_name.clone();
+        if let Some(canonical_name) = db.symbol_canonical_name(def_id) {
+            return canonical_name;
         }
 
         let tcx = db.tcx();
@@ -150,4 +151,22 @@ impl FullyQualifiedName {
         let name = make_rs_ident(name.as_str());
         std::iter::once(krate).chain(mod_path).chain(std::iter::once(name))
     }
+}
+
+/// A publicly exported path for a definition.
+///
+/// This path is not necessarily semantically meaningful (i.e. it won't always have a corresponding
+/// scope and DefId), but is always valid to spell out in syntax.
+#[derive(Debug, Clone)]
+pub struct ExportedPath {
+    /// Segments of the path.
+    pub path: Vec<Symbol>,
+    /// If this path aliases a definition, this will be the alias.
+    pub alias: Option<Symbol>,
+    /// If this path points as a type alias, rather than a use statement, this will be the DefId of
+    /// the type alias.
+    pub type_alias_def_id: Option<DefId>,
+    /// True if any segment of this path is marked #[doc(hidden)] making it a less preferable path
+    /// than any non-hidden path regardless of length.
+    pub is_doc_hidden: bool,
 }

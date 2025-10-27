@@ -70,7 +70,7 @@ const _: () = assert!(::std::mem::align_of::<::arrays_golden::ArrayStruct>() == 
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::arrays_golden::ArrayStruct as ::core::default::Default>::default();
+            <::arrays_golden::ArrayStruct as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::arrays_golden::ArrayStruct).write(__rs_return_value);
     }
 }
@@ -128,7 +128,7 @@ const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDropAndDefault>
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::arrays_golden::HasDropAndDefault as ::core::default::Default>::default();
+            <::arrays_golden::HasDropAndDefault as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::arrays_golden::HasDropAndDefault).write(__rs_return_value);
     }
 }

@@ -75,7 +75,7 @@ const _: () = assert!(::std::mem::align_of::<::tuples_golden::NontrivialDrop>() 
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::tuples_golden::NontrivialDrop as ::core::default::Default>::default();
+            <::tuples_golden::NontrivialDrop as ::core::prelude::rust_2015::Default>::default();
         (__ret_ptr as *mut ::tuples_golden::NontrivialDrop).write(__rs_return_value);
     }
 }
