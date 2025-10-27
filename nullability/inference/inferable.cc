@@ -7,6 +7,7 @@
 #include <cassert>
 #include <optional>
 
+#include "absl/base/nullability.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/Decl.h"
@@ -23,6 +24,16 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace clang::tidy::nullability {
+
+static bool SelectTemplatesOfPointersInferable = false;
+
+void setSelectTemplatesOfPointersInferable(bool Enabled) {
+  SelectTemplatesOfPointersInferable = Enabled;
+}
+
+bool selectTemplatesOfPointersInferable() {
+  return SelectTemplatesOfPointersInferable;
+}
 
 static void forEachTypeNestedNameSpecifier(
     const Type& T, llvm::function_ref<void(const Type&)> ForType) {
@@ -176,11 +187,59 @@ static bool isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
   return Walker().Visit(T.getTypePtr());
 }
 
-bool hasInferable(QualType T) {
+static bool hasNonTemplateInferable(QualType T) {
   QualType NonReferenceType = T.getNonReferenceType();
   return isSupportedPointerType(NonReferenceType) &&
          isSupportedPointerTypeOutsideOfSubstitutedTemplateParam(
              NonReferenceType);
+}
+
+// Modeled after DeclContext::isStdNamespace.
+static bool isAbslNamespace(const DeclContext& Ctx) {
+  if (!Ctx.isNamespace()) return false;
+  const auto* ND = cast<NamespaceDecl>(&Ctx);
+  if (ND->isInline()) {
+    if (!ND->getParent()) return false;
+    return isAbslNamespace(*ND->getParent());
+  }
+
+  if (!Ctx.getParent()->getRedeclContext()->isTranslationUnit()) return false;
+
+  const IdentifierInfo* II = ND->getIdentifier();
+  return II && II->isStr("absl");
+}
+
+static bool hasName(const CXXRecordDecl& RD, llvm::StringRef DesiredName) {
+  const IdentifierInfo* II = RD.getIdentifier();
+  return II && II->isStr(DesiredName);
+}
+
+// Returns true if `T` is std::vector<U> or absl::StatusOr<U> and
+// `hasNonTemplateInferable(U)`.
+static bool isSelectTemplateOfPointer(QualType T) {
+  QualType NonReferenceType = T.getNonReferenceType();
+  const auto* absl_nullable CTSD =
+      dyn_cast_if_present<ClassTemplateSpecializationDecl>(
+          NonReferenceType.getCanonicalType()->getAsCXXRecordDecl());
+  if (!CTSD) return false;
+  const DeclContext* Ctx = CTSD->getDeclContext();
+  if (!Ctx) return false;
+  if (!((Ctx->isStdNamespace() && hasName(*CTSD, "vector")) ||
+        (isAbslNamespace(*Ctx) && hasName(*CTSD, "StatusOr")))) {
+    return false;
+  }
+
+  assert(CTSD->getTemplateArgs().size() > 0);
+  if (CTSD->getTemplateArgs().size() <= 0) return false;
+  QualType TemplateArg = CTSD->getTemplateArgs().get(0).getAsType();
+  assert(!TemplateArg.isNull());
+  if (TemplateArg.isNull()) return false;
+  return hasNonTemplateInferable(TemplateArg);
+}
+
+bool hasInferable(QualType T) {
+  return hasNonTemplateInferable(T) ||
+         (selectTemplatesOfPointersInferable() && isSelectTemplateOfPointer(T));
 }
 
 int countInferableSlots(const Decl& D) {

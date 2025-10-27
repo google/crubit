@@ -11,6 +11,16 @@
 
 namespace clang::tidy::nullability {
 
+// Enables or disables support for inferring nullability for pointers in
+// template arguments for select templates. (Disabled by default.)
+
+// This should only be called once before the first analysis is started.
+void setSelectTemplatesOfPointersInferable(bool Enabled);
+
+// Returns whether support for inferring nullability for pointers in
+// template arguments for select templates has been turned on.
+bool selectTemplatesOfPointersInferable();
+
 // Are there inferable slots in this type?
 bool hasInferable(QualType T);
 

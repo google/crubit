@@ -101,6 +101,7 @@ cc_library(
     deps = [
         ":inference_cc_proto",
         "//nullability:type_nullability",
+        "@abseil-cpp//absl/base:nullability",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//llvm:Support",

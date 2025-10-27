@@ -1240,5 +1240,282 @@ TEST(HasInferableTest,
   EXPECT_TRUE(hasInferable(Instantiation->getReturnType()));
 }
 
+TEST(HasInferableTest, ClassTemplateInstanceWithPointerTemplateArgument) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct S {};
+
+    S<int*> Instance;
+  )cc");
+
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST(HasInferableTest, StdVectorOfPointerNotInferableWithoutFlagEnabling) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    std::vector<int*> Instance;
+  )cc");
+
+  bool PreviousState = selectTemplatesOfPointersInferable();
+  setSelectTemplatesOfPointersInferable(false);
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+
+  // Reset global state for other tests.
+  setSelectTemplatesOfPointersInferable(PreviousState);
+}
+
+TEST(HasInferableTest, AbslStatusOrOfPointerNotInferableWithoutFlagEnabling) {
+  TestAST AST(R"cc(
+    namespace absl {
+    template <typename T>
+    class StatusOr {};
+    }  // namespace absl
+
+    absl::StatusOr<int*> Instance;
+  )cc");
+
+  bool PreviousState = selectTemplatesOfPointersInferable();
+  setSelectTemplatesOfPointersInferable(false);
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+
+  // Reset global state for other tests.
+  setSelectTemplatesOfPointersInferable(PreviousState);
+}
+
+class HasInferableTestWithSelectTemplatesOfPointersInferable
+    : public testing::Test {
+ public:
+  static void SetUpTestSuite() {
+    PreviousState = selectTemplatesOfPointersInferable();
+    setSelectTemplatesOfPointersInferable(true);
+  }
+
+  static void TearDownTestSuite() {
+    setSelectTemplatesOfPointersInferable(PreviousState);
+  }
+
+  static bool PreviousState;
+};
+
+// Initialize to false arbitrarily.
+bool HasInferableTestWithSelectTemplatesOfPointersInferable::PreviousState =
+    false;
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       NonSelectClassTemplateInstanceWithPointerTemplateArgument) {
+  TestAST AST(R"cc(
+    template <typename T>
+    struct S {};
+
+    S<int*> Instance;
+  )cc");
+
+  // The pointer in this arbitrary template type is not one of the "select"
+  // inferable pointers.
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       VectorOutsideStdIsNotASelectTemplate) {
+  TestAST AST(R"cc(
+    template <typename T>
+    class vector {};
+
+    vector<int*> Instance;
+  )cc");
+
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       StatusOrOutsideAbslIsNotASelectTemplate) {
+  TestAST AST(R"cc(
+    template <typename T>
+    class StatusOr {};
+
+    StatusOr<int*> Instance;
+  )cc");
+
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       StdVectorIsASelectTemplate) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    std::vector<int*> Instance;
+  )cc");
+
+  EXPECT_TRUE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       AbslStatusOrIsASelectTemplate) {
+  TestAST AST(R"cc(
+    namespace absl {
+    template <typename T>
+    class StatusOr {};
+    }  // namespace absl
+
+    absl::StatusOr<int*> Instance;
+  )cc");
+
+  EXPECT_TRUE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       ReferenceToSelectTemplateIsInferable) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    std::vector<int*>& GetRef();
+  )cc");
+
+  EXPECT_TRUE(hasInferable(
+      lookup<FunctionDecl>("GetRef", AST.context()).getReturnType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       NestedSelectTemplatesAreNotInferable) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    std::vector<std::vector<int*>> Instance;
+  )cc");
+
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       OtherTypesInStdAreNotSelectTemplates) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class not_vector {};
+    }  // namespace std
+
+    std::not_vector<int*> Instance;
+  )cc");
+
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       SelectTemplateOfNonPointerIsNotInferable) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    std::vector<int> Instance;
+  )cc");
+
+  EXPECT_FALSE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       SelectTemplateOfPointerIsInferableWhenUsedThroughAlias) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    using VectorOfIntPtr = std::vector<int*>;
+
+    VectorOfIntPtr Instance;
+  )cc");
+
+  EXPECT_TRUE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       SelectTemplateOfPointerIsInferableWhenUsedThroughAliasTemplate) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    template <typename T>
+    using VectorAliasTemplate = std::vector<T>;
+
+    VectorAliasTemplate<int*> Instance;
+  )cc");
+
+  EXPECT_TRUE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       SelectTemplateOfPointerIsInferableWhenUsedThroughUsingDecl) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {};
+    }  // namespace std
+
+    using std::vector;
+
+    vector<int*> Instance;
+  )cc");
+
+  EXPECT_TRUE(
+      hasInferable(lookup<VarDecl>("Instance", AST.context()).getType()));
+}
+
+// This is a reproduction of a crash seen on methods inside std::vector.
+TEST_F(HasInferableTestWithSelectTemplatesOfPointersInferable,
+       SelectTemplateOfPointerIsInferableWhenReferencedInsideTheTemplate) {
+  TestAST AST(R"cc(
+    namespace std {
+    template <typename T>
+    class vector {
+     public:
+      int method(vector);
+    };
+    }  // namespace std
+
+    std::vector<int*> Instance;
+    int MethodResult = Instance.method(Instance);
+  )cc");
+
+  EXPECT_TRUE(hasInferable(
+      cast<CXXMemberCallExpr>(lookup<VarDecl>("MethodResult", AST.context())
+                                  .getInit()
+                                  ->IgnoreImplicit())
+          ->getMethodDecl()
+          ->getParamDecl(0)
+          ->getType()));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
