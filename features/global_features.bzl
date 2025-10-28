@@ -8,6 +8,7 @@ visibility(["//..."])
 
 SUPPORTED_FEATURES = [
     "supported",
+    "non_unpin_ctor",
     "std_vector",
     "std_unique_ptr",
     "do_not_hardcode_status_bridge",

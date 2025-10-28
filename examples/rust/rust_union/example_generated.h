@@ -4,8 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // example_crate_golden
-// Features: do_not_hardcode_status_bridge, std_unique_ptr, std_vector,
-// supported
+// Features: do_not_hardcode_status_bridge, non_unpin_ctor, std_unique_ptr,
+// std_vector, supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_RUST_UNION_EXAMPLE_CRATE_GOLDEN
