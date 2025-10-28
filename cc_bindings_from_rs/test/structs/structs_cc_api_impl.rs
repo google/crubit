@@ -404,3 +404,15 @@ const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::unsupported_types::SomeStruct, unsupported_field)
         == 0
 );
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::keyword_named_fields_and_methods::AField>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::keyword_named_fields_and_methods::AField>() == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_operator(
+    __self: &'static ::structs_golden::keyword_named_fields_and_methods::AField,
+) -> i32 {
+    unsafe { ::structs_golden::keyword_named_fields_and_methods::AField::operator(__self) }
+}

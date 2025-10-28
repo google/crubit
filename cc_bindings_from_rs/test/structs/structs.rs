@@ -7,17 +7,21 @@
 
 /// Test for a `#[repr(C)` struct.
 pub mod repr_c {
+    use crubit_annotate::must_bind;
 
     #[repr(C)]
+    #[must_bind]
     pub struct Point {
         pub x: i32,
         pub y: i32,
     }
 
+    #[must_bind]
     pub fn create(x: i32, y: i32) -> Point {
         Point { x, y }
     }
 
+    #[must_bind]
     pub fn get_x(p: Point) -> i32 {
         p.x
     }
@@ -29,24 +33,30 @@ pub mod repr_c {
 /// `improper_ctypes_definitions` (search for this warning name in `bindings.rs`
 /// for a longer explanation of why suppressing this warning is okay).
 pub mod default_repr {
+    use crubit_annotate::must_bind;
 
+    #[must_bind]
     pub struct Point {
         pub x: i32,
         pub y: i32,
     }
 
+    #[must_bind]
     pub fn create(x: i32, y: i32) -> Point {
         Point { x, y }
     }
 
+    #[must_bind]
     pub fn get_x(p: Point) -> i32 {
         p.x
     }
 }
 
 pub mod non_cpp_movable {
+    use crubit_annotate::must_bind;
 
     #[repr(C)]
+    #[must_bind]
     pub struct Point {
         pub x: i32,
         pub y: i32,
@@ -59,11 +69,13 @@ pub mod non_cpp_movable {
     }
 
     // It can still be returned by value
+    #[must_bind]
     pub fn create(x: i32, y: i32) -> Point {
         Point { x, y }
     }
 
     // ... but not passed by value
+    #[must_bind]
     pub fn get_x(p: &Point) -> i32 {
         p.x
     }
@@ -71,11 +83,13 @@ pub mod non_cpp_movable {
 
 /// Test for a struct containing zero-sized fields.
 pub mod zst_fields {
+    use crubit_annotate::must_bind;
 
     pub struct Zst1;
     pub struct Zst2();
     pub struct Zst3 {}
 
+    #[must_bind]
     pub struct ZstFields {
         pub zst1: Zst1,
         pub zst2: Zst2,
@@ -83,10 +97,12 @@ pub mod zst_fields {
         pub value: i32,
     }
 
+    #[must_bind]
     pub fn create(value: i32) -> ZstFields {
         ZstFields { zst1: Zst1, zst2: Zst2(), zst3: Zst3 {}, value }
     }
 
+    #[must_bind]
     pub fn get_value(x: ZstFields) -> i32 {
         x.value
     }
@@ -116,10 +132,12 @@ pub mod zst_fields {
 pub mod abi_classification {
     /// Expected ABI classification: integer.  (For indirect confirmation, see
     /// the disassembly at https://godbolt.org/z/b7eeGcrGn).
+    #[crubit_annotate::must_bind]
     pub struct StructInteger(i32);
 
     /// Expected ABI classification: SSE.  (For indirect confirmation, see the
     /// disassembly at https://godbolt.org/z/b7eeGcrGn).
+    #[crubit_annotate::must_bind]
     pub struct StructFloat(
         f64,
         f32,
@@ -130,32 +148,39 @@ pub mod abi_classification {
     /// Expected ABI classification: memory.  (For indirect confirmation, see
     /// the disassembly at https://godbolt.org/z/b7eeGcrGn).
     #[repr(packed(1))]
+    #[crubit_annotate::must_bind]
     pub struct StructMemory {
         _padding: u8,
         i: i32,
     }
 
     impl StructInteger {
+        #[crubit_annotate::must_bind]
         pub fn create(i: i32) -> Self {
             Self(i)
         }
+        #[crubit_annotate::must_bind]
         pub fn multiply(x: Self, y: Self) -> Self {
             Self(x.0 * y.0)
         }
+        #[crubit_annotate::must_bind]
         pub fn inspect(s: Self) -> i32 {
             s.0
         }
     }
 
     impl StructFloat {
+        #[crubit_annotate::must_bind]
         pub fn create(f: f32) -> Self {
             Self(12.34, f)
         }
+        #[crubit_annotate::must_bind]
         pub fn multiply(x: Self, y: Self) -> Self {
             assert_eq!(12.34, x.0);
             assert_eq!(12.34, y.0);
             Self::create(x.1 * y.1)
         }
+        #[crubit_annotate::must_bind]
         pub fn inspect(s: Self) -> f32 {
             assert_eq!(12.34, s.0);
             s.1
@@ -163,12 +188,15 @@ pub mod abi_classification {
     }
 
     impl StructMemory {
+        #[crubit_annotate::must_bind]
         pub fn create(i: i32) -> Self {
             Self { _padding: 0, i }
         }
+        #[crubit_annotate::must_bind]
         pub fn multiply(x: Self, y: Self) -> Self {
             Self::create(x.i * y.i)
         }
+        #[crubit_annotate::must_bind]
         pub fn inspect(s: Self) -> i32 {
             s.i
         }
@@ -188,6 +216,7 @@ pub mod abi_classification {
 /// `abi_classification` test above.
 pub mod struct_by_float_passing_with_no_cc_definition {
     #[repr(C)]
+    #[crubit_annotate::must_bind]
     pub struct StructFloat(
         f64,
         f32,
@@ -196,11 +225,13 @@ pub mod struct_by_float_passing_with_no_cc_definition {
     );
 
     #[unsafe(no_mangle)]
+    #[crubit_annotate::must_bind]
     pub extern "C" fn no_mangle_create(f: f32) -> StructFloat {
         StructFloat(12.34, f)
     }
 
     #[unsafe(no_mangle)]
+    #[crubit_annotate::must_bind]
     pub extern "C" fn no_mangle_multiply(x: StructFloat, y: StructFloat) -> StructFloat {
         assert_eq!(12.34, x.0);
         assert_eq!(12.34, y.0);
@@ -208,6 +239,7 @@ pub mod struct_by_float_passing_with_no_cc_definition {
     }
 
     #[unsafe(no_mangle)]
+    #[crubit_annotate::must_bind]
     pub extern "C" fn no_mangle_inspect(s: StructFloat) -> f32 {
         assert_eq!(12.34, s.0);
         s.1
@@ -228,6 +260,7 @@ pub mod struct_by_float_passing_with_no_cc_definition {
 /// `abi_classification` test above.
 pub mod struct_by_float_passing_with_no_thunk {
     #[repr(C)]
+    #[crubit_annotate::must_bind]
     pub struct StructFloat(
         f64,
         f32,
@@ -244,11 +277,13 @@ pub mod struct_by_float_passing_with_no_thunk {
     }
 
     #[unsafe(export_name = "struct_by_float_passing_with_no_thunk__thunkless_create")]
+    #[crubit_annotate::must_bind]
     pub extern "C" fn thunkless_create(f: f32) -> StructFloat {
         StructFloat(12.34, f)
     }
 
     #[unsafe(export_name = "struct_by_float_passing_with_no_thunk__thunkless_multiply")]
+    #[crubit_annotate::must_bind]
     pub extern "C" fn thunkless_multiply(x: StructFloat, y: StructFloat) -> StructFloat {
         assert_eq!(12.34, x.0);
         assert_eq!(12.34, y.0);
@@ -256,6 +291,7 @@ pub mod struct_by_float_passing_with_no_thunk {
     }
 
     #[unsafe(export_name = "struct_by_float_passing_with_no_thunk__thunkless_inspect")]
+    #[crubit_annotate::must_bind]
     pub extern "C" fn thunkless_inspect(s: StructFloat) -> f32 {
         assert_eq!(12.34, s.0);
         s.1
@@ -281,6 +317,7 @@ pub mod dynamically_sized_type {
 /// This is a regression test for b/286876315 - it verifies that the mutability
 /// qualifiers of nested pointers are correctly propagated.
 pub mod nested_ptr_type_mutability_qualifiers {
+    #[crubit_annotate::must_bind]
     pub struct SomeStruct {
         pub mut_const_ptr: *mut *const f32,
         pub const_mut_ptr: *const *mut f32,
@@ -319,6 +356,7 @@ pub mod interior_mutability {
     use std::cell::UnsafeCell;
 
     #[derive(Debug, Default)]
+    #[crubit_annotate::must_bind]
     pub struct SomeStruct {
         /// `pub` to make sure that `assert!(::core::mem::offset_of!(...) ==
         /// ...)` is generated. (Such assertions are skipped for private
@@ -328,14 +366,34 @@ pub mod interior_mutability {
 }
 
 pub mod unsupported_types {
+    use crubit_annotate::must_bind;
+
+    #[must_bind]
     #[derive(Default)]
     pub struct SomeStruct {
         pub unsupported_field: char,
     }
 
     impl SomeStruct {
+        #[must_bind]
         pub fn create(x: char) -> Self {
             Self { unsupported_field: x }
+        }
+    }
+}
+
+/// We should correctly handle a field and method of the same name when that name is a cpp keyword.
+pub mod keyword_named_fields_and_methods {
+    use crubit_annotate::must_bind;
+
+    #[must_bind]
+    pub struct AField {
+        pub(crate) operator: i32,
+    }
+    impl AField {
+        #[must_bind]
+        pub fn operator(&self) -> i32 {
+            self.operator
         }
     }
 }

@@ -1059,14 +1059,15 @@ fn generate_fields<'tcx>(
                                 })
                             });
                             let name = field_def.ident(tcx).to_string();
-                            let cc_name = if member_function_names.contains(&name) {
+                            let cc_name = code_gen_utils::unkeyword_cpp_ident(&name).to_string();
+                            let cc_name = if member_function_names.contains(&cc_name) {
                                 // TODO: Handle the case of name_ itself also being taken? e.g. the
                                 // Rust struct struct S {a: i32, a_:
                                 // i32} impl S { fn a() {} fn a_()
                                 // {} fn a__(){}.
-                                format!("{name}_")
+                                format!("{cc_name}_")
                             } else {
-                                name.clone()
+                                cc_name
                             };
                             let cc_name = format_cc_ident(db, cc_name.as_str())
                                 .unwrap_or_else(|_err| anonymous_field_ident(index));

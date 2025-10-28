@@ -24,8 +24,10 @@ namespace structs {
 
 namespace repr_c {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=12
+// cc_bindings_from_rs/test/structs/structs.rs;l=14
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: repr_c :: Point") alignas(4) [[clang::trivial_abi]]
 Point final {
@@ -46,12 +48,12 @@ Point final {
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=13
+    // cc_bindings_from_rs/test/structs/structs.rs;l=15
     std::int32_t x;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=14
+    // cc_bindings_from_rs/test/structs/structs.rs;l=16
     std::int32_t y;
   };
 
@@ -59,20 +61,26 @@ Point final {
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=17
+// cc_bindings_from_rs/test/structs/structs.rs;l=20
 ::structs::repr_c::Point create(std::int32_t x, std::int32_t y);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=21
+// cc_bindings_from_rs/test/structs/structs.rs;l=25
 std::int32_t get_x(::structs::repr_c::Point p);
 
 }  // namespace repr_c
 
 namespace default_repr {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=33
+// cc_bindings_from_rs/test/structs/structs.rs;l=39
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: default_repr :: Point") alignas(4)
     [[clang::trivial_abi]] Point final {
@@ -93,12 +101,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=34
+    // cc_bindings_from_rs/test/structs/structs.rs;l=40
     std::int32_t x;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=35
+    // cc_bindings_from_rs/test/structs/structs.rs;l=41
     std::int32_t y;
   };
 
@@ -106,20 +114,26 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=38
+// cc_bindings_from_rs/test/structs/structs.rs;l=45
 ::structs::default_repr::Point create(std::int32_t x, std::int32_t y);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=42
+// cc_bindings_from_rs/test/structs/structs.rs;l=50
 std::int32_t get_x(::structs::default_repr::Point p);
 
 }  // namespace default_repr
 
 namespace non_cpp_movable {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=50
+// cc_bindings_from_rs/test/structs/structs.rs;l=60
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: non_cpp_movable :: Point") alignas(4)
     [[clang::trivial_abi]] Point final {
@@ -142,12 +156,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=51
+    // cc_bindings_from_rs/test/structs/structs.rs;l=61
     std::int32_t x;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=52
+    // cc_bindings_from_rs/test/structs/structs.rs;l=62
     std::int32_t y;
   };
 
@@ -155,12 +169,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=62
+// cc_bindings_from_rs/test/structs/structs.rs;l=73
 ::structs::non_cpp_movable::Point create(std::int32_t x, std::int32_t y);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=67
+// cc_bindings_from_rs/test/structs/structs.rs;l=79
 std::int32_t get_x(::structs::non_cpp_movable::Point const& p);
 
 }  // namespace non_cpp_movable
@@ -168,19 +186,21 @@ std::int32_t get_x(::structs::non_cpp_movable::Point const& p);
 namespace zst_fields {
 
 // Error generating bindings for `zst_fields::Zst1` defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=75:
+// cc_bindings_from_rs/test/structs/structs.rs;l=88:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // Error generating bindings for `zst_fields::Zst2` defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=76:
+// cc_bindings_from_rs/test/structs/structs.rs;l=89:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // Error generating bindings for `zst_fields::Zst3` defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=77:
+// cc_bindings_from_rs/test/structs/structs.rs;l=90:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=79
+// cc_bindings_from_rs/test/structs/structs.rs;l=93
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: zst_fields :: ZstFields") alignas(4)
     [[clang::trivial_abi]] ZstFields final {
@@ -201,7 +221,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=83
+    // cc_bindings_from_rs/test/structs/structs.rs;l=97
     std::int32_t value;
   };
   // Skipped bindings for field `zst1`: ZST fields are not supported
@@ -216,24 +236,30 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=86
+// cc_bindings_from_rs/test/structs/structs.rs;l=101
 ::structs::zst_fields::ZstFields create(std::int32_t value);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=90
+// cc_bindings_from_rs/test/structs/structs.rs;l=106
 std::int32_t get_value(::structs::zst_fields::ZstFields x);
 
 }  // namespace zst_fields
 
 namespace abi_classification {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 //  Expected ABI classification: integer.  (For indirect confirmation, see
 //
 //  the disassembly at https://godbolt.org/z/b7eeGcrGn).
 //
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=119
+// cc_bindings_from_rs/test/structs/structs.rs;l=136
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: abi_classification :: StructInteger") alignas(4)
     [[clang::trivial_abi]] StructInteger final {
@@ -253,24 +279,30 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     memcpy(this, &value, sizeof(value));
   }
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=139
+  // cc_bindings_from_rs/test/structs/structs.rs;l=159
   static ::structs::abi_classification::StructInteger create(std::int32_t i);
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=142
+  // cc_bindings_from_rs/test/structs/structs.rs;l=163
   static ::structs::abi_classification::StructInteger multiply(
       ::structs::abi_classification::StructInteger x,
       ::structs::abi_classification::StructInteger y);
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=145
+  // cc_bindings_from_rs/test/structs/structs.rs;l=167
   static std::int32_t inspect(::structs::abi_classification::StructInteger s);
 
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=119
+    // cc_bindings_from_rs/test/structs/structs.rs;l=136
     std::int32_t __field0;
   };
 
@@ -278,12 +310,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 //  Expected ABI classification: SSE.  (For indirect confirmation, see the
 //
 //  disassembly at https://godbolt.org/z/b7eeGcrGn).
 //
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=123
+// cc_bindings_from_rs/test/structs/structs.rs;l=141
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: abi_classification :: StructFloat") alignas(8)
     [[clang::trivial_abi]] StructFloat final {
@@ -303,29 +337,35 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     memcpy(this, &value, sizeof(value));
   }
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=151
+  // cc_bindings_from_rs/test/structs/structs.rs;l=174
   static ::structs::abi_classification::StructFloat create(float f);
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=154
+  // cc_bindings_from_rs/test/structs/structs.rs;l=178
   static ::structs::abi_classification::StructFloat multiply(
       ::structs::abi_classification::StructFloat x,
       ::structs::abi_classification::StructFloat y);
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=159
+  // cc_bindings_from_rs/test/structs/structs.rs;l=184
   static float inspect(::structs::abi_classification::StructFloat s);
 
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=124
+    // cc_bindings_from_rs/test/structs/structs.rs;l=142
     double __field0;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=125
+    // cc_bindings_from_rs/test/structs/structs.rs;l=143
     float __field1;
   };
   unsigned char __padding1[4];
@@ -334,12 +374,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 //  Expected ABI classification: memory.  (For indirect confirmation, see
 //
 //  the disassembly at https://godbolt.org/z/b7eeGcrGn).
 //
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=133
+// cc_bindings_from_rs/test/structs/structs.rs;l=152
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: abi_classification :: StructMemory") alignas(1)
     [[clang::trivial_abi]] __attribute__((packed)) StructMemory final {
@@ -359,29 +401,35 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     memcpy(this, &value, sizeof(value));
   }
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=166
+  // cc_bindings_from_rs/test/structs/structs.rs;l=192
   static ::structs::abi_classification::StructMemory create(std::int32_t i);
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=169
+  // cc_bindings_from_rs/test/structs/structs.rs;l=196
   static ::structs::abi_classification::StructMemory multiply(
       ::structs::abi_classification::StructMemory x,
       ::structs::abi_classification::StructMemory y);
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=172
+  // cc_bindings_from_rs/test/structs/structs.rs;l=200
   static std::int32_t inspect(::structs::abi_classification::StructMemory s);
 
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=134
+    // cc_bindings_from_rs/test/structs/structs.rs;l=153
     std::uint8_t _padding;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=135
+    // cc_bindings_from_rs/test/structs/structs.rs;l=154
     std::int32_t i;
   };
 
@@ -393,8 +441,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace struct_by_float_passing_with_no_cc_definition {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=191
+// cc_bindings_from_rs/test/structs/structs.rs;l=220
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: struct_by_float_passing_with_no_cc_definition :: "
     "StructFloat") alignas(8) [[clang::trivial_abi]] StructFloat final {
@@ -419,12 +469,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=192
+    // cc_bindings_from_rs/test/structs/structs.rs;l=221
     double __field0;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=193
+    // cc_bindings_from_rs/test/structs/structs.rs;l=222
     float __field1;
   };
 
@@ -432,20 +482,26 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=199
+// cc_bindings_from_rs/test/structs/structs.rs;l=229
 ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat
 no_mangle_create(float f);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=204
+// cc_bindings_from_rs/test/structs/structs.rs;l=235
 ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat
 no_mangle_multiply(
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat x,
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat y);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=211
+// cc_bindings_from_rs/test/structs/structs.rs;l=243
 float no_mangle_inspect(
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat s);
 
@@ -453,8 +509,10 @@ float no_mangle_inspect(
 
 namespace struct_by_float_passing_with_no_thunk {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=231
+// cc_bindings_from_rs/test/structs/structs.rs;l=264
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: struct_by_float_passing_with_no_thunk :: "
     "StructFloat") alignas(8) [[clang::trivial_abi]] StructFloat final {
@@ -481,12 +539,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  private:
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=232
+    // cc_bindings_from_rs/test/structs/structs.rs;l=265
     double __field0;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=233
+    // cc_bindings_from_rs/test/structs/structs.rs;l=266
     float __field1;
   };
 
@@ -494,20 +552,26 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=247
+// cc_bindings_from_rs/test/structs/structs.rs;l=281
 ::structs::struct_by_float_passing_with_no_thunk::StructFloat thunkless_create(
     float f);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=252
+// cc_bindings_from_rs/test/structs/structs.rs;l=287
 ::structs::struct_by_float_passing_with_no_thunk::StructFloat
 thunkless_multiply(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat x,
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat y);
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=259
+// cc_bindings_from_rs/test/structs/structs.rs;l=295
 float thunkless_inspect(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat s);
 
@@ -517,15 +581,17 @@ namespace dynamically_sized_type {
 
 // Error generating bindings for
 // `dynamically_sized_type::DynamicallySizedStruct` defined at
-// cc_bindings_from_rs/test/structs/structs.rs;l=273:
+// cc_bindings_from_rs/test/structs/structs.rs;l=309:
 // Bindings for dynamically sized types are not supported.
 
 }
 
 namespace nested_ptr_type_mutability_qualifiers {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=284
+// cc_bindings_from_rs/test/structs/structs.rs;l=321
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: nested_ptr_type_mutability_qualifiers :: "
     "SomeStruct") alignas(8) [[clang::trivial_abi]] SomeStruct final {
@@ -547,12 +613,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=285
+    // cc_bindings_from_rs/test/structs/structs.rs;l=322
     float const** mut_const_ptr;
   };
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=286
+    // cc_bindings_from_rs/test/structs/structs.rs;l=323
     float* const* const_mut_ptr;
   };
 
@@ -564,8 +630,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace interior_mutability {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=322
+// cc_bindings_from_rs/test/structs/structs.rs;l=360
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: interior_mutability :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
@@ -598,8 +666,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace unsupported_types {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/structs/structs.rs;l=332
+// cc_bindings_from_rs/test/structs/structs.rs;l=373
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: unsupported_types :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
@@ -619,13 +689,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     memcpy(this, &value, sizeof(value));
   }
 
+  // CRUBIT_ANNOTATE: must_bind=
+  //
   // Generated from:
-  // cc_bindings_from_rs/test/structs/structs.rs;l=337
+  // cc_bindings_from_rs/test/structs/structs.rs;l=379
   static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/structs/structs.rs;l=333
+    // cc_bindings_from_rs/test/structs/structs.rs;l=374
     rs_std::char_ unsupported_field;
   };
 
@@ -634,6 +706,53 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 }  // namespace unsupported_types
+
+namespace keyword_named_fields_and_methods {
+
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
+// cc_bindings_from_rs/test/structs/structs.rs;l=390
+struct
+    CRUBIT_INTERNAL_RUST_TYPE(
+        ":: structs_golden :: keyword_named_fields_and_methods :: "
+        "AField") alignas(4) [[clang::trivial_abi]] AField final {
+ public:
+  // `keyword_named_fields_and_methods::AField` doesn't implement the `Default`
+  // trait
+  AField() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~AField() = default;
+  AField(AField&&) = default;
+  AField& operator=(AField&&) = default;
+
+  // `keyword_named_fields_and_methods::AField` doesn't implement the `Clone`
+  // trait
+  AField(const AField&) = delete;
+  AField& operator=(const AField&) = delete;
+  AField(::crubit::UnsafeRelocateTag, AField&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+  // CRUBIT_ANNOTATE: must_bind=
+  //
+  // Generated from:
+  // cc_bindings_from_rs/test/structs/structs.rs;l=395
+  std::int32_t operator_() const;
+
+ private:
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/structs/structs.rs;l=391
+    std::int32_t operator__;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace keyword_named_fields_and_methods
 
 namespace repr_c {
 
@@ -1161,6 +1280,30 @@ inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, unsupported_field));
 }
 }  // namespace unsupported_types
+
+namespace keyword_named_fields_and_methods {
+
+static_assert(
+    sizeof(AField) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(AField) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<AField>);
+static_assert(std::is_trivially_move_constructible_v<AField>);
+static_assert(std::is_trivially_move_assignable_v<AField>);
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_operator(
+    ::structs::keyword_named_fields_and_methods::AField const&);
+}
+inline std::int32_t AField::operator_() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_operator(self);
+}
+inline void AField::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(AField, operator__));
+}
+}  // namespace keyword_named_fields_and_methods
 
 }  // namespace structs
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN
