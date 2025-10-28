@@ -66,18 +66,21 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
     return StrRef(UnsafePromiseUtf8(), string_view);
   }
 
-  // consteval implict conversion from `const char*` so that string
+  // consteval implicit conversion from `const char*` so that string
   // literals can be used as `StrRef` arguments while still requiring runtime
   // UTF8 validation to be explicit.
-  //
-  // Note: consider this constructor for an implicit conversion waiver.
-  explicit consteval StrRef(const char* absl_nonnull char_ptr) noexcept
+  consteval StrRef(  // NOLINT(google-explicit-constructor)
+                     // Style waiver for implicit conversions granted in
+                     // cl/825200658.
+      const char* absl_nonnull char_ptr) noexcept
       : StrRef(absl::string_view(char_ptr)) {}
 
-  // consteval implict conversion from `absl::string_view`.
-  //
-  // Note: consider this constructor for an implicit conversion waiver.
-  explicit consteval StrRef(absl::string_view string_view) noexcept : slice_() {
+  // consteval implicit conversion from `absl::string_view`.
+  consteval StrRef(  // NOLINT(google-explicit-constructor)
+                     // Style waiver for implicit conversions granted in
+                     // cl/825200658.
+      absl::string_view string_view) noexcept
+      : slice_() {
     if (!string_view.empty()) {
       // We cannot use `static_assert` because C++ does not treat arguments
       // to `consteval` functions as constants.
@@ -90,8 +93,11 @@ class CRUBIT_INTERNAL_RUST_TYPE("&str") ABSL_ATTRIBUTE_TRIVIAL_ABI
     }
   }
 
-  // Note: consider conversion operator for an implicit conversion waiver.
-  explicit constexpr operator absl::string_view() const noexcept {
+  constexpr
+  operator absl::string_view()  // NOLINT(google-explicit-constructor)
+                                // Style waiver for implicit
+                                // conversions granted in cl/825200658.
+      const noexcept {
     return absl::string_view(slice_.data(), slice_.size());
   }
 
@@ -145,6 +151,14 @@ constexpr bool operator==(absl::string_view lhs, StrRef rhs) noexcept {
   return rhs == lhs;
 }
 
+constexpr bool operator==(StrRef lhs, const char* rhs) noexcept {
+  return lhs.to_string_view() == absl::string_view(rhs);
+}
+
+constexpr bool operator==(const char* lhs, StrRef rhs) noexcept {
+  return rhs == lhs;
+}
+
 constexpr auto operator<=>(StrRef lhs, StrRef rhs) noexcept {
   return lhs.to_string_view() <=> rhs.to_string_view();
 }
@@ -155,6 +169,14 @@ constexpr auto operator<=>(StrRef lhs, absl::string_view rhs) noexcept {
 
 constexpr auto operator<=>(absl::string_view lhs, StrRef rhs) noexcept {
   return lhs <=> rhs.to_string_view();
+}
+
+constexpr auto operator<=>(StrRef lhs, const char* rhs) noexcept {
+  return lhs.to_string_view() <=> absl::string_view(rhs);
+}
+
+constexpr auto operator<=>(const char* lhs, StrRef rhs) noexcept {
+  return absl::string_view(lhs) <=> rhs.to_string_view();
 }
 
 }  // namespace rs_std

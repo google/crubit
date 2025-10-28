@@ -64,20 +64,20 @@ TEST(StrTest, Comparison) {
   static constexpr absl::string_view kStr = "12345";
   static constexpr absl::string_view kStrCopy = "12345";
 
-  static constexpr StrRef kStrRef = StrRef(kStr);
+  static constexpr StrRef kStrRef = kStr;
   static constexpr StrRef kStrRefCopy = kStrRef;
-  static constexpr StrRef kStrRef2 = StrRef(kStrCopy);
+  static constexpr StrRef kStrRef2 = kStrCopy;
 
   static_assert(kStrRef == kStrRef);
   static_assert(kStrRef == kStrRefCopy);
   static_assert(kStrRef == kStrRef2);
 
   static constexpr StrRef kStrRef_prefix =
-      StrRef(absl::string_view(kStr.data(), kStr.size() - 1));
+      absl::string_view(kStr.data(), kStr.size() - 1);
   static constexpr StrRef kStrRef_suffix =
-      StrRef(absl::string_view(kStr.data() + 1, kStr.size() - 1));
+      absl::string_view(kStr.data() + 1, kStr.size() - 1);
   static constexpr StrRef kStrRef_infix =
-      StrRef(absl::string_view(kStr.data() + 1, kStr.size() - 2));
+      absl::string_view(kStr.data() + 1, kStr.size() - 2);
 
   EXPECT_GT(kStrRef, kStrRef_prefix);
   EXPECT_LT(kStrRef, kStrRef_suffix);
@@ -86,7 +86,7 @@ TEST(StrTest, Comparison) {
 
 TEST(StrTest, FromAndTo) {
   static constexpr absl::string_view kStr = "12345";
-  static constexpr StrRef kStrRef = StrRef(kStr);
+  static constexpr StrRef kStrRef = kStr;
   EXPECT_EQ(kStr, kStrRef);
 }
 
@@ -101,7 +101,7 @@ struct StrRefFields {
 // `StrRef` is correct.
 TEST(StrTest, Layout) {
   static constexpr absl::string_view kStr = "foo";
-  const StrRef s = StrRef(kStr);
+  const StrRef s = kStr;
   const auto fields = std::bit_cast<StrRefFields>(s);
   EXPECT_EQ(fields.ptr, kStr.data());
   EXPECT_EQ(fields.size, kStr.size());
@@ -109,7 +109,7 @@ TEST(StrTest, Layout) {
 
 TEST(StrTest, Empty) {
   static constexpr const char* kEmpty = "";
-  const StrRef empty = StrRef(absl::string_view(kEmpty, 0));
+  const StrRef empty = absl::string_view(kEmpty, 0);
   static constexpr StrRef default_constructed;
   EXPECT_EQ(empty, default_constructed);
 
@@ -125,7 +125,7 @@ TEST(StrTest, Empty) {
 
 TEST(StrTest, StrCat) {
   static constexpr absl::string_view kStr = "12345";
-  static constexpr StrRef kStrRef = StrRef("12345");
+  static constexpr StrRef kStrRef = "12345";
   EXPECT_EQ(absl::StrCat(kStrRef), kStr);
 }
 
@@ -144,7 +144,7 @@ TEST(ImplicitConversionTest, FromConstString) {
 
 TEST(ImplicitConversionTest, FromConstCharPtr) {
   static constexpr const char* kConstCharPtr = "12";
-  static constexpr StrRef kStrRef = StrRef(kConstCharPtr);
+  static constexpr StrRef kStrRef = kConstCharPtr;
   EXPECT_EQ(kStrRef, "12");
 }
 

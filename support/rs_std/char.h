@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <type_traits>
 
 #include "absl/base/optimization.h"
 #include "absl/types/span.h"
@@ -44,10 +45,22 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
   // for C++ which argues that zero-initialization may mitigate 10% of exploits.
   constexpr char_() noexcept = default;
 
-  // Constant-time implicit constructor which converts a Unicode scalar value
-  // `uint32_t` into an `rs_std::char_`. This function performs compile-time
-  // validation that the `uint32_t` is a valid Unicode scalar value.
-  explicit consteval char_(char32_t c) noexcept : value_(c) {
+  // Constant-time implicit constructor which converts a character
+  // literal into an `rs_std::char_`. This function performs compile-time
+  // validation that the argument is a valid Unicode scalar value.
+  //
+  // Note: this constructor is templated in order to ensure that implicit
+  // conversions from `int` values are not applied.
+  template <typename Char, typename CharNoCv = std::remove_cvref_t<Char>,
+            typename = std::enable_if_t<std::is_same_v<CharNoCv, char> ||
+                                        std::is_same_v<CharNoCv, char8_t> ||
+                                        std::is_same_v<CharNoCv, char16_t> ||
+                                        std::is_same_v<CharNoCv, char32_t>>>
+  consteval char_(  // NOLINT(google-explicit-constructor)
+                    // Style waiver for implicit conversions granted in
+                    // cl/825200658.
+      Char c) noexcept
+      : value_(c) {
     if (!IsValidCodePoint(c)) {
       internal::CharArgumentMustBeUnicodeCodePoint();
     }
