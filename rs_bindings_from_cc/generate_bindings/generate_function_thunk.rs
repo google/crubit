@@ -4,7 +4,7 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, expect_format_cc_type_name, make_rs_ident};
-use crubit_abi_type::CrubitAbiTypeToCppTokens;
+use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
@@ -507,7 +507,14 @@ pub fn generate_function_thunk_impl(
                     if rs_type_kind.is_crubit_abi_bridge_type() {
                         let crubit_abi_type = db.crubit_abi_type(rs_type_kind)?;
                         let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                        Ok(quote! { ::crubit::internal::Decode<#crubit_abi_type_tokens>(#ident) })
+                        let crubit_abi_type_expr_tokens =
+                            CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                        Ok(quote! {
+                            ::crubit::internal::Decode<#crubit_abi_type_tokens>(
+                                #crubit_abi_type_expr_tokens,
+                                #ident
+                            )
+                        })
                     } else if !rs_type_kind.is_c_abi_compatible_by_value() {
                         Ok(quote! { std::move(* #ident) })
                     } else if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {
@@ -610,8 +617,11 @@ pub fn generate_function_thunk_impl(
         let out_param = &param_idents[0];
         let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
         let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+        let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
         quote! {
-            ::crubit::internal::Encode<#crubit_abi_type_tokens>(#out_param, #return_expr)
+            ::crubit::internal::Encode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens,
+                                                                #out_param,
+                                                                #return_expr)
         }
     } else if !is_return_value_c_abi_compatible {
         let out_param = &param_idents[0];

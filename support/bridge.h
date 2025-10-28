@@ -183,7 +183,15 @@ void Encode(unsigned char* buf, typename Abi::Value value);
 
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
+void Encode(Abi&&, unsigned char* buf, typename Abi::Value value);
+
+template <typename Abi>
+  requires(is_crubit_abi<Abi>)
 typename Abi::Value Decode(const unsigned char* buf);
+
+template <typename Abi>
+  requires(is_crubit_abi<Abi>)
+typename Abi::Value Decode(Abi&&, const unsigned char* buf);
 
 }  // namespace internal
 
@@ -214,6 +222,11 @@ class Encoder {
   template <typename Abi>
     requires(is_crubit_abi<Abi>)
   friend void internal::Encode(unsigned char* buf, typename Abi::Value value);
+
+  template <typename Abi>
+    requires(is_crubit_abi<Abi>)
+  friend void internal::Encode(Abi&&, unsigned char* buf,
+                               typename Abi::Value value);
   // The number of bytes remaining in the buffer.
   size_t remaining_bytes_;
   unsigned char* buf_;
@@ -248,6 +261,9 @@ class Decoder {
   template <typename Abi>
     requires(is_crubit_abi<Abi>)
   friend typename Abi::Value internal::Decode(const unsigned char* buf);
+  template <typename Abi>
+    requires(is_crubit_abi<Abi>)
+  friend typename Abi::Value internal::Decode(Abi&&, const unsigned char* buf);
   // The number of bytes remaining in the buffer.
   size_t remaining_bytes_;
   const unsigned char* buf_;
@@ -303,11 +319,15 @@ struct TupleAbi {
   static Value Decode(Decoder& decoder) {
     return std::make_tuple(decoder.Decode<Abis>()...);
   }
+
+  std::tuple<Abis...> abis;
 };
 
 template <typename Abi1, typename Abi2>
   requires(is_crubit_abi<Abi1> && is_crubit_abi<Abi2>)
 struct PairAbi {
+  explicit PairAbi(Abi1 abi1, Abi2 abi2) : abis(abi1, abi2) {}
+
   using Value = std::pair<typename Abi1::Value, typename Abi2::Value>;
   static constexpr size_t kSize = Abi1::kSize + Abi2::kSize;
   static void Encode(Value value, Encoder& encoder) {
@@ -320,7 +340,12 @@ struct PairAbi {
         .second = decoder.Decode<Abi2>(),
     };
   }
+
+  std::pair<Abi1, Abi2> abis;
 };
+
+template <typename Abi1, typename Abi2>
+PairAbi(Abi1, Abi2) -> PairAbi<Abi1, Abi2>;
 
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
@@ -341,7 +366,13 @@ struct OptionAbi {
     }
     return decoder.Decode<Abi>();
   }
+
+  Abi abi;
 };
+
+template <typename Abi>
+  requires(is_crubit_abi<Abi>)
+OptionAbi(Abi) -> OptionAbi<Abi>;
 
 template <typename T>
   requires(std::move_constructible<T>)
@@ -369,11 +400,29 @@ void Encode(unsigned char* buf, typename Abi::Value value) {
   encoder.Encode<Abi>(std::move(value));
 }
 
+// TODO(okabayashi): Overload for new Crubit codegen, where an instance of the
+// ABI is passed in. After the new codegen hits crosstool release, I will delete
+// other other overload and change the implementation here.
+template <typename Abi>
+  requires(is_crubit_abi<Abi>)
+void Encode(Abi&&, unsigned char* buf, typename Abi::Value value) {
+  Encode<Abi>(buf, std::move(value));
+}
+
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
 typename Abi::Value Decode(const unsigned char* buf) {
   Decoder decoder(Abi::kSize, buf);
   return decoder.Decode<Abi>();
+}
+
+// TODO(okabayashi): Overload for new Crubit codegen, where an instance of the
+// ABI is passed in. After the new codegen hits crosstool release, I will delete
+// other other overload and change the implementation here.
+template <typename Abi>
+  requires(is_crubit_abi<Abi>)
+typename Abi::Value Decode(Abi&&, const unsigned char* buf) {
+  return Decode<Abi>(buf);
 }
 
 }  // namespace internal

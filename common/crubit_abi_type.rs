@@ -123,12 +123,17 @@ impl CrubitAbiType {
 /// tokens.
 pub struct CrubitAbiTypeToRustTokens<'a>(pub &'a CrubitAbiType);
 
-/// A [`ToTokens`] implementation for [`CrubitAbiType`] to construct an instance of the type.
+/// A [`ToTokens`] implementation for [`CrubitAbiType`] to construct an instance of the type in
+/// Rust.
 pub struct CrubitAbiTypeToRustExprTokens<'a>(pub &'a CrubitAbiType);
 
 /// A [`ToTokens`] implementation for [`CrubitAbiType`] to format the schema as C++
 /// tokens.
 pub struct CrubitAbiTypeToCppTokens<'a>(pub &'a CrubitAbiType);
+
+/// A [`ToTokens`] implementation for [`CrubitAbiType`] to construct an instance of the type in
+/// C++.
+pub struct CrubitAbiTypeToCppExprTokens<'a>(pub &'a CrubitAbiType);
 
 impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -297,6 +302,65 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
                     let type_args_tokens = type_args.iter().map(Self);
                     quote! { < #(#type_args_tokens),* > }.to_tokens(tokens);
                 }
+            }
+        }
+    }
+}
+
+impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self.0 {
+            CrubitAbiType::SignedChar => {
+                quote! { ::crubit::TransmuteAbi<signed char>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedChar => {
+                quote! { ::crubit::TransmuteAbi<unsigned char>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedShort => {
+                quote! { ::crubit::TransmuteAbi<unsigned short>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedInt => {
+                quote! { ::crubit::TransmuteAbi<unsigned int>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedLong => {
+                quote! { ::crubit::TransmuteAbi<unsigned long>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::LongLong => {
+                quote! { ::crubit::TransmuteAbi<long long>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedLongLong => {
+                quote! { ::crubit::TransmuteAbi<unsigned long long>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::Ptr { is_const, is_rust_slice, cpp_type, .. } => {
+                let mut ty = cpp_type.clone();
+                if *is_const {
+                    ty = quote! { const #ty };
+                }
+                if *is_rust_slice {
+                    ty = quote! { ::rs_std::SliceRef<#ty> };
+                } else {
+                    ty = quote! { #ty * };
+                }
+                quote! { ::crubit::TransmuteAbi<#ty>() }.to_tokens(tokens);
+            }
+            CrubitAbiType::Pair(first, second) => {
+                let first_tokens = Self(first);
+                let second_tokens = Self(second);
+                quote! { ::crubit::PairAbi(#first_tokens, #second_tokens) }.to_tokens(tokens);
+            }
+            CrubitAbiType::StdString { .. } => {
+                quote! { ::crubit::BoxedAbi<std::string>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::Transmute { cpp_type, .. } => {
+                quote! { ::crubit::TransmuteAbi<#cpp_type>() }.to_tokens(tokens);
+            }
+            CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
+                quote! { ::crubit::BoxedAbi<#cpp_proto_path>() }.to_tokens(tokens);
+            }
+            CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
+                cpp_abi_path.to_tokens(tokens);
+                let type_args_tokens = type_args.iter().map(Self);
+                quote! { ( #(#type_args_tokens),* ) }.to_tokens(tokens);
             }
         }
     }

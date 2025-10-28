@@ -1946,9 +1946,10 @@ fn function_signature(
                     .crubit_abi_type(type_.clone())
                     .with_context(|| format!("while generating bridge param '{ident}'"))?;
                 let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
 
                 api_params.push(quote! {#ident: #quoted_type_or_self});
-                thunk_args.push(quote! {::bridge_rust::unstable_encode!(#crubit_abi_type_tokens, #ident).as_ptr() as *const u8});
+                thunk_args.push(quote! {::bridge_rust::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #ident).as_ptr() as *const u8});
             } else if type_.is_c_abi_compatible_by_value() {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {#ident});

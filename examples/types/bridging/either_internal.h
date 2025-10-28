@@ -50,7 +50,13 @@ struct EitherAbi {
       };
     }
   }
+
+  LeftAbi left_abi;
+  RightAbi right_abi;
 };
+
+template <typename L, typename R>
+EitherAbi(L, R) -> EitherAbi<L, R>;
 
 }  // namespace internal
 }  // namespace either

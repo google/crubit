@@ -42,6 +42,8 @@ struct Vec3Abi {
         .z = decoder.Decode<Abi>(),
     };
   }
+
+  Abi abi;
 };
 
 Vec3<float> MakeVec3(float x, float y, float z);

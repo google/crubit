@@ -29,7 +29,8 @@ pub fn ReturnCppStruct() -> crate::RustStruct {
 pub fn TakeCppStruct(__param_0: crate::RustStruct) {
     unsafe {
         crate::detail::__rust_thunk___Z13TakeCppStruct9CppStruct(
-            ::bridge_rust::unstable_encode!(crate::RustStructAbi, __param_0).as_ptr() as *const u8,
+            ::bridge_rust::unstable_encode!(@crate::RustStructAbi,crate::RustStructAbi,__param_0)
+                .as_ptr() as *const u8,
         )
     }
 }
@@ -73,7 +74,7 @@ pub fn MakeOptionalVec3(x: f32, y: f32, z: f32, is_present: bool) -> crate::MyOp
 #[inline(always)]
 pub fn MapMultiply(v: crate::MyOption<crate::Vec3>, factor: f32) -> crate::MyOption<crate::Vec3> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(__return_abi_buffer,::bridge_rust::unstable_encode!(crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,v).as_ptr()as*const u8,factor); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(__return_abi_buffer,::bridge_rust::unstable_encode!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::Vec3>>,v).as_ptr()as*const u8,factor); })
     }
 }
 
