@@ -5,6 +5,8 @@
 """Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
 """
 
+load("@rules_rust//:version.bzl", RUST_VERSION = "VERSION")
+
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
@@ -20,6 +22,14 @@ load(
     "can_use_metadata_for_pipelining",
 )
 load("@bazel_skylib//lib:structs.bzl", "structs")
+
+def _version_parts(version):
+    major, minor = version.split(".")[0:2]
+    return (int(major), int(minor))
+
+def _rust_version_ge(version):
+    """Checks if the rust version as at least the given major.minor version."""
+    return _version_parts(RUST_VERSION) >= _version_parts(version)
 
 def _get_crate_info(providers):
     for provider in providers:
@@ -82,6 +92,12 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
     # should omit the rustc_flags.
     attr_args = structs.to_dict(attr)
     attr_args["rustc_flags"] = []
+
+    if _rust_version_ge("0.67"):
+        srcs = [src] + extra_srcs
+    else:
+        srcs = depset([src] + extra_srcs)
+
     providers = rustc_compile_action(
         ctx = ctx,
         attr = struct(**attr_args),
@@ -90,7 +106,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             name = crate_name,
             type = "rlib",
             root = src,
-            srcs = depset([src] + extra_srcs),
+            srcs = srcs,
             deps = deps.to_list(),
             proc_macro_deps = [],
             aliases = {},
