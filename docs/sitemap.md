@@ -2,6 +2,8 @@
 
 *   [Home](/docs/index.md)
 *   [Are We Crubit Yet?](/docs/overview/status.md)
+*   [Limitations](/docs/overview/limits.md)
+*   [Safety](/docs/overview/safety.md)
 *   Types
 
     *   [Overview](/docs/types/)
