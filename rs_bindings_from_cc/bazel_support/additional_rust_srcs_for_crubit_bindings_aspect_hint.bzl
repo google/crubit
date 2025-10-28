@@ -69,12 +69,20 @@ visibility([
     # <internal link> end
 ])
 
+def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps):
+    return AdditionalRustSrcsProviderInfo(
+        srcs = srcs,
+        namespace_path = namespace_path,
+        deps = _get_additional_rust_deps_variant_info(deps),
+        cc_deps = _get_additional_cc_deps_variant_info(cc_deps),
+    )
+
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
-    return [AdditionalRustSrcsProviderInfo(
-        srcs = ctx.attr.srcs,
-        namespace_path = ctx.attr.namespace_path,
-        deps = _get_additional_rust_deps_variant_info(ctx.attr.deps),
-        cc_deps = _get_additional_cc_deps_variant_info(ctx.attr.cc_deps),
+    return [make_additional_rust_srcs_provider(
+        ctx.attr.srcs,
+        ctx.attr.namespace_path,
+        ctx.attr.deps,
+        ctx.attr.cc_deps,
     )]
 
 additional_rust_srcs_for_crubit_bindings = rule(
@@ -150,7 +158,7 @@ def _get_additional_cc_deps_variant_info(cc_deps_list):
     additional_cc_deps = []
     for cc_dep in cc_deps_list:
         if RustBindingsFromCcInfo not in cc_dep:
-            fail("cc_dep (" + cc_dep + ") does not provide RustBindingsFromCcInfo")
+            fail("cc_dep (%s) does not provide RustBindingsFromCcInfo" % cc_dep)
         if cc_dep[RustBindingsFromCcInfo].dep_variant_info:
             additional_cc_deps.extend([cc_dep[RustBindingsFromCcInfo].dep_variant_info])
     return collections.uniq(additional_cc_deps)

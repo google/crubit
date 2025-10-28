@@ -119,6 +119,9 @@ bzl_library(
 bzl_library(
     name = "additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
     srcs = ["additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl"],
+    visibility =
+        package_default_visibility() + [
+        ],
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_aspect",

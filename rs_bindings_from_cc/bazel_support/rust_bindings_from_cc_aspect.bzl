@@ -63,6 +63,21 @@ public_headers_to_remove = {
     ],
 }
 
+def _get_additional_rust_srcs_from_provider(provider):
+    """Returns `extra_rs_srcs` associated with the `provider`.
+    """
+
+    srcs = []
+    ns_path = provider.namespace_path
+    for target in provider.srcs:
+        # This is a label
+        if "files" in dir(target):
+            srcs.extend([(f, ns_path) for f in target.files.to_list()])
+        else:
+            # This is a file.
+            srcs.extend([(target, ns_path)])
+    return srcs
+
 def _get_additional_rust_srcs(aspect_ctx):
     """Returns `extra_rs_srcs` associated with the `_target`.
 
@@ -75,11 +90,15 @@ def _get_additional_rust_srcs(aspect_ctx):
     additional_rust_srcs = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
         if AdditionalRustSrcsProviderInfo in hint:
-            ns_path = hint[AdditionalRustSrcsProviderInfo].namespace_path
-            for target in hint[AdditionalRustSrcsProviderInfo].srcs:
-                srcs = [(f, ns_path) for f in target.files.to_list()]
-                additional_rust_srcs.extend(srcs)
+            additional_rust_srcs.extend(
+                _get_additional_rust_srcs_from_provider(hint[AdditionalRustSrcsProviderInfo]),
+            )
     return collections.uniq(additional_rust_srcs)
+
+def _get_additional_rust_deps_from_provider(provider):
+    """Returns `deps` and `cc_deps` associated with the `provider`.
+    """
+    return provider.deps + provider.cc_deps
 
 def _get_additional_rust_deps(aspect_ctx):
     """Returns DepVariantInfo of `deps` and `cc_deps` associated with the `_target`.
@@ -93,8 +112,9 @@ def _get_additional_rust_deps(aspect_ctx):
     additional_rust_deps = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
         if AdditionalRustSrcsProviderInfo in hint:
-            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].deps)
-            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].cc_deps)
+            additional_rust_deps.extend(
+                _get_additional_rust_deps_from_provider(hint[AdditionalRustSrcsProviderInfo]),
+            )
     return collections.uniq(additional_rust_deps)
 
 def _collect_hdrs(ctx, crubit_features):
@@ -261,6 +281,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_cc_compilation_action_inputs = []
     extra_rule_specific_deps = []
 
+    extra_rs_srcs = []
+    extra_deps = []
+
     # Headers for which we will produce bindings.
     public_hdrs = []
 
@@ -274,6 +297,14 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     elif ctx.rule.kind == "cc_stubby_library":
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
         extra_rule_specific_deps = ctx.rule.attr.implicit_cc_deps
+
+        if not AdditionalRustSrcsProviderInfo in target:
+            fail("cc_stubby_library must provide AdditionalRustSrcsProviderInfo")
+
+        additional_provider = target[AdditionalRustSrcsProviderInfo]
+
+        extra_rs_srcs.extend(_get_additional_rust_srcs_from_provider(additional_provider))
+        extra_deps.extend(_get_additional_rust_deps_from_provider(additional_provider))
 
     has_public_headers = len(public_hdrs) > 0
     if not has_public_headers:
@@ -316,8 +347,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         header_includes.append("-include")
         header_includes.append(hdr.path)
 
-    extra_rs_srcs = _get_additional_rust_srcs(ctx)
-    extra_deps = _get_additional_rust_deps(ctx)
+    extra_rs_srcs = collections.uniq(extra_rs_srcs + _get_additional_rust_srcs(ctx))
+    extra_deps = collections.uniq(extra_deps + _get_additional_rust_deps(ctx))
+
     binding_infos = [
         dep[RustBindingsFromCcInfo]
         for dep in all_deps
