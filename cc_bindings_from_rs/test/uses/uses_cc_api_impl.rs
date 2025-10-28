@@ -12,7 +12,7 @@
 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_f() -> i32 {
-    unsafe { ::uses_golden::test_mod::f() }
+    unsafe { ::uses_golden::f() }
 }
 const _: () = assert!(::std::mem::size_of::<::uses_golden::AliasOfExportedStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_golden::AliasOfExportedStruct>() == 4);

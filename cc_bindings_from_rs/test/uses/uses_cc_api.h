@@ -22,13 +22,9 @@
 
 namespace uses {
 
-namespace test_mod {
-
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=10
 std::int32_t f();
-
-}  // namespace test_mod
 
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=16
@@ -125,16 +121,14 @@ std::int32_t private_middle_path();
 
 }  // namespace a::c
 
-using ::uses::test_mod::f;
-
 namespace test_mod {
+using ::uses::f;
+}
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_f();
 }
 inline std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
-
-}  // namespace test_mod
 
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
