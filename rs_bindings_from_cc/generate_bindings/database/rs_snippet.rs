@@ -601,8 +601,6 @@ pub enum BridgeRsTypeKind {
     },
     ProtoMessageBridge {
         rust_name: Rc<str>,
-        abi_rust: Rc<str>,
-        abi_cpp: Rc<str>,
     },
     StdOptional(Rc<RsTypeKind>),
     StdPair(Rc<RsTypeKind>, Rc<RsTypeKind>),
@@ -630,8 +628,8 @@ impl BridgeRsTypeKind {
                 cpp_to_rust_converter,
                 rust_to_cpp_converter,
             },
-            BridgeType::ProtoMessageBridge { rust_name, abi_rust, abi_cpp } => {
-                BridgeRsTypeKind::ProtoMessageBridge { rust_name, abi_rust, abi_cpp }
+            BridgeType::ProtoMessageBridge { rust_name } => {
+                BridgeRsTypeKind::ProtoMessageBridge { rust_name }
             }
             BridgeType::Bridge { rust_name, abi_rust, abi_cpp } => BridgeRsTypeKind::Bridge {
                 rust_name,
@@ -1569,7 +1567,7 @@ impl RsTypeKind {
                             generic_types.iter().map(|t| t.to_token_stream(db));
                         quote! { #path < #(#generic_types_tokens),* > }
                     }
-                    BridgeRsTypeKind::ProtoMessageBridge { rust_name, .. } => {
+                    BridgeRsTypeKind::ProtoMessageBridge { rust_name } => {
                         fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
                     }
                     BridgeRsTypeKind::StdOptional(inner) => {

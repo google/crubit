@@ -664,11 +664,11 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             BridgeRsTypeKind::BridgeVoidConverters { .. } => {
                 bail!("Void pointer bridge types are not allowed within composable bridging")
             }
-            BridgeRsTypeKind::ProtoMessageBridge { abi_rust, abi_cpp, .. } => {
+            BridgeRsTypeKind::ProtoMessageBridge { .. } => {
                 let target =
                     original_type.defining_target().unwrap_or(&original_type.owning_target);
-                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, db.ir(), target);
-                let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
+                let rust_abi_path =
+                    make_rust_abi_path_from_str("ProtoMessageRustBridge", db.ir(), target);
 
                 let cpp_namespace_qualifier = db.ir().namespace_qualifier(original_type.as_ref());
 
@@ -677,17 +677,15 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                     + "::"
                     + original_type.cc_name.identifier.as_ref();
 
-                let type_args = Rc::from([CrubitAbiType::Type {
-                    rust_abi_path: make_rust_abi_path_from_str(
+                Ok(CrubitAbiType::ProtoMessage {
+                    proto_message_rust_bridge: rust_abi_path,
+                    rust_proto_path: make_rust_abi_path_from_str(
                         original_type.rs_name.identifier.as_ref(),
                         db.ir(),
                         target,
                     ),
-                    cpp_abi_path: make_cpp_abi_path_from_str(&merged_cpp_abi_path)?,
-                    type_args: Rc::default(),
-                }]);
-
-                Ok(CrubitAbiType::Type { rust_abi_path, cpp_abi_path, type_args })
+                    cpp_proto_path: make_cpp_abi_path_from_str(&merged_cpp_abi_path)?,
+                })
             }
             BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
                 let target =

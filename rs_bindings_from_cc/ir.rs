@@ -1041,8 +1041,6 @@ pub enum BridgeType {
     },
     ProtoMessageBridge {
         rust_name: Rc<str>,
-        abi_rust: Rc<str>,
-        abi_cpp: Rc<str>,
     },
     Bridge {
         rust_name: Rc<str>,

@@ -536,8 +536,6 @@ struct BridgeType {
 
   struct ProtoMessageBridge {
     std::string rust_name;
-    std::string abi_rust;
-    std::string abi_cpp;
   };
 
   struct StdString {};

@@ -148,9 +148,7 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
 
   if (crubit::IsProto2Message(record_decl)) {
     return BridgeType{BridgeType::ProtoMessageBridge{
-        .rust_name = record_decl.getNameAsString(),
-        .abi_rust = "ProtoMessageRustBridge",
-        .abi_cpp = "::crubit::BoxedAbi"}};
+        .rust_name = record_decl.getNameAsString()}};
   }
 
   if (void_converter_values.has_value()) {

@@ -68,6 +68,23 @@ pub enum CrubitAbiType {
         rust_type: FullyQualifiedPath,
         cpp_type: TokenStream,
     },
+    /// A proto message type. This is a special case of CrubitAbiType::Type, where the Rust type is
+    /// a ::foo_proto::ProtoMessageRustBridge<M>, and the C++ type is a
+    /// ::crubit::BoxedAbi<::foo_proto::Message>.
+    ///
+    /// Importantly, constructing instances of these types is notably different from other
+    /// CrubitAbiType::Types, since ::crubit::BoxedAbi<T> doesn't take a T argument, it's just an
+    /// empty record. On the other hand, CrubitAbiType::Type will always take an Abi object for each
+    /// type argument.
+    ProtoMessage {
+        /// `ProtoMessageRustBridge`, with the correct module path.
+        /// rust ::foo_proto::ProtoMessageRustBridge
+        proto_message_rust_bridge: FullyQualifiedPath,
+        /// rust ::foo_proto::Message
+        rust_proto_path: FullyQualifiedPath,
+        /// cpp foo::Message
+        cpp_proto_path: FullyQualifiedPath,
+    },
     Type {
         rust_abi_path: FullyQualifiedPath,
         cpp_abi_path: FullyQualifiedPath,
@@ -165,6 +182,9 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
             CrubitAbiType::Transmute { rust_type, .. } => {
                 quote! { ::bridge_rust::TransmuteAbi<#rust_type> }.to_tokens(tokens);
             }
+            CrubitAbiType::ProtoMessage { proto_message_rust_bridge, rust_proto_path, .. } => {
+                quote! { #proto_message_rust_bridge<#rust_proto_path> }.to_tokens(tokens);
+            }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
                 rust_abi_path.to_tokens(tokens);
                 if !type_args.is_empty() {
@@ -204,6 +224,10 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
             }
             CrubitAbiType::Transmute { .. } => {
                 quote! { ::bridge_rust::transmute_abi() }.to_tokens(tokens);
+            }
+            CrubitAbiType::ProtoMessage { proto_message_rust_bridge, .. } => {
+                quote! { #proto_message_rust_bridge(::core::marker::PhantomData) }
+                    .to_tokens(tokens);
             }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
                 rust_abi_path.to_tokens(tokens);
@@ -263,6 +287,9 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
             }
             CrubitAbiType::Transmute { cpp_type, .. } => {
                 quote! { ::crubit::TransmuteAbi<#cpp_type> }.to_tokens(tokens);
+            }
+            CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
+                quote! { ::crubit::BoxedAbi<#cpp_proto_path> }.to_tokens(tokens);
             }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
                 cpp_abi_path.to_tokens(tokens);
