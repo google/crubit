@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/method:example_lib
-// Features: do_not_hardcode_status_bridge, non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]

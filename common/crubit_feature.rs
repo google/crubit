@@ -22,9 +22,6 @@ flagset::flags! {
         /// operators.
         InferOperatorLifetimes,
 
-        /// Temporary migration flag, see b/436862191.
-        DoNotHardcodeStatusBridge,
-
         /// Enable the native Rust std::vector<T> reimplementation.
         StdVector,
 
@@ -51,7 +48,6 @@ impl CrubitFeature {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
             Self::InferOperatorLifetimes => "infer_operator_lifetimes",
-            Self::DoNotHardcodeStatusBridge => "do_not_hardcode_status_bridge",
             Self::StdVector => "std_vector",
             Self::StdUniquePtr => "std_unique_ptr",
             Self::NonUnpinCtor => "non_unpin_ctor",
@@ -69,9 +65,6 @@ impl CrubitFeature {
             Self::InferOperatorLifetimes => {
                 "//features:infer_operator_lifetimes"
             }
-            Self::DoNotHardcodeStatusBridge => {
-                "//features:do_not_hardcode_status_bridge"
-            }
             Self::StdVector => "//features:std_vector",
             Self::StdUniquePtr => "//features:std_unique_ptr",
             Self::NonUnpinCtor => "//features:non_unpin_ctor",
@@ -87,7 +80,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
         b"infer_operator_lifetimes" => CrubitFeature::InferOperatorLifetimes.into(),
-        b"do_not_hardcode_status_bridge" => CrubitFeature::DoNotHardcodeStatusBridge.into(),
         b"std_vector" => CrubitFeature::StdVector.into(),
         b"std_unique_ptr" => CrubitFeature::StdUniquePtr.into(),
         b"non_unpin_ctor" => CrubitFeature::NonUnpinCtor.into(),
@@ -195,7 +187,6 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
-                | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
@@ -224,7 +215,6 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
-                | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
@@ -241,7 +231,6 @@ mod tests {
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
                 | CrubitFeature::InferOperatorLifetimes
-                | CrubitFeature::DoNotHardcodeStatusBridge
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
