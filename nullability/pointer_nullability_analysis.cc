@@ -44,6 +44,7 @@
 namespace clang::tidy::nullability {
 
 using dataflow::Arena;
+using dataflow::Atom;
 using dataflow::ComparisonResult;
 using dataflow::DataflowAnalysisContext;
 using dataflow::Environment;
@@ -61,13 +62,13 @@ using dataflow::WidenResult;
 static void ensureRawPointerHasValueAndNullability(
     const CFGElement& Elt, Environment& Env,
     TransferState<PointerNullabilityLattice>& State) {
-  auto S = Elt.getAs<CFGStmt>();
+  std::optional<CFGStmt> S = Elt.getAs<CFGStmt>();
   if (!S) return;
 
   const Expr* E = dyn_cast<Expr>(S->getStmt());
   if (!E) return;
 
-  if (auto* PointerVal = ensureRawPointerHasValue(E, Env)) {
+  if (PointerValue* PointerVal = ensureRawPointerHasValue(E, Env)) {
     if (!hasPointerNullState(*PointerVal)) {
       initPointerFromTypeNullability(*PointerVal, E, State);
     }
@@ -118,7 +119,7 @@ static const Formula* absl_nullable mergeFormulas(
 
   if (Bool1 == nullptr || Bool2 == nullptr) return nullptr;
 
-  auto& A = MergedEnv.arena();
+  Arena& A = MergedEnv.arena();
 
   // If `Bool1` and `Bool2` is constrained to the same true / false value, that
   // can serve as the return value - this simplifies the flow condition tracked
@@ -132,9 +133,9 @@ static const Formula* absl_nullable mergeFormulas(
     return &A.makeLiteral(false);
   }
 
-  auto& MergedBool = A.makeAtomRef(A.makeAtom());
-  auto FC1 = Env1.getFlowConditionToken();
-  auto FC2 = Env2.getFlowConditionToken();
+  const Formula& MergedBool = A.makeAtomRef(A.makeAtom());
+  const Atom FC1 = Env1.getFlowConditionToken();
+  const Atom FC2 = Env2.getFlowConditionToken();
   MergedEnv.assume(A.makeOr(
       A.makeAnd(A.makeAtomRef(FC1), A.makeEquals(MergedBool, *Bool1)),
       A.makeAnd(A.makeAtomRef(FC2), A.makeEquals(MergedBool, *Bool2))));
@@ -158,14 +159,14 @@ void PointerNullabilityAnalysis::join(QualType Type, const Value& Val1,
     return;
   }
 
-  auto Nullability1 = getPointerNullState(cast<PointerValue>(Val1));
-  auto Nullability2 = getPointerNullState(cast<PointerValue>(Val2));
+  PointerNullState Nullability1 = getPointerNullState(cast<PointerValue>(Val1));
+  PointerNullState Nullability2 = getPointerNullState(cast<PointerValue>(Val2));
 
-  auto* FromNullable =
+  const Formula* FromNullable =
       mergeFormulas(Nullability1.FromNullable, Env1, Nullability2.FromNullable,
                     Env2, MergedEnv);
-  auto* Null = mergeFormulas(Nullability1.IsNull, Env1, Nullability2.IsNull,
-                             Env2, MergedEnv);
+  const Formula* Null = mergeFormulas(Nullability1.IsNull, Env1,
+                                      Nullability2.IsNull, Env2, MergedEnv);
 
   initPointerNullState(cast<PointerValue>(MergedVal),
                        MergedEnv.getDataflowAnalysisContext(),
@@ -188,8 +189,8 @@ ComparisonResult PointerNullabilityAnalysis::compare(QualType Type,
 
     if (!hasPointerNullState(*PointerVal1)) return ComparisonResult::Same;
 
-    auto Nullability1 = getPointerNullState(*PointerVal1);
-    auto Nullability2 = getPointerNullState(PointerVal2);
+    PointerNullState Nullability1 = getPointerNullState(*PointerVal1);
+    PointerNullState Nullability2 = getPointerNullState(PointerVal2);
 
     // Ideally, we would be checking for equivalence of formulas, but that's
     // expensive, so we simply check for identity instead.
@@ -235,7 +236,7 @@ widenNullabilityProperty(const Formula* absl_nullable Prev,
 std::optional<WidenResult> PointerNullabilityAnalysis::widen(
     QualType Type, Value& Prev, const Environment& PrevEnv, Value& Current,
     Environment& CurrentEnv) {
-  auto* PrevPtr = dyn_cast<PointerValue>(&Prev);
+  const auto* PrevPtr = dyn_cast<PointerValue>(&Prev);
   if (PrevPtr == nullptr) return std::nullopt;
 
   // Widen pointers (when different) to a pointer with a "top" storage location.
@@ -272,7 +273,7 @@ std::optional<WidenResult> PointerNullabilityAnalysis::widen(
           : &getTopStorageLocation(DACtx, CurPtr.getPointeeLoc().getType());
 
   // Construct the new, widened value.
-  auto& WidenedPtr = CurrentEnv.create<PointerValue>(*WidenedLoc);
+  PointerValue& WidenedPtr = CurrentEnv.create<PointerValue>(*WidenedLoc);
   initPointerNullState(WidenedPtr, CurrentEnv.getDataflowAnalysisContext(),
                        {FromNullableWidened, NullWidened});
 
