@@ -136,7 +136,6 @@ pub mod internal {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use googletest::prelude::*;
     use quote::quote;
 
