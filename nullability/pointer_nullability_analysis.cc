@@ -133,9 +133,6 @@ static const Formula* absl_nullable mergeFormulas(
   }
 
   auto& MergedBool = A.makeAtomRef(A.makeAtom());
-  // TODO(b/233582219): Flow conditions are not necessarily mutually
-  // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
-  // this section when the patch is committed.
   auto FC1 = Env1.getFlowConditionToken();
   auto FC2 = Env2.getFlowConditionToken();
   MergedEnv.assume(A.makeOr(
