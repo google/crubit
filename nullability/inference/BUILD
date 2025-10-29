@@ -45,10 +45,10 @@ cc_test(
     deps = [
         ":augmented_test_inputs",
         ":collect_evidence",
+        ":collect_evidence_test_utilities",
         ":inference_cc_proto",
         ":slot_fingerprint",
         ":usr_cache",
-        "//nullability:pointer_nullability_analysis",
         "//nullability:pragma",
         "//nullability:proto_matchers",
         "@llvm-project//clang:analysis",
@@ -325,6 +325,28 @@ cc_library(
         ":eligible_ranges",
         "//nullability:type_nullability",
         "@llvm-project//clang:ast",
+    ],
+)
+
+cc_library(
+    name = "collect_evidence_test_utilities",
+    testonly = True,
+    srcs = ["collect_evidence_test_utilities.cc"],
+    hdrs = ["collect_evidence_test_utilities.h"],
+    deps = [
+        ":augmented_test_inputs",
+        ":collect_evidence",
+        ":inference_cc_proto",
+        ":usr_cache",
+        "//nullability:pointer_nullability_analysis",
+        "//nullability:pragma",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:testing",
+        "@llvm-project//clang/unittests:dataflow_testing_support",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//llvm:TestingSupport",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
     ],
 )
 

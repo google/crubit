@@ -11,10 +11,10 @@
 #include <vector>
 
 #include "nullability/inference/augmented_test_inputs.h"
+#include "nullability/inference/collect_evidence_test_utilities.h"
 #include "nullability/inference/inference.proto.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/inference/usr_cache.h"
-#include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"
 #include "nullability/proto_matchers.h"
 #include "clang/AST/ASTConsumer.h"
@@ -85,244 +85,7 @@ constexpr llvm::StringRef CheckMacroDefinitions = R"cc(
 #define CHECK_NE(A, B) (A, B)
 )cc";
 
-MATCHER_P(functionNamed, Name, "") {
-  return llvm::StringRef(arg.usr()).contains(
-      ("@" + llvm::Twine(Name) + "#").str());
-}
-
-MATCHER_P(functionTemplateNamed, Name, "") {
-  return llvm::Regex((".*@FT@>[0-9]+(#.*)*" + llvm::Twine(Name) + "#.*").str())
-      .match(arg.usr());
-}
-
-/// Matches a non-static field with the given name.
-/// The name should be of the form "MyStruct::field", but it should be qualified
-/// only by the enclosing type, not any namespaces.
-MATCHER_P(fieldNamed, TypeQualifiedFieldName, "") {
-  const auto [TypeName, FieldName] =
-      llvm::StringRef(TypeQualifiedFieldName).split("::");
-  return arg.usr().ends_with(("@S@" + TypeName + "@FI@" + FieldName).str()) ||
-         arg.usr().ends_with(("@U@" + TypeName + "@FI@" + FieldName).str());
-}
-
-/// Matches a static field with the given name.
-/// The name should be of the form "MyStruct::field" (see also comment for
-/// `fieldNamed()`).
-MATCHER_P(staticFieldNamed, TypeQualifiedFieldName, "") {
-  const auto [TypeName, FieldName] =
-      llvm::StringRef(TypeQualifiedFieldName).split("::");
-  return arg.usr().ends_with(("@S@" + TypeName + "@" + FieldName).str());
-}
-
-MATCHER_P(globalVarNamed, Name, "") {
-  return arg.usr() == ("c:@" + llvm::Twine(Name)).str();
-}
-
-MATCHER_P2(localVarNamedImpl, VarName, FunctionName, "") {
-  return llvm::StringRef(arg.usr()).contains(
-             ("@F@" + llvm::Twine(FunctionName) + "#").str()) &&
-         arg.usr().ends_with(("@" + llvm::Twine(VarName)).str());
-}
 }  // namespace
-
-static auto localVarNamed(llvm::StringRef VarName,
-                          llvm::StringRef FunctionName = "target") {
-  return localVarNamedImpl(VarName, FunctionName);
-}
-
-namespace {
-MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
-  return SlotMatcher.Matches(static_cast<Slot>(arg.slot())) &&
-         KindMatcher.Matches(arg.kind()) && SymbolMatcher.Matches(arg.symbol());
-}
-
-MATCHER(notPropagated, "") { return !arg.has_propagated_from(); }
-
-MATCHER_P(propagatedFrom, PropagatedFromMatcher, "") {
-  return PropagatedFromMatcher.Matches(arg.propagated_from());
-}
-}  // namespace
-
-static testing::Matcher<const Evidence&> evidence(
-    testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
-    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
-  return AllOf(isEvidenceMatcher(S, Kind, SymbolMatcher), notPropagated());
-}
-
-static testing::Matcher<const Evidence&> evidencePropagatedFrom(
-    testing::Matcher<const Symbol&> PropagatedFromMatcher,
-    testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
-    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target")) {
-  return AllOf(isEvidenceMatcher(S, Kind, SymbolMatcher),
-               propagatedFrom(PropagatedFromMatcher));
-}
-
-namespace {
-enum class CollectionMode {
-  kTestWithSummaries,
-  kTestDirectly,
-};
-}  // namespace
-
-// Helper to get a string representation of the CollectionMode for test names.
-static std::string printToString(CollectionMode Mode) {
-  switch (Mode) {
-    case CollectionMode::kTestWithSummaries:
-      return "WithSummaries";
-    case CollectionMode::kTestDirectly:
-      return "Directly";
-  }
-  llvm_unreachable("Unknown CollectionMode");
-}
-
-static std::vector<Evidence> collectFromDefinitionDirectly(
-    clang::TestAST& AST, const Decl& Definition,
-    const NullabilityPragmas& Pragmas,
-    PreviousInferences InputInferences = {}) {
-  std::vector<Evidence> Results;
-  USRCache UsrCache;
-  // Can't assert from within a non-void helper function, so only EXPECT.
-  EXPECT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          Definition,
-          evidenceEmitterWithPropagation(
-              [&Results](Evidence E) { Results.push_back(std::move(E)); },
-              UsrCache, AST.context()),
-          UsrCache, Pragmas, InputInferences),
-      llvm::Succeeded());
-  return Results;
-}
-
-static llvm::Expected<CFGSummary> summarizeDefinitionNamed(
-    llvm::StringRef TargetName, llvm::StringRef Source) {
-  USRCache UsrCache;
-  NullabilityPragmas Pragmas;
-  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
-  const Decl& Definition =
-      *dataflow::test::findValueDecl(AST.context(), TargetName);
-  return summarizeDefinition(Definition, UsrCache, Pragmas);
-}
-
-/// Provides a default function-name-cased value for TargetName in
-/// collectEvidenceFromDefinitionNamed, which puts TargetName first for
-/// readability.
-static llvm::Expected<CFGSummary> summarizeTargetFuncDefinition(
-    llvm::StringRef Source) {
-  return summarizeDefinitionNamed("target", Source);
-}
-
-// Returns both an error and a vector to represent partial computations -- those
-// that fail after producing some results.
-static std::pair<llvm::Error, std::vector<Evidence>>
-collectFromDefinitionViaSummaryWithErrors(
-    clang::TestAST& AST, const Decl& Definition,
-    const NullabilityPragmas& Pragmas,
-    const PreviousInferences& InputInferences,
-    const SolverFactory& MakeSolver = makeDefaultSolverForInference) {
-  USRCache UsrCache;
-  std::vector<Evidence> Results;
-  auto Summary = summarizeDefinition(Definition, UsrCache, Pragmas, MakeSolver);
-  if (!Summary) return {Summary.takeError(), Results};
-
-  // In the context of a pipeline, the index would be created from the AST and
-  // then serialized to proto, along with the summaries. We round-trip the index
-  // here to ensure proper testing of the full save/restore flow.
-  VirtualMethodIndex VMI = getVirtualMethodIndex(AST.context(), UsrCache);
-  RelatedSymbols VMIProto = saveVirtualMethodsMap(VMI.Bases);
-
-  VirtualMethodIndex PostVMI;
-  PostVMI.Overrides = std::move(VMI.Overrides);
-  PostVMI.Bases = loadVirtualMethodsMap(VMIProto);
-  return {collectEvidenceFromSummary(
-              *Summary,
-              evidenceEmitterWithPropagation(
-                  [&Results](const Evidence& E) { Results.push_back(E); },
-                  std::move(PostVMI)),
-              InputInferences, MakeSolver),
-          Results};
-}
-
-static std::vector<Evidence> collectFromDefinitionViaSummary(
-    clang::TestAST& AST, const Decl& Definition,
-    const NullabilityPragmas& Pragmas, PreviousInferences InputInferences) {
-  auto [Err, Results] = collectFromDefinitionViaSummaryWithErrors(
-      AST, Definition, Pragmas, InputInferences);
-  if (Err) {
-    // Can't assert from within a non-void helper function, so only EXPECT.
-    EXPECT_TRUE(false) << "Error encountered in collection via summary: "
-                       << Err;
-    return {};
-  }
-  return Results;
-}
-
-// Dispatcher to collect evidence based on the CollectionMode.
-static std::vector<Evidence> collectFromDefinition(
-    clang::TestAST& AST, const Decl& Definition,
-    const NullabilityPragmas& Pragmas, CollectionMode Mode,
-    PreviousInferences InputInferences = {}) {
-  switch (Mode) {
-    case CollectionMode::kTestWithSummaries:
-      return collectFromDefinitionViaSummary(AST, Definition, Pragmas,
-                                             InputInferences);
-    case CollectionMode::kTestDirectly:
-      return collectFromDefinitionDirectly(AST, Definition, Pragmas,
-                                           InputInferences);
-  }
-  llvm_unreachable("Unexpected collection mode");
-}
-
-static std::vector<Evidence> collectFromDefinitionNamed(
-    llvm::StringRef TargetName, llvm::StringRef Source, CollectionMode Mode,
-    PreviousInferences InputInferences = {}) {
-  NullabilityPragmas Pragmas;
-  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
-  const Decl& Definition =
-      *dataflow::test::findValueDecl(AST.context(), TargetName);
-  return collectFromDefinition(AST, Definition, Pragmas, Mode, InputInferences);
-}
-
-/// Provides a default function-name-cased value for TargetName in
-/// collectFromDefinitionNamed, which puts TargetName first for readability.
-static std::vector<Evidence> collectFromTargetFuncDefinition(
-    llvm::StringRef Source, CollectionMode Mode,
-    PreviousInferences InputInferences = {}) {
-  return collectFromDefinitionNamed("target", Source, Mode, InputInferences);
-}
-
-template <typename MatcherT>
-static std::vector<Evidence> collectFromDefinitionMatching(
-    MatcherT Matcher, llvm::StringRef Source, CollectionMode Mode,
-    PreviousInferences InputInferences = {}) {
-  NullabilityPragmas Pragmas;
-  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
-  const Decl& Definition =
-      *selectFirst<Decl>("d", match(Matcher.bind("d"), AST.context()));
-  return collectFromDefinition(AST, Definition, Pragmas, Mode, InputInferences);
-}
-
-static std::vector<Evidence> collectFromDecl(llvm::StringRef Source,
-                                             llvm::StringRef DeclName) {
-  std::vector<Evidence> Results;
-  NullabilityPragmas Pragmas;
-  clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
-  USRCache USRCache;
-  collectEvidenceFromTargetDeclaration(
-      *dataflow::test::findValueDecl(AST.context(), DeclName),
-      evidenceEmitterWithPropagation(
-          [&Results](Evidence E) { Results.push_back(std::move(E)); }, USRCache,
-          AST.context()),
-      USRCache, Pragmas);
-  return Results;
-}
-
-static auto collectFromTargetVarDecl(llvm::StringRef Source) {
-  return collectFromDecl(Source, "Target");
-}
-
-static auto collectFromTargetFuncDecl(llvm::StringRef Source) {
-  return collectFromDecl(Source, "target");
-}
 
 namespace {
 MATCHER_P2(methodSummary, SlotIndices, USRs, "") {
@@ -493,16 +256,16 @@ TEST(SummarizeDefinitionTest, NullableArgPassed) {
 }
 
 class CollectEvidenceFromDefinitionTest
-    : public testing::TestWithParam<CollectionMode> {
+    : public testing::TestWithParam<DefinitionCollectionMode> {
  protected:
-  CollectionMode getMode() const { return GetParam(); }
+  DefinitionCollectionMode getMode() const { return GetParam(); }
 };
 
 INSTANTIATE_TEST_SUITE_P(
     CollectEvidenceFromDefinitionTests, CollectEvidenceFromDefinitionTest,
-    testing::Values(CollectionMode::kTestWithSummaries,
-                    CollectionMode::kTestDirectly),
-    [](const testing::TestParamInfo<CollectionMode>& Info) {
+    testing::Values(DefinitionCollectionMode::kTestWithSummaries,
+                    DefinitionCollectionMode::kTestDirectly),
+    [](const testing::TestParamInfo<DefinitionCollectionMode>& Info) {
       return printToString(Info.param);
     });
 
@@ -512,9 +275,9 @@ using SmartPointerCollectEvidenceFromDefinitionTest =
 INSTANTIATE_TEST_SUITE_P(
     SmartPointerCollectEvidenceFromDefinitionTests,
     SmartPointerCollectEvidenceFromDefinitionTest,
-    testing::Values(CollectionMode::kTestWithSummaries,
-                    CollectionMode::kTestDirectly),
-    [](const testing::TestParamInfo<CollectionMode>& Info) {
+    testing::Values(DefinitionCollectionMode::kTestWithSummaries,
+                    DefinitionCollectionMode::kTestDirectly),
+    [](const testing::TestParamInfo<DefinitionCollectionMode>& Info) {
       return printToString(Info.param);
     });
 
@@ -4573,14 +4336,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
 
   switch (getMode()) {
-    case CollectionMode::kTestWithSummaries:
+    case DefinitionCollectionMode::kTestWithSummaries:
       EXPECT_THAT_EXPECTED(
           summarizeDefinition(Decl, UsrCache, Pragmas),
           llvm::FailedWithMessage(
               "Variable template specializations with InitListExprs in their "
               "initializers are currently unsupported."));
       break;
-    case CollectionMode::kTestDirectly: {
+    case DefinitionCollectionMode::kTestDirectly: {
       std::vector<Evidence> Results;
       EXPECT_THAT_ERROR(
           collectEvidenceFromDefinition(
@@ -4623,14 +4386,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
 
   switch (getMode()) {
-    case CollectionMode::kTestWithSummaries:
+    case DefinitionCollectionMode::kTestWithSummaries:
       EXPECT_THAT_EXPECTED(
           summarizeDefinition(Decl, UsrCache, Pragmas),
           llvm::FailedWithMessage(
               "Variable template specializations with InitListExprs in their "
               "initializers are currently unsupported."));
       break;
-    case CollectionMode::kTestDirectly: {
+    case DefinitionCollectionMode::kTestDirectly: {
       std::vector<Evidence> Results;
       EXPECT_THAT_ERROR(
           collectEvidenceFromDefinition(
@@ -4662,9 +4425,9 @@ TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
         /*MaxSATIterations=*/100);
   };
   switch (getMode()) {
-    case CollectionMode::kTestWithSummaries: {
+    case DefinitionCollectionMode::kTestWithSummaries: {
       auto [Err, Results] = collectFromDefinitionViaSummaryWithErrors(
-          AST, Decl, Pragmas,
+          AST.context(), Decl, Pragmas,
           /*InputInferences=*/{}, std::move(MakeSolver));
       EXPECT_THAT_ERROR(
           std::move(Err),
@@ -4672,7 +4435,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
       EXPECT_THAT(Results, SizeIs(1));
       break;
     }
-    case CollectionMode::kTestDirectly: {
+    case DefinitionCollectionMode::kTestDirectly: {
       std::vector<Evidence> Results;
       USRCache UsrCache;
       EXPECT_THAT_ERROR(
