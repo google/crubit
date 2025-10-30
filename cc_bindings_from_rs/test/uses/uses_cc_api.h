@@ -30,8 +30,6 @@ std::int32_t f();
 
 }  // namespace test_mod
 
-using ::uses::test_mod::f;
-
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=16
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -72,13 +70,6 @@ AliasOfExportedStruct final {
 // cc_bindings_from_rs/test/uses/uses.rs;l=26
 std::int32_t private_fn();
 
-using ::uses::private_fn;
-using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
-using AliasOfExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
-using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
-
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=41
 ::extern_crate::X return_x();
@@ -117,10 +108,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
  private:
   static void __crubit_field_offset_assertions();
 };
-using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Alias") =
-    ::uses::Original;
-using Alias2 CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Alias") =
-    ::uses::Original;
 
 namespace doc_hidden_test::visible {
 
@@ -130,14 +117,6 @@ std::int32_t private_fn();
 
 }  // namespace doc_hidden_test::visible
 
-namespace doc_hidden_test::hidden {
-using ::uses::doc_hidden_test::visible::private_fn;
-}
-
-namespace doc_hidden_test::visible {
-using ::uses::doc_hidden_test::visible::private_fn;
-}
-
 namespace a::c {
 
 // Generated from:
@@ -146,7 +125,7 @@ std::int32_t private_middle_path();
 
 }  // namespace a::c
 
-namespace a {}
+using ::uses::test_mod::f;
 
 namespace test_mod {
 
@@ -157,6 +136,8 @@ inline std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 
 }  // namespace test_mod
 
+using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
 static_assert(
     sizeof(AliasOfExportedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -206,7 +187,10 @@ inline ::extern_crate::Y return_y() {
   __crubit_internal::__crubit_thunk_return_uy(__return_value_storage);
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-
+using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
+    ::uses::Original;
+using Alias2 CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
+    ::uses::Original;
 static_assert(
     sizeof(Original) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -220,6 +204,10 @@ inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, field));
 }
 
+namespace doc_hidden_test::hidden {
+using ::uses::doc_hidden_test::visible::private_fn;
+}
+
 namespace doc_hidden_test::visible {
 
 namespace __crubit_internal {
@@ -230,10 +218,6 @@ inline std::int32_t private_fn() {
 }
 
 }  // namespace doc_hidden_test::visible
-
-namespace doc_hidden_test::hidden {}
-
-namespace doc_hidden_test::visible {}
 
 namespace a::c {
 
@@ -246,7 +230,6 @@ inline std::int32_t private_middle_path() {
 
 }  // namespace a::c
 
-namespace a {}
-
+using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
 }  // namespace uses
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN

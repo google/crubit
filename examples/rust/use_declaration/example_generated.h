@@ -58,9 +58,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace module
 
 using ::example_crate::module::function;
-using Type CRUBIT_INTERNAL_RUST_TYPE(
-    ":: example_crate_golden :: module :: Type") =
-    ::example_crate::module::Type;
 
 namespace module {
 
@@ -68,6 +65,14 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_function();
 }
 inline void function() { return __crubit_internal::__crubit_thunk_function(); }
+
+}  // namespace module
+
+using Type CRUBIT_INTERNAL_RUST_TYPE(
+    ":: example_crate_golden :: module :: Type") =
+    ::example_crate::module::Type;
+
+namespace module {
 
 static_assert(
     sizeof(Type) == 4,

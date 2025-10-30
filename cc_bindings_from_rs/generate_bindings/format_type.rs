@@ -17,7 +17,7 @@ use crate::{
     is_public_or_supported_export, matches_qualified_name, CcType,
 };
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{CcInclude, NamespaceQualifier};
+use code_gen_utils::CcInclude;
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
 use database::code_snippet::{CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs};
@@ -27,11 +27,10 @@ use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
-use rustc_hir::def::Res;
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
-use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
+use rustc_span::def_id::{CrateNum, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
 use std::rc::Rc;
 

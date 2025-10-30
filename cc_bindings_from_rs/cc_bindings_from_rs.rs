@@ -381,13 +381,15 @@ mod tests {
         }
     }
 
+    // TODO: b/455963829 - Replace this with golden test so it's easier to update.
     #[test]
     fn test_error_reporting_generation() -> Result<()> {
         let test_args =
             TestArgs::default_args()?.with_error_report_out("error_report.json").with_rs_input(
                 r#"
-                pub use std::collections;
-                pub use std::path;
+                pub struct Unsupported<T> {
+                    pub field: T,
+                }
                 "#,
             );
 
@@ -397,9 +399,8 @@ mod tests {
         assert!(error_report_out_path.exists());
         let error_report = std::fs::read_to_string(&error_report_out_path)?;
         let expected_error_report = r#"{
-  "`use` of a module (`{}`) is not yet supported": {
-    "count": 2,
-    "sample_message": "`use` of a module (`std::collections`) is not yet supported"
+  "Generic types are not supported yet (b/259749095)": {
+    "count": 1
   }
 }"#;
         assert_eq!(expected_error_report, error_report);

@@ -305,7 +305,7 @@ fn generate_associated_item<'tcx>(
                 );
                 db.fatal_errors().report(&must_bind_message);
             }
-            Some(generate_unsupported_def(db, def_id, err))
+            Some(generate_unsupported_def(db, def_id, err).into_main_api())
         }
         Ok(result) => Some(result),
     }

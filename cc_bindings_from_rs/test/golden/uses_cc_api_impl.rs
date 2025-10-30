@@ -50,3 +50,6 @@ unsafe extern "C" fn __crubit_thunk_g2() -> i32 {
 const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::InnerX>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::InnerX>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_rust_golden::InnerX, field) == 0);
+const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::test_mod::S>() == 4);
+const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::test_mod::S>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::uses_rust_golden::test_mod::S, field) == 0);

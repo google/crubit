@@ -157,16 +157,100 @@ impl FullyQualifiedName {
 ///
 /// This path is not necessarily semantically meaningful (i.e. it won't always have a corresponding
 /// scope and DefId), but is always valid to spell out in syntax.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExportedPath {
     /// Segments of the path.
     pub path: Vec<Symbol>,
-    /// If this path aliases a definition, this will be the alias.
-    pub alias: Option<Symbol>,
+    /// If this path aliases a definition, this will be the alias. Otherwise, it will be the definition name.
+    pub name: Symbol,
     /// If this path points as a type alias, rather than a use statement, this will be the DefId of
     /// the type alias.
     pub type_alias_def_id: Option<DefId>,
     /// True if any segment of this path is marked #[doc(hidden)] making it a less preferable path
     /// than any non-hidden path regardless of length.
     pub is_doc_hidden: bool,
+}
+
+impl From<&ExportedPath> for NamespaceQualifier {
+    fn from(this: &ExportedPath) -> Self {
+        NamespaceQualifier::new(
+            this.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
+        )
+    }
+}
+
+impl Ord for ExportedPath {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        use std::cmp::Ordering;
+        // Prefer paths that are do not contain an item marked #[doc(hidden)].
+        self.is_doc_hidden
+            .cmp(&other.is_doc_hidden)
+            // Prefer the longest path.
+            // TODO: b/454721444 - We pick the longest path here to match existing behavior, but we
+            // should prefer the shorter path overall. Before that we need to update `generate_use`
+            // to support generating using statements that point at a type in a higher namespace.
+            .then_with(|| self.path.len().cmp(&other.path.len()).reverse())
+            // Between two paths of the same length, prefer the one that is not a type alias.
+            .then_with(|| match (self.type_alias_def_id, other.type_alias_def_id) {
+                (Some(_), None) => Ordering::Greater,
+                (None, Some(_)) => Ordering::Less,
+                _ => Ordering::Equal,
+            })
+            .then_with(|| self.name.as_str().cmp(other.name.as_str()))
+            // Failing all else, choose the lexicographically smallest path.
+            .then_with(|| self.path.cmp(&other.path))
+    }
+}
+
+impl PartialOrd for ExportedPath {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+/// The set of public paths for a definition.
+///
+/// The canonical path is the preferred path that should be treated as the primary definition for
+/// generating bindings. Aliases are other paths the same definition is available at and should
+/// generate aliases to the canonical path in the bindings.
+///
+/// Aliases are sorted.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PublicPaths {
+    canonical_path: ExportedPath,
+    aliases: Vec<ExportedPath>,
+}
+impl PublicPaths {
+    pub fn new(canonical_path: ExportedPath) -> Self {
+        Self { canonical_path, aliases: vec![] }
+    }
+
+    pub fn insert(&mut self, path: ExportedPath) {
+        let alias = if path < self.canonical_path {
+            std::mem::replace(&mut self.canonical_path, path)
+        } else {
+            path
+        };
+        if let Err(index) = self.aliases.binary_search(&alias) {
+            self.aliases.insert(index, alias);
+        }
+    }
+
+    pub fn canonical(&self) -> &ExportedPath {
+        &self.canonical_path
+    }
+
+    /// Turn `self` into it's canonical path and aliases. This should only be used on a definition
+    /// defined in the source crate.
+    pub fn into_canonical_and_aliases(self) -> (ExportedPath, Vec<ExportedPath>) {
+        (self.canonical_path, self.aliases)
+    }
+
+    /// Turn `self` into a list of aliases for a definition defined in an external crate.
+    /// External crate definitions should only be aliased, not used as the canonical definition.
+    /// The returned vector is sorted.
+    pub fn into_extern_aliases(mut self) -> Vec<ExportedPath> {
+        self.aliases.insert(0, self.canonical_path);
+        self.aliases
+    }
 }

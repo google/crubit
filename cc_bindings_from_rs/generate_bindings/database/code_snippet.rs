@@ -125,7 +125,6 @@ pub struct CcSnippet {
     pub tokens: TokenStream,
     pub prereqs: CcPrerequisites,
 }
-
 // Override debug to use the Display impl for tokens, as the Debug impl for TokenStream is rarely
 // useful (it shows the structure of the tokens, not the actual text).
 impl fmt::Debug for CcSnippet {
@@ -182,6 +181,10 @@ impl CcSnippet {
                 bail!(errs.join(", "))
             }
         }
+    }
+
+    pub fn into_main_api(self) -> ApiSnippets {
+        ApiSnippets { main_api: self, ..Default::default() }
     }
 }
 

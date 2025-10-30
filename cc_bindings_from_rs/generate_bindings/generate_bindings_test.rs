@@ -377,12 +377,15 @@ fn test_generated_bindings_module_basics() {
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
+                ...
                 namespace rust_out {
+                    ...
                     namespace some_module {
                         ...
                         inline void some_func() { ... }
                         ...
                     }  // namespace some_module
+                    ...
                 }  // namespace rust_out
             }
         );
@@ -413,7 +416,9 @@ fn test_generated_bindings_module_name_is_cpp_reserved_keyword() {
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
+                ...
                 namespace rust_out {
+                    ...
                     namespace reinterpret_cast_ {
                         ...
                         void working_module_f1();
@@ -421,7 +426,7 @@ fn test_generated_bindings_module_name_is_cpp_reserved_keyword() {
                         void working_module_f2();
                         ...
                     }  // namespace reinterpret_cast_
-
+                    ...
                 }  // namespace rust_out
             }
         );
@@ -2476,30 +2481,6 @@ fn test_format_item_unsupported_static_value() {
 }
 
 #[test]
-fn test_format_item_use_normal_type() {
-    let test_src = r#"
-        pub mod test_mod {
-            pub struct S{
-                pub field: i32
-            }
-        }
-
-        pub use test_mod::S as G;
-        "#;
-    test_format_item(test_src, "G", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert!(!main_api.prereqs.is_empty());
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                using G CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: S") = ::rust_out::test_mod::S;
-            }
-        );
-    });
-}
-
-#[test]
 fn test_generate_bindings_use_list_items() {
     let test_src = r#"
         pub mod test_mod {
@@ -2519,8 +2500,30 @@ fn test_generate_bindings_use_list_items() {
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
-                using X CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") = ::rust_out::test_mod::X;
-                using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") = ::rust_out::test_mod::Y;
+                namespace test_mod {
+                ...
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") alignas(4)
+                    [[clang::trivial_abi]] X final {
+                    ...
+                };
+
+                ...
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") alignas(4)
+                    [[clang::trivial_abi]] Y final {
+                    ...
+                };
+
+                }  // namespace test_mod
+
+                using X CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") =
+                    ::rust_out::test_mod::X;
+
+                ...
+
+                using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") =
+                    ::rust_out::test_mod::Y;
+
+                ...
             }
         );
     });
@@ -2546,8 +2549,31 @@ fn test_generate_bindings_use_glob() {
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
+                ...
+
+                namespace test_mod {
+
+                ...
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") alignas(4)
+                    [[clang::trivial_abi]] X final {
+                    ...
+                };
+
+                ...
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") alignas(4)
+                    [[clang::trivial_abi]] Y final {
+                    ...
+                };
+
+                }  // namespace test_mod
+
                 using X CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: test_mod :: X") = ::rust_out::test_mod::X;
+
+                ...
+
                 using Y CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: test_mod :: Y") = ::rust_out::test_mod::Y;
+
+                ...
             }
         );
     });

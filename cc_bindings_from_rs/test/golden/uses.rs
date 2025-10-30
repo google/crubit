@@ -73,6 +73,14 @@ mod m1 {
 
 pub use self::m1::InnerX;
 
+pub mod test_mod {
+    pub struct S {
+        pub field: i32,
+    }
+}
+
+pub use test_mod::S as G;
+
 // Unsupported case: `use` mod.
 /*
 mod another_private_mod {

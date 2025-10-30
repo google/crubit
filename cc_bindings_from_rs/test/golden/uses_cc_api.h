@@ -65,12 +65,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace test_use_glob
 
-using ::uses_rust::test_use_glob::f1;
-using ::uses_rust::test_use_glob::f2;
-using X1 CRUBIT_INTERNAL_RUST_TYPE(
-    ":: uses_rust_golden :: test_use_glob :: X1") =
-    ::uses_rust::test_use_glob::X1;
-
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=32
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
@@ -156,13 +150,6 @@ std::int32_t g1();
 // cc_bindings_from_rs/test/golden/uses.rs;l=58
 std::int32_t g2();
 
-using Bar CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") =
-    ::uses_rust::Bar;
-using Foo CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") =
-    ::uses_rust::Foo;
-using ::uses_rust::g1;
-using ::uses_rust::g2;
-
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=67
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
@@ -192,8 +179,41 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-using InnerX CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") =
-    ::uses_rust::InnerX;
+namespace test_mod {
+
+// Generated from:
+// cc_bindings_from_rs/test/golden/uses.rs;l=77
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: uses_rust_golden :: test_mod :: S") alignas(4) [[clang::trivial_abi]]
+S final {
+ public:
+  // `test_mod::S` doesn't implement the `Default` trait
+  S() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~S() = default;
+  S(S&&) = default;
+  S& operator=(S&&) = default;
+
+  // `test_mod::S` doesn't implement the `Clone` trait
+  S(const S&) = delete;
+  S& operator=(const S&) = delete;
+  S(::crubit::UnsafeRelocateTag, S&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/golden/uses.rs;l=78
+    std::int32_t field;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace test_mod
+
+using ::uses_rust::test_use_glob::f1;
 
 namespace test_use_glob {
 
@@ -202,10 +222,24 @@ extern "C" std::int32_t __crubit_thunk_f1();
 }
 inline std::int32_t f1() { return __crubit_internal::__crubit_thunk_f1(); }
 
+}  // namespace test_use_glob
+
+using ::uses_rust::test_use_glob::f2;
+
+namespace test_use_glob {
+
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_f2();
 }
 inline std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
+
+}  // namespace test_use_glob
+
+using X1 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: uses_rust_golden :: test_use_glob :: X1") =
+    ::uses_rust::test_use_glob::X1;
+
+namespace test_use_glob {
 
 static_assert(
     sizeof(X1) == 4,
@@ -287,6 +321,25 @@ static_assert(std::is_trivially_move_assignable_v<InnerX>);
 inline void InnerX::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(InnerX, field));
 }
+
+using G CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: test_mod :: S") =
+    ::uses_rust::test_mod::S;
+
+namespace test_mod {
+
+static_assert(
+    sizeof(S) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(S) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<S>);
+static_assert(std::is_trivially_move_constructible_v<S>);
+static_assert(std::is_trivially_move_assignable_v<S>);
+inline void S::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(S, field));
+}
+}  // namespace test_mod
 
 }  // namespace uses_rust
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN

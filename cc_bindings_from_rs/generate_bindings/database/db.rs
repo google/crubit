@@ -8,7 +8,7 @@ extern crate rustc_span;
 
 use crate::adt_core_bindings::AdtCoreBindings;
 use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
-use crate::fully_qualified_name::{ExportedPath, FullyQualifiedName};
+use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths};
 use crate::include_guard::IncludeGuard;
 use crate::sugared_ty::SugaredTy;
 use crate::type_location::TypeLocation;
@@ -141,7 +141,7 @@ memoized::query_group! {
       /// visible_parent_map(), strictly those within the provided crate.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:public_paths_by_def_id
-      fn public_paths_by_def_id(&self, crate_num: CrateNum) -> HashMap<DefId, Vec<ExportedPath>>;
+      fn public_paths_by_def_id(&self, crate_num: CrateNum) -> HashMap<DefId, PublicPaths>;
 
       /// Formats a C++ identifier, if possible.
       ///

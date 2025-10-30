@@ -10,10 +10,12 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
 
 use anyhow::{bail, ensure, Result};
+use rustc_hir::def::DefKind;
 use rustc_middle::ty::TyCtxt;
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
@@ -312,11 +314,53 @@ pub enum BridgingAttrs {
     },
 }
 
+// Ideally we could call https://github.com/rust-lang/rust/blob/2aaa62b89d22b570e560731b03e3d2d6f5c3bbce/compiler/rustc_metadata/src/rmeta/encoder.rs#L937 directly, but that method is not publicly available.
+// It does not suffice to call `tcx.has_attrs` on our DefId because that will call `get_all_attrs` under the hood and panic if given an unsupported DefId.
+pub fn supports_attrs(def_kind: DefKind) -> bool {
+    match def_kind {
+        DefKind::Mod
+        | DefKind::Struct
+        | DefKind::Union
+        | DefKind::Enum
+        | DefKind::Variant
+        | DefKind::Trait
+        | DefKind::TyAlias
+        | DefKind::ForeignTy
+        | DefKind::TraitAlias
+        | DefKind::AssocTy
+        | DefKind::Fn
+        | DefKind::Const
+        | DefKind::Static { nested: false, .. }
+        | DefKind::AssocFn
+        | DefKind::AssocConst
+        | DefKind::Macro(_)
+        | DefKind::Field
+        | DefKind::Impl { .. }
+        | DefKind::Closure => true,
+        DefKind::SyntheticCoroutineBody
+        | DefKind::TyParam
+        | DefKind::ConstParam
+        | DefKind::Ctor(..)
+        | DefKind::ExternCrate
+        | DefKind::Use
+        | DefKind::ForeignMod
+        | DefKind::AnonConst
+        | DefKind::InlineConst
+        | DefKind::OpaqueTy
+        | DefKind::LifetimeParam
+        | DefKind::Static { nested: true, .. }
+        | DefKind::GlobalAsm => false,
+    }
+}
+
 /// Returns a CrubitAttrs object containing all the `#[doc="CRUBIT_ANNOTATE: key=value"]`
 /// attributes of the specified definition.
 pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
     let mut crubit_attrs = CrubitAttrs::default();
-    if !did.is_local() && tcx.crate_name(did.krate).as_str() == "core" {
+    if (!did.is_local() && tcx.crate_name(did.krate).as_str() == "core")
+        // Calling get_all_attrs on an unsupported DefKind will panic, so we check beforehand.
+        || !supports_attrs(tcx.def_kind(did))
+    {
         // TODO: cramertj - calling `get_all_attrs` on `did` values from `core` crashes like:
         //
         // compiler/rustc_metadata/src/rmeta/decoder.rs:1396:17:
