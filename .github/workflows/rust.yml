@@ -12,6 +12,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+# LINT.IfChange
 jobs:
   build:
 
@@ -21,3 +22,4 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose --bin cc_bindings_from_rs
+# LINT.ThenChange(//depot/copy.bara.sky)
