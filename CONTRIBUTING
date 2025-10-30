@@ -5,13 +5,14 @@ Thank you for your interest in contributing to Crubit!
 ## Testing
 
 For now, the only direction of Crubit that can be tested in the GitHub repo is
-`cc_bindings_from_rs`, and only via `cargo build --bin cc_bindings_from_rs`. Beyond
-that, it is on us to clean up the PR.
+`cc_bindings_from_rs`, and only via `cargo build --bin cc_bindings_from_rs`.
+Beyond that, it is on us to clean up the PR.
 
 ## Copybara
 
-Today, Crubit lives in Google's monorepo, with a bidirectional export/import to/from GitHub
-using [Copybara](https://github.com/google/copybara). This has implications for contributors.
+Today, Crubit lives in Google's monorepo, with a bidirectional export/import
+to/from GitHub using [Copybara](https://github.com/google/copybara). This has
+implications for contributors.
 
 ### Non-reversible transforms
 
