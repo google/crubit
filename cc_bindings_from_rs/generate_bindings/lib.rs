@@ -346,6 +346,15 @@ fn public_paths_by_def_id(
         let Some(mut def_id) = child.res.opt_def_id() else {
             return;
         };
+
+        // Don't include definitions that are within an `extern` block. These are foreign symbols
+        // getting linked into rust, so we do not want to emit bindings for them. Expectation is
+        // downstream consumers can link in the C symbols themselves.
+        use rustc_hir::definitions::DefPathData;
+        if tcx.def_path(def_id).data.iter().any(|segment| segment.data == DefPathData::ForeignMod) {
+            return;
+        }
+
         // Map type aliases to their underlying type.
         let mut type_alias_def_id = None;
         if tcx.def_kind(def_id) == DefKind::TyAlias {
