@@ -463,16 +463,14 @@ static std::optional<Evidence::Kind> evidenceKindFromDeclaredNullability(
 
 static std::optional<Evidence::Kind> evidenceKindFromDeclaredTypeLoc(
     TypeLoc Loc, const TypeNullabilityDefaults &Defaults) {
-  if (!isSupportedPointerType(Loc.getType().getNonReferenceType()))
-    return std::nullopt;
+  if (!hasInferable(Loc.getType())) return std::nullopt;
   auto Nullability = getTypeNullability(Loc, Defaults);
   return evidenceKindFromDeclaredNullability(Nullability);
 }
 
 static std::optional<Evidence::Kind> evidenceKindFromDeclaredReturnType(
     const FunctionDecl &D, const TypeNullabilityDefaults &Defaults) {
-  if (!isSupportedPointerType(D.getReturnType().getNonReferenceType()))
-    return std::nullopt;
+  if (!hasInferable(D.getReturnType())) return std::nullopt;
   return evidenceKindFromDeclaredNullability(
       getReturnTypeNullabilityAnnotations(D, Defaults));
 }
