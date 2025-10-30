@@ -23,7 +23,7 @@ cs/file:examples/cpp/trivial_struct/example_generated.rs class:Position
 ```
 
 For an example of a Rust-movable class with a destructor, see
-[examples/cpp/trivial_abi_struct/](http://examples/cpp/trivial_abi_struct/).
+[examples/cpp/trivial_abi_struct/](https://github.com/google/crubit/tree/main/examples/cpp/trivial_abi_struct/).
 
 ## Fields {#fields}
 

@@ -68,11 +68,11 @@ includes spanshots of what the generated bindings look like.
 *   Walkthrough:
     [Rust Bindings for C++ Libraries](https://github.com/google/crubit/tree/main/docs/cpp/)
     *   Examples:
-        [`examples/cpp/`](http://examples/cpp)
+        [`examples/cpp/`](https://github.com/google/crubit/tree/main/examples/cpp)
 *   Walkthrough:
     [C++ Bindings for Rust Libraries](https://github.com/google/crubit/tree/main/docs/rust/)
     *   Examples:
-        [`examples/rust/`](http://examples/rust)
+        [`examples/rust/`](https://github.com/google/crubit/tree/main/examples/rust)
 
 ## Building Crubit
 
