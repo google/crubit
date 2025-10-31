@@ -6,6 +6,10 @@ load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
+load(
+    "//cc_bindings_from_rs/test/golden:golden_test.bzl",
+    "golden_test",
+)
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
@@ -24,6 +28,14 @@ cc_bindings_from_rust(
     name = "primitive_types_cc_api",
     testonly = 1,
     crate = ":primitive_types",
+)
+
+golden_test(
+    name = "primitive_types_golden_test",
+    basename = "primitive_types",
+    golden_h = "primitive_types_cc_api.h",
+    golden_rs = "primitive_types_cc_api_impl.rs",
+    rust_library = "primitive_types",
 )
 
 crubit_cc_test(

@@ -172,7 +172,8 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "*const std::ffi::c_uchar", cc: "unsigned char const *"),
         case!(
             rs: "&'static std::ffi::c_uchar",
-            cc: "unsigned char const * [[clang :: annotate_type (\"lifetime\" , \"static\")]]"
+            cc: "unsigned char const * [[clang :: annotate_type (\"lifetime\" , \"static\")]] absl_nonnull",
+            includes: ["\"third_party/absl/base/nullability.h\""]
         ),
         // Generics lose type alias information.
         case!(rs: "Identity<std::ffi::c_longlong>", cc: "std::int64_t", includes: ["<cstdint>"]),
@@ -198,13 +199,13 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "*mut i32", cc: "std :: int32_t *", includes: ["<cstdint>"]),
         case!(
             rs: "&'static i32",
-            cc: "std :: int32_t const * [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
-            includes: ["<cstdint>"]
+            cc: "std :: int32_t const * [[clang :: annotate_type (\"lifetime\" , \"static\")]] absl_nonnull",
+            includes: ["<cstdint>", "\"third_party/absl/base/nullability.h\""]
         ),
         case!(
             rs: "&'static mut i32",
-            cc: "std :: int32_t * [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
-            includes: ["<cstdint>"]
+            cc: "std :: int32_t * [[clang :: annotate_type (\"lifetime\" , \"static\")]] absl_nonnull",
+            includes: ["<cstdint>", "\"third_party/absl/base/nullability.h\""]
         ),
         // Slice pointers:
         case!(

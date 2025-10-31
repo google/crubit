@@ -18,6 +18,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/nullability.h"
+
 namespace lifetimes {
 
 // Generated from:
@@ -45,8 +47,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=32
   static ::lifetimes::StructWithLifetime from_ref(
-      std::int32_t const* [[clang::annotate_type("lifetime",
-                                                 "a")]] field_with_lifetime);
+      std::int32_t const* [[clang::annotate_type("lifetime", "a")]]
+      absl_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=36
@@ -61,7 +63,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=44
   std::int32_t const& [[clang::annotate_type("lifetime",
                                              "__anon1")]] borrow_from_self()
-      const& [[clang::annotate_type("lifetime", "__anon1")]];
+      const& [[clang::annotate_type("lifetime",
+                                    "__anon1")]] ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=50
@@ -70,14 +73,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=54
   static ::lifetimes::StructWithLifetime from_static_ref(
-      std::int32_t const* [[clang::annotate_type(
-          "lifetime", "static")]] field_with_lifetime);
+      std::int32_t const* [[clang::annotate_type("lifetime", "static")]]
+      absl_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=58
   static ::lifetimes::StructWithLifetime from_static_ref_where_bound(
-      std::int32_t const* [[clang::annotate_type("lifetime",
-                                                 "a")]] field_with_lifetime);
+      std::int32_t const* [[clang::annotate_type("lifetime", "a")]]
+      absl_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=65
@@ -166,12 +169,12 @@ static_assert(std::is_trivially_copy_constructible_v<StructWithLifetime>);
 static_assert(std::is_trivially_copy_assignable_v<StructWithLifetime>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
-    std::int32_t const* [[clang::annotate_type("lifetime", "a")]],
+    std::int32_t const* [[clang::annotate_type("lifetime", "a")]] absl_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
-    std::int32_t const* [[clang::annotate_type("lifetime",
-                                               "a")]] field_with_lifetime) {
+    std::int32_t const* [[clang::annotate_type("lifetime", "a")]]
+    absl_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_uref(field_with_lifetime,
@@ -206,7 +209,8 @@ extern "C" std::int32_t const& [[clang::annotate_type(
 }
 inline std::int32_t const& [[clang::annotate_type(
     "lifetime", "__anon1")]] StructWithLifetime::borrow_from_self()
-    const& [[clang::annotate_type("lifetime", "__anon1")]] {
+    const& [[clang::annotate_type("lifetime",
+                                  "__anon1")]] ABSL_ATTRIBUTE_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_borrow_ufrom_uself(self);
 }
@@ -224,12 +228,13 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::make_static_42() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref(
-    std::int32_t const* [[clang::annotate_type("lifetime", "static")]],
+    std::int32_t const* [[clang::annotate_type("lifetime", "static")]]
+    absl_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
-    std::int32_t const* [[clang::annotate_type(
-        "lifetime", "static")]] field_with_lifetime) {
+    std::int32_t const* [[clang::annotate_type("lifetime", "static")]]
+    absl_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref(field_with_lifetime,
@@ -239,13 +244,13 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref_uwhere_ubound(
-    std::int32_t const* [[clang::annotate_type("lifetime", "a")]],
+    std::int32_t const* [[clang::annotate_type("lifetime", "a")]] absl_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime
 StructWithLifetime::from_static_ref_where_bound(
-    std::int32_t const* [[clang::annotate_type("lifetime",
-                                               "a")]] field_with_lifetime) {
+    std::int32_t const* [[clang::annotate_type("lifetime", "a")]]
+    absl_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref_uwhere_ubound(
