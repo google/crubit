@@ -15,8 +15,7 @@ const _: () = assert!(::std::mem::align_of::<::move_golden::Foo>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            <::move_golden::Foo as ::core::prelude::rust_2015::Default>::default();
+        let __rs_return_value = <::move_golden::Foo as ::core::default::Default>::default();
         (__ret_ptr as *mut ::move_golden::Foo).write(__rs_return_value);
     }
 }
@@ -60,8 +59,7 @@ const _: () = assert!(::std::mem::align_of::<::move_golden::Copyable>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            <::move_golden::Copyable as ::core::prelude::rust_2015::Default>::default();
+        let __rs_return_value = <::move_golden::Copyable as ::core::default::Default>::default();
         (__ret_ptr as *mut ::move_golden::Copyable).write(__rs_return_value);
     }
 }

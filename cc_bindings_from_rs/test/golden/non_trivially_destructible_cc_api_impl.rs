@@ -21,7 +21,7 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value=<::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::prelude::rust_2015::Default>::default();
+        let __rs_return_value=<::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::default::Default>::default();
         (__ret_ptr as *mut ::non_trivially_destructible_rust_golden::NonTriviallyDestructable)
             .write(__rs_return_value);
     }
@@ -40,7 +40,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::prelude::rust_2015::Clone>::clone(__self);
+        let __rs_return_value=<::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::clone::Clone>::clone(__self);
         (__ret_ptr as *mut ::non_trivially_destructible_rust_golden::NonTriviallyDestructable)
             .write(__rs_return_value);
     }
@@ -51,7 +51,7 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::non_trivially_destructible_rust_golden::NonTriviallyDestructable,
 ) -> () {
     unsafe {
-        <::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::prelude::rust_2015::Clone>::clone_from(__self,source)
+        <::non_trivially_destructible_rust_golden::NonTriviallyDestructable as::core::clone::Clone>::clone_from(__self,source)
     }
 }
 const _: () = assert!(
