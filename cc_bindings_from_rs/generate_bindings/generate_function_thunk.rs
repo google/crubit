@@ -5,8 +5,7 @@
 use crate::{
     does_type_implement_trait, ensure_ty_is_pointer_like, format_cc_ident,
     format_param_types_for_cc, format_ret_ty_for_cc, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, BridgedType, BridgedTypeConversionInfo,
-    FullyQualifiedName, RsSnippet,
+    liberate_and_deanonymize_late_bound_regions, BridgedType, BridgedTypeConversionInfo, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -723,8 +722,10 @@ pub fn generate_trait_thunks<'tcx>(
                 })
             } else {
                 let fully_qualified_fn_name = {
-                    let fully_qualified_trait_name =
-                        FullyQualifiedName::new(db, trait_id).format_for_rs();
+                    let fully_qualified_trait_name = db
+                        .symbol_canonical_name(trait_id)
+                        .ok_or_else(|| anyhow!("Failed to get canonical name for {trait_id:?}"))?
+                        .format_for_rs();
                     let method_name = make_rs_ident(method.name().as_str());
                     let args = type_args
                         .iter()

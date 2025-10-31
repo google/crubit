@@ -22,7 +22,7 @@ use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
 use database::code_snippet::{CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use database::BindingsGenerator;
-use database::{FineGrainedFeature, FullyQualifiedName, SugaredTy, TypeLocation};
+use database::{FineGrainedFeature, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{quote, ToTokens};
@@ -349,11 +349,15 @@ pub fn format_ty_for_cc<'tcx>(
 
                 // Verify if definition of `ty` can be succesfully imported and bail otherwise.
                 db.generate_adt_core(def_id).with_context(|| {
-                    format!("Failed to generate bindings for the definition of `{ty}`")
+                    format!("Failed to format type for the definition of `{ty}`")
                 })?;
             }
 
-            CcSnippet { tokens: FullyQualifiedName::new(db, def_id).format_for_cc(db)?, prereqs }
+            let canonical_name = db
+                .symbol_canonical_name(def_id)
+                .ok_or_else(|| anyhow!("Failed to generate canonical name for `{ty}`"))?;
+
+            CcSnippet { tokens: canonical_name.format_for_cc(db)?, prereqs }
         }
 
         ty::TyKind::RawPtr(pointee_mid, mutbl) => {
@@ -793,7 +797,10 @@ pub fn format_ty_for_rs<'tcx>(
                 has_cpp_type || !has_non_lifetime_substs(substs) || has_composable_bridging,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
             );
-            let type_name = FullyQualifiedName::new(db, adt.did()).format_for_rs();
+            let canonical_name = db
+                .symbol_canonical_name(adt.did())
+                .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
+            let type_name = canonical_name.format_for_rs();
             let generic_params = if substs.len() == 0 {
                 quote! {}
             } else {
@@ -990,7 +997,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                         return crubit_abi_type_from_bridged_adt(db, abi_rust, abi_cpp, substs);
                     }
                     BridgingAttrs::JustCppType { include_path, cpp_type } => {
-                        let fully_qualified_name = FullyQualifiedName::new(db, adt.did());
+                        let fully_qualified_name = db.symbol_canonical_name(adt.did()).ok_or_else(|| {
+                            anyhow!("Failed to get canonical name for {:?}", adt.did())
+                        })?;
                         let mut prereqs = CcPrerequisites::default();
                         if let Some(include_path) = include_path {
                             prereqs.includes.insert(CcInclude::from_path(include_path.as_str()));
@@ -1014,7 +1023,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     return bridged_builtin.crubit_abi_type(db, substs);
                 }
 
-                let fully_qualified_name = FullyQualifiedName::new(db, adt.did());
+                let fully_qualified_name = db
+                    .symbol_canonical_name(adt.did())
+                    .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
 
                 // It's just a regular old type.
                 // Question: do we need to check that it doesn't have any generics?

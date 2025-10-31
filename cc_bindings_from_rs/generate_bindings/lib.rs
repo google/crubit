@@ -444,26 +444,38 @@ fn symbol_canonical_name(
     // canonical name.
     let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
 
-    let (full_path_strs, item_name, type_alias_def_id) = {
-        // If our definition is at a path that can't be spelled, we have to pick a path from our
-        // aliases.
-        let paths = db.public_paths_by_def_id(def_id.krate);
+    let (full_path_strs, item_name, type_alias_def_id) =
+        if tcx.opt_associated_item(def_id).is_some() {
+            // TODO: b/455932965 - Remove associated item's dependency on `symbol_canonical_name`
+            // and remove this workaround.
+            let full_path = tcx
+                .def_path(def_id)
+                .data
+                .into_iter()
+                .filter_map(|p| p.data.get_opt_name())
+                .map(|s| Rc::<str>::from(s.as_str()))
+                .collect::<Vec<_>>();
+            (full_path, tcx.item_name(def_id), None)
+        } else {
+            // If our definition is at a path that can't be spelled, we have to pick a path from our
+            // aliases.
+            let paths = db.public_paths_by_def_id(def_id.krate);
 
-        // If our definition has no public spellings, we can't give it a canonical name.
-        let paths = paths.get(&def_id)?;
+            // If our definition has no public spellings, we can't give it a canonical name.
+            let paths = paths.get(&def_id)?;
 
-        // Select a canonical path for this symbol from available paths.
-        // Our paths are kept in sorted order, so the canonical path will be the first one.
-        let canonical_path = paths.canonical();
+            // Select a canonical path for this symbol from available paths.
+            // Our paths are kept in sorted order, so the canonical path will be the first one.
+            let canonical_path = paths.canonical();
 
-        // If the use is in the same scope as the canonical path, we want to use the original
-        // name of the symbol, not the alias.
-        (
-            canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
-            canonical_path.name,
-            canonical_path.type_alias_def_id,
-        )
-    };
+            // If the use is in the same scope as the canonical path, we want to use the original
+            // name of the symbol, not the alias.
+            (
+                canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
+                canonical_path.name,
+                canonical_path.type_alias_def_id,
+            )
+        };
 
     let rs_name = Some(item_name);
 
@@ -636,7 +648,9 @@ fn generate_using(
                     bail!("Unable to `use` function whose bindings failed: {err:?}");
                 }
             };
-            let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
+            let fully_qualified_fn_name = db
+                .symbol_canonical_name(def_id)
+                .unwrap_or_else(|| panic!("Failed to get canonical name for {:?}", def_id));
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
                 format_cc_ident(db, fully_qualified_fn_name.cpp_name.unwrap().as_str())
@@ -755,7 +769,9 @@ fn create_type_alias<'tcx>(
 
     let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
 
-    let fully_qualified_name = database::FullyQualifiedName::new(db, def_id);
+    let fully_qualified_name = db
+        .symbol_canonical_name(def_id)
+        .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", def_id))?;
     let rs_type = format!("{}", fully_qualified_name.format_for_rs());
 
     main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
@@ -1364,7 +1380,9 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         // meets the prerequisites.
         cc_details.push(CcDetails::new(
             def_id,
-            FullyQualifiedName::new(db, def_id).cpp_ns_path,
+            db.symbol_canonical_name(def_id)
+                .unwrap_or_else(|| panic!("Exported item {def_id:?} should have a canonical name"))
+                .cpp_ns_path,
             api_snippets.cc_details.into_tokens(&mut cc_details_prereqs),
         ));
         cc_api_impl.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
@@ -1428,18 +1446,25 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
             .map(|local_def_id| (local_def_id, generate_fwd_decl(db, local_def_id)));
 
         // The first item of the tuple here is the DefId of the namespace.
-        let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> = fwd_decls
-            .into_iter()
-            .chain(ordered_main_apis)
-            .map(|(def_id, tokens)| {
-                (tcx.opt_parent(def_id), FullyQualifiedName::new(db, def_id).cpp_ns_path, tokens)
-            })
-            .chain(
-                cc_details.into_iter().map(|details| {
+        let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> =
+            fwd_decls
+                .into_iter()
+                .chain(ordered_main_apis)
+                .map(|(def_id, tokens)| {
+                    (
+                        tcx.opt_parent(def_id),
+                        db.symbol_canonical_name(def_id)
+                            .unwrap_or_else(|| {
+                                panic!("Exported item {def_id:?} should have a canonical name")
+                            })
+                            .cpp_ns_path,
+                        tokens,
+                    )
+                })
+                .chain(cc_details.into_iter().map(|details| {
                     (tcx.opt_parent(details.def_id), details.namespace, details.tokens)
-                }),
-            )
-            .collect_vec();
+                }))
+                .collect_vec();
 
         (includes, ordered_cc)
     };

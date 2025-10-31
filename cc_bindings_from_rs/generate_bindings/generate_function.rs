@@ -10,8 +10,7 @@ use crate::generate_function_thunk::{
 use crate::{
     format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
     generate_deprecated_tag, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, BridgedType, CcType, FullyQualifiedName,
-    RsSnippet,
+    liberate_and_deanonymize_late_bound_regions, BridgedType, CcType, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{
@@ -71,9 +70,9 @@ fn thunk_name(
         if let Some(export_name) = export_name {
             export_name.to_string()
         } else {
-            FullyQualifiedName::new(db, def_id)
-                .rs_name
-                .expect("Functions are assumed to always have a name")
+            db.symbol_canonical_name(def_id)
+                .and_then(|fqn| fqn.rs_name)
+                .unwrap_or_else(|| panic!("Functions are assumed to always have a name {def_id:?}"))
                 .to_string()
         }
     } else {
@@ -597,7 +596,9 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let needs_thunk = is_thunk_required(&sig_mid).is_err() || (!has_no_mangle && !has_export_name);
     let thunk_name = thunk_name(db, def_id, export_name, needs_thunk);
 
-    let fully_qualified_fn_name = FullyQualifiedName::new(db, def_id);
+    let fully_qualified_fn_name = db.symbol_canonical_name(def_id).unwrap_or_else(|| {
+        panic!("`generate_function` called on non-reachable function {def_id:?}")
+    });
     let unqualified_rust_fn_name =
         fully_qualified_fn_name.rs_name.expect("Functions are assumed to always have a name");
     let main_api_fn_name = format_cc_ident(db, fully_qualified_fn_name.cpp_name.unwrap().as_str())
@@ -680,7 +681,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         Some(ty) => match ty.kind() {
             ty::TyKind::Adt(adt, substs) => {
                 assert!(!has_non_lifetime_substs(substs), "Callers should filter out generics");
-                Some(FullyQualifiedName::new(db, adt.did()))
+                db.symbol_canonical_name(adt.did())
             }
             _ => panic!("Non-ADT `impl`s should be filtered by caller"),
         },

@@ -67,58 +67,6 @@ fn format_ns_path_for_cc(
 }
 
 impl FullyQualifiedName {
-    /// Computes a `FullyQualifiedName` for `def_id`.
-    ///
-    /// May panic if `def_id` is an invalid id.
-    // TODO(b/259724276): This function's results should be memoized.
-    // TODO: b/455648721 - Replace this with direct calls to `symbol_canonical_name`.
-    pub fn new(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Self {
-        if let Some(canonical_name) = db.symbol_canonical_name(def_id) {
-            return canonical_name;
-        }
-
-        let tcx = db.tcx();
-        let krate = tcx.crate_name(def_id.krate);
-        let cpp_top_level_ns = db.format_top_level_ns_for_crate(def_id.krate);
-
-        let attributes = crubit_attr::get_attrs(tcx, def_id)
-            .expect("these attributes should never be malformed because they are introduced by crubit itself");
-        let cpp_type = attributes.cpp_type;
-
-        let mut full_path = tcx.def_path(def_id).data; // mod_path + name
-        let name = full_path.pop().expect("At least the item's name should be present");
-        let rs_name = name.data.get_opt_name();
-        let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or_else(|| {
-            // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
-            // This prevents silly Rust names like "reinterpret_cast" from trying to be named
-            // "reinterpret_cast" in C++, which would be an error.
-            // If the user has opted in to one of these reserved names by setting cpp_name, however,
-            // we should _not_ implicitly change it, and should instead given them an error.
-            // Hence, this unkeywording behavior only happens in the case where we implicitly
-            // delegate to the Rust name.
-            rs_name.map(|rs_name| {
-                Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
-            })
-        });
-
-        let mod_path = NamespaceQualifier::new(
-            full_path
-                .into_iter()
-                .filter_map(|p| p.data.get_opt_name())
-                .map(|s| Rc::<str>::from(s.as_str())),
-        );
-
-        Self {
-            krate,
-            cpp_top_level_ns,
-            rs_mod_path: mod_path.clone(),
-            cpp_ns_path: mod_path,
-            rs_name,
-            cpp_name,
-            cpp_type,
-        }
-    }
-
     pub fn format_for_cc(&self, db: &dyn BindingsGenerator<'_>) -> Result<TokenStream> {
         if let Some(path) = self.cpp_type {
             let path = format_cc_type_name(path.as_str())?;

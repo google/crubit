@@ -20,7 +20,7 @@ use crate::{
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
-use database::{AdtCoreBindings, BindingsGenerator, FullyQualifiedName, SugaredTy, TypeLocation};
+use database::{AdtCoreBindings, BindingsGenerator, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -276,7 +276,10 @@ fn generate_associated_item<'tcx>(
         ty::AssocKind::Fn { .. } => {
             let result = db.generate_function(def_id);
             if result.is_ok() {
-                let cpp_name = FullyQualifiedName::new(db, def_id).cpp_name.unwrap().to_string();
+                let fully_qualified_name = db
+                    .symbol_canonical_name(def_id)
+                    .expect("Exported item should have a canonical name: {def_id:?}");
+                let cpp_name = fully_qualified_name.cpp_name.unwrap().to_string();
                 member_function_names.insert(cpp_name);
             }
             result
@@ -692,7 +695,9 @@ pub fn generate_adt_core<'tcx>(
     assert!(self_ty.is_adt());
     assert!(is_public_or_supported_export(db, def_id), "Caller should verify");
 
-    let fully_qualified_name = FullyQualifiedName::new(db, def_id);
+    let fully_qualified_name = db
+        .symbol_canonical_name(def_id)
+        .ok_or_else(|| anyhow!("`generate_adt_core` called on non-reachable type {def_id:?}"))?;
     let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
     let cpp_name = format_cc_ident(db, fully_qualified_name.cpp_name.unwrap().as_str())
         .context("Error formatting item name")?;
