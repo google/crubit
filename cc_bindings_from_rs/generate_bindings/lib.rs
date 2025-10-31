@@ -39,7 +39,7 @@ use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQ
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
 use database::{
     AdtCoreBindings, BindingsGenerator, ExportedPath, FineGrainedFeature, FullyQualifiedName,
-    PublicPaths, SugaredTy, TypeLocation,
+    PublicPaths, SugaredTy, TypeLocation, UnqualifiedName,
 };
 pub use database::{Database, IncludeGuard};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
@@ -157,6 +157,7 @@ pub fn new_database<'db>(
         source_crate_num,
         support_header,
         repr_attrs_from_db,
+        symbol_unqualified_name,
         symbol_canonical_name,
         public_paths_by_def_id,
         format_cc_ident_symbol,
@@ -432,6 +433,33 @@ fn resolve_if_use(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Option<DefId
     None
 }
 
+fn symbol_unqualified_name(
+    db: &dyn BindingsGenerator<'_>,
+    def_id: DefId,
+) -> Option<UnqualifiedName> {
+    let tcx = db.tcx();
+    let item_name = db
+        .public_paths_by_def_id(def_id.krate)
+        .get(&def_id)
+        .map(|path| path.canonical().name)
+        .or_else(|| tcx.opt_item_name(def_id))?;
+    let rs_name = item_name;
+    let attributes = crubit_attr::get_attrs(tcx, def_id)
+        .unwrap_or_else(|_| panic!("Expected crubit_attrs on {def_id:?}"));
+    let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).unwrap_or_else(|| {
+        // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
+        // This prevents silly Rust names like "reinterpret_cast" from trying to be named
+        // "reinterpret_cast" in C++, which would be an error.
+        // If the user has opted in to one of these reserved names by setting cpp_name, however,
+        // we should _not_ implicitly change it, and should instead given them an error.
+        // Hence, this unkeywording behavior only happens in the case where we implicitly
+        // delegate to the Rust name.
+        Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
+    });
+    let cpp_type = attributes.cpp_type;
+    Some(UnqualifiedName { cpp_name, rs_name, cpp_type })
+}
+
 /// Implementation of `BindingsGenerator::symbol_canonical_name`.
 fn symbol_canonical_name(
     db: &dyn BindingsGenerator<'_>,
@@ -444,43 +472,41 @@ fn symbol_canonical_name(
     // canonical name.
     let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
 
-    let (full_path_strs, item_name, type_alias_def_id) =
-        if tcx.opt_associated_item(def_id).is_some() {
-            // TODO: b/455932965 - Remove associated item's dependency on `symbol_canonical_name`
-            // and remove this workaround.
-            let full_path = tcx
-                .def_path(def_id)
-                .data
-                .into_iter()
-                .filter_map(|p| p.data.get_opt_name())
-                .map(|s| Rc::<str>::from(s.as_str()))
-                .collect::<Vec<_>>();
-            (full_path, tcx.item_name(def_id), None)
-        } else {
-            // If our definition is at a path that can't be spelled, we have to pick a path from our
-            // aliases.
-            let paths = db.public_paths_by_def_id(def_id.krate);
+    let (full_path_strs, type_alias_def_id) = {
+        // If our definition is at a path that can't be spelled, we have to pick a path from our
+        // aliases.
+        let paths = db.public_paths_by_def_id(def_id.krate);
 
-            // If our definition has no public spellings, we can't give it a canonical name.
-            let paths = paths.get(&def_id)?;
+        // If our definition has no public spellings, we can't give it a canonical name.
+        let paths = paths.get(&def_id)?;
 
-            // Select a canonical path for this symbol from available paths.
-            // Our paths are kept in sorted order, so the canonical path will be the first one.
-            let canonical_path = paths.canonical();
+        // Select a canonical path for this symbol from available paths.
+        // Our paths are kept in sorted order, so the canonical path will be the first one.
+        let canonical_path = paths.canonical();
 
-            // If the use is in the same scope as the canonical path, we want to use the original
-            // name of the symbol, not the alias.
-            (
-                canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
-                canonical_path.name,
-                canonical_path.type_alias_def_id,
-            )
-        };
+        // If the use is in the same scope as the canonical path, we want to use the original
+        // name of the symbol, not the alias.
+        (
+            canonical_path.path.iter().map(|s| Rc::<str>::from(s.as_str())).collect::<Vec<_>>(),
+            canonical_path.type_alias_def_id,
+        )
+    };
 
-    let rs_name = Some(item_name);
+    let unqualified = type_alias_def_id
+        .and_then(|def_id| {
+            use crubit_attr::CrubitAttrs;
+            let attrs = crubit_attr::get_attrs(tcx, def_id).unwrap();
+            if attrs == CrubitAttrs::default() {
+                None
+            } else {
+                db.symbol_unqualified_name(def_id)
+            }
+        })
+        .or_else(|| db.symbol_unqualified_name(def_id))?;
 
     let krate = tcx.crate_name(def_id.krate);
-    if krate.as_str() == "polars_plan" && matches!(item_name.as_str(), "date_range" | "time_range")
+    if krate.as_str() == "polars_plan"
+        && matches!(unqualified.rs_name.as_str(), "date_range" | "time_range")
     {
         // Short-circuit `polars_plan::dsl::{date_range, time_range}`.
         //
@@ -496,38 +522,9 @@ fn symbol_canonical_name(
 
     let rs_mod_path = NamespaceQualifier::new(full_path_strs.clone());
     let cpp_ns_path = NamespaceQualifier::new(full_path_strs);
-
-    // If our canonical definition is a type alias, use the attributes on that type alias, if available, otherwise use the attributes on the underlying definition.
-    let attributes = type_alias_def_id
-        .and_then(|id| {
-            use crubit_attr::CrubitAttrs;
-            let attrs = crubit_attr::get_attrs(tcx, id).unwrap();
-            (attrs != CrubitAttrs::default()).then_some(attrs)
-        })
-        .unwrap_or_else(|| crubit_attr::get_attrs(tcx, def_id).unwrap());
-    let cpp_type = attributes.cpp_type;
     let cpp_top_level_ns = format_top_level_ns_for_crate(db, def_id.krate);
-    let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).or_else(|| {
-        // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
-        // This prevents silly Rust names like "reinterpret_cast" from trying to be named
-        // "reinterpret_cast" in C++, which would be an error.
-        // If the user has opted in to one of these reserved names by setting cpp_name, however,
-        // we should _not_ implicitly change it, and should instead given them an error.
-        // Hence, this unkeywording behavior only happens in the case where we implicitly
-        // delegate to the Rust name.
-        rs_name.map(|rs_name| {
-            Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
-        })
-    });
-    Some(FullyQualifiedName {
-        cpp_name,
-        cpp_ns_path,
-        rs_name,
-        krate,
-        cpp_top_level_ns,
-        rs_mod_path,
-        cpp_type,
-    })
+
+    Some(FullyQualifiedName { krate, cpp_top_level_ns, cpp_ns_path, rs_mod_path, unqualified })
 }
 
 /// Checks whether a definition matches a specific qualified name by matching it's definition path
@@ -653,7 +650,7 @@ fn generate_using(
                 .unwrap_or_else(|| panic!("Failed to get canonical name for {:?}", def_id));
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
-                format_cc_ident(db, fully_qualified_fn_name.cpp_name.unwrap().as_str())
+                format_cc_ident(db, fully_qualified_fn_name.unqualified.cpp_name.as_str())
                     .context("Error formatting function name")?;
             let using_name =
                 format_cc_ident(db, using_name.as_str()).context("Error formatting using name")?;

@@ -13,6 +13,32 @@ use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use std::rc::Rc;
 
+/// Represents the unqualified name of a Rust item. For the fully qualified name
+// `std::collections::HashMap`, the unqualified name would be `HashMap`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct UnqualifiedName {
+    /// Rust name of the item.
+    /// For example, this would be:
+    /// * `Ordering` for `std::cmp::Ordering`.
+    pub rs_name: Symbol,
+
+    /// The C++ name to use for the symbol.
+    ///
+    /// For example, the following struct
+    /// ```
+    /// #[crubit_annotate::cpp_layout_equivalent(cpp_name="Bar")]
+    /// struct Foo { ... }
+    /// ```
+    /// will be generated as a C++ struct named `Bar` instead of `Foo`.
+    pub cpp_name: Symbol,
+
+    /// The fully-qualified C++ type to use for this, if this was originally a C++ type.
+    ///
+    /// For example, if a type has `#[crubit_annotate::cpp_layout_equivalent(cpp_type="x::y")]`,
+    /// then cpp_type will be `Some(x::y)`.
+    pub cpp_type: Option<Symbol>,
+}
+
 /// Represents the fully qualified name of a Rust item (e.g. of a `struct` or a
 /// function).
 #[derive(Clone, Debug, PartialEq)]
@@ -33,28 +59,8 @@ pub struct FullyQualifiedName {
     /// namespace.
     pub cpp_ns_path: NamespaceQualifier,
 
-    /// Rust name of the item.
-    /// For example, this would be:
-    /// * `Some("Ordering")` for `std::cmp::Ordering`.
-    /// * `None` for `ItemKind::Use` - e.g.: `use submodule::*`
-    pub rs_name: Option<Symbol>,
-
-    /// The C++ name to use for the symbol.
-    ///
-    /// For example, the following struct
-    /// ```
-    /// #[crubit_annotate::cpp_layout_equivalent(cpp_name="Bar")]
-    /// struct Foo { ... }
-    /// ```
-    /// will be generated as a C++ struct named `Bar` instead of `Foo`.
-    pub cpp_name: Option<Symbol>,
-
-    /// The fully-qualified C++ type to use for this, if this was originally a
-    /// C++ type.
-    ///
-    /// For example, if a type has `#[crubit_annotate::cpp_layout_equivalent(cpp_type="x::y")]`,
-    /// then cpp_type will be `Some(x::y)`.
-    pub cpp_type: Option<Symbol>,
+    /// The unqualified name of the item.
+    pub unqualified: UnqualifiedName,
 }
 
 fn format_ns_path_for_cc(
@@ -68,12 +74,12 @@ fn format_ns_path_for_cc(
 
 impl FullyQualifiedName {
     pub fn format_for_cc(&self, db: &dyn BindingsGenerator<'_>) -> Result<TokenStream> {
-        if let Some(path) = self.cpp_type {
+        if let Some(path) = self.unqualified.cpp_type {
             let path = format_cc_type_name(path.as_str())?;
             return Ok(path);
         }
 
-        let name = self.cpp_name.expect("`format_for_cc` can't be called on name-less item kinds");
+        let name = self.unqualified.cpp_name;
 
         let cpp_top_level_ns = self
             .cpp_top_level_ns
@@ -94,8 +100,7 @@ impl FullyQualifiedName {
     pub fn rs_name_parts(&self) -> impl Iterator<Item = Ident> + use<'_> {
         let krate = make_rs_ident(self.krate.as_str());
         let mod_path = self.rs_mod_path.parts_with_snake_case_record_names();
-        let name =
-            self.rs_name.as_ref().expect("`format_for_rs` can't be called on name-less item kinds");
+        let name = self.unqualified.rs_name;
         let name = make_rs_ident(name.as_str());
         std::iter::once(krate).chain(mod_path).chain(std::iter::once(name))
     }

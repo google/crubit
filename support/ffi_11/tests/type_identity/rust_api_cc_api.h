@@ -70,9 +70,9 @@ decltype(nullptr) c_nullptr_t();
 // Error generating bindings for `c_wchar_t` defined at
 // support/ffi_11/tests/type_identity/rust_api.rs;l=54:
 // Error formatting function return type `ffi_11::wchar_type::c_wchar_t`: Failed
-// to generate bindings for the definition of `ffi_11::wchar_type::c_wchar_t`:
-// Error formatting the fully-qualified C++ name of `c_wchar_t`: `wchar_t` is a
-// C++ reserved keyword and can't be used as a C++ identifier
+// to format type for the definition of `ffi_11::wchar_type::c_wchar_t`: Error
+// formatting the fully-qualified C++ name of `c_wchar_t`: `wchar_t` is a C++
+// reserved keyword and can't be used as a C++ identifier
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=58

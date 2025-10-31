@@ -70,8 +70,8 @@ fn thunk_name(
         if let Some(export_name) = export_name {
             export_name.to_string()
         } else {
-            db.symbol_canonical_name(def_id)
-                .and_then(|fqn| fqn.rs_name)
+            db.symbol_unqualified_name(def_id)
+                .map(|name| name.rs_name)
                 .unwrap_or_else(|| panic!("Functions are assumed to always have a name {def_id:?}"))
                 .to_string()
         }
@@ -596,12 +596,11 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let needs_thunk = is_thunk_required(&sig_mid).is_err() || (!has_no_mangle && !has_export_name);
     let thunk_name = thunk_name(db, def_id, export_name, needs_thunk);
 
-    let fully_qualified_fn_name = db.symbol_canonical_name(def_id).unwrap_or_else(|| {
-        panic!("`generate_function` called on non-reachable function {def_id:?}")
-    });
-    let unqualified_rust_fn_name =
-        fully_qualified_fn_name.rs_name.expect("Functions are assumed to always have a name");
-    let main_api_fn_name = format_cc_ident(db, fully_qualified_fn_name.cpp_name.unwrap().as_str())
+    let unqualified_fn_name = db
+        .symbol_unqualified_name(def_id)
+        .unwrap_or_else(|| panic!("`generate_function` called on unnamed function {def_id:?}"));
+    let unqualified_rust_fn_name = unqualified_fn_name.rs_name;
+    let main_api_fn_name = format_cc_ident(db, unqualified_fn_name.cpp_name.as_str())
         .context("Error formatting function name")?;
 
     let mut main_api_prereqs = CcPrerequisites::default();
@@ -762,7 +761,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         let struct_name = match struct_name.as_ref() {
             None => quote! {},
             Some(fully_qualified_name) => {
-                let name = fully_qualified_name.cpp_name.expect("Structs always have a name");
+                let name = fully_qualified_name.unqualified.cpp_name;
                 let name = format_cc_ident(db, name.as_str()).expect(
                     "Caller of generate_function should verify struct via generate_adt_core",
                 );
@@ -809,7 +808,14 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         RsSnippet::default()
     } else {
         let fully_qualified_fn_name = match struct_name.as_ref() {
-            None => fully_qualified_fn_name.format_for_rs(),
+            None => db
+                .symbol_canonical_name(def_id)
+                .unwrap_or_else(|| {
+                    panic!(
+                        "`generate_function` called on unreachable top-level function {def_id:?}"
+                    )
+                })
+                .format_for_rs(),
             Some(struct_name) => {
                 let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
                 let struct_name = struct_name.format_for_rs();
