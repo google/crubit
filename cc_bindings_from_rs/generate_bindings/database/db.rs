@@ -8,7 +8,7 @@ extern crate rustc_span;
 
 use crate::adt_core_bindings::AdtCoreBindings;
 use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
-use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths};
+use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
 use crate::sugared_ty::SugaredTy;
 use crate::type_location::TypeLocation;
@@ -109,7 +109,12 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/query_compiler.rs?q=function:repr_attrs
       fn repr_attrs(&self, did: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]>;
 
-      /// Computes the canonical name of the symbol identified by `def_id`. For cases, this
+      /// Computes the unqualified name of the symbol identified by `def_id`.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:symbol_unqualified_name
+      fn symbol_unqualified_name(&self, def_id: DefId) -> Option<UnqualifiedName>;
+
+      /// Computes the canonical name of the symbol identified by `def_id`. For most cases, this
       /// will be the fully qualified path to the definition `def_id` references. However, some
       /// definitions are private and may not be referenced by the path they are defined at. This
       /// will pick a path that can be referenced publicly and treat it as the canonical name for

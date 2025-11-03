@@ -14,7 +14,7 @@ pub use db::{BindingsGenerator, Database};
 mod fine_grained_feature;
 pub use fine_grained_feature::FineGrainedFeature;
 mod fully_qualified_name;
-pub use fully_qualified_name::{ExportedPath, FullyQualifiedName, PublicPaths};
+pub use fully_qualified_name::{ExportedPath, FullyQualifiedName, PublicPaths, UnqualifiedName};
 mod include_guard;
 pub use include_guard::IncludeGuard;
 mod sugared_ty;

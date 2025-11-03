@@ -276,10 +276,10 @@ fn generate_associated_item<'tcx>(
         ty::AssocKind::Fn { .. } => {
             let result = db.generate_function(def_id);
             if result.is_ok() {
-                let fully_qualified_name = db
-                    .symbol_canonical_name(def_id)
-                    .expect("Exported item should have a canonical name: {def_id:?}");
-                let cpp_name = fully_qualified_name.cpp_name.unwrap().to_string();
+                let unqualified_name = db
+                    .symbol_unqualified_name(def_id)
+                    .expect("Associated item should have an unqualified name: {def_id:?}");
+                let cpp_name = unqualified_name.cpp_name.to_string();
                 member_function_names.insert(cpp_name);
             }
             result
@@ -699,7 +699,7 @@ pub fn generate_adt_core<'tcx>(
         .symbol_canonical_name(def_id)
         .ok_or_else(|| anyhow!("`generate_adt_core` called on non-reachable type {def_id:?}"))?;
     let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
-    let cpp_name = format_cc_ident(db, fully_qualified_name.cpp_name.unwrap().as_str())
+    let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
         .context("Error formatting item name")?;
 
     // The check below ensures that `generate_trait_thunks` will succeed for the
