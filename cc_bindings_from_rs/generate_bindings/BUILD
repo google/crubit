@@ -42,6 +42,7 @@ rust_library(
         "//common:dyn_format",
         "//common:error_report",
         "@crate_index//:flagset",  # v0_4
+        "@crate_index//:heck",  # v0_5
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1

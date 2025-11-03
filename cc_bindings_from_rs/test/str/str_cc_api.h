@@ -21,7 +21,7 @@
 #include <utility>
 
 namespace str {
-static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
+static constexpr rs_std::StrRef kConstStrFoo = rs_std::StrRef("foo");
 
 // Error generating bindings for `STATIC_STR_FOO` defined at
 // cc_bindings_from_rs/test/str/str.rs;l=43:

@@ -26,14 +26,15 @@ database = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/dat
 dyn_format = { path = "../../../../cargo/common/dyn_format"}
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 crubit_abi_type = { path = "../../../../cargo/common/crubit_abi_type"}
+crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}
 itertools.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true
 syn.workspace = true
-crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 flagset.workspace = true
+heck.workspace = true
 rustversion.workspace = true
 [dev-dependencies]
 generate_bindings = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
