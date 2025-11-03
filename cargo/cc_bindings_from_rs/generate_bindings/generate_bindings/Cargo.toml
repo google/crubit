@@ -32,4 +32,5 @@ quote.workspace = true
 syn.workspace = true
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 flagset.workspace = true
+heck.workspace = true
 rustversion.workspace = true
