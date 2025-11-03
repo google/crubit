@@ -630,8 +630,15 @@ pub fn generate_trait_thunks<'tcx>(
         trait_id,
         type_args.iter().copied().map(ty::GenericArg::from),
     ) {
+        let display_name = db
+            .symbol_canonical_name(adt.def_id)
+            .map(|canon| {
+                let parts = canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
+                parts.join("::")
+            })
+            .unwrap_or_else(|| format!("{self_ty}"));
         let trait_name = tcx.item_name(trait_id);
-        bail!("`{self_ty}` doesn't implement the `{trait_name}` trait");
+        bail!("`{display_name}` doesn't implement the `{trait_name}` trait");
     }
 
     let mut method_name_to_cc_thunk_name = HashMap::new();

@@ -26,7 +26,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetime") alignas(8)
     [[clang::trivial_abi]] StructWithLifetime final {
  public:
-  // `StructWithLifetime<'_>` doesn't implement the `Default` trait
+  // `lifetimes_golden::StructWithLifetime` doesn't implement the `Default`
+  // trait
   StructWithLifetime() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -115,7 +116,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
     [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
  public:
-  // `StructWithLifetimeAndDropGlue<'_>` doesn't implement the `Default` trait
+  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
+  // `Default` trait
   StructWithLifetimeAndDropGlue() = delete;
 
   // Drop::drop
@@ -126,7 +128,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructWithLifetimeAndDropGlue(StructWithLifetimeAndDropGlue&&) = delete;
   StructWithLifetimeAndDropGlue& operator=(StructWithLifetimeAndDropGlue&&) =
       delete;
-  // `StructWithLifetimeAndDropGlue<'_>` doesn't implement the `Clone` trait
+  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
+  // `Clone` trait
   StructWithLifetimeAndDropGlue(const StructWithLifetimeAndDropGlue&) = delete;
   StructWithLifetimeAndDropGlue& operator=(
       const StructWithLifetimeAndDropGlue&) = delete;

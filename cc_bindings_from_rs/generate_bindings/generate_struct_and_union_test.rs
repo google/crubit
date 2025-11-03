@@ -229,7 +229,7 @@ fn test_format_item_struct_with_fields() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeStruct final {
                     public:
-                        __COMMENT__ "`SomeStruct` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::SomeStruct` doesn't implement the `Default` trait"
                         SomeStruct() = delete;
 
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -237,7 +237,7 @@ fn test_format_item_struct_with_fields() {
                         SomeStruct(SomeStruct&&) = default;
                         SomeStruct& operator=(SomeStruct&&) = default;
 
-                        __COMMENT__ "`SomeStruct` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::SomeStruct` doesn't implement the `Clone` trait"
                         SomeStruct(const SomeStruct&) = delete;
                         SomeStruct& operator=(const SomeStruct&) = delete;
 
@@ -296,7 +296,7 @@ fn test_format_item_struct_with_tuple() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] TupleStruct final {
                     public:
-                        __COMMENT__ "`TupleStruct` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::TupleStruct` doesn't implement the `Default` trait"
                         TupleStruct() = delete;
 
                         __COMMENT__ "Synthesized tuple constructor"
@@ -308,7 +308,7 @@ fn test_format_item_struct_with_tuple() {
                         TupleStruct(TupleStruct&&) = default;
                         TupleStruct& operator=(TupleStruct&&) = default;
 
-                        __COMMENT__ "`TupleStruct` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::TupleStruct` doesn't implement the `Clone` trait"
                         TupleStruct(const TupleStruct&) = delete;
                         TupleStruct& operator=(const TupleStruct&) = delete;
                         TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {
@@ -935,7 +935,7 @@ fn test_format_item_enum_with_only_discriminant_items() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] SomeEnum final {
                     public:
-                        __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::SomeEnum` doesn't implement the `Default` trait"
                         SomeEnum() = delete;
 
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -943,7 +943,7 @@ fn test_format_item_enum_with_only_discriminant_items() {
                         SomeEnum(SomeEnum&&) = default;
                         SomeEnum& operator=(SomeEnum&&) = default;
 
-                        __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::SomeEnum` doesn't implement the `Clone` trait"
                         SomeEnum(const SomeEnum&) = delete;
                         SomeEnum& operator=(const SomeEnum&) = delete;
 
@@ -999,7 +999,7 @@ fn test_format_item_enum_with_tuple_and_struct_items() {
                 ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] Point final {
                     public:
-                        __COMMENT__ "`Point` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::Point` doesn't implement the `Default` trait"
                         Point() = delete;
 
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -1007,7 +1007,7 @@ fn test_format_item_enum_with_tuple_and_struct_items() {
                         Point(Point&&) = default;
                         Point& operator=(Point&&) = default;
 
-                        __COMMENT__ "`Point` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::Point` doesn't implement the `Clone` trait"
                         Point(const Point&) = delete;
                         Point& operator=(const Point&) = delete;
 
@@ -1074,7 +1074,7 @@ fn test_format_item_union() {
                 ...
                 union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(8) [[clang::trivial_abi]] SomeUnion final {
                     public:
-                        __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::SomeUnion` doesn't implement the `Default` trait"
                         SomeUnion() = delete;
 
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -1082,7 +1082,7 @@ fn test_format_item_union() {
                         SomeUnion(SomeUnion&&) = default;
                         SomeUnion& operator=(SomeUnion&&) = default;
 
-                        __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::SomeUnion` doesn't implement the `Clone` trait"
                         SomeUnion(const SomeUnion&) = delete;
                         SomeUnion& operator=(const SomeUnion&) = delete;
                     ...
@@ -1318,7 +1318,7 @@ fn test_repr_c_enum_fields() {
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) ... [[clang::trivial_abi]] SomeEnum final {
                     public:
                         ...
-                        __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::SomeEnum` doesn't implement the `Default` trait"
                         SomeEnum() = delete;
                         ...
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -1326,7 +1326,7 @@ fn test_repr_c_enum_fields() {
                         SomeEnum(SomeEnum&&) = default;
                         SomeEnum& operator=(SomeEnum&&) = default;
 
-                        __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::SomeEnum` doesn't implement the `Clone` trait"
                         SomeEnum(const SomeEnum&) = delete;
                         SomeEnum& operator=(const SomeEnum&) = delete;
                         ...
@@ -1395,7 +1395,7 @@ fn test_repr_c_enum_with_zst() {
                 struct CRUBIT_INTERNAL_RUST_TYPE(...) ... [[clang::trivial_abi]] SomeEnum final {
                     public:
                         ...
-                        __COMMENT__ "`SomeEnum` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::SomeEnum` doesn't implement the `Default` trait"
                         SomeEnum() = delete;
                         ...
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -1403,7 +1403,7 @@ fn test_repr_c_enum_with_zst() {
                         SomeEnum(SomeEnum&&) = default;
                         SomeEnum& operator=(SomeEnum&&) = default;
 
-                        __COMMENT__ "`SomeEnum` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::SomeEnum` doesn't implement the `Clone` trait"
                         SomeEnum(const SomeEnum&) = delete;
                         SomeEnum& operator=(const SomeEnum&) = delete;
                         ...
@@ -1447,7 +1447,7 @@ fn test_repr_c_union_fields() {
                 union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeUnion final {
                     public:
                         ...
-                        __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::SomeUnion` doesn't implement the `Default` trait"
                         SomeUnion() = delete;
                         ...
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -1455,7 +1455,7 @@ fn test_repr_c_union_fields() {
                         SomeUnion(SomeUnion&&) = default;
                         SomeUnion& operator=(SomeUnion&&) = default;
 
-                        __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::SomeUnion` doesn't implement the `Clone` trait"
                         SomeUnion(const SomeUnion&) = delete;
                         SomeUnion& operator=(const SomeUnion&) = delete;
                         ...
@@ -1517,7 +1517,7 @@ fn test_union_fields() {
                 union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] SomeUnion final {
                     public:
                         ...
-                        __COMMENT__ "`SomeUnion` doesn't implement the `Default` trait"
+                        __COMMENT__ "`rust_out::SomeUnion` doesn't implement the `Default` trait"
                         SomeUnion() = delete;
                         ...
                         __COMMENT__ "No custom `Drop` impl and no custom \"drop glue\" required"
@@ -1525,7 +1525,7 @@ fn test_union_fields() {
                         SomeUnion(SomeUnion&&) = default;
                         SomeUnion& operator=(SomeUnion&&) = default;
 
-                        __COMMENT__ "`SomeUnion` doesn't implement the `Clone` trait"
+                        __COMMENT__ "`rust_out::SomeUnion` doesn't implement the `Clone` trait"
                         SomeUnion(const SomeUnion&) = delete;
                         SomeUnion& operator=(const SomeUnion&) = delete;
                         ...

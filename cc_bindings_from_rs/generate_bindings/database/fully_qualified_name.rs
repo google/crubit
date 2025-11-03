@@ -138,20 +138,17 @@ impl Ord for ExportedPath {
         // Prefer paths that are do not contain an item marked #[doc(hidden)].
         self.is_doc_hidden
             .cmp(&other.is_doc_hidden)
-            // Prefer the longest path.
-            // TODO: b/454721444 - We pick the longest path here to match existing behavior, but we
-            // should prefer the shorter path overall. Before that we need to update `generate_use`
-            // to support generating using statements that point at a type in a higher namespace.
-            .then_with(|| self.path.len().cmp(&other.path.len()).reverse())
+            // Prefer the shortest path.
+            .then_with(|| self.path.len().cmp(&other.path.len()))
             // Between two paths of the same length, prefer the one that is not a type alias.
             .then_with(|| match (self.type_alias_def_id, other.type_alias_def_id) {
                 (Some(_), None) => Ordering::Greater,
                 (None, Some(_)) => Ordering::Less,
                 _ => Ordering::Equal,
             })
-            .then_with(|| self.name.as_str().cmp(other.name.as_str()))
             // Failing all else, choose the lexicographically smallest path.
             .then_with(|| self.path.cmp(&other.path))
+            .then_with(|| self.name.as_str().cmp(other.name.as_str()))
     }
 }
 

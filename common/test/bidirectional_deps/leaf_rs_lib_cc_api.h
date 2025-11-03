@@ -65,7 +65,7 @@ std::uint8_t unwrap(::leaf_rs_lib::LeafRsType x);
 struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
     1) [[clang::trivial_abi]] LeafRsEnum final {
  public:
-  // `LeafRsEnum` doesn't implement the `Default` trait
+  // `leaf_rs_lib_golden::LeafRsEnum` doesn't implement the `Default` trait
   LeafRsEnum() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required

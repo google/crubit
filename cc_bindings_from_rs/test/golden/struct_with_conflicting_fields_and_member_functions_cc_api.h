@@ -26,7 +26,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: struct_with_conflicting_fields_and_member_functions_rust_golden :: "
     "X") alignas(4) [[clang::trivial_abi]] X final {
  public:
-  // `X` doesn't implement the `Default` trait
+  // `struct_with_conflicting_fields_and_member_functions_rust_golden::X`
+  // doesn't implement the `Default` trait
   X() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -34,7 +35,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   X(X&&) = default;
   X& operator=(X&&) = default;
 
-  // `X` doesn't implement the `Clone` trait
+  // `struct_with_conflicting_fields_and_member_functions_rust_golden::X`
+  // doesn't implement the `Clone` trait
   X(const X&) = delete;
   X& operator=(const X&) = delete;
   X(::crubit::UnsafeRelocateTag, X&& value) {

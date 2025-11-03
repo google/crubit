@@ -33,7 +33,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   ReprRustUnion(ReprRustUnion&&) = default;
   ReprRustUnion& operator=(ReprRustUnion&&) = default;
 
-  // `ReprRustUnion` doesn't implement the `Clone` trait
+  // `example_crate_golden::ReprRustUnion` doesn't implement the `Clone` trait
   ReprRustUnion(const ReprRustUnion&) = delete;
   ReprRustUnion& operator=(const ReprRustUnion&) = delete;
   ReprRustUnion(::crubit::UnsafeRelocateTag, ReprRustUnion&& value) {

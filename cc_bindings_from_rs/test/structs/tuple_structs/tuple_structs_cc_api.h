@@ -29,7 +29,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructOnePublicArg") alignas(4)
     [[clang::trivial_abi]] TupleStructOnePublicArg final {
  public:
-  // `TupleStructOnePublicArg` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructOnePublicArg` doesn't implement the
+  // `Default` trait
   TupleStructOnePublicArg() = delete;
 
   // Synthesized tuple constructor
@@ -80,7 +81,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructOnePrivateArg") alignas(4)
     [[clang::trivial_abi]] TupleStructOnePrivateArg final {
  public:
-  // `TupleStructOnePrivateArg` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructOnePrivateArg` doesn't implement the
+  // `Default` trait
   TupleStructOnePrivateArg() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -129,7 +131,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructTwoPublicArgs") alignas(4)
     [[clang::trivial_abi]] TupleStructTwoPublicArgs final {
  public:
-  // `TupleStructTwoPublicArgs` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructTwoPublicArgs` doesn't implement the
+  // `Default` trait
   TupleStructTwoPublicArgs() = delete;
 
   // Synthesized tuple constructor
@@ -193,7 +196,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructTwoPrivateArgs") alignas(4)
     [[clang::trivial_abi]] TupleStructTwoPrivateArgs final {
  public:
-  // `TupleStructTwoPrivateArgs` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructTwoPrivateArgs` doesn't implement the
+  // `Default` trait
   TupleStructTwoPrivateArgs() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -256,8 +260,8 @@ struct
         "TupleStructOnePublicArgOnePrivateArg") alignas(4)
         [[clang::trivial_abi]] TupleStructOnePublicArgOnePrivateArg final {
  public:
-  // `TupleStructOnePublicArgOnePrivateArg` doesn't implement the `Default`
-  // trait
+  // `tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg` doesn't
+  // implement the `Default` trait
   TupleStructOnePublicArgOnePrivateArg() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -418,7 +422,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DontMoveMe") alignas(8) [[clang::trivial_abi]]
 DontMoveMe final {
  public:
-  // `DontMoveMe` doesn't implement the `Default` trait
+  // `tuple_structs_golden::DontMoveMe` doesn't implement the `Default` trait
   DontMoveMe() = delete;
 
   // Drop::drop
@@ -428,7 +432,7 @@ DontMoveMe final {
   // available.
   DontMoveMe(DontMoveMe&&) = delete;
   DontMoveMe& operator=(DontMoveMe&&) = delete;
-  // `DontMoveMe` doesn't implement the `Clone` trait
+  // `tuple_structs_golden::DontMoveMe` doesn't implement the `Clone` trait
   DontMoveMe(const DontMoveMe&) = delete;
   DontMoveMe& operator=(const DontMoveMe&) = delete;
   DontMoveMe(::crubit::UnsafeRelocateTag, DontMoveMe&& value) {
@@ -452,7 +456,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCppImmovableType") alignas(8)
     [[clang::trivial_abi]] TupleStructWithCppImmovableType final {
  public:
-  // `TupleStructWithCppImmovableType` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructWithCppImmovableType` doesn't implement
+  // the `Default` trait
   TupleStructWithCppImmovableType() = delete;
 
   // Drop::drop
@@ -463,7 +468,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithCppImmovableType(TupleStructWithCppImmovableType&&) = delete;
   TupleStructWithCppImmovableType& operator=(
       TupleStructWithCppImmovableType&&) = delete;
-  // `TupleStructWithCppImmovableType` doesn't implement the `Clone` trait
+  // `tuple_structs_golden::TupleStructWithCppImmovableType` doesn't implement
+  // the `Clone` trait
   TupleStructWithCppImmovableType(const TupleStructWithCppImmovableType&) =
       delete;
   TupleStructWithCppImmovableType& operator=(
@@ -520,7 +526,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: CopyNoDefault") alignas(4)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
-  // `CopyNoDefault` doesn't implement the `Default` trait
+  // `tuple_structs_golden::CopyNoDefault` doesn't implement the `Default` trait
   CopyNoDefault() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -560,7 +566,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithNoDefault") alignas(4)
     [[clang::trivial_abi]] TupleStructWithNoDefault final {
  public:
-  // `TupleStructWithNoDefault` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructWithNoDefault` doesn't implement the
+  // `Default` trait
   TupleStructWithNoDefault() = delete;
 
   // Synthesized tuple constructor
@@ -572,7 +579,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithNoDefault(TupleStructWithNoDefault&&) = default;
   TupleStructWithNoDefault& operator=(TupleStructWithNoDefault&&) = default;
 
-  // `TupleStructWithNoDefault` doesn't implement the `Clone` trait
+  // `tuple_structs_golden::TupleStructWithNoDefault` doesn't implement the
+  // `Clone` trait
   TupleStructWithNoDefault(const TupleStructWithNoDefault&) = delete;
   TupleStructWithNoDefault& operator=(const TupleStructWithNoDefault&) = delete;
   TupleStructWithNoDefault(::crubit::UnsafeRelocateTag,
@@ -603,7 +611,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DefaultNoCopyNoClone(DefaultNoCopyNoClone&&) = default;
   DefaultNoCopyNoClone& operator=(DefaultNoCopyNoClone&&) = default;
 
-  // `DefaultNoCopyNoClone` doesn't implement the `Clone` trait
+  // `tuple_structs_golden::DefaultNoCopyNoClone` doesn't implement the `Clone`
+  // trait
   DefaultNoCopyNoClone(const DefaultNoCopyNoClone&) = delete;
   DefaultNoCopyNoClone& operator=(const DefaultNoCopyNoClone&) = delete;
   DefaultNoCopyNoClone(::crubit::UnsafeRelocateTag,
@@ -628,7 +637,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone") alignas(4)
     [[clang::trivial_abi]] TupleStructWithDefaultNoCopyNoClone final {
  public:
-  // `TupleStructWithDefaultNoCopyNoClone` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructWithDefaultNoCopyNoClone` doesn't
+  // implement the `Default` trait
   TupleStructWithDefaultNoCopyNoClone() = delete;
 
   // Synthesized tuple constructor
@@ -643,7 +653,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithDefaultNoCopyNoClone& operator=(
       TupleStructWithDefaultNoCopyNoClone&&) = default;
 
-  // `TupleStructWithDefaultNoCopyNoClone` doesn't implement the `Clone` trait
+  // `tuple_structs_golden::TupleStructWithDefaultNoCopyNoClone` doesn't
+  // implement the `Clone` trait
   TupleStructWithDefaultNoCopyNoClone(
       const TupleStructWithDefaultNoCopyNoClone&) = delete;
   TupleStructWithDefaultNoCopyNoClone& operator=(
@@ -669,7 +680,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: CloneNoDefault") alignas(8)
     [[clang::trivial_abi]] CloneNoDefault final {
  public:
-  // `CloneNoDefault` doesn't implement the `Default` trait
+  // `tuple_structs_golden::CloneNoDefault` doesn't implement the `Default`
+  // trait
   CloneNoDefault() = delete;
 
   // Drop::drop
@@ -702,7 +714,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCloneNoDefault") alignas(8)
     [[clang::trivial_abi]] TupleStructWithCloneNoDefault final {
  public:
-  // `TupleStructWithCloneNoDefault` doesn't implement the `Default` trait
+  // `tuple_structs_golden::TupleStructWithCloneNoDefault` doesn't implement the
+  // `Default` trait
   TupleStructWithCloneNoDefault() = delete;
 
   // Drop::drop
@@ -713,7 +726,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithCloneNoDefault(TupleStructWithCloneNoDefault&&) = delete;
   TupleStructWithCloneNoDefault& operator=(TupleStructWithCloneNoDefault&&) =
       delete;
-  // `TupleStructWithCloneNoDefault` doesn't implement the `Clone` trait
+  // `tuple_structs_golden::TupleStructWithCloneNoDefault` doesn't implement the
+  // `Clone` trait
   TupleStructWithCloneNoDefault(const TupleStructWithCloneNoDefault&) = delete;
   TupleStructWithCloneNoDefault& operator=(
       const TupleStructWithCloneNoDefault&) = delete;
@@ -794,8 +808,8 @@ struct
         "TupleStructWithDefaultAndCloneNoUnpin") alignas(4)
         [[clang::trivial_abi]] TupleStructWithDefaultAndCloneNoUnpin final {
  public:
-  // `TupleStructWithDefaultAndCloneNoUnpin` doesn't implement the `Default`
-  // trait
+  // `tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin` doesn't
+  // implement the `Default` trait
   TupleStructWithDefaultAndCloneNoUnpin() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -805,7 +819,8 @@ struct
   TupleStructWithDefaultAndCloneNoUnpin& operator=(
       TupleStructWithDefaultAndCloneNoUnpin&&) = default;
 
-  // `TupleStructWithDefaultAndCloneNoUnpin` doesn't implement the `Clone` trait
+  // `tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin` doesn't
+  // implement the `Clone` trait
   TupleStructWithDefaultAndCloneNoUnpin(
       const TupleStructWithDefaultAndCloneNoUnpin&) = delete;
   TupleStructWithDefaultAndCloneNoUnpin& operator=(

@@ -93,7 +93,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonFreezeType(NonFreezeType&&) = default;
   NonFreezeType& operator=(NonFreezeType&&) = default;
 
-  // `NonFreezeType` doesn't implement the `Clone` trait
+  // `aliasing_references_golden::NonFreezeType` doesn't implement the `Clone`
+  // trait
   NonFreezeType(const NonFreezeType&) = delete;
   NonFreezeType& operator=(const NonFreezeType&) = delete;
   NonFreezeType(::crubit::UnsafeRelocateTag, NonFreezeType&& value) {

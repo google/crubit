@@ -41,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: AdtHoldingFiveAndSix") alignas(4)
     [[clang::trivial_abi]] AdtHoldingFiveAndSix final {
  public:
-  // `AdtHoldingFiveAndSix` doesn't implement the `Default` trait
+  // `tuples_golden::AdtHoldingFiveAndSix` doesn't implement the `Default` trait
   AdtHoldingFiveAndSix() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -49,7 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   AdtHoldingFiveAndSix(AdtHoldingFiveAndSix&&) = default;
   AdtHoldingFiveAndSix& operator=(AdtHoldingFiveAndSix&&) = default;
 
-  // `AdtHoldingFiveAndSix` doesn't implement the `Clone` trait
+  // `tuples_golden::AdtHoldingFiveAndSix` doesn't implement the `Clone` trait
   AdtHoldingFiveAndSix(const AdtHoldingFiveAndSix&) = delete;
   AdtHoldingFiveAndSix& operator=(const AdtHoldingFiveAndSix&) = delete;
   AdtHoldingFiveAndSix(::crubit::UnsafeRelocateTag,
@@ -95,7 +95,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   NontrivialDrop(NontrivialDrop&&);
   NontrivialDrop& operator=(NontrivialDrop&&);
 
-  // `NontrivialDrop` doesn't implement the `Clone` trait
+  // `tuples_golden::NontrivialDrop` doesn't implement the `Clone` trait
   NontrivialDrop(const NontrivialDrop&) = delete;
   NontrivialDrop& operator=(const NontrivialDrop&) = delete;
   NontrivialDrop(::crubit::UnsafeRelocateTag, NontrivialDrop&& value) {
@@ -136,7 +136,7 @@ void assert_nontrivial_drop_count(std::uint8_t drop_count);
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
     [[clang::trivial_abi]] NonCppMovable final {
  public:
-  // `NonCppMovable` doesn't implement the `Default` trait
+  // `tuples_golden::NonCppMovable` doesn't implement the `Default` trait
   NonCppMovable() = delete;
 
   // Drop::drop
@@ -146,7 +146,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   // available.
   NonCppMovable(NonCppMovable&&) = delete;
   NonCppMovable& operator=(NonCppMovable&&) = delete;
-  // `NonCppMovable` doesn't implement the `Clone` trait
+  // `tuples_golden::NonCppMovable` doesn't implement the `Clone` trait
   NonCppMovable(const NonCppMovable&) = delete;
   NonCppMovable& operator=(const NonCppMovable&) = delete;
   NonCppMovable(::crubit::UnsafeRelocateTag, NonCppMovable&& value) {
@@ -199,7 +199,7 @@ std::tuple<char> return_ffi_alias_in_tuple();
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
     [[clang::trivial_abi]] TupleStruct final {
  public:
-  // `TupleStruct` doesn't implement the `Default` trait
+  // `tuples_golden::TupleStruct` doesn't implement the `Default` trait
   TupleStruct() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -207,7 +207,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
   TupleStruct(TupleStruct&&) = default;
   TupleStruct& operator=(TupleStruct&&) = default;
 
-  // `TupleStruct` doesn't implement the `Clone` trait
+  // `tuples_golden::TupleStruct` doesn't implement the `Clone` trait
   TupleStruct(const TupleStruct&) = delete;
   TupleStruct& operator=(const TupleStruct&) = delete;
   TupleStruct(::crubit::UnsafeRelocateTag, TupleStruct&& value) {

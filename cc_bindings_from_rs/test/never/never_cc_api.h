@@ -40,7 +40,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   NeverStruct(NeverStruct&&) = default;
   NeverStruct& operator=(NeverStruct&&) = default;
 
-  // `NeverStruct` doesn't implement the `Clone` trait
+  // `never_golden::NeverStruct` doesn't implement the `Clone` trait
   NeverStruct(const NeverStruct&) = delete;
   NeverStruct& operator=(const NeverStruct&) = delete;
   NeverStruct(::crubit::UnsafeRelocateTag, NeverStruct&& value) {

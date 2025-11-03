@@ -28,7 +28,7 @@ struct OpaqueRef;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
     [[clang::trivial_abi]] Opaque final {
  public:
-  // `Opaque` doesn't implement the `Default` trait
+  // `from_golden::Opaque` doesn't implement the `Default` trait
   Opaque() = delete;
 
   // Synthesized tuple constructor
@@ -39,7 +39,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   Opaque(Opaque&&) = default;
   Opaque& operator=(Opaque&&) = default;
 
-  // `Opaque` doesn't implement the `Clone` trait
+  // `from_golden::Opaque` doesn't implement the `Clone` trait
   Opaque(const Opaque&) = delete;
   Opaque& operator=(const Opaque&) = delete;
   Opaque(::crubit::UnsafeRelocateTag, Opaque&& value) {
@@ -82,7 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
     [[clang::trivial_abi]] OpaqueRef final {
  public:
-  // `OpaqueRef<'_>` doesn't implement the `Default` trait
+  // `from_golden::OpaqueRef` doesn't implement the `Default` trait
   OpaqueRef() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -90,7 +90,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   OpaqueRef(OpaqueRef&&) = default;
   OpaqueRef& operator=(OpaqueRef&&) = default;
 
-  // `OpaqueRef<'_>` doesn't implement the `Clone` trait
+  // `from_golden::OpaqueRef` doesn't implement the `Clone` trait
   OpaqueRef(const OpaqueRef&) = delete;
   OpaqueRef& operator=(const OpaqueRef&) = delete;
   OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef&& value) {
@@ -130,7 +130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
     [[clang::trivial_abi]] NotFfiSafe final {
  public:
-  // `NotFfiSafe` doesn't implement the `Default` trait
+  // `from_golden::NotFfiSafe` doesn't implement the `Default` trait
   NotFfiSafe() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -138,7 +138,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe(NotFfiSafe&&) = default;
   NotFfiSafe& operator=(NotFfiSafe&&) = default;
 
-  // `NotFfiSafe` doesn't implement the `Clone` trait
+  // `from_golden::NotFfiSafe` doesn't implement the `Clone` trait
   NotFfiSafe(const NotFfiSafe&) = delete;
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {

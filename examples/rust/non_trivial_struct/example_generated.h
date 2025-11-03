@@ -35,7 +35,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonTrivialStruct(NonTrivialStruct&&);
   NonTrivialStruct& operator=(NonTrivialStruct&&);
 
-  // `NonTrivialStruct` doesn't implement the `Clone` trait
+  // `example_crate_golden::NonTrivialStruct` doesn't implement the `Clone`
+  // trait
   NonTrivialStruct(const NonTrivialStruct&) = delete;
   NonTrivialStruct& operator=(const NonTrivialStruct&) = delete;
   NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {

@@ -30,7 +30,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: function_pointers_golden :: HasFnPtrField") alignas(8)
     [[clang::trivial_abi]] HasFnPtrField final {
  public:
-  // `HasFnPtrField` doesn't implement the `Default` trait
+  // `function_pointers_golden::HasFnPtrField` doesn't implement the `Default`
+  // trait
   HasFnPtrField() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required

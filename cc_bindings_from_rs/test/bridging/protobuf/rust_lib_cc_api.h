@@ -35,7 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   FooService(FooService&&);
   FooService& operator=(FooService&&);
 
-  // `FooService` doesn't implement the `Clone` trait
+  // `rust_lib_golden::FooService` doesn't implement the `Clone` trait
   FooService(const FooService&) = delete;
   FooService& operator=(const FooService&) = delete;
   FooService(::crubit::UnsafeRelocateTag, FooService&& value) {

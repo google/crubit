@@ -1807,7 +1807,7 @@ fn test_format_item_struct_with_default_constructor() {
                 ) -> () {
                     unsafe {
                         let __rs_return_value =
-                            <::rust_out::Point as ::core::prelude::rust_2015::Default>::default();
+                            <::rust_out::Point as ::core::default::Default>::default();
                         (__ret_ptr as *mut ::rust_out::Point).write(__rs_return_value);
                     }
                 }
@@ -1930,7 +1930,7 @@ fn test_format_item_struct_with_clone_trait() {
                 ) -> () {
                     unsafe {
                         let __rs_return_value =
-                            <::rust_out::Point as ::core::prelude::rust_2015::Clone>::clone(__self);
+                            <::rust_out::Point as ::core::clone::Clone>::clone(__self);
                         (__ret_ptr as *mut ::rust_out::Point).write(__rs_return_value);
                     }
                 }
@@ -1939,7 +1939,7 @@ fn test_format_item_struct_with_clone_trait() {
                     __self: &'static mut ::rust_out::Point,
                     source: &'static ::rust_out::Point
                 ) -> () {
-                    unsafe { <::rust_out::Point as ::core::prelude::rust_2015::Clone>::clone_from(__self, source) }
+                    unsafe { <::rust_out::Point as ::core::clone::Clone>::clone_from(__self, source) }
                 }
             }
         );
@@ -2395,7 +2395,7 @@ fn test_format_item_unsupported_struct_with_custom_drop_and_default_and_nonunpin
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = <::rust_out::SomeStruct as ::core::prelude::rust_2015::Default>::default();
+                        let __rs_return_value = <::rust_out::SomeStruct as ::core::default::Default>::default();
                         (__ret_ptr as *mut ::rust_out::SomeStruct).write(__rs_return_value);
                     }
                 }
@@ -2500,28 +2500,34 @@ fn test_generate_bindings_use_list_items() {
         assert_cc_matches!(
             bindings.cc_api,
             quote! {
-                namespace test_mod {
                 ...
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") alignas(4)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") alignas(4)
                     [[clang::trivial_abi]] X final {
                     ...
                 };
 
                 ...
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") alignas(4)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") alignas(4)
                     [[clang::trivial_abi]] Y final {
                     ...
                 };
 
-                }  // namespace test_mod
 
-                using X CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") =
-                    ::rust_out::test_mod::X;
+                namespace test_mod {
+
+                using X CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") =
+                    ::rust_out::X;
+
+                }  // namespace test_mod
 
                 ...
 
-                using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") =
-                    ::rust_out::test_mod::Y;
+                namespace test_mod {
+
+                using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") =
+                    ::rust_out::Y;
+
+                }  // namespace test_mod
 
                 ...
             }
@@ -2550,28 +2556,31 @@ fn test_generate_bindings_use_glob() {
             bindings.cc_api,
             quote! {
                 ...
-
-                namespace test_mod {
-
-                ...
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: X") alignas(4)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") alignas(4)
                     [[clang::trivial_abi]] X final {
                     ...
                 };
 
                 ...
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: test_mod :: Y") alignas(4)
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") alignas(4)
                     [[clang::trivial_abi]] Y final {
                     ...
                 };
 
-                }  // namespace test_mod
-
-                using X CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: test_mod :: X") = ::rust_out::test_mod::X;
-
                 ...
 
-                using Y CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: test_mod :: Y") = ::rust_out::test_mod::Y;
+                namespace test_mod {
+
+                using X CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: X") = ::rust_out::X;
+
+                }  // namespace test_mod
+                ...
+
+                namespace test_mod {
+
+                using Y CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: Y") = ::rust_out::Y;
+
+                }  // namespace test_mod
 
                 ...
             }
@@ -2849,7 +2858,7 @@ fn test_repr_c_union_fields_impl_clone() {
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = <::rust_out::SomeUnion as ::core::prelude::rust_2015::Clone>::clone(__self);
+                        let __rs_return_value = <::rust_out::SomeUnion as ::core::clone::Clone>::clone(__self);
                         (__ret_ptr as *mut ::rust_out::SomeUnion).write(__rs_return_value);
                     }
                 }
@@ -2858,7 +2867,7 @@ fn test_repr_c_union_fields_impl_clone() {
                     __self: &'static mut ::rust_out::SomeUnion,
                     source: &'static ::rust_out::SomeUnion
                 ) -> () {
-                    unsafe { <::rust_out::SomeUnion as ::core::prelude::rust_2015::Clone>::clone_from(__self, source) }
+                    unsafe { <::rust_out::SomeUnion as ::core::clone::Clone>::clone_from(__self, source) }
                 }
             }
         );

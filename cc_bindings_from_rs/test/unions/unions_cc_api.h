@@ -28,7 +28,7 @@ namespace repr_c {
 union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
     [[clang::trivial_abi]] U final {
  public:
-  // `repr_c::U` doesn't implement the `Default` trait
+  // `unions_golden::repr_c::U` doesn't implement the `Default` trait
   U() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -36,7 +36,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
   U(U&&) = default;
   U& operator=(U&&) = default;
 
-  // `repr_c::U` doesn't implement the `Clone` trait
+  // `unions_golden::repr_c::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
@@ -66,7 +66,7 @@ namespace repr_rust {
 union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
     [[clang::trivial_abi]] U final {
  public:
-  // `repr_rust::U` doesn't implement the `Default` trait
+  // `unions_golden::repr_rust::U` doesn't implement the `Default` trait
   U() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -74,7 +74,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
   U(U&&) = default;
   U& operator=(U&&) = default;
 
-  // `repr_rust::U` doesn't implement the `Clone` trait
+  // `unions_golden::repr_rust::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
@@ -126,7 +126,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_c_packed :: U") alignas(1) [[clang::trivial_abi]]
 __attribute__((packed)) U final {
  public:
-  // `repr_c_packed::U` doesn't implement the `Default` trait
+  // `unions_golden::repr_c_packed::U` doesn't implement the `Default` trait
   U() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -134,7 +134,7 @@ __attribute__((packed)) U final {
   U(U&&) = default;
   U& operator=(U&&) = default;
 
-  // `repr_c_packed::U` doesn't implement the `Clone` trait
+  // `unions_golden::repr_c_packed::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
@@ -165,7 +165,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_rust_packed :: U") alignas(1)
     [[clang::trivial_abi]] __attribute__((packed)) U final {
  public:
-  // `repr_rust_packed::U` doesn't implement the `Default` trait
+  // `unions_golden::repr_rust_packed::U` doesn't implement the `Default` trait
   U() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -173,7 +173,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   U(U&&) = default;
   U& operator=(U&&) = default;
 
-  // `repr_rust_packed::U` doesn't implement the `Clone` trait
+  // `unions_golden::repr_rust_packed::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
@@ -208,7 +208,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_c_clone :: U") alignas(4) [[clang::trivial_abi]]
 U final {
  public:
-  // `repr_c_clone::U` doesn't implement the `Default` trait
+  // `unions_golden::repr_c_clone::U` doesn't implement the `Default` trait
   U() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -247,7 +247,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
     ":: unions_golden :: repr_rust_clone :: U") alignas(4)
     [[clang::trivial_abi]] U final {
  public:
-  // `repr_rust_clone::U` doesn't implement the `Default` trait
+  // `unions_golden::repr_rust_clone::U` doesn't implement the `Default` trait
   U() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -305,7 +305,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   U(U&&);
   U& operator=(U&&);
 
-  // `repr_c_drop::U` doesn't implement the `Clone` trait
+  // `unions_golden::repr_c_drop::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {
@@ -338,7 +338,7 @@ U final {
   U(U&&);
   U& operator=(U&&);
 
-  // `repr_rust_drop::U` doesn't implement the `Clone` trait
+  // `unions_golden::repr_rust_drop::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
   U(::crubit::UnsafeRelocateTag, U&& value) {

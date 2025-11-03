@@ -18,7 +18,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 ) -> i32 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::from_golden::Opaque as ::core::prelude::rust_2015::Into<i32>>::into(__self)
+        <::from_golden::Opaque as ::core::convert::Into<i32>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -27,7 +27,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui64(
 ) -> i64 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::from_golden::Opaque as ::core::prelude::rust_2015::Into<i64>>::into(__self)
+        <::from_golden::Opaque as ::core::convert::Into<i64>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -36,7 +36,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027static_x00000020st
 ) -> &'static str {
     unsafe {
         let __self = __self.assume_init_read();
-        <::from_golden::Opaque as ::core::prelude::rust_2015::Into<&'static str>>::into(__self)
+        <::from_golden::Opaque as ::core::convert::Into<&'static str>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -45,7 +45,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui16(
 ) -> i16 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::from_golden::Opaque as ::core::prelude::rust_2015::Into<i16>>::into(__self)
+        <::from_golden::Opaque as ::core::convert::Into<i16>>::into(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -55,7 +55,7 @@ unsafe extern "C" fn __crubit_thunk_into_uOpaqueRef_x0000003c_x00000027static_x0
 ) -> () {
     unsafe {
         let __self = __self.assume_init_read();
-        let __rs_return_value = <::from_golden::Opaque as ::core::prelude::rust_2015::Into<
+        let __rs_return_value = <::from_golden::Opaque as ::core::convert::Into<
             ::from_golden::OpaqueRef<'static>,
         >>::into(__self);
         (__ret_ptr as *mut ::from_golden::OpaqueRef<'static>).write(__rs_return_value);
@@ -86,7 +86,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
 ) -> &'static str {
     unsafe {
         let __self = __self.assume_init_read();
-        <::from_golden::OpaqueRef as ::core::prelude::rust_2015::Into<&'static str>>::into(__self)
+        <::from_golden::OpaqueRef as ::core::convert::Into<&'static str>>::into(__self)
     }
 }
 const _: () = assert!(::std::mem::size_of::<::from_golden::NotFfiSafe>() == 8);
@@ -104,6 +104,6 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 ) -> i32 {
     unsafe {
         let __self = __self.assume_init_read();
-        <::from_golden::NotFfiSafe as ::core::prelude::rust_2015::Into<i32>>::into(__self)
+        <::from_golden::NotFfiSafe as ::core::convert::Into<i32>>::into(__self)
     }
 }

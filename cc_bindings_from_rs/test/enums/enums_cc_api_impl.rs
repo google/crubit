@@ -16,7 +16,7 @@ const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c::MyEnum>() =
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::enums_golden::repr_c::MyEnum as ::core::prelude::rust_2015::Default>::default();
+            <::enums_golden::repr_c::MyEnum as ::core::default::Default>::default();
         (__ret_ptr as *mut ::enums_golden::repr_c::MyEnum).write(__rs_return_value);
     }
 }
@@ -32,7 +32,7 @@ const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c_drop::DropMe
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::enums_golden::repr_c_drop::DropMe as ::core::prelude::rust_2015::Default>::default();
+            <::enums_golden::repr_c_drop::DropMe as ::core::default::Default>::default();
         (__ret_ptr as *mut ::enums_golden::repr_c_drop::DropMe).write(__rs_return_value);
     }
 }
@@ -49,7 +49,9 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value=<::enums_golden::repr_c_clone_counter::CloneCount as::core::prelude::rust_2015::Default>::default();
+        let __rs_return_value =
+            <::enums_golden::repr_c_clone_counter::CloneCount as ::core::default::Default>::default(
+            );
         (__ret_ptr as *mut ::enums_golden::repr_c_clone_counter::CloneCount)
             .write(__rs_return_value);
     }
@@ -60,7 +62,10 @@ unsafe extern "C" fn __crubit_thunk_clone(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::enums_golden::repr_c_clone_counter::CloneCount as::core::prelude::rust_2015::Clone>::clone(__self);
+        let __rs_return_value =
+            <::enums_golden::repr_c_clone_counter::CloneCount as ::core::clone::Clone>::clone(
+                __self,
+            );
         (__ret_ptr as *mut ::enums_golden::repr_c_clone_counter::CloneCount)
             .write(__rs_return_value);
     }
@@ -71,7 +76,9 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::enums_golden::repr_c_clone_counter::CloneCount,
 ) -> () {
     unsafe {
-        <::enums_golden::repr_c_clone_counter::CloneCount as::core::prelude::rust_2015::Clone>::clone_from(__self,source)
+        <::enums_golden::repr_c_clone_counter::CloneCount as ::core::clone::Clone>::clone_from(
+            __self, source,
+        )
     }
 }
 const _: () = assert!(
@@ -83,7 +90,7 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::prelude::rust_2015::Default>::default();
+        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::default::Default>::default();
         (__ret_ptr as *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant)
             .write(__rs_return_value);
     }
@@ -94,7 +101,7 @@ unsafe extern "C" fn __crubit_thunk_clone(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::prelude::rust_2015::Clone>::clone(__self);
+        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::clone::Clone>::clone(__self);
         (__ret_ptr as *mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant)
             .write(__rs_return_value);
     }
@@ -105,7 +112,7 @@ unsafe extern "C" fn __crubit_thunk_clone_ufrom(
     source: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
 ) -> () {
     unsafe {
-        <::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::prelude::rust_2015::Clone>::clone_from(__self,source)
+        <::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::clone::Clone>::clone_from(__self,source)
     }
 }
 #[unsafe(no_mangle)]

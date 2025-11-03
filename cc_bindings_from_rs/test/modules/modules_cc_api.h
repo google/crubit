@@ -69,8 +69,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: modules_golden :: impl_in_separate_private_module :: Foo") alignas(4)
     [[clang::trivial_abi]] Foo final {
  public:
-  // `impl_in_separate_private_module::Foo` doesn't implement the `Default`
-  // trait
+  // `modules_golden::impl_in_separate_private_module::Foo` doesn't implement
+  // the `Default` trait
   Foo() = delete;
 
   // Synthesized tuple constructor
@@ -81,7 +81,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Foo(Foo&&) = default;
   Foo& operator=(Foo&&) = default;
 
-  // `impl_in_separate_private_module::Foo` doesn't implement the `Clone` trait
+  // `modules_golden::impl_in_separate_private_module::Foo` doesn't implement
+  // the `Clone` trait
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {

@@ -17,7 +17,7 @@ const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::FooService>() ==
 unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value =
-            <::rust_lib_golden::FooService as ::core::prelude::rust_2015::Default>::default();
+            <::rust_lib_golden::FooService as ::core::default::Default>::default();
         (__ret_ptr as *mut ::rust_lib_golden::FooService).write(__rs_return_value);
     }
 }
@@ -35,12 +35,14 @@ unsafe extern "C" fn __crubit_thunk_handle_urequest(
 ) -> bool {
     unsafe {
         let req = {
-            let mut __crubit_temp=::core::mem::MaybeUninit::<::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestView<'static>>::uninit();
+            let mut __crubit_temp =
+                ::core::mem::MaybeUninit::<::foo_proto::FooRequestView<'static>>::uninit();
             __crubit_temp.write(::core::mem::transmute(req));
             __crubit_temp.assume_init()
         };
         let rsp = {
-            let mut __crubit_temp=::core::mem::MaybeUninit::<::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooResponseMut<'static>>::uninit();
+            let mut __crubit_temp =
+                ::core::mem::MaybeUninit::<::foo_proto::FooResponseMut<'static>>::uninit();
             __crubit_temp.write(::core::mem::transmute(rsp));
             __crubit_temp.assume_init()
         };
@@ -54,7 +56,7 @@ unsafe extern "C" fn __crubit_thunk_request_ustats(
 ) -> () {
     unsafe {
         let __rs_return_value = ::rust_lib_golden::FooService::request_stats(__self);
-        (__ret_ptr as*mut::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestStatsView<'static>).write(__rs_return_value);
+        (__ret_ptr as *mut ::foo_proto::FooRequestStatsView<'static>).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -77,7 +79,8 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
 ) -> () {
     unsafe {
         let updated_stats = {
-            let mut __crubit_temp=::core::mem::MaybeUninit::<::foo_proto::internal_do_not_use_third__party_scrubit_scc__bindings__from__rs_stest_sbridging_sprotobuf_sfoo::FooRequestStats>::uninit();
+            let mut __crubit_temp =
+                ::core::mem::MaybeUninit::<::foo_proto::FooRequestStats>::uninit();
             proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_cpp_to_rust_converter(
                 updated_stats,
                 __crubit_temp.as_mut_ptr() as *mut core::ffi::c_void,

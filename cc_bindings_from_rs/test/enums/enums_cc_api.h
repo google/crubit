@@ -38,7 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   MyEnum(MyEnum&&);
   MyEnum& operator=(MyEnum&&);
 
-  // `repr_c::MyEnum` doesn't implement the `Clone` trait
+  // `enums_golden::repr_c::MyEnum` doesn't implement the `Clone` trait
   MyEnum(const MyEnum&) = delete;
   MyEnum& operator=(const MyEnum&) = delete;
   MyEnum(::crubit::UnsafeRelocateTag, MyEnum&& value) {
@@ -123,7 +123,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DropMe(DropMe&&);
   DropMe& operator=(DropMe&&);
 
-  // `repr_c_drop::DropMe` doesn't implement the `Clone` trait
+  // `enums_golden::repr_c_drop::DropMe` doesn't implement the `Clone` trait
   DropMe(const DropMe&) = delete;
   DropMe& operator=(const DropMe&) = delete;
   DropMe(::crubit::UnsafeRelocateTag, DropMe&& value) {

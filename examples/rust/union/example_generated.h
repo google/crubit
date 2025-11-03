@@ -32,7 +32,7 @@ ReprCUnion final {
   ReprCUnion(ReprCUnion&&) = default;
   ReprCUnion& operator=(ReprCUnion&&) = default;
 
-  // `ReprCUnion` doesn't implement the `Clone` trait
+  // `example_crate_golden::ReprCUnion` doesn't implement the `Clone` trait
   ReprCUnion(const ReprCUnion&) = delete;
   ReprCUnion& operator=(const ReprCUnion&) = delete;
   ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {

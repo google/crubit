@@ -27,7 +27,7 @@ namespace must_bind {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
-  // `Original` doesn't implement the `Default` trait
+  // `must_bind_golden::Original` doesn't implement the `Default` trait
   Original() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -35,7 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   Original(Original&&) = default;
   Original& operator=(Original&&) = default;
 
-  // `Original` doesn't implement the `Clone` trait
+  // `must_bind_golden::Original` doesn't implement the `Clone` trait
   Original(const Original&) = delete;
   Original& operator=(const Original&) = delete;
   Original(::crubit::UnsafeRelocateTag, Original&& value) {

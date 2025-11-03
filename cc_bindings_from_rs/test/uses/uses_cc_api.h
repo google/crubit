@@ -22,13 +22,9 @@
 
 namespace uses {
 
-namespace test_mod {
-
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=10
 std::int32_t f();
-
-}  // namespace test_mod
 
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=16
@@ -36,7 +32,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") alignas(4) [[clang::trivial_abi]]
 AliasOfExportedStruct final {
  public:
-  // `private_mod::ReexportedStruct` doesn't implement the `Default` trait
+  // `uses_golden::AliasOfExportedStruct` doesn't implement the `Default` trait
   AliasOfExportedStruct() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -44,7 +40,7 @@ AliasOfExportedStruct final {
   AliasOfExportedStruct(AliasOfExportedStruct&&) = default;
   AliasOfExportedStruct& operator=(AliasOfExportedStruct&&) = default;
 
-  // `private_mod::ReexportedStruct` doesn't implement the `Clone` trait
+  // `uses_golden::AliasOfExportedStruct` doesn't implement the `Clone` trait
   AliasOfExportedStruct(const AliasOfExportedStruct&) = delete;
   AliasOfExportedStruct& operator=(const AliasOfExportedStruct&) = delete;
   AliasOfExportedStruct(::crubit::UnsafeRelocateTag,
@@ -85,7 +81,7 @@ std::int32_t private_fn();
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
-  // `Original` doesn't implement the `Default` trait
+  // `uses_golden::Original` doesn't implement the `Default` trait
   Original() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -93,7 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   Original(Original&&) = default;
   Original& operator=(Original&&) = default;
 
-  // `Original` doesn't implement the `Clone` trait
+  // `uses_golden::Original` doesn't implement the `Clone` trait
   Original(const Original&) = delete;
   Original& operator=(const Original&) = delete;
   Original(::crubit::UnsafeRelocateTag, Original&& value) {
@@ -125,16 +121,14 @@ std::int32_t private_middle_path();
 
 }  // namespace a::c
 
-using ::uses::test_mod::f;
-
 namespace test_mod {
+using ::uses::f;
+}
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_f();
 }
 inline std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
-
-}  // namespace test_mod
 
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;

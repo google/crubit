@@ -28,7 +28,7 @@ namespace into {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
     [[clang::trivial_abi]] Convert final {
  public:
-  // `Convert` doesn't implement the `Default` trait
+  // `into_golden::Convert` doesn't implement the `Default` trait
   Convert() = delete;
 
   // Synthesized tuple constructor
@@ -39,7 +39,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   Convert(Convert&&) = default;
   Convert& operator=(Convert&&) = default;
 
-  // `Convert` doesn't implement the `Clone` trait
+  // `into_golden::Convert` doesn't implement the `Clone` trait
   Convert(const Convert&) = delete;
   Convert& operator=(const Convert&) = delete;
   Convert(::crubit::UnsafeRelocateTag, Convert&& value) {
@@ -78,7 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
     [[clang::trivial_abi]] ConvertRef final {
  public:
-  // `ConvertRef<'_>` doesn't implement the `Default` trait
+  // `into_golden::ConvertRef` doesn't implement the `Default` trait
   ConvertRef() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -86,7 +86,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   ConvertRef(ConvertRef&&) = default;
   ConvertRef& operator=(ConvertRef&&) = default;
 
-  // `ConvertRef<'_>` doesn't implement the `Clone` trait
+  // `into_golden::ConvertRef` doesn't implement the `Clone` trait
   ConvertRef(const ConvertRef&) = delete;
   ConvertRef& operator=(const ConvertRef&) = delete;
   ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef&& value) {
@@ -130,7 +130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
     [[clang::trivial_abi]] NotFfiSafe final {
  public:
-  // `NotFfiSafe` doesn't implement the `Default` trait
+  // `into_golden::NotFfiSafe` doesn't implement the `Default` trait
   NotFfiSafe() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -138,7 +138,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe(NotFfiSafe&&) = default;
   NotFfiSafe& operator=(NotFfiSafe&&) = default;
 
-  // `NotFfiSafe` doesn't implement the `Clone` trait
+  // `into_golden::NotFfiSafe` doesn't implement the `Clone` trait
   NotFfiSafe(const NotFfiSafe&) = delete;
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
@@ -162,7 +162,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
     [[clang::trivial_abi]] ConvertModule final {
  public:
-  // `ConvertModule` doesn't implement the `Default` trait
+  // `into_golden::ConvertModule` doesn't implement the `Default` trait
   ConvertModule() = delete;
 
   // Synthesized tuple constructor
@@ -174,7 +174,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
   ConvertModule(ConvertModule&&) = default;
   ConvertModule& operator=(ConvertModule&&) = default;
 
-  // `ConvertModule` doesn't implement the `Clone` trait
+  // `into_golden::ConvertModule` doesn't implement the `Clone` trait
   ConvertModule(const ConvertModule&) = delete;
   ConvertModule& operator=(const ConvertModule&) = delete;
   ConvertModule(::crubit::UnsafeRelocateTag, ConvertModule&& value) {

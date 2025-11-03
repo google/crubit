@@ -31,7 +31,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: repr_c :: Point") alignas(4) [[clang::trivial_abi]]
 Point final {
  public:
-  // `repr_c::Point` doesn't implement the `Default` trait
+  // `structs_golden::repr_c::Point` doesn't implement the `Default` trait
   Point() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -39,7 +39,7 @@ Point final {
   Point(Point&&) = default;
   Point& operator=(Point&&) = default;
 
-  // `repr_c::Point` doesn't implement the `Clone` trait
+  // `structs_golden::repr_c::Point` doesn't implement the `Clone` trait
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
@@ -84,7 +84,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: default_repr :: Point") alignas(4)
     [[clang::trivial_abi]] Point final {
  public:
-  // `default_repr::Point` doesn't implement the `Default` trait
+  // `structs_golden::default_repr::Point` doesn't implement the `Default` trait
   Point() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -92,7 +92,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Point(Point&&) = default;
   Point& operator=(Point&&) = default;
 
-  // `default_repr::Point` doesn't implement the `Clone` trait
+  // `structs_golden::default_repr::Point` doesn't implement the `Clone` trait
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
@@ -137,7 +137,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: non_cpp_movable :: Point") alignas(4)
     [[clang::trivial_abi]] Point final {
  public:
-  // `non_cpp_movable::Point` doesn't implement the `Default` trait
+  // `structs_golden::non_cpp_movable::Point` doesn't implement the `Default`
+  // trait
   Point() = delete;
 
   // Drop::drop
@@ -147,7 +148,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // available.
   Point(Point&&) = delete;
   Point& operator=(Point&&) = delete;
-  // `non_cpp_movable::Point` doesn't implement the `Clone` trait
+  // `structs_golden::non_cpp_movable::Point` doesn't implement the `Clone`
+  // trait
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
   Point(::crubit::UnsafeRelocateTag, Point&& value) {
@@ -204,7 +206,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: zst_fields :: ZstFields") alignas(4)
     [[clang::trivial_abi]] ZstFields final {
  public:
-  // `zst_fields::ZstFields` doesn't implement the `Default` trait
+  // `structs_golden::zst_fields::ZstFields` doesn't implement the `Default`
+  // trait
   ZstFields() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -212,7 +215,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ZstFields(ZstFields&&) = default;
   ZstFields& operator=(ZstFields&&) = default;
 
-  // `zst_fields::ZstFields` doesn't implement the `Clone` trait
+  // `structs_golden::zst_fields::ZstFields` doesn't implement the `Clone` trait
   ZstFields(const ZstFields&) = delete;
   ZstFields& operator=(const ZstFields&) = delete;
   ZstFields(::crubit::UnsafeRelocateTag, ZstFields&& value) {
@@ -263,7 +266,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: abi_classification :: StructInteger") alignas(4)
     [[clang::trivial_abi]] StructInteger final {
  public:
-  // `abi_classification::StructInteger` doesn't implement the `Default` trait
+  // `structs_golden::abi_classification::StructInteger` doesn't implement the
+  // `Default` trait
   StructInteger() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -271,7 +275,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructInteger(StructInteger&&) = default;
   StructInteger& operator=(StructInteger&&) = default;
 
-  // `abi_classification::StructInteger` doesn't implement the `Clone` trait
+  // `structs_golden::abi_classification::StructInteger` doesn't implement the
+  // `Clone` trait
   StructInteger(const StructInteger&) = delete;
   StructInteger& operator=(const StructInteger&) = delete;
   StructInteger(::crubit::UnsafeRelocateTag, StructInteger&& value) {
@@ -321,7 +326,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: abi_classification :: StructFloat") alignas(8)
     [[clang::trivial_abi]] StructFloat final {
  public:
-  // `abi_classification::StructFloat` doesn't implement the `Default` trait
+  // `structs_golden::abi_classification::StructFloat` doesn't implement the
+  // `Default` trait
   StructFloat() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -329,7 +335,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructFloat(StructFloat&&) = default;
   StructFloat& operator=(StructFloat&&) = default;
 
-  // `abi_classification::StructFloat` doesn't implement the `Clone` trait
+  // `structs_golden::abi_classification::StructFloat` doesn't implement the
+  // `Clone` trait
   StructFloat(const StructFloat&) = delete;
   StructFloat& operator=(const StructFloat&) = delete;
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
@@ -385,7 +392,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: abi_classification :: StructMemory") alignas(1)
     [[clang::trivial_abi]] __attribute__((packed)) StructMemory final {
  public:
-  // `abi_classification::StructMemory` doesn't implement the `Default` trait
+  // `structs_golden::abi_classification::StructMemory` doesn't implement the
+  // `Default` trait
   StructMemory() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -393,7 +401,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructMemory(StructMemory&&) = default;
   StructMemory& operator=(StructMemory&&) = default;
 
-  // `abi_classification::StructMemory` doesn't implement the `Clone` trait
+  // `structs_golden::abi_classification::StructMemory` doesn't implement the
+  // `Clone` trait
   StructMemory(const StructMemory&) = delete;
   StructMemory& operator=(const StructMemory&) = delete;
   StructMemory(::crubit::UnsafeRelocateTag, StructMemory&& value) {
@@ -448,8 +457,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: struct_by_float_passing_with_no_cc_definition :: "
     "StructFloat") alignas(8) [[clang::trivial_abi]] StructFloat final {
  public:
-  // `struct_by_float_passing_with_no_cc_definition::StructFloat` doesn't
-  // implement the `Default` trait
+  // `structs_golden::struct_by_float_passing_with_no_cc_definition::StructFloat`
+  // doesn't implement the `Default` trait
   StructFloat() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -457,8 +466,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructFloat(StructFloat&&) = default;
   StructFloat& operator=(StructFloat&&) = default;
 
-  // `struct_by_float_passing_with_no_cc_definition::StructFloat` doesn't
-  // implement the `Clone` trait
+  // `structs_golden::struct_by_float_passing_with_no_cc_definition::StructFloat`
+  // doesn't implement the `Clone` trait
   StructFloat(const StructFloat&) = delete;
   StructFloat& operator=(const StructFloat&) = delete;
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
@@ -516,8 +525,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: struct_by_float_passing_with_no_thunk :: "
     "StructFloat") alignas(8) [[clang::trivial_abi]] StructFloat final {
  public:
-  // `struct_by_float_passing_with_no_thunk::StructFloat` doesn't implement the
-  // `Default` trait
+  // `structs_golden::struct_by_float_passing_with_no_thunk::StructFloat`
+  // doesn't implement the `Default` trait
   StructFloat() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -603,8 +612,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(SomeStruct&&) = default;
   SomeStruct& operator=(SomeStruct&&) = default;
 
-  // `nested_ptr_type_mutability_qualifiers::SomeStruct` doesn't implement the
-  // `Clone` trait
+  // `structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct` doesn't
+  // implement the `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
@@ -645,7 +654,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(SomeStruct&&) = default;
   SomeStruct& operator=(SomeStruct&&) = default;
 
-  // `interior_mutability::SomeStruct` doesn't implement the `Clone` trait
+  // `structs_golden::interior_mutability::SomeStruct` doesn't implement the
+  // `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
@@ -681,7 +691,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(SomeStruct&&) = default;
   SomeStruct& operator=(SomeStruct&&) = default;
 
-  // `unsupported_types::SomeStruct` doesn't implement the `Clone` trait
+  // `structs_golden::unsupported_types::SomeStruct` doesn't implement the
+  // `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
@@ -717,8 +728,8 @@ struct
         ":: structs_golden :: keyword_named_fields_and_methods :: "
         "AField") alignas(4) [[clang::trivial_abi]] AField final {
  public:
-  // `keyword_named_fields_and_methods::AField` doesn't implement the `Default`
-  // trait
+  // `structs_golden::keyword_named_fields_and_methods::AField` doesn't
+  // implement the `Default` trait
   AField() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -726,8 +737,8 @@ struct
   AField(AField&&) = default;
   AField& operator=(AField&&) = default;
 
-  // `keyword_named_fields_and_methods::AField` doesn't implement the `Clone`
-  // trait
+  // `structs_golden::keyword_named_fields_and_methods::AField` doesn't
+  // implement the `Clone` trait
   AField(const AField&) = delete;
   AField& operator=(const AField&) = delete;
   AField(::crubit::UnsafeRelocateTag, AField&& value) {

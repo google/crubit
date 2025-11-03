@@ -100,7 +100,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
     [[clang::trivial_abi]] HasDrop final {
  public:
-  // `HasDrop` doesn't implement the `Default` trait
+  // `arrays_golden::HasDrop` doesn't implement the `Default` trait
   HasDrop() = delete;
 
   // Drop::drop
@@ -110,7 +110,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   // available.
   HasDrop(HasDrop&&) = delete;
   HasDrop& operator=(HasDrop&&) = delete;
-  // `HasDrop` doesn't implement the `Clone` trait
+  // `arrays_golden::HasDrop` doesn't implement the `Clone` trait
   HasDrop(const HasDrop&) = delete;
   HasDrop& operator=(const HasDrop&) = delete;
   HasDrop(::crubit::UnsafeRelocateTag, HasDrop&& value) {
@@ -159,7 +159,7 @@ HasDropAndDefault final {
   HasDropAndDefault(HasDropAndDefault&&);
   HasDropAndDefault& operator=(HasDropAndDefault&&);
 
-  // `HasDropAndDefault` doesn't implement the `Clone` trait
+  // `arrays_golden::HasDropAndDefault` doesn't implement the `Clone` trait
   HasDropAndDefault(const HasDropAndDefault&) = delete;
   HasDropAndDefault& operator=(const HasDropAndDefault&) = delete;
   HasDropAndDefault(::crubit::UnsafeRelocateTag, HasDropAndDefault&& value) {

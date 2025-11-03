@@ -27,7 +27,7 @@ namespace cpp_name {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Replaced final {
  public:
-  // `Original` doesn't implement the `Default` trait
+  // `cpp_name_golden::Original` doesn't implement the `Default` trait
   Replaced() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -35,7 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   Replaced(Replaced&&) = default;
   Replaced& operator=(Replaced&&) = default;
 
-  // `Original` doesn't implement the `Clone` trait
+  // `cpp_name_golden::Original` doesn't implement the `Clone` trait
   Replaced(const Replaced&) = delete;
   Replaced& operator=(const Replaced&) = delete;
   Replaced(::crubit::UnsafeRelocateTag, Replaced&& value) {

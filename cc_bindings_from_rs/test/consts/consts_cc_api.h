@@ -60,7 +60,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: consts_golden :: TyWithAssocConsts") alignas(1) [[clang::trivial_abi]]
 TyWithAssocConsts final {
  public:
-  // `TyWithAssocConsts` doesn't implement the `Default` trait
+  // `consts_golden::TyWithAssocConsts` doesn't implement the `Default` trait
   TyWithAssocConsts() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -68,7 +68,7 @@ TyWithAssocConsts final {
   TyWithAssocConsts(TyWithAssocConsts&&) = default;
   TyWithAssocConsts& operator=(TyWithAssocConsts&&) = default;
 
-  // `TyWithAssocConsts` doesn't implement the `Clone` trait
+  // `consts_golden::TyWithAssocConsts` doesn't implement the `Clone` trait
   TyWithAssocConsts(const TyWithAssocConsts&) = delete;
   TyWithAssocConsts& operator=(const TyWithAssocConsts&) = delete;
   TyWithAssocConsts(::crubit::UnsafeRelocateTag, TyWithAssocConsts&& value) {

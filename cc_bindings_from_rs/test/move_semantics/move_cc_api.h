@@ -35,7 +35,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   Foo(Foo&&);
   Foo& operator=(Foo&&);
 
-  // `Foo` doesn't implement the `Clone` trait
+  // `move_golden::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
   Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
