@@ -105,11 +105,11 @@ pub mod crubit {
             }
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=24
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
         // Error while generating bindings for function 'crubit::test::FunctionWithDoNotBindArgument':
         // Parameter #0 is not supported: Unsupported type 'crubit::test::DoNotBindStruct': No generated bindings found for 'DoNotBindStruct'
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
+        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor
@@ -123,32 +123,32 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
         // Error while generating bindings for constructor 'StructWithDoNotBindConstructor::StructWithDoNotBindConstructor':
         // Move and copy constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindConstructor
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindConstructor
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
         // Error while generating bindings for constructor 'StructWithDoNotBindConstructor::StructWithDoNotBindConstructor':
         // Move and copy constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindConstructor
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindConstructor
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
         // Error while generating bindings for function 'StructWithDoNotBindConstructor::operator=':
         // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=26
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
         // Error while generating bindings for function 'StructWithDoNotBindConstructor::operator=':
         // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=29
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=31
         // Error while generating bindings for constructor 'StructWithDoNotBindConstructor::StructWithDoNotBindConstructor':
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindConstructor
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindConstructor
 
-        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=32
+        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod
@@ -162,34 +162,34 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=32
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         // Error while generating bindings for constructor 'StructWithDoNotBindMethod::StructWithDoNotBindMethod':
         // Default constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindMethod
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindMethod
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=32
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         // Error while generating bindings for constructor 'StructWithDoNotBindMethod::StructWithDoNotBindMethod':
         // Move and copy constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindMethod
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindMethod
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=32
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         // Error while generating bindings for constructor 'StructWithDoNotBindMethod::StructWithDoNotBindMethod':
         // Move and copy constructors do yet receive bindings. See b/452726517.
         // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindMethod
         // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindMethod
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=32
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         // Error while generating bindings for function 'StructWithDoNotBindMethod::operator=':
         // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=32
+        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         // Error while generating bindings for function 'StructWithDoNotBindMethod::operator=':
         // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
         impl StructWithDoNotBindMethod {
-            /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
+            /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
             #[inline(always)]
             pub unsafe fn DoNotBindMethod(
                 __this: *mut Self,

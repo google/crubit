@@ -15,6 +15,8 @@ struct ArgumentToUnboundOverload {};
 CRUBIT_DO_NOT_BIND inline void DoNotBindFn(ArgumentToUnboundOverload) {}
 inline void DoNotBindFn(ArgumentToBoundOverload) {}
 
+CRUBIT_DO_NOT_BIND inline void NonAllowListedDoNotBindFn() {}
+
 struct CRUBIT_DO_NOT_BIND DoNotBindStruct {
   struct StructNestedInsideDoNotBindStruct {};
   DoNotBindStruct() = default;

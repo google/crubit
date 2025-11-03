@@ -743,7 +743,9 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
         do_not_bind_allowlist = invocation_.do_not_bind_allowlist_;
     const clang::NamedDecl* named_decl =
         clang::dyn_cast<clang::NamedDecl>(decl);
-    if (do_not_bind_allowlist.has_value() && named_decl) {
+    // Function declarations do not need to be allowlisted.
+    if (named_decl && !clang::isa<clang::FunctionDecl>(decl) &&
+        do_not_bind_allowlist.has_value()) {
       std::string decl_name = named_decl->getQualifiedNameAsString();
       if (!do_not_bind_allowlist->contains(decl_name)) {
         return HardError(
