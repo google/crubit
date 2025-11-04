@@ -121,6 +121,11 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
     h_out_file = ctx.actions.declare_file(basename + ".h")
     rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
 
+    if ctx.label in [Label(x) for x in ctx.attr._verbose_log_targets[BuildSettingInfo].value]:
+        verbose_log_env = {"RUST_LOG": "info"}
+    else:
+        verbose_log_env = {"RUST_LOG": "error"}
+
     crubit_args = ctx.actions.args()
     crubit_args.add("--h-out", h_out_file)
     crubit_args.add("--rs-out", rs_out_file)
@@ -183,7 +188,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
                 [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
                 transitive = [inputs],
             ),
-            env = rustc_env,
+            env = rustc_env | verbose_log_env,
             tools = [toolchain.binary],
             executable = ctx.executable._process_wrapper,
             mnemonic = "CcBindingsFromRust",
@@ -463,6 +468,9 @@ cc_bindings_from_rust_aspect = aspect(
         ),
         "_globally_enabled_features": attr.label(
             default = "//common/bazel_support:globally_enabled_features",
+        ),
+        "_verbose_log_targets": attr.label(
+            default = "//common/bazel_support:verbose_log_targets",
         ),
     },
     toolchains = [

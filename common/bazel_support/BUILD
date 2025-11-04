@@ -27,6 +27,12 @@ string_list_flag(
     visibility = ["//visibility:public"],
 )
 
+string_list_flag(
+    name = "verbose_log_targets",
+    build_setting_default = [],
+    visibility = ["//:__subpackages__"],
+)
+
 # TOOLCHAINS
 # ==========
 #

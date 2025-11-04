@@ -249,4 +249,7 @@ bindings_attrs = {
     "_globally_enabled_features": attr.label(
         default = "//common/bazel_support:globally_enabled_features",
     ),
+    "_verbose_log_targets": attr.label(
+        default = "//common/bazel_support:verbose_log_targets",
+    ),
 }

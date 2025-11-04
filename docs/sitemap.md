@@ -4,6 +4,7 @@
 *   [Are We Crubit Yet?](/docs/overview/status.md)
 *   [Limitations](/docs/overview/limits.md)
 *   [Safety](/docs/overview/safety.md)
+*   [Debugging](/docs/overview/debugging.md)
 *   Types
 
     *   [Overview](/docs/types/)

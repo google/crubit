@@ -82,8 +82,12 @@ def generate_bindings(
     namespaces_output = ctx.actions.declare_file(crate_name + "_namespaces.json")
     error_report_output = None
 
-    rs_bindings_from_cc_flags = [
-        "--stderrthreshold=2",
+    if ctx.label in [Label(x) for x in ctx.attr._verbose_log_targets[BuildSettingInfo].value]:
+        verbose_log_flags = ["--stderrthreshold=0"]
+    else:
+        verbose_log_flags = ["--stderrthreshold=2"]
+
+    rs_bindings_from_cc_flags = verbose_log_flags + [
         "--target=" + str(ctx.label),
         "--rs_out",
         rs_output.path,
