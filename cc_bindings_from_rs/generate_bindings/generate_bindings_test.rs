@@ -1408,7 +1408,7 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
                 struct ... SomeStruct final {
                     ...
                     static std::int32_t fn_taking_reference(
-                        std::int32_t const* [[clang::annotate_type("lifetime", "a")]] x);
+                        std::int32_t const* [[clang::annotate_type("lifetime", "a")]] crubit_nonnull x);
                     ...
                 };
                 ...
@@ -1419,10 +1419,10 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
             quote! {
                 namespace __crubit_internal {
                 extern "C" std::int32_t ...(
-                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]]);
+                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]] crubit_nonnull);
                 }
                 inline std::int32_t SomeStruct::fn_taking_reference(
-                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]] x) {
+                    std::int32_t const* [[clang::annotate_type("lifetime", "a")]] crubit_nonnull x) {
                   return __crubit_internal::...(x);
                 }
             },
@@ -1462,7 +1462,7 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_impl_level
                 struct ... SomeStruct final {
                     ...
                     static std::int32_t fn_taking_reference(
-                        std::int32_t const* [[clang::annotate_type("lifetime", "a")]] x);
+                        std::int32_t const* [[clang::annotate_type("lifetime", "a")]] crubit_nonnull x);
                     ...
                 };
                 ...

@@ -429,34 +429,19 @@ pub fn format_ty_for_cc<'tcx>(
                 }
             }
 
-            let treat_ref_as_ptr: bool = 'blk: {
-                // Parameter type references are only converted to C++ references if they are
-                // valid exclusively for the lifetime of the function.
-                //
-                // References with a more complex lifetime are converted to pointers.
-                // See <internal link> for more details on the motivation.
-                let TypeLocation::FnParam { is_self_param, elided_is_output } = location else {
-                    break 'blk false;
-                };
-                // `self` parameters are always passed by-ref, never by pointer.
-                if is_self_param {
-                    break 'blk false;
-                }
-                // Explicit lifetimes are always converted to pointers.
-                if !region_is_elided(tcx, *region) {
-                    break 'blk true;
-                }
-                // Elided lifetimes are converted to pointers if the elided lifetime is captured by
-                // the output of the function.
-                if elided_is_output {
-                    break 'blk true;
-                }
-                false
-            };
+            let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty.mid(), location);
 
-            let ptr_or_ref_prefix = if treat_ref_as_ptr {
+            let mut prereqs = CcPrerequisites::default();
+            let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
                 let lifetime = format_region_as_cc_lifetime(tcx, region);
-                quote! { * #lifetime }
+                // Don't annotate maybe uninit with crubit_nonnull.
+                let annotation = if try_ty_as_maybe_uninit(db, referent_mid).is_some() {
+                    quote! {}
+                } else {
+                    prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                    quote! { crubit_nonnull }
+                };
+                quote! { * #lifetime #annotation }
             } else if matches!(location, TypeLocation::FnParam { .. }) {
                 // Omit the lifetime of parameter-location references whose lifetime is trivial.
                 // References with non-trivial lifetimes will be converted to pointers above.
@@ -478,10 +463,13 @@ pub fn format_ty_for_cc<'tcx>(
             }
 
             let referent = SugaredTy::new(*referent_mid, referent_hir);
-            format_pointer_or_reference_ty_for_cc(db, referent, *mutability, ptr_or_ref_prefix)
-                .with_context(|| {
-                    format!("Failed to format the referent of the reference type `{ty}`")
-                })?
+            let tokens =
+                format_pointer_or_reference_ty_for_cc(db, referent, *mutability, ptr_or_ref_prefix)
+                    .with_context(|| {
+                        format!("Failed to format the referent of the reference type `{ty}`")
+                    })?
+                    .into_tokens(&mut prereqs);
+            CcSnippet { tokens, prereqs }
         }
         ty::TyKind::FnPtr(sig_tys, fn_header) => {
             let sig = {
@@ -530,7 +518,7 @@ pub fn format_ty_for_cc<'tcx>(
             let param_types =
                 format_param_types_for_cc(db, &sig, sig_hir, /*has_self_param=*/ false)?
                     .into_iter()
-                    .map(|snippet| snippet.into_tokens(&mut prereqs));
+                    .map(|cc_param| cc_param.snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
                 crubit::type_identity_t<
                     #ret_type( #( #param_types ),* )
@@ -547,6 +535,44 @@ pub fn format_ty_for_cc<'tcx>(
         // `CcPrerequisites::move_defs_to_fwd_decls`.
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
+}
+
+enum RefConvert {
+    ToPtr { is_lifetime_bound: bool },
+    ToRef,
+}
+
+fn treat_ref_as_ptr<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    ty: ty::Ty<'tcx>,
+    location: TypeLocation,
+) -> RefConvert {
+    // Parameter type references are only converted to C++ references if they are
+    // valid exclusively for the lifetime of the function.
+    //
+    // References with a more complex lifetime are converted to pointers.
+    // See <internal link> for more details on the motivation.
+    let TypeLocation::FnParam { is_self_param, elided_is_output } = location else {
+        return RefConvert::ToRef;
+    };
+    // `self` parameters are always passed by-ref, never by pointer.
+    if is_self_param {
+        return RefConvert::ToRef;
+    }
+    // If this is not a reference don't convert to a pointer.
+    let ty::TyKind::Ref(region, _, _) = ty.kind() else {
+        return RefConvert::ToRef;
+    };
+    // Explicit lifetimes are always converted to pointers.
+    if !region_is_elided(tcx, *region) {
+        return RefConvert::ToPtr { is_lifetime_bound: false };
+    }
+    // Elided lifetimes are converted to pointers if the elided lifetime is captured by
+    // the output of the function.
+    if elided_is_output {
+        return RefConvert::ToPtr { is_lifetime_bound: true };
+    }
+    RefConvert::ToRef
 }
 
 /// Returns `Some(CcSnippet)` if `ty` is a special-cased alias type from
@@ -661,6 +687,11 @@ pub fn region_is_elided<'tcx>(tcx: TyCtxt<'tcx>, region: ty::Region<'tcx>) -> bo
     }
 }
 
+pub struct CcParamTy {
+    pub snippet: CcSnippet,
+    pub is_lifetime_bound: bool,
+}
+
 /// Returns the C++ parameter types.
 ///
 /// `sig_hir` is the optional HIR FnSig, if available. This is used to retrieve
@@ -670,18 +701,37 @@ pub fn format_param_types_for_cc<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     has_self_param: bool,
-) -> Result<Vec<CcSnippet>> {
+) -> Result<Vec<CcParamTy>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
     let param_types = SugaredTy::fn_inputs(sig_mid, sig_hir);
     let mut snippets = Vec::with_capacity(param_types.len());
     for (i, param_type) in param_types.enumerate() {
         let is_self_param = i == 0 && has_self_param;
+        let location = TypeLocation::FnParam { elided_is_output, is_self_param };
         let cc_type = db
-            .format_ty_for_cc(param_type, TypeLocation::FnParam { elided_is_output, is_self_param })
+            .format_ty_for_cc(param_type, location)
             .with_context(|| format!("Error handling parameter #{i} of type `{param_type}`"))?;
-        snippets.push(cc_type);
+        snippets.push(CcParamTy {
+            snippet: cc_type,
+            is_lifetime_bound: matches!(
+                treat_ref_as_ptr(db.tcx(), param_type.mid(), location),
+                RefConvert::ToPtr { is_lifetime_bound: true }
+            ),
+        });
     }
     Ok(snippets)
+}
+
+fn try_ty_as_maybe_uninit<'tcx>(
+    db: &dyn BindingsGenerator<'_>,
+    ty: &Ty<'tcx>,
+) -> Option<GenericArg<'tcx>> {
+    if let ty::TyKind::Adt(adt, substs) = ty.kind() {
+        if matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"]) {
+            return Some(substs[0]);
+        }
+    }
+    None
 }
 
 /// Format a supported `repr(transparent)` pointee type
@@ -689,13 +739,11 @@ pub fn format_transparent_pointee<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: &Ty<'tcx>,
 ) -> Result<TokenStream> {
-    if let ty::TyKind::Adt(adt, substs) = ty.kind() {
-        if matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"]) {
-            let generic_ty = db.format_ty_for_rs(substs[0].expect_ty())?;
-            return Ok(quote! { std::mem::MaybeUninit<#generic_ty> });
-        }
-    }
-    bail!("unable to generate bindings for anything other than `MaybeUninit<T>`")
+    let Some(generic_arg) = try_ty_as_maybe_uninit(db, ty) else {
+        bail!("unable to generate bindings for anything other than `MaybeUninit<T>`")
+    };
+    let generic_ty = db.format_ty_for_rs(generic_arg.expect_ty())?;
+    Ok(quote! { std::mem::MaybeUninit<#generic_ty> })
 }
 
 fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {

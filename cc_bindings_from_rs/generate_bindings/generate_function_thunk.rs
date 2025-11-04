@@ -96,7 +96,7 @@ pub fn generate_thunk_decl<'tcx>(
             .iter()
             .zip(cpp_types.into_iter())
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
-                let cpp_type = cpp_type.into_tokens(&mut prereqs);
+                let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
                 let bridged_type_opt = is_bridged_type(db, ty)?;
                 if let Some(bridged_type) = bridged_type_opt {
                     match bridged_type {

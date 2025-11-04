@@ -81,7 +81,7 @@ pub mod crubit {
         }
 
         impl SomeStruct {
-            /// Generated from: support/annotations_internal.h;l=13
+            /// Generated from: support/annotations_internal.h;l=14
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub fn ConstructorNewName(
@@ -103,7 +103,7 @@ pub mod crubit {
         }
 
         impl SomeStruct {
-            /// Generated from: support/annotations_internal.h;l=13
+            /// Generated from: support/annotations_internal.h;l=14
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const Self) {

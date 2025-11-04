@@ -115,7 +115,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=32
   std::int32_t& [[clang::annotate_type("lifetime",
                                        "__anon1")]] as_mut_unchecked()
-      const& [[clang::annotate_type("lifetime", "__anon1")]];
+      const& [[clang::annotate_type("lifetime",
+                                    "__anon1")]] CRUBIT_LIFETIME_BOUND;
 
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=35
@@ -254,7 +255,8 @@ extern "C" std::int32_t& [[clang::annotate_type(
 }
 inline std::int32_t& [[clang::annotate_type(
     "lifetime", "__anon1")]] NonFreezeType::as_mut_unchecked()
-    const& [[clang::annotate_type("lifetime", "__anon1")]] {
+    const& [[clang::annotate_type("lifetime",
+                                  "__anon1")]] CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_as_umut_uunchecked(self);
 }

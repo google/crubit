@@ -9,6 +9,7 @@ extern crate rustc_span;
 
 // TODO(b/381888123): Seperate out enum generation.
 use crate::format_cc_ident;
+use crate::format_type::CcParamTy;
 use crate::generate_doc_comment;
 use crate::generate_function::{generate_thunk_call, Param};
 use crate::{
@@ -455,7 +456,10 @@ fn generate_into_impls<'tcx>(
                 /*has_self_param=*/ true,
                 &[Param {
                     cc_name: format_ident!("self"),
-                    cpp_type: self_cpp_ty,
+                    cpp_type: CcParamTy {
+                        snippet: CcSnippet::new(self_cpp_ty),
+                        is_lifetime_bound: false,
+                    },
                     ty: sugar_self_ty,
                 }],
             )

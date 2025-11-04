@@ -60,6 +60,7 @@ cc_library(
     ],
     deps = [
         "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/base:nullability",
     ],
 )
 

@@ -6,6 +6,7 @@
 #define CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 
 // Style waiver granted in <internal link>
 #if ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate) && \
@@ -82,5 +83,9 @@
   CRUBIT_INTERNAL_BRIDGE_TYPE(ty)                                    \
   CRUBIT_INTERNAL_BRIDGE_TYPE_RUST_TO_CPP_CONVERTER(rust_to_cpp)     \
   CRUBIT_INTERNAL_BRIDGE_TYPE_CPP_TO_RUST_CONVERTER(cpp_to_rust)
+
+#define CRUBIT_LIFETIME_BOUND ABSL_ATTRIBUTE_LIFETIME_BOUND
+
+#define crubit_nonnull absl_nonnull
 
 #endif  // CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_

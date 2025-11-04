@@ -499,7 +499,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=145
   std::int32_t const& [[clang::annotate_type("lifetime",
                                              "__anon1")]] get_second_arg()
-      const& [[clang::annotate_type("lifetime", "__anon1")]];
+      const& [[clang::annotate_type("lifetime",
+                                    "__anon1")]] CRUBIT_LIFETIME_BOUND;
 
   union {
     // Generated from:
@@ -750,7 +751,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/structs/tuple_structs/tuple_structs.rs;l=188
   std::int32_t const& [[clang::annotate_type("lifetime",
                                              "__anon1")]] get_value()
-      const& [[clang::annotate_type("lifetime", "__anon1")]];
+      const& [[clang::annotate_type("lifetime",
+                                    "__anon1")]] CRUBIT_LIFETIME_BOUND;
 
   union {
     // Generated from:
@@ -1236,7 +1238,8 @@ extern "C" std::int32_t const& [[clang::annotate_type(
 }
 inline std::int32_t const& [[clang::annotate_type(
     "lifetime", "__anon1")]] TupleStructWithCppImmovableType::get_second_arg()
-    const& [[clang::annotate_type("lifetime", "__anon1")]] {
+    const& [[clang::annotate_type("lifetime",
+                                  "__anon1")]] CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(self);
 }
@@ -1384,7 +1387,8 @@ extern "C" std::int32_t const& [[clang::annotate_type(
 }
 inline std::int32_t const& [[clang::annotate_type(
     "lifetime", "__anon1")]] TupleStructWithCloneNoDefault::get_value()
-    const& [[clang::annotate_type("lifetime", "__anon1")]] {
+    const& [[clang::annotate_type("lifetime",
+                                  "__anon1")]] CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
 }

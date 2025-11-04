@@ -172,7 +172,8 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "*const std::ffi::c_uchar", cc: "unsigned char const *"),
         case!(
             rs: "&'static std::ffi::c_uchar",
-            cc: "unsigned char const * [[clang :: annotate_type (\"lifetime\" , \"static\")]]"
+            cc: "unsigned char const * [[clang :: annotate_type (\"lifetime\" , \"static\")]] crubit_nonnull",
+            includes: ["<crubit/support/for/tests/annotations_internal.h>"]
         ),
         // Generics lose type alias information.
         case!(rs: "Identity<std::ffi::c_longlong>", cc: "std::int64_t", includes: ["<cstdint>"]),
@@ -198,13 +199,13 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "*mut i32", cc: "std :: int32_t *", includes: ["<cstdint>"]),
         case!(
             rs: "&'static i32",
-            cc: "std :: int32_t const * [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
-            includes: ["<cstdint>"]
+            cc: "std :: int32_t const * [[clang :: annotate_type (\"lifetime\" , \"static\")]] crubit_nonnull",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
         ),
         case!(
             rs: "&'static mut i32",
-            cc: "std :: int32_t * [[clang :: annotate_type (\"lifetime\" , \"static\")]]",
-            includes: ["<cstdint>"]
+            cc: "std :: int32_t * [[clang :: annotate_type (\"lifetime\" , \"static\")]] crubit_nonnull",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
         ),
         // Slice pointers:
         case!(

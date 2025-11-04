@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::{format_cc_ident, has_elided_region, region_is_elided};
+use crate::format_type::{format_cc_ident, has_elided_region, region_is_elided, CcParamTy};
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, ident_or_opt_ident, is_thunk_required,
@@ -426,7 +426,7 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
 
 pub(crate) struct Param<'tcx> {
     pub(crate) cc_name: Ident,
-    pub(crate) cpp_type: TokenStream,
+    pub(crate) cpp_type: CcParamTy,
     pub(crate) ty: SugaredTy<'tcx>,
 }
 
@@ -527,9 +527,17 @@ pub(crate) fn generate_thunk_call<'tcx>(
         .collect::<Result<Vec<TokenStream>>>()?;
 
     if let Some(refs_to_check) = refs_to_check_for_aliasing(db, params) {
-        let mut_cpp_tys = refs_to_check.mutable.iter().map(|param| &param.cpp_type);
+        let mut_cpp_tys = refs_to_check
+            .mutable
+            .iter()
+            .map(|param| param.cpp_type.snippet.clone().into_tokens(&mut prereqs))
+            .collect::<Vec<_>>();
         let mut_cpp_names = refs_to_check.mutable.iter().map(|param| &param.cc_name);
-        let shared_cpp_tys = refs_to_check.shared.iter().map(|param| &param.cpp_type);
+        let shared_cpp_tys = refs_to_check
+            .shared
+            .iter()
+            .map(|param| param.cpp_type.snippet.clone().into_tokens(&mut prereqs))
+            .collect::<Vec<_>>();
         let shared_cpp_names = refs_to_check.shared.iter().map(|param| &param.cc_name);
         prereqs.includes.insert(db.support_header("internal/check_no_mutable_aliasing.h"));
         tokens.extend(quote! {
@@ -630,7 +638,6 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 } else {
                     expect_format_cc_ident(&format!("__param_{i}"))
                 };
-                let cpp_type = cpp_type.into_tokens(&mut main_api_prereqs);
                 Param { cc_name, cpp_type, ty }
             })
             .collect_vec()
@@ -654,11 +661,13 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 // Ref-qualify if the lifetime of `&self` is a named lifetime or if the elided
                 // lifetime appears in the return type.
                 // See <internal link> for more details on the motivation.
-                let ref_qualifier = if !region_is_elided(tcx, *region)
-                    || has_elided_region(tcx, sig_mid.output())
-                {
+                let ref_qualifier = if !region_is_elided(tcx, *region) {
                     let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
                     quote! { & #lifetime_annotation }
+                } else if has_elided_region(tcx, sig_mid.output()) {
+                    let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
+                    main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                    quote! { & #lifetime_annotation CRUBIT_LIFETIME_BOUND }
                 } else {
                     quote! {}
                 };
@@ -690,7 +699,16 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let main_api_params = params
         .iter()
         .skip(if function_kind.has_self_param() { 1 } else { 0 })
-        .map(|Param { cc_name, cpp_type, .. }| quote! { #cpp_type #cc_name })
+        .map(|Param { cc_name, cpp_type, .. }| {
+            let annotation = if cpp_type.is_lifetime_bound {
+                main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                quote! { CRUBIT_LIFETIME_BOUND }
+            } else {
+                quote! {}
+            };
+            let cpp_type = cpp_type.snippet.clone().into_tokens(&mut main_api_prereqs);
+            quote! { #cpp_type #cc_name #annotation }
+        })
         .collect_vec();
     let rs_return_type = SugaredTy::fn_output(&sig_mid, sig_hir);
     let main_api = {
