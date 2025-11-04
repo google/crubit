@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/method:example_lib
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -30,31 +30,17 @@ pub mod foo {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Generated from: examples/cpp/method/example.h;l=12
-    // Error while generating bindings for constructor 'Bar::Bar':
-    // Default constructors do yet receive bindings. See b/452726517.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::Bar
-
-    // Generated from: examples/cpp/method/example.h;l=12
-    // Error while generating bindings for constructor 'Bar::Bar':
-    // Move and copy constructors do yet receive bindings. See b/452726517.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::Bar
-
-    // Generated from: examples/cpp/method/example.h;l=12
-    // Error while generating bindings for constructor 'Bar::Bar':
-    // Move and copy constructors do yet receive bindings. See b/452726517.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::Bar
-    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::Bar
-
-    // Generated from: examples/cpp/method/example.h;l=12
-    // Error while generating bindings for function 'Bar::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-    // Generated from: examples/cpp/method/example.h;l=12
-    // Error while generating bindings for function 'Bar::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+    /// Generated from: examples/cpp/method/example.h;l=12
+    impl Default for Bar {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN3foo3BarC1Ev(&raw mut tmp as *mut _);
+                tmp.assume_init()
+            }
+        }
+    }
 
     impl Bar {
         /// Generated from: examples/cpp/method/example.h;l=14
@@ -71,6 +57,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN3foo3BarC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN3foo3Bar8MyMethodEv(__this: *mut crate::foo::Bar);
     }
 }

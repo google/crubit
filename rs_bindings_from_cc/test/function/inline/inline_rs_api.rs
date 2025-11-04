@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/inline:inline
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -38,31 +38,17 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
-// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Default constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeStruct
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::SomeStruct
-
-// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
-// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeStruct
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::SomeStruct
-
-// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
-// Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::SomeStruct
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::SomeStruct
-
-// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
-// Error while generating bindings for function 'SomeStruct::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
-// Error while generating bindings for function 'SomeStruct::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+/// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=12
+impl Default for SomeStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=15
 #[inline(always)]
@@ -97,6 +83,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z18hello_world_inlinev() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(
             s: *const crate::SomeStruct,
         ) -> ::core::ffi::c_int;

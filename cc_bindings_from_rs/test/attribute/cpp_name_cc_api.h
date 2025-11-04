@@ -4,7 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // cpp_name_golden
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr,
+// std_vector, supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_CPP_NAME_GOLDEN

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:do_not_bind
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -31,31 +31,19 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
-        // Error while generating bindings for constructor 'ArgumentToBoundOverload::ArgumentToBoundOverload':
-        // Default constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::ArgumentToBoundOverload
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::ArgumentToBoundOverload
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
-        // Error while generating bindings for constructor 'ArgumentToBoundOverload::ArgumentToBoundOverload':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::ArgumentToBoundOverload
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::ArgumentToBoundOverload
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
-        // Error while generating bindings for constructor 'ArgumentToBoundOverload::ArgumentToBoundOverload':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::ArgumentToBoundOverload
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::ArgumentToBoundOverload
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
-        // Error while generating bindings for function 'ArgumentToBoundOverload::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
-        // Error while generating bindings for function 'ArgumentToBoundOverload::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=12
+        impl Default for ArgumentToBoundOverload {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test23ArgumentToBoundOverloadC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
 
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -71,31 +59,19 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
-        // Error while generating bindings for constructor 'ArgumentToUnboundOverload::ArgumentToUnboundOverload':
-        // Default constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::ArgumentToUnboundOverload
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::ArgumentToUnboundOverload
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
-        // Error while generating bindings for constructor 'ArgumentToUnboundOverload::ArgumentToUnboundOverload':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::ArgumentToUnboundOverload
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::ArgumentToUnboundOverload
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
-        // Error while generating bindings for constructor 'ArgumentToUnboundOverload::ArgumentToUnboundOverload':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::ArgumentToUnboundOverload
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::ArgumentToUnboundOverload
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
-        // Error while generating bindings for function 'ArgumentToUnboundOverload::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
-        // Error while generating bindings for function 'ArgumentToUnboundOverload::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=13
+        impl Default for ArgumentToUnboundOverload {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test25ArgumentToUnboundOverloadC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
 
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=16
         #[inline(always)]
@@ -123,30 +99,27 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
-        // Error while generating bindings for constructor 'StructWithDoNotBindConstructor::StructWithDoNotBindConstructor':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindConstructor
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindConstructor
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
-        // Error while generating bindings for constructor 'StructWithDoNotBindConstructor::StructWithDoNotBindConstructor':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindConstructor
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindConstructor
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
-        // Error while generating bindings for function 'StructWithDoNotBindConstructor::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=28
-        // Error while generating bindings for function 'StructWithDoNotBindConstructor::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=31
-        // Error while generating bindings for constructor 'StructWithDoNotBindConstructor::StructWithDoNotBindConstructor':
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindConstructor
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindConstructor
+        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=31
+        impl From<crate::crubit::test::ArgumentToBoundOverload> for StructWithDoNotBindConstructor {
+            #[inline(always)]
+            fn from(mut __param_0: crate::crubit::test::ArgumentToBoundOverload) -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut _,&mut __param_0);
+                    tmp.assume_init()
+                }
+            }
+        }
+        impl ::ctor::CtorNew<crate::crubit::test::ArgumentToBoundOverload>
+            for StructWithDoNotBindConstructor
+        {
+            type CtorType = Self;
+            type Error = ::ctor::Infallible;
+            #[inline(always)]
+            fn ctor_new(args: crate::crubit::test::ArgumentToBoundOverload) -> Self::CtorType {
+                <Self as From<crate::crubit::test::ArgumentToBoundOverload>>::from(args)
+            }
+        }
 
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -162,31 +135,19 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
-        // Error while generating bindings for constructor 'StructWithDoNotBindMethod::StructWithDoNotBindMethod':
-        // Default constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindMethod
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindMethod
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
-        // Error while generating bindings for constructor 'StructWithDoNotBindMethod::StructWithDoNotBindMethod':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindMethod
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindMethod
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
-        // Error while generating bindings for constructor 'StructWithDoNotBindMethod::StructWithDoNotBindMethod':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::crubit::test::StructWithDoNotBindMethod
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::crubit::test::StructWithDoNotBindMethod
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
-        // Error while generating bindings for function 'StructWithDoNotBindMethod::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-        // Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
-        // Error while generating bindings for function 'StructWithDoNotBindMethod::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+        /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
+        impl Default for StructWithDoNotBindMethod {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethodC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
 
         impl StructWithDoNotBindMethod {
             /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
@@ -217,8 +178,21 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test23ArgumentToBoundOverloadC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25ArgumentToUnboundOverloadC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test11DoNotBindFnENS0_23ArgumentToBoundOverloadE(
             __param_0: &mut crate::crubit::test::ArgumentToBoundOverload,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &mut crate::crubit::test::ArgumentToBoundOverload,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethodC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(
             __this: *mut crate::crubit::test::StructWithDoNotBindMethod,

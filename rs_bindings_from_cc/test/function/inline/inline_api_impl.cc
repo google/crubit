@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/inline:inline
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -28,6 +28,10 @@ static_assert((int (*)())&hello_world_inline);
 static_assert(CRUBIT_SIZEOF(struct SomeStruct) == 4);
 static_assert(alignof(struct SomeStruct) == 4);
 static_assert(CRUBIT_OFFSET_OF(int_field, struct SomeStruct) == 0);
+
+extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
+  crubit::construct_at(__this);
+}
 
 extern "C" int __rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(
     struct SomeStruct const* s) {

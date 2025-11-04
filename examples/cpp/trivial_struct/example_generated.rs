@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/trivial_struct:example_lib
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -30,31 +30,25 @@ unsafe impl ::cxx::ExternType for Position {
     type Kind = ::cxx::kind::Trivial;
 }
 
-// Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for constructor 'Position::Position':
-// Default constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position
+/// Generated from: examples/cpp/trivial_struct/example.h;l=8
+impl Default for Position {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN8PositionC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
-// Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for constructor 'Position::Position':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position
-
-// Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for constructor 'Position::Position':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::Position
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::Position
-
-// Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for function 'Position::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Generated from: examples/cpp/trivial_struct/example.h;l=8
-// Error while generating bindings for function 'Position::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN8PositionC1Ev(__this: *mut ::core::ffi::c_void);
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::Position>() == 8);

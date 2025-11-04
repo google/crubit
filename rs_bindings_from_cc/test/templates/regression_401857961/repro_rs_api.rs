@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -36,31 +36,17 @@ pub mod repro {
         type Kind = ::cxx::kind::Trivial;
     }
 
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for constructor 'Interval::Interval':
-    // Default constructors do yet receive bindings. See b/452726517.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::repro::Interval
-
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for constructor 'Interval::Interval':
-    // Move and copy constructors do yet receive bindings. See b/452726517.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::repro::Interval
-
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for constructor 'Interval::Interval':
-    // Move and copy constructors do yet receive bindings. See b/452726517.
-    // Expected first constructor parameter to be a mutable reference, got: *mut crate::repro::Interval
-    // Expected first reference parameter `__this` to have a lifetime, found *mut crate::repro::Interval
-
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for function 'Interval::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-    // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
-    // Error while generating bindings for function 'Interval::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+    /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
+    impl Default for Interval {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN5repro8IntervalC1Ev(&raw mut tmp as *mut _);
+                tmp.assume_init()
+            }
+        }
+    }
 
     // Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=19
     // Error while generating bindings for class 'repro::Nullable':
@@ -89,6 +75,14 @@ pub mod repro {
 // Can't generate bindings for repro::Nullable<repro::Interval>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
 // //rs_bindings_from_cc/test/templates/regression_401857961:repro needs [//features:wrapper] for repro::Nullable<repro::Interval> (crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE is a template instantiation)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN5repro8IntervalC1Ev(__this: *mut ::core::ffi::c_void);
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::repro::Interval>() == 1);

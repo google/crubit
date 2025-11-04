@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -40,31 +40,17 @@ forward_declare::unsafe_define!(
     crate::CompoundDataType
 );
 
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for constructor 'CompoundDataType::CompoundDataType':
-// Default constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::CompoundDataType
-
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for constructor 'CompoundDataType::CompoundDataType':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::CompoundDataType
-
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for constructor 'CompoundDataType::CompoundDataType':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::CompoundDataType
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::CompoundDataType
-
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for function 'CompoundDataType::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
-// Error while generating bindings for function 'CompoundDataType::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+/// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=23
+impl Default for CompoundDataType {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16CompoundDataTypeC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=27
 #[inline(always)]
@@ -141,29 +127,28 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Default constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst9Template2IiE
+// Can't generate bindings for Template2<int>::Template2<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::Template2<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst9Template2IiE
+// Can't generate bindings for Template2<int>::Template2<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::Template2<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template2<int>::Template2<int>':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst9Template2IiE
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst9Template2IiE
+// Can't generate bindings for Template2<int>::Template2<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::Template2<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for function 'Template2<int>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// Can't generate bindings for Template2<int>::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/other_pub_crate_types.h;l=11
 // Error while generating bindings for function 'Template2<int>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// Can't generate bindings for Template2<int>::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template2<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -181,29 +166,28 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Default constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst8TemplateIiE
+// Can't generate bindings for Template<int>::Template<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::Template<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst8TemplateIiE
+// Can't generate bindings for Template<int>::Template<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::Template<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for constructor 'Template<int>::Template<int>':
-// Move and copy constructors do yet receive bindings. See b/452726517.
-// Expected first constructor parameter to be a mutable reference, got: *mut crate::__CcTemplateInst8TemplateIiE
-// Expected first reference parameter `__this` to have a lifetime, found *mut crate::__CcTemplateInst8TemplateIiE
+// Can't generate bindings for Template<int>::Template<int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::Template<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for function 'Template<int>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// Can't generate bindings for Template<int>::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=11
 // Error while generating bindings for function 'Template<int>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// Can't generate bindings for Template<int>::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types needs [//features:experimental] for Template<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=14
 // Error while generating bindings for function 'Template<int>::IndirectCannotBeInstantiated':
@@ -225,6 +209,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN16CompoundDataTypeC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z14GetTemplateIntv(__return: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(
             container: &mut crate::CompoundDataType,

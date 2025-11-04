@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/namespace/inline:inline
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -36,31 +36,19 @@ pub mod foo {
             type Kind = ::cxx::kind::Trivial;
         }
 
-        // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
-        // Error while generating bindings for constructor 'MyStruct::MyStruct':
-        // Default constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::inline1::MyStruct
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::inline1::MyStruct
-
-        // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
-        // Error while generating bindings for constructor 'MyStruct::MyStruct':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::inline1::MyStruct
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::inline1::MyStruct
-
-        // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
-        // Error while generating bindings for constructor 'MyStruct::MyStruct':
-        // Move and copy constructors do yet receive bindings. See b/452726517.
-        // Expected first constructor parameter to be a mutable reference, got: *mut crate::foo::inline1::MyStruct
-        // Expected first reference parameter `__this` to have a lifetime, found *mut crate::foo::inline1::MyStruct
-
-        // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
-        // Error while generating bindings for function 'MyStruct::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
-
-        // Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
-        // Error while generating bindings for function 'MyStruct::operator=':
-        // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+        /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=11
+        impl Default for MyStruct {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN3foo7inline18MyStructC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
 
         /// Generated from: rs_bindings_from_cc/test/namespace/inline/inline.h;l=15
         #[inline(always)]
@@ -106,6 +94,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN3foo7inline18MyStructC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN3foo7inline115GetStructValue1EPKNS0_8MyStructE(
             s: *const crate::foo::inline1::MyStruct,
         ) -> ::core::ffi::c_int;

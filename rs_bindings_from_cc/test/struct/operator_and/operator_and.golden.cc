@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/operator_and:operator_and
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -21,6 +21,10 @@
 
 static_assert(sizeof(class MyBadClass) == 1);
 static_assert(alignof(class MyBadClass) == 1);
+
+extern "C" void __rust_thunk___ZN10MyBadClassC1Ev(class MyBadClass* __this) {
+  crubit::construct_at(__this);
+}
 
 extern "C" class MyBadClass* __rust_thunk___ZN10MyBadClass7ReturnsEv() {
   return std::addressof(MyBadClass::Returns());
