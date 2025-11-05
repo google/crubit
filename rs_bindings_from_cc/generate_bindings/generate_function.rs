@@ -700,26 +700,6 @@ fn issue_unsafe_constructor_errors(
                 return;
             }
 
-            // TODO: b/452726517 - remove this special case once we infer lifetimes of default
-            // constructors by default.
-            let is_lifetimeless_default_ctor = matches!(param_types, [this] if this.is_pointer());
-            if is_lifetimeless_default_ctor {
-                errors
-                    .add(anyhow!("Default constructors do yet receive bindings. See b/452726517."));
-                return;
-            }
-
-            // TODO: b/452726517 - remove this special case once we infer lifetimes of copy and move
-            // constructors by default.
-            let is_lifetimeless_move_or_copy_ctor =
-                matches!(param_types, [_this, arg] if arg.is_pointer_to(record));
-            if is_lifetimeless_move_or_copy_ctor {
-                errors.add(anyhow!(
-                    "Move and copy constructors do yet receive bindings. See b/452726517."
-                ));
-                return;
-            }
-
             // We skip the first parameter because it's the implicit `this` parameter.
             // Constructors of unsafe types are not automatically considered unsafe.
             let param_names = func.params.iter().map(|p| &p.identifier);
@@ -1275,55 +1255,28 @@ fn errors_as_unsatisfied_trait_bound(
 fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
     use ir::UnqualifiedIdentifier::*;
     match &func.rs_name {
-        Destructor | Identifier(_) => return false,
-        Constructor => {
-            // Fallthrough
-        }
+        Destructor | Identifier(_) => false,
+        Constructor => true,
         Operator(op_name) => {
             match &*op_name.name {
-                "==" | "<=>" | "<" | "=" => {
-                    // Fallthrough
-                }
+                "==" | "<=>" | "<" | "=" => true,
                 // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
                 // creates conflicting libc++ impls for `long` and `long long`.
-                "<<" | ">>" => return false,
+                "<<" | ">>" => false,
                 name => {
                     // Today, all entries in `OPERATOR_METADATA` are "simple" operators (i.e.
                     // they don't have any special lifetime behavior).
                     //
                     // Consider making this check more comprehensive if we ever need to support
                     // non-trivial lifetime behavior for some operator.
-                    if !OPERATOR_METADATA
+                    OPERATOR_METADATA
                         .by_cc_name_and_params
                         .keys()
                         .any(|(meta_name, _num_params)| *meta_name == name)
-                    {
-                        return false;
-                    }
                 }
             }
         }
     }
-
-    fn cc_type_has_lifetimes(cc_type: &CcType) -> bool {
-        use CcTypeVariant::*;
-        match &cc_type.variant {
-            Pointer(pointer) => {
-                if pointer.lifetime.is_some() {
-                    return true;
-                }
-                cc_type_has_lifetimes(&pointer.pointee_type)
-            }
-            // This is a simplification, as function pointers can have their own lifetimes, but
-            // this isn't important in this context.
-            FuncPointer { .. } | Decl(_) | Primitive(_) => false,
-        }
-    }
-
-    // Inference is disabled if the function signature already contains any C++-provided lifetimes.
-    let func_has_lifetimes = func.params.iter().any(|p| cc_type_has_lifetimes(&p.type_))
-        || cc_type_has_lifetimes(&func.return_type);
-    !func_has_lifetimes
 }
 
 fn rs_type_kinds_for_func(
@@ -1332,11 +1285,7 @@ fn rs_type_kinds_for_func(
 ) -> Result<(Vec<RsTypeKind>, RsTypeKind)> {
 
     let errors = Errors::new();
-    let infer_lifetimes = db
-        .ir()
-        .target_crubit_features(&func.owning_target)
-        .contains(crubit_feature::CrubitFeature::InferOperatorLifetimes)
-        && func_should_infer_lifetimes_of_references(func);
+    let infer_lifetimes = func_should_infer_lifetimes_of_references(func);
 
     let param_types: Vec<RsTypeKind> = func
         .params
@@ -1973,7 +1922,6 @@ fn function_signature(
             &mut thunk_args,
             param_types,
             &mut lifetimes,
-            /*allow_missing_this_lifetime=*/ true,
         )?;
         quoted_return_type = Some(quote! { Self });
     }
@@ -2002,7 +1950,6 @@ fn function_signature(
                 &mut thunk_args,
                 param_types,
                 &mut lifetimes,
-                /*allow_missing_this_lifetime=*/ false,
             )?;
             quoted_return_type = Some(quote! { Self });
 
@@ -2145,7 +2092,6 @@ fn move_self_from_out_param_to_return_value(
     thunk_args: &mut Vec<TokenStream>,
     param_types: &mut Vec<RsTypeKind>,
     lifetimes: &mut Vec<Lifetime>,
-    allow_missing_this_lifetime: bool,
 ) -> Result<()> {
     // For constructors, we move the output parameter to be the return value.
     // The return value is "really" void.
@@ -2168,15 +2114,6 @@ fn move_self_from_out_param_to_return_value(
 
     // Grab the `__this` lifetime to remove it from the lifetime parameters.
     let this_lifetime = param_types[0].lifetime();
-
-    // HACK: this prevents generation of uncallable bindings prior to stabilization of
-    // inferred lifetimes, and should be removed once InferOperatorLifetimes is enabled by default.
-    if this_lifetime.is_none() && !allow_missing_this_lifetime {
-        bail!(
-            "Expected first reference parameter `__this` to have a lifetime, found {}",
-            param_types[0].display(db)
-        )
-    }
 
     // Drop `__this` parameter from the public Rust API.
     api_params.remove(0);
