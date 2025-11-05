@@ -145,6 +145,8 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
+use alloc::rc::Rc;
+use alloc::sync::Arc;
 use core::marker::{PhantomData, Unpin};
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut};
@@ -230,7 +232,7 @@ pub unsafe trait Ctor: Sized {
 /// Trait for smart pointer types which support initialization via `Ctor`.
 ///
 /// A typical example would be `Box<T>`, allows emplacing a `Ctor` into
-/// a `Pin<Box<T>>` by calling `Box::emplace`.
+/// a `Pin<Box<T>>` by calling `{Box, Rc, Arc}::emplace`.
 pub trait Emplace<T>: Sized {
     /// Materialize an unfailable `Ctor`.
     fn emplace<C: Ctor<Output = T, Error = Infallible>>(c: C) -> Pin<Self> {
@@ -246,7 +248,29 @@ impl<T> Emplace<T> for Box<T> {
         let mut uninit = Box::new(MaybeUninit::<T>::uninit());
         unsafe {
             ctor.ctor(uninit.as_mut_ptr())?;
-            Ok(Pin::new_unchecked(Box::from_raw(Box::into_raw(uninit).cast::<T>())))
+            Ok(Pin::new_unchecked(uninit.assume_init()))
+        }
+    }
+}
+
+impl<T> Emplace<T> for Rc<T> {
+    fn try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Rc<T>>, C::Error> {
+        let uninit = Rc::new(MaybeUninit::<T>::uninit());
+        unsafe {
+            // TODO: https://github.com/rust-lang/rust/issues/145036 - use cast_init when stable.
+            ctor.ctor(Rc::as_ptr(&uninit).cast_mut().cast::<T>())?;
+            Ok(Pin::new_unchecked(uninit.assume_init()))
+        }
+    }
+}
+
+impl<T> Emplace<T> for Arc<T> {
+    fn try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Arc<T>>, C::Error> {
+        let uninit = Arc::new(MaybeUninit::<T>::uninit());
+        unsafe {
+            // TODO: https://github.com/rust-lang/rust/issues/145036 - use cast_init when stable.
+            ctor.ctor(Arc::as_ptr(&uninit).cast_mut().cast::<T>())?;
+            Ok(Pin::new_unchecked(uninit.assume_init()))
         }
     }
 }
@@ -1479,12 +1503,24 @@ mod test {
     }
 
     #[gtest]
-    fn test_emplace() {
+    fn test_emplace_macro() {
         let x: u32 = 42;
         emplace! {
             let foo = copy(&x);
         }
         assert_eq!(*foo, 42);
+    }
+
+    #[gtest]
+    fn test_emplace_trait() {
+        let x: Pin<Box<u32>> = Box::emplace(u32::ctor_new(()));
+        assert_eq!(*x, 0);
+
+        let x: Pin<Rc<u32>> = Rc::emplace(u32::ctor_new(()));
+        assert_eq!(*x, 0);
+
+        let x: Pin<Arc<u32>> = Arc::emplace(u32::ctor_new(()));
+        assert_eq!(*x, 0);
     }
 
     #[gtest]
