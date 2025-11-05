@@ -686,6 +686,21 @@ fn generate_using(
 
 fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
+    // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
+    let unsupported_consts = [
+        ["core", "f32", "INFINITY"],
+        ["core", "f64", "INFINITY"],
+        ["core", "f32", "NEG_INFINITY"],
+        ["core", "f64", "NEG_INFINITY"],
+        ["core", "f32", "NAN"],
+        ["core", "f64", "NAN"],
+    ];
+    if unsupported_consts.iter().any(|const_path| matches_qualified_name(db, def_id, const_path)) {
+        bail!(
+            "Cannot generate bindings to unsupported constant: {}",
+            tcx.item_name(def_id).as_str()
+        )
+    }
     let unsupported_node_item_msg = "Called `generate_const` with a `rustc_hir::Node` that is not a `Node::Item` or `Node::ImplItem`";
     let ty = tcx.type_of(def_id).instantiate_identity();
     let hir_ty = def_id.as_local().map(|local_def_id| {
