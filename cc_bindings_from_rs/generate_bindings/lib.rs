@@ -47,8 +47,8 @@ use itertools::Itertools;
 use proc_macro2::TokenStream;
 use query_compiler::{
     does_type_implement_trait, get_layout, get_scalar_int_type, get_tag_size_with_padding,
-    is_c_abi_compatible_by_value, is_copy, is_directly_public, is_exported,
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, repr_attrs,
+    is_c_abi_compatible_by_value, is_copy, liberate_and_deanonymize_late_bound_regions,
+    post_analysis_typing_env, repr_attrs,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
@@ -804,13 +804,6 @@ fn create_type_alias<'tcx>(
     Ok(CcSnippet { prereqs: main_api_prereqs, tokens })
 }
 
-fn is_public_or_supported_export(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> bool {
-    (def_id.krate != db.source_crate_num())
-        || is_directly_public(db.tcx(), def_id)
-        // If we have a private symbol in this crate that is publicly re-exported, then it is supported.
-        || (is_exported(db.tcx(), def_id) && db.symbol_canonical_name(def_id).is_some())
-}
-
 /// Implementation of `BindingsGenerator::generate_default_ctor`.
 fn generate_default_ctor<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
@@ -1146,14 +1139,7 @@ fn generate_item_impl(
     def_id: DefId,
 ) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
-    let should_generate = match resolve_if_use(db, def_id) {
-        Some(res_def_id) => {
-            // Only generate a binding if the use is public and points as something exported.
-            is_directly_public(tcx, def_id) && is_public_or_supported_export(db, res_def_id)
-        }
-        None => is_public_or_supported_export(db, def_id),
-    };
-    if !should_generate {
+    if db.symbol_canonical_name(def_id).is_none() {
         return Ok(None);
     }
     let item = match tcx.def_kind(def_id) {

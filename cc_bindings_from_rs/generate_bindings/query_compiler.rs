@@ -176,21 +176,6 @@ pub fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
     }
 }
 
-/// Like `TyCtxt::is_exported`, but works not only with `LocalDefId`, but
-/// also with `DefId`.
-pub fn is_exported(tcx: TyCtxt, def_id: DefId) -> bool {
-    match def_id.as_local() {
-        None => {
-            // This mimics the checks in `try_print_visible_def_path_recur` in
-            // `compiler/rustc_middle/src/ty/print/pretty.rs`.
-            let actual_parent = tcx.opt_parent(def_id);
-            let visible_parent = tcx.visible_parent_map(()).get(&def_id).copied();
-            actual_parent == visible_parent
-        }
-        Some(local_def_id) => tcx.effective_visibilities(()).is_exported(local_def_id),
-    }
-}
-
 pub fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
     tcx.layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
         .map(|ty_and_layout| ty_and_layout.layout)

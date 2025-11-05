@@ -537,11 +537,6 @@ fn test_format_item_reexport_private_type() {
         assert!(result.is_none());
     });
 
-    test_format_item(test_src, "PrivateUse", |result| {
-        let result = result.unwrap();
-        assert!(result.is_none());
-    });
-
     test_generated_bindings(test_src, |bindings| {
         let bindings = bindings.unwrap();
         assert_cc_matches!(
@@ -2645,8 +2640,7 @@ fn test_format_item_pub_type_alias_on_private_type_wont_generate_bindings() {
         pub type TypeAlias = SomeStruct;
         "#;
     test_format_item(test_src, "TypeAlias", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(err, "Not a public or a supported reexported type (b/262052635).");
+        assert!(matches!(result, Ok(None)));
     });
 }
 

@@ -14,7 +14,7 @@ use crate::generate_function::check_fn_sig;
 use crate::generate_function_thunk::is_thunk_required;
 use crate::{
     check_feature_enabled_on_self_and_all_deps, check_slice_layout, get_layout,
-    is_public_or_supported_export, matches_qualified_name, CcType,
+    matches_qualified_name, CcType,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
@@ -327,7 +327,7 @@ pub fn format_ty_for_cc<'tcx>(
                     "Generic types are not supported yet (b/259749095)"
                 );
                 ensure!(
-                    is_public_or_supported_export(db, adt.did()),
+                    db.symbol_canonical_name(adt.did()).is_some(),
                     "Not a public or a supported reexported type (b/262052635)."
                 );
 

@@ -15,8 +15,7 @@ use crate::generate_function::{generate_thunk_call, Param};
 use crate::{
     crate_features, generate_const, generate_deprecated_tag, generate_must_use_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_bridged_type, is_copy, is_exported,
-    is_public_or_supported_export, RsSnippet, SortedByDef, TraitThunks,
+    get_tag_size_with_padding, is_bridged_type, is_copy, RsSnippet, SortedByDef, TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
@@ -214,7 +213,7 @@ fn generate_cpp_enum<'tcx>(
         .sorted_by_def(tcx)
         .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
         .filter_map(|assoc_item| {
-            if !is_exported(tcx, assoc_item.def_id) {
+            if !is_supported_associated_item(tcx, assoc_item.def_id) {
                 return None;
             }
             let ty::AssocKind::Const { name } = assoc_item.kind else {
@@ -263,6 +262,19 @@ fn generate_cpp_enum<'tcx>(
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
+/// Returns true if the associated item should generate bindings.
+///
+/// Associated items don't have a canonical name because they can be accessed through their parent
+/// type even if they're not publicly exported from the crate. Because of this an associated item
+/// should receive bindings if it's definition is marked public and it is not marked #[unstable].
+///
+/// We rely on callers to ensure that we only try to generate bindings for associated items of types
+/// that are publicly reachable.
+fn is_supported_associated_item<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
+    tcx.visibility(def_id).is_public()
+        && tcx.lookup_stability(def_id).is_none_or(|stability| stability.is_stable())
+}
+
 fn generate_associated_item<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
@@ -270,7 +282,7 @@ fn generate_associated_item<'tcx>(
 ) -> Option<ApiSnippets> {
     let tcx = db.tcx();
     let def_id = assoc_item.def_id;
-    if !is_exported(tcx, def_id) {
+    if !is_supported_associated_item(tcx, def_id) {
         return None;
     }
     let result = match assoc_item.kind {
@@ -697,7 +709,7 @@ pub fn generate_adt_core<'tcx>(
     // C++ cannot special-case the availability of a function based on lifetimes.
     let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
     assert!(self_ty.is_adt());
-    assert!(is_public_or_supported_export(db, def_id), "Caller should verify");
+    assert!(db.symbol_canonical_name(def_id).is_some(), "Caller should verify");
 
     let fully_qualified_name = db
         .symbol_canonical_name(def_id)
