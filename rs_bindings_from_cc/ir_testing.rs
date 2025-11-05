@@ -9,7 +9,7 @@ use arc_anyhow::Result;
 use itertools::Itertools;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
-use ir::{self, make_ir_from_parts, Func, Identifier, Item, Record, IR};
+use ir::{self, make_ir_from_parts, Func, Identifier, Item, LifetimeId, LifetimeName, Record, IR};
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str) -> Result<IR> {
@@ -28,6 +28,23 @@ pub fn with_lifetime_macros(source: &str) -> String {
     }
     result.push_str("#define $static $(static)\n");
     result.push_str(source);
+    result
+}
+
+pub fn with_full_lifetime_macros() -> String {
+    // TODO: b/454627672 - it's not immediately clear why test_impl_clone_that_propagates_lifetime
+    // fails when these additional macros are defined.
+    let mut result = String::from(
+        r#"
+    #define $(l) [[clang::annotate_type("lifetime", #l)]]
+    #define LIFETIME_PARAMS(...) [[clang::annotate("lifetime_params", __VA_ARGS__)]]
+    #define MEMBER_LIFETIMES(...) [[clang::annotate("member_lifetimes", __VA_ARGS__)]]
+    "#,
+    );
+    for l in 'a'..='z' {
+        result.push_str(&format!("#define ${} $({})\n", l, l));
+    }
+    result.push_str("#define $static $(static)\n");
     result
 }
 
@@ -125,6 +142,15 @@ pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Recor
         }
     }
     panic!("Test IR doesn't contain a record");
+}
+
+pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> LifetimeId {
+    for param in names {
+        if *param.name == *name {
+            return param.id;
+        }
+    }
+    panic!("Didn't find lifetime param with name {}", name);
 }
 
 /// Retrieves the function with the given name.

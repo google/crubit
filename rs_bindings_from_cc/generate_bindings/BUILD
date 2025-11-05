@@ -373,6 +373,52 @@ rust_library(
 )
 
 rust_library(
+    name = "lifetime_defaults_transform",
+    srcs = [
+        "lifetime_defaults_transform.rs",
+    ],
+    visibility = [
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
+    deps = [
+        "//common:arc_anyhow",
+        "//common:code_gen_utils",
+        "//common:crubit_abi_type",
+        "//common:error_report",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+        "@crate_index//:unicode-ident",
+    ],
+)
+
+multiplatform_rust_test(
+    name = "lifetime_defaults_transform_test",
+    timeout = "long",
+    srcs = ["lifetime_defaults_transform_test.rs"],
+    tags = [
+        "not_run:arm",
+        "not_run:mac",
+    ],
+    deps = [
+        ":lifetime_defaults_transform",
+        ":multiplatform_ir_testing",
+        "//common:arc_anyhow",
+        "//common:multiplatform_testing",
+        "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc:ir_matchers",
+        "//rs_bindings_from_cc:ir_testing",
+        "@crate_index//:googletest",
+        "@crate_index//:itertools",  # v0_13
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+    ],
+)
+
+rust_library(
     name = "rs_type_kind",
     srcs = [
         "rs_type_kind.rs",

@@ -111,7 +111,7 @@ where
     })
 }
 
-fn make_ir(flat_ir: FlatIR) -> IR {
+pub fn make_ir(flat_ir: FlatIR) -> IR {
     let mut used_decl_ids = HashMap::new();
     for item in &flat_ir.items {
         if let Some(existing_decl) = used_decl_ids.insert(item.id(), item) {
@@ -573,6 +573,13 @@ impl ToTokens for ItemId {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         use std::str::FromStr;
         proc_macro2::Literal::from_str(&format!("{:#x}", self.0)).unwrap().to_tokens(tokens)
+    }
+}
+
+impl ToTokens for LifetimeId {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        use std::str::FromStr;
+        proc_macro2::Literal::from_str(&format!("{:#}", self.0)).unwrap().to_tokens(tokens)
     }
 }
 
@@ -1964,20 +1971,23 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
     }
 }
 
+// There's no reason to hide FlatIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
+// and transforming the json is strictly worse than transforming the ir itself.
+
 #[derive(PartialEq, Eq, Clone, Deserialize)]
 #[serde(deny_unknown_fields, rename(deserialize = "IR"))]
-struct FlatIR {
+pub struct FlatIR {
     #[serde(default)]
-    public_headers: Vec<HeaderName>,
-    current_target: BazelLabel,
+    pub public_headers: Vec<HeaderName>,
+    pub current_target: BazelLabel,
     #[serde(default)]
-    items: Vec<Item>,
+    pub items: Vec<Item>,
     #[serde(default)]
-    top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
+    pub top_level_item_ids: BTreeMap<BazelLabel, Vec<ItemId>>,
     #[serde(default)]
-    crate_root_path: Option<Rc<str>>,
+    pub crate_root_path: Option<Rc<str>>,
     #[serde(default)]
-    crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
+    pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
@@ -2032,6 +2042,14 @@ pub struct IR {
 }
 
 impl IR {
+    pub fn flat_ir(&self) -> &FlatIR {
+        &self.flat_ir
+    }
+
+    pub fn lifetimes(&self) -> impl Iterator<Item = (&LifetimeId, &LifetimeName)> {
+        self.lifetimes.iter()
+    }
+
     pub fn items(&self) -> impl Iterator<Item = &Item> {
         self.flat_ir.items.iter()
     }
