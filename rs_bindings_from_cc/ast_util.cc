@@ -140,16 +140,22 @@ bool IsProto2Message(const clang::Decl& decl) {
   }
 
   const auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&decl);
+  constexpr auto kProtoClasses = std::to_array<absl::string_view>({
+      "google::protobuf::Message",
+      "proto2::internal::ZeroFieldsBase",
+      "google::protobuf::MessageLite",
+  });
 
   return cxx_record_decl->isCompleteDefinition() &&
          absl::c_any_of(
              cxx_record_decl->bases(),
              [&](const clang::CXXBaseSpecifier& base) {
-               constexpr auto kProtoClasses = std::to_array<absl::string_view>(
-                   {"::google::protobuf::Message", "::proto2::internal::ZeroFieldsBase",
-                    "google::protobuf::Message", "proto2::internal::ZeroFieldsBase"});
-               return absl::c_linear_search(kProtoClasses,
-                                            base.getType().getAsString());
+               std::string base_name_owned = base.getType().getAsString();
+               absl::string_view base_name = base_name_owned;
+               if (base_name.starts_with("::")) {
+                 base_name.remove_prefix(2);
+               }
+               return absl::c_linear_search(kProtoClasses, base_name);
              });
 }
 
