@@ -78,7 +78,7 @@ pub enum TraitName {
         params: Rc<[RsTypeKind]>,
     },
     /// The PartialEq trait.
-    PartialEq { param: Rc<RsTypeKind> },
+    PartialEq { param: Rc<RsTypeKind>, negate_thunk_result: bool },
     /// The PartialOrd trait.
     PartialOrd { param: Rc<RsTypeKind> },
     /// Any other trait, e.g. Eq.
@@ -117,7 +117,9 @@ impl TraitName {
             Self::CtorNew(params)
             | Self::UnpinConstructor { params, .. }
             | Self::Other { params, .. } => params,
-            Self::PartialEq { param } | Self::PartialOrd { param } => core::slice::from_ref(param),
+            Self::PartialEq { param, .. } | Self::PartialOrd { param } => {
+                core::slice::from_ref(param)
+            }
             Self::Clone => &[],
         }
     }
