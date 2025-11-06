@@ -30,7 +30,7 @@ use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, 
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
-use rustc_span::def_id::{CrateNum, LOCAL_CRATE};
+use rustc_span::def_id::CrateNum;
 use rustc_span::symbol::{sym, Symbol};
 use std::rc::Rc;
 
@@ -39,7 +39,7 @@ pub fn format_top_level_ns_for_crate(
     db: &dyn BindingsGenerator<'_>,
     krate: CrateNum,
 ) -> Rc<[Symbol]> {
-    let crate_name = if krate == LOCAL_CRATE {
+    let crate_name = if krate == db.source_crate_num() {
         "self".to_string()
     } else {
         db.tcx().crate_name(krate).to_string()
