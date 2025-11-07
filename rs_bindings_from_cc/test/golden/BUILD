@@ -17,6 +17,8 @@ TESTS = [name[:-2] for name in glob(
     exclude = [
         "*namespaces_json.h",
         "not_crubit_exposed.h",
+        "template_def_with_crubit.h",
+        "template_fwd_without_crubit.h",
     ],
 )]
 
@@ -49,6 +51,10 @@ DEPS = {
     ],
     "uses_not_crubit_exposed": ["not_crubit_exposed"],
     "depends_on_nested_types": ["nested_types"],
+    "template_inst": [
+        "template_def_with_crubit",
+        "template_fwd_without_crubit",
+    ],
 }
 
 TAGS = {}
@@ -64,7 +70,7 @@ rust_bindings_from_cc_cli_flag(
     aspect_hints = [
         "//features:infer_operator_lifetimes",
         ":disable_source_location_in_doc_comment",
-    ],
+    ] + (["//features:wrapper"] if name == "template_inst" else []),
     deps = [
         ((d + "_cc") if d in TESTS else d)
         for d in (DEPS[name] if name in DEPS else [])
@@ -125,4 +131,19 @@ bzl_library(
 cc_library(
     name = "not_crubit_exposed",
     hdrs = ["not_crubit_exposed.h"],
+)
+
+# A cc_library that defines MyTemplate<T>
+cc_library(
+    name = "template_def_with_crubit",
+    hdrs = ["template_def_with_crubit.h"],
+    aspect_hints = [
+        "//features:wrapper",
+    ],
+)
+
+# A cc_library that forward declares MyTemplate<T>, independently of template_def_with_crubit
+cc_library(
+    name = "template_fwd_without_crubit",
+    hdrs = ["template_fwd_without_crubit.h"],
 )
