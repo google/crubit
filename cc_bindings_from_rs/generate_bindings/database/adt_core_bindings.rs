@@ -5,7 +5,7 @@
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
+use crate::code_snippet::ApiSnippets;
 use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
