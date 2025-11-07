@@ -1953,7 +1953,8 @@ fn test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
         let pass_by_value_msg = format!(
             "Error generating bindings for `TypeUnderTest::pass_by_value` \
                     defined at <crubit_unittests.rs>;l={pass_by_value_line_number}: \
-             Can't pass a type by value without a move constructor"
+             Can't pass a type by value without a move constructor: C++ moves are deleted \
+             because there's no non-destructive implementation available."
         );
         assert_cc_matches!(
             main_api.tokens,
@@ -2334,7 +2335,8 @@ fn test_format_item_unsupported_struct_with_custom_drop_and_default_and_nonunpin
                                 because there's no non-destructive implementation available.";
         let pass_by_value_msg = "Error generating bindings for `SomeStruct::pass_by_value` \
                     defined at <crubit_unittests.rs>;l=18: \
-             Can't pass a type by value without a move constructor";
+             Can't pass a type by value without a move constructor: C++ moves are deleted \
+             because there's no non-destructive implementation available.";
         assert_cc_matches!(
             main_api.tokens,
             quote! {

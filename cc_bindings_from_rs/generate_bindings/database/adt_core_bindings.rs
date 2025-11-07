@@ -5,6 +5,7 @@
 extern crate rustc_middle;
 extern crate rustc_span;
 
+use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
@@ -64,4 +65,17 @@ impl Hash for AdtCoreBindings<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.def_id.hash(state);
     }
+}
+
+/// The error type returned by `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
+//
+// See discussion on http://cl/828812151 for why the type is in this crate/module, not the one that
+// defines BindingsGenerator.
+#[derive(Clone)]
+pub struct NoMoveOrAssign {
+    /// An error explaining why we didn't generate the special member functions.
+    pub err: arc_anyhow::Error,
+
+    /// Snippets containing explicitly deleted declarations.
+    pub explicitly_deleted: ApiSnippets,
 }

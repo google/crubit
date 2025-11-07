@@ -569,8 +569,9 @@ pub fn generate_adt<'tcx>(
     let copy_ctor_and_assignment_snippets =
         db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
 
-    let move_ctor_and_assignment_snippets =
-        db.generate_move_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+    let move_ctor_and_assignment_snippets = db
+        .generate_move_ctor_and_assignment_operator(core.clone())
+        .unwrap_or_else(|err| err.explicitly_deleted);
 
     let relocating_ctor_snippets = generate_relocating_ctor(db, core.clone());
 

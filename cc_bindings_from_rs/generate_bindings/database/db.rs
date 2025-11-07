@@ -6,7 +6,7 @@ extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::adt_core_bindings::AdtCoreBindings;
+use crate::adt_core_bindings::{AdtCoreBindings, NoMoveOrAssign};
 use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
@@ -199,16 +199,15 @@ memoized::query_group! {
           core: Rc<AdtCoreBindings<'tcx>>,
       ) -> Result<ApiSnippets, ApiSnippets>;
 
-      /// Generates the move constructor and the move-assignment operator for an ADT if
-      /// possible (it depends on various factors like `needs_drop`, `is_unpin` and
-      /// implementations of `Default` and/or `Clone` traits).  Returns an error
-      /// otherwise (the error's `ApiSnippets` contain a `=delete`d declaration).
+      /// Generates the move constructor and the move-assignment operator for an ADT if possible
+      /// (it depends on various factors like `needs_drop`, `is_unpin` and implementations of
+      /// `Default` and/or `Clone` traits).
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:generate_move_ctor_and_assignment_operator
       fn generate_move_ctor_and_assignment_operator(
           &self,
           core: Rc<AdtCoreBindings<'tcx>>,
-      ) -> Result<ApiSnippets, ApiSnippets>;
+      ) -> Result<ApiSnippets, NoMoveOrAssign>;
 
       /// Generates bindings for a HIR item idenfied by `def_id`.  Returns `None` if
       /// the item can be ignored. Returns an `Err` if the bindings could not be

@@ -7,7 +7,7 @@
 pub mod code_snippet;
 
 mod adt_core_bindings;
-pub use adt_core_bindings::AdtCoreBindings;
+pub use adt_core_bindings::{AdtCoreBindings, NoMoveOrAssign};
 pub mod cpp_type;
 mod db;
 pub use db::{BindingsGenerator, Database};

@@ -39,7 +39,7 @@ use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQ
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
 use database::{
     AdtCoreBindings, BindingsGenerator, ExportedPath, FineGrainedFeature, FullyQualifiedName,
-    PublicPaths, SugaredTy, TypeLocation, UnqualifiedName,
+    NoMoveOrAssign, PublicPaths, SugaredTy, TypeLocation, UnqualifiedName,
 };
 pub use database::{Database, IncludeGuard};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
@@ -945,10 +945,11 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
 }
 
 /// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
+#[allow(clippy::result_large_err)]
 fn generate_move_ctor_and_assignment_operator<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> Result<ApiSnippets, ApiSnippets> {
+) -> Result<ApiSnippets, NoMoveOrAssign> {
     fn fallible_format_move_ctor_and_assignment_operator<'tcx>(
         db: &dyn BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
@@ -1043,13 +1044,16 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     fallible_format_move_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &core.cc_short_name;
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                __NEWLINE__ __COMMENT__ #msg
-                #adt_cc_name(#adt_cc_name&&) = delete;  __NEWLINE__
-                #adt_cc_name& operator=(#adt_cc_name&&) = delete;
-            }),
-            ..Default::default()
+        NoMoveOrAssign {
+            err,
+            explicitly_deleted: ApiSnippets {
+                main_api: CcSnippet::new(quote! {
+                    __NEWLINE__ __COMMENT__ #msg
+                    #adt_cc_name(#adt_cc_name&&) = delete;  __NEWLINE__
+                    #adt_cc_name& operator=(#adt_cc_name&&) = delete;
+                }),
+                ..Default::default()
+            },
         }
     })
 }
