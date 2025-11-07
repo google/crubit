@@ -150,7 +150,8 @@ pub fn generate_thunk_decl<'tcx>(
 
     let mut attributes = vec![];
     // Attribute: noreturn
-    let rs_return_type = SugaredTy::fn_output(sig_mid, sig_hir);
+    let rs_return_type =
+        SugaredTy::fn_output(sig_mid, if db.enable_hir_types() { sig_hir } else { None });
     if *rs_return_type.mid().kind() == ty::TyKind::Never {
         attributes.push(quote! {[[noreturn]]});
     }

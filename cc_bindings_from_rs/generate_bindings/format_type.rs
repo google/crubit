@@ -137,7 +137,11 @@ pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     }
 
     let referent_mid = substs[0].expect_ty();
-    let referent = SugaredTy::new(referent_mid, referer_hir);
+    let referent = if db.enable_hir_types() {
+        SugaredTy::new(referent_mid, referer_hir)
+    } else {
+        SugaredTy::missing_hir(referent_mid)
+    };
     format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
 }
 
@@ -155,8 +159,12 @@ pub fn format_ty_for_cc<'tcx>(
         CcSnippet::new(tokens)
     }
 
-    if let Some(alias) = format_core_alias_for_cc(db, ty) {
-        return Ok(alias);
+    // format_core_alias_for_cc relies on hir types to determine if an alias is present, so there's
+    // no reason to check one if hir types are disabled.
+    if db.enable_hir_types() {
+        if let Some(alias) = format_core_alias_for_cc(db, ty) {
+            return Ok(alias);
+        }
     }
 
     Ok(match ty.mid().kind() {
@@ -363,19 +371,20 @@ pub fn format_ty_for_cc<'tcx>(
         ty::TyKind::RawPtr(pointee_mid, mutbl) => {
             if let ty::TyKind::Slice(slice_ty) = pointee_mid.kind() {
                 check_slice_layout(db.tcx(), ty.mid());
-                let mut slice_hir_ty = None;
-                if let Some(hir) = ty.hir(db) {
-                    if let rustc_hir::TyKind::Ptr(pointee) = &hir.kind {
-                        if let rustc_hir::TyKind::Slice(slice_ty) = &pointee.ty.kind {
-                            slice_hir_ty = Some(*slice_ty);
+                let sugared_ty = if db.enable_hir_types() {
+                    let mut slice_hir_ty = None;
+                    if let Some(hir) = ty.hir(db) {
+                        if let rustc_hir::TyKind::Ptr(pointee) = &hir.kind {
+                            if let rustc_hir::TyKind::Slice(slice_ty) = &pointee.ty.kind {
+                                slice_hir_ty = Some(*slice_ty);
+                            }
                         }
                     }
-                }
-                return format_slice_pointer_for_cc(
-                    db,
-                    SugaredTy::new(*slice_ty, slice_hir_ty),
-                    *mutbl,
-                );
+                    SugaredTy::new(*slice_ty, slice_hir_ty)
+                } else {
+                    SugaredTy::missing_hir(*slice_ty)
+                };
+                return format_slice_pointer_for_cc(db, sugared_ty, *mutbl);
             }
             let mut pointee_hir = None;
             if let Some(hir) = ty.hir(db) {
@@ -395,7 +404,11 @@ pub fn format_ty_for_cc<'tcx>(
                 return Ok(snippet);
             }
 
-            let pointee = SugaredTy::new(*pointee_mid, pointee_hir);
+            let pointee = if db.enable_hir_types() {
+                SugaredTy::new(*pointee_mid, pointee_hir)
+            } else {
+                SugaredTy::missing_hir(*pointee_mid)
+            };
             format_pointer_or_reference_ty_for_cc(db, pointee, *mutbl, quote! { * }).with_context(
                 || format!("Failed to format the pointee of the pointer type `{ty}`"),
             )?
@@ -462,7 +475,11 @@ pub fn format_ty_for_cc<'tcx>(
                 return Ok(snippet);
             }
 
-            let referent = SugaredTy::new(*referent_mid, referent_hir);
+            let referent = if db.enable_hir_types() {
+                SugaredTy::new(*referent_mid, referent_hir)
+            } else {
+                SugaredTy::missing_hir(*referent_mid)
+            };
             let tokens =
                 format_pointer_or_reference_ty_for_cc(db, referent, *mutability, ptr_or_ref_prefix)
                     .with_context(|| {
@@ -651,7 +668,8 @@ pub fn format_ret_ty_for_cc<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
 ) -> Result<CcSnippet> {
-    let output_ty = SugaredTy::fn_output(sig_mid, sig_hir);
+    let output_ty =
+        SugaredTy::fn_output(sig_mid, if db.enable_hir_types() { sig_hir } else { None });
     db.format_ty_for_cc(output_ty, TypeLocation::FnReturn)
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
@@ -703,7 +721,8 @@ pub fn format_param_types_for_cc<'tcx>(
     has_self_param: bool,
 ) -> Result<Vec<CcParamTy>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
-    let param_types = SugaredTy::fn_inputs(sig_mid, sig_hir);
+    let param_types =
+        SugaredTy::fn_inputs(sig_mid, if db.enable_hir_types() { sig_hir } else { None });
     let mut snippets = Vec::with_capacity(param_types.len());
     for (i, param_type) in param_types.enumerate() {
         let is_self_param = i == 0 && has_self_param;

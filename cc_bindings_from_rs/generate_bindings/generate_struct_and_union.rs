@@ -28,7 +28,7 @@ use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
 use rustc_hir::attrs::AttributeKind;
-use rustc_hir::{self as hir, Attribute, ItemKind};
+use rustc_hir::{self as hir, Attribute};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind, TypeFlags};
@@ -78,29 +78,35 @@ fn cpp_enum_cpp_underlying_type(db: &dyn BindingsGenerator, def_id: DefId) -> Re
 
     let field_middle_ty = cpp_enum_rust_underlying_type(tcx, def_id)?;
 
-    let field_hir_ty = match tcx.hir_node_by_def_id(def_id.expect_local()) {
-        rustc_hir::Node::Item(hir_item) => match hir_item.kind {
-            ItemKind::Struct(_, _, variant_data) => {
-                if variant_data.fields().len() != 1 {
+    let field_type = if db.enable_hir_types() {
+        use rustc_hir::ItemKind;
+        let field_hir_ty = match tcx.hir_node_by_def_id(def_id.expect_local()) {
+            rustc_hir::Node::Item(hir_item) => match hir_item.kind {
+                ItemKind::Struct(_, _, variant_data) => {
+                    if variant_data.fields().len() != 1 {
+                        return Err(anyhow!(
+                            "Expected one field in cpp_enum hir item, got {:?}",
+                            variant_data.fields().len()
+                        ));
+                    }
+                    Some(variant_data.fields()[0].ty)
+                }
+                _ => {
+                    // ItemKind is not Struct.
                     return Err(anyhow!(
-                        "Expected one field in cpp_enum hir item, got {:?}",
-                        variant_data.fields().len()
+                        "Unexpected `ItemKind` in cpp_enum hir item: {:?}",
+                        hir_item.kind
                     ));
                 }
-                Some(variant_data.fields()[0].ty)
-            }
-            _ => {
-                // ItemKind is not Struct.
-                return Err(anyhow!(
-                    "Unexpected `ItemKind` in cpp_enum hir item: {:?}",
-                    hir_item.kind
-                ));
-            }
-        },
-        _ => None, // HIR node is not an Item.
+            },
+            _ => None, // HIR node is not an Item.
+        };
+        SugaredTy::new(field_middle_ty, field_hir_ty)
+    } else {
+        SugaredTy::missing_hir(field_middle_ty)
     };
 
-    db.format_ty_for_cc(SugaredTy::new(field_middle_ty, field_hir_ty), TypeLocation::Other)
+    db.format_ty_for_cc(field_type, TypeLocation::Other)
 }
 
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
@@ -910,7 +916,11 @@ fn generate_tuple_struct_ctor<'tcx>(
                 return None;
             }
 
-            Some(SugaredTy::new(ty, hir_field_ty))
+            if db.enable_hir_types() {
+                Some(SugaredTy::new(ty, hir_field_ty))
+            } else {
+                Some(SugaredTy::missing_hir(ty))
+            }
         })
         .collect::<Option<Vec<_>>>()?;
 
@@ -1058,8 +1068,11 @@ fn generate_fields<'tcx>(
                 .map(|field_iter| {
                     field_iter
                         .map(|IndexedVariantField { index, field_def, hir_field_ty }| {
-                            let ty =
-                                SugaredTy::new(field_def.ty(tcx, adt_generic_args), hir_field_ty);
+                            let ty = if db.enable_hir_types() {
+                                SugaredTy::new(field_def.ty(tcx, adt_generic_args), hir_field_ty)
+                            } else {
+                                SugaredTy::missing_hir(field_def.ty(tcx, adt_generic_args))
+                            };
                             let size =
                                 get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
@@ -1514,7 +1527,7 @@ fn generate_fields<'tcx>(
                             .format_ty_for_cc(
                                 // An enum cannot have repr(c_char), or any other alias, so there's
                                 // never sugar.
-                                SugaredTy::new(tag_ty, None),
+                                SugaredTy::missing_hir(tag_ty),
                                 TypeLocation::Other,
                             )
                             .expect("discriminant should be a integer type.")

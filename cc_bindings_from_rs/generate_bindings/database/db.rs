@@ -53,6 +53,10 @@ memoized::query_group! {
       fn default_features(&self) -> flagset::FlagSet<crubit_feature::CrubitFeature>;
 
       #[input]
+      /// Feature flag enabling HIR types.
+      fn enable_hir_types(&self) -> bool;
+
+      #[input]
       /// A map from a crate name to the include paths of the corresponding C++
       /// headers This is used when formatting a type exported from another
       /// crate.

@@ -143,6 +143,11 @@ pub struct Cmdline {
     /// compiled via the provided `rustc_args`.
     #[clap(long, value_parser, value_name = "STRING")]
     pub source_crate_name: Option<String>,
+
+    /// Feature flag for HIR types. When enabled, we will query the HIR for type sugar that does
+    /// not appear in MIR types and use it to generate bindings.
+    #[clap(long, value_parser, value_name = "BOOL", default_value_t = true)]
+    pub enable_hir_types: bool,
 }
 
 impl Cmdline {

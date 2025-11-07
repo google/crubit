@@ -131,6 +131,7 @@ pub fn new_database<'db>(
     crubit_support_path_format: dyn_format::Format<1>,
     crubit_debug_path_format: Option<dyn_format::Format<2>>,
     default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    enable_hir_types: bool,
     crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
     crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,
     crate_name_to_namespace: Rc<HashMap<Rc<str>, Rc<str>>>,
@@ -146,6 +147,7 @@ pub fn new_database<'db>(
         crubit_support_path_format,
         crubit_debug_path_format,
         default_features,
+        enable_hir_types,
         crate_name_to_include_paths,
         crate_name_to_features,
         crate_name_to_namespace,
@@ -703,15 +705,19 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSn
     }
     let unsupported_node_item_msg = "Called `generate_const` with a `rustc_hir::Node` that is not a `Node::Item` or `Node::ImplItem`";
     let ty = tcx.type_of(def_id).instantiate_identity();
-    let hir_ty = def_id.as_local().map(|local_def_id| {
-        let hir_node = tcx.hir_node_by_def_id(local_def_id);
-        match hir_node {
-            Node::Item(item) => item.expect_const().2,
-            Node::ImplItem(item) => item.expect_const().0,
-            _ => panic!("{}", unsupported_node_item_msg),
-        }
-    });
-    let rust_type = SugaredTy::new(ty, hir_ty);
+    let rust_type = if db.enable_hir_types() {
+        let hir_ty = def_id.as_local().map(|local_def_id| {
+            let hir_node = tcx.hir_node_by_def_id(local_def_id);
+            match hir_node {
+                Node::Item(item) => item.expect_const().2,
+                Node::ImplItem(item) => item.expect_const().0,
+                _ => panic!("{}", unsupported_node_item_msg),
+            }
+        });
+        SugaredTy::new(ty, hir_ty)
+    } else {
+        SugaredTy::missing_hir(ty)
+    };
     let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
 
     let cc_type = cc_type_snippet.tokens;
@@ -764,15 +770,20 @@ fn generate_type_alias(
     using_name: &str,
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
-    let hir_ty = def_id.as_local().map(|local_def_id| {
-        let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } =
-            tcx.hir_expect_item(local_def_id)
-        else {
-            panic!("called generate_type_alias on a non-type-alias");
-        };
-        *hir_ty
-    });
-    let alias_type = SugaredTy::new(tcx.type_of(def_id).instantiate_identity(), hir_ty);
+    let mir_ty = tcx.type_of(def_id).instantiate_identity();
+    let alias_type = if db.enable_hir_types() {
+        let hir_ty = def_id.as_local().map(|local_def_id| {
+            let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } =
+                tcx.hir_expect_item(local_def_id)
+            else {
+                panic!("called generate_type_alias on a non-type-alias");
+            };
+            *hir_ty
+        });
+        SugaredTy::new(mir_ty, hir_ty)
+    } else {
+        SugaredTy::missing_hir(mir_ty)
+    };
     create_type_alias(db, def_id, using_name, alias_type)
 }
 

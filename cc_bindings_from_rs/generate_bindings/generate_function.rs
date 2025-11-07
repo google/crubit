@@ -621,7 +621,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
             format_param_types_for_cc(db, &sig_mid, sig_hir, function_kind.has_self_param())?;
         names
             .enumerate()
-            .zip(SugaredTy::fn_inputs(&sig_mid, sig_hir))
+            .zip(SugaredTy::fn_inputs(&sig_mid, if db.enable_hir_types() { sig_hir } else { None }))
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
                 // TODO(jeanpierreda): deduplicate this with thunk_param_names.
@@ -710,7 +710,8 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
             quote! { #cpp_type #cc_name #annotation }
         })
         .collect_vec();
-    let rs_return_type = SugaredTy::fn_output(&sig_mid, sig_hir);
+    let rs_return_type =
+        SugaredTy::fn_output(&sig_mid, if db.enable_hir_types() { sig_hir } else { None });
     let main_api = {
         let doc_comment = {
             let doc_comment = generate_doc_comment(db, def_id);
