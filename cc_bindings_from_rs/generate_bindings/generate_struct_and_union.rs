@@ -28,7 +28,7 @@ use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
 use rustc_hir::attrs::AttributeKind;
-use rustc_hir::{self as hir, Attribute, ItemKind};
+use rustc_hir::{self as hir, Attribute};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind, TypeFlags};
@@ -78,29 +78,7 @@ fn cpp_enum_cpp_underlying_type(db: &dyn BindingsGenerator, def_id: DefId) -> Re
 
     let field_middle_ty = cpp_enum_rust_underlying_type(tcx, def_id)?;
 
-    let field_hir_ty = match tcx.hir_node_by_def_id(def_id.expect_local()) {
-        rustc_hir::Node::Item(hir_item) => match hir_item.kind {
-            ItemKind::Struct(_, _, variant_data) => {
-                if variant_data.fields().len() != 1 {
-                    return Err(anyhow!(
-                        "Expected one field in cpp_enum hir item, got {:?}",
-                        variant_data.fields().len()
-                    ));
-                }
-                Some(variant_data.fields()[0].ty)
-            }
-            _ => {
-                // ItemKind is not Struct.
-                return Err(anyhow!(
-                    "Unexpected `ItemKind` in cpp_enum hir item: {:?}",
-                    hir_item.kind
-                ));
-            }
-        },
-        _ => None, // HIR node is not an Item.
-    };
-
-    db.format_ty_for_cc(SugaredTy::new(field_middle_ty, field_hir_ty), TypeLocation::Other)
+    db.format_ty_for_cc(SugaredTy::missing_hir(field_middle_ty), TypeLocation::Other)
 }
 
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
