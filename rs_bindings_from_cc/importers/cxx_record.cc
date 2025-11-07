@@ -470,6 +470,23 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       clang::NamedDecl* decl;
       if (auto* template_decl =
               instantiation_source.dyn_cast<clang::ClassTemplateDecl*>()) {
+        // `getSpecializedTemplateOrPartial()` can return a ClassTemplateDecl
+        // corresponding to a forward declaration, even if a definition is
+        // available elsewhere. If we have a forward declaration, we need to
+        // navigate to the definition's ClassTemplateDecl to ensure we generate
+        // bindings against the full definition of the template instead of just
+        // the forward declaration.
+        // We do this by getting the underlying CXXRecordDecl
+        // (`getTemplatedDecl()`), finding its definition (`getDefinition()`),
+        // and then getting the ClassTemplateDecl that describes that definition
+        // (`getDescribedClassTemplate()`).
+        if (clang::CXXRecordDecl* definition =
+                template_decl->getTemplatedDecl()->getDefinition()) {
+          if (auto* definition_template_decl =
+                  definition->getDescribedClassTemplate()) {
+            template_decl = definition_template_decl;
+          }
+        }
         decl = template_decl;
       } else {
         decl = instantiation_source
