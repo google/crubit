@@ -182,7 +182,7 @@ impl Nontrivial {
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator== (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator!=':
-// Bindings for this kind of operator (operator != with 2 parameter(s)) are not supported
+// operator== is present, skipping bindings for operator!=
 
 // Error while generating bindings for function 'Nontrivial::operator<':
 // Can't generate bindings for Nontrivial::operator<, because of missing required features (<internal link>):
