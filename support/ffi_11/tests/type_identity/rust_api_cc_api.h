@@ -11,11 +11,6 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN
 #define THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN
 
-#include "support/internal/slot.h"
-
-#include <cstdint>
-#include <utility>
-
 #include "support/ffi_11/ffi_11.h"
 
 namespace rust_api {
@@ -26,35 +21,35 @@ decltype(char(0)) c_char();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=8
-std::uint8_t c_uchar();
+unsigned char c_uchar();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=11
-std::int8_t c_schar();
+signed char c_schar();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=15
-std::int16_t c_short();
+decltype(short(0)) c_short();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=18
-std::uint16_t c_ushort();
+unsigned short c_ushort();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=21
-std::int32_t c_int();
+decltype(int(0)) c_int();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=24
-std::uint32_t c_uint();
+unsigned int c_uint();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=27
-std::int64_t c_long();
+decltype(long(0)) c_long();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=30
-std::uint64_t c_ulong();
+unsigned long c_ulong();
 
 // Generated from:
 // support/ffi_11/tests/type_identity/rust_api.rs;l=43
@@ -88,68 +83,65 @@ decltype(char16_t(0)) c_char16_t();
 decltype(char32_t(0)) c_char32_t();
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar(decltype(char(0))* __ret_ptr);
+extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
 }
 inline decltype(char(0)) c_char() {
-  crubit::Slot<decltype(char(0))> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_c_uchar(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return __crubit_internal::__crubit_thunk_c_uchar();
 }
 
 namespace __crubit_internal {
-extern "C" std::uint8_t __crubit_thunk_c_uuchar();
+extern "C" unsigned char __crubit_thunk_c_uuchar();
 }
-inline std::uint8_t c_uchar() {
+inline unsigned char c_uchar() {
   return __crubit_internal::__crubit_thunk_c_uuchar();
 }
 
 namespace __crubit_internal {
-extern "C" std::int8_t __crubit_thunk_c_uschar();
+extern "C" signed char __crubit_thunk_c_uschar();
 }
-inline std::int8_t c_schar() {
+inline signed char c_schar() {
   return __crubit_internal::__crubit_thunk_c_uschar();
 }
 
 namespace __crubit_internal {
-extern "C" std::int16_t __crubit_thunk_c_ushort();
+extern "C" decltype(short(0)) __crubit_thunk_c_ushort();
 }
-inline std::int16_t c_short() {
+inline decltype(short(0)) c_short() {
   return __crubit_internal::__crubit_thunk_c_ushort();
 }
 
 namespace __crubit_internal {
-extern "C" std::uint16_t __crubit_thunk_c_uushort();
+extern "C" unsigned short __crubit_thunk_c_uushort();
 }
-inline std::uint16_t c_ushort() {
+inline unsigned short c_ushort() {
   return __crubit_internal::__crubit_thunk_c_uushort();
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_c_uint();
+extern "C" decltype(int(0)) __crubit_thunk_c_uint();
 }
-inline std::int32_t c_int() {
+inline decltype(int(0)) c_int() {
   return __crubit_internal::__crubit_thunk_c_uint();
 }
 
 namespace __crubit_internal {
-extern "C" std::uint32_t __crubit_thunk_c_uuint();
+extern "C" unsigned int __crubit_thunk_c_uuint();
 }
-inline std::uint32_t c_uint() {
+inline unsigned int c_uint() {
   return __crubit_internal::__crubit_thunk_c_uuint();
 }
 
 namespace __crubit_internal {
-extern "C" std::int64_t __crubit_thunk_c_ulong();
+extern "C" decltype(long(0)) __crubit_thunk_c_ulong();
 }
-inline std::int64_t c_long() {
+inline decltype(long(0)) c_long() {
   return __crubit_internal::__crubit_thunk_c_ulong();
 }
 
 namespace __crubit_internal {
-extern "C" std::uint64_t __crubit_thunk_c_uulong();
+extern "C" unsigned long __crubit_thunk_c_uulong();
 }
-inline std::uint64_t c_ulong() {
+inline unsigned long c_ulong() {
   return __crubit_internal::__crubit_thunk_c_uulong();
 }
 
@@ -166,43 +158,31 @@ inline double c_double() {
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_unullptr_ut(decltype(nullptr)* __ret_ptr);
+extern "C" decltype(nullptr) __crubit_thunk_c_unullptr_ut();
 }
 inline decltype(nullptr) c_nullptr_t() {
-  crubit::Slot<decltype(nullptr)> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_c_unullptr_ut(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return __crubit_internal::__crubit_thunk_c_unullptr_ut();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar8_ut(decltype(char8_t(0))* __ret_ptr);
+extern "C" decltype(char8_t(0)) __crubit_thunk_c_uchar8_ut();
 }
 inline decltype(char8_t(0)) c_char8_t() {
-  crubit::Slot<decltype(char8_t(0))> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_c_uchar8_ut(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return __crubit_internal::__crubit_thunk_c_uchar8_ut();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar16_ut(decltype(char16_t(0))* __ret_ptr);
+extern "C" decltype(char16_t(0)) __crubit_thunk_c_uchar16_ut();
 }
 inline decltype(char16_t(0)) c_char16_t() {
-  crubit::Slot<decltype(char16_t(0))> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_c_uchar16_ut(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return __crubit_internal::__crubit_thunk_c_uchar16_ut();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar32_ut(decltype(char32_t(0))* __ret_ptr);
+extern "C" decltype(char32_t(0)) __crubit_thunk_c_uchar32_ut();
 }
 inline decltype(char32_t(0)) c_char32_t() {
-  crubit::Slot<decltype(char32_t(0))> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_c_uchar32_ut(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+  return __crubit_internal::__crubit_thunk_c_uchar32_ut();
 }
 
 }  // namespace rust_api

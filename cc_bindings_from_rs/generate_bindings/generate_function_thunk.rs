@@ -86,6 +86,7 @@ pub fn generate_thunk_decl<'tcx>(
     thunk_name: &Ident,
     has_self_param: bool,
 ) -> Result<CcSnippet> {
+    let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid, sig_hir)?.into_tokens(&mut prereqs);
 
@@ -110,7 +111,7 @@ pub fn generate_thunk_decl<'tcx>(
                         }
                         BridgedType::Composable(_) => Ok(quote! { unsigned char* }),
                     }
-                } else if is_c_abi_compatible_by_value(ty) {
+                } else if is_c_abi_compatible_by_value(tcx, ty) {
                     Ok(quote! { #cpp_type })
                 } else if let Some(tuple_abi) = tuple_c_abi_c_type(ty) {
                     Ok(tuple_abi)
@@ -130,22 +131,32 @@ pub fn generate_thunk_decl<'tcx>(
     };
 
     // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
-    let thunk_ret_type: TokenStream;
-    if is_c_abi_compatible_by_value(sig_mid.output()) {
-        thunk_ret_type = main_api_ret_type;
+    // TODO: b/ 459482188 - The order of this check must align with the order in `cc_return_value_from_c_abi`.
+    // We should centralize this logic so that the order exists in a singular location used by both
+    // places.
+    let thunk_ret_type = if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
+        match briging {
+            BridgedType::Legacy { .. } => {
+                thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+                quote! { void }
+            }
+            BridgedType::Composable(_) => {
+                thunk_params.push(quote! { unsigned char * __ret_ptr });
+                quote! { void }
+            }
+        }
+    } else if is_c_abi_compatible_by_value(tcx, sig_mid.output()) {
+        main_api_ret_type
     } else if let Some(tuple_abi) = tuple_c_abi_c_type(sig_mid.output()) {
-        thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #tuple_abi __ret_ptr });
+        quote! { void }
     } else if let ty::TyKind::Array(inner_ty, _) = sig_mid.output().kind() {
         let c_type = array_c_abi_c_type(db.tcx(), *inner_ty)?;
-        thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #c_type __ret_ptr });
-    } else if let Some(BridgedType::Composable(_)) = is_bridged_type(db, sig_mid.output())? {
-        thunk_ret_type = quote! { void };
-        thunk_params.push(quote! { unsigned char * __ret_ptr });
+        quote! { void }
     } else {
-        thunk_ret_type = quote! { void };
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
+        quote! { void }
     };
 
     let mut attributes = vec![];
@@ -266,7 +277,8 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
             extern_c_decls,
         );
     }
-    if is_c_abi_compatible_by_value(ty) {
+    let tcx = db.tcx();
+    if is_c_abi_compatible_by_value(tcx, ty) {
         return Ok(quote! {});
     }
     if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
@@ -281,12 +293,13 @@ fn c_abi_for_param_type<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
 ) -> Result<TokenStream> {
+    let tcx = db.tcx();
     if let Some(bridged) = is_bridged_type(db, ty)? {
         match bridged {
             BridgedType::Legacy { .. } => Ok(quote! { *const core::ffi::c_void }),
             BridgedType::Composable(_) => Ok(quote! { *const core::ffi::c_uchar }),
         }
-    } else if is_c_abi_compatible_by_value(ty) {
+    } else if is_c_abi_compatible_by_value(tcx, ty) {
         let rs_type = db.format_ty_for_rs(ty)?;
         Ok(quote! { #rs_type })
     } else if let Some(tuple_abi) = tuple_c_abi_rs_type(ty) {
@@ -375,6 +388,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
         let rs_type_tokens = db.format_ty_for_rs(rs_type)?;
         Ok(quote! { (#c_ptr as *mut #rs_type_tokens).write(#rs_value); })
     };
+    let tcx = db.tcx();
     Ok(if let Some(bridged_type) = is_bridged_type(db, rs_type)? {
         match bridged_type {
             BridgedType::Legacy { conversion_info, .. } => match conversion_info {
@@ -412,7 +426,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                 }
             }
         }
-    } else if is_c_abi_compatible_by_value(rs_type) {
+    } else if is_c_abi_compatible_by_value(tcx, rs_type) {
         write_directly()?
     } else if let ty::TyKind::Tuple(tuple_tys) = rs_type.kind() {
         let num_elements = tuple_tys.len();
@@ -525,7 +539,7 @@ pub fn generate_thunk_impl<'tcx>(
 
     let thunk_return_type;
     let thunk_return_expression;
-    if output_is_bridged.is_none() && is_c_abi_compatible_by_value(sig.output()) {
+    if output_is_bridged.is_none() && is_c_abi_compatible_by_value(tcx, sig.output()) {
         // The output is not bridged and is C ABI compatible by-value, so we can just return
         // the result directly, and no out-param is needed.
         thunk_return_type = db.format_ty_for_rs(sig.output())?;
@@ -576,7 +590,7 @@ pub fn generate_thunk_impl<'tcx>(
 
 /// Returns `Ok(())` if no thunk is required.
 /// Otherwise returns an error the describes why the thunk is needed.
-pub fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
+pub fn is_thunk_required(tcx: TyCtxt<'_>, sig: &ty::FnSig) -> Result<()> {
     match sig.abi {
         // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
         // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
@@ -594,9 +608,12 @@ pub fn is_thunk_required(sig: &ty::FnSig) -> Result<()> {
         _ => bail!("Any calling convention other than `extern \"C\"` requires a thunk"),
     };
 
-    ensure!(is_c_abi_compatible_by_value(sig.output()), "Return type requires a thunk");
+    ensure!(is_c_abi_compatible_by_value(tcx, sig.output()), "Return type requires a thunk");
     for (i, param_ty) in sig.inputs().iter().enumerate() {
-        ensure!(is_c_abi_compatible_by_value(*param_ty), "Type of parameter #{i} requires a thunk");
+        ensure!(
+            is_c_abi_compatible_by_value(tcx, *param_ty),
+            "Type of parameter #{i} requires a thunk"
+        );
     }
 
     Ok(())

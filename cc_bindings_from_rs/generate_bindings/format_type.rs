@@ -503,7 +503,7 @@ pub fn format_ty_for_cc<'tcx>(
             };
 
             check_fn_sig(&sig)?;
-            is_thunk_required(&sig).context("Function pointers can't have a thunk")?;
+            is_thunk_required(tcx, &sig).context("Function pointers can't have a thunk")?;
 
             // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
             // This assertion reinforces that the generated C++ code doesn't need

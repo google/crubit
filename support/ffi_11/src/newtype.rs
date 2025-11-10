@@ -8,7 +8,7 @@ macro_rules! wrapped_to_primitive {
       $(
         impl From<$from> for $to {
           fn from(x: $from) -> $to {
-            x.0.into()
+            x.0 as $to
           }
         }
       )*
@@ -17,11 +17,11 @@ macro_rules! wrapped_to_primitive {
 
 /// Implement `From<unwrapped_t> for WrappedT` by reusing the `WrappedT.0 : From<unwrapped_t>` impl.
 macro_rules! primitive_to_wrapped {
-    ($(impl From<$from:ty> for $to:path);* $(;)?) => {
+    ($int:ty, $(impl From<$from:ty> for $to:path);* $(;)?) => {
       $(
         impl From<$from> for $to {
           fn from(x: $from) -> $to {
-            $to(x.into())
+            $to(x as $int)
           }
         }
       )*
@@ -73,12 +73,30 @@ macro_rules! new_integer {
         impl From<$IntegerType> for i128;
         impl From<$IntegerType> for u128;
         impl From<$IntegerType> for usize;
-        impl From<$IntegerType> for ::core::sync::atomic::AtomicU8;
         impl From<$IntegerType> for f32;
         impl From<$IntegerType> for f64;
       }
-      $crate::newtype::primitive_to_wrapped!{
+      $crate::newtype::primitive_to_wrapped!{u8,
         impl From<u8> for $IntegerType;
+      }
+    };
+    (@__from, $IntegerType:ident, i8) => {
+      $crate::newtype::wrapped_to_primitive!{
+        impl From<$IntegerType> for i8;
+        impl From<$IntegerType> for i16;
+        impl From<$IntegerType> for u16;
+        impl From<$IntegerType> for i32;
+        impl From<$IntegerType> for u32;
+        impl From<$IntegerType> for i64;
+        impl From<$IntegerType> for u64;
+        impl From<$IntegerType> for i128;
+        impl From<$IntegerType> for u128;
+        impl From<$IntegerType> for usize;
+        impl From<$IntegerType> for f32;
+        impl From<$IntegerType> for f64;
+      }
+      $crate::newtype::primitive_to_wrapped!{i8,
+        impl From<i8> for $IntegerType;
       }
     };
     (@__from, $IntegerType:ident, u16) => {
@@ -91,28 +109,46 @@ macro_rules! new_integer {
         impl From<$IntegerType> for i128;
         impl From<$IntegerType> for u128;
         impl From<$IntegerType> for usize;
-        impl From<$IntegerType> for ::core::sync::atomic::AtomicU16;
         impl From<$IntegerType> for f32;
         impl From<$IntegerType> for f64;
       }
-      $crate::newtype::primitive_to_wrapped!{
+      $crate::newtype::primitive_to_wrapped!{u16,
         impl From<u8> for $IntegerType;
         impl From<u16> for $IntegerType;
+        impl From<i8> for $IntegerType;
+      }
+    };
+    (@__from, $IntegerType:ident, i16) => {
+      $crate::newtype::wrapped_to_primitive!{
+        impl From<$IntegerType> for i16;
+        impl From<$IntegerType> for i32;
+        impl From<$IntegerType> for u32;
+        impl From<$IntegerType> for i64;
+        impl From<$IntegerType> for u64;
+        impl From<$IntegerType> for i128;
+        impl From<$IntegerType> for u128;
+        impl From<$IntegerType> for usize;
+        impl From<$IntegerType> for f32;
+        impl From<$IntegerType> for f64;
+      }
+      $crate::newtype::primitive_to_wrapped!{i16,
+        impl From<i8> for $IntegerType;
+        impl From<i16> for $IntegerType;
+        impl From<u8> for $IntegerType;
       }
     };
     (@__from, $IntegerType:ident, i32) => {
       $crate::newtype::wrapped_to_primitive!{
         impl From<$IntegerType> for i32;
         impl From<$IntegerType> for i64;
-        impl From<$IntegerType> for u64;
         impl From<$IntegerType> for i128;
-        impl From<$IntegerType> for u128;
-        impl From<$IntegerType> for ::core::sync::atomic::AtomicI32;
-        impl From<$IntegerType> for f64;
       }
-      $crate::newtype::primitive_to_wrapped!{
+      $crate::newtype::primitive_to_wrapped!{i32,
         impl From<i8> for $IntegerType;
         impl From<i16> for $IntegerType;
+        impl From<i32> for $IntegerType;
+        impl From<u8> for $IntegerType;
+        impl From<u16> for $IntegerType;
       }
     };
     (@__from, $IntegerType:ident, u32) => {
@@ -122,9 +158,45 @@ macro_rules! new_integer {
         impl From<$IntegerType> for u64;
         impl From<$IntegerType> for i128;
         impl From<$IntegerType> for u128;
-        impl From<$IntegerType> for ::core::sync::atomic::AtomicU32;
         impl From<$IntegerType> for f64;
       }
+      $crate::newtype::primitive_to_wrapped!{u32,
+        impl From<u8> for $IntegerType;
+        impl From<u16> for $IntegerType;
+        impl From<u32> for $IntegerType;
+        impl From<i8> for $IntegerType;
+        impl From<i16> for $IntegerType;
+      }
+    };
+    (@__from, $IntegerType:ident, i64) => {
+        $crate::newtype::wrapped_to_primitive!{
+          impl From<$IntegerType> for i64;
+          impl From<$IntegerType> for i128;
+        }
+        $crate::newtype::primitive_to_wrapped!{i64,
+          impl From<i8> for $IntegerType;
+          impl From<i16> for $IntegerType;
+          impl From<i32> for $IntegerType;
+          impl From<i64> for $IntegerType;
+          impl From<u8> for $IntegerType;
+          impl From<u16> for $IntegerType;
+          impl From<u32> for $IntegerType;
+        }
+    };
+    (@__from, $IntegerType:ident, u64) => {
+        $crate::newtype::wrapped_to_primitive!{
+          impl From<$IntegerType> for u64;
+          impl From<$IntegerType> for u128;
+        }
+        $crate::newtype::primitive_to_wrapped!{u64,
+          impl From<u8> for $IntegerType;
+          impl From<u16> for $IntegerType;
+          impl From<u32> for $IntegerType;
+          impl From<u64> for $IntegerType;
+          impl From<i8> for $IntegerType;
+          impl From<i16> for $IntegerType;
+          impl From<i32> for $IntegerType;
+        }
     };
 }
 
