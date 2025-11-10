@@ -32,17 +32,17 @@ use std::rc::Rc;
 
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
-pub fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
+pub fn is_c_abi_compatible_by_value(tcx: TyCtxt<'_>, ty: Ty) -> bool {
     match ty.kind() {
         // `improper_ctypes_definitions` warning doesn't complain about the following types:
-        ty::TyKind::Bool |
-        ty::TyKind::Float{..} |
-        ty::TyKind::Int{..} |
-        ty::TyKind::Uint{..} |
-        ty::TyKind::Never |
-        ty::TyKind::RawPtr{..} |
-        ty::TyKind::Ref{..} |
-        ty::TyKind::FnPtr{..} => true,
+        ty::TyKind::Bool
+        | ty::TyKind::Float { .. }
+        | ty::TyKind::Int { .. }
+        | ty::TyKind::Uint { .. }
+        | ty::TyKind::Never
+        | ty::TyKind::RawPtr { .. }
+        | ty::TyKind::Ref { .. }
+        | ty::TyKind::FnPtr { .. } => true,
         ty::TyKind::Tuple(types) if types.is_empty() => true,
 
         // Crubit assumes that `char` is compatible with a certain `extern "C"` ABI.
@@ -55,7 +55,7 @@ pub fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         // - In general `TyKind::Ref` should have the same ABI as `TyKind::RawPtr`
         // - References to slices (`&[T]`) or strings (`&str`) rely on assumptions
         //   spelled out in `rust_builtin_type_abi_assumptions.md`.
-        ty::TyKind::Slice{..} => false,
+        ty::TyKind::Slice { .. } => false,
 
         // Crubit's C++ bindings for tuples, structs, and other ADTs may not preserve
         // their ABI (even if they *do* preserve their memory layout).  For example:
@@ -70,13 +70,23 @@ pub fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         // returning `true` in a few limited cases (this may require additional complexity to
         // ensure that `generate_adt` never injects explicit padding into such structs):
         // - `#[repr(C)]` structs and unions,
-        // - `#[repr(transparent)]` struct that wraps an ABI-safe type,
         // - Discriminant-only enums (b/259984090).
-        ty::TyKind::Tuple{..} |  // An empty tuple (`()` - the unit type) is handled above.
-        ty::TyKind::Adt{..} => false,
+        ty::TyKind::Tuple { .. } => false, // An empty tuple (`()` - the unit type) is handled above.
+        ty::TyKind::Adt(adt, _) => {
+            if !adt.repr().transparent() {
+                // If our adt is not transparent, it is not abi compatible by value.
+                return false;
+            }
+            let Some(field) = adt.all_fields().next() else {
+                // TODO: b/258259459 - Support zero sized types.
+                return false;
+            };
+            is_c_abi_compatible_by_value(tcx, tcx.type_of(field.did).instantiate_identity())
+        }
 
         // Arrays are explicitly not ABI-compatible (though they are layout-compatible).
-        ty::TyKind::Array{..} => false,
+        ty::TyKind::Array { .. } => false,
+        ty::TyKind::Alias { .. } => false,
 
         // These kinds of reference-related types are not implemented yet - `is_c_abi_compatible_by_value`
         // should never need to handle them, because `format_ty_for_cc` fails for such types.
@@ -85,7 +95,7 @@ pub fn is_c_abi_compatible_by_value(ty: Ty) -> bool {
         // `format_ty_for_cc` is expected to fail for other kinds of types
         // and therefore `is_c_abi_compatible_by_value` should never be called for
         // these other types
-        _ => unimplemented!(),
+        ty => panic!("unsupported type kind: {ty:?}"),
     }
 }
 

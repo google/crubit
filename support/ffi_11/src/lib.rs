@@ -140,34 +140,104 @@ impl From<i8> for c_char {
 // This doesn't result in _incorrect_ bindings -- actually, it would break, the same as `char`,
 // if it worked. But the results are less readable than if we directly used the correct
 // type: `signed char` instead of `std::int8_t`, `unsigned char` instead of `std::uint8_t`, etc.
-
+new_integer! {
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=signed char")]
-pub type c_schar = i8;
+pub struct c_schar(u8);
+}
+impl From<c_schar> for i8 {
+    fn from(c: c_schar) -> i8 {
+        c.0 as i8
+    }
+}
+
+impl From<i8> for c_schar {
+    fn from(c: i8) -> c_schar {
+        c_schar(c as u8)
+    }
+}
+new_integer! {
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned char")]
-pub type c_uchar = u8;
+pub struct c_uchar(u8);
+}
 
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=short")]
-pub type c_short = i16;
+new_integer! {
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(short(0))")]
+pub struct c_short(u16);
+}
+wrapped_to_wrapped! {
+impl From<c_schar> for c_short;
+}
+impl From<c_short> for i16 {
+    fn from(c: c_short) -> i16 {
+        c.0 as i16
+    }
+}
+
+impl From<i16> for c_short {
+    fn from(c: i16) -> c_short {
+        c_short(c as u16)
+    }
+}
+new_integer! {
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned short")]
-pub type c_ushort = u16;
+pub struct c_ushort(u16);
+}
+wrapped_to_wrapped! {
+impl From<c_uchar> for c_ushort;
+}
 
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=int")]
-pub type c_int = i32;
+new_integer! {
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(int(0))")]
+pub struct c_int(i32);
+}
+wrapped_to_wrapped! {
+impl From<c_schar> for c_int;
+impl From<c_short> for c_int;
+}
+new_integer! {
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned int")]
-pub type c_uint = u32;
+pub struct c_uint(u32);
+}
+wrapped_to_wrapped! {
+impl From<c_uchar> for c_uint;
+impl From<c_ushort> for c_uint;
+}
 
 /// LP64 with long int64_t.
 #[cfg(all(target_pointer_width = "64", not(windows), not(target_os = "openbsd")))]
 mod long_integers {
-    pub type c_long = i64;
-    pub type c_ulong = u64;
+    use super::*;
+    new_integer! {
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(long(0))")]
+    pub struct c_long(i32);
+    }
+    new_integer! {
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
+    pub struct c_ulong(u32);
+    }
 
-    // TODO(b/333759161): Idea: what if we make `isize` into long long, etc.?
-    // Unless/until we do this, however, the following aliases would be
-    // incorrect.
+    wrapped_to_wrapped! {
+        impl From<c_ushort> for c_ulong;
+        impl From<c_uint> for c_ulong;
+        impl From<c_uchar> for c_ulong;
+        impl From<c_char> for c_ulong;
 
-    // pub type c_longlong = isize;
-    // pub type c_ulonglong = usize;
+        impl From<c_schar> for c_long;
+        impl From<c_char> for c_long;
+        impl From<c_short> for c_long;
+        impl From<c_int> for c_long;
+
+        impl From<c_ulong> for c_char32_t;
+    }
+
+    new_integer! {
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+    pub struct c_longlong(i64);
+    }
+    new_integer! {
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+    pub struct c_ulonglong(u64);
+    }
 }
 
 // TODO(b/333759161): This is the mirror image of the above.
@@ -190,7 +260,7 @@ mod long_integers {
 mod long_integers {
     use super::*;
     new_integer! {
-      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(long(0))")]
       pub struct c_long(i32);
       #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
       pub struct c_ulong(u32);
@@ -203,21 +273,25 @@ mod long_integers {
         impl From<c_ulong> for c_char32_t;
     }
 
-    pub type c_longlong = i64;
-    pub type c_ulonglong = u64;
+    new_integer! {
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+    pub struct c_longlong(i64);
+    }
+    new_integer! {
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+    pub struct c_ulonglong(u64);
+    }
 }
 
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(long(0))")]
 pub type c_long = long_integers::c_long;
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
 pub type c_ulong = long_integers::c_ulong;
 
-// TODO(b/333759161): Uncomment these when we have a decision on what to do with long
-// long.
-
-// #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")] pub type c_longlong = long_integers::c_longlong;
-
-// #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")] pub type c_ulonglong = long_integers::c_ulonglong;
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+pub type c_longlong = long_integers::c_longlong;
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+pub type c_ulonglong = long_integers::c_ulonglong;
 
 // ====================================
 // Newtypes for other fundamental types
