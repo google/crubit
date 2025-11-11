@@ -1377,9 +1377,7 @@ class NullabilityBehaviorVisitor {
     if (!ReturnExpr) return;
     const FunctionDecl *CurrentFunc = Env.getCurrentFunc();
     CHECK(CurrentFunc) << "A return statement outside of a function?";
-    if (!isSupportedPointerType(
-            CurrentFunc->getReturnType().getNonReferenceType()))
-      return;
+    if (!hasInferable(CurrentFunc->getReturnType())) return;
 
     // Only gather evidence about the current function's return type if
     // the current function is an inference target and the return type
