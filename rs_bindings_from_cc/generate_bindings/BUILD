@@ -28,6 +28,7 @@ rust_library(
 rust_library(
     name = "generate_bindings",
     srcs = [
+        "generate_dyn_callable.rs",
         "lib.rs",
     ],
     visibility = [

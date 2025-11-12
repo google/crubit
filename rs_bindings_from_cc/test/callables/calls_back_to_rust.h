@@ -2,9 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CALLABLES_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CALLABLES_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CALLABLES_CALLS_BACK_TO_RUST_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CALLABLES_CALLS_BACK_TO_RUST_H_
 
+#include <optional>
+
+#include "support/annotations.h"
 #include "support/rs_std/dyn_callable.h"
 
 void invoke_once(rs_std::DynCallable<void() &&> f);
@@ -15,11 +18,9 @@ void invoke_const(rs_std::DynCallable<void() const> f);
 
 int map_int(rs_std::DynCallable<int(int) const> f, int arg);
 
-struct [[clang::annotate("crubit_bridge_rust_name", "RustBridged")]]
-[[clang::annotate("crubit_bridge_abi_rust", "RustBridgedAbi")]]
-[[clang::annotate("crubit_bridge_abi_cpp", "::crubit::BridgedAbi")]] Bridged {};
-
-Bridged map_bridged(rs_std::DynCallable<Bridged(Bridged) const> f, Bridged arg);
+std::optional<int> map_optional_int(
+    rs_std::DynCallable<std::optional<int>(std::optional<int>) const> f,
+    std::optional<int> arg);
 
 struct ABICompatible {
   int x;
@@ -36,6 +37,7 @@ class LayoutCompatible {
  public:
   static LayoutCompatible Create(int x) { return LayoutCompatible(x); }
 
+  CRUBIT_UNSAFE_MARK_SAFE
   int get() const { return private_; }
 
  private:
@@ -46,4 +48,4 @@ LayoutCompatible map_layout_compatible(
     rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const> f,
     LayoutCompatible arg);
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CALLABLES_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CALLABLES_CALLS_BACK_TO_RUST_H_

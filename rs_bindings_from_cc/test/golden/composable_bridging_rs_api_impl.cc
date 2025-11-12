@@ -9,6 +9,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
