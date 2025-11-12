@@ -55,7 +55,7 @@ use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
 use rustc_hir::{Item, ItemKind, Node};
 use rustc_middle::dep_graph::DepContext;
-use rustc_middle::metadata::ModChild;
+use rustc_middle::metadata::{ModChild, Reexport};
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
@@ -401,7 +401,18 @@ fn public_paths_by_def_id(
             }
             Entry::Occupied(mut occupied) => occupied.get_mut().insert(path),
         }
-        if child.res.mod_def_id().is_some() && module_seen_set.insert(def_id) {
+        // TODO: b/459865403 - Support bindings for `pub extern crate core`.
+        let is_extern_crate_core = |child: &ModChild| {
+            child
+                .reexport_chain
+                .first()
+                .is_some_and(|reexport| matches!(reexport, Reexport::ExternCrate(_)))
+                && tcx.opt_item_name(def_id).is_some_and(|name| name.as_str() == "core")
+        };
+        if child.res.mod_def_id().is_some()
+            && module_seen_set.insert(def_id)
+            && !is_extern_crate_core(child)
+        {
             parent.push(child.ident.name);
             bfs_queue.push_back(ModLikeDef { path_so_far: parent, is_doc_hidden, def_id });
         }
