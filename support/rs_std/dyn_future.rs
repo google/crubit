@@ -13,6 +13,7 @@ use std::pin::Pin;
 use std::task::{RawWaker, RawWakerVTable, Waker};
 
 /// A type-erased wrapper for Rust `Future` types that exposes a Crubit-compatible API.
+#[must_use]
 #[derive(Default)]
 pub struct DynFuture<'a>(Option<Pin<Box<dyn Future<Output = ()> + Send + 'a>>>);
 
