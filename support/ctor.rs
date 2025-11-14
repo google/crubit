@@ -1057,10 +1057,10 @@ macro_rules! ctor {
     //
     // tt is used for the field names, because this allows for both integer fields for tuple
     // structs, and named fields for non-tuple structs.
-    ( $t:ident $(:: $ts:ident)* {$( $name:tt: $sub_ctor:expr ),* $(,)?} ) => {
+    ( $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$( $name:tt: $sub_ctor:expr ),* $(,)?} ) => {
         {
             use $t $(:: $ts)* as Type;
-            $crate::FnCtor::new(|x: *mut Type| {
+            $crate::FnCtor::new(|x: *mut Type $(< $( $gp ),+ >)?| {
                 struct DropGuard;
                 let drop_guard = DropGuard;
                 let _ = &x; // silence unused_variables warning if Type is fieldless.
@@ -1071,13 +1071,13 @@ macro_rules! ctor {
                 // For unions, it fails to compile unless precisely one name is used.
                 // In both cases, this ensures that we only compile when expressions corresponding
                 // to normal init are used, with unsurprising semantics.
-                let _ = |x: Type| {
+                let _ = |x: Type $(< $( $gp ),+ >)?| {
                     let _ = &x; // silence unused_variables warning if Type is fieldless.
                     // If this fails to compile, not every field was specified in the ctor! invocation.
                     // The `panic!(...)` allows us to avoid moving out of x, while still pretending to
                     // fill in each field.
                     #[allow(unreachable_code, unused_unsafe)] $crate::macro_internal::Identity::<
-                        <Type as $crate::RecursivelyPinned>::CtorInitializedFields> {
+                        <Type $(< $( $gp ),+ >)? as $crate::RecursivelyPinned>::CtorInitializedFields> {
                             // SAFETY: this code is not executed.
                             // The unsafe {} block is in case this is a *union* literal, rather than
                             // a struct literal.
@@ -1086,7 +1086,7 @@ macro_rules! ctor {
                 };
 
                 // Enforce that the type is RecursivelyPinned.
-                $crate::macro_internal::require_recursively_pinned::<Type>();
+                $crate::macro_internal::require_recursively_pinned::<Type $(< $( $gp ),+ >)?>();
 
                 $(
                     let sub_ctor = $sub_ctor;
@@ -1580,6 +1580,28 @@ mod test {
             x: 0,
             y: 0,
         });
+    }
+
+    #[gtest]
+    fn test_ctor_macro_generic_struct() {
+        struct MyStruct<T> {
+            x: T,
+            y: T,
+        }
+
+        unsafe impl<T> RecursivelyPinned for MyStruct<T> {
+            type CtorInitializedFields = Self;
+        }
+
+        emplace! {
+            let my_struct = ctor!(MyStruct<u32> {
+                x: 4,
+                y: 2,
+            });
+        };
+
+        assert_eq!(my_struct.x, 4);
+        assert_eq!(my_struct.y, 2);
     }
 
     #[gtest]
