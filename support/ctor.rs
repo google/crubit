@@ -1205,15 +1205,13 @@ impl<T> ReconstructUnchecked for T {}
 /// Note that this is not safe to call on `[[no_unique_address]]` member
 /// variables, but the interface is marked safe, because those can only be
 /// produced via unsafe means.
-pub unsafe trait Reconstruct: ReconstructUnchecked {
+pub trait Reconstruct: ReconstructUnchecked {
     fn reconstruct(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self, Error = Infallible>) {
         unsafe { self.reconstruct_unchecked(ctor) };
     }
 }
 
-/// Safety: anything implementing `Unpin` is Rust-assignable, and
-/// Rust-assignment is inherently destroy+reconstruct.
-unsafe impl<T: Unpin> Reconstruct for T {}
+impl<T> Reconstruct for T {}
 
 /// Run f, aborting if it unwinds.
 ///
