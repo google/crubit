@@ -107,11 +107,29 @@ struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
 };
 }  // namespace
 
+// Returns a LocFilter that allows testing if the SourceLocation is in a
+// GoogleTest "main" file (by inverting, and allowing locations in all files but
+// the main file). Returns nullptr if the `Ctx` does not have any recognized
+// GoogleTest macros, which means that no file in the TU is a GoogleTest main
+// file.
+static std::unique_ptr<LocFilter> getNotTestMainFileLocFilter(ASTContext& Ctx) {
+  if (Ctx.Idents.get("ASSERT_NE").hasMacroDefinition() &&
+      Ctx.Idents.get("GTEST_TEST").hasMacroDefinition()) {
+    return nullability::getLocFilter(
+        Ctx.getSourceManager(),
+        nullability::LocFilterKind::kAllowAllButNotMainFile);
+  }
+  return nullptr;
+}
+
 VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
-    explicit Walker(USRCache &UC) : USRCache(UC) {}
+    explicit Walker(USRCache& UC,
+                    LocFilter* absl_nullable NotTestMainFileLocFilter)
+        : USRCache(UC), NotTestMainFileLocFilter(NotTestMainFileLocFilter) {}
     VirtualMethodIndex Index;
     USRCache &USRCache;
+    LocFilter* absl_nullable NotTestMainFileLocFilter;
 
     // Note: the correctness of this function relies on the pre-order traversal
     // order of `Walker` (which is the default for RecursiveASTVisitor), because
@@ -135,19 +153,22 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
 
     bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
       if (MD && MD->isVirtual()) {
-        llvm::StringSet<> Overridden = getOverridden(MD);
-        if (Overridden.empty()) return true;
-
-        // Filter for Nullability relevance. Optimization note: we filter
-        // *after* calling getOverridden on the assumption that, for irrelevant
-        // methods, it is cheaper, on average, to call `getOverridden` than
-        // `getInferableSlotIndices`. But, no data informed this choice.
+        // Filter for Nullability relevance.
         llvm::SmallVector<int> SlotIndices = getInferableSlotIndices(*MD);
         // No slots -> irrelevant method.
         if (SlotIndices.empty()) return true;
 
         std::string_view USR = getOrGenerateUSR(USRCache, *MD);
         if (USR.empty()) return true;
+
+        if (NotTestMainFileLocFilter != nullptr &&
+            !NotTestMainFileLocFilter->check(
+                MD->getCanonicalDecl()->getBeginLoc())) {
+          Index.IsDefinedInTest.insert(USR);
+        }
+
+        llvm::StringSet<> Overridden = getOverridden(MD);
+        if (Overridden.empty()) return true;
 
         for (auto &O : Overridden) {
           auto &S = Index.Overrides[O.getKey()];
@@ -162,32 +183,53 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
     }
   };
 
-  // Don't use a LocFilter here to restrict to the main file or header, because
-  // we want to propagate evidence from virtual methods to/from their overrides,
-  // no matter where they are each defined.
-  Walker W(UC);
+  // The LocFilter is mainly used to get metadata about where the virtual
+  // method is defined (test/non-test), and filtering happens later.
+  //
+  // We don't support "fast mode" (RestrictToMainFileOrHeader) in this case,
+  // because we want to propagate evidence from virtual methods to/from their
+  // overrides, no matter where they are each defined.
+  std::unique_ptr<LocFilter> NotTestMainFileLocFilter =
+      getNotTestMainFileLocFilter(Ctx);
+  Walker W(UC, NotTestMainFileLocFilter.get());
   W.TraverseAST(Ctx);
   return std::move(W.Index);
 }
 
-RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap &M) {
+static RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap& M) {
   RelatedSymbols Result;
-  auto &RelatedMethods = *Result.mutable_related_symbols();
-  for (auto &[KeyMethod, MethodSet] : M) {
-    RelatedSymbols::SymbolSet &Methods = RelatedMethods[KeyMethod];
-    for (auto &Method : MethodSet)
+  auto& RelatedMethods = *Result.mutable_related_symbols();
+  for (auto& [KeyMethod, MethodSet] : M) {
+    RelatedSymbols::SymbolSet& Methods = RelatedMethods[KeyMethod];
+    for (auto& Method : MethodSet)
       Methods.add_symbols()->set_usr(Method.getKey());
   }
   return Result;
 }
 
-RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols &R) {
+static RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols& R) {
   RelatedVirtualMethodsMap Related;
-  for (const auto &[KeyMethod, Methods] : R.related_symbols()) {
-    llvm::StringSet<> &RelatedMethods = Related[KeyMethod];
-    for (auto &Symbol : Methods.symbols()) RelatedMethods.insert(Symbol.usr());
+  for (const auto& [KeyMethod, Methods] : R.related_symbols()) {
+    llvm::StringSet<>& RelatedMethods = Related[KeyMethod];
+    for (auto& Symbol : Methods.symbols()) RelatedMethods.insert(Symbol.usr());
   }
   return Related;
+}
+
+VirtualMethodIndexSummary saveVirtualMethodsIndex(const VirtualMethodIndex& M) {
+  VirtualMethodIndexSummary Result;
+  *Result.mutable_overrides_to_bases() = saveVirtualMethodsMap(M.Bases);
+  for (auto& Entry : M.IsDefinedInTest)
+    Result.add_virtual_methods_defined_in_tests()->set_usr(Entry.getKey());
+  return Result;
+}
+
+VirtualMethodIndex loadVirtualMethodsIndex(const VirtualMethodIndexSummary& R) {
+  VirtualMethodIndex Result;
+  Result.Bases = loadVirtualMethodsMap(R.overrides_to_bases());
+  for (auto& Symbol : R.virtual_methods_defined_in_tests())
+    Result.IsDefinedInTest.insert(Symbol.usr());
+  return Result;
 }
 
 VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
@@ -247,6 +289,24 @@ static void appendUSRs(const llvm::StringSet<> &Strings,
   for (auto &Entry : Strings) USRs.push_back(Entry.getKey());
 }
 
+// Given a virtual method `USR` and its base methods `BaseUSRs`, append to
+// `Results` only if USR -> Base does not cross a test to non-test boundary.
+static void appendBaseUSRsIfNotLeavingTestBoundary(
+    std::string_view USR, const llvm::StringSet<>& USRsDefinedInTests,
+    const llvm::StringSet<>& BaseUSRs, std::vector<std::string_view>& Results) {
+  if (!USRsDefinedInTests.contains(USR)) {
+    appendUSRs(BaseUSRs, Results);
+    return;
+  }
+  // Otherwise, USR is defined in a test main file, so only propagate to bases
+  // that are also defined in test main files.
+  for (auto& Entry : BaseUSRs) {
+    if (USRsDefinedInTests.contains(Entry.getKey())) {
+      Results.push_back(Entry.getKey());
+    }
+  }
+}
+
 static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
     std::string_view USR, Evidence::Kind Kind, bool ForReturnSlot,
     const VirtualMethodIndex &Index) {
@@ -259,16 +319,20 @@ static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
         appendUSRs(It->second.OverridingUSRs, Results);
       return Results;
     case VirtualMethodEvidenceFlowDirection::kFromDerivedToBase:
-      if (auto It = Index.Bases.find(USR); It != Index.Bases.end())
-        appendUSRs(It->second, Results);
+      if (auto It = Index.Bases.find(USR); It != Index.Bases.end()) {
+        appendBaseUSRsIfNotLeavingTestBoundary(USR, Index.IsDefinedInTest,
+                                               It->second, Results);
+      }
       return Results;
     case VirtualMethodEvidenceFlowDirection::kBoth:
       // Simply concatenate the two sets -- given the acyclic nature of the AST,
       // they must be exclusive.
-      if (auto It = Index.Bases.find(USR); It != Index.Bases.end())
-        appendUSRs(It->second, Results);
       if (auto It = Index.Overrides.find(USR); It != Index.Overrides.end())
         appendUSRs(It->second.OverridingUSRs, Results);
+      if (auto It = Index.Bases.find(USR); It != Index.Bases.end()) {
+        appendBaseUSRsIfNotLeavingTestBoundary(USR, Index.IsDefinedInTest,
+                                               It->second, Results);
+      }
       return Results;
   }
 }
@@ -898,28 +962,33 @@ class NullabilityBehaviorVisitor {
   //
   // Instantiate the class only in this function, to restrict the lifetime of
   // the object, which holds reference parameters.
-  static void visit(const std::vector<InferableSlot> &InferableSlots,
-                    USRCache &USRCache,
-                    const PointerNullabilityLattice &Lattice,
-                    const Environment &Env, const SourceManager &SM,
-                    const CFGElement &CFGElem, BehaviorConsumer &BC) {
+  static void visit(const std::vector<InferableSlot>& InferableSlots,
+                    USRCache& USRCache,
+                    const PointerNullabilityLattice& Lattice,
+                    const Environment& Env, const SourceManager& SM,
+                    const CFGElement& CFGElem,
+                    LocFilter* absl_nullable NotTestMainFileLocFilter,
+                    BehaviorConsumer& BC) {
     NullabilityBehaviorVisitor<BehaviorConsumer> Visitor(
-        InferableSlots, USRCache, Lattice, Env, SM, BC);
+        InferableSlots, USRCache, Lattice, Env, SM, NotTestMainFileLocFilter,
+        BC);
     Visitor.visit(CFGElem);
   }
 
  private:
-  NullabilityBehaviorVisitor(const std::vector<InferableSlot> &InferableSlots,
-                             USRCache &USRCache,
-                             const PointerNullabilityLattice &Lattice,
-                             const Environment &Env, const SourceManager &SM,
-                             BehaviorConsumer &BC)
+  NullabilityBehaviorVisitor(const std::vector<InferableSlot>& InferableSlots,
+                             USRCache& USRCache,
+                             const PointerNullabilityLattice& Lattice,
+                             const Environment& Env, const SourceManager& SM,
+                             LocFilter* absl_nullable NotTestMainFileLocFilter,
+                             BehaviorConsumer& BC)
       : Consumer(BC),
         Env(Env),
         HasInferableSlots(!InferableSlots.empty()),
         USRCache(USRCache),
         Lattice(Lattice),
-        SM(SM) {}
+        SM(SM),
+        NotTestMainFileLocFilter(NotTestMainFileLocFilter) {}
 
   void visit(const CFGElement &CFGElem) {
     if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
@@ -1025,6 +1094,19 @@ class NullabilityBehaviorVisitor {
                           bool MayBeMissingImplicitConversion) {
     bool SummarizeCallee = isInferenceTarget(CalleeDecl);
     bool SummarizeCaller = HasInferableSlots;
+
+    // Don't consider nullability behaviors where the caller is in a test main
+    // file, but the callee is not, to avoid collecting such evidence (test
+    // evidence may not be as accurate as non-test evidence). If the caller and
+    // callee are both in test main files, then that will be the only evidence,
+    // so we consider that behavior.
+    if (SummarizeCallee && NotTestMainFileLocFilter != nullptr) {
+      if (NotTestMainFileLocFilter->check(
+              CalleeDecl.getCanonicalDecl()->getBeginLoc()) &&
+          !NotTestMainFileLocFilter->check(Expr.getBeginLoc())) {
+        SummarizeCallee = false;
+      }
+    }
 
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
@@ -1697,6 +1779,9 @@ class NullabilityBehaviorVisitor {
   USRCache &USRCache;
   const PointerNullabilityLattice &Lattice;
   const SourceManager &SM;
+  // Null if the TU is not a GoogleTest TU. Otherwise, if it is a test TU,
+  // then this LocFilter will allow all locations, except the test main file.
+  LocFilter* absl_nullable NotTestMainFileLocFilter;
 };
 }  // namespace
 
@@ -1937,12 +2022,14 @@ class SummaryCollector {
  public:
   static llvm::SmallVector<NullabilityBehaviorSummary> summarizeElement(
       llvm::ArrayRef<InferableSlot> InferableSlots,
-      llvm::DenseSet<Atom> &UsedTokens, USRCache &USRCache,
-      const PointerNullabilityLattice &Lattice, const Environment &Env,
-      const SourceManager &SM, const CFGElement &CFGElem) {
+      llvm::DenseSet<Atom>& UsedTokens, USRCache& USRCache,
+      const PointerNullabilityLattice& Lattice, const Environment& Env,
+      const SourceManager& SM, const CFGElement& CFGElem,
+      LocFilter* absl_nullable NotTestMainFileLocFilter) {
     SummaryCollector SCollector(Env, UsedTokens);
     NullabilityBehaviorVisitor<SummaryCollector>::visit(
-        InferableSlots, USRCache, Lattice, Env, SM, CFGElem, SCollector);
+        InferableSlots, USRCache, Lattice, Env, SM, CFGElem,
+        NotTestMainFileLocFilter, SCollector);
     // Consume the summaries generated in this visit.
     return std::move(SCollector.Summaries);
   }
@@ -2654,11 +2741,27 @@ static llvm::Expected<Stmt *absl_nonnull> getTarget(
 
 static std::vector<InferableSlot> gatherInferableSlots(
     TypeNullabilityDefaults Defaults,
-    const FunctionDecl *absl_nullable TargetAsFunc,
-    const dataflow::ReferencedDecls &ReferencedDecls,
-    PointerNullabilityAnalysis &Analysis, dataflow::Arena &Arena,
-    USRCache &USRCache) {
+    const FunctionDecl* absl_nullable TargetAsFunc, const Stmt& TargetStmt,
+    const dataflow::ReferencedDecls& ReferencedDecls,
+    PointerNullabilityAnalysis& Analysis, dataflow::Arena& Arena,
+    USRCache& USRCache, LocFilter* absl_nullable NotTestMainFileLocFilter) {
   std::vector<InferableSlot> InferableSlots;
+
+  // Don't consider slots where the target (e.g., caller) is defined in a test
+  // main file, but the referenced decl (e.g., callee) is not.
+  LocFilter* absl_nullable ActiveFilter = nullptr;
+  if (NotTestMainFileLocFilter != nullptr) {
+    bool IsTargetInTestMainFile =
+        !NotTestMainFileLocFilter->check(TargetStmt.getBeginLoc());
+    // If the target is defined in a test main file, then have a LocFilter
+    // to check the referenced decl. Otherwise, we can skip the check.
+    if (IsTargetInTestMainFile) ActiveFilter = NotTestMainFileLocFilter;
+  }
+  auto ShouldConsiderReference = [&](const DeclaratorDecl& D) {
+    if (ActiveFilter == nullptr) return true;
+    return !ActiveFilter->check(D.getCanonicalDecl()->getBeginLoc());
+  };
+
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
@@ -2678,7 +2781,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
     const TypeSourceInfo *TSI = Field->getTypeSourceInfo();
     if (isInferenceTarget(*Field) &&
         (!TSI ||
-         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
+         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) &&
+        ShouldConsiderReference(*Field)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Field, Arena), Slot(0), *Field,
           USRCache);
@@ -2688,7 +2792,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
     const TypeSourceInfo *TSI = Global->getTypeSourceInfo();
     if (isInferenceTarget(*Global) &&
         (!TSI ||
-         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
+         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) &&
+        ShouldConsiderReference(*Global)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Global, Arena), Slot(0), *Global,
           USRCache);
@@ -2707,7 +2812,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
   for (const FunctionDecl *Function : ReferencedDecls.Functions) {
     if (isInferenceTarget(*Function) &&
         hasInferable(Function->getReturnType()) &&
-        !evidenceKindFromDeclaredReturnType(*Function, Defaults)) {
+        !evidenceKindFromDeclaredReturnType(*Function, Defaults) &&
+        ShouldConsiderReference(*Function)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Function, Arena), SLOT_RETURN_TYPE,
           *Function, USRCache);
@@ -2767,9 +2873,13 @@ llvm::Error collectEvidenceFromDefinition(
                                : Environment(AnalysisContext, TargetStmt);
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
 
+  std::unique_ptr<LocFilter> NotTestMainFileLocFilter =
+      getNotTestMainFileLocFilter(Ctx);
+
   std::vector<InferableSlot> InferableSlots = gatherInferableSlots(
-      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, ReferencedDecls,
-      Analysis, AnalysisContext.arena(), USRCache);
+      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, TargetStmt,
+      ReferencedDecls, Analysis, AnalysisContext.arena(), USRCache,
+      NotTestMainFileLocFilter.get());
 
   // Here, we overlay new knowledge from past iterations over the symbolic
   // entities for the `InferableSlots` (whose symbols are invariant across
@@ -2787,16 +2897,17 @@ llvm::Error collectEvidenceFromDefinition(
       Results;
   dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
   PostAnalysisCallbacks.Before =
-      [&](const CFGElement &Element,
-          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
-              &State) {
+      [&](const CFGElement& Element,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>&
+              State) {
         if (Solver->reachedLimit()) return;
 
         EvidenceCollector Collector(InferableSlots, InferableSlotsConstraint,
                                     State.Env, *Solver, Emit);
         NullabilityBehaviorVisitor<EvidenceCollector>::visit(
             InferableSlots, USRCache, State.Lattice, State.Env,
-            Ctx.getSourceManager(), Element, Collector);
+            Ctx.getSourceManager(), Element, NotTestMainFileLocFilter.get(),
+            Collector);
       };
   if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
                                                         PostAnalysisCallbacks)
@@ -2858,9 +2969,13 @@ llvm::Expected<CFGSummary> summarizeDefinition(
                                : Environment(AnalysisContext, TargetStmt);
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
 
+  std::unique_ptr<LocFilter> NotTestMainFileLocFilter =
+      getNotTestMainFileLocFilter(Ctx);
+
   std::vector<InferableSlot> InferableSlots = gatherInferableSlots(
-      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, ReferencedDecls,
-      Analysis, AnalysisContext.arena(), USRCache);
+      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, TargetStmt,
+      ReferencedDecls, Analysis, AnalysisContext.arena(), USRCache,
+      NotTestMainFileLocFilter.get());
 
   for (const auto &IS : InferableSlots) {
     *Summary.add_inferable_slots() = saveInferableSlot(IS);
@@ -2872,13 +2987,14 @@ llvm::Expected<CFGSummary> summarizeDefinition(
       Results;
   dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
   PostAnalysisCallbacks.Before =
-      [&](const CFGElement &Element,
-          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
-              &State) {
+      [&](const CFGElement& Element,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>&
+              State) {
         if (Solver->reachedLimit()) return;
-        for (NullabilityBehaviorSummary &S : SummaryCollector::summarizeElement(
+        for (NullabilityBehaviorSummary& S : SummaryCollector::summarizeElement(
                  InferableSlots, UsedTokens, USRCache, State.Lattice, State.Env,
-                 Ctx.getSourceManager(), Element)) {
+                 Ctx.getSourceManager(), Element,
+                 NotTestMainFileLocFilter.get())) {
           *Summary.add_behavior_summaries() = std::move(S);
         }
       };
