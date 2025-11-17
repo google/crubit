@@ -3796,8 +3796,6 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("tmpl<#b>")),
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                                    functionNamed("tmpl<#*C>")),
-                           evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("tmpl<#*C>"))));
 
   EXPECT_THAT(

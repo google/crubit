@@ -610,16 +610,20 @@ TEST_P(InferTUTest, AutoNoStarType) {
                      inferredSlot(1, Nullability::NONNULL)}),
           inference(hasName("AutoLocalInAutoReturn"),
                     {inferredSlot(0, Nullability::NULLABLE)}),
-          // Functions with parameters of type `auto` are templates, so
-          // we infer for/from the instantiations.
+          // Functions with parameters of type `auto` are templates, and in this
+          // case, the parameter type is a bare `T` template parameter (vs
+          // `T*`), so we do not infer for/from the instantiations, as they may
+          // have generic nullability.
+          // For `autoReturnAndParam`, the return type is also `auto`, but in
+          // that case, the compiler deduces that the `auto` is `int* _Nullable`
+          // based on the `return` statement, so the return type is not a bare
+          // `T` template parameter, and we do infer.
           inference(functionDecl(hasName("autoParamAkaTemplate"),
                                  isTemplateInstantiation()),
-                    {inferredSlot(0, Nullability::NULLABLE),
-                     inferredSlot(1, Nullability::NONNULL)}),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
           inference(functionDecl(hasName("autoReturnAndParam"),
                                  isTemplateInstantiation()),
-                    {inferredSlot(0, Nullability::NULLABLE),
-                     inferredSlot(1, Nullability::NONNULL)}),
+                    {inferredSlot(0, Nullability::NULLABLE)}),
           inference(
               varDecl(hasName("AutoLocalInTemplate"),
                       hasDeclContext(functionDecl(isTemplateInstantiation()))),
@@ -831,7 +835,7 @@ TEST_P(InferTUTest, Pragma) {
 TEST_P(InferTUTest, FunctionTemplate) {
   build(R"cc(
     template <typename T>
-    T functionTemplate(int *P, int *_Nullable Q, T *R, T *_Nullable S, T U) {
+    T functionTemplate(int* P, int* _Nullable Q, T* R, T* _Nullable S, T U) {
       *P;
       *R;
       return U;
@@ -839,15 +843,16 @@ TEST_P(InferTUTest, FunctionTemplate) {
 
     void usage() {
       int I = 0;
-      int *A = &I;
-      int *B = &I;
-      int *C = &I;
-      int *D = &I;
-      int *E = &I;
+      int* A = &I;
+      int* B = &I;
+      int* C = &I;
+      int* D = &I;
+      int* E = &I;
       // In the first iteration, infer (for the instantiation) P and R as
-      // Nonnull, Q and S as Nullable, U as Nonnull, and Unknown for the int*
-      // return type (which hasn't yet seen the inference of U as Nonnull).
-      int *TargetIntStarResult = functionTemplate(A, B, &C, &D, E);
+      // Nonnull, Q and S as Nullable, and nothing for U and the return type
+      // (which have generic nullability -- the T for each instantiation could
+      // specify the nullability).
+      int* TargetIntStarResult = functionTemplate(A, B, &C, &D, E);
       // Infer (for the instantiation) P and R as Nonnull, Q and S as Nullable,
       // and nothing for the int U and int return type.
       int TargetIntResult = functionTemplate(A, B, C, D, I);
@@ -860,12 +865,10 @@ TEST_P(InferTUTest, FunctionTemplate) {
                functionDecl(
                    hasName("functionTemplate"), isTemplateInstantiation(),
                    hasTemplateArgument(0, refersToType(asString("int *")))),
-               {inferredSlot(0, Nullability::UNKNOWN),
-                inferredSlot(1, Nullability::NONNULL),
+               {inferredSlot(1, Nullability::NONNULL),
                 inferredSlot(2, Nullability::NULLABLE),
                 inferredSlot(3, Nullability::NONNULL),
-                inferredSlot(4, Nullability::NULLABLE),
-                inferredSlot(5, Nullability::NONNULL)}),
+                inferredSlot(4, Nullability::NULLABLE)}),
            inference(functionDecl(
                          hasName("functionTemplate"), isTemplateInstantiation(),
                          hasTemplateArgument(0, refersToType(asString("int")))),
@@ -873,6 +876,71 @@ TEST_P(InferTUTest, FunctionTemplate) {
                       inferredSlot(2, Nullability::NULLABLE),
                       inferredSlot(3, Nullability::NONNULL),
                       inferredSlot(4, Nullability::NULLABLE)})}));
+}
+
+TEST_P(InferTUTest, FunctionTemplateParamToReturn) {
+  build(R"cc(
+    // A function that could have parametric nullability -- the return
+    // is *intended* to be nullable only if the parameter is nullable
+    // (or return is nonnull if the parameter is nonnull).
+    // It's also possible to consider the param/return nullable, but we'd
+    // likely detect conflicts when the return value is dereferenced without a
+    // check.
+    // NOTE: We need at least one inferable slot for this test to be
+    // interesting so use `U*` for the param, instead of just `T`.
+    template <typename T, typename U>
+    T identity(U* X) {
+      return X;
+    }
+
+    int target(int* _Nullable A, int* _Nonnull B) {
+      int* C = identity<int*>(A);
+      int* D = identity<int*>(B);
+      return *D;
+    }
+  )cc");
+
+  bool UseSummaries = GetParam() == InferenceMode::kTestWithSummaries;
+  EXPECT_THAT(
+      inferTU(AST->context(), Pragmas, UseSummaries,
+              /*Iterations=*/3),
+      UnorderedElementsAre(
+          inference(hasName("target"), {inferredSlot(1, Nullability::NULLABLE),
+                                        inferredSlot(2, Nullability::NONNULL)}),
+          inference(
+              functionDecl(hasName("identity"), isTemplateInstantiation()),
+              {inferredSlot(1, Nullability::NULLABLE)}),
+          inference(hasName("C"), {inferredSlot(0, Nullability::UNKNOWN)}),
+          inference(hasName("D"), {inferredSlot(0, Nullability::UNKNOWN)})));
+}
+
+TEST_P(InferTUTest, FunctionParamToReturn) {
+  build(R"cc(
+    // A function that returns what it's given. However, the type is not a
+    // template parameter, so we can't have different nullability for different
+    // call sites through a template argument.
+    int* identity(int* X) { return X; }
+
+    int target(int* _Nullable A, int* _Nonnull B) {
+      int* C = identity(A);
+      int* D = identity(B);
+      return *D;
+    }
+  )cc");
+
+  bool UseSummaries = GetParam() == InferenceMode::kTestWithSummaries;
+  EXPECT_THAT(
+      inferTU(AST->context(), Pragmas, UseSummaries,
+              /*Iterations=*/2),
+      UnorderedElementsAre(
+          inference(hasName("target"), {inferredSlot(1, Nullability::NULLABLE),
+                                        inferredSlot(2, Nullability::NONNULL)}),
+          inference(
+              hasName("identity"),
+              {inferredSlot(0, Nullability::NONNULL, /*Conflict*/ true),
+               inferredSlot(1, Nullability::NULLABLE, /*Conflict*/ true)}),
+          inference(hasName("C"), {inferredSlot(0, Nullability::NONNULL)}),
+          inference(hasName("D"), {inferredSlot(0, Nullability::NONNULL)})));
 }
 
 TEST_P(InferTUTest, LambdaWithCaptureInit) {

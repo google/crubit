@@ -1028,7 +1028,8 @@ class NullabilityBehaviorVisitor {
 
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
-      if (!isSupportedPointerType(Iter.param().getType().getNonReferenceType()))
+      if (!hasInferable(Iter.param().getType()) ||
+          !isSupportedPointerType(Iter.param().getType().getNonReferenceType()))
         continue;
       bool ArgIsNullPtrT = Iter.arg().getType()->isNullPtrType();
       if (!isSupportedPointerType(Iter.arg().getType())) {
@@ -1377,7 +1378,8 @@ class NullabilityBehaviorVisitor {
     if (!ReturnExpr) return;
     const FunctionDecl *CurrentFunc = Env.getCurrentFunc();
     CHECK(CurrentFunc) << "A return statement outside of a function?";
-    if (!isSupportedPointerType(
+    if (!hasInferable(CurrentFunc->getReturnType()) ||
+        !isSupportedPointerType(
             CurrentFunc->getReturnType().getNonReferenceType()))
       return;
 
