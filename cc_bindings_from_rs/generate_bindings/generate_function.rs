@@ -121,6 +121,7 @@ fn cc_param_to_c_abi<'tcx>(
     includes: &mut BTreeSet<CcInclude>,
     statements: &mut TokenStream,
 ) -> Result<TokenStream> {
+    let tcx = db.tcx();
     Ok(if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
@@ -146,7 +147,7 @@ fn cc_param_to_c_abi<'tcx>(
                 quote! { #buffer_name }
             }
         }
-    } else if is_c_abi_compatible_by_value(ty.mid()) {
+    } else if is_c_abi_compatible_by_value(tcx, ty.mid()) {
         quote! { #cc_ident }
     } else if let Some(tuple_tys) = ty.as_tuple(db) {
         let n = tuple_tys.len();
@@ -243,7 +244,11 @@ fn cc_return_value_from_c_abi<'tcx>(
     storage_statements: &mut TokenStream,
     recursive: bool,
 ) -> Result<ReturnConversion> {
+    let tcx = db.tcx();
     let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
+    // TODO: b/459482188 - The order of this check must align with the order in `generate_thunk_decl`.
+    // We should centralize this logic so that the order exists in a singular location used by both
+    // places.
     if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
@@ -286,7 +291,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 })
             }
         }
-    } else if is_c_abi_compatible_by_value(ty.mid()) {
+    } else if is_c_abi_compatible_by_value(tcx, ty.mid()) {
         let cc_type = &format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
         let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
         storage_statements.extend(quote! {
@@ -493,6 +498,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     has_self_param: bool,
     params: &[Param<'tcx>],
 ) -> Result<CcSnippet> {
+    let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let mut tokens = TokenStream::new();
 
@@ -514,7 +520,6 @@ pub(crate) fn generate_thunk_call<'tcx>(
                     tokens.extend(quote! { auto&& #cc_name = *this; });
                 }
             }
-            let tcx = db.tcx();
             cc_param_to_c_abi(
                 db,
                 cc_name.clone(),
@@ -552,7 +557,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     }
 
     let return_body = if is_bridged_type(db, rs_return_type.mid())?.is_none()
-        && is_c_abi_compatible_by_value(rs_return_type.mid())
+        && is_c_abi_compatible_by_value(tcx, rs_return_type.mid())
     {
         // C++ compilers can emit diagnostics if a function marked [[noreturn]] looks like it
         // might return. In this scenario, we just call the (also [[noreturn]]) thunk.
@@ -601,7 +606,8 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
     let (export_name, has_no_mangle) = export_name_and_no_mangle_attrs_of(tcx, def_id);
     let has_export_name = export_name.is_some();
-    let needs_thunk = is_thunk_required(&sig_mid).is_err() || (!has_no_mangle && !has_export_name);
+    let needs_thunk =
+        is_thunk_required(tcx, &sig_mid).is_err() || (!has_no_mangle && !has_export_name);
     let thunk_name = thunk_name(db, def_id, export_name, needs_thunk);
 
     let unqualified_fn_name = db
