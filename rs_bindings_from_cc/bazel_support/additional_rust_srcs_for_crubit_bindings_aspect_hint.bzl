@@ -85,44 +85,65 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.cc_deps,
     )]
 
-additional_rust_srcs_for_crubit_bindings = rule(
+_additional_rust_srcs_for_crubit_bindings_rule = rule(
     attrs = {
         "srcs": attr.label_list(
-            doc = "The Rust source files to be included in addition to generated Rust bindings.",
             allow_files = True,
             mandatory = True,
         ),
         "namespace_path": attr.string(
-            doc = """This allows Rust source files define new entries inside of a specific existing C++ namespace instead of the top level namespace.
-For modules which are not existing namespace names, use `pub mod` statement in the Rust source file instead.""",
             mandatory = False,
             default = "",
         ),
         "deps": attr.label_list(
-            doc = """List of other libraries to be linked to this library target.
-
-            This accepts the same deps as rust_library.""",
             mandatory = False,
             default = [],
         ),
         "cc_deps": attr.label_list(
-            doc = """List of cc_library targets whose crubit-generated bindings will be made available to this library target.""",
             mandatory = False,
             default = [],
             aspects = [rust_bindings_from_cc_aspect],
         ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
-    doc = """
-Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's
-`extra_rs_srcs` CLI argument.
-
-Note: to use `std` in the extra Rust source files, you must use:
-```rust
-extern crate std;
-```
-""",
 )
+
+def additional_rust_srcs_for_crubit_bindings(
+        name,
+        srcs,
+        namespace_path = "",
+        deps = [],
+        cc_deps = [],
+        **kwargs):
+    """
+    Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
+
+    Note: to use `std` in the extra Rust source files, you must use:
+    ```rust
+    extern crate std;
+    ```
+
+    Args:
+        name: Aspect hint name.
+        srcs: The Rust source files to be included in addition to generated Rust bindings.
+        namespace_path: This allows Rust source files define new entries inside of a specific
+            existing C++ namespace instead of the top level namespace. For modules which are not
+            existing namespace names, use `pub mod` statement in the Rust source file instead.
+        deps: List of other libraries to be linked to this library target. This accepts the same
+            deps as rust_library.
+        cc_deps: List of cc_library targets whose crubit-generated bindings will be made available
+            to this library target.
+        **kwargs: Args passed through to the underlying rule (visibility, etc.).
+    """
+
+    _additional_rust_srcs_for_crubit_bindings_rule(
+        name = name,
+        srcs = srcs,
+        namespace_path = namespace_path,
+        deps = deps,
+        cc_deps = cc_deps,
+        **kwargs
+    )
 
 def _create_dep_variant_info(dep):
     return DepVariantInfo(
