@@ -147,6 +147,7 @@ extern crate alloc;
 use alloc::boxed::Box;
 use alloc::rc::Rc;
 use alloc::sync::Arc;
+use core::fmt::Debug;
 use core::marker::{PhantomData, Unpin};
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut};
@@ -209,9 +210,30 @@ pub unsafe trait Ctor: Sized {
     /// `dest` is valid for writes, pinned, and uninitialized.
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error>;
 
-    /// Returns a chained Ctor, which will invoke `f` after construction.
+    /// Converts a `Ctor` with error type `Infallible` to one with the provided error type `E`.
     ///
-    /// for example, these two snippets are equivalent:
+    /// This is useful for chaining possibly-fallible operations (such as `ctor_then`) on top of
+    /// an existing infallible `Ctor`.
+    fn ctor_make_fallible<E>(self) -> impl Ctor<Output = Self::Output, Error = E>
+    where
+        Self: Ctor<Error = Infallible>,
+    {
+        self.ctor_map_err(|e: Infallible| match e {})
+    }
+
+    /// Maps this `Ctor`'s error type into a new error type using the `Into` trait.
+    fn ctor_err_into<E>(self) -> impl Ctor<Output = Self::Output, Error = E>
+    where
+        Self::Error: Into<E>,
+    {
+        self.ctor_map_err(|e| e.into())
+    }
+
+    /// Returns a `Ctor`, which will invoke `f` after construction, if successful.
+    ///
+    /// This functions similarly to `Result::and_then`.
+    ///
+    /// For example, these two snippets are equivalent:
     ///
     /// ```
     /// let mut x = emplace!(y);
@@ -219,14 +241,185 @@ pub unsafe trait Ctor: Sized {
     /// ```
     ///
     /// ```
-    /// let x = emplace!(y.ctor_then(|mut inited| {inited.mutating_method()); Ok(())}));
+    /// let new_ctor = y.ctor_then(|mut initialized| {
+    ///     initialized.mutating_method();
+    ///     Ok(())
+    /// });
+    /// let x = emplace!(new_ctor);
     /// ```
-    fn ctor_then<F>(self, f: F) -> CtorThen<Self, F>
+    fn ctor_then<F>(self, f: F) -> impl Ctor<Output = Self::Output, Error = Self::Error>
     where
         F: FnOnce(Pin<&mut Self::Output>) -> Result<(), Self::Error>,
     {
+        struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> {
+            ctor: C,
+            f: F,
+        }
+
+        // SAFETY: unconditionally initializes dest.
+        unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Ctor
+            for CtorThen<C, F>
+        {
+            type Output = C::Output;
+            type Error = C::Error;
+            unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+                self.ctor.ctor(dest)?;
+                let dest = Pin::new_unchecked(&mut *dest);
+                (self.f)(dest)
+            }
+        }
+
+        impl<C, F> !Unpin for CtorThen<C, F>
+        where
+            C: Ctor,
+            F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>,
+        {
+        }
+
         CtorThen { ctor: self, f }
     }
+
+    /// Returns a `Ctor` which will invoke `f` if construction fails,
+    /// transforming the error type.
+    ///
+    /// This functions similarly to `Result::map_err`.
+    ///
+    /// For example, these two snippets are equivalent:
+    ///
+    /// ```
+    /// let x: Result<Pin<Box<T>>, E> = Box::try_emplace(y);
+    /// let x = x.map_err(|e| e.into_new_error())
+    /// ```
+    ///
+    /// ```
+    /// let new_ctor = y.ctor_map_err(|e| e.into_new_error());
+    /// let x = Box::try_emplace(new_ctor);
+    /// ```
+    fn ctor_map_err<F, E>(self, f: F) -> impl Ctor<Output = Self::Output, Error = E>
+    where
+        F: FnOnce(Self::Error) -> E,
+    {
+        self.ctor_or_else(|e| ctor_error(f(e)))
+    }
+
+    /// Returns a `Ctor` which, if the original construction fails,
+    /// invoke `f` in order to attempt to produce the value.
+    ///
+    /// This functions similarly to `Result::or_else`.
+    ///
+    /// For example:
+    ///
+    /// ```
+    /// let new_ctor = Y::first_attempt().ctor_or_else(|_| Y::fallback_attempt());
+    /// let x = Box::try_emplace(new_ctor);
+    /// ```
+    fn ctor_or_else<F, O>(self, f: F) -> impl Ctor<Output = Self::Output, Error = O::Error>
+    where
+        F: FnOnce(Self::Error) -> O,
+        O: Ctor<Output = Self::Output>,
+    {
+        struct CtorOrElse<C, F, O>
+        where
+            C: Ctor,
+            F: FnOnce(C::Error) -> O,
+            O: Ctor<Output = C::Output>,
+        {
+            ctor: C,
+            f: F,
+        }
+
+        // SAFETY: initializes dest or returns an error.
+        unsafe impl<C, F, O> Ctor for CtorOrElse<C, F, O>
+        where
+            C: Ctor,
+            F: FnOnce(C::Error) -> O,
+            O: Ctor<Output = C::Output>,
+        {
+            type Output = C::Output;
+            type Error = O::Error;
+            unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+                let Err(e) = self.ctor.ctor(dest) else { return Ok(()) };
+                (self.f)(e).ctor(dest)
+            }
+        }
+
+        impl<C, F, O> !Unpin for CtorOrElse<C, F, O>
+        where
+            C: Ctor,
+            F: FnOnce(C::Error) -> O,
+            O: Ctor<Output = C::Output>,
+        {
+        }
+
+        CtorOrElse { ctor: self, f }
+    }
+
+    /// Returns a `Ctor` which will panic with the given message if the original construction
+    /// fails.
+    ///
+    /// This functions similarly to `Result::expect`.
+    fn ctor_expect<'a>(
+        self,
+        msg: &'a str,
+    ) -> impl Ctor<Output = Self::Output, Error = Infallible> + use<'a, Self>
+    where
+        Self::Error: Debug,
+    {
+        // Unused: convert `!` into a proper `Ctor`-implementing type.
+        #[allow(unused)]
+        self.ctor_or_else(move |e| ctor_error(panic!("{}: {:?}", msg, e)))
+    }
+
+    /// Returns a `Ctor` which will panic if the original construction fails.
+    ///
+    /// This functions similarly to `Result::unwrap`.
+    fn ctor_unwrap(self) -> impl Ctor<Output = Self::Output, Error = Infallible>
+    where
+        Self::Error: Debug,
+    {
+        self.ctor_or_else(|e| {
+            // Unused: convert `!` into a proper `Ctor`-implementing type.
+            #[allow(unused)]
+            ctor_error(panic!(
+                "Construction of {} failed: {:?}",
+                core::any::type_name::<Self::Output>(),
+                e,
+            ))
+        })
+    }
+
+    /// Returns a `Ctor` which will return a default value if the original construction fails.
+    ///
+    /// This functions similarly to `Result::unwrap_or_default`.
+    fn ctor_unwrap_or_default(
+        self,
+    ) -> impl Ctor<Output = Self::Output, Error = <Self::Output as CtorNew<()>>::Error>
+    where
+        Self::Output: CtorNew<()>,
+    {
+        self.ctor_or_else(|_| Self::Output::ctor_new(()))
+    }
+}
+
+/// Returns a `Ctor` with error type `E` which always fails with the given error.
+pub fn ctor_error<T: ?Sized, E>(e: E) -> impl Ctor<Output = T, Error = E> {
+    struct CtorError<T: ?Sized, E> {
+        e: E,
+        marker: PhantomData<fn() -> T>,
+    }
+
+    // SAFETY: unconditionally returns an error.
+    unsafe impl<T: ?Sized, E> Ctor for CtorError<T, E> {
+        type Output = T;
+        type Error = E;
+        unsafe fn ctor(self, _: *mut Self::Output) -> Result<(), Self::Error> {
+            Err(self.e)
+        }
+    }
+
+    impl<T: ?Sized, E> !Unpin for CtorError<T, E> {}
+
+    CtorError { e, marker: PhantomData }
 }
 
 /// Trait for smart pointer types which support initialization via `Ctor`.
@@ -604,36 +797,6 @@ impl<T: Unpin + Clone> CtorNew<&T> for T {
         RustMoveCtor::new(src.clone())
     }
 }
-
-// ===========
-// ctor_then()
-// ===========
-
-/// A `Ctor` which constructs using `self.ctor`, and then invokes `f` on the
-/// resulting object.
-///
-/// This struct is created by the `ctor_then` method on `Ctor`. See its
-/// documentation for more.
-#[must_use = must_use_ctor!()]
-pub struct CtorThen<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> {
-    ctor: C,
-    f: F,
-}
-
-// SAFETY: unconditionally initializes dest.
-unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Ctor
-    for CtorThen<C, F>
-{
-    type Output = C::Output;
-    type Error = C::Error;
-    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
-        self.ctor.ctor(dest)?;
-        let dest = Pin::new_unchecked(&mut *dest);
-        (self.f)(dest)
-    }
-}
-
-impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> !Unpin for CtorThen<C, F> {}
 
 // ========
 // emplace!
@@ -1962,6 +2125,32 @@ mod test {
             let x = 40.ctor_then(|mut y| { *y += 2; Ok(()) });
         }
         assert_eq!(*x, 42);
+    }
+
+    #[gtest]
+    fn test_ctor_map_err_on_ok_not_called() {
+        let r: Result<Pin<Box<i32>>, ()> = Box::try_emplace(40.ctor_map_err(|_| panic!()));
+        assert_eq!(r, Ok(Box::pin(40)));
+    }
+
+    #[gtest]
+    fn test_ctor_map_err_on_err_transforms_error() {
+        let res: Result<Pin<Box<i32>>, String> = Box::try_emplace(
+            10.ctor_make_fallible().ctor_then(|_| Err(15)).ctor_map_err(|e| format!("oops: {e}")),
+        );
+        assert_eq!(res, Err("oops: 15".to_string()));
+    }
+
+    #[gtest]
+    fn test_ctor_or_else_on_ok_not_called() {
+        Box::emplace(10.ctor_or_else(|_| -> i32 { panic!() }));
+    }
+
+    #[gtest]
+    fn test_ctor_or_else_on_err_can_recover_value() {
+        let res: Pin<Box<i32>> =
+            Box::emplace(10.ctor_make_fallible().ctor_then(|_| Err(15)).ctor_or_else(|_| 22));
+        assert_eq!(res, Box::pin(22));
     }
 
     /// Test that a slot can be created in a temporary.
