@@ -367,7 +367,7 @@ pub unsafe trait Ctor: Sized {
     {
         // Unused: convert `!` into a proper `Ctor`-implementing type.
         #[allow(unused)]
-        self.ctor_or_else(move |e| ctor_error(panic!("{}: {:?}", msg, e)))
+        self.ctor_or_else(move |e| ctor_error(panic!("{msg}: {e:?}")))
     }
 
     /// Returns a `Ctor` which will panic if the original construction fails.
@@ -381,9 +381,8 @@ pub unsafe trait Ctor: Sized {
             // Unused: convert `!` into a proper `Ctor`-implementing type.
             #[allow(unused)]
             ctor_error(panic!(
-                "Construction of {} failed: {:?}",
-                core::any::type_name::<Self::Output>(),
-                e,
+                "Construction of {type_name} failed: {e:?}",
+                type_name = core::any::type_name::<Self::Output>(),
             ))
         })
     }
