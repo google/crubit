@@ -157,6 +157,10 @@ dialect.
 `super_let` allows us to instead write `let x = emplace!(...)`, with the macro
 expanding to a use of `super_let` to lifetime-extend the storage subexpression.
 
+There's another possible exit strategy: define the `emplace!` macro in an old
+Rust edition so that the old temporary lifetime rules apply. This trick was
+previously used to implement `pin!` in the standard library.
+
 ### `allow_internal_unstable`
 
 *   **Crubit feature:** `wrapper`

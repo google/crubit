@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use ctor::CtorNew as _;
+use ctor::{emplace, CtorNew as _};
 use googletest::prelude::*;
 use oops::Upcast as _;
 use upcast::*;
@@ -27,9 +27,7 @@ fn test_upcast() {
 #[gtest]
 fn test_virtual_upcast() {
     use upcast::virtual_inheritance::*;
-    ctor::emplace! {
-        let derived = VirtualDerived::ctor_new(());
-    }
+    let derived = emplace!(VirtualDerived::ctor_new(()));
     let derived = &*derived;
 
     let base1: &Base1 = derived.upcast();
@@ -48,9 +46,7 @@ fn test_virtual_upcast() {
 
 #[gtest]
 fn test_upcast_thunk_name_uniqueness() {
-    ctor::emplace! {
-        let derived = another_namespace::VirtualBase2::ctor_new(());
-    }
+    let derived = emplace!(another_namespace::VirtualBase2::ctor_new(()));
     let derived = &*derived;
 
     let base1: &Base1 = derived.upcast();

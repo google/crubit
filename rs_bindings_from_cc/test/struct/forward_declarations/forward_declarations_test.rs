@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use ctor::emplace;
 use forward_declare::CppCast;
 use googletest::prelude::*;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
@@ -95,9 +96,7 @@ fn test_write_incomplete_unpin() {
 /// NonunpinStruct work (with an cpp_cast()).
 #[gtest]
 fn test_read_complete_nonunpin() {
-    ctor::emplace! {
-      let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
-    }
+    let s = emplace!(ctor::ctor!(definition::ns::NonunpinStruct { field: 42 }));
 
     // The normal way to call it, if you have a complete type (and know it).
     assert_eq!(definition::ns::ReadNonunpinStruct(&*s), 42);
@@ -115,9 +114,7 @@ fn test_read_complete_nonunpin() {
 /// mut NonunpinStruct work (with an cpp_cast()).
 #[gtest]
 fn test_write_complete_nonunpin() {
-    ctor::emplace! {
-      let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
-    }
+    let mut s = emplace!(ctor::ctor!(definition::ns::NonunpinStruct { field: 42 }));
 
     // The normal way to call it, if you have a complete type (and know it).
     definition::ns::WriteNonunpinStruct(s.as_mut(), 0);
@@ -139,9 +136,7 @@ fn test_write_complete_nonunpin() {
 /// incomplete) NonunpinStruct work (with an cpp_cast()).
 #[gtest]
 fn test_read_incomplete_nonunpin() {
-    ctor::emplace! {
-      let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
-    }
+    let s = emplace!(ctor::ctor!(definition::ns::NonunpinStruct { field: 42 }));
     let decl1_s: Pin<&mut declaration_1::ns::NonunpinStruct> = s.cpp_cast();
 
     // Cast from incomplete to complete:
@@ -160,9 +155,7 @@ fn test_read_incomplete_nonunpin() {
 /// incomplete) mut NonunpinStruct work (with an cpp_cast()).
 #[gtest]
 fn test_write_incomplete_nonunpin() {
-    ctor::emplace! {
-      let mut s = ctor::ctor!(definition::ns::NonunpinStruct {field: 42});
-    }
+    let s = emplace!(ctor::ctor!(definition::ns::NonunpinStruct { field: 42 }));
     let mut decl1_s: Pin<&mut declaration_1::ns::NonunpinStruct> = s.cpp_cast();
 
     // Cast from incomplete to complete:
@@ -187,9 +180,7 @@ fn test_inline_functions_with_incomplete_parameters() {
     let unpin_ref = &unpin;
     assert_eq!(42, declaration_1::ns::InlineFunctionTakingUnpinStruct(unpin_ref.cpp_cast()));
 
-    ctor::emplace! {
-      let nonunpin = ctor::ctor!(definition::ns::NonunpinStruct {field: 123});
-    }
+    let nonunpin = emplace!(ctor::ctor!(definition::ns::NonunpinStruct { field: 123 }));
     let nonunpin_ref = &*nonunpin;
     assert_eq!(123, declaration_1::ns::InlineFunctionTakingNonunpinStruct(nonunpin_ref.cpp_cast()));
 }

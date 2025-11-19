@@ -13,10 +13,8 @@ use std::pin::Pin;
 
 #[gtest]
 fn test_move_construct() {
-    ctor::emplace! {
-        let mut x = Nonunpin::ctor_new(42);
-        let mut y = ctor::mov!(x.as_mut());
-    }
+    let mut x = emplace!(Nonunpin::ctor_new(42));
+    let y = emplace!(mov!(x.as_mut()));
 
     assert_eq!(x.value(), 0); // moved-from
     assert_eq!(y.value(), 42); // moved-to
@@ -27,10 +25,8 @@ fn test_move_construct() {
 
 #[gtest]
 fn test_move_assign() {
-    ctor::emplace! {
-        let mut x = Nonunpin::ctor_new(42);
-        let mut y = Nonunpin::ctor_new(8);
-    }
+    let mut x = emplace!(Nonunpin::ctor_new(42));
+    let mut y = emplace!(Nonunpin::ctor_new(8));
 
     y.as_mut().assign(ctor::mov!(x.as_mut()));
 
@@ -43,10 +39,8 @@ fn test_move_assign() {
 
 #[gtest]
 fn test_copy_construct() {
-    ctor::emplace! {
-        let x = Nonunpin::ctor_new(42);
-        let y = ctor::copy(&*x);
-    }
+    let x = emplace!(Nonunpin::ctor_new(42));
+    let y = emplace!(ctor::copy(&*x));
 
     assert_eq!(x.value(), 42);
     assert_eq!(y.value(), 42);
@@ -57,10 +51,8 @@ fn test_copy_construct() {
 
 #[gtest]
 fn test_copy_assign() {
-    ctor::emplace! {
-        let x = Nonunpin::ctor_new(42);
-        let mut y = Nonunpin::ctor_new(8);
-    }
+    let x = emplace!(Nonunpin::ctor_new(42));
+    let mut y = emplace!(Nonunpin::ctor_new(8));
     y.as_mut().assign(&*x);
 
     assert_eq!(x.value(), 42);
@@ -74,9 +66,7 @@ fn test_copy_assign() {
 /// types, and passed by value.
 #[gtest]
 fn test_ref() {
-    ctor::emplace! {
-        let mut x = Nonunpin::ctor_new(42);
-    }
+    let mut x = emplace!(Nonunpin::ctor_new(42));
     {
         let x_ref: Pin<&mut Nonunpin> = x.as_mut().AsMutRef();
         assert_eq!(nonunpin_experimental::GetValueFromMutRef(x_ref), 42);
@@ -132,7 +122,7 @@ fn test_struct_field() {
         }
     }
 
-    emplace! { let mut my_struct = MyStruct::new(); }
+    let my_struct = emplace!(MyStruct::new());
     assert_eq!(my_struct.field_1, 4);
     assert_eq!(my_struct.field_2.value(), 2);
     // use projection (from recursively_pinned/pin_project) to mutate the struct:
@@ -147,7 +137,7 @@ fn test_struct_field() {
 #[gtest]
 fn test_swap() {
     fn swap(mut x: Pin<&mut Nonunpin>, mut y: Pin<&mut Nonunpin>) {
-        emplace! { let mut tmp = mov!(x.as_mut()); }
+        let mut tmp = emplace!(mov!(x.as_mut()));
         x.assign(mov!(y.as_mut()));
         y.assign(mov!(tmp));
     }

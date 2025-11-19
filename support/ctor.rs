@@ -2,9 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![cfg_attr(not(test), no_std)]
-#![feature(negative_impls)]
+#![feature(negative_impls, allow_internal_unstable, super_let)]
 #![allow(internal_features)] // allow_internal_unstable 🤔
-#![cfg_attr(feature = "unstable", feature(allow_internal_unstable, super_let))]
 //! Traits for memory management operations on wrapped C++ objects, inspired by
 //! moveit, pin-init, and the current in-place initialization proposal at
 //! https://hackmd.io/@aliceryhl/BJutRcPblx.
@@ -287,13 +286,13 @@ pub unsafe trait Ctor: Sized {
     /// For example, these two snippets are equivalent:
     ///
     /// ```
-    /// let x: Result<Pin<Box<T>>, E> = Box::try_emplace(y);
+    /// let x: Result<Pin<&mut T>, E> = try_emplace!(y);
     /// let x = x.map_err(|e| e.into_new_error())
     /// ```
     ///
     /// ```
     /// let new_ctor = y.ctor_map_err(|e| e.into_new_error());
-    /// let x = Box::try_emplace(new_ctor);
+    /// let x = try_emplace!(new_ctor);
     /// ```
     fn ctor_map_err<F, E>(self, f: F) -> impl Ctor<Output = Self::Output, Error = E>
     where
@@ -311,7 +310,7 @@ pub unsafe trait Ctor: Sized {
     ///
     /// ```
     /// let new_ctor = Y::first_attempt().ctor_or_else(|_| Y::fallback_attempt());
-    /// let x = Box::try_emplace(new_ctor);
+    /// let x = try_emplace!(new_ctor);
     /// ```
     fn ctor_or_else<F, O>(self, f: F) -> impl Ctor<Output = Self::Output, Error = O::Error>
     where
@@ -812,61 +811,11 @@ impl<T: Unpin + Clone> CtorNew<&T> for T {
 ///
 /// `emplace!` only works with non-failable `Ctor`s. See `try_emplace` for
 /// failable `Ctor`s.
-///
-/// NOTE: The `let x = emplace!(ctor)` syntax uses the super_let feature. To avoid this, an
-/// alternate syntax is `emplace! {let x = some_ctor;}`.
 #[macro_export]
-macro_rules! emplace {
-    ($expr:expr) => {
-        $crate::internal_emplace_expr!($expr)
-    };
-    (@emplace_one let [$($mut_:tt)?] $var:ident [$($type_:tt)*]= $expr:expr;) => {
-        let mut $var = $crate::Slot::unsafe_new();
-        $var.unsafe_construct($expr);
-        let $($mut_)* $var $($type_)* = $var.unsafe_as_pin_unchecked();
-    };
-    // Base case for repeated lets: empty emplace.
-    () => {};
-    // Recursive case: let [mut] x [: T] = ...;
-    // There are four different combinations of mutability and explicit type parameter, we have to
-    // match all of them.
-    (let mut $var:ident : $t:ty = $expr:expr; $($remaining_lets:tt)*) => {
-        $crate::emplace! {@emplace_one let [mut] $var [:$t] = $expr;}
-        $crate::emplace! {$($remaining_lets)*};
-    };
-    (let mut $var:ident = $expr:expr; $($remaining_lets:tt)*) => {
-        $crate::emplace! {@emplace_one let [mut] $var []= $expr;}
-        $crate::emplace! {$($remaining_lets)*};
-    };
-    (let $var:ident : $t:ty  = $expr:expr; $($remaining_lets:tt)*) => {
-        $crate::emplace! {@emplace_one let [] $var [:$t] = $expr;}
-        $crate::emplace! {$($remaining_lets)*};
-    };
-    (let $var:ident = $expr:expr; $($remaining_lets:tt)*) => {
-        $crate::emplace! {@emplace_one let [] $var [] = $expr;}
-        $crate::emplace! {$($remaining_lets)*};
-    };
-}
-
-// Needs to be a separate macro to isolate the cfg-guard, which can only apply to the
-// entire macro_rules.
-
-#[macro_export]
-#[doc(hidden)]
-#[cfg(not(feature = "unstable"))]
-macro_rules! internal_emplace_expr {
-    ($expr:expr) => {
-        $crate::Slot::unsafe_new().unsafe_construct($expr).unsafe_as_pin_unchecked()
-    };
-}
-
-#[macro_export]
-#[doc(hidden)]
-#[cfg(feature = "unstable")]
 #[allow_internal_unstable(super_let)]
 // `super` gets removed by rustfmt, apparently.
 #[rustfmt::skip]
-macro_rules! internal_emplace_expr {
+macro_rules! emplace {
     ($expr:expr) => {
         {
             super let mut slot = $crate::Slot::unsafe_new();
@@ -883,7 +832,6 @@ macro_rules! internal_emplace_expr {
 /// This is similar to `emplace!`, but can be used with fallible `Ctor`s (ones with an error type
 /// that is not `Infallible`).
 #[macro_export]
-#[cfg(feature = "unstable")]
 #[allow_internal_unstable(super_let)]
 // `super` gets removed by rustfmt, apparently.
 #[rustfmt::skip]
@@ -1644,15 +1592,8 @@ mod test {
     /// Only really need one test for the new super-let syntax, as it uses the same
     /// building blocks as the old syntax.
     #[gtest]
-    #[cfg(feature = "unstable")]
     fn test_emplace_super_let() {
         let x = emplace!(u32::ctor_new(()));
-        assert_eq!(*x, 0);
-    }
-
-    #[gtest]
-    fn test_default_rust_type() {
-        emplace! {let x = u32::ctor_new(());}
         assert_eq!(*x, 0);
     }
 
@@ -1679,9 +1620,7 @@ mod test {
     #[gtest]
     fn test_copy_smart_ptr() {
         let x = Box::new(42_u32);
-        emplace! {
-            let y = copy(x);
-        }
+        let y = emplace!(copy(x));
         // x is no longer in scope, as it was moved into the Copy.
         assert_eq!(*y, 42);
     }
@@ -1690,22 +1629,17 @@ mod test {
     #[gtest]
     fn test_emplace_type() {
         let x: u32 = 42;
-        emplace! {
-            let foo = copy(&x);
-        }
+        let foo = emplace!(copy(&x));
         let _foo: Pin<&mut u32> = foo; // type checks OK
     }
 
     #[gtest]
     fn test_emplace_macro() {
         let x: u32 = 42;
-        emplace! {
-            let foo = copy(&x);
-        }
+        let foo = emplace!(copy(&x));
         assert_eq!(*foo, 42);
     }
 
-    #[cfg(feature = "unstable")]
     #[gtest]
     fn test_try_emplace_returns_ok() {
         struct OkCtor;
@@ -1724,7 +1658,6 @@ mod test {
         assert_eq!(x, Ok(Pin::new(&mut 42)));
     }
 
-    #[cfg(feature = "unstable")]
     #[gtest]
     fn test_try_emplace_returns_err() {
         struct ErrCtor;
@@ -1757,9 +1690,7 @@ mod test {
     #[gtest]
     fn test_emplace_mut() {
         let x: u32 = 42;
-        emplace! {
-            let mut foo = copy(&x);
-        }
+        let mut foo = emplace!(copy(&x));
         assert_eq!(*foo, 42);
         *foo = 0;
         assert_eq!(*foo, 0);
@@ -1768,10 +1699,8 @@ mod test {
     #[gtest]
     fn test_emplace_multi() {
         let x: u32 = 42;
-        emplace! {
-            let foo = copy(&x);
-            let bar = copy(&*foo);
-        }
+        let foo = emplace!(copy(&x));
+        let bar = emplace!(copy(&*foo));
         assert_eq!(*foo, 42);
         assert_eq!(*bar, 42);
     }
@@ -1779,10 +1708,8 @@ mod test {
     #[gtest]
     fn test_emplace_type_syntax() {
         let x: u32 = 42;
-        emplace! {
-            let mut foo: Pin<&mut u32> = copy(&x);
-            let bar: Pin<&mut u32> = copy(&x);
-        }
+        let mut foo: Pin<&mut u32> = emplace!(copy(&x));
+        let bar: Pin<&mut u32> = emplace!(copy(&x));
         assert_eq!(*foo, 42);
         *foo = 0;
         assert_eq!(*foo, 0);
@@ -1798,10 +1725,7 @@ mod test {
         unsafe impl RecursivelyPinned for MyStruct {
             type CtorInitializedFields = Self;
         }
-        emplace! { let my_struct = ctor!(MyStruct {
-            x: 4,
-            y: copy(&2)
-        });}
+        let my_struct = emplace!(ctor!(MyStruct { x: 4, y: copy(&2) }));
         assert_eq!(my_struct.x, 4);
         assert_eq!(my_struct.y, 2);
 
@@ -1824,12 +1748,10 @@ mod test {
             type CtorInitializedFields = Self;
         }
 
-        emplace! {
-            let my_struct = ctor!(MyStruct<u32> {
-                x: 4,
-                y: 2,
-            });
-        };
+        let my_struct = emplace!(ctor!(MyStruct<u32> {
+            x: 4,
+            y: 2,
+        }));
 
         assert_eq!(my_struct.x, 4);
         assert_eq!(my_struct.y, 2);
@@ -1841,8 +1763,8 @@ mod test {
         unsafe impl RecursivelyPinned for MyStruct {
             type CtorInitializedFields = Self;
         }
-        emplace! { let _my_struct = ctor!(MyStruct);}
-        emplace! { let _my_struct = ctor!(MyStruct {});}
+        let _my_struct = emplace!(ctor!(MyStruct));
+        let _my_struct = emplace!(ctor!(MyStruct {}));
     }
 
     #[gtest]
@@ -1851,10 +1773,7 @@ mod test {
         unsafe impl RecursivelyPinned for MyStruct {
             type CtorInitializedFields = Self;
         }
-        emplace! { let my_struct = ctor!(MyStruct {
-            0: 4,
-            1: copy(&2)
-        });}
+        let my_struct = emplace!(ctor!(MyStruct { 0: 4, 1: copy(&2) }));
         assert_eq!(my_struct.0, 4);
         assert_eq!(my_struct.1, 2);
     }
@@ -1865,7 +1784,7 @@ mod test {
         unsafe impl RecursivelyPinned for MyStruct {
             type CtorInitializedFields = Self;
         }
-        emplace! { let my_struct = ctor!(MyStruct (4, copy(&2)));}
+        let my_struct = emplace!(ctor!(MyStruct(4, copy(&2))));
         assert_eq!(my_struct.0, 4);
         assert_eq!(my_struct.1, 2);
     }
@@ -1888,7 +1807,8 @@ mod test {
         unsafe impl RecursivelyPinned for MyStruct {
             type CtorInitializedFields = Self;
         }
-        emplace! {let my_struct = ctor!(MyStruct {x: unsafe {ManuallyDropCtor::new(vec![42])}, y: 0 }); }
+        let my_struct =
+            emplace!(ctor!(MyStruct { x: unsafe { ManuallyDropCtor::new(vec![42]) }, y: 0 }));
         assert_eq!(&*my_struct.x, &vec![42]);
         assert_eq!(my_struct.y, 0);
     }
@@ -1902,7 +1822,8 @@ mod test {
         unsafe impl RecursivelyPinned for MyUnion {
             type CtorInitializedFields = Self;
         }
-        emplace! {let mut my_union = ctor!(MyUnion {x: unsafe { ManuallyDropCtor::new(vec![42])} }); }
+        let mut my_union =
+            emplace!(ctor!(MyUnion { x: unsafe { ManuallyDropCtor::new(vec![42]) } }));
         assert_eq!(unsafe { &*my_union.x }, &vec![42]);
 
         // And now write to the union.
@@ -1925,10 +1846,7 @@ mod test {
                 type CtorInitializedFields = Self;
             }
         }
-        emplace! { let my_struct = ctor!(nested::MyStruct {
-            x: 4,
-            y: copy(&2)
-        });}
+        let my_struct = emplace!(ctor!(nested::MyStruct { x: 4, y: copy(&2) }));
         assert_eq!(my_struct.x, 4);
         assert_eq!(my_struct.y, 2);
     }
@@ -1941,7 +1859,7 @@ mod test {
                 type CtorInitializedFields = Self;
             }
         }
-        emplace! { let my_struct = ctor!(nested::MyStruct (4, copy(&2)));}
+        let my_struct = emplace!(ctor!(nested::MyStruct(4, copy(&2))));
         assert_eq!(my_struct.0, 4);
         assert_eq!(my_struct.1, 2);
     }
@@ -1960,9 +1878,7 @@ mod test {
             fn drop(&mut self) {}
         }
 
-        emplace! { let _my_struct = ctor!(MyStruct {
-            x: "".to_string()
-        });}
+        let _my_struct = emplace!(ctor!(MyStruct { x: "".to_string() }));
     }
 
     /// Struct which sets a bool to true when dropped.
@@ -2005,7 +1921,7 @@ mod test {
     fn test_emplace_drop() {
         let is_dropped = Mutex::new(false);
         {
-            emplace! { let _my_drop_notify = DropNotify(&is_dropped); }
+            let _my_drop_notify = emplace!(DropNotify(&is_dropped));
         }
         assert!(*is_dropped.lock().unwrap());
     }
@@ -2016,7 +1932,7 @@ mod test {
     fn test_emplace_no_drop_on_panic() {
         let is_dropped = Mutex::new(false);
         let panic_result = std::panic::catch_unwind(|| {
-            emplace! { let _my_drop_notify = PanicCtor(DropNotify(&is_dropped)); }
+            let _my_drop_notify = emplace!(PanicCtor(DropNotify(&is_dropped)));
         });
         assert!(panic_result.is_err());
         assert!(!*is_dropped.lock().unwrap());
@@ -2038,10 +1954,10 @@ mod test {
         let x_dropped = Mutex::new(false);
         let y_dropped = Mutex::new(false);
         let panic_result = std::panic::catch_unwind(|| {
-            emplace! { let _my_struct = ctor!(MyStruct {
+            let _my_struct = emplace!(ctor!(MyStruct {
                 x: DropNotify(&x_dropped),
                 y: PanicCtor(DropNotify(&y_dropped))
-            });}
+            }));
         });
         assert!(panic_result.is_err());
         assert!(*x_dropped.lock().unwrap());
@@ -2068,7 +1984,7 @@ mod test {
         // (outside this crate) because it is private
         // let x = CtorOnly {field: 3};
 
-        emplace! {let x = ctor!(CtorOnly {field: 3});}
+        let x = emplace!(ctor!(CtorOnly { field: 3 }));
         assert_eq!(x.field, 3);
     }
 
@@ -2085,7 +2001,7 @@ mod test {
         // because it is private
         // let x = CtorOnly(3);
 
-        emplace! {let x = ctor!(CtorOnly(3));}
+        let x = emplace!(ctor!(CtorOnly(3)));
         assert_eq!(x.0, 3);
     }
 
@@ -2140,10 +2056,8 @@ mod test {
         let log = RefCell::new(vec![]);
         let log = &log;
 
-        emplace! {
-            let notify_tester = DropCtorLogger {log};
-            let new_value = DropCtorLogger {log};
-        }
+        let notify_tester = emplace!(DropCtorLogger { log });
+        let new_value = emplace!(DropCtorLogger { log });
         notify_tester.assign(&*new_value);
         assert_eq!(*log.borrow(), vec!["copy ctor", "drop"]);
     }
@@ -2155,10 +2069,8 @@ mod test {
         let log = RefCell::new(vec![]);
         let log = &log;
 
-        emplace! {
-            let notify_tester = DropCtorLogger {log};
-            let new_value = DropCtorLogger {log};
-        }
+        let notify_tester = emplace!(DropCtorLogger { log });
+        let new_value = emplace!(DropCtorLogger { log });
         notify_tester.assign(mov!(new_value));
         assert_eq!(*log.borrow(), vec!["move ctor", "drop"]);
     }
@@ -2189,23 +2101,25 @@ mod test {
 
     #[gtest]
     fn test_ctor_then() {
-        emplace! {
-            let x = 40.ctor_then(|mut y| { *y += 2; Ok(()) });
-        }
+        let x = emplace!(40.ctor_then(|mut y| {
+            *y += 2;
+            Ok(())
+        }));
         assert_eq!(*x, 42);
     }
 
     #[gtest]
     fn test_ctor_map_err_on_ok_not_called() {
-        let r: Result<Pin<Box<i32>>, ()> = Box::try_emplace(40.ctor_map_err(|_| panic!()));
-        assert_eq!(r, Ok(Box::pin(40)));
+        let r: Result<Pin<&mut i32>, ()> = try_emplace!(40.ctor_map_err(|_| panic!()));
+        assert_eq!(r, Ok(Pin::new(&mut 40)));
     }
 
     #[gtest]
     fn test_ctor_map_err_on_err_transforms_error() {
-        let res: Result<Pin<Box<i32>>, String> = Box::try_emplace(
-            10.ctor_make_fallible().ctor_then(|_| Err(15)).ctor_map_err(|e| format!("oops: {e}")),
-        );
+        let res: Result<Pin<&mut i32>, String> = try_emplace!(10
+            .ctor_make_fallible()
+            .ctor_then(|_| Err(15))
+            .ctor_map_err(|e| format!("oops: {e}")));
         assert_eq!(res, Err("oops: 15".to_string()));
     }
 
@@ -2230,7 +2144,7 @@ mod test {
     /// Test that a slot can be created in a local.
     #[gtest]
     fn test_slot_local() {
-        emplace! {let slot = Slot::new(42); }
+        let slot = emplace!(Slot::new(42));
         assert_eq!(*slot.as_opt().unwrap(), 42);
     }
 
@@ -2243,7 +2157,7 @@ mod test {
             slot.replace(42)
         }
 
-        emplace! {let slot = Slot::uninit(); }
+        let slot = emplace!(Slot::uninit());
         let rv = foo(slot);
         assert_eq!(*rv, 42);
     }
@@ -2256,7 +2170,7 @@ mod test {
             slot.replace(42);
         }
 
-        emplace! {let mut slot = Slot::uninit(); }
+        let mut slot = emplace!(Slot::uninit());
         foo(slot.as_mut());
         assert_eq!(*slot.as_opt().unwrap(), 42);
     }
@@ -2275,9 +2189,7 @@ mod test {
             })
         }
 
-        emplace! {
-            let sum = adder(&40, &2);
-        }
+        let sum = emplace!(adder(&40, &2));
         assert_eq!(*sum, 42);
     }
 

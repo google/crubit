@@ -31,7 +31,7 @@ fn test_derive_default_unit_struct() {
     }
     impl !Unpin for Struct {}
 
-    ::ctor::emplace! {let _p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
+    let _p = ::ctor::emplace!(<Struct as ::ctor::CtorNew<()>>::ctor_new(()));
 }
 
 #[gtest]
@@ -46,7 +46,7 @@ fn test_derive_default_struct() {
     }
     impl !Unpin for Struct {}
 
-    ::ctor::emplace! {let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
+    let p = ::ctor::emplace!(<Struct as ::ctor::CtorNew<()>>::ctor_new(()));
     assert_eq!(p.x, 0);
     assert_eq!(p.y, 0.0);
 }
@@ -60,7 +60,7 @@ fn test_derive_default_tuple_struct() {
     }
     impl !Unpin for Struct {}
 
-    ::ctor::emplace! {let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
+    let p = ::ctor::emplace!(<Struct as ::ctor::CtorNew<()>>::ctor_new(()));
     assert_eq!(p.0, 0);
     assert_eq!(p.1, 0.0);
 }
@@ -216,9 +216,7 @@ fn test_recursively_pinned_struct_derive_default() {
         y: f32,
     }
 
-    ::ctor::emplace! {
-        let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(());
-    }
+    let p = ::ctor::emplace!(<Struct as ::ctor::CtorNew<()>>::ctor_new(()));
     assert_eq!(p.x, 0);
     assert_eq!(p.y, 0.0);
 }
@@ -234,7 +232,7 @@ fn test_derive_default_recursively_pinned_struct() {
         y: f32,
     }
 
-    ::ctor::emplace! {let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
+    let p = ::ctor::emplace!(<Struct as ::ctor::CtorNew<()>>::ctor_new(()));
     assert_eq!(p.x, 0);
     assert_eq!(p.y, 0.0);
 }
@@ -248,13 +246,8 @@ fn test_recursively_pinned_actually_pinned() {
         pin: ::std::marker::PhantomPinned,
     }
 
-    ::ctor::emplace! {
-        let p = ::ctor::ctor!(Struct {
-            x: 0,
-            y: 0.0,
-            pin: ::ctor::PhantomPinnedCtor,
-        });
-    }
+    let p =
+        ::ctor::emplace!(::ctor::ctor!(Struct { x: 0, y: 0.0, pin: ::ctor::PhantomPinnedCtor }));
     assert_eq!(p.x, 0);
     assert_eq!(p.y, 0.0);
     // TODO(jeanpierreda): negative compilation test for e.g. `p.x = 1;`

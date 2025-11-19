@@ -17,17 +17,6 @@ use googletest::prelude::*;
 mod std {}
 mod ctor {}
 
-/// Expand emplace!{let ...} to test for hygiene.
-#[gtest]
-fn test_emplace_stmt_hygiene() {
-    ::ctor::emplace! {
-        let _x1 = 0;
-        let mut _x2 = 0;
-        let _x3 : ::std::pin::Pin<&mut u32> = 0;
-        let mut _x4 : ::std::pin::Pin<&mut u32> = 0;
-    }
-}
-
 /// Expand emplace!(expr) to test for hygiene.
 #[gtest]
 fn test_emplace_expr_hygiene() {

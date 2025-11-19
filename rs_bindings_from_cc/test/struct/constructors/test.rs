@@ -9,6 +9,7 @@ use constructors::{
     StructWithInlineConstructors, StructWithPrivateConstructors,
     StructWithUserProvidedConstructors,
 };
+use ctor::emplace;
 use ctor::CtorNew as _;
 use googletest::gtest;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
@@ -111,13 +112,9 @@ fn test_nontrivial_struct() {
     // constructor, copy constructor, and constructor taking an int.
     assert_not_impl_any!(NonTrivialStructWithConstructors: Clone, Default, From<i32>);
 
-    ctor::emplace! {
-        let s = NonTrivialStructWithConstructors::ctor_new(123);
-    }
+    let s = emplace!(NonTrivialStructWithConstructors::ctor_new(123));
     assert_eq!(s.int_field, 123);
 
-    ctor::emplace! {
-        let s_clone = ctor::copy(&*s);
-    }
+    let s_clone = emplace!(ctor::copy(&*s));
     assert_eq!(s_clone.int_field, 123);
 }

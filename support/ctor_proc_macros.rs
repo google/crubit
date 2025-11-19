@@ -452,9 +452,7 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 ///
 /// ```
 /// // equivalent to `let x = Point {x: 3, y: 4}`, but uses pinned construction.
-/// emplace! {
-///   let x = ctor!(Point {x: 3, y: 4});
-/// }
+/// let x = emplace!(ctor!(Point {x: 3, y: 4}));
 /// ```
 ///
 /// Recursively pinned types cannot be created directly in safe code, as they

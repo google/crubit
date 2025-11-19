@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use add::*;
+use ctor::emplace;
 use googletest::prelude::*;
 
 #[gtest]
@@ -49,13 +50,9 @@ fn test_add_returns_void() {
 
 #[gtest]
 fn test_add_nontrivial_by_value() {
-    ctor::emplace! {
-        let s1 = ctor::ctor!(AddableNontrivialByValue {i: 11});
-        let s2 = ctor::ctor!(AddableNontrivialByValue {i: 22});
-    }
-    ctor::emplace! {
-        let sum = &*s1 + ctor::mov!(s2);
-    }
+    let s1 = emplace!(ctor::ctor!(AddableNontrivialByValue { i: 11 }));
+    let s2 = emplace!(ctor::ctor!(AddableNontrivialByValue { i: 22 }));
+    let sum = emplace!(&*s1 + ctor::mov!(s2));
     assert_eq!(sum.i, 33);
 }
 
@@ -110,12 +107,8 @@ fn test_add_friend_by_value() {
 
 #[gtest]
 fn test_add_returns_nontrivial() {
-    ctor::emplace! {
-        let s1 = ctor::ctor!(AddableReturnsNontrivial {i: 11});
-        let s2 = ctor::ctor!(AddableReturnsNontrivial {i: 22});
-    }
-    ctor::emplace! {
-        let sum = &*s1 + &*s2;
-    }
+    let s1 = emplace!(ctor::ctor!(AddableReturnsNontrivial { i: 11 }));
+    let s2 = emplace!(ctor::ctor!(AddableReturnsNontrivial { i: 22 }));
+    let sum = emplace!(&*s1 + &*s2);
     assert_eq!(sum.i, 33);
 }

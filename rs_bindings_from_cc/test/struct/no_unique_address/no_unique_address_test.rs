@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use ctor::emplace;
 use googletest::prelude::*;
 use no_unique_address::*;
 
@@ -23,9 +24,7 @@ fn test_padding_between_fields() {
 
 #[gtest]
 fn test_field_in_tail_padding() {
-    ctor::emplace! {
-        let s = FieldInTailPadding::ctor_new((1, 2, 3));
-    }
+    let s = emplace!(FieldInTailPadding::ctor_new((1, 2, 3)));
     assert_eq!(s.inner_struct().inner_int_field, 1);
     assert_eq!(s.inner_struct().inner_char_field, 2);
     assert_eq!(s.char_in_tail_padding_of_prev_field, 3);
@@ -33,9 +32,7 @@ fn test_field_in_tail_padding() {
 
 #[gtest]
 fn test_struct_with_fields_written_before_empty_no_unique_address_field() {
-    ctor::emplace! {
-      let mut s = StructWithFieldsWrittenBeforeEmptyNoUniqueAddressField::Make(1);
-    }
+    let mut s = emplace!(StructWithFieldsWrittenBeforeEmptyNoUniqueAddressField::Make(1));
     assert_eq!(s.field1, 1);
     assert_eq!(s.no_unique_address_empty_field().method(), 12345);
 }

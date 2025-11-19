@@ -12,36 +12,28 @@ use std::pin::Pin;
 /// address.
 #[gtest]
 fn test_onearg_ctor() {
-    ctor::emplace! {
-        let mut x = Nonunpin::ctor_new(42);
-    }
+    let mut x = emplace!(Nonunpin::ctor_new(42));
     assert_eq!(x.value(), 42);
     assert_eq!(x.addr(), &*x as *const _ as usize);
 }
 
 #[gtest]
 fn test_default_ctor() {
-    ctor::emplace! {
-        let mut x = Nonunpin::ctor_new(());
-    }
+    let mut x = emplace!(Nonunpin::ctor_new(()));
     assert_eq!(x.value(), 0);
     assert_eq!(x.addr(), &*x as *const _ as usize);
 }
 
 #[gtest]
 fn test_methods() {
-    ctor::emplace! {
-        let mut x = Nonunpin::ctor_new(42);
-    }
+    let mut x = emplace!(Nonunpin::ctor_new(42));
     x.as_mut().set_value(24);
     assert_eq!(x.value(), 24);
 }
 
 #[gtest]
 fn test_aggregate() {
-    ctor::emplace! {
-        let mut x = ctor!(NonunpinStruct {value: 42});
-    }
+    let mut x = emplace!(ctor!(NonunpinStruct { value: 42 }));
     assert_eq!(x.value, 42);
     {
         // Read/write via a pin-projection.
@@ -55,10 +47,8 @@ fn test_aggregate() {
 
 #[gtest]
 fn test_return_by_value() {
-    ctor::emplace! {
-        let x = Nonunpin::ctor_new(42);
-        let y = x.AsValue();
-    }
+    let x = emplace!(Nonunpin::ctor_new(42));
+    let y = emplace!(x.AsValue());
 
     assert_eq!(x.value(), 42);
     assert_eq!(y.value(), 42);
@@ -69,9 +59,7 @@ fn test_return_by_value() {
 
 #[gtest]
 fn test_nonmovable_ctor() {
-    ctor::emplace! {
-        let x = Nonmovable::ctor_new(());
-    }
+    let x = emplace!(Nonmovable::ctor_new(()));
     assert_eq!(x.addr, &*x as *const _ as usize);
 }
 
@@ -79,9 +67,7 @@ fn test_nonmovable_ctor() {
 /// type by value.
 #[gtest]
 fn test_nonmovable_return_value() {
-    ctor::emplace! {
-        let x = ReturnsNonmovable();
-    }
+    let x = emplace!(ReturnsNonmovable());
     assert_eq!(x.addr, &*x as *const _ as usize);
 }
 
@@ -101,11 +87,9 @@ fn test_union_field() {
 
     // No safe helpers here. :)
     unsafe {
-        emplace! {
-            let mut my_union = ctor!(MyUnion {
-                cxx_class: ctor::ManuallyDropCtor::new(Nonunpin::ctor_new(4))
-            });
-        }
+        let mut my_union = emplace!(ctor!(MyUnion {
+            cxx_class: ctor::ManuallyDropCtor::new(Nonunpin::ctor_new(4))
+        }));
         assert_eq!(my_union.cxx_class.value(), 4);
         std::mem::ManuallyDrop::drop(&mut Pin::into_inner_unchecked(my_union.as_mut()).cxx_class);
         my_union.as_mut().reconstruct_unchecked(ctor!(MyUnion { int: 2 }));
