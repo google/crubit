@@ -178,21 +178,18 @@ fn func_has_bindings(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
 ) -> Result<BindingsInfo, NoBindingsReason> {
-    let ir = db.ir();
-    let target = &func.owning_target;
-    let enabled_features = ir.target_crubit_features(target);
-    // Check for non-Unpin return/parameter types.
-    // When we release non-Unpin types by value, this whole complicated check will go away.
-
-    let mut missing_features = vec![];
-    let mut has_nonunpin = false;
-
     if func.is_consteval {
         return Err(NoBindingsReason::Unsupported {
             context: func.debug_name(db.ir()),
             error: anyhow!("consteval functions are not supported"),
         });
     }
+
+    let ir = db.ir();
+    let target = &func.owning_target;
+    let enabled_features = ir.target_crubit_features(target);
+
+    let mut missing_features = vec![];
 
     if func.is_member_or_descendant_of_class_template
         && func.rs_name != ir::UnqualifiedIdentifier::Destructor
@@ -209,57 +206,23 @@ fn func_has_bindings(
         });
     }
 
-    let mut require_nonunpin =
-        |missing_features: &mut Vec<RequiredCrubitFeature>,
-         rs_type_kind: RsTypeKind,
-         location: &dyn Fn() -> std::borrow::Cow<'static, str>| {
-            if rs_type_kind.is_unpin() {
-                return;
+    let mut visibility = Visibility::Public;
+    let sig_types = func.params.iter().map(|p| &p.type_).chain(std::iter::once(&func.return_type));
+    for sig_type in sig_types {
+        let rs_type_kind = db.rs_type_kind(sig_type.clone()).unwrap();
+        match type_visibility(db, &func, rs_type_kind) {
+            Ok(vis) => {
+                visibility = visibility.or(vis);
             }
-            has_nonunpin = true;
-            if enabled_features.contains(crubit_feature::CrubitFeature::NonUnpinCtor) {
-                return;
-            }
-            let location = location();
-            missing_features.push(RequiredCrubitFeature {
-                target: target.clone(),
-                item: func.debug_name(ir),
-                missing_features: crubit_feature::CrubitFeature::NonUnpinCtor.into(),
-                capability_description: format!(
-                    "<internal link>_relocatable_error: {location} is not rust-movable"
-                )
-                .into(),
-            });
-        };
-    let require_visible = |old_visibility: &mut Visibility,
-                           all_missing_features: &mut Vec<RequiredCrubitFeature>,
-                           rs_type_kind: RsTypeKind| {
-        let new_visibility = match type_visibility(db, &func, rs_type_kind) {
-            Ok(vis) => vis,
-            Err(NoBindingsReason::MissingRequiredFeatures { context: _, mut missing_features }) => {
-                all_missing_features.append(&mut missing_features);
+            Err(NoBindingsReason::MissingRequiredFeatures {
+                context: _,
+                missing_features: new_missing_features,
+            }) => {
+                missing_features.extend(new_missing_features);
                 // Keep going using public for now, we're not going to generate bindings anyway.
-                Visibility::Public
             }
             Err(other_reason) => unreachable!("{:#?}", Error::from(other_reason)),
         };
-        if *old_visibility == Visibility::Public {
-            *old_visibility = new_visibility;
-        }
-    };
-
-    let return_type = db.rs_type_kind(func.return_type.clone()).unwrap();
-    require_nonunpin(&mut missing_features, return_type.clone(), &|| "the return type".into());
-    let mut visibility = Visibility::Public;
-    require_visible(&mut visibility, &mut missing_features, return_type);
-
-    for (i, param) in func.params.iter().enumerate() {
-        let param_type = db.rs_type_kind(param.type_.clone()).unwrap();
-        require_nonunpin(&mut missing_features, param_type.clone(), &|| {
-            format!("{} (parameter #{i})", &param.identifier).into()
-        });
-
-        require_visible(&mut visibility, &mut missing_features, param_type);
     }
 
     if !missing_features.is_empty() {
@@ -269,14 +232,6 @@ fn func_has_bindings(
         });
     }
 
-    if has_nonunpin
-        && enabled_features.is_disjoint(
-            crubit_feature::CrubitFeature::Experimental
-                | crubit_feature::CrubitFeature::NonUnpinCtor,
-        )
-    {
-        visibility = Visibility::PubCrate;
-    }
     Ok(BindingsInfo { visibility })
 }
 

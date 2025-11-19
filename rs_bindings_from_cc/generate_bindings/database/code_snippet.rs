@@ -328,6 +328,19 @@ pub enum Visibility {
     PubCrate,
 }
 
+impl Visibility {
+    /// Returns the least of two visibilities.
+    #[must_use]
+    pub fn or(self, other: Visibility) -> Visibility {
+        match (self, other) {
+            (Visibility::Public, Visibility::Public) => Visibility::Public,
+            (Visibility::Public, Visibility::PubCrate)
+            | (Visibility::PubCrate, Visibility::Public)
+            | (Visibility::PubCrate, Visibility::PubCrate) => Visibility::PubCrate,
+        }
+    }
+}
+
 impl ToTokens for Visibility {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
