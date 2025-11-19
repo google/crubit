@@ -1148,6 +1148,40 @@ TEST(HasInferableTest,
 }
 
 TEST(HasInferableTest,
+     ParamInFunctionTemplateInstantiationWithUniversalRefTemplateArgumentType) {
+  TestAST AST(R"cc(
+    template <typename T>
+    void funcTmpl(T&& ParamInTmpl) {}
+
+    // Instantiations with an lvalue reference result in a parameter type that
+    // does not contain a SubstTemplateTypeParmType node, so we don't detect
+    // that it is a substituted template parameter.
+    auto& FuncTmplInstLValue = funcTmpl<int*&>;
+
+    // Without the reference component of the template argument, the type of
+    // ParamInTmpl is an rvalue reference.
+    auto& FuncTmplInstRValue = funcTmpl<int*>;
+  )cc");
+  ASTContext& Ctx = AST.context();
+  const ValueDecl& LValueInstantiation =
+      *cast<DeclRefExpr>(lookup<VarDecl>("FuncTmplInstLValue", Ctx)
+                             .getInit()
+                             ->IgnoreImplicit())
+           ->getDecl();
+  // Ideally, this would be false.
+  EXPECT_TRUE(hasInferable(
+      lookup<ParmVarDecl>("ParamInTmpl", Ctx, &LValueInstantiation).getType()));
+
+  const ValueDecl& RValueInstantiation =
+      *cast<DeclRefExpr>(lookup<VarDecl>("FuncTmplInstRValue", Ctx)
+                             .getInit()
+                             ->IgnoreImplicit())
+           ->getDecl();
+  EXPECT_FALSE(hasInferable(
+      lookup<ParmVarDecl>("ParamInTmpl", Ctx, &RValueInstantiation).getType()));
+}
+
+TEST(HasInferableTest,
      ParamInFunctionTemplateInstantiationWithPointerToTemplateArgumentType) {
   TestAST AST(R"cc(
     template <typename T>
