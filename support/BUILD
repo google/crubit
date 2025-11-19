@@ -96,9 +96,9 @@ crubit_rust_test(
 
 rust_test(
     name = "ctor_test",
-    crate = ":ctor",
-    proc_macro_deps = [":ctor_proc_macros"],
+    srcs = ["ctor_test.rs"],
     deps = [
+        ":ctor",
         "@crate_index//:googletest",
     ],
 )
