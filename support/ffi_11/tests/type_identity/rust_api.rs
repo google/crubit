@@ -30,15 +30,13 @@ pub fn c_long() -> ffi_11::c_long {
 pub fn c_ulong() -> ffi_11::c_ulong {
     Default::default()
 }
-// TODO(jeanpierreda): Uncomment these when we have a decision on what to do with long
-// long.
 
-// pub fn c_longlong() -> ffi_11::c_longlong {
-//     Default::default()
-// }
-// pub fn c_ulonglong() -> ffi_11::c_ulonglong {
-//     Default::default()
-// }
+pub fn c_longlong() -> ffi_11::c_longlong {
+    Default::default()
+}
+pub fn c_ulonglong() -> ffi_11::c_ulonglong {
+    Default::default()
+}
 
 pub fn c_float() -> ffi_11::c_float {
     Default::default()

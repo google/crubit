@@ -17,10 +17,8 @@ const _: () = {
     assert_impl_all!(c_long: From<i8>, From<u8>, From<i16>, From<i32>, From<c_schar>, From<c_short>, From<c_int>);
     assert_impl_all!(c_ulong: From<u8>, From<u16>, From<u32>, From<c_uchar>, From<c_ushort>, From<c_uint>);
 
-    // TODO(jeanpierreda): uncomment when long long is supported.
-
-    // assert_impl_all!(c_longlong: From<i8>, From<u8>, From<i16>, From<i32>, From<i64>, From<c_schar>, From<c_short>, From<c_int>, From<c_long>);
-    // assert_impl_all!(c_ulonglong: From<u8>, From<u16>, From<u32>, From<u64>, From<c_uchar>, From<c_ushort>, From<c_uint>, From<c_ulong>);
+    assert_impl_all!(c_longlong: From<i8>, From<u8>, From<i16>, From<i32>, From<i64>, From<c_schar>, From<c_short>, From<c_int>, From<c_long>);
+    assert_impl_all!(c_ulonglong: From<u8>, From<u16>, From<u32>, From<u64>, From<c_uchar>, From<c_ushort>, From<c_uint>, From<c_ulong>);
 };
 
 const _: () = {
@@ -37,11 +35,9 @@ const _: () = {
     assert_impl_all!(core::ffi::c_long: From<c_long>);
     assert_impl_all!(core::ffi::c_ulong: From<c_ulong>);
 
-    // TODO(jeanpierreda): uncomment when long long is supported.
+    assert_impl_all!(core::ffi::c_longlong: From<c_longlong>);
+    assert_impl_all!(core::ffi::c_ulonglong: From<c_ulonglong>);
 
-    // assert_impl_all!(core::ffi::c_longlong: From<c_longlong>);
-    // assert_impl_all!(core::ffi::c_ulonglong: From<c_ulonglong>);
-
-    // assert_impl_all!(c_longlong: From<i8>, From<u8>, From<i16>, From<i32>, From<i64>, From<c_schar>, From<c_short>, From<c_int>, From<c_long>);
-    // assert_impl_all!(c_ulonglong: From<u8>, From<u16>, From<u32>, From<u64>, From<c_uchar>, From<c_ushort>, From<c_uint>, From<c_ulong>);
+    assert_impl_all!(c_longlong: From<i8>, From<u8>, From<i16>, From<i32>, From<i64>, From<c_schar>, From<c_short>, From<c_int>, From<c_long>);
+    assert_impl_all!(c_ulonglong: From<u8>, From<u16>, From<u32>, From<u64>, From<c_uchar>, From<c_ushort>, From<c_uint>, From<c_ulong>);
 };

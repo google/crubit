@@ -159,15 +159,18 @@ pub type c_uint = u32;
 /// LP64 with long int64_t.
 #[cfg(all(target_pointer_width = "64", not(windows), not(target_os = "openbsd")))]
 mod long_integers {
+    use super::*;
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
     pub type c_long = i64;
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
     pub type c_ulong = u64;
 
-    // TODO(b/333759161): Idea: what if we make `isize` into long long, etc.?
-    // Unless/until we do this, however, the following aliases would be
-    // incorrect.
-
-    // pub type c_longlong = isize;
-    // pub type c_ulonglong = usize;
+    new_integer! {
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+      pub struct c_longlong(i64);
+      #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+      pub struct c_ulonglong(u64);
+    }
 }
 
 // TODO(b/333759161): This is the mirror image of the above.
@@ -203,21 +206,22 @@ mod long_integers {
         impl From<c_ulong> for c_char32_t;
     }
 
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
     pub type c_longlong = i64;
+    #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
     pub type c_ulonglong = u64;
 }
 
-#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long")]
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(long(0))")]
 pub type c_long = long_integers::c_long;
 #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long")]
 pub type c_ulong = long_integers::c_ulong;
 
-// TODO(b/333759161): Uncomment these when we have a decision on what to do with long
-// long.
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")]
+pub type c_longlong = long_integers::c_longlong;
 
-// #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=long long")] pub type c_longlong = long_integers::c_longlong;
-
-// #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")] pub type c_ulonglong = long_integers::c_ulonglong;
+#[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=unsigned long long")]
+pub type c_ulonglong = long_integers::c_ulonglong;
 
 // ====================================
 // Newtypes for other fundamental types

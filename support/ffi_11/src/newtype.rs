@@ -126,6 +126,33 @@ macro_rules! new_integer {
         impl From<$IntegerType> for f64;
       }
     };
+    (@__from, $IntegerType:ident, i64) => {
+      $crate::newtype::wrapped_to_primitive!{
+        impl From<$IntegerType> for i64;
+        impl From<$IntegerType> for i128;
+        impl From<$IntegerType> for ::core::sync::atomic::AtomicI64;
+      }
+      $crate::newtype::primitive_to_wrapped!{
+        impl From<u8> for $IntegerType;
+        impl From<i8> for $IntegerType;
+        impl From<i16> for $IntegerType;
+        impl From<i32> for $IntegerType;
+        impl From<i64> for $IntegerType;
+      }
+    };
+    (@__from, $IntegerType:ident, u64) => {
+      $crate::newtype::wrapped_to_primitive!{
+        impl From<$IntegerType> for u64;
+        impl From<$IntegerType> for u128;
+        impl From<$IntegerType> for ::core::sync::atomic::AtomicU64;
+      }
+      $crate::newtype::primitive_to_wrapped!{
+        impl From<u8> for $IntegerType;
+        impl From<u16> for $IntegerType;
+        impl From<u32> for $IntegerType;
+        impl From<u64> for $IntegerType;
+      }
+    };
 }
 
 pub(crate) use new_integer;

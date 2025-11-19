@@ -20,11 +20,9 @@ static_assert(std::is_same_v<decltype(rust_api::c_int()), int>);
 static_assert(std::is_same_v<decltype(rust_api::c_uint()), unsigned int>);
 static_assert(std::is_same_v<decltype(rust_api::c_long()), long>);
 static_assert(std::is_same_v<decltype(rust_api::c_ulong()), unsigned long>);
-// TODO(jeanpierreda): Uncomment these when we have a decision on what to do with long
-// long.
-// static_assert(std::is_same_v<decltype(rust_api::c_longlong()), long long>);
-// static_assert(
-//     std::is_same_v<decltype(rust_api::c_ulonglong()), unsigned long long>);
+static_assert(std::is_same_v<decltype(rust_api::c_longlong()), long long>);
+static_assert(
+    std::is_same_v<decltype(rust_api::c_ulonglong()), unsigned long long>);
 
 static_assert(std::is_same_v<decltype(rust_api::c_float()), float>);
 static_assert(std::is_same_v<decltype(rust_api::c_double()), double>);
