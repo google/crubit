@@ -12,6 +12,7 @@
     *   [Pointer Types](/docs/types/pointer.md)
     *   [`absl::Status`](/docs/types/absl_status.md)
     *   [Protobuf](/docs/types/protobuf.md)
+    *   [Non-Trivially-Relocatable C++ Objects in Rust](/docs/types/non_trivially_relocatable_types.md)
     *   <hr>
     *   [Visibility](/docs/types/visibility.md)
 
