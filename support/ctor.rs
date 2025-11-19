@@ -875,6 +875,27 @@ macro_rules! internal_emplace_expr {
     };
 }
 
+/// Attempt to emplace a constructor into a local or temporary.
+///
+/// The resulting value will be a `Result<Pin<&mut C::Output>, C::Error>` where `C` is the type of
+/// the provided `Ctor`.
+///
+/// This is similar to `emplace!`, but can be used with fallible `Ctor`s (ones with an error type
+/// that is not `Infallible`).
+#[macro_export]
+#[cfg(feature = "unstable")]
+#[allow_internal_unstable(super_let)]
+// `super` gets removed by rustfmt, apparently.
+#[rustfmt::skip]
+macro_rules! try_emplace {
+    ($expr:expr) => {
+        {
+            super let mut slot = $crate::Slot::unsafe_new();
+            slot.try_unsafe_construct($expr)
+        }
+    };
+}
+
 // ====
 // Slot
 // ====
@@ -1035,6 +1056,17 @@ impl<T> Slot<T> {
         unsafe { ctor.ctor(self.maybe_uninit.as_mut_ptr()).unwrap() };
         self.is_initialized = true;
         self
+    }
+
+    /// Safety: must not have already been constructed, as that would violate
+    /// the pin guarantee.
+    pub fn try_unsafe_construct<C: Ctor<Output = T>>(
+        &mut self,
+        ctor: C,
+    ) -> Result<Pin<&mut T>, C::Error> {
+        unsafe { ctor.ctor(self.maybe_uninit.as_mut_ptr())? };
+        self.is_initialized = true;
+        Ok(self.unsafe_as_pin_unchecked())
     }
 
     /// Safety: pin guarantee, assumes init.
@@ -1671,6 +1703,43 @@ mod test {
             let foo = copy(&x);
         }
         assert_eq!(*foo, 42);
+    }
+
+    #[cfg(feature = "unstable")]
+    #[gtest]
+    fn test_try_emplace_returns_ok() {
+        struct OkCtor;
+        impl !Unpin for OkCtor {}
+        // SAFETY: unconditionally initializes dest.
+        unsafe impl Ctor for OkCtor {
+            type Output = i32;
+            type Error = String;
+            unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+                unsafe { dest.write(42) };
+                Ok(())
+            }
+        }
+
+        let x: Result<Pin<&mut i32>, String> = try_emplace!(OkCtor);
+        assert_eq!(x, Ok(Pin::new(&mut 42)));
+    }
+
+    #[cfg(feature = "unstable")]
+    #[gtest]
+    fn test_try_emplace_returns_err() {
+        struct ErrCtor;
+        impl !Unpin for ErrCtor {}
+        // SAFETY: unconditionally returns error.
+        unsafe impl Ctor for ErrCtor {
+            type Output = i32;
+            type Error = String;
+            unsafe fn ctor(self, _: *mut Self::Output) -> Result<(), Self::Error> {
+                Err("fooey".to_string())
+            }
+        }
+
+        let x: Result<Pin<&mut i32>, String> = try_emplace!(ErrCtor);
+        assert_eq!(x, Err("fooey".to_string()));
     }
 
     #[gtest]
