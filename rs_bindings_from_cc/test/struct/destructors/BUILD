@@ -13,7 +13,7 @@ cc_library(
     name = "destructors",
     srcs = ["destructors.cc"],
     hdrs = ["destructors.h"],
-    aspect_hints = ["//features:infer_operator_lifetimes"],
+    aspect_hints = ["//features:supported"],
 )
 
 golden_test(

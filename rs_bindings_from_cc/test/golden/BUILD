@@ -68,7 +68,7 @@ rust_bindings_from_cc_cli_flag(
     name = name + "_cc",
     hdrs = [name + ".h"],
     aspect_hints = [
-        "//features:infer_operator_lifetimes",
+        "//features:supported",
         ":disable_source_location_in_doc_comment",
     ] + (["//features:wrapper"] if name == "template_inst" else []),
     deps = [
