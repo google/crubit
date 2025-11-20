@@ -4,6 +4,7 @@
 
 use googletest::prelude::*;
 use rstest::rstest;
+use std::thread;
 use test_helpers::cpp_std_string_test::RoundTrip;
 
 #[googletest::test]
@@ -77,4 +78,19 @@ fn test_debug() {
     let utf8_str: cc_std::std::string = "array".into();
     let utf8_str_formatted = format!("{:?}", utf8_str);
     expect_that!(utf8_str_formatted, eq("cc_std::string([97, 114, 114, 97, 121])"));
+}
+
+// It should be possible to send strings across threads.
+#[gtest]
+fn test_send() {
+    let s = thread::spawn(|| cc_std::std::string::from("taco")).join().unwrap();
+    expect_eq!("taco", s.to_string());
+}
+
+// It should be possible to send references to strings across threads.
+#[gtest]
+fn test_sync() {
+    let s = cc_std::std::string::from("taco");
+    let s = thread::scope(|scope| scope.spawn(|| s.to_string()).join().unwrap());
+    expect_eq!("taco", s);
 }

@@ -34,6 +34,10 @@ pub struct string {
     owned_cpp_string: NonNull<c_void>,
 }
 
+// We have no reason to restrict access to the string data to particular threads.
+unsafe impl Send for string {}
+unsafe impl Sync for string {}
+
 impl string {
     pub fn as_slice(&self) -> &[u8] {
         self.as_ref()
