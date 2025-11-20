@@ -76,25 +76,25 @@ llvm::json::Value CcType::ToJson() const {
           [&](CcType::PointerType pointer) {
             return llvm::json::Object{
                 {"Pointer",
-                 llvm::json::Object{
-                     {
-                         "kind",
-                         [&]() -> llvm::json::Value {
-                           switch (pointer.kind) {
-                             case PointerTypeKind::kLValueRef:
-                               return "LValueRef";
-                             case PointerTypeKind::kRValueRef:
-                               return "RValueRef";
-                             case PointerTypeKind::kNullable:
-                               return "Nullable";
-                             case PointerTypeKind::kNonNull:
-                               return "NonNull";
-                           }
-                         }(),
-                     },
-                     {"lifetime", pointer.lifetime},
-                     {"pointee_type", *pointer.pointee_type},
-                 }},
+                 llvm::json::Object{{
+                                        "kind",
+                                        [&]() -> llvm::json::Value {
+                                          switch (pointer.kind) {
+                                            case PointerTypeKind::kLValueRef:
+                                              return "LValueRef";
+                                            case PointerTypeKind::kRValueRef:
+                                              return "RValueRef";
+                                            case PointerTypeKind::kNullable:
+                                              return "Nullable";
+                                            case PointerTypeKind::kNonNull:
+                                              return "NonNull";
+                                            case PointerTypeKind::kOwned:
+                                              return "Owned";
+                                          }
+                                        }(),
+                                    },
+                                    {"lifetime", pointer.lifetime},
+                                    {"pointee_type", *pointer.pointee_type}}},
             };
           },
           [&](const CcType::FuncPointer& func_value) {
@@ -158,6 +158,12 @@ CcType CcType::PointerTo(CcType pointee_type,
       std::move(pointee_type),
       nullable ? PointerTypeKind::kNullable : PointerTypeKind::kNonNull,
       lifetime);
+}
+
+CcType CcType::OwnedPointerTo(CcType pointee_type,
+                              std::optional<LifetimeId> lifetime) {
+  return PointerOrReferenceTo(std::move(pointee_type), PointerTypeKind::kOwned,
+                              lifetime);
 }
 
 CcType CcType::LValueReferenceTo(CcType pointee_type,
@@ -554,6 +560,7 @@ llvm::json::Value Record::ToJson() const {
       {"unknown_attr", unknown_attr},
       {"doc_comment", doc_comment},
       {"bridge_type", bridge_type},
+      {"owned_ptr_type", owned_ptr_type},
       {"source_loc", source_loc},
       {"unambiguous_public_bases", unambiguous_public_bases},
       {"fields", fields},
