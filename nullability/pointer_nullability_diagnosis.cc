@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
@@ -1087,6 +1088,62 @@ static void checkAnnotationsConsistent(
   }
 }
 
+static void checkNonnullPointerMemberDefaultInitializer(
+    clang::ASTContext& Ctx, const TypeNullabilityDefaults& Defaults,
+    const FieldDecl& Field,
+    llvm::SmallVector<PointerNullabilityDiagnostic>& Diags) {
+  // Ignore the member if it's not annotated as nonnull.
+  TypeNullability MemberTypeNullability = getTypeNullability(Field, Defaults);
+  if (MemberTypeNullability.empty() ||
+      MemberTypeNullability.front().concrete() != NullabilityKind::NonNull) {
+    return;
+  }
+
+  // Ignore the member if it doesn't have a default member initializer.
+  if (!Field.hasInClassInitializer()) {
+    return;
+  }
+  const Expr* Init = Field.getInClassInitializer();
+  if (Init == nullptr) {
+    return;
+  }
+
+  // Ignore the member if it doesn't belong to a C++ class or struct.
+  const CXXRecordDecl* RD =
+      dyn_cast_if_present<CXXRecordDecl>(Field.getParent());
+  if (RD == nullptr) {
+    return;
+  }
+  const TagDecl::TagKind DeclKind = RD->getTagKind();
+  if (DeclKind != TagDecl::TagKind::Class &&
+      DeclKind != TagDecl::TagKind::Struct) {
+    return;
+  }
+
+  // Ignore if the default initializer expression is not null.
+  if (!Init->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNotNull)) {
+    return;
+  }
+
+  PointerNullabilityDiagnostic Diagnostic = {
+      .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+      .Ctx = PointerNullabilityDiagnostic::Context::Initializer,
+      .Range = getRangeModuloMacros(
+          CharSourceRange::getTokenRange(Init->getSourceRange()), Ctx),
+  };
+
+  // Suggest using `ABSL_REQUIRE_EXPLICIT_INIT` for aggregate classes.
+  if (RD->isAggregate()) {
+    Diagnostic.NoteRange = getRangeModuloMacros(
+        CharSourceRange::getTokenRange(Field.getSourceRange()), Ctx),
+    Diagnostic.NoteMessage =
+        "consider declaring the aggregate class member with "
+        "ABSL_REQUIRE_EXPLICIT_INIT";
+  }
+
+  Diags.push_back(std::move(Diagnostic));
+}
+
 static CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl& Method) {
   if (!Method.hasBody()) {
     // If the method doesn't have a body, fall back to using the entire method
@@ -1291,6 +1348,12 @@ diagnosePointerNullability(const ValueDecl* VD,
   TypeNullabilityDefaults Defaults{Ctx, Pragmas};
 
   checkAnnotationsConsistent(VD, Diags, Defaults);
+
+  const FieldDecl* MemberDecl = dyn_cast<FieldDecl>(VD);
+  if (MemberDecl != nullptr) {
+    checkNonnullPointerMemberDefaultInitializer(Ctx, Defaults, *MemberDecl,
+                                                Diags);
+  }
 
   const auto* Func = dyn_cast<FunctionDecl>(VD);
   if (Func == nullptr) return Diags;

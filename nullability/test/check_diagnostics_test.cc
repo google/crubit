@@ -6,28 +6,71 @@
 
 #include "nullability/test/check_diagnostics.h"
 
+#include <optional>
+#include <vector>
+
+#include "nullability/pointer_nullability_diagnosis.h"
+#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest-spi.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {
 
-TEST(PointerNullabilityTest, NoDiagnostics) {
+using ::testing::AllOf;
+using ::testing::ElementsAre;
+using ::testing::Field;
+using ::testing::IsEmpty;
+using ::testing::Optional;
+
+TEST(PointerNullabilityTest, CheckNoDiagnostics) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {}
   )cc"));
 }
 
-TEST(PointerNullabilityTest, ExpectedDiagnostic) {
+TEST(PointerNullabilityTest, GetNoDiagnostics) {
+  EXPECT_THAT(checkAndGetDiagnostics(R"cc(
+                void target() {}
+              )cc"),
+              Optional(IsEmpty()));
+}
+
+TEST(PointerNullabilityTest, CheckExpectedDiagnostic) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {
-      int *p = nullptr;
+      int* p = nullptr;
       *p;  // [[unsafe]]
     }
   )cc"));
 }
 
-TEST(PointerNullabilityTest, UnexpectedDiagnostic) {
+TEST(PointerNullabilityTest, GetExpectedDiagnostic) {
+  EXPECT_THAT(
+      checkAndGetDiagnostics(R"cc(
+        void target() {
+          int* p = nullptr;
+          *p;  // [[unsafe]]
+        }
+      )cc"),
+      Optional(ElementsAre(
+          AllOf(
+              Field("Code", &PointerNullabilityDiagnostic::Code,
+                    PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull),
+              Field("Ctx", &PointerNullabilityDiagnostic::Ctx,
+                    PointerNullabilityDiagnostic::Context::NullableDereference),
+              Field("NoteMessage", &PointerNullabilityDiagnostic::NoteMessage,
+                    "")),
+          AllOf(
+              Field("Code", &PointerNullabilityDiagnostic::Code,
+                    PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull),
+              Field("Ctx", &PointerNullabilityDiagnostic::Ctx,
+                    PointerNullabilityDiagnostic::Context::NullableDereference),
+              Field("NoteMessage", &PointerNullabilityDiagnostic::NoteMessage,
+                    "")))));
+}
+
+TEST(PointerNullabilityTest, CheckUnexpectedDiagnostic) {
   bool Result = true;
   EXPECT_NONFATAL_FAILURE(Result = checkDiagnostics(R"cc(
                             void target() {
@@ -38,7 +81,18 @@ TEST(PointerNullabilityTest, UnexpectedDiagnostic) {
   EXPECT_EQ(Result, false);
 }
 
-TEST(PointerNullabilityTest, MissingDiagnostic) {
+TEST(PointerNullabilityTest, GetUnexpectedDiagnostic) {
+  std::optional<std::vector<PointerNullabilityDiagnostic>> Result;
+  EXPECT_NONFATAL_FAILURE(Result = checkAndGetDiagnostics(R"cc(
+                            void target() {
+                              1;  // [[unsafe]]
+                            }
+                          )cc"),
+                          "Expected diagnostics but didn't find them");
+  EXPECT_EQ(Result, std::nullopt);
+}
+
+TEST(PointerNullabilityTest, CheckMissingDiagnostic) {
   bool Result = true;
   EXPECT_NONFATAL_FAILURE(Result = checkDiagnostics(R"cc(
                             void target() {
@@ -48,6 +102,18 @@ TEST(PointerNullabilityTest, MissingDiagnostic) {
                           )cc"),
                           "Found diagnostics but didn't expect them");
   EXPECT_EQ(Result, false);
+}
+
+TEST(PointerNullabilityTest, GetMissingDiagnostic) {
+  std::optional<std::vector<PointerNullabilityDiagnostic>> Result;
+  EXPECT_NONFATAL_FAILURE(Result = checkAndGetDiagnostics(R"cc(
+                            void target() {
+                              int* p = nullptr;
+                              *p;  // Missing diagnostic
+                            }
+                          )cc"),
+                          "Found diagnostics but didn't expect them");
+  EXPECT_EQ(Result, std::nullopt);
 }
 
 }  // namespace
