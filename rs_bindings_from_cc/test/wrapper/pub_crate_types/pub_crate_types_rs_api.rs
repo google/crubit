@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types
-// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]

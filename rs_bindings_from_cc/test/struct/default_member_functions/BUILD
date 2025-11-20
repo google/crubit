@@ -13,7 +13,6 @@ crubit_test_cc_library(
     name = "default_member_functions",
     srcs = ["default_member_functions.cc"],
     hdrs = ["default_member_functions.h"],
-    aspect_hints = ["//features:infer_operator_lifetimes"],
 )
 
 golden_test(

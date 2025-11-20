@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/references:references
-// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"

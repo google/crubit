@@ -44,16 +44,6 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
-# A feature set which specifically enables inferred operator lifetimes.
-#
-# See <internal link>
-crubit_feature_hint(
-    name = "infer_operator_lifetimes",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["infer_operator_lifetimes"],
-    visibility = ["//visibility:public"],
-)
-
 # A feature set which specifically std::vector support.
 #
 # See <internal link>

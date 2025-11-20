@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // rust_lib_golden
-// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
 #![allow(improper_ctypes_definitions)]

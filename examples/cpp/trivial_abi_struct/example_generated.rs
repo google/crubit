@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/trivial_abi_struct:example_lib
-// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
