@@ -238,6 +238,8 @@ VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
     case Evidence::NONNULL_REFERENCE_ARGUMENT:
     case Evidence::NONNULL_REFERENCE_ARGUMENT_AS_CONST:
     case Evidence::UNKNOWN_REFERENCE_ARGUMENT:
+    case Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NONNULL:
+    case Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NULLABLE:
       return VirtualMethodEvidenceFlowDirection::kBoth;
   }
 }
@@ -718,6 +720,54 @@ class EvidenceCollector {
     }
   }
 
+  /// For an unannotated decl's nullability slot identified by `TargetUSR` and
+  /// `TargetSlot`, collect evidence to indicate that the nullability slot must
+  /// match the type nullability `NullabilityToMatch`.
+  void collectMustHaveInvariantTypeNullability(
+      std::string_view TargetUSR, Slot TargetSlot,
+      const PointerTypeNullability& NullabilityToMatch,
+      const SerializedSrcLoc& CollectionLoc) {
+    dataflow::Arena& A = Env.arena();
+    if (NullabilityToMatch.concrete() == NullabilityKind::NonNull ||
+        (NullabilityToMatch.isSymbolic() &&
+         Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                  NullabilityToMatch.isNonnull(A))))) {
+      emit(TargetUSR, TargetSlot,
+           Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NONNULL, CollectionLoc);
+    } else if (NullabilityToMatch.concrete() == NullabilityKind::Nullable ||
+               (NullabilityToMatch.isSymbolic() &&
+                Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                         NullabilityToMatch.isNullable(A))))) {
+      emit(TargetUSR, TargetSlot,
+           Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NULLABLE, CollectionLoc);
+    }
+  }
+
+  /// Collect evidence that will lead to `TargetNullability` matching
+  /// `NullabilityToMatch`.
+  void collectMustHaveInvariantTypeNullability(
+      const PointerTypeNullability& TargetNullability,
+      const PointerTypeNullability& NullabilityToMatch,
+      std::optional<SlotFingerprint> /*UNUSED*/,
+      const SerializedSrcLoc& CollectionLoc) {
+    dataflow::Arena& A = Env.arena();
+    if (NullabilityToMatch.concrete() == NullabilityKind::NonNull ||
+        (NullabilityToMatch.isSymbolic() &&
+         Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                  NullabilityToMatch.isNonnull(A))))) {
+      mustBeTrueByMarkingNonnull(
+          TargetNullability.isNonnull(A), CollectionLoc,
+          Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NONNULL);
+    } else if (NullabilityToMatch.concrete() == NullabilityKind::Nullable ||
+               (NullabilityToMatch.isSymbolic() &&
+                Env.proves(A.makeImplies(InferableSlotsConstraint,
+                                         NullabilityToMatch.isNullable(A))))) {
+      mustBeTrueByMarkingNullable(
+          TargetNullability.isNullable(A), CollectionLoc,
+          Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NULLABLE);
+    }
+  }
+
   /// Collects evidence for parameter nullability based on arguments passed at
   /// call sites. Considers two distinct cases, based on the setting of
   /// `ArgNullState` -- when populated, the argument is a pointer value; when
@@ -1019,20 +1069,87 @@ class NullabilityBehaviorVisitor {
                                      RHSNullState, RHSLoc);
   }
 
+  // Visits the binding of `Arg` to `Param` when their types are inferable but
+  // not directly pointers, e.g. a select template with a pointer-type template
+  // argument. These bindings conservatively require invariant nullability for
+  // the entirety of the two types.
+  void visitArgAndParamWithInferableNonPointerTypes(
+      const ParmVarDecl& Param, std::string_view ParamSlotUSR, Slot ParamSlot,
+      bool CalleeIsInferenceTarget, const Expr& Arg,
+      SerializedSrcLoc CollectionLoc) {
+    // TODO: Account for each layer of nullability when we handle more than
+    // top-level pointers as template arguments.
+
+    const TypeNullability* ArgTypeNullability =
+        Lattice.getTypeNullability(&Arg);
+    if (ArgTypeNullability == nullptr) return;
+    CHECK(!ArgTypeNullability->empty());
+    const PointerTypeNullability& ArgTopLevelNullability =
+        (*ArgTypeNullability)[0];
+
+    const TypeNullability ParamTypeNullabilityInSource =
+        getTypeNullability(Param, Lattice.defaults());
+    CHECK(!ParamTypeNullabilityInSource.empty());
+
+    // Collect information about the nullability requirement for the
+    // parameter, if we are trying to infer nullability for the parameter and it
+    // is not already annotated in source.
+    if (CalleeIsInferenceTarget &&
+        !evidenceKindFromDeclaredNullability(ParamTypeNullabilityInSource)) {
+      Consumer.collectMustHaveInvariantTypeNullability(
+          ParamSlotUSR, ParamSlot, ArgTopLevelNullability, CollectionLoc);
+    }
+    // Collect information about the nullability requirement for the argument.
+    // The argument's nullability must be symbolic and influenced by at least
+    // one inferable slot in order for this information to be useful. We don't
+    // try to determine which slots influence the argument's nullability, since
+    // that's done with the InferableSlotsConstraint, which can change over the
+    // course of multiple iterations, but we at least check that we have 1+
+    // inferable slots.
+    if (HasInferableSlots && ArgTopLevelNullability.isSymbolic()) {
+      const TypeNullability ParamTypeNullabilityWithOverrides =
+          getNullabilityAnnotationsFromDeclAndOverrides(Param, Lattice);
+      CHECK(!ParamTypeNullabilityWithOverrides.empty());
+
+      Consumer.collectMustHaveInvariantTypeNullability(
+          ArgTopLevelNullability, ParamTypeNullabilityWithOverrides[0],
+          fingerprint(ParamSlotUSR, ParamSlot), CollectionLoc);
+    }
+  }
+
   template <typename CallOrConstructExpr>
   void visitArgsAndParams(const FunctionDecl &CalleeDecl,
                           const CallOrConstructExpr &Expr,
                           bool MayBeMissingImplicitConversion) {
-    bool SummarizeCallee = isInferenceTarget(CalleeDecl);
+    bool CalleeIsInferenceTarget = isInferenceTarget(CalleeDecl);
+    // TODO(b/440317964) Fix these names, which refer to summarizing even though
+    // this function/class doesn't summarize.
+    bool SummarizeCallee = CalleeIsInferenceTarget;
     bool SummarizeCaller = HasInferableSlots;
 
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
-      if (!hasInferable(Iter.param().getType()) ||
-          !isSupportedPointerType(Iter.param().getType().getNonReferenceType()))
-        continue;
+      if (isa<clang::CXXDefaultArgExpr>(Iter.arg())) {
+        // Collection for the callee from default argument values is handled
+        // when processing declarations, and there's nothing useful available to
+        // collect for the caller. Return, not just continue, because once we've
+        // seen one default argument used, all remaining parameters also use
+        // default arguments.
+        return;
+      }
+
+      if (!hasInferable(Iter.param().getType())) continue;
       bool ArgIsNullPtrT = Iter.arg().getType()->isNullPtrType();
-      if (!isSupportedPointerType(Iter.arg().getType())) {
+      bool ParamHasSupportedPointerType =
+          isSupportedPointerType(Iter.param().getType().getNonReferenceType());
+      // We check only the canonical type because if the call is in a template,
+      // we don't care about checking the argument for substituted template
+      // arguments.
+      bool CanonicalArgTypeIsInferable =
+          hasInferable(Iter.arg().getType().getCanonicalType());
+      if (!CanonicalArgTypeIsInferable ||
+          (ParamHasSupportedPointerType &&
+           !isSupportedPointerType(Iter.arg().getType()))) {
         // These builtins are declared with pointer type parameters even when
         // given a valid argument of type uintptr_t. In this case, there's
         // nothing to infer, but also nothing unexpected to crash over.
@@ -1049,21 +1166,32 @@ class NullabilityBehaviorVisitor {
         // `nullptr_t` is handled since we have an answer for its nullability.
         if (MayBeMissingImplicitConversion && !ArgIsNullPtrT) continue;
       }
-      // the corresponding argument should also be a pointer.
-      CHECK(isSupportedPointerType(Iter.arg().getType()) ||
+      // Otherwise, the corresponding argument's canonical type should also be
+      // inferable.
+      CHECK(CanonicalArgTypeIsInferable ||
             (MayBeMissingImplicitConversion && ArgIsNullPtrT))
           << "Unsupported argument " << Iter.argIdx()
           << " type: " << Iter.arg().getType().getAsString();
 
-      if (isa<clang::CXXDefaultArgExpr>(Iter.arg())) {
-        // Summarization and evidence collection for the callee from default
-        // argument values is handled when processing declarations, and there's
-        // no useful evidence available to collect for the caller (and so
-        // nothing to summarize).
+      SerializedSrcLoc ArgLoc = serializeLoc(SM, Iter.arg().getExprLoc());
+      if (!ParamHasSupportedPointerType) {
+        // Inferable types which are not directly a pointer are conservatively
+        // required to have invariant nullability, so we visit this behavior
+        // differently for non-pointers.
+        visitArgAndParamWithInferableNonPointerTypes(
+            Iter.param(), getOrGenerateUSR(USRCache, CalleeDecl),
+            paramSlot(Iter.paramIdx()), CalleeIsInferenceTarget, Iter.arg(),
+            ArgLoc);
         return;
       }
 
-      SerializedSrcLoc ArgLoc = serializeLoc(SM, Iter.arg().getExprLoc());
+      // Outside of the special cases skipped above, if the parameter has a
+      // supported pointer type, the corresponding argument should also be a
+      // supported pointer or of type `nullptr_t`.
+      CHECK(isSupportedPointerType(Iter.arg().getType()) ||
+            (MayBeMissingImplicitConversion && ArgIsNullPtrT))
+          << "Unsupported argument " << Iter.argIdx()
+          << " type: " << Iter.arg().getType().getAsString();
 
       if (SummarizeCaller) {
         auto ParamNullability = getNullabilityAnnotationsFromDeclAndOverrides(
@@ -1989,6 +2117,34 @@ class SummaryCollector {
     S.set_rhs_loc(RHSLoc.Loc);
   }
 
+  void collectMustHaveInvariantTypeNullability(
+      std::string_view TargetUSR, Slot TargetSlot,
+      const PointerTypeNullability& NullabilityToMatch,
+      const SerializedSrcLoc& CollectionLoc) {
+    TypeAssignedToInvariantTypeSummary& S =
+        *addSummary().mutable_assigned_to_invariant_type();
+    *S.mutable_nullability_to_match() =
+        savePointerTypeNullability(NullabilityToMatch);
+    S.mutable_target_symbol()->set_usr(TargetUSR);
+    S.set_target_slot(TargetSlot);
+    S.set_location(CollectionLoc.Loc);
+  }
+
+  void collectMustHaveInvariantTypeNullability(
+      const PointerTypeNullability& TargetNullability,
+      const PointerTypeNullability& NullabilityToMatch,
+      SlotFingerprint FingerprintOfNullabilityToMatch,
+      const SerializedSrcLoc& CollectionLoc) {
+    TypeAssignedToInvariantTypeSummary& S =
+        *addSummary().mutable_assigned_to_invariant_type();
+    *S.mutable_nullability_to_match() =
+        savePointerTypeNullability(NullabilityToMatch);
+    S.set_nullability_to_match_fingerprint(FingerprintOfNullabilityToMatch);
+    *S.mutable_target_nullability() =
+        savePointerTypeNullability(TargetNullability);
+    S.set_location(CollectionLoc.Loc);
+  }
+
   void collectAssignmentFromValue(
       PointerTypeNullability TypeNullability,
       std::optional<PointerNullState> ValueNullState,
@@ -2120,6 +2276,9 @@ class SummaryEvidenceCollector {
         return collectReturn(BehaviorSummary.returned());
       case NullabilityBehaviorSummary::kOnExit:
         return collectExitBlock(BehaviorSummary.on_exit());
+      case NullabilityBehaviorSummary::kAssignedToInvariantType:
+        return collectTypeAssignedToInvariantType(
+            BehaviorSummary.assigned_to_invariant_type());
 
       case NullabilityBehaviorSummary::BEHAVIOR_NOT_SET:
         return llvm::createStringError(llvm::errc::invalid_argument,
@@ -2186,6 +2345,46 @@ class SummaryEvidenceCollector {
         Summary.lhs_is_non_reference_const(), *LHSTypeNullability,
         /*LHSFingerprint*/ std::nullopt, RHSTypeNullability,
         *RHSValueNullability, {Summary.rhs_loc()});
+    return llvm::Error::success();
+  }
+
+  llvm::Error collectTypeAssignedToInvariantType(
+      const TypeAssignedToInvariantTypeSummary& Summary) {
+    if (Summary.has_target_nullability() ==
+            (Summary.has_target_symbol() && Summary.has_target_slot()) ||
+        (Summary.has_target_symbol() != Summary.has_target_slot())) {
+      return llvm::createStringError(
+          "Exactly one of `target_nullability` or (`target_symbol` and "
+          "`target_slot`) should be set, depending on whether the side of the "
+          "assignment we are inferring for was a known decl or a potentially "
+          "arbitrary expression.");
+    }
+
+    auto NullabilityToMatch = [&]() -> llvm::Expected<PointerTypeNullability> {
+      if (Summary.has_nullability_to_match_fingerprint()) {
+        if (const PointerTypeNullability* absl_nullable O =
+                NullabilityOverlay(Summary.nullability_to_match_fingerprint()))
+          return *O;
+      }
+      return loadPointerTypeNullability(Summary.nullability_to_match(), Arena,
+                                        AtomMap);
+    }();
+    if (!NullabilityToMatch) return NullabilityToMatch.takeError();
+
+    if (Summary.has_target_nullability()) {
+      auto TargetNullability = loadPointerTypeNullability(
+          Summary.target_nullability(), Arena, AtomMap);
+
+      if (!TargetNullability) return TargetNullability.takeError();
+      Collector.collectMustHaveInvariantTypeNullability(
+          *TargetNullability, *NullabilityToMatch, std::nullopt,
+          {Summary.location()});
+    } else {
+      Collector.collectMustHaveInvariantTypeNullability(
+          Summary.target_symbol().usr(),
+          static_cast<Slot>(Summary.target_slot()), *NullabilityToMatch,
+          {Summary.location()});
+    }
     return llvm::Error::success();
   }
 

@@ -153,6 +153,16 @@ message Evidence {
     // A smart pointer field was left default-initialized (to null) or
     // initialized to a nullable value in the exit block of a constructor.
     LEFT_NULLABLE_BY_CONSTRUCTOR = 33;
+    // A value was assigned to or from a Nonnull type (or similar
+    // assignment-like behavior, such as an argument passed to a parameter) in a
+    // context that requires invariant nullability between the types, e.g. when
+    // the pointer is in a template argument.
+    ASSIGNED_TO_OR_FROM_INVARIANT_NONNULL = 34;
+    // A value was assigned to or from a Nullable type (or similar
+    // assignment-like behavior, such as an argument passed to a parameter) in a
+    // context that requires invariant nullability between the types, e.g. when
+    // the pointer is in a template argument.
+    ASSIGNED_TO_OR_FROM_INVARIANT_NULLABLE = 35;
   }
 }
 
@@ -279,6 +289,28 @@ message RequiresAnnotationSummary {
   optional Evidence.Kind evidence_kind = 4;
 }
 
+// Encodes properties of an assignment with an invariant nullability
+// requirement, relevant to collecting evidence for whichever side of the
+// assignment is unannotated.
+message TypeAssignedToInvariantTypeSummary {
+  optional PointerTypeNullabilityProto nullability_to_match = 1;
+  // optional. When the nullability to match is known to be the type nullability
+  // of a decl, nullability_to_match may be overridden during inference. This
+  // field identifies the decl. When populated, this fingerprint should be
+  // checked for an override.
+  optional uint64 nullability_to_match_fingerprint = 2;
+
+  // Exactly one of `target_nullability` or (`target_symbol` and `target_slot`)
+  // should be set, depending on whether the side of the assignment we are
+  // inferring for was a known decl or a potentially arbitrary expression.
+
+  optional PointerTypeNullabilityProto target_nullability = 3;
+  optional Symbol target_symbol = 4;
+  optional uint32 target_slot = 5;
+
+  optional string location = 6;
+}
+
 // Encodes properties of an assignment relevant to collecting evidence for the
 // assignment's RHS.
 message ValueAssignedToTypeSummary {
@@ -345,15 +377,16 @@ message ExitBlockSummary {
 message NullabilityBehaviorSummary {
   // The numerical ID of the atom representing the flow condition (aka. flow
   // condition token) of the block from which this behavior was summarized.
-  optional uint32 block_atom = 8;
+  optional uint32 block_atom = 1;
   oneof behavior {
-    RequiresAnnotationSummary requires_annotation = 1;
-    ValueAssignedToTypeSummary value_assigned = 2;
-    AssignmentFromValueSummary assignment_from_value = 3;
-    BindingSummary argument_binding = 4;
-    AbortIfEqualSummary abort_if_equal = 5;
-    BindingSummary returned = 6;
-    ExitBlockSummary on_exit = 7;
+    RequiresAnnotationSummary requires_annotation = 2;
+    ValueAssignedToTypeSummary value_assigned = 3;
+    AssignmentFromValueSummary assignment_from_value = 4;
+    BindingSummary argument_binding = 5;
+    AbortIfEqualSummary abort_if_equal = 6;
+    BindingSummary returned = 7;
+    ExitBlockSummary on_exit = 8;
+    TypeAssignedToInvariantTypeSummary assigned_to_invariant_type = 9;
   }
 }
 

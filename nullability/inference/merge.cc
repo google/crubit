@@ -126,6 +126,10 @@ InferResult infer(llvm::ArrayRef<unsigned> Counts, bool EnableSoftRules) {
     update(Result, Nullability::NONNULL);
   if (Counts[Evidence::ASSIGNED_TO_NONNULL])
     update(Result, Nullability::NONNULL);
+  if (Counts[Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NONNULL])
+    update(Result, Nullability::NONNULL);
+  if (Counts[Evidence::ASSIGNED_TO_OR_FROM_INVARIANT_NULLABLE])
+    update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::ASSIGNED_TO_MUTABLE_NULLABLE])
     update(Result, Nullability::NULLABLE);
   if (Counts[Evidence::ASSIGNED_TO_NONNULL_REFERENCE])
