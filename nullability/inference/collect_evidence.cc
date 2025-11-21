@@ -553,7 +553,7 @@ static SerializedSrcLoc serializeLoc(const SourceManager &SM,
 }
 
 namespace {
-// Collects nullability evidence from data summarized from the AST.
+// Collects nullability evidence from data extracted from the AST.
 class EvidenceCollector {
  public:
   EvidenceCollector(const std::vector<InferableSlot> &InferableSlots,
@@ -1020,13 +1020,13 @@ class NullabilityBehaviorVisitor {
                   serializeLoc(SM, Loc), Evidence::UNCHECKED_DEREFERENCE);
   }
 
-  // Summarizes an assignment to a pointer-typed declaration, to extract
-  // nullability constraints on the RHS (potentially both its type and value)
-  // stemming from the declaration's Nullability. `LHSType` should be a pointer
-  // type or a reference to a pointer type. `LHSDecl` identifies the ValueDecl
-  // of the LHS whose type annotation may be overridden by future rounds of
-  // inference. When the ValueDecl doesn't take part in inference, nullptr
-  // should be passed.
+  // Analyzes an assignment to a pointer-typed declaration for nullability
+  // constraints on the RHS (potentially both its type and value). These
+  // constraints stem from the declaration's Nullability. `LHSType` should be a
+  // pointer type or a reference to a pointer type. `LHSDecl` identifies the
+  // ValueDecl of the LHS whose type annotation may be overridden by future
+  // rounds of inference. When the ValueDecl doesn't take part in inference,
+  // nullptr should be passed.
   void visitAssignmentToType(QualType LHSType,
                              const TypeNullability &LHSTypeNullability,
                              const ValueDecl *absl_nullable LHSDecl,
@@ -1122,10 +1122,8 @@ class NullabilityBehaviorVisitor {
                           const CallOrConstructExpr &Expr,
                           bool MayBeMissingImplicitConversion) {
     bool CalleeIsInferenceTarget = isInferenceTarget(CalleeDecl);
-    // TODO(b/440317964) Fix these names, which refer to summarizing even though
-    // this function/class doesn't summarize.
-    bool SummarizeCallee = CalleeIsInferenceTarget;
-    bool SummarizeCaller = HasInferableSlots;
+    bool AnalyzeCallee = CalleeIsInferenceTarget;
+    bool AnalyzeCaller = HasInferableSlots;
 
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
@@ -1193,21 +1191,21 @@ class NullabilityBehaviorVisitor {
           << "Unsupported argument " << Iter.argIdx()
           << " type: " << Iter.arg().getType().getAsString();
 
-      if (SummarizeCaller) {
+      if (AnalyzeCaller) {
         auto ParamNullability = getNullabilityAnnotationsFromDeclAndOverrides(
             Iter.param(), Lattice);
 
-        // Summarize potential constraints that the parameter's nullability
+        // Analyzes for potential constraints that the parameter's nullability
         // places on the argument's nullability.
         visitAssignmentToType(Iter.param().getType(), ParamNullability,
                               &Iter.param(), Iter.arg(), ArgLoc);
       }
 
-      if (SummarizeCallee &&
-          // Don't summarize if the parameter is already annotated in
-          // source. This will still summarize otherwise (irrespective of
-          // whether the parameter has a previously-inferred nullability), in
-          // order to maintain that inference in this iteration.
+      if (AnalyzeCallee &&
+          // Don't analyze if the parameter is already annotated in
+          // source. Otherwise, analyze, even if the parameter has a
+          // previously-inferred nullability, to maintain that inference in this
+          // iteration.
           !evidenceKindFromDeclaredNullability(
               getTypeNullability(Iter.param(), Lattice.defaults()))) {
         dataflow::PointerValue *PV = getPointerValue(&Iter.arg(), Env);
@@ -1228,11 +1226,11 @@ class NullabilityBehaviorVisitor {
     }
   }
 
-  /// Summarizes call expressions where we have a FunctionProtoType but no
+  /// Analyzes call expressions with a FunctionProtoType but no corresponding
   /// FunctionDecl, focusing on relating function arguments to the types of the
   /// corresponding parameter.
-  /// TODO: When we summarize more complex slots than just top-level pointers,
-  /// summarize the function parameter's nullability as a slot in the
+  /// TODO: When we analyze more complex slots than just top-level pointers,
+  /// analyze the function parameter's nullability as a slot in the
   /// appropriate declaration.
   void visitFunctionProtoTypeCall(const FunctionProtoType &CalleeType,
                                   const CallExpr &Expr) {
@@ -1245,8 +1243,8 @@ class NullabilityBehaviorVisitor {
           << "Unsupported argument " << I
           << " type: " << Expr.getArg(I)->getType().getAsString();
 
-      // Summarize potential constraints that the parameter's nullability places
-      // on the argument's nullability.
+      // Analyze for potential constraints that the parameter's nullability
+      // places on the argument's nullability.
       //
       // TODO: when we infer function pointer/reference parameters'
       // nullabilities, we'll need to check for overrides from previous
@@ -1261,7 +1259,7 @@ class NullabilityBehaviorVisitor {
     }
   }
 
-  /// Summarizes call expressions involving function pointers, noting that the
+  /// Analyzes call expressions involving function pointers. It notes that the
   /// function pointer was dereferenced and matches up parameter/argument
   /// nullabilities.
   void visitFunctionPointerCallExpr(const Type &CalleeFunctionType,
@@ -1282,9 +1280,8 @@ class NullabilityBehaviorVisitor {
     visitFunctionProtoTypeCall(*CalleeFunctionProtoType, Expr);
   }
 
-  /// Summarizes a call to a function without a FunctionDecl, e.g. the function
-  /// is provided as a parameter or another decl, e.g. a field or local
-  /// variable.
+  /// Analyzes a call to a function without a FunctionDecl. This situation can
+  /// arise, for example, when a function is provided as a parameter.
   ///
   /// Example: We can collect evidence for the nullability of `p` and (when we
   /// handle more than top-level pointer slots) `j` in the following, based on
@@ -1348,14 +1345,14 @@ class NullabilityBehaviorVisitor {
     // If we run into other cases meeting this criterion, skip them, but log
     // first so we can potentially add support later.
     llvm::errs() << "Unsupported case of a CallExpr without a FunctionDecl. "
-                    "Not summarizing this CallExpr:\n";
+                    "Skipping this CallExpr:\n";
     Expr.getBeginLoc().dump(CalleeDecl.getASTContext().getSourceManager());
     Expr.dump();
     llvm::errs() << "Which is a call to:\n";
     CalleeDecl.dump();
   }
 
-  /// Summarizes `CallExpr`, which contains a call to our special macro
+  /// Analyzes `CallExpr`, which contains a call to our special macro
   /// single-argument capture function, to extract constraints on the argument.
   ///
   /// e.g. From `CHECK(x)`, we constrain `x` to not be null.
@@ -1380,7 +1377,7 @@ class NullabilityBehaviorVisitor {
     }
   }
 
-  /// Summarizes `CallExpr`, which contains a call to our special macro
+  /// Analyzes `CallExpr`, which contains a call to our special macro
   /// two-argument capture function for not-equal checks. Extracts potential
   /// constraints between the macro arguments.
   ///
@@ -1533,12 +1530,12 @@ class NullabilityBehaviorVisitor {
                           serializeLoc(SM, ReturnExpr->getExprLoc()));
   }
 
-  /// Summarizes an assignment of RHS to an expression with type LHSType and
-  /// nullability LHSNullability, through a direct assignment statement,
-  /// aggregate initialization, etc. `LHSDecl` identifies the ValueDecl of the
-  /// LHS whose type annotation may be overridden by future rounds of
-  /// inference. When the ValueDecl doesn't take part in inference, nullptr
-  /// should be passed.
+  /// Analyzes a direct assignment statement, aggregate initialization, etc.
+  /// `RHS` is the assigned expression,  `LHSType` and `LHSNullability` are the
+  /// assignee type and nullability (respectively), `LHSDecl` identifies the
+  /// ValueDecl of the assignee whose type annotation may be overridden by
+  /// future rounds of inference. When the ValueDecl doesn't take part in
+  /// inference, nullptr should be passed for `LHSDecl`.
   void visitAssignmentLike(
       QualType LHSType, const TypeNullability &LHSNullability,
       const ValueDecl *absl_nullable LHSDecl, const Expr &RHS,
@@ -1549,7 +1546,7 @@ class NullabilityBehaviorVisitor {
     if (!PV && !RHS.getType()->isNullPtrType()) return;
     visitAssignmentToType(LHSType, LHSNullability, LHSDecl, RHS, Loc);
 
-    // Summarize potential constraints on the LHS.
+    // Analyze potential constraints on the LHS.
     if (LHSNullability.empty()) return;
     std::optional<PointerNullState> NullState =
         PV ? std::make_optional(getPointerNullState(*PV)) : std::nullopt;
@@ -1557,7 +1554,7 @@ class NullabilityBehaviorVisitor {
                                         EvidenceKindForAssignmentFromNullable);
   }
 
-  /// Summarizes an assignment of RHS to LHSDecl, through a direct assignment
+  /// Analyzes an assignment of `RHS` to `LHSDecl`, through a direct assignment
   /// statement, aggregate initialization, etc.
   void visitAssignmentLike(
       const ValueDecl &LHSDecl, const Expr &RHS, const SerializedSrcLoc &Loc,
@@ -1569,7 +1566,7 @@ class NullabilityBehaviorVisitor {
         &LHSDecl, RHS, Loc, EvidenceKindForAssignmentFromNullable);
   }
 
-  /// Summarizes direct assignment statements, e.g. `p = nullptr`, whether
+  /// Analyzes direct assignment statements, e.g. `p = nullptr`, whether
   /// initializing a new declaration or re-assigning to an existing declaration.
   void visitAssignment(const Stmt &S) {
     if (!HasInferableSlots) return;
@@ -1741,8 +1738,8 @@ class NullabilityBehaviorVisitor {
 
   void visitFieldInits(const RecordInitListHelper &Helper) {
     // Any initialization of base classes/fields will be collected from the
-    // InitListExpr for the base initialization, so we only need to summarize
-    // here the field inits.
+    // InitListExpr for the base initialization, so, here, we only need to
+    // analyze the field inits.
     for (auto [Field, InitExpr] : Helper.field_inits()) {
       if (!isSupportedPointerType(Field->getType())) continue;
 
