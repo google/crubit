@@ -217,6 +217,12 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
         .ParamName = ParamName,
         .NoteRange = getRangeModuloMacros(
             CharSourceRange::getTokenRange(NullCheck->getSourceRange()), Ctx),
+        .NoteMessage =
+            "the nullable pointer comes from a non-const method call, and "
+            "there is a null check on a similar call here. To show stability, "
+            "capture the value to a local variable, then null-check and use "
+            "that. Or, mark the method as const (if possible, and if it has "
+            "zero params).",
     }};
   }
 
@@ -1005,9 +1011,11 @@ static void checkAnnotationsConsistentHelper(
         .Ctx = PointerNullabilityDiagnostic::Context::Other,
         .Range = CharSourceRange::getTokenRange(Range),
         .NoteRange = CharSourceRange::getTokenRange(CanonicalRange),
+        .NoteMessage = "previous declaration is here",
     });
     return;
   }
+
   // If a function parameter has a nullability annotation in the canonical
   // declaration but no annotation in its corresponding definition, the
   // annotation in the declaration is infused into the definition at the AST
@@ -1029,6 +1037,7 @@ static void checkAnnotationsConsistentHelper(
           .Ctx = PointerNullabilityDiagnostic::Context::Other,
           .Range = CharSourceRange::getTokenRange(Range),
           .NoteRange = CharSourceRange::getTokenRange(CanonicalRange),
+          .NoteMessage = "previous declaration is here",
       });
     }
   }
@@ -1168,6 +1177,7 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
           .Ctx = PointerNullabilityDiagnostic::Context::Other,
           .Range = getMethodClosingBraceRange(*Method),
           .NoteRange = CharSourceRange::getTokenRange(Field->getSourceRange()),
+          .NoteMessage = "pointer field is declared here",
       });
     }
   }
