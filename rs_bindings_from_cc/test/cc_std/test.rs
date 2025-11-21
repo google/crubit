@@ -21,7 +21,7 @@ fn test_ctime() {
         tm_wday: 7,
         tm_yday: 8,
         tm_year: 9,
-        tm_zone: zone.as_ptr() as *mut core::ffi::c_char,
+        tm_zone: zone.as_ptr() as *mut ffi_11::c_char,
     };
 }
 

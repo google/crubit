@@ -43,6 +43,7 @@ deps_for_bindings(
     ],
     deps_for_generated_rs_file = [
         "//support:ctor",
+        "//support/ffi_11",
         "//support:forward_declare",
         "//support:oops",
         "//support:bridge_rust",

@@ -58,6 +58,17 @@ macro_rules! new_integer {
         #[derive(Copy, Clone, Default, PartialOrd, Ord, PartialEq, Eq, Hash)]
         pub struct $IntegerType($underlying);
         $crate::newtype::new_integer!(@__from, $IntegerType, $underlying);
+
+        impl core::fmt::Debug for $IntegerType {
+          fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+            <$underlying as core::fmt::Debug>::fmt(&self.0, f)
+          }
+        }
+        impl core::fmt::Display for $IntegerType {
+          fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+            <$underlying as core::fmt::Display>::fmt(&self.0, f)
+          }
+        }
       )*
     };
     // @__into: define <new integer type>.into() for all known integer types with known sizes.

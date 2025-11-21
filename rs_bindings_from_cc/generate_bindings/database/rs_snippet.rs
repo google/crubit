@@ -1511,41 +1511,118 @@ impl RsTypeKind {
                 let ident = make_rs_ident(&type_alias.rs_name.identifier);
                 quote! { #crate_path #ident }
             }
-            RsTypeKind::Primitive(primitive) => match primitive {
-                Primitive::Bool => quote! { bool },
-                Primitive::Void => quote! { ::core::ffi::c_void },
-                Primitive::Float => quote! { f32 },
-                Primitive::Double => quote! { f64 },
-                Primitive::Char => quote! { ::core::ffi::c_char },
-                Primitive::SignedChar => quote! { ::core::ffi::c_schar },
-                Primitive::UnsignedChar => quote! { ::core::ffi::c_uchar },
-                Primitive::Short => quote! { ::core::ffi::c_short },
-                Primitive::Int => quote! { ::core::ffi::c_int },
-                Primitive::Long => quote! { ::core::ffi::c_long },
-                Primitive::LongLong => quote! { ::core::ffi::c_longlong },
-                Primitive::UnsignedShort => quote! { ::core::ffi::c_ushort },
-                Primitive::UnsignedInt => quote! { ::core::ffi::c_uint },
-                Primitive::UnsignedLong => quote! { ::core::ffi::c_ulong },
-                Primitive::UnsignedLongLong => quote! { ::core::ffi::c_ulonglong },
-                Primitive::Char16T => quote! { u16 },
-                Primitive::Char32T => quote! { u32 },
-                Primitive::PtrdiffT
-                | Primitive::StdPtrdiffT
-                | Primitive::IntptrT
-                | Primitive::StdIntptrT => quote! { isize },
-                Primitive::SizeT
-                | Primitive::StdSizeT
-                | Primitive::UintptrT
-                | Primitive::StdUintptrT => quote! { usize },
-                Primitive::Int8T | Primitive::StdInt8T => quote! { i8 },
-                Primitive::Int16T | Primitive::StdInt16T => quote! { i16 },
-                Primitive::Int32T | Primitive::StdInt32T => quote! { i32 },
-                Primitive::Int64T | Primitive::StdInt64T => quote! { i64 },
-                Primitive::Uint8T | Primitive::StdUint8T => quote! { u8 },
-                Primitive::Uint16T | Primitive::StdUint16T => quote! { u16 },
-                Primitive::Uint32T | Primitive::StdUint32T => quote! { u32 },
-                Primitive::Uint64T | Primitive::StdUint64T => quote! { u64 },
-            },
+            RsTypeKind::Primitive(primitive) => {
+                let ir = db.ir();
+                let features = db.ir().target_crubit_features(&ir.flat_ir().current_target);
+                let enable_ffi11_types = features.contains(CrubitFeature::CustomFfiTypes);
+                match primitive {
+                    Primitive::Bool => quote! { bool },
+                    Primitive::Void => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_void }
+                        } else {
+                            quote! { ::core::ffi::c_void }
+                        }
+                    }
+                    Primitive::Float => quote! { f32 },
+                    Primitive::Double => quote! { f64 },
+                    Primitive::Char => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_char }
+                        } else {
+                            quote! { ::core::ffi::c_char }
+                        }
+                    }
+                    Primitive::SignedChar => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_schar }
+                        } else {
+                            quote! { ::core::ffi::c_schar }
+                        }
+                    }
+                    Primitive::UnsignedChar => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_uchar }
+                        } else {
+                            quote! { ::core::ffi::c_uchar }
+                        }
+                    }
+                    Primitive::Short => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_short }
+                        } else {
+                            quote! { ::core::ffi::c_short }
+                        }
+                    }
+                    Primitive::Int => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_int }
+                        } else {
+                            quote! { ::core::ffi::c_int }
+                        }
+                    }
+                    Primitive::Long => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_long }
+                        } else {
+                            quote! { ::core::ffi::c_long }
+                        }
+                    }
+                    Primitive::LongLong => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_longlong }
+                        } else {
+                            quote! { ::core::ffi::c_longlong }
+                        }
+                    }
+                    Primitive::UnsignedShort => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_ushort }
+                        } else {
+                            quote! { ::core::ffi::c_ushort }
+                        }
+                    }
+                    Primitive::UnsignedInt => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_uint }
+                        } else {
+                            quote! { ::core::ffi::c_uint }
+                        }
+                    }
+                    Primitive::UnsignedLong => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_ulong }
+                        } else {
+                            quote! { ::core::ffi::c_ulong }
+                        }
+                    }
+                    Primitive::UnsignedLongLong => {
+                        if enable_ffi11_types {
+                            quote! { ::ffi_11::c_ulonglong }
+                        } else {
+                            quote! { ::core::ffi::c_ulonglong }
+                        }
+                    }
+                    Primitive::Char16T => quote! { u16 },
+                    Primitive::Char32T => quote! { u32 },
+                    Primitive::PtrdiffT
+                    | Primitive::StdPtrdiffT
+                    | Primitive::IntptrT
+                    | Primitive::StdIntptrT => quote! { isize },
+                    Primitive::SizeT
+                    | Primitive::StdSizeT
+                    | Primitive::UintptrT
+                    | Primitive::StdUintptrT => quote! { usize },
+                    Primitive::Int8T | Primitive::StdInt8T => quote! { i8 },
+                    Primitive::Int16T | Primitive::StdInt16T => quote! { i16 },
+                    Primitive::Int32T | Primitive::StdInt32T => quote! { i32 },
+                    Primitive::Int64T | Primitive::StdInt64T => quote! { i64 },
+                    Primitive::Uint8T | Primitive::StdUint8T => quote! { u8 },
+                    Primitive::Uint16T | Primitive::StdUint16T => quote! { u16 },
+                    Primitive::Uint32T | Primitive::StdUint32T => quote! { u32 },
+                    Primitive::Uint64T | Primitive::StdUint64T => quote! { u64 },
+                }
+            }
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
                     BridgeRsTypeKind::BridgeVoidConverters { rust_name, .. } => {

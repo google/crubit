@@ -17,6 +17,7 @@ crubit_rust_test(
     cc_deps = [":no_unique_address"],
     deps = [
         "//support:ctor",
+        "//support/ffi_11",
         "@crate_index//:googletest",
     ],
 )

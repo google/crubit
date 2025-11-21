@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/type_alias:type_alias
-// Features: experimental, infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: custom_ffi_types, experimental, infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -57,7 +57,7 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
 impl __CcTemplateInst10MyTemplateIiE {
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
     #[inline(always)]
-    pub fn Create(value: ::core::ffi::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
+    pub fn Create(value: ::ffi_11::c_int) -> crate::__CcTemplateInst10MyTemplateIiE {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut __return as*mut::core::ffi::c_void,value);
@@ -69,7 +69,7 @@ impl __CcTemplateInst10MyTemplateIiE {
 impl __CcTemplateInst10MyTemplateIiE {
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
-    pub fn value<'a>(&'a self) -> &'a ::core::ffi::c_int {
+    pub fn value<'a>(&'a self) -> &'a ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(self)
         }
@@ -85,13 +85,13 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(
             __return: *mut ::core::ffi::c_void,
-            value: ::core::ffi::c_int,
+            value: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias<
             'a,
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIiE,
-        ) -> &'a ::core::ffi::c_int;
+        ) -> &'a ::ffi_11::c_int;
     }
 }
 

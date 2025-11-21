@@ -10,24 +10,24 @@ use ctor::CtorNew as _;
 
 #[gtest]
 fn test_get() {
-    let s = Struct::Make(1, 2);
+    let s = Struct::Make(1, 2i8.into());
     assert_eq!(s.field1(), &1);
-    assert_eq!(s.field2(), &2);
+    assert_eq!(s.field2(), &ffi_11::c_char::from(2i8));
 }
 
 #[gtest]
 fn test_padding_between_fields() {
-    let s = PaddingBetweenFields::Make(1, 2);
-    assert_eq!(s.field1, 1);
+    let s = PaddingBetweenFields::Make(1i8.into(), 2);
+    assert_eq!(s.field1, ffi_11::c_char::from(1i8));
     assert_eq!(s.field2(), &2);
 }
 
 #[gtest]
 fn test_field_in_tail_padding() {
-    let s = emplace!(FieldInTailPadding::ctor_new((1, 2, 3)));
+    let s = emplace!(FieldInTailPadding::ctor_new((1, 2i8.into(), 3i8.into())));
     assert_eq!(s.inner_struct().inner_int_field, 1);
-    assert_eq!(s.inner_struct().inner_char_field, 2);
-    assert_eq!(s.char_in_tail_padding_of_prev_field, 3);
+    assert_eq!(s.inner_struct().inner_char_field, ffi_11::c_char::from(2i8));
+    assert_eq!(s.char_in_tail_padding_of_prev_field, ffi_11::c_char::from(3i8));
 }
 
 #[gtest]

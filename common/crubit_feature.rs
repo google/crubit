@@ -34,6 +34,9 @@ flagset::flags! {
         /// Experimental is never *set* without also setting Supported, but we allow it to be
         /// *required* without also requiring Supported, so that error messages can be more direct.
         Experimental,
+
+        /// Enable emitting custom ffi_11 types instead of `core::ffi` types.
+        CustomFfiTypes,
     }
 }
 
@@ -52,6 +55,7 @@ impl CrubitFeature {
             Self::StdUniquePtr => "std_unique_ptr",
             Self::NonUnpinCtor => "non_unpin_ctor",
             Self::Experimental => "experimental",
+            Self::CustomFfiTypes => "custom_ffi_types",
         }
     }
 
@@ -69,6 +73,7 @@ impl CrubitFeature {
             Self::StdUniquePtr => "//features:std_unique_ptr",
             Self::NonUnpinCtor => "//features:non_unpin_ctor",
             Self::Experimental => "//features:experimental",
+            Self::CustomFfiTypes => "//features:custom_ffi_types",
         }
     }
 }
@@ -84,6 +89,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"std_unique_ptr" => CrubitFeature::StdUniquePtr.into(),
         b"non_unpin_ctor" => CrubitFeature::NonUnpinCtor.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
+        b"custom_ffi_types" => CrubitFeature::CustomFfiTypes.into(),
         _ => return None,
     };
     Some(features)
@@ -191,6 +197,7 @@ mod tests {
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
+                | CrubitFeature::CustomFfiTypes
         );
     }
 
@@ -219,6 +226,7 @@ mod tests {
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
+                | CrubitFeature::CustomFfiTypes
         );
     }
 
@@ -235,6 +243,7 @@ mod tests {
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
+                | CrubitFeature::CustomFfiTypes
         );
     }
 }

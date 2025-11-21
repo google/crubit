@@ -11,6 +11,7 @@ crubit_rust_test(
     ],
     deps = [
         "//support:ctor",
+        "//support/ffi_11",
         "@crate_index//:googletest",
     ],
 )
@@ -23,6 +24,7 @@ crubit_rust_test(
     ],
     deps = [
         "//support:ctor",
+        "//support/ffi_11",
         "@crate_index//:googletest",
     ],
 )
