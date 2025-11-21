@@ -117,9 +117,12 @@ static SmallVector<PointerNullabilityDiagnostic> untrackedError(
     const Expr* E, const ASTContext& Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx =
         PointerNullabilityDiagnostic::Context::Other) {
-  return {{PointerNullabilityDiagnostic::ErrorCode::Untracked, DiagCtx,
-           getRangeModuloMacros(
-               CharSourceRange::getTokenRange(E->getSourceRange()), Ctx)}};
+  return {{
+      .Code = PointerNullabilityDiagnostic::ErrorCode::Untracked,
+      .Ctx = DiagCtx,
+      .Range = getRangeModuloMacros(
+          CharSourceRange::getTokenRange(E->getSourceRange()), Ctx),
+  }};
 }
 
 constexpr llvm::StringLiteral kNonConstMethodCallID("non-const-method-call");
@@ -195,13 +198,23 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
           NullCheck != nullptr) {
         CharSourceRange NoteRange = getRangeModuloMacros(
             CharSourceRange::getTokenRange(NullCheck->getSourceRange()), Ctx);
-        return {{PointerNullabilityDiagnostic::ErrorCode::
-                     ExpectedNonnullWithCheckOnNonConstCall,
-                 DiagCtx, getRangeModuloMacros(Range, Ctx), Callee, ParamName,
-                 NoteRange}};
+        return {{
+            .Code = PointerNullabilityDiagnostic::ErrorCode::
+                ExpectedNonnullWithCheckOnNonConstCall,
+            .Ctx = DiagCtx,
+            .Range = getRangeModuloMacros(Range, Ctx),
+            .Callee = Callee,
+            .ParamName = ParamName,
+            .NoteRange = NoteRange,
+        }};
       }
-      return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
-               DiagCtx, getRangeModuloMacros(Range, Ctx), Callee, ParamName}};
+      return {{
+          .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+          .Ctx = DiagCtx,
+          .Range = getRangeModuloMacros(Range, Ctx),
+          .Callee = Callee,
+          .ParamName = ParamName,
+      }};
     }
     return {};
   }
@@ -326,9 +339,14 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
   if (LHSRange.isInvalid())
     LHSRange = CharSourceRange::getTokenRange(RHS->getSourceRange());
   if (!invariantMatch(LHSNullability, *RHSNullability)) {
-    Diagnostics.push_back(
-        {PointerNullabilityDiagnostic::ErrorCode::ExpectedEqualNullability,
-         DiagCtx, getRangeModuloMacros(LHSRange, Ctx), Callee, ParamName});
+    Diagnostics.push_back({
+        .Code =
+            PointerNullabilityDiagnostic::ErrorCode::ExpectedEqualNullability,
+        .Ctx = DiagCtx,
+        .Range = getRangeModuloMacros(LHSRange, Ctx),
+        .Callee = Callee,
+        .ParamName = ParamName,
+    });
   }
 
   return Diagnostics;
@@ -407,11 +425,13 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseSmartPointerReset(
       (MCE->getNumArgs() == 1 && MCE->getArg(0)->getType()->isNullPtrType()) ||
       (MCE->getNumArgs() == 1 && MCE->getArg(0)->isDefaultArgument())) {
     if (ReceiverNullability.front().concrete() == NullabilityKind::NonNull)
-      return {{PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
-               PointerNullabilityDiagnostic::Context::Assignment,
-               getRangeModuloMacros(
-                   CharSourceRange::getTokenRange(MCE->getSourceRange()),
-                   *Result.Context)}};
+      return {{
+          .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+          .Ctx = PointerNullabilityDiagnostic::Context::Assignment,
+          .Range = getRangeModuloMacros(
+              CharSourceRange::getTokenRange(MCE->getSourceRange()),
+              *Result.Context),
+      }};
     return {};
   }
 
@@ -529,10 +549,12 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
     llvm::dbgs() << nullabilityToString(*MaybeComputed) << "\n";
   });
 
-  return {{PointerNullabilityDiagnostic::ErrorCode::AssertFailed,
-           PointerNullabilityDiagnostic::Context::Other,
-           getRangeModuloMacros(
-               CharSourceRange::getTokenRange(CE->getSourceRange()), Ctx)}};
+  return {{
+      .Code = PointerNullabilityDiagnostic::ErrorCode::AssertFailed,
+      .Ctx = PointerNullabilityDiagnostic::Context::Other,
+      .Range = getRangeModuloMacros(
+          CharSourceRange::getTokenRange(CE->getSourceRange()), Ctx),
+  }};
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
@@ -862,11 +884,13 @@ diagnoseMovedFromNonnullSmartPointer(const Expr* absl_nonnull E,
   if (Val == nullptr) return untrackedError(E, Ctx);
 
   if (isNullable(*Val, State.Env))
-    return {{PointerNullabilityDiagnostic::ErrorCode::
-                 AccessingMovedFromNonnullPointer,
-             PointerNullabilityDiagnostic::Context::Other,
-             getRangeModuloMacros(
-                 CharSourceRange::getTokenRange(E->getSourceRange()), Ctx)}};
+    return {{
+        .Code = PointerNullabilityDiagnostic::ErrorCode::
+            AccessingMovedFromNonnullPointer,
+        .Ctx = PointerNullabilityDiagnostic::Context::Other,
+        .Range = getRangeModuloMacros(
+            CharSourceRange::getTokenRange(E->getSourceRange()), Ctx),
+    }};
 
   return {};
 }
@@ -956,12 +980,14 @@ static void checkParmVarDeclWithPointerDefaultArg(
       !shouldDiagnoseExpectedNonnullDefaultArgValue(Ctx, Parm, Defaults))
     return;
 
-  Diags.push_back(
-      {PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
-       PointerNullabilityDiagnostic::Context::Initializer,
-       getRangeModuloMacros(
-           CharSourceRange::getTokenRange(DefaultVal->getSourceRange()), Ctx),
-       Callee, Parm.getIdentifier()});
+  Diags.push_back({
+      .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+      .Ctx = PointerNullabilityDiagnostic::Context::Initializer,
+      .Range = getRangeModuloMacros(
+          CharSourceRange::getTokenRange(DefaultVal->getSourceRange()), Ctx),
+      .Callee = Callee,
+      .ParamName = Parm.getIdentifier(),
+  });
 }
 
 static void checkAnnotationsConsistentHelper(
@@ -974,9 +1000,12 @@ static void checkAnnotationsConsistentHelper(
   TypeNullability CanonicalNullability =
       getTypeNullability(CanonicalT, CanonicalFile, Defaults);
   if (Nullability != CanonicalNullability) {
-    Diags.push_back({ErrorCode, PointerNullabilityDiagnostic::Context::Other,
-                     CharSourceRange::getTokenRange(Range), nullptr, nullptr,
-                     CharSourceRange::getTokenRange(CanonicalRange)});
+    Diags.push_back({
+        .Code = ErrorCode,
+        .Ctx = PointerNullabilityDiagnostic::Context::Other,
+        .Range = CharSourceRange::getTokenRange(Range),
+        .NoteRange = CharSourceRange::getTokenRange(CanonicalRange),
+    });
     return;
   }
   // If a function parameter has a nullability annotation in the canonical
@@ -995,9 +1024,12 @@ static void checkAnnotationsConsistentHelper(
         // Only issue the diagnostic if the infused nullability is different
         // from the default.
         Defaults.get(File) != *AT->getImmediateNullability()) {
-      Diags.push_back({ErrorCode, PointerNullabilityDiagnostic::Context::Other,
-                       CharSourceRange::getTokenRange(Range), nullptr, nullptr,
-                       CharSourceRange::getTokenRange(CanonicalRange)});
+      Diags.push_back({
+          .Code = ErrorCode,
+          .Ctx = PointerNullabilityDiagnostic::Context::Other,
+          .Range = CharSourceRange::getTokenRange(Range),
+          .NoteRange = CharSourceRange::getTokenRange(CanonicalRange),
+      });
     }
   }
 }
@@ -1114,10 +1146,11 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
       Val = StateAtExit.Env.get<PointerValue>(*FieldLoc);
     }
     if (Val == nullptr) {
-      Diags.push_back(
-          {PointerNullabilityDiagnostic::ErrorCode::Untracked,
-           PointerNullabilityDiagnostic::Context::Other,
-           CharSourceRange::getTokenRange(Field->getSourceRange())});
+      Diags.push_back({
+          .Code = PointerNullabilityDiagnostic::ErrorCode::Untracked,
+          .Ctx = PointerNullabilityDiagnostic::Context::Other,
+          .Range = CharSourceRange::getTokenRange(Field->getSourceRange()),
+      });
       continue;
     }
 
@@ -1129,12 +1162,13 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
     if (!hasPointerNullState(*Val)) return;
 
     if (isNullable(*Val, StateAtExit.Env)) {
-      Diags.push_back(
-          {PointerNullabilityDiagnostic::ErrorCode::
-               NonnullPointerFieldNullableAtExit,
-           PointerNullabilityDiagnostic::Context::Other,
-           getMethodClosingBraceRange(*Method), nullptr, nullptr,
-           CharSourceRange::getTokenRange(Field->getSourceRange())});
+      Diags.push_back({
+          .Code = PointerNullabilityDiagnostic::ErrorCode::
+              NonnullPointerFieldNullableAtExit,
+          .Ctx = PointerNullabilityDiagnostic::Context::Other,
+          .Range = getMethodClosingBraceRange(*Method),
+          .NoteRange = CharSourceRange::getTokenRange(Field->getSourceRange()),
+      });
     }
   }
 }
