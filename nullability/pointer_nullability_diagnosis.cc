@@ -189,44 +189,44 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
   else if (E->getType()->isNullPtrType())
     IsNullable = isReachableNullptrLiteral(Env);
 
-  if (IsNullable.has_value()) {
-    if (*IsNullable) {
-      if (Range.isInvalid())
-        Range = CharSourceRange::getTokenRange(E->getSourceRange());
-      if (const Expr* NullCheck =
-              matchesNonConstCallNullCheck(*E, Ctx, Env.getCurrentFunc());
-          NullCheck != nullptr) {
-        CharSourceRange NoteRange = getRangeModuloMacros(
-            CharSourceRange::getTokenRange(NullCheck->getSourceRange()), Ctx);
-        return {{
-            .Code = PointerNullabilityDiagnostic::ErrorCode::
-                ExpectedNonnullWithCheckOnNonConstCall,
-            .Ctx = DiagCtx,
-            .Range = getRangeModuloMacros(Range, Ctx),
-            .Callee = Callee,
-            .ParamName = ParamName,
-            .NoteRange = NoteRange,
-        }};
-      }
-      return {{
-          .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
-          .Ctx = DiagCtx,
-          .Range = getRangeModuloMacros(Range, Ctx),
-          .Callee = Callee,
-          .ParamName = ParamName,
-      }};
-    }
-    return {};
+  if (!IsNullable.has_value()) {
+    LLVM_DEBUG({
+      llvm::dbgs()
+          << "The dataflow analysis framework does not model a PointerValue "
+             "for the following Expr, and thus its dereference is marked as "
+             "unsafe:\n";
+      E->dump();
+    });
+    return untrackedError(E, Ctx, DiagCtx);
   }
 
-  LLVM_DEBUG({
-    llvm::dbgs()
-        << "The dataflow analysis framework does not model a PointerValue "
-           "for the following Expr, and thus its dereference is marked as "
-           "unsafe:\n";
-    E->dump();
-  });
-  return untrackedError(E, Ctx, DiagCtx);
+  if (!*IsNullable) return {};
+
+  if (Range.isInvalid())
+    Range = CharSourceRange::getTokenRange(E->getSourceRange());
+
+  if (const Expr* NullCheck =
+          matchesNonConstCallNullCheck(*E, Ctx, Env.getCurrentFunc());
+      NullCheck != nullptr) {
+    return {{
+        .Code = PointerNullabilityDiagnostic::ErrorCode::
+            ExpectedNonnullWithCheckOnNonConstCall,
+        .Ctx = DiagCtx,
+        .Range = getRangeModuloMacros(Range, Ctx),
+        .Callee = Callee,
+        .ParamName = ParamName,
+        .NoteRange = getRangeModuloMacros(
+            CharSourceRange::getTokenRange(NullCheck->getSourceRange()), Ctx),
+    }};
+  }
+
+  return {{
+      .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+      .Ctx = DiagCtx,
+      .Range = getRangeModuloMacros(Range, Ctx),
+      .Callee = Callee,
+      .ParamName = ParamName,
+  }};
 }
 
 static bool invariantMatch(ArrayRef<PointerTypeNullability> A,
