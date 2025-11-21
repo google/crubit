@@ -6,6 +6,7 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_DIAGNOSIS_H_
 
 #include <memory>
+#include <string>
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
@@ -70,9 +71,9 @@ struct PointerNullabilityDiagnostic {
   /// Populated only if `Ctx` is `FunctionArgument` and the parameter name is
   /// known.
   const clang::IdentifierInfo *absl_nullable ParamName = nullptr;
-  /// Source range of a note to be emitted alongside the diagnostic.
-  /// The exact semantics of the note depend on `Code` and `Ctx`.
+  /// Source range and message of a note to be emitted alongside the diagnostic.
   CharSourceRange NoteRange;
+  std::string NoteMessage;
 };
 
 /// Creates a solver with default parameters that is suitable for passing to
