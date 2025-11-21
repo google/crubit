@@ -63,3 +63,15 @@ pub mod field_with_no_default {
 pub mod no_impl {
     pub struct SomeStruct(i32);
 }
+
+pub mod transparent_struct {
+    #[repr(transparent)]
+    #[derive(Default)]
+    pub struct SomeStruct(i32);
+
+    impl SomeStruct {
+        pub fn extract_int(&self) -> i32 {
+            self.0
+        }
+    }
+}

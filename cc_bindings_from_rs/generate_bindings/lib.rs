@@ -859,11 +859,25 @@ fn generate_default_ctor<'tcx>(
             let mut prereqs = CcPrerequisites::default();
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
 
+            // This might be the case for `#[repr(transparent)]` types.
+            // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
+            // should be cetnralized with the other callsites that depend on return type ABI.
+            let ctor_impl = if is_c_abi_compatible_by_value(tcx, core.self_ty) {
+                quote! {
+                    inline #cc_struct_name::#cc_struct_name() {
+                       *this = __crubit_internal::#thunk_name();
+                    }
+                }
+            } else {
+                quote! {
+                    inline #cc_struct_name::#cc_struct_name() {
+                        __crubit_internal::#thunk_name(this);
+                    }
+                }
+            };
             let tokens = quote! {
                 #cc_thunk_decls
-                inline #cc_struct_name::#cc_struct_name() {
-                    __crubit_internal::#thunk_name(this);
-                }
+                #ctor_impl
             };
             CcSnippet { tokens, prereqs }
         };
