@@ -95,23 +95,23 @@ pub unsafe fn InspectStringViews(
 }
 
 #[inline(always)]
-pub fn MaybeVoidPtr() -> crate::MyOption<*mut ::core::ffi::c_void> {
+pub fn MaybeVoidPtr() -> crate::MyOption<*mut ::ffi_11::c_void> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut::core::ffi::c_void>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z12MaybeVoidPtrv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut::ffi_11::c_void>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z12MaybeVoidPtrv(__return_abi_buffer,); })
     }
 }
 
 #[inline(always)]
 pub unsafe fn AcceptsSliceAndReturnsStatusErrorIfEmpty(
-    slice: *const [::core::ffi::c_int],
-) -> crate::MyOption<*const [::core::ffi::c_int]> {
-    ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::core::ffi::c_int]>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__return_abi_buffer,slice); })
+    slice: *const [::ffi_11::c_int],
+) -> crate::MyOption<*const [::ffi_11::c_int]> {
+    ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__return_abi_buffer,slice); })
 }
 
 #[inline(always)]
-pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
+pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut*const::core::ffi::c_char>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z16ReturnsCStrArrayv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut*const::ffi_11::c_char>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z16ReturnsCStrArrayv(__return_abi_buffer,); })
     }
 }
 
@@ -915,13 +915,13 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for class 'absl::Span<const int>':
 // Can't generate bindings for absl::Span<const int>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::Span<const int> (::span::absl::RawSpan<::core::ffi::c_int> is a template instantiation)
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::Span<const int> (::span::absl::RawSpan<::ffi_11::c_int> is a template instantiation)
 
 // Error while generating bindings for class 'absl::Span<std::basic_string_view<char, std::char_traits<char>>>':
 // Can't generate bindings for absl::Span<std::basic_string_view<char, std::char_traits<char>>>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::Span<std::basic_string_view<char, std::char_traits<char>>> (::span::absl::RawSpanMut<::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE> is a template instantiation)
 
-// Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::core::ffi::c_int])
+// Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
 
 // Type bindings for rs_std::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE])
 
@@ -960,7 +960,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
-            slice: *const [::core::ffi::c_int],
+            slice: *const [::ffi_11::c_int],
         );
         pub(crate) unsafe fn __rust_thunk___Z16ReturnsCStrArrayv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
@@ -1002,8 +1002,8 @@ const _: () = {
             __size_
         ) == 8
     );
-    assert!(::core::mem::size_of::<*const [::core::ffi::c_int]>() == 16);
-    assert!(::core::mem::align_of::<*const [::core::ffi::c_int]>() == 8);
+    assert!(::core::mem::size_of::<*const [::ffi_11::c_int]>() == 16);
+    assert!(::core::mem::align_of::<*const [::ffi_11::c_int]>() == 8);
     assert!(
         ::core::mem::size_of::<
             *mut [::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],

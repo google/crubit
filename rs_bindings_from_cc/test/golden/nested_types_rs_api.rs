@@ -18,7 +18,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Foo
 pub struct Foo {
-    pub foo: ::core::ffi::c_int,
+    pub foo: ::ffi_11::c_int,
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
@@ -46,7 +46,7 @@ pub mod foo {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar
     pub struct Bar {
-        pub bar: ::core::ffi::c_int,
+        pub bar: ::ffi_11::c_int,
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
@@ -74,7 +74,7 @@ pub mod foo {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=Foo :: Bar :: Baz
         pub struct Baz {
-            pub baz: ::core::ffi::c_int,
+            pub baz: ::ffi_11::c_int,
         }
         impl !Send for Baz {}
         impl !Sync for Baz {}

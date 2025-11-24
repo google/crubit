@@ -4,7 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // rust_api_golden
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector,
+// supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN

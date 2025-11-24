@@ -17,19 +17,19 @@
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=Color
-pub struct Color(::core::ffi::c_uint);
+pub struct Color(::ffi_11::c_uint);
 impl Color {
     pub const kRed: Color = Color(0);
     pub const kBlue: Color = Color(1);
     pub const kGreen: Color = Color(2);
 }
-impl From<::core::ffi::c_uint> for Color {
-    fn from(value: ::core::ffi::c_uint) -> Color {
+impl From<::ffi_11::c_uint> for Color {
+    fn from(value: ::ffi_11::c_uint) -> Color {
         Color(value)
     }
 }
-impl From<Color> for ::core::ffi::c_uint {
-    fn from(value: Color) -> ::core::ffi::c_uint {
+impl From<Color> for ::ffi_11::c_uint {
+    fn from(value: Color) -> ::ffi_11::c_uint {
         value.0
     }
 }
@@ -37,15 +37,15 @@ impl From<Color> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=EnumToRename
-pub struct RenamedEnum(::core::ffi::c_uint);
+pub struct RenamedEnum(::ffi_11::c_uint);
 impl RenamedEnum {}
-impl From<::core::ffi::c_uint> for RenamedEnum {
-    fn from(value: ::core::ffi::c_uint) -> RenamedEnum {
+impl From<::ffi_11::c_uint> for RenamedEnum {
+    fn from(value: ::ffi_11::c_uint) -> RenamedEnum {
         RenamedEnum(value)
     }
 }
-impl From<RenamedEnum> for ::core::ffi::c_uint {
-    fn from(value: RenamedEnum) -> ::core::ffi::c_uint {
+impl From<RenamedEnum> for ::ffi_11::c_uint {
+    fn from(value: RenamedEnum) -> ::ffi_11::c_uint {
         value.0
     }
 }
@@ -53,18 +53,18 @@ impl From<RenamedEnum> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=EnumWithRenamedVariants
-pub struct EnumWithRenamedVariants(::core::ffi::c_uint);
+pub struct EnumWithRenamedVariants(::ffi_11::c_uint);
 impl EnumWithRenamedVariants {
     pub const FOO: EnumWithRenamedVariants = EnumWithRenamedVariants(0);
     pub const BAR: EnumWithRenamedVariants = EnumWithRenamedVariants(1);
 }
-impl From<::core::ffi::c_uint> for EnumWithRenamedVariants {
-    fn from(value: ::core::ffi::c_uint) -> EnumWithRenamedVariants {
+impl From<::ffi_11::c_uint> for EnumWithRenamedVariants {
+    fn from(value: ::ffi_11::c_uint) -> EnumWithRenamedVariants {
         EnumWithRenamedVariants(value)
     }
 }
-impl From<EnumWithRenamedVariants> for ::core::ffi::c_uint {
-    fn from(value: EnumWithRenamedVariants) -> ::core::ffi::c_uint {
+impl From<EnumWithRenamedVariants> for ::ffi_11::c_uint {
+    fn from(value: EnumWithRenamedVariants) -> ::ffi_11::c_uint {
         value.0
     }
 }
@@ -72,15 +72,15 @@ impl From<EnumWithRenamedVariants> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=Empty
-pub struct Empty(::core::ffi::c_uint);
+pub struct Empty(::ffi_11::c_uint);
 impl Empty {}
-impl From<::core::ffi::c_uint> for Empty {
-    fn from(value: ::core::ffi::c_uint) -> Empty {
+impl From<::ffi_11::c_uint> for Empty {
+    fn from(value: ::ffi_11::c_uint) -> Empty {
         Empty(value)
     }
 }
-impl From<Empty> for ::core::ffi::c_uint {
-    fn from(value: Empty) -> ::core::ffi::c_uint {
+impl From<Empty> for ::ffi_11::c_uint {
+    fn from(value: Empty) -> ::ffi_11::c_uint {
         value.0
     }
 }
@@ -104,15 +104,15 @@ impl From<EmptyBool> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyInt
-pub struct EmptyInt(::core::ffi::c_uint);
+pub struct EmptyInt(::ffi_11::c_uint);
 impl EmptyInt {}
-impl From<::core::ffi::c_uint> for EmptyInt {
-    fn from(value: ::core::ffi::c_uint) -> EmptyInt {
+impl From<::ffi_11::c_uint> for EmptyInt {
+    fn from(value: ::ffi_11::c_uint) -> EmptyInt {
         EmptyInt(value)
     }
 }
-impl From<EmptyInt> for ::core::ffi::c_uint {
-    fn from(value: EmptyInt) -> ::core::ffi::c_uint {
+impl From<EmptyInt> for ::ffi_11::c_uint {
+    fn from(value: EmptyInt) -> ::ffi_11::c_uint {
         value.0
     }
 }
@@ -120,15 +120,15 @@ impl From<EmptyInt> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyChar
-pub struct EmptyChar(::core::ffi::c_char);
+pub struct EmptyChar(::ffi_11::c_char);
 impl EmptyChar {}
-impl From<::core::ffi::c_char> for EmptyChar {
-    fn from(value: ::core::ffi::c_char) -> EmptyChar {
+impl From<::ffi_11::c_char> for EmptyChar {
+    fn from(value: ::ffi_11::c_char) -> EmptyChar {
         EmptyChar(value)
     }
 }
-impl From<EmptyChar> for ::core::ffi::c_char {
-    fn from(value: EmptyChar) -> ::core::ffi::c_char {
+impl From<EmptyChar> for ::ffi_11::c_char {
+    fn from(value: EmptyChar) -> ::ffi_11::c_char {
         value.0
     }
 }
@@ -155,18 +155,18 @@ impl From<NonEmptyBool> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyInt
-pub struct NonEmptyInt(::core::ffi::c_uint);
+pub struct NonEmptyInt(::ffi_11::c_uint);
 impl NonEmptyInt {
     pub const kInt1: NonEmptyInt = NonEmptyInt(0);
     pub const kInt2: NonEmptyInt = NonEmptyInt(4294967295);
 }
-impl From<::core::ffi::c_uint> for NonEmptyInt {
-    fn from(value: ::core::ffi::c_uint) -> NonEmptyInt {
+impl From<::ffi_11::c_uint> for NonEmptyInt {
+    fn from(value: ::ffi_11::c_uint) -> NonEmptyInt {
         NonEmptyInt(value)
     }
 }
-impl From<NonEmptyInt> for ::core::ffi::c_uint {
-    fn from(value: NonEmptyInt) -> ::core::ffi::c_uint {
+impl From<NonEmptyInt> for ::ffi_11::c_uint {
+    fn from(value: NonEmptyInt) -> ::ffi_11::c_uint {
         value.0
     }
 }
@@ -174,18 +174,18 @@ impl From<NonEmptyInt> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyChar
-pub struct NonEmptyChar(::core::ffi::c_char);
+pub struct NonEmptyChar(::ffi_11::c_char);
 impl NonEmptyChar {
-    pub const kChar1: NonEmptyChar = NonEmptyChar(0);
-    pub const kChar2: NonEmptyChar = NonEmptyChar(97);
+    pub const kChar1: NonEmptyChar = NonEmptyChar(ffi_11::c_char::new(0 as u8));
+    pub const kChar2: NonEmptyChar = NonEmptyChar(ffi_11::c_char::new(97 as u8));
 }
-impl From<::core::ffi::c_char> for NonEmptyChar {
-    fn from(value: ::core::ffi::c_char) -> NonEmptyChar {
+impl From<::ffi_11::c_char> for NonEmptyChar {
+    fn from(value: ::ffi_11::c_char) -> NonEmptyChar {
         NonEmptyChar(value)
     }
 }
-impl From<NonEmptyChar> for ::core::ffi::c_char {
-    fn from(value: NonEmptyChar) -> ::core::ffi::c_char {
+impl From<NonEmptyChar> for ::ffi_11::c_char {
+    fn from(value: NonEmptyChar) -> ::ffi_11::c_char {
         value.0
     }
 }
@@ -193,15 +193,15 @@ impl From<NonEmptyChar> for ::core::ffi::c_char {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyClass
-pub struct EmptyClass(::core::ffi::c_int);
+pub struct EmptyClass(::ffi_11::c_int);
 impl EmptyClass {}
-impl From<::core::ffi::c_int> for EmptyClass {
-    fn from(value: ::core::ffi::c_int) -> EmptyClass {
+impl From<::ffi_11::c_int> for EmptyClass {
+    fn from(value: ::ffi_11::c_int) -> EmptyClass {
         EmptyClass(value)
     }
 }
-impl From<EmptyClass> for ::core::ffi::c_int {
-    fn from(value: EmptyClass) -> ::core::ffi::c_int {
+impl From<EmptyClass> for ::ffi_11::c_int {
+    fn from(value: EmptyClass) -> ::ffi_11::c_int {
         value.0
     }
 }
@@ -225,15 +225,15 @@ impl From<EmptyBoolClass> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyIntClass
-pub struct EmptyIntClass(::core::ffi::c_int);
+pub struct EmptyIntClass(::ffi_11::c_int);
 impl EmptyIntClass {}
-impl From<::core::ffi::c_int> for EmptyIntClass {
-    fn from(value: ::core::ffi::c_int) -> EmptyIntClass {
+impl From<::ffi_11::c_int> for EmptyIntClass {
+    fn from(value: ::ffi_11::c_int) -> EmptyIntClass {
         EmptyIntClass(value)
     }
 }
-impl From<EmptyIntClass> for ::core::ffi::c_int {
-    fn from(value: EmptyIntClass) -> ::core::ffi::c_int {
+impl From<EmptyIntClass> for ::ffi_11::c_int {
+    fn from(value: EmptyIntClass) -> ::ffi_11::c_int {
         value.0
     }
 }
@@ -241,15 +241,15 @@ impl From<EmptyIntClass> for ::core::ffi::c_int {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyCharClass
-pub struct EmptyCharClass(::core::ffi::c_char);
+pub struct EmptyCharClass(::ffi_11::c_char);
 impl EmptyCharClass {}
-impl From<::core::ffi::c_char> for EmptyCharClass {
-    fn from(value: ::core::ffi::c_char) -> EmptyCharClass {
+impl From<::ffi_11::c_char> for EmptyCharClass {
+    fn from(value: ::ffi_11::c_char) -> EmptyCharClass {
         EmptyCharClass(value)
     }
 }
-impl From<EmptyCharClass> for ::core::ffi::c_char {
-    fn from(value: EmptyCharClass) -> ::core::ffi::c_char {
+impl From<EmptyCharClass> for ::ffi_11::c_char {
+    fn from(value: EmptyCharClass) -> ::ffi_11::c_char {
         value.0
     }
 }
@@ -276,18 +276,18 @@ impl From<NonEmptyBoolClass> for bool {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyIntClass
-pub struct NonEmptyIntClass(::core::ffi::c_uint);
+pub struct NonEmptyIntClass(::ffi_11::c_uint);
 impl NonEmptyIntClass {
     pub const k1: NonEmptyIntClass = NonEmptyIntClass(0);
     pub const k2: NonEmptyIntClass = NonEmptyIntClass(4294967295);
 }
-impl From<::core::ffi::c_uint> for NonEmptyIntClass {
-    fn from(value: ::core::ffi::c_uint) -> NonEmptyIntClass {
+impl From<::ffi_11::c_uint> for NonEmptyIntClass {
+    fn from(value: ::ffi_11::c_uint) -> NonEmptyIntClass {
         NonEmptyIntClass(value)
     }
 }
-impl From<NonEmptyIntClass> for ::core::ffi::c_uint {
-    fn from(value: NonEmptyIntClass) -> ::core::ffi::c_uint {
+impl From<NonEmptyIntClass> for ::ffi_11::c_uint {
+    fn from(value: NonEmptyIntClass) -> ::ffi_11::c_uint {
         value.0
     }
 }
@@ -295,18 +295,18 @@ impl From<NonEmptyIntClass> for ::core::ffi::c_uint {
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyCharClass
-pub struct NonEmptyCharClass(::core::ffi::c_char);
+pub struct NonEmptyCharClass(::ffi_11::c_char);
 impl NonEmptyCharClass {
-    pub const k1: NonEmptyCharClass = NonEmptyCharClass(0);
-    pub const k2: NonEmptyCharClass = NonEmptyCharClass(97);
+    pub const k1: NonEmptyCharClass = NonEmptyCharClass(ffi_11::c_char::new(0 as u8));
+    pub const k2: NonEmptyCharClass = NonEmptyCharClass(ffi_11::c_char::new(97 as u8));
 }
-impl From<::core::ffi::c_char> for NonEmptyCharClass {
-    fn from(value: ::core::ffi::c_char) -> NonEmptyCharClass {
+impl From<::ffi_11::c_char> for NonEmptyCharClass {
+    fn from(value: ::ffi_11::c_char) -> NonEmptyCharClass {
         NonEmptyCharClass(value)
     }
 }
-impl From<NonEmptyCharClass> for ::core::ffi::c_char {
-    fn from(value: NonEmptyCharClass) -> ::core::ffi::c_char {
+impl From<NonEmptyCharClass> for ::ffi_11::c_char {
+    fn from(value: NonEmptyCharClass) -> ::ffi_11::c_char {
         value.0
     }
 }

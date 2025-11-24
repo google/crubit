@@ -18,7 +18,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=FirstStruct
 pub struct FirstStruct {
-    pub field: ::core::ffi::c_int,
+    pub field: ::ffi_11::c_int,
 }
 impl !Send for FirstStruct {}
 impl !Sync for FirstStruct {}
@@ -57,7 +57,7 @@ impl Default for FirstStruct {
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for FirstStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
-pub fn first_func() -> ::core::ffi::c_int {
+pub fn first_func() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
 }
 
@@ -65,7 +65,7 @@ pub fn first_func() -> ::core::ffi::c_int {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SecondStruct
 pub struct SecondStruct {
-    pub field: ::core::ffi::c_int,
+    pub field: ::ffi_11::c_int,
 }
 impl !Send for SecondStruct {}
 impl !Sync for SecondStruct {}
@@ -104,7 +104,7 @@ impl Default for SecondStruct {
 // //rs_bindings_from_cc/test/golden:item_order_cc needs [//features:experimental] for SecondStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
-pub fn second_func() -> ::core::ffi::c_int {
+pub fn second_func() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z11second_funcv() }
 }
 
@@ -113,9 +113,9 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___Z10first_funcv() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z10first_funcv() -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___Z11second_funcv() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z11second_funcv() -> ::ffi_11::c_int;
     }
 }
 

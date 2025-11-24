@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/inline:inline
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -17,7 +17,7 @@
 
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=8
 #[inline(always)]
-pub fn hello_world_inline() -> ::core::ffi::c_int {
+pub fn hello_world_inline() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z18hello_world_inlinev() }
 }
 
@@ -29,7 +29,7 @@ pub fn hello_world_inline() -> ::core::ffi::c_int {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
 pub struct SomeStruct {
-    pub int_field: ::core::ffi::c_int,
+    pub int_field: ::ffi_11::c_int,
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
@@ -52,7 +52,7 @@ impl Default for SomeStruct {
 
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=15
 #[inline(always)]
-pub unsafe fn take_struct_by_const_ptr(s: *const crate::SomeStruct) -> ::core::ffi::c_int {
+pub unsafe fn take_struct_by_const_ptr(s: *const crate::SomeStruct) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(s)
 }
 
@@ -62,7 +62,7 @@ pub unsafe fn take_struct_by_const_ptr(s: *const crate::SomeStruct) -> ::core::f
 ///
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=22
 #[inline(always)]
-pub fn double_unsigned_int(i: ::core::ffi::c_uint) -> ::core::ffi::c_uint {
+pub fn double_unsigned_int(i: ::ffi_11::c_uint) -> ::ffi_11::c_uint {
     unsafe { crate::detail::__rust_thunk___Z19double_unsigned_intj(i) }
 }
 
@@ -71,7 +71,7 @@ pub fn double_unsigned_int(i: ::core::ffi::c_uint) -> ::core::ffi::c_uint {
 pub mod namespaced {
     /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=28
     #[inline(always)]
-    pub fn forward_declared_doubler(x: ::core::ffi::c_int) -> ::core::ffi::c_int {
+    pub fn forward_declared_doubler(x: ::ffi_11::c_int) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN10namespaced24forward_declared_doublerEi(x) }
     }
 }
@@ -82,17 +82,17 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
-        pub(crate) unsafe fn __rust_thunk___Z18hello_world_inlinev() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z18hello_world_inlinev() -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(
             s: *const crate::SomeStruct,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z19double_unsigned_intj(
-            i: ::core::ffi::c_uint,
-        ) -> ::core::ffi::c_uint;
+            i: ::ffi_11::c_uint,
+        ) -> ::ffi_11::c_uint;
         pub(crate) unsafe fn __rust_thunk___ZN10namespaced24forward_declared_doublerEi(
-            x: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
+            x: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
     }
 }
 

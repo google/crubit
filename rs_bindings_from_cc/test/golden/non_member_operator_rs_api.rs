@@ -19,7 +19,7 @@ pub mod ns {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: X
     pub struct X {
-        pub f: ::core::ffi::c_int,
+        pub f: ::ffi_11::c_int,
     }
     impl !Send for X {}
     impl !Sync for X {}
