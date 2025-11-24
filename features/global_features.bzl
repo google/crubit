@@ -12,4 +12,5 @@ SUPPORTED_FEATURES = [
     "std_vector",
     "std_unique_ptr",
     "infer_operator_lifetimes",
+    "custom_ffi_types",
 ]
