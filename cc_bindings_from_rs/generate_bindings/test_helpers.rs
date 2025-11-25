@@ -78,6 +78,7 @@ fn bindings_db_for_tests_with_features(
         /* crubit_debug_path_format= */ None,
         /* default_features= */ Default::default(),
         /* enable_hir_types= */ true,
+        /* kythe_annotations= */ false,
         /* crate_name_to_include_paths= */ Default::default(),
         /* crate_name_to_features= */
         Rc::new(HashMap::from([(Rc::from("self"), features)])),

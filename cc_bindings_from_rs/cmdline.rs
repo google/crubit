@@ -148,6 +148,10 @@ pub struct Cmdline {
     /// not appear in MIR types and use it to generate bindings.
     #[clap(long, value_parser, value_name = "BOOL", default_value_t = true)]
     pub enable_hir_types: bool,
+
+    /// Emit extra source information for generating cross-references.
+    #[clap(long, value_parser, value_name = "BOOL", default_value_t = false)]
+    pub kythe_annotations: bool,
 }
 
 impl Cmdline {
@@ -503,5 +507,21 @@ mod tests {
         .unwrap();
         assert_eq!(None, cmdline.clang_format_exe_path);
         assert_eq!(Some(PathBuf::from("rustfmt.exe")), cmdline.rustfmt_exe_path);
+        assert_eq!(false, cmdline.kythe_annotations);
+    }
+
+    #[test]
+    fn test_pass_kythe_annotations() {
+        let cmdline = new_cmdline([
+            "--h-out=foo.h",
+            "--rs-out=foo_impl.rs",
+            "--kythe-annotations",
+            "--crubit-support-path-format=<crubit/support/{header}>",
+            "--rustfmt-exe-path=rustfmt.exe",
+        ])
+        .unwrap();
+        assert_eq!(None, cmdline.clang_format_exe_path);
+        assert_eq!(Some(PathBuf::from("rustfmt.exe")), cmdline.rustfmt_exe_path);
+        assert_eq!(true, cmdline.kythe_annotations);
     }
 }

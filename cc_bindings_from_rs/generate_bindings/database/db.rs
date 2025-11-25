@@ -57,6 +57,10 @@ memoized::query_group! {
       fn enable_hir_types(&self) -> bool;
 
       #[input]
+      /// Feature flag enabling Kythe annotations
+      fn kythe_annotations(&self) -> bool;
+
+      #[input]
       /// A map from a crate name to the include paths of the corresponding C++
       /// headers This is used when formatting a type exported from another
       /// crate.

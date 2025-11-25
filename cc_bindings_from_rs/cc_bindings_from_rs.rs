@@ -84,6 +84,7 @@ fn new_db<'tcx>(
         cmdline.crubit_debug_path_format.clone(),
         cmdline.default_crate_features,
         cmdline.enable_hir_types,
+        cmdline.kythe_annotations,
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),
         crate_name_to_namespace.into(),
