@@ -11,5 +11,4 @@ SUPPORTED_FEATURES = [
     "non_unpin_ctor",
     "std_vector",
     "std_unique_ptr",
-    "infer_operator_lifetimes",
 ]

@@ -40,7 +40,6 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "core_user",
     hdrs = ["core_user.h"],
-    aspect_hints = ["//features:infer_operator_lifetimes"],
     deps = [
         ":core",
     ],

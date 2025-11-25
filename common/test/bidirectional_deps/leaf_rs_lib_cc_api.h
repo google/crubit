@@ -4,8 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // leaf_rs_lib_golden
-// Features: infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr,
-// std_vector, supported
+// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN

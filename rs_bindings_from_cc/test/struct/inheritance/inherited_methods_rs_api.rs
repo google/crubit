@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/inheritance:inherited_methods
-// Features: custom_ffi_types, experimental, infer_operator_lifetimes, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: custom_ffi_types, experimental, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(

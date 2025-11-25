@@ -14,7 +14,6 @@ cc_library(
     hdrs = ["references.h"],
     aspect_hints = [
         "//features:supported",
-        "//features:infer_operator_lifetimes",
     ],
 )
 

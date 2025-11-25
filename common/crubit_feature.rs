@@ -18,10 +18,6 @@ flagset::flags! {
 
         Wrapper,
 
-        /// Enables inferring the lifetimes of arguments to special member functions and common
-        /// operators.
-        InferOperatorLifetimes,
-
         /// Enable the native Rust std::vector<T> reimplementation.
         StdVector,
 
@@ -50,7 +46,6 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
-            Self::InferOperatorLifetimes => "infer_operator_lifetimes",
             Self::StdVector => "std_vector",
             Self::StdUniquePtr => "std_unique_ptr",
             Self::NonUnpinCtor => "non_unpin_ctor",
@@ -66,9 +61,6 @@ impl CrubitFeature {
         match self {
             Self::Supported => "//features:supported",
             Self::Wrapper => "//features:wrapper",
-            Self::InferOperatorLifetimes => {
-                "//features:infer_operator_lifetimes"
-            }
             Self::StdVector => "//features:std_vector",
             Self::StdUniquePtr => "//features:std_unique_ptr",
             Self::NonUnpinCtor => "//features:non_unpin_ctor",
@@ -84,7 +76,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"all" => flagset::FlagSet::<CrubitFeature>::full(),
         b"supported" => CrubitFeature::Supported.into(),
         b"wrapper" => CrubitFeature::Wrapper.into(),
-        b"infer_operator_lifetimes" => CrubitFeature::InferOperatorLifetimes.into(),
         b"std_vector" => CrubitFeature::StdVector.into(),
         b"std_unique_ptr" => CrubitFeature::StdUniquePtr.into(),
         b"non_unpin_ctor" => CrubitFeature::NonUnpinCtor.into(),
@@ -192,7 +183,6 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
-                | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
@@ -221,7 +211,6 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
-                | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
@@ -238,7 +227,6 @@ mod tests {
             features,
             CrubitFeature::Supported
                 | CrubitFeature::Wrapper
-                | CrubitFeature::InferOperatorLifetimes
                 | CrubitFeature::StdVector
                 | CrubitFeature::StdUniquePtr
                 | CrubitFeature::NonUnpinCtor
