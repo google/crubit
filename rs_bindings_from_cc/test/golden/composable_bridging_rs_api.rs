@@ -695,7 +695,7 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare (b/248542210: template instantiation of member function cannot reliably get bindings)
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare ([[nodiscard]] attribute)
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
 // Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
@@ -852,7 +852,7 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with (b/248542210: template instantiation of member function cannot reliably get bindings)
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with ([[nodiscard]] attribute)
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t>::starts_with':
 // Parameter #0 is not supported: Unsupported type 'std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
@@ -862,7 +862,7 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with (b/248542210: template instantiation of member function cannot reliably get bindings)
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with ([[nodiscard]] attribute)
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t>::ends_with':
 // Parameter #0 is not supported: Unsupported type 'std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
