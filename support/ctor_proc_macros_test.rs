@@ -282,3 +282,12 @@ fn test_pinned_drop() {
     let _ = DropStruct(called_drop.clone());
     assert!(called_drop.get(), "PinnedDrop::pinned_drop was not called");
 }
+
+#[gtest]
+fn test_maybe_unpin() {
+    #[::ctor::recursively_pinned(?Unpin)]
+    struct S {
+        x: i32,
+    }
+    let _: &mut S = &mut *::ctor::emplace!(::ctor::ctor!(S { x: 42 }));
+}
