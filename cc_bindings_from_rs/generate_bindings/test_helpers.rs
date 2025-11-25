@@ -32,6 +32,7 @@ where
         source,
         name,
         crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        /* with_kythe_annotations= */ false,
         test_function,
     )
 }
@@ -45,6 +46,7 @@ pub fn test_format_item_with_features<F, T>(
     source: &str,
     name: &str,
     features: impl Into<flagset::FlagSet<crubit_feature::CrubitFeature>>,
+    with_kythe_annotations: bool,
     test_function: F,
 ) -> T
 where
@@ -54,7 +56,7 @@ where
     let features = features.into();
     run_compiler_for_testing(source, |tcx| {
         let local_def_id = find_def_id_by_name(tcx, name);
-        let result = bindings_db_for_tests_with_features(tcx, features)
+        let result = bindings_db_for_tests_with_features(tcx, features, with_kythe_annotations)
             .generate_item(local_def_id.to_def_id());
 
         // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
@@ -68,6 +70,7 @@ where
 fn bindings_db_for_tests_with_features(
     tcx: TyCtxt,
     features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    with_kythe_annotations: bool,
 ) -> Database {
     new_database(
         tcx,
@@ -78,7 +81,7 @@ fn bindings_db_for_tests_with_features(
         /* crubit_debug_path_format= */ None,
         /* default_features= */ Default::default(),
         /* enable_hir_types= */ true,
-        /* kythe_annotations= */ false,
+        /* kythe_annotations= */ with_kythe_annotations,
         /* crate_name_to_include_paths= */ Default::default(),
         /* crate_name_to_features= */
         Rc::new(HashMap::from([(Rc::from("self"), features)])),
@@ -95,6 +98,7 @@ pub fn bindings_db_for_tests(tcx: TyCtxt) -> Database {
     bindings_db_for_tests_with_features(
         tcx,
         crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        /* with_kythe_annotations= */ false,
     )
 }
 

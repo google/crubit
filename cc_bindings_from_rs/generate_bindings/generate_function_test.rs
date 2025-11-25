@@ -343,6 +343,7 @@ fn test_format_item_fn_references() {
         test_src,
         "foo",
         <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+        /* with_kythe_annotations= */ false,
         |result| {
             let main_api = result.unwrap().unwrap().main_api;
             assert_cc_matches!(
@@ -395,6 +396,7 @@ fn test_format_item_fn_nested_reference() {
         test_src,
         "foo",
         <flagset::FlagSet<crubit_feature::CrubitFeature>>::default(),
+        /* with_kythe_annotations= */ false,
         |result| {
             assert_eq!(
                 result.unwrap_err(),
@@ -731,6 +733,34 @@ fn test_format_item_fn_with_inner_doc_comment_with_unmangled_name() {
             }
         );
     });
+}
+
+#[test]
+fn test_format_item_with_kythe_annotations() {
+    let test_src = r#"
+            /// Doc comment of a function with provenance.
+            pub fn fn_with_provenance() {}
+        "#;
+    test_format_item_with_features(
+        test_src,
+        "fn_with_provenance",
+        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        /* with_kythe_annotations= */ true,
+        |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert!(main_api.prereqs.is_empty());
+            let comment = " Doc comment of a function with provenance.\n\n\
+                       Generated from: <crubit_unittests.rs>;l=3";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "79" "97" __COMMENT__ #comment
+                    void __CAPTURE_BEGIN__ fn_with_provenance __CAPTURE_END__ ();
+                }
+            );
+        },
+    );
 }
 
 #[test]

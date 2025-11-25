@@ -1114,6 +1114,22 @@ fn generate_fwd_decl(db: &Database<'_>, def_id: DefId) -> TokenStream {
     quote! { #keyword #cc_short_name; }
 }
 
+fn generate_kythe_doc_comment(
+    db: &dyn BindingsGenerator,
+    def_id: DefId,
+    doc_comment: String,
+) -> TokenStream {
+    // Always emit a new capture tag so we can unconditionally emit capture brackets around
+    // identifiers. (Otherwise, we might accidentally associate a capture range with the wrong
+    // capture tag; it's fine to emit capture tags that never capture anything.)
+    let tcx = db.tcx();
+    let def_span = tcx.def_ident_span(def_id).unwrap_or_else(|| tcx.def_span(def_id));
+    let file_name = tcx.sess().source_map().span_to_filename(def_span).prefer_local().to_string();
+    let start = def_span.lo().0.to_string();
+    let end = def_span.hi().0.to_string();
+    quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
+}
+
 fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String {
     let tcx = db.tcx();
     let def_span = tcx.def_span(def_id);
@@ -1145,7 +1161,11 @@ fn generate_doc_comment(db: &dyn BindingsGenerator, def_id: DefId) -> TokenStrea
         .map(|symbol| symbol.to_string())
         .chain(once(format!("Generated from: {}", generate_source_location(db, def_id))))
         .join("\n\n");
-    quote! { __COMMENT__ #doc_comment}
+    if db.kythe_annotations() {
+        generate_kythe_doc_comment(db, def_id, doc_comment)
+    } else {
+        quote! { __COMMENT__ #doc_comment}
+    }
 }
 
 /// Returns the name of the item identified by `def_id`, or "<unknown>" if

@@ -616,6 +616,11 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let unqualified_rust_fn_name = unqualified_fn_name.rs_name;
     let main_api_fn_name = format_cc_ident(db, unqualified_fn_name.cpp_name.as_str())
         .context("Error formatting function name")?;
+    let bracketed_decl_name = if db.kythe_annotations() {
+        quote! { __CAPTURE_BEGIN__ #main_api_fn_name __CAPTURE_END__ }
+    } else {
+        quote! { #main_api_fn_name }
+    };
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type =
@@ -772,7 +777,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 __NEWLINE__
                 #doc_comment
                 #extern_c #(#attributes)* #static_
-                    #main_api_ret_type #main_api_fn_name (
+                    #main_api_ret_type #bracketed_decl_name (
                         #( #main_api_params ),*
                     ) #method_qualifiers;
                 __NEWLINE__
@@ -820,7 +825,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
             tokens: quote! {
                 __NEWLINE__
                 #thunk_decl
-                inline #main_api_ret_type #struct_name #main_api_fn_name (
+                inline #main_api_ret_type #struct_name #bracketed_decl_name (
                         #( #main_api_params ),* ) #method_qualifiers {
                     #impl_body
                 }
