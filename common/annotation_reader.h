@@ -8,6 +8,8 @@
 #include <optional>
 #include <string>
 
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -16,6 +18,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/TypeBase.h"
 
 namespace crubit {
 
@@ -82,6 +85,13 @@ absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
 // arguments.
 absl::StatusOr<bool> HasAnnotationWithoutArgs(
     const clang::Decl& decl, absl::string_view annotation_name);
+
+// Returns the `AnnotateTypeAttr` with the given `annotation_name` if it exists.
+// If there are multiple annotations with the given name, returns an error.
+absl::StatusOr<const clang::AnnotateTypeAttr* absl_nullable>
+GetTypeAnnotationSingleDecl(const clang::Type* absl_nonnull type
+                                ABSL_ATTRIBUTE_LIFETIME_BOUND,
+                            absl::string_view annotation_name);
 
 }  // namespace crubit
 

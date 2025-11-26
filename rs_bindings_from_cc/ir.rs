@@ -258,6 +258,7 @@ pub enum PointerTypeKind {
     RValueRef,
     Nullable,
     NonNull,
+    Owned,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1122,6 +1123,7 @@ pub struct Record {
     pub unknown_attr: Option<Rc<str>>,
     pub doc_comment: Option<Rc<str>>,
     pub bridge_type: Option<BridgeType>,
+    pub owned_ptr_type: Option<Rc<str>>,
     pub source_loc: Rc<str>,
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,

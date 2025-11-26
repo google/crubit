@@ -9,6 +9,7 @@
 #include <string>
 
 #include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -23,6 +24,8 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/TypeBase.h"
+#include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/StringRef.h"
@@ -167,9 +170,10 @@ static absl::Status CheckAnnotationsConsistent(
 
 // Returns the `clang::Decl` that should be used for reading annotations.
 //
-// Template declarations technically do not have annotations-- the *templated*
-// decl has annotations. So, if we're searching for annotations on a template
-// decl, we should search for annotations on the templated decl instead.
+// Template declarations technically do not have annotations-- the
+// *templated* decl has annotations. So, if we're searching for annotations
+// on a template decl, we should search for annotations on the templated
+// decl instead.
 static const clang::Decl& DeclForAnnotations(const clang::Decl& decl) {
   auto* template_decl = clang::dyn_cast<clang::TemplateDecl>(&decl);
   if (template_decl == nullptr) {
@@ -288,6 +292,31 @@ absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
                      " must have a single string argument."));
   }
   return std::string(*arg);
+}
+
+absl::StatusOr<const clang::AnnotateTypeAttr* absl_nullable>
+GetTypeAnnotationSingleDecl(const clang::Type* absl_nonnull type
+                                ABSL_ATTRIBUTE_LIFETIME_BOUND,
+                            absl::string_view annotation_name) {
+  const clang::Type* current_type = type;
+  const clang::AnnotateTypeAttr* found_attr = nullptr;
+  while (const auto* attributed_type =
+             current_type->getAs<clang::AttributedType>()) {
+    if (attributed_type->getAttrKind() == clang::attr::AnnotateType) {
+      const clang::AnnotateTypeAttr* annotateAttr =
+          clang::cast<clang::AnnotateTypeAttr>(attributed_type->getAttr());
+      if (annotateAttr->getAnnotation() == llvm::StringRef(annotation_name)) {
+        if (found_attr != nullptr) {
+          return absl::InvalidArgumentError(
+              absl::StrCat("Only one `", annotation_name,
+                           "` annotation may be placed on a type."));
+        }
+        found_attr = annotateAttr;
+      }
+    }
+    current_type = attributed_type->getEquivalentType().getTypePtr();
+  }
+  return found_attr;
 }
 
 }  // namespace crubit

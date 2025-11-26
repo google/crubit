@@ -1354,6 +1354,8 @@ fn rs_type_kinds_for_func(
                         PointerTypeKind::Nullable | PointerTypeKind::NonNull => {
                             *kind = PointerTypeKind::LValueRef;
                         }
+                        PointerTypeKind::Owned => unreachable!("owned pointers require an annotation on the pointer, but there's nowhere to put an annotation for the `this` pointer")
+
                     }
                 }
             }

@@ -289,4 +289,41 @@
 #define CRUBIT_UNSAFE_IGNORE_ATTR(name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr", #name)
 
+// TODO: b/12574907 - Finish implementing generation for these annotations.
+//
+// The CRUBIT_OWNED_POINTER AND CRUBIT_OWNED_POINTEE annotations work together
+// to map conventionally "owned" C++ pointer usages to a Rust type that provides
+// proper Rust-style ownership.
+//
+// Types annotated with `CRUBIT_OWNED_PTR` are considered "owned": for example,
+// in the return position, they indicate that the function is passing ownership
+// of the pointed-to object to the caller. Similarly, in a parameter position,
+// the callee receiving ownership of the pointed-to object.
+//
+// The annotation is only meaningful on pointer types. When a pointer is
+// annotated with `CRUBIT_OWNED_PTR`, the pointee type must also be annotated
+// with `CRUBIT_OWNED_PTR_TYPE`, indicating the Rust type that will manage the
+// ownership of the object in Rust bindings.
+//
+// The annotation pair is meant to associate Rust types that simply contain a
+// pointer to the associated C++ type.
+//
+// For example:
+//
+// ```c++
+// struct CRUBIT_OWNED_POINTEE("WrapperTypeName") MyType;
+//
+// MyType* CRUBIT_OWNED_POINTER ReturnOwnedPtr() { ... }
+// void AcceptOwnedPtr(MyType* CRUBIT_OWNED_POINTER owned_ptr) { ... }
+// ```
+//
+// This will generate a Rust struct called `WrapperTypeName` that simply
+// contains a pointer to the underlying object. This type will be used in
+// positions that are annotated with `CRUBIT_OWNED_POINTER`.
+
+#define CRUBIT_OWNED_POINTER \
+  CRUBIT_INTERNAL_ANNOTATE_TYPE("crubit_owned_pointer")
+#define CRUBIT_OWNED_POINTEE(name) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_owned_pointee", name)
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

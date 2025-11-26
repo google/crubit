@@ -78,11 +78,13 @@ pub fn rs_type_kind_with_lifetime_elision(
                 // of the pointer. In the future, we may wish to consume this information along
                 // with a user-provided annotation in order to convert some pointers into either
                 // references or optional references.
-                PointerTypeKind::NonNull | PointerTypeKind::Nullable => RsTypeKind::Pointer {
-                    pointee,
-                    kind: RustPtrKind::CcPtr(pointer.kind),
-                    mutability,
-                },
+                PointerTypeKind::NonNull | PointerTypeKind::Nullable | PointerTypeKind::Owned => {
+                    RsTypeKind::Pointer {
+                        pointee,
+                        kind: RustPtrKind::CcPtr(pointer.kind),
+                        mutability,
+                    }
+                }
             })
         }
         CcTypeVariant::FuncPointer { non_null, call_conv, param_and_return_types } => {

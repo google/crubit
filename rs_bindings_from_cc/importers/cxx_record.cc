@@ -437,6 +437,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool is_explicit_class_template_instantiation_definition = false;
   std::optional<TemplateSpecialization> template_specialization;
   std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(*record_decl);
+
+  absl::StatusOr<std::optional<std::string>> owned_ptr_type =
+      GetAnnotationWithStringArg(*record_decl, "crubit_owned_pointee");
+  if (!owned_ptr_type.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *record_decl, std::nullopt,
+        FormattedError::FromStatus(owned_ptr_type.status()));
+  }
+
   BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
@@ -667,6 +676,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .unknown_attr = std::move(*unknown_attr),
       .doc_comment = std::move(doc_comment),
       .bridge_type = std::move(bridge_type),
+      .owned_ptr_type = *std::move(owned_ptr_type),
       .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = ImportFields(record_decl),

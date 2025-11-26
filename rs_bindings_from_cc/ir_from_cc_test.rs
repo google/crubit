@@ -629,6 +629,58 @@ fn test_struct_with_bridge_type_annotation() {
 }
 
 #[gtest]
+fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_owned_pointee", "SomeOwnedPtrType")]]
+                RecordWithOwnedPtrType {
+            int foo;
+        };"#,
+    )
+    .expect("Failed to generate IR from CC");
+
+    let record =
+        ir.records().find(|record| record.rs_name == "RecordWithOwnedPtrType").or_fail()?;
+    let owned_ptr_type = &record.owned_ptr_type.clone().or_fail()?;
+    expect_that!(&**owned_ptr_type, eq("SomeOwnedPtrType"));
+    Ok(())
+}
+
+#[gtest]
+fn test_owned_ptr_as_return_type_annotation() -> googletest::Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct SomeType;
+        SomeType* [[clang::annotate_type("crubit_owned_pointer")]] f() { return nullptr; }
+        "#,
+    )
+    .expect("Failed to generate IR from CC");
+
+    let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
+    let pointer_type = &function.return_type.variant.as_pointer().or_fail()?;
+    expect_eq!(pointer_type.kind, PointerTypeKind::Owned);
+    Ok(())
+}
+
+#[gtest]
+fn test_owned_ptr_as_param_type_annotation() -> googletest::Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        struct SomeType;
+        void f(
+            SomeType* [[clang::annotate_type("crubit_owned_pointer")]] owned_ptr
+          ) {}
+        "#,
+    )
+    .expect("Failed to generate IR from CC");
+
+    let function = ir.functions().find(|f| f.cc_name == "f").or_fail()?;
+    let first_param_pointer_type = &function.params[0].type_.variant.as_pointer().or_fail()?;
+    expect_eq!(first_param_pointer_type.kind, PointerTypeKind::Owned);
+    Ok(())
+}
+
+#[gtest]
 fn test_struct_with_trait_derive_annotation() {
     let ir = ir_from_cc(
         r#"
@@ -869,7 +921,7 @@ fn test_pointer_member_variable() {
                         lifetime: None,
                         pointee_type: CcType {
                             variant: Decl(...), ...
-                        },
+                        }, ...
                     }), ...
                 }) ...
             }
@@ -1623,7 +1675,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
                         lifetime: Some(...),
                         pointee_type: CcType {
                             variant: Decl(ItemId(#record_id)), ...
-                        },
+                        }, ...
                     }),
                     is_const: false, ...
                 },
@@ -1810,7 +1862,7 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
                         pointee_type: CcType {
                             variant: Primitive(Int),
                             is_const: false, ...
-                        },
+                        }, ...
                     }),
                     is_const: false, ...
                 }, ...
@@ -1855,7 +1907,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                         pointee_type: CcType {
                             variant: Primitive(Int),
                             is_const: true, ...
-                        },
+                        }, ...
                     }),
                     is_const: false, ...
                 }, ...
@@ -1875,7 +1927,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
                         pointee_type: CcType {
                             variant: Primitive(Int),
                             is_const: true, ...
-                        },
+                        }, ...
                     }),
                     is_const: false, ...
                 }, ...

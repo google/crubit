@@ -41,6 +41,7 @@
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "rs_bindings_from_cc/type_map.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -1149,6 +1150,17 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
+  CRUBIT_ASSIGN_OR_RETURN(
+      const clang::AnnotateTypeAttr* crubit_owned_ptr_attr,
+      GetTypeAnnotationSingleDecl(type, "crubit_owned_pointer"));
+
+  bool is_owned_ptr = crubit_owned_ptr_attr != nullptr;
+
+  if (is_owned_ptr && !type->isPointerType()) {
+    return absl::InvalidArgumentError(
+        "CRUBIT_OWNED_POINTER can only be applied to pointer types.");
+  }
+
   assert(!lifetimes || IsSameCanonicalUnqualifiedType(
                            lifetimes->Type(), clang::QualType(type, 0)));
 
@@ -1214,7 +1226,12 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     // IR consumer to error if a lifetime is required. This allows the IR
     // consumer to infer a lifetime where-appropriate (e.g. constructors).
     if (type->isPointerType()) {
-      return CcType::PointerTo(std::move(cpp_pointee_type), lifetime, nullable);
+      if (is_owned_ptr) {
+        return CcType::OwnedPointerTo(std::move(cpp_pointee_type), lifetime);
+      } else {
+        return CcType::PointerTo(std::move(cpp_pointee_type), lifetime,
+                                 nullable);
+      }
     } else if (type->isLValueReferenceType()) {
       return CcType::LValueReferenceTo(std::move(cpp_pointee_type), lifetime);
     } else {

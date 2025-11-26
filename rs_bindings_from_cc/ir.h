@@ -119,7 +119,13 @@ inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
 // unsafe.
 enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
 
-enum class PointerTypeKind { kRValueRef, kLValueRef, kNullable, kNonNull };
+enum class PointerTypeKind {
+  kRValueRef,
+  kLValueRef,
+  kNullable,
+  kNonNull,
+  kOwned
+};
 
 // Calling conventions for functions that are supported by Crubit.
 //
@@ -176,6 +182,9 @@ struct CcType {
 
   static CcType PointerTo(CcType pointee_type,
                           std::optional<LifetimeId> lifetime, bool nullable);
+
+  static CcType OwnedPointerTo(CcType pointee_type,
+                               std::optional<LifetimeId> lifetime);
 
   static CcType LValueReferenceTo(CcType pointee_type,
                                   std::optional<LifetimeId> lifetime);
@@ -606,6 +615,7 @@ struct Record {
   std::optional<std::string> unknown_attr;
   std::optional<std::string> doc_comment;
   std::optional<BridgeType> bridge_type;
+  std::optional<std::string> owned_ptr_type;
   std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
