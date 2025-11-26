@@ -19,5 +19,5 @@ path = "../../../../rs_bindings_from_cc/generate_bindings/rs_type_kind.rs"
 cpp_type_name = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/cpp_type_name", package = "rs_bindings_from_cc_cpp_type_name"}
 has_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/has_bindings", package = "rs_bindings_from_cc_has_bindings"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
-ir = { path = "../../../../cargo/rs_bindings_from_cc/ir"}
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}

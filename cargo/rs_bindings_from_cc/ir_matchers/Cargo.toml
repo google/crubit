@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate ir_matchers.
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_ir_matchers.
 
 [package]
-name = "ir_matchers"
+name = "rs_bindings_from_cc_ir_matchers"
 edition.workspace = true
 
 license-file.workspace = true
@@ -16,8 +16,8 @@ categories.workspace = true
 path = "../../../rs_bindings_from_cc/ir_matchers.rs"
 
 [dependencies]
-ir = { path = "../../../cargo/rs_bindings_from_cc/ir"}
-ir_testing = { path = "../../../cargo/rs_bindings_from_cc/ir_testing"}
+ir = { path = "../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
+ir_testing = { path = "../../../cargo/rs_bindings_from_cc/ir_testing", package = "rs_bindings_from_cc_ir_testing"}
 token_stream_matchers = { path = "../../../cargo/common/token_stream_matchers"}
 token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
 anyhow.workspace = true
