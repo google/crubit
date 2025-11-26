@@ -11,7 +11,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcConstQualifier;
-use crubit_abi_type::CrubitAbiTypeToRustTokens;
+use crubit_abi_type::{CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens};
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
 use database::{AdtCoreBindings, BindingsGenerator, SugaredTy};
 use error_report::{anyhow, bail, ensure};
@@ -223,9 +223,12 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
         }
         BridgedType::Composable(composable) => {
             let crubit_abi_type = CrubitAbiTypeToRustTokens(&composable.crubit_abi_type);
+            let crubit_abi_type_expr = CrubitAbiTypeToRustExprTokens(&composable.crubit_abi_type);
             // SAFETY: The buffer is the correct size, as determined by Crubit.
             Ok(quote! {
-                let #local_name = unsafe { ::bridge_rust::internal::decode::<#crubit_abi_type>(#local_name) };
+                let #local_name = unsafe {
+                    ::bridge_rust::decode_wrapper!(#crubit_abi_type_expr, #crubit_abi_type, #local_name)
+                };
             })
         }
     }
@@ -413,14 +416,16 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
             },
             BridgedType::Composable(composable) => {
                 let crubit_abi_type = CrubitAbiTypeToRustTokens(&composable.crubit_abi_type);
+                let crubit_abi_type_expr =
+                    CrubitAbiTypeToRustExprTokens(&composable.crubit_abi_type);
                 quote! {
                     // SAFETY: TODO(okabayashi)
                     unsafe {
-                        ::bridge_rust::internal::encode::<#crubit_abi_type>(
+                        ::bridge_rust::encode_wrapper!(#crubit_abi_type_expr, #crubit_abi_type,
                             // TODO(okabayashi): This ptr case can be removed once tuple bridging is supported,
                             // as it only is required in the tuple recursive case.
                             #c_ptr as *mut core::ffi::c_uchar,
-                            #rs_value,
+                            #rs_value
                         );
                     }
                 }
