@@ -1232,7 +1232,7 @@ fn test_format_item_unsupported_fn_variadic() {
             #![feature(c_variadic)]
 
             #[unsafe(no_mangle)]
-            pub unsafe extern "C" fn variadic_function(_fmt: *const u8, ...) {}
+            pub unsafe extern "C" fn variadic_function(_fmt: *const u8, _: ...) {}
         "#;
     test_format_item(test_src, "variadic_function", |result| {
         // TODO(b/254097223): Add support for variadic functions.
