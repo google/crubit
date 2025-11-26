@@ -559,6 +559,42 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
+TEST_P(CollectEvidenceFromDefinitionTest,
+       FirstSufficientSlotForFunctionsIsTheLaterReferenced) {
+  static constexpr llvm::StringRef Src = R"cc(
+    int* primaryProvider();
+    int* fallback();
+
+    void target() {
+      // We could collect the evidence for primaryProvider and end up annotating
+      // its return as Nonnull, but this would make the fallback block dead
+      // code, and is, to a human, clearly not the intention. It also often
+      // causes an unnecessary conflict, since the primaryProvider function
+      // likely returns null if this pattern is being used, while fallback is
+      // expected to return a non-null value.
+      //
+      // So instead, we intentionally order the InferableSlots for return types
+      // of referenced functions in the reverse of the order they are referenced
+      // in the AST, and thus the first sufficient slot is the return type of
+      // fallback. If downsides or unanticipated complexities become known in
+      // the future, this behavior is easily changed.
+      int* local = primaryProvider();
+      if (local == nullptr) {
+        local = fallback();
+      }
+      *local;
+    }
+  )cc";
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("fallback")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("local")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("local"))));
+}
+
 TEST_P(CollectEvidenceFromDefinitionTest, EarlyReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {

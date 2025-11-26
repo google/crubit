@@ -2900,7 +2900,25 @@ static std::vector<InferableSlot> gatherInferableSlots(
           USRCache);
     }
   }
-  for (const FunctionDecl *Function : ReferencedDecls.Functions) {
+
+  // Add functions in the reverse of the order in which they are referenced.
+  // This is a heuristic based on the use of fallback functions to provide
+  // nonnull values when one or more initial functions may provide a nullable
+  // value. The goal is to reduce conflicting evidence for the return types of
+  // those initial functions. For example, we'd prefer to collect evidence for a
+  // dereference of the value of `getNonnullFallback()` from the following
+  // pattern, rather than the value of `getNullable()`, which is likely to get
+  // contradictory evidence of a nullable return value from its body:
+  // ```
+  // int* P = getNullable();
+  // if (P == nullptr) {
+  //   P = getNonnullFallback();
+  // }
+  // *P;
+  // ```
+  for (auto Iter = ReferencedDecls.Functions.rbegin();
+       Iter != ReferencedDecls.Functions.rend(); ++Iter) {
+    const FunctionDecl* Function = *Iter;
     if (isInferenceTarget(*Function) &&
         hasInferable(Function->getReturnType()) &&
         !evidenceKindFromDeclaredReturnType(*Function, Defaults)) {
