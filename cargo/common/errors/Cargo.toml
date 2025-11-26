@@ -15,7 +15,15 @@ categories.workspace = true
 [lib]
 path = "../../../common/errors.rs"
 
+doctest = false
+
 [dependencies]
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../cargo/common/error_report"}
 anyhow.workspace = true
+[dev-dependencies]
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
+error_report = { path = "../../../cargo/common/error_report"}
+errors = { path = "../../../cargo/common/errors"}
+googletest.workspace = true
+serde_json.workspace = true

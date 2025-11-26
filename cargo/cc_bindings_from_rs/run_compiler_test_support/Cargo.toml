@@ -1,0 +1,23 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate cc_bindings_from_rs_run_compiler_test_support.
+
+[package]
+name = "cc_bindings_from_rs_run_compiler_test_support"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../cc_bindings_from_rs/run_compiler_test_support.rs"
+
+doctest = false
+
+[dependencies]
+tempfile.workspace = true
+itertools.workspace = true
+rustversion.workspace = true

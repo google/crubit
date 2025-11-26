@@ -1,0 +1,28 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate cc_bindings_from_rs_test_helpers.
+
+[package]
+name = "cc_bindings_from_rs_test_helpers"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../../cc_bindings_from_rs/generate_bindings/test_helpers.rs"
+
+doctest = false
+
+[dependencies]
+generate_bindings = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
+database = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/database/database", package = "cc_bindings_from_rs_database"}
+run_compiler_test_support = { path = "../../../../cargo/cc_bindings_from_rs/run_compiler_test_support", package = "cc_bindings_from_rs_run_compiler_test_support"}
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+error_report = { path = "../../../../cargo/common/error_report"}
+flagset.workspace = true
+dyn_format = { path = "../../../../cargo/common/dyn_format"}

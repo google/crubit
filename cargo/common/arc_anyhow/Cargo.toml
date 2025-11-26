@@ -15,5 +15,9 @@ categories.workspace = true
 [lib]
 path = "../../../common/arc_anyhow.rs"
 
+doctest = false
+
 [dependencies]
 anyhow.workspace = true
+[dev-dependencies]
+googletest.workspace = true

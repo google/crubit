@@ -173,7 +173,10 @@ rust_library(
     proc_macro_deps = [
         "@crate_index//:rustversion",  # v1
     ],
-    rustc_flags = ["--cfg=oss"],
+    rustc_flags = [
+        "--cfg=bazel",
+        "--cfg=oss",
+    ],
     deps = [
         "@crate_index//:itertools",  # v0_13
         "@rules_rust//tools/runfiles",

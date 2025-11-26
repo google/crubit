@@ -148,8 +148,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use run_compiler_test_support::get_sysroot_for_testing;
     use run_compiler_test_support::setup_rustc_target_for_testing;
+    use run_compiler_test_support::sysroot_path;
     use std::path::PathBuf;
     use tempfile::tempdir;
 
@@ -203,16 +203,6 @@ mod tests {
         Ok(())
     }
 
-    #[rustversion::before(2025-06-25)]
-    fn sysroot_path() -> PathBuf {
-        get_sysroot_for_testing()
-    }
-
-    #[rustversion::since(2025-06-25)]
-    fn sysroot_path() -> PathBuf {
-        get_sysroot_for_testing().path().to_path_buf()
-    }
-
     /// `test_run_compiler_no_output_file` tests that we stop the compilation
     /// midway (i.e. that we return `Stop` from `after_analysis`).
     #[test]
@@ -227,12 +217,14 @@ mod tests {
             // Default parameters.
             "run_compiler_unittest_executable".to_string(),
             "--crate-type=lib".to_string(),
-            format!("--sysroot={}", sysroot_path().display()),
             rs_path.display().to_string(),
             // Test-specific parameter: asking for after-analysis output
             "-o".to_string(),
             out_path.display().to_string(),
         ];
+        if let Some(sysroot) = sysroot_path() {
+            rustc_args.push(format!("--sysroot={}", sysroot.display()));
+        }
         if let Some(target_arg) = setup_rustc_target_for_testing(tmpdir.path()) {
             rustc_args.push(format!("--target={}", target_arg));
         }

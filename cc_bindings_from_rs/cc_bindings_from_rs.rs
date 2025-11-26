@@ -339,9 +339,12 @@ mod tests {
                 "--".to_string(),
                 format!("--codegen=panic={}", &self.panic_mechanism),
                 "--crate-type=lib".to_string(),
-                format!("--sysroot={}", sysroot_path().display()),
                 rs_input_path.display().to_string(),
             ]);
+
+            if let Some(sysroot) = sysroot_path() {
+                args.push(format!("--sysroot={}", sysroot.display()));
+            }
 
             if let Some(target) = &setup_rustc_target_for_testing(self.tempdir.path()) {
                 args.push(format!("--target={}", target));

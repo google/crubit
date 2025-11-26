@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate ir.
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_ir.
 
 [package]
-name = "ir"
+name = "rs_bindings_from_cc_ir"
 edition.workspace = true
 
 license-file.workspace = true
@@ -14,6 +14,8 @@ categories.workspace = true
 
 [lib]
 path = "../../../rs_bindings_from_cc/ir.rs"
+
+doctest = false
 
 [dependencies]
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
@@ -26,3 +28,5 @@ proc-macro2.workspace = true
 quote.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+[dev-dependencies]
+googletest.workspace = true

@@ -15,4 +15,8 @@ categories.workspace = true
 [lib]
 path = "../../../common/ffi_types.rs"
 
+doctest = false
+
 [dependencies]
+[dev-dependencies]
+googletest.workspace = true

@@ -15,6 +15,10 @@ categories.workspace = true
 [lib]
 path = "../../../common/crubit_abi_type.rs"
 
+doctest = false
+
 [dependencies]
 proc-macro2.workspace = true
 quote.workspace = true
+[dev-dependencies]
+googletest.workspace = true
