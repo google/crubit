@@ -36,6 +36,8 @@ cc_test(
     srcs = ["check_diagnostics_test.cc"],
     deps = [
         ":check_diagnostics",
+        "//nullability:pointer_nullability_diagnosis",
+        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
@@ -167,6 +169,18 @@ cc_test(
     srcs = ["default_arguments.cc"],
     deps = [
         ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "default_member_initializers",
+    srcs = ["default_member_initializers.cc"],
+    deps = [
+        ":check_diagnostics",
+        "//nullability:pointer_nullability_diagnosis",
+        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],
