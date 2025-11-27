@@ -437,10 +437,15 @@ message RelatedSymbols {
   map<string, SymbolSet> related_symbols = 1;
 }
 
+message VirtualMethodIndexSummary {
+  repeated Symbol virtual_methods_defined_in_tests = 1;
+  optional RelatedSymbols overrides_to_bases = 2;
+}
+
 // A summary for a whole translation unit.
 message TUSummary {
   repeated CFGSummary cfg_summaries = 1;
-  optional RelatedSymbols overrides_to_bases = 2;
+  optional VirtualMethodIndexSummary virtual_method_index = 2;
   // Information about the TU that could be useful for debug logs.
   optional string path = 3;
 }
