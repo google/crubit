@@ -15,6 +15,8 @@ categories.workspace = true
 [lib]
 path = "../../../../cc_bindings_from_rs/generate_bindings/query_compiler.rs"
 
+doctest = false
+
 [dependencies]
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}

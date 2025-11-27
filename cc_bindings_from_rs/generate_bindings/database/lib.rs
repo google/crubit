@@ -4,6 +4,8 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_driver;
+
 pub mod code_snippet;
 
 mod adt_core_bindings;

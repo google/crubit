@@ -1,0 +1,28 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_test_generators.
+
+[package]
+name = "rs_bindings_from_cc_test_generators"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../../rs_bindings_from_cc/generate_bindings/test_generators.rs"
+
+doctest = false
+
+[dependencies]
+generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
+multiplatform_ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing", package = "rs_bindings_from_cc_multiplatform_ir_testing"}
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+dyn_format = { path = "../../../../cargo/common/dyn_format"}
+error_report = { path = "../../../../cargo/common/error_report"}
+ffi_types = { path = "../../../../cargo/common/ffi_types"}
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
+database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}

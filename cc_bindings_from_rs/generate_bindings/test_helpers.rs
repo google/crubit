@@ -5,6 +5,7 @@
 //! Helpers for C++ bindings generation tests.
 
 #![feature(rustc_private)]
+extern crate rustc_middle;
 
 use arc_anyhow::Result;
 use database::code_snippet::ApiSnippets;

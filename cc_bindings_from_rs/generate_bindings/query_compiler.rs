@@ -8,6 +8,7 @@
 
 extern crate rustc_abi;
 extern crate rustc_ast;
+extern crate rustc_driver;
 extern crate rustc_hir;
 extern crate rustc_infer;
 extern crate rustc_middle;

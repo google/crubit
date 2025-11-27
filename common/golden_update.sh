@@ -18,5 +18,6 @@ bazel test \
   --test_strategy=local \
   --test_env=WRITE_GOLDENS=1 \
   --cache_test_results=no \
+  --nocheck_visibility \
   -k \
   $TESTS_TO_RUN
