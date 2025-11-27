@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_library importer_sys.
+# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_importer_sys.
 
 [package]
-name = "importer_sys"
+name = "rs_bindings_from_cc_importer_sys"
 edition.workspace = true
 license-file.workspace = true
 repository.workspace = true
@@ -17,11 +17,11 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-annotations_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/annotations_consumer_sys"}
-ast_util_sys = { path = "../../../cargo/rs_bindings_from_cc/ast_util_sys"}
-cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
-recording_diagnostic_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys"}
-type_map_sys = { path = "../../../cargo/rs_bindings_from_cc/type_map_sys"}
+annotations_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/annotations_consumer_sys", package = "rs_bindings_from_cc_annotations_consumer_sys"}
+ast_util_sys = { path = "../../../cargo/rs_bindings_from_cc/ast_util_sys", package = "rs_bindings_from_cc_ast_util_sys"}
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
+recording_diagnostic_consumer_sys = { path = "../../../cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys", package = "rs_bindings_from_cc_recording_diagnostic_consumer_sys"}
+type_map_sys = { path = "../../../cargo/rs_bindings_from_cc/type_map_sys", package = "rs_bindings_from_cc_type_map_sys"}
 annotation_reader_sys = { path = "../../../cargo/common/annotation_reader_sys"}
 type_lifetimes_sys = { path = "../../../cargo/lifetime_annotations/type_lifetimes_sys"}
 class_template_sys = { path = "../../../cargo/rs_bindings_from_cc/importers/class_template_sys", package = "rs_bindings_from_cc_class_template_sys"}

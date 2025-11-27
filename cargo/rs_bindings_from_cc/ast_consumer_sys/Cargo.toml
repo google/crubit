@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_library ast_consumer_sys.
+# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_ast_consumer_sys.
 
 [package]
-name = "ast_consumer_sys"
+name = "rs_bindings_from_cc_ast_consumer_sys"
 edition.workspace = true
 license-file.workspace = true
 repository.workspace = true
@@ -17,7 +17,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-importer_sys = { path = "../../../cargo/rs_bindings_from_cc/importer_sys"}
+importer_sys = { path = "../../../cargo/rs_bindings_from_cc/importer_sys", package = "rs_bindings_from_cc_importer_sys"}
 
 
 [build-dependencies]
