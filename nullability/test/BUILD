@@ -36,6 +36,8 @@ cc_test(
     srcs = ["check_diagnostics_test.cc"],
     deps = [
         ":check_diagnostics",
+        "//nullability:pointer_nullability_diagnosis",
+        "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
     ],

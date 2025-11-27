@@ -8,6 +8,7 @@
 #include <array>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -36,25 +37,26 @@
 
 namespace clang::tidy::nullability {
 
-bool checkDiagnostics(ASTContext &AST, llvm::Annotations AnnotatedCode,
-                      const NullabilityPragmas &Pragmas, bool AllowUntracked) {
+static std::optional<std::vector<PointerNullabilityDiagnostic>>
+checkAndGetDiagnostics(ASTContext& AST, llvm::Annotations AnnotatedCode,
+                       const NullabilityPragmas& Pragmas, bool AllowUntracked) {
   using ast_matchers::BoundNodes;
   using ast_matchers::hasAnyName;
   using ast_matchers::match;
-  using ast_matchers::stmt;
   using ast_matchers::valueDecl;
 
   SmallVector<BoundNodes, 1> MatchResult =
       match(valueDecl(hasAnyName("target", "~target")).bind("target"), AST);
   if (MatchResult.empty()) {
     ADD_FAILURE() << "didn't find target declaration";
-    return false;
+    return std::nullopt;
   }
 
   bool Success = true;
   // We already checked MatchResult is not empty above, but we skip
   // isTemplated() functions. Make sure we didn't skip every MatchResult.
   bool FoundMatch = false;
+  std::vector<PointerNullabilityDiagnostic> AllActualDiagnostics;
   for (const ast_matchers::BoundNodes &BN : MatchResult) {
     const auto *Target = BN.getNodeAs<ValueDecl>("target");
     // Skip templates and only analyze instantiations
@@ -71,7 +73,7 @@ bool checkDiagnostics(ASTContext &AST, llvm::Annotations AnnotatedCode,
     if (llvm::Error Err =
             diagnosePointerNullability(Target, Pragmas).moveInto(Diagnostics)) {
       ADD_FAILURE() << Err;
-      return false;
+      return std::nullopt;
     }
 
     // Note: use sorted sets for expected and actual lines to improve
@@ -88,6 +90,7 @@ bool checkDiagnostics(ASTContext &AST, llvm::Annotations AnnotatedCode,
         ActualLines.insert(AST.getSourceManager().getPresumedLineNumber(
             Diag.Range.getBegin()));
       }
+      AllActualDiagnostics.push_back(Diag);
     }
     if (ActualLines != ExpectedLines) {
       Success = false;
@@ -126,14 +129,21 @@ bool checkDiagnostics(ASTContext &AST, llvm::Annotations AnnotatedCode,
   if (!FoundMatch) {
     ADD_FAILURE() << "didn't find target declaration (after skipping templated "
                      "functions) -- add an instantiation?";
-    return false;
+    return std::nullopt;
   }
 
-  return Success;
+  return Success ? std::optional(AllActualDiagnostics) : std::nullopt;
 }
 
-static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
-                             bool AllowUntracked) {
+bool checkDiagnostics(ASTContext& AST, llvm::Annotations AnnotatedCode,
+                      const NullabilityPragmas& Pragmas, bool AllowUntracked) {
+  return checkAndGetDiagnostics(AST, AnnotatedCode, Pragmas, AllowUntracked)
+      .has_value();
+}
+
+static std::optional<std::vector<PointerNullabilityDiagnostic>>
+checkAndGetDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
+                       bool AllowUntracked) {
   llvm::Annotations AnnotatedCode(SourceCode);
   clang::TestInputs Inputs(AnnotatedCode.code());
   Inputs.Language = Lang;
@@ -163,14 +173,32 @@ static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
     return std::make_unique<Action>(Pragmas);
   };
   clang::TestAST AST(Inputs);
-  return checkDiagnostics(AST.context(), AnnotatedCode, Pragmas,
-                          AllowUntracked);
+  return checkAndGetDiagnostics(AST.context(), AnnotatedCode, Pragmas,
+                                AllowUntracked);
+}
+
+static bool checkDiagnostics(llvm::StringRef SourceCode, TestLanguage Lang,
+                             bool AllowUntracked) {
+  return checkAndGetDiagnostics(SourceCode, Lang, AllowUntracked).has_value();
 }
 
 // Run in C++17 and C++20 mode to cover differences in the AST between modes
 // (e.g. C++20 can contain `CXXRewrittenBinaryOperator`).
 static constexpr std::array<TestLanguage, 2> CXXLanguagesToTest = {
     TestLanguage::Lang_CXX17, TestLanguage::Lang_CXX20};
+
+std::optional<std::vector<PointerNullabilityDiagnostic>> checkAndGetDiagnostics(
+    llvm::StringRef SourceCode) {
+  std::vector<PointerNullabilityDiagnostic> AllDiagnostics;
+  for (TestLanguage Lang : CXXLanguagesToTest) {
+    const auto Diagnostics =
+        checkAndGetDiagnostics(SourceCode, Lang, /*AllowUntracked=*/false);
+    if (!Diagnostics.has_value()) return std::nullopt;
+    AllDiagnostics.insert(AllDiagnostics.end(), Diagnostics->begin(),
+                          Diagnostics->end());
+  }
+  return AllDiagnostics;
+}
 
 bool checkDiagnostics(llvm::StringRef SourceCode) {
   for (TestLanguage Lang : CXXLanguagesToTest)
