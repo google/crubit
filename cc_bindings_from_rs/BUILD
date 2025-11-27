@@ -32,6 +32,7 @@ crubit_rust_binary(
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
+        "//common:kythe_metadata",
         "//common:token_stream_printer",
         "@crate_index//:clap",  # v4
         "@crate_index//:flagset",  # v0_4

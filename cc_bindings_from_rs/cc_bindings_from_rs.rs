@@ -19,9 +19,11 @@ use cmdline::Cmdline;
 use code_gen_utils::CcInclude;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, ReportFatalError};
 use generate_bindings::{Database, IncludeGuard};
+use kythe_metadata::cc_embed_provenance_map;
 use run_compiler::run_compiler;
 use token_stream_printer::{
-    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
+    cc_tokens_to_formatted_string, cc_tokens_to_formatted_string_with_provenance,
+    rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
 fn turn_off_clang_format(mut cc_api: String) -> String {
@@ -113,7 +115,22 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
         return Err(arc_anyhow::Error::msg(fatal_error_message));
     }
 
-    {
+    if cmdline.kythe_annotations {
+        let (cc_api, provenance_map) = cc_tokens_to_formatted_string_with_provenance(
+            cc_api,
+            cmdline.clang_format_exe_path.as_deref(),
+        )?;
+        let cc_api = turn_off_clang_format(cc_api);
+        let cc_api = cc_embed_provenance_map(
+            &provenance_map,
+            cmdline
+                .kythe_default_corpus
+                .as_deref()
+                .expect("kythe_default_corpus is required when kythe_annotations is enabled"),
+            cc_api,
+        );
+        write_file(&cmdline.h_out, &cc_api)?;
+    } else {
         let cc_api =
             cc_tokens_to_formatted_string(cc_api, cmdline.clang_format_exe_path.as_deref())?;
         let cc_api = turn_off_clang_format(cc_api);

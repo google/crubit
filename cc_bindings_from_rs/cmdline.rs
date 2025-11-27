@@ -152,6 +152,10 @@ pub struct Cmdline {
     /// Emit extra source information for generating cross-references.
     #[clap(long, value_parser, value_name = "BOOL", default_value_t = false)]
     pub kythe_annotations: bool,
+
+    /// Default corpus to use for Kythe vnames.
+    #[clap(long, value_parser, value_name = "STRING", default_value = "corpus")]
+    pub kythe_default_corpus: Option<String>,
 }
 
 impl Cmdline {

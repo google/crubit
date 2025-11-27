@@ -338,6 +338,30 @@ crubit_rust_test(
     ],
 )
 
+rust_library(
+    name = "kythe_metadata",
+    srcs = ["kythe_metadata.rs"],
+    deps = [
+        ":token_stream_printer",
+        "@crate_index//:anyhow",  # v1
+        "@crate_index//:base64",  # v0_22
+        "@crate_index//:serde",  # v1
+        "@crate_index//:serde_json",  # v1
+    ],
+)
+
+crubit_rust_test(
+    name = "kythe_metadata_test",
+    crate = ":kythe_metadata",
+    tags = [
+        "not_run:arm",  # We don't need to run Crubit itself on aarch64.
+        "not_run:mac",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
 cc_library(
     name = "test_utils",
     testonly = True,

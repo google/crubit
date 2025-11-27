@@ -30,6 +30,7 @@ serde_json = "1"
 syn = { version = "2", features = [ "extra-traits" ] }
 tracing = "0.1"
 unicode-ident = "1"
+base64 = "0.22"
 
 [workspace.package]
 

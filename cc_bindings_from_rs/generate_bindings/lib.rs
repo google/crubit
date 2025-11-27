@@ -76,10 +76,21 @@ pub struct BindingsTokens {
 }
 
 fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Result<TokenStream> {
+    let metadata_block = if db.kythe_annotations() {
+        quote! {
+            __HASH_TOKEN__ ifdef KYTHE_IS_RUNNING __NEWLINE__
+            __HASH_TOKEN__ pragma kythe_inline_metadata "This file contains Kythe metadata."
+            __NEWLINE__
+            __HASH_TOKEN__ endif __NEWLINE__
+        }
+    } else {
+        TokenStream::new()
+    };
     match db.h_out_include_guard() {
         IncludeGuard::PragmaOnce => Ok(quote! {
             __HASH_TOKEN__ pragma once __NEWLINE__
             __NEWLINE__
+            #metadata_block
 
             #cc_api
         }),
@@ -89,6 +100,7 @@ fn add_include_guard(db: &dyn BindingsGenerator<'_>, cc_api: TokenStream) -> Res
                 __HASH_TOKEN__ ifndef #include_guard __NEWLINE__
                 __HASH_TOKEN__ define #include_guard __NEWLINE__
                 __NEWLINE__
+                #metadata_block
 
                 #cc_api
 
