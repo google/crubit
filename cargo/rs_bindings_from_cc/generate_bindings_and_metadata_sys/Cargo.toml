@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_library generate_bindings_and_metadata_sys.
+# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_generate_bindings_and_metadata_sys.
 
 [package]
-name = "generate_bindings_and_metadata_sys"
+name = "rs_bindings_from_cc_generate_bindings_and_metadata_sys"
 edition.workspace = true
 license-file.workspace = true
 repository.workspace = true
@@ -17,12 +17,12 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-cc_collect_instantiations_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_collect_instantiations_sys"}
-cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
-cmdline_sys = { path = "../../../cargo/rs_bindings_from_cc/cmdline_sys"}
-collect_namespaces_sys = { path = "../../../cargo/rs_bindings_from_cc/collect_namespaces_sys"}
-ir_from_cc_sys = { path = "../../../cargo/rs_bindings_from_cc/ir_from_cc_sys"}
-src_code_gen_sys = { path = "../../../cargo/rs_bindings_from_cc/src_code_gen_sys"}
+cc_collect_instantiations_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_collect_instantiations_sys", package = "rs_bindings_from_cc_cc_collect_instantiations_sys"}
+cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
+cmdline_sys = { path = "../../../cargo/rs_bindings_from_cc/cmdline_sys", package = "rs_bindings_from_cc_cmdline_sys"}
+collect_namespaces_sys = { path = "../../../cargo/rs_bindings_from_cc/collect_namespaces_sys", package = "rs_bindings_from_cc_collect_namespaces_sys"}
+ir_from_cc_sys = { path = "../../../cargo/rs_bindings_from_cc/ir_from_cc_sys", package = "rs_bindings_from_cc_ir_from_cc_sys"}
+src_code_gen_sys = { path = "../../../cargo/rs_bindings_from_cc/src_code_gen_sys", package = "rs_bindings_from_cc_src_code_gen_sys"}
 
 
 [build-dependencies]

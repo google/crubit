@@ -16,7 +16,7 @@ categories.workspace = true
 path = "../../../../../cc_bindings_from_rs/generate_bindings/database/lib.rs"
 
 [dependencies]
-crubit_attr = { path = "../../../../../cargo/cc_bindings_from_rs/crubit_attr"}
+crubit_attr = { path = "../../../../../cargo/cc_bindings_from_rs/crubit_attr", package = "cc_bindings_from_rs_crubit_attr"}
 crubit_abi_type = { path = "../../../../../cargo/common/crubit_abi_type"}
 arc_anyhow = { path = "../../../../../cargo/common/arc_anyhow"}
 code_gen_utils = { path = "../../../../../cargo/common/code_gen_utils"}

@@ -33,7 +33,7 @@ error_report = { path = "../../../../cargo/common/error_report"}
 errors = { path = "../../../../cargo/common/errors"}
 ffi_types = { path = "../../../../cargo/common/ffi_types"}
 token_stream_printer = { path = "../../../../cargo/common/token_stream_printer"}
-ir = { path = "../../../../cargo/rs_bindings_from_cc/ir"}
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
 flagset.workspace = true
 itertools.workspace = true

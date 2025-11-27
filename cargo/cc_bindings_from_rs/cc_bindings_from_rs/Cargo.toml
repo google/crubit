@@ -18,8 +18,8 @@ path = "../../../cc_bindings_from_rs/cc_bindings_from_rs.rs"
 
 [dependencies]
 generate_bindings = { path = "../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
-cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline"}
-run_compiler = { path = "../../../cargo/cc_bindings_from_rs/run_compiler"}
+cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline", package = "cc_bindings_from_rs_cmdline"}
+run_compiler = { path = "../../../cargo/cc_bindings_from_rs/run_compiler", package = "cc_bindings_from_rs_run_compiler"}
 code_gen_utils = { path = "../../../cargo/common/code_gen_utils"}
 token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
 kythe_metadata = { path = "../../../cargo/common/kythe_metadata"}
