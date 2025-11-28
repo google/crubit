@@ -55,6 +55,11 @@ extern "C" void __rust_thunk___ZN12VirtualBase1C1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___ZN12VirtualBase1D1Ev(
+    class VirtualBase1* __this) {
+  std::destroy_at(__this);
+}
+
 static_assert(CRUBIT_SIZEOF(class VirtualBase2) == 24);
 static_assert(alignof(class VirtualBase2) == 8);
 
@@ -63,12 +68,22 @@ extern "C" void __rust_thunk___ZN12VirtualBase2C1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___ZN12VirtualBase2D1Ev(
+    class VirtualBase2* __this) {
+  std::destroy_at(__this);
+}
+
 static_assert(CRUBIT_SIZEOF(class VirtualDerived) == 32);
 static_assert(alignof(class VirtualDerived) == 8);
 
 extern "C" void __rust_thunk___ZN14VirtualDerivedC1Ev(
     class VirtualDerived* __this) {
   crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN14VirtualDerivedD1Ev(
+    class VirtualDerived* __this) {
+  std::destroy_at(__this);
 }
 
 static_assert(CRUBIT_SIZEOF(class MyAbstractClass) == 8);

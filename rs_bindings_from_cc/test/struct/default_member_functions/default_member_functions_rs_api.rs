@@ -22,7 +22,7 @@
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=10
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Uncopyable
 pub struct Uncopyable {
@@ -33,6 +33,14 @@ impl !Sync for Uncopyable {}
 unsafe impl ::cxx::ExternType for Uncopyable {
     type Id = ::cxx::type_id!("Uncopyable");
     type Kind = ::cxx::kind::Opaque;
+}
+
+/// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=10
+impl ::ctor::PinnedDrop for Uncopyable {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN10UncopyableD1Ev(self)
+    }
 }
 
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=12
@@ -214,6 +222,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN10UncopyableD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::Uncopyable>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN10UncopyableC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN21UncopyableDespiteDeclD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::UncopyableDespiteDecl>,
@@ -227,7 +238,8 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Uncopyable>() == 1);
     assert!(::core::mem::align_of::<crate::Uncopyable>() == 1);
-    static_assertions::assert_not_impl_any!(crate::Uncopyable: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::Uncopyable: Drop);
+    static_assertions::assert_not_impl_any!(crate::Uncopyable: Copy);
 
     assert!(::core::mem::size_of::<crate::UncopyableDespiteDecl>() == 24);
     assert!(::core::mem::align_of::<crate::UncopyableDespiteDecl>() == 8);

@@ -62,7 +62,7 @@ impl Default for EmptyUnion {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for EmptyUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
@@ -74,6 +74,13 @@ impl !Sync for Nontrivial {}
 unsafe impl ::cxx::ExternType for Nontrivial {
     type Id = ::cxx::type_id!("Nontrivial");
     type Kind = ::cxx::kind::Opaque;
+}
+
+impl ::ctor::PinnedDrop for Nontrivial {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self)
+    }
 }
 
 impl ::ctor::CtorNew<()> for Nontrivial {
@@ -210,7 +217,7 @@ impl Default for NonEmptyUnion {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion
 pub union NonCopyUnion {
@@ -222,6 +229,13 @@ impl !Sync for NonCopyUnion {}
 unsafe impl ::cxx::ExternType for NonCopyUnion {
     type Id = ::cxx::type_id!("NonCopyUnion");
     type Kind = ::cxx::kind::Opaque;
+}
+
+impl ::ctor::PinnedDrop for NonCopyUnion {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN12NonCopyUnionD1Ev(self)
+    }
 }
 
 #[repr(C)]
@@ -475,6 +489,9 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10EmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::Nontrivial>,
+        );
         #[link_name = "_ZN10NontrivialC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN13UnionToRenameC1Ev(__this: *mut ::core::ffi::c_void);
@@ -484,6 +501,9 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN13NonEmptyUnionC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12NonCopyUnionD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::NonCopyUnion>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -508,8 +528,10 @@ const _: () = {
 
     assert!(::core::mem::size_of::<crate::Nontrivial>() == 4);
     assert!(::core::mem::align_of::<crate::Nontrivial>() == 4);
-    static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
+    static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
     assert!(::core::mem::offset_of!(crate::Nontrivial, field) == 0);
+    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
     assert!(::core::mem::size_of::<crate::RenamedUnion>() == 1);
     assert!(::core::mem::align_of::<crate::RenamedUnion>() == 1);
     static_assertions::assert_impl_all!(crate::RenamedUnion: Copy,Clone);
@@ -534,7 +556,8 @@ const _: () = {
     static_assertions::assert_impl_all!(::core::ffi::c_longlong: Copy);
     assert!(::core::mem::size_of::<crate::NonCopyUnion>() == 4);
     assert!(::core::mem::align_of::<crate::NonCopyUnion>() == 4);
-    static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::NonCopyUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy);
     assert!(::core::mem::offset_of!(crate::NonCopyUnion, trivial_member) == 0);
     assert!(::core::mem::offset_of!(crate::NonCopyUnion, nontrivial_member) == 0);
     static_assertions::assert_impl_all!(bool: Copy);

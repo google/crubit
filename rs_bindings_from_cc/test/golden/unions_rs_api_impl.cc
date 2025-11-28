@@ -29,6 +29,10 @@ static_assert(CRUBIT_SIZEOF(struct Nontrivial) == 4);
 static_assert(alignof(struct Nontrivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
 
+extern "C" void __rust_thunk___ZN10NontrivialD1Ev(struct Nontrivial* __this) {
+  std::destroy_at(__this);
+}
+
 static_assert(sizeof(union UnionToRename) == 1);
 static_assert(alignof(union UnionToRename) == 1);
 
@@ -63,6 +67,11 @@ static_assert(CRUBIT_SIZEOF(union NonCopyUnion) == 4);
 static_assert(alignof(union NonCopyUnion) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_member, union NonCopyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(nontrivial_member, union NonCopyUnion) == 0);
+
+extern "C" void __rust_thunk___ZN12NonCopyUnionD1Ev(
+    union NonCopyUnion* __this) {
+  std::destroy_at(__this);
+}
 
 static_assert(sizeof(union NonCopyUnion2) == 1);
 static_assert(alignof(union NonCopyUnion2) == 1);

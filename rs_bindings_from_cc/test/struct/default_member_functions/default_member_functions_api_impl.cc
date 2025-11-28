@@ -22,6 +22,10 @@
 static_assert(sizeof(class Uncopyable) == 1);
 static_assert(alignof(class Uncopyable) == 1);
 
+extern "C" void __rust_thunk___ZN10UncopyableD1Ev(class Uncopyable* __this) {
+  std::destroy_at(__this);
+}
+
 extern "C" void __rust_thunk___ZN10UncopyableC1Ev(class Uncopyable* __this) {
   crubit::construct_at(__this);
 }

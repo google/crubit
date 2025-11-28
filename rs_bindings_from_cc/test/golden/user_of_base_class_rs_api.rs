@@ -25,7 +25,7 @@
 /// This tests inheritance across library boundaries.
 ///
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Derived2
 pub struct Derived2 {
@@ -61,17 +61,24 @@ impl ::ctor::CtorNew<()> for Derived2 {
 // Can't generate bindings for Derived2::Derived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::Derived2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'Derived2::operator=':
-// Can't generate bindings for Derived2::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __param_0 (parameter #1): references are not supported)
+impl ::ctor::PinnedDrop for Derived2 {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN8Derived2D1Ev(self)
+    }
+}
 
 // Error while generating bindings for function 'Derived2::operator=':
 // Can't generate bindings for Derived2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-#[::ctor::recursively_pinned]
+// Error while generating bindings for function 'Derived2::operator=':
+// Can't generate bindings for Derived2::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for Derived2::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived2
 pub struct VirtualDerived2 {
@@ -108,6 +115,13 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
 // Can't generate bindings for VirtualDerived2::VirtualDerived2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::VirtualDerived2 (the type of __param_0 (parameter #1): references are not supported)
 
+impl ::ctor::PinnedDrop for VirtualDerived2 {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN15VirtualDerived2D1Ev(self)
+    }
+}
+
 // Error while generating bindings for function 'VirtualDerived2::operator=':
 // Can't generate bindings for VirtualDerived2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc needs [//features:experimental] for VirtualDerived2::operator= (return type: references are not supported)
@@ -123,8 +137,14 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN8Derived2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8Derived2D1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::Derived2>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2C1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN15VirtualDerived2D1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::VirtualDerived2>,
         );
     }
 }
@@ -132,9 +152,12 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Derived2>() == 24);
     assert!(::core::mem::align_of::<crate::Derived2>() == 8);
-    static_assertions::assert_not_impl_any!(crate::Derived2: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::Derived2: Drop);
+    static_assertions::assert_not_impl_any!(crate::Derived2: Copy);
     assert!(::core::mem::offset_of!(crate::Derived2, derived_1) == 20);
+    static_assertions::assert_impl_all!(::core::ffi::c_char: Copy);
     assert!(::core::mem::size_of::<crate::VirtualDerived2>() == 32);
     assert!(::core::mem::align_of::<crate::VirtualDerived2>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::VirtualDerived2: Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Copy);
 };

@@ -22,7 +22,7 @@
 #![deny(warnings)]
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=10
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
@@ -35,6 +35,14 @@ unsafe impl ::cxx::ExternType for Nonmovable {
     type Kind = ::cxx::kind::Opaque;
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
+
+/// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=10
+impl ::ctor::PinnedDrop for Nonmovable {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self)
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=11
 impl ::ctor::CtorNew<()> for Nonmovable {
@@ -177,6 +185,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN10NonmovableD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::Nonmovable>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN10NonmovableC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN4BaseC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZNK4Base12has_bindingsEv<'a>(
@@ -189,7 +200,8 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::Nonmovable>() == 1);
     assert!(::core::mem::align_of::<crate::Nonmovable>() == 1);
-    static_assertions::assert_not_impl_any!(crate::Nonmovable: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::Nonmovable: Drop);
+    static_assertions::assert_not_impl_any!(crate::Nonmovable: Copy);
 
     assert!(::core::mem::size_of::<crate::Base>() == 1);
     assert!(::core::mem::align_of::<crate::Base>() == 1);

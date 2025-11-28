@@ -6,7 +6,7 @@
 //! `rs_bindings_from_cc/ir.h` for more
 //! information.
 
-use arc_anyhow::{anyhow, bail, Context, Error, Result};
+use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, NamespaceQualifier};
 use crubit_feature::CrubitFeature;
 use proc_macro2::{Ident, TokenStream};
@@ -1213,8 +1213,7 @@ impl Record {
 
     pub fn should_implement_drop(&self) -> bool {
         match self.destructor {
-            // TODO(b/202258760): Only omit destructor if `Copy` is specified.
-            SpecialMemberFunc::Trivial => false,
+            SpecialMemberFunc::Trivial => !self.should_derive_copy(),
 
             // TODO(b/212690698): Avoid calling into the C++ destructor (e.g. let
             // Rust drive `drop`-ing) to avoid (somewhat unergonomic) ManuallyDrop
@@ -1232,6 +1231,34 @@ impl Record {
             // `std::mem::forget`?
             SpecialMemberFunc::Unavailable => false,
         }
+    }
+
+    pub fn should_derive_copy(&self) -> bool {
+        match self.trait_derives.copy {
+            TraitImplPolarity::Positive => true,
+            TraitImplPolarity::Negative => false,
+            TraitImplPolarity::None => {
+                self.is_unpin()
+                    && self.copy_constructor == SpecialMemberFunc::Trivial
+                    && self.destructor == SpecialMemberFunc::Trivial
+                    && self.check_by_value().is_ok()
+                    && self.trait_derives.clone != TraitImplPolarity::Negative
+            }
+        }
+    }
+
+    pub fn check_by_value(&self) -> Result<()> {
+        ensure!(
+            self.destructor != SpecialMemberFunc::Unavailable,
+            "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
+            self.cc_name
+        );
+        ensure!(
+            !self.is_abstract,
+            "Can't directly construct values of type `{}`: it is abstract",
+            self.cc_name
+        );
+        Ok(())
     }
 
     /// Whether this is a template instantiation that is generally available.

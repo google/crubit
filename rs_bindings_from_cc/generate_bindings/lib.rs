@@ -713,7 +713,8 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
         },
         RsTypeKind::Record { record, crate_path, .. } => {
-            database::rs_snippet::check_by_value(record.as_ref())?;
+            record.check_by_value()?;
+            // database::rs_snippet::check_by_value(record.as_ref())?;
 
             let rust_type = crate_path
                 .to_fully_qualified_path(make_rs_ident(record.rs_name.identifier.as_ref()));

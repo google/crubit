@@ -21,4 +21,9 @@
 static_assert(sizeof(class CompatibleType) == 1);
 static_assert(alignof(class CompatibleType) == 1);
 
+extern "C" void __rust_thunk___ZN14CompatibleTypeD1Ev(
+    class CompatibleType* __this) {
+  std::destroy_at(__this);
+}
+
 #pragma clang diagnostic pop

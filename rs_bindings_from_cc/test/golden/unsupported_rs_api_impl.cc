@@ -31,4 +31,9 @@ static_assert(CRUBIT_SIZEOF(struct NontrivialCustomType) == 4);
 static_assert(alignof(struct NontrivialCustomType) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, struct NontrivialCustomType) == 0);
 
+extern "C" void __rust_thunk___ZN20NontrivialCustomTypeD1Ev(
+    struct NontrivialCustomType* __this) {
+  std::destroy_at(__this);
+}
+
 #pragma clang diagnostic pop
