@@ -704,7 +704,7 @@ mod iter {
             self.0.size_hint()
         }
 
-        // TODO(b/356638830): Uncomment when feature advance_by is stable
+        // TODO(dvadym): Uncomment when feature advance_by is stable
         // fn advance_by(&mut self, n: usize) -> Result<(), NonZeroUsize> {
         //     self.0.advance_by(n)
         // }
@@ -739,7 +739,7 @@ mod iter {
             self.0.next_back()
         }
 
-        // TODO(b/356638830): Uncomment when feature advance_back_by is stable
+        // TODO(dvadym): Uncomment when feature advance_back_by is stable
         // #[inline]
         // fn advance_back_by(&mut self, n: usize) -> Result<(), NonZero<usize>> {
         //     self.0.advance_back_by()
@@ -747,7 +747,7 @@ mod iter {
     }
 
     impl<T> ExactSizeIterator for VectorIntoIter<T> {
-        // TODO(b/356638830): Uncomment when feature is_empty is stable
+        // TODO(dvadym): Uncomment when feature is_empty is stable
         // #[inline]
         // fn is_empty(&self) -> bool {
         //     self.0.is_empty()
@@ -755,7 +755,7 @@ mod iter {
     }
 
     impl<T> FusedIterator for VectorIntoIter<T> {}
-    // TODO(b/356638830): Uncomment when feature TrustedLen is stable
+    // TODO(dvadym): Uncomment when feature TrustedLen is stable
     // unsafe impl<T> TrustedLen for VectorIntoIter<T> {}
 }
 

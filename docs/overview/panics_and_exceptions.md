@@ -39,8 +39,7 @@ behavior is defined.
 **Rust:** Rust: Crubit can create bindings for libraries built with either
 `-Cpanic=abort` or `-Cpanic=unwind`.
 
-If a panic unwinds past a Crubit FFI boundary, the process will terminate
-(on rustc nightly[^terminate_requirements]), with
+If a panic unwinds past a Crubit FFI boundary, the process will terminate, with
 the **sole** exception of `extern "C-unwind"` functions. If you define an
 `extern "C-unwind"` function, you must ensure that it is only called by C++ code
 which enables exceptions. This responsibility is left to the caller.
@@ -51,11 +50,3 @@ exception, and the behavior is undefined if an exception propagates past a
 Crubit FFI boundary. (See b/200067087 for catching this at compile time.)
 
 <!-- TODO(b/200067087): fail when exceptions are enabled, document above. -->
-
-[^terminate_requirements]: We use the behavior of
-    https://doc.rust-lang.org/nomicon/ffi.html#ffi-and-unwinding
-    to cause a crash. However, this is not yet
-    incorporated into a stable Rust release, and requires
-    nightly.
-
-<!-- TODO(b/254049425): remove above note once crash reaches stable. -->

@@ -355,9 +355,9 @@ mod tests {
         }
     }
 
-    // TODO(b/261074843): Go back to exact string matching (and hardcoding thunk
-    // names) once we are using stable name mangling (which may be coming in Q1
-    // 2023).  ("Go back" = more or less revert cl/492292910 + manual review and
+    // TODO(lukasza): b/261074843 - Go back to exact string matching (and hardcoding thunk
+    // names) once we are using stable name mangling.
+    // ("Go back" = more or less revert cl/492292910 + manual review and
     // tweaks.)
     fn assert_body_matches(actual: &str, expected: &str) {
         fn build_regex(expected_body: &str) -> Regex {
