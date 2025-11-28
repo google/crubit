@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate collect_instantiations.
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_collect_instantiations.
 
 [package]
-name = "collect_instantiations"
+name = "rs_bindings_from_cc_collect_instantiations"
 edition.workspace = true
 
 license-file.workspace = true
