@@ -18,7 +18,7 @@
 /// overridden in Rust instead -- this is proof that you can write bindings
 /// that are forward-compatible, as described in
 /// additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CompatibleType
 pub struct CompatibleType {
@@ -29,6 +29,13 @@ impl !Sync for CompatibleType {}
 unsafe impl ::cxx::ExternType for CompatibleType {
     type Id = ::cxx::type_id!("CompatibleType");
     type Kind = ::cxx::kind::Opaque;
+}
+
+impl ::ctor::PinnedDrop for CompatibleType {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN14CompatibleTypeD1Ev(self)
+    }
 }
 
 impl CompatibleType {
@@ -61,6 +68,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
+        );
         #[link_name = "_ZN14CompatibleTypeC1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
@@ -76,5 +86,6 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::CompatibleType>() == 1);
     assert!(::core::mem::align_of::<crate::CompatibleType>() == 1);
-    static_assertions::assert_not_impl_any!(crate::CompatibleType: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::CompatibleType: Drop);
+    static_assertions::assert_not_impl_any!(crate::CompatibleType: Copy);
 };

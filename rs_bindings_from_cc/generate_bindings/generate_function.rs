@@ -8,9 +8,8 @@ use crubit_abi_type::{CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens};
 use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibility};
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
-    check_by_value, format_generic_params, format_generic_params_replacing_by_self,
-    should_derive_clone, should_derive_copy, unique_lifetimes, Lifetime, LifetimeOptions,
-    Mutability, RsTypeKind,
+    format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
+    unique_lifetimes, Lifetime, LifetimeOptions, Mutability, RsTypeKind,
 };
 use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
@@ -363,7 +362,7 @@ fn api_func_shape_for_operator_assign(
     let trait_name;
     let func_name;
     if record.is_unpin() {
-        if rhs.is_ref_to(record) && should_derive_copy(record) {
+        if rhs.is_ref_to(record) && record.should_derive_copy() {
             // `MoveAndAssignViaCopy` is derived for `Copy` types, so we don't need to generate
             // `UnpinAssign` explicitly.
             return None;
@@ -765,7 +764,7 @@ fn api_func_shape_for_constructor(
     let Some(record) = maybe_record else {
         panic!("Constructors must be associated with a record.");
     };
-    if let Err(err) = check_by_value(record) {
+    if let Err(err) = record.check_by_value() {
         errors.add(err);
     }
     materialize_ctor_in_caller(func, param_types);
@@ -830,7 +829,7 @@ fn api_func_shape_for_constructor(
             Some((func_name, impl_kind))
         }
         2 => {
-            if param_types[1].is_rvalue_ref_to(record) && should_derive_copy(record) {
+            if param_types[1].is_rvalue_ref_to(record) && record.should_derive_copy() {
                 // `MoveAndAssignViaCopy` is derived for `Copy` types, so we don't need to
                 // generate move constructor bindings explicitly.
                 return None;

@@ -201,7 +201,7 @@ impl Default for Derived {
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for Derived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
 pub struct VirtualBase1 {
@@ -238,17 +238,24 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 // Can't generate bindings for VirtualBase1::VirtualBase1, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::VirtualBase1 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'VirtualBase1::operator=':
-// Can't generate bindings for VirtualBase1::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
+impl ::ctor::PinnedDrop for VirtualBase1 {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN12VirtualBase1D1Ev(self)
+    }
+}
 
 // Error while generating bindings for function 'VirtualBase1::operator=':
 // Can't generate bindings for VirtualBase1::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-#[::ctor::recursively_pinned]
+// Error while generating bindings for function 'VirtualBase1::operator=':
+// Can't generate bindings for VirtualBase1::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
 pub struct VirtualBase2 {
@@ -285,17 +292,24 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 // Can't generate bindings for VirtualBase2::VirtualBase2, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::VirtualBase2 (the type of __param_0 (parameter #1): references are not supported)
 
-// Error while generating bindings for function 'VirtualBase2::operator=':
-// Can't generate bindings for VirtualBase2::operator=, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (return type: references are not supported)
-// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
+impl ::ctor::PinnedDrop for VirtualBase2 {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN12VirtualBase2D1Ev(self)
+    }
+}
 
 // Error while generating bindings for function 'VirtualBase2::operator=':
 // Can't generate bindings for VirtualBase2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-#[::ctor::recursively_pinned]
+// Error while generating bindings for function 'VirtualBase2::operator=':
+// Can't generate bindings for VirtualBase2::operator=, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (return type: references are not supported)
+// //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
 pub struct VirtualDerived {
@@ -331,6 +345,13 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 // Error while generating bindings for constructor 'VirtualDerived::VirtualDerived':
 // Can't generate bindings for VirtualDerived::VirtualDerived, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for VirtualDerived::VirtualDerived (the type of __param_0 (parameter #1): references are not supported)
+
+impl ::ctor::PinnedDrop for VirtualDerived {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN14VirtualDerivedD1Ev(self)
+    }
+}
 
 // Error while generating bindings for function 'VirtualDerived::operator=':
 // Can't generate bindings for VirtualDerived::operator=, because of missing required features (<internal link>):
@@ -544,9 +565,18 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN5Base2C1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase1D1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::VirtualBase1>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2D1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::VirtualBase2>,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::VirtualDerived>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN11MethodBase16PublicEv"]
@@ -603,15 +633,18 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::Derived, derived_1) == 12);
     assert!(::core::mem::size_of::<crate::VirtualBase1>() == 24);
     assert!(::core::mem::align_of::<crate::VirtualBase1>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualBase1: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::VirtualBase1: Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualBase1: Copy);
 
     assert!(::core::mem::size_of::<crate::VirtualBase2>() == 24);
     assert!(::core::mem::align_of::<crate::VirtualBase2>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualBase2: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::VirtualBase2: Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualBase2: Copy);
 
     assert!(::core::mem::size_of::<crate::VirtualDerived>() == 32);
     assert!(::core::mem::align_of::<crate::VirtualDerived>() == 8);
-    static_assertions::assert_not_impl_any!(crate::VirtualDerived: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::VirtualDerived: Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerived: Copy);
 
     assert!(::core::mem::size_of::<crate::MyAbstractClass>() == 8);
     assert!(::core::mem::align_of::<crate::MyAbstractClass>() == 8);

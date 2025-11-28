@@ -62,7 +62,7 @@ impl Default for TrivialCustomType {
 // Error while generating bindings for function 'TrivialCustomType::operator int':
 // Function name is not supported: Unsupported name: operator int
 
-#[::ctor::recursively_pinned]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType
 pub struct NontrivialCustomType {
@@ -74,6 +74,13 @@ impl !Sync for NontrivialCustomType {}
 unsafe impl ::cxx::ExternType for NontrivialCustomType {
     type Id = ::cxx::type_id!("NontrivialCustomType");
     type Kind = ::cxx::kind::Opaque;
+}
+
+impl ::ctor::PinnedDrop for NontrivialCustomType {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN20NontrivialCustomTypeD1Ev(self)
+    }
 }
 
 // Error while generating bindings for constructor 'NontrivialCustomType::NontrivialCustomType':
@@ -110,6 +117,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN17TrivialCustomTypeC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN20NontrivialCustomTypeD1Ev<'a>(
+            __this: ::core::pin::Pin<&'a mut crate::NontrivialCustomType>,
+        );
     }
 }
 
@@ -121,6 +131,8 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::TrivialCustomType, i) == 0);
     assert!(::core::mem::size_of::<crate::NontrivialCustomType>() == 4);
     assert!(::core::mem::align_of::<crate::NontrivialCustomType>() == 4);
-    static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Copy,Drop);
+    static_assertions::assert_impl_all!(crate::NontrivialCustomType: Drop);
+    static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Copy);
     assert!(::core::mem::offset_of!(crate::NontrivialCustomType, i) == 0);
+    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
 };
