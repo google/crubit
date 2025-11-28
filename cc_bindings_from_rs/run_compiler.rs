@@ -148,8 +148,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use run_compiler_test_support::get_sysroot_for_testing;
     use run_compiler_test_support::setup_rustc_target_for_testing;
+    use run_compiler_test_support::sysroot_path;
     use std::path::PathBuf;
     use tempfile::tempdir;
 
@@ -201,16 +201,6 @@ mod tests {
         let msg = format!("{err:#}");
         assert_eq!("The Rust compiler had no crate to compile and analyze", msg);
         Ok(())
-    }
-
-    #[rustversion::before(2025-06-25)]
-    fn sysroot_path() -> PathBuf {
-        get_sysroot_for_testing()
-    }
-
-    #[rustversion::since(2025-06-25)]
-    fn sysroot_path() -> PathBuf {
-        get_sysroot_for_testing().path().to_path_buf()
     }
 
     /// `test_run_compiler_no_output_file` tests that we stop the compilation
