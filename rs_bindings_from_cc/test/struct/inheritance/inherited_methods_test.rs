@@ -9,7 +9,6 @@ use inherited_methods::{Base, Derived};
 fn test_inherits_has_bindings() {
     let _base = Base::default();
     let _derived = Derived::default();
-    // TODO(b/422065313): Uncomment these.
-    // assert!(_base.has_bindings());
-    // assert!(_derived.has_bindings());
+    assert!(_base.has_bindings());
+    assert!(_derived.has_bindings());
 }

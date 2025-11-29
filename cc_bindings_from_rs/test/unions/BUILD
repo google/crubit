@@ -21,11 +21,6 @@ rust_library(
     name = "unions",
     testonly = 1,
     srcs = ["unions.rs"],
-
-    # TODO(b/262878759): Remove this once `all` is not automatically added anymore.
-    aspect_hints = [
-        "//features:supported",
-    ],
 )
 
 golden_test(

@@ -333,10 +333,9 @@ fn field_definition(
             let mut wrap_in_manually_drop = false;
             if record.should_implement_drop() || record.is_union() {
                 if needs_manually_drop(&type_kind) {
-                    // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
-                    // if we can ask Rust to preserve field destruction order if the
-                    // destructor is the SpecialMemberFunc::NontrivialMembers
-                    // case.
+                    // TODO(jeanpierreda): b/212690698 - Avoid (somewhat unergonomic)
+                    // ManuallyDrop if we can ask Rust to preserve field destruction order
+                    // if the destructor is the SpecialMemberFunc::NontrivialMembers case.
                     wrap_in_manually_drop = true;
                 } else {
                     fields_that_must_be_copy.push(ty.clone());
