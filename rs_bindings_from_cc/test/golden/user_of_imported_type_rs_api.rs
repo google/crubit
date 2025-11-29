@@ -15,9 +15,9 @@
 #![deny(warnings)]
 
 #[inline(always)]
-pub fn UsesImportedType(mut t: trivial_type_cc::ns::Trivial) -> trivial_type_cc::ns::Trivial {
+pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type_cc::ns::Trivial {
     unsafe {
-        let mut __return = ::core::mem::MaybeUninit::<trivial_type_cc::ns::Trivial>::uninit();
+        let mut __return = ::core::mem::MaybeUninit::<::trivial_type_cc::ns::Trivial>::uninit();
         crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
             &raw mut __return as *mut ::core::ffi::c_void,
             &mut t,
@@ -30,7 +30,7 @@ pub fn UsesImportedType(mut t: trivial_type_cc::ns::Trivial) -> trivial_type_cc:
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UserOfImportedType
 pub struct UserOfImportedType {
-    pub trivial: *mut trivial_type_cc::ns::Trivial,
+    pub trivial: *mut ::trivial_type_cc::ns::Trivial,
 }
 impl !Send for UserOfImportedType {}
 impl !Sync for UserOfImportedType {}
@@ -74,7 +74,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
             __return: *mut ::core::ffi::c_void,
-            t: &mut trivial_type_cc::ns::Trivial,
+            t: &mut ::trivial_type_cc::ns::Trivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
             __this: *mut ::core::ffi::c_void,
