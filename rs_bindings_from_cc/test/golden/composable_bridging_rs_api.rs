@@ -89,7 +89,7 @@ pub fn MakeMyI8Struct() -> crate::MyOption<i8> {
 
 #[inline(always)]
 pub unsafe fn InspectStringViews(
-    slice: *mut [cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
+    slice: *mut [::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
 ) {
     crate::detail::__rust_thunk___Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(slice)
 }
@@ -919,11 +919,11 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for class 'absl::Span<std::basic_string_view<char, std::char_traits<char>>>':
 // Can't generate bindings for absl::Span<std::basic_string_view<char, std::char_traits<char>>>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::Span<std::basic_string_view<char, std::char_traits<char>>> (::span::absl::RawSpanMut<cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE> is a template instantiation)
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::Span<std::basic_string_view<char, std::char_traits<char>>> (::span::absl::RawSpanMut<::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE> is a template instantiation)
 
 // Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::core::ffi::c_int])
 
-// Type bindings for rs_std::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE])
+// Type bindings for rs_std::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE])
 
 mod detail {
     #[allow(unused_imports)]
@@ -953,7 +953,7 @@ mod detail {
         );
         #[link_name = "_Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE"]
         pub(crate) unsafe fn __rust_thunk___Z18InspectStringViewsN6rs_std8SliceRefINSt3__u17basic_string_viewIcNS1_11char_traitsIcEEEEEE(
-            slice: *mut[cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
+            slice: *mut[::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
         );
         pub(crate) unsafe fn __rust_thunk___Z12MaybeVoidPtrv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
@@ -1006,12 +1006,12 @@ const _: () = {
     assert!(::core::mem::align_of::<*const [::core::ffi::c_int]>() == 8);
     assert!(
         ::core::mem::size_of::<
-            *mut [cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
+            *mut [::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
         >() == 16
     );
     assert!(
         ::core::mem::align_of::<
-            *mut [cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
+            *mut [::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
         >() == 8
     );
 };

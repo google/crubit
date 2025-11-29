@@ -110,3 +110,22 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "derives_abstract_base",
+    hdrs = ["derives_abstract_base.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+)
+
+crubit_rust_test(
+    name = "derives_abstract_base_test",
+    srcs = ["derives_abstract_base_test.rs"],
+    cc_deps = [
+        ":derives_abstract_base",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
