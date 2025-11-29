@@ -32,7 +32,7 @@ pub fn rs_type_kind_with_lifetime_elision(
                 if pointer.pointee_type.is_const { Mutability::Const } else { Mutability::Mut };
             let mut pointee = db.rs_type_kind(pointer.pointee_type.as_ref().clone())?;
 
-            // TODO(b/351976044): Support bridge types by pointer/reference.
+            // TODO(b/464492052): Support bridge types by pointer/reference.
             if let RsTypeKind::BridgeType { original_type, .. } = pointee.unalias() {
                 let visibility_override = if pointee.is_proto_message_bridge_type() {
                     Some(Visibility::Public)
