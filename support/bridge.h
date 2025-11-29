@@ -283,7 +283,8 @@ struct TransmuteAbi {
     // violations. Furthermore, the destructor is not called- this is intended,
     // because we have semantically moved the value into the buffer.
     alignas(Value) char buf[kSize];
-    std::memcpy(encoder.Next(kSize), new (buf) Value(std::move(value)), kSize);
+    std::memcpy(encoder.Next(kSize),
+                static_cast<void*>(new (buf) Value(std::move(value))), kSize);
   }
   static Value Decode(Decoder& decoder) {
     alignas(Value) char buf[kSize];
