@@ -278,7 +278,7 @@
 // Prevents Crubit from interpreting one or more named attributes on this
 // declaration.
 //
-// TODO: b/439606536 - This currently only ignores unknown attributes, but
+// TODO: b/444508414 - This currently only ignores unknown attributes, but
 // should be extended to ignore attributes that Crubit interprets.
 //
 // ```c++
