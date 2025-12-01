@@ -18,8 +18,8 @@ path = "lib.rs"
 
 [dependencies]
 type_lifetimes_sys = { path = "../../../../cargo/lifetime_annotations/type_lifetimes_sys"}
-ast_util_sys = { path = "../../../../cargo/rs_bindings_from_cc/ast_util_sys"}
-cc_ir_sys = { path = "../../../../cargo/rs_bindings_from_cc/cc_ir_sys"}
+ast_util_sys = { path = "../../../../cargo/rs_bindings_from_cc/ast_util_sys", package = "rs_bindings_from_cc_ast_util_sys"}
+cc_ir_sys = { path = "../../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
 
 
 [build-dependencies]

@@ -25,7 +25,7 @@ errors = { path = "../../../../../cargo/common/errors"}
 ffi_types = { path = "../../../../../cargo/common/ffi_types"}
 memoized = { path = "../../../../../cargo/common/memoized"}
 token_stream_printer = { path = "../../../../../cargo/common/token_stream_printer"}
-ir = { path = "../../../../../cargo/rs_bindings_from_cc/ir"}
+ir = { path = "../../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 flagset.workspace = true
 heck.workspace = true
 itertools.workspace = true
