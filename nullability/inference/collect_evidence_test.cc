@@ -151,6 +151,91 @@ TEST(GetVirtualMethodIndexTest, DerivedMultipleLayers) {
                                          USRSet({DFooUSR, DDFooUSR}))),
           IsStringMapEntry(DFooUSR, methodSummary(llvm::SmallVector<int>{0, 3},
                                                   USRSet({DDFooUSR})))));
+
+  // For TUs that don't have any GoogleTest macros, IsDefinedInTest is empty.
+  EXPECT_THAT(Index.IsDefinedInTest, IsEmpty());
+}
+
+TEST(GetVirtualMethodIndexTest, TracksCrossingTestToNontestCode) {
+  using USRSet = llvm::StringSet<>;
+
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+    struct TestToNontestDerived : public Derived {
+      int* foo() override { return nullptr; };
+    };
+
+    struct TestBase : public Base {
+      int* foo() override { return new int(42); };
+    };
+
+    struct TestToTestDerived : public TestBase {
+      int* foo() override { return nullptr; };
+    };
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    struct Base {
+      virtual int* foo() { return new int(42); }
+    };
+
+    struct Derived : public Base {
+      int* foo() override;
+    };
+  )cc";
+
+  clang::TestAST AST(Inputs);
+  const Decl* BaseFoo =
+      dataflow::test::findValueDecl(AST.context(), "Base::foo");
+  const Decl* DFoo =
+      dataflow::test::findValueDecl(AST.context(), "Derived::foo");
+  const Decl* TtoNTDFoo =
+      dataflow::test::findValueDecl(AST.context(), "TestToNontestDerived::foo");
+  const Decl* TBaseFoo =
+      dataflow::test::findValueDecl(AST.context(), "TestBase::foo");
+  const Decl* TtoTDFoo =
+      dataflow::test::findValueDecl(AST.context(), "TestToTestDerived::foo");
+
+  USRCache UC;
+  std::string_view BaseFooUSR = getOrGenerateUSR(UC, *BaseFoo);
+  std::string_view DFooUSR = getOrGenerateUSR(UC, *DFoo);
+  std::string_view TtoNTDFooUSR = getOrGenerateUSR(UC, *TtoNTDFoo);
+  std::string_view TBaseFooUSR = getOrGenerateUSR(UC, *TBaseFoo);
+  std::string_view TtoTDFooUSR = getOrGenerateUSR(UC, *TtoTDFoo);
+
+  auto Index = getVirtualMethodIndex(AST.context(), UC);
+
+  EXPECT_THAT(
+      Index.Bases,
+      UnorderedElementsAre(
+          IsStringMapEntry(DFooUSR, USRSet({BaseFooUSR})),
+          IsStringMapEntry(TtoNTDFooUSR, USRSet({DFooUSR, BaseFooUSR})),
+          IsStringMapEntry(TBaseFooUSR, USRSet({BaseFooUSR})),
+          IsStringMapEntry(TtoTDFooUSR, USRSet({TBaseFooUSR, BaseFooUSR}))));
+
+  EXPECT_THAT(
+      Index.Overrides,
+      UnorderedElementsAre(
+          IsStringMapEntry(BaseFooUSR,
+                           methodSummary(llvm::SmallVector<int>{0},
+                                         USRSet({DFooUSR, TtoNTDFooUSR,
+                                                 TBaseFooUSR, TtoTDFooUSR}))),
+          IsStringMapEntry(DFooUSR, methodSummary(llvm::SmallVector<int>{0},
+                                                  USRSet({TtoNTDFooUSR}))),
+          IsStringMapEntry(TBaseFooUSR, methodSummary(llvm::SmallVector<int>{0},
+                                                      USRSet({TtoTDFooUSR})))));
+
+  // We don't filter test -> nontest here. We only track the metadata
+  // to enable filtering elsewhere.
+  EXPECT_THAT(Index.IsDefinedInTest,
+              UnorderedElementsAre(IsStringMapEntry(TtoNTDFooUSR, _),
+                                   IsStringMapEntry(TBaseFooUSR, _),
+                                   IsStringMapEntry(TtoTDFooUSR, _)));
 }
 
 // TODO: b/440317964 -- Expand SummarizeDefinitionTest to cover all summarized
@@ -4748,6 +4833,99 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                    globalVarNamed("TestGlobal")),
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    staticFieldNamed("TestClass::TestStatic"))));
+}
+
+TEST_P(CollectEvidenceFromDefinitionTest,
+       IgnoreTestToNontestFromVirtualDerivedForReturn) {
+  static constexpr llvm::StringRef BaseSrc = R"cc(
+#include "input.h"
+
+    // A test-only class that overrides a non-test base class.
+    struct TestToNontestDerived : public Base {
+      int* foo() override { return nullptr; }
+    };
+
+    struct TestBaseRoot {
+      virtual int* foo();
+    };
+
+    // A test-only class that overrides a test base class (which is a root).
+    struct TestToTestRootDerived : public TestBaseRoot {
+      int* foo() override { return nullptr; }
+    };
+
+    struct TestBaseNotRoot : public Base {
+      int* foo() override { return new int(0); }
+    };
+
+    // A test-only class that overrides a test base class (which is not a root).
+    struct TestToTestNotRootDerived : public TestBaseNotRoot {
+      int* foo() override { return nullptr; }
+    };
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs =
+      getAugmentedTestInputs((GtestMacroDefinitions + BaseSrc).str(), Pragmas);
+  Inputs.FileName = "input_test.cc";
+
+  Inputs.ExtraFiles["input.h"] = R"cc(
+    struct Base {
+      virtual int* foo();
+    };
+
+    struct Derived : public Base {
+      int* foo() override { return nullptr; }
+    };
+  )cc";
+
+  clang::TestAST AST(Inputs);
+  const Decl& NontestDecl =
+      *dataflow::test::findValueDecl(AST.context(), "Derived::foo");
+  const Decl& TestToNontestDecl = *dataflow::test::findValueDecl(
+      AST.context(), "TestToNontestDerived::foo");
+  const Decl& TestToTestRootDecl = *dataflow::test::findValueDecl(
+      AST.context(), "TestToTestRootDerived::foo");
+  const Decl& TestToTestNotRootDecl = *dataflow::test::findValueDecl(
+      AST.context(), "TestToTestNotRootDerived::foo");
+
+  // In the non-test case, we can propagate from Derived::foo to Base::foo.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                   functionNamed("Derived@F@foo")),
+          evidencePropagatedFrom(functionNamed("Derived@F@foo"),
+                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                 functionNamed("Base@F@foo"))));
+
+  // In the test case, we only propagate from
+  // TestToTest{Root,NotRoot}Derived::foo to TestBase{Root,NotRoot}::foo, but
+  // not TestToNontestDerived::foo to Base::foo, or
+  // TestToTestNotRootDerived::foo to Base::foo.
+  EXPECT_THAT(collectFromDefinition(AST.context(), TestToNontestDecl, Pragmas,
+                                    getMode()),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                           functionNamed("TestToNontestDerived@F@foo"))));
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestToTestRootDecl, Pragmas,
+                            getMode()),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                   functionNamed("TestToTestRootDerived@F@foo")),
+          evidencePropagatedFrom(functionNamed("TestToTestRootDerived@F@foo"),
+                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                 functionNamed("TestBaseRoot@F@foo"))));
+  EXPECT_THAT(collectFromDefinition(AST.context(), TestToTestNotRootDecl,
+                                    Pragmas, getMode()),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                           functionNamed("TestToTestNotRootDerived@F@foo")),
+                  evidencePropagatedFrom(
+                      functionNamed("TestToTestNotRootDerived@F@foo"),
+                      SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                      functionNamed("TestBaseNotRoot@F@foo"))));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {

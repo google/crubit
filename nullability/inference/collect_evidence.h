@@ -90,13 +90,16 @@ struct VirtualMethodIndex {
   // Map from virtual methods in a TU to the set of methods that override them
   // in that TU. Methods are identified by USRs.
   llvm::StringMap<MethodSummary> Overrides;
+  // Set of virtual methods (identified by USRs) that are defined in test main
+  // files. If not defined in a test main file, the USR will not be present.
+  llvm::StringSet<> IsDefinedInTest;
 };
 
 /// Index the relationships between virtual methods in the TU.
 VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC);
 
-RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap &M);
-RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols &R);
+VirtualMethodIndexSummary saveVirtualMethodsIndex(const VirtualMethodIndex& M);
+VirtualMethodIndex loadVirtualMethodsIndex(const VirtualMethodIndexSummary& R);
 
 class SortedFingerprintVector {
  public:

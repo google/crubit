@@ -124,9 +124,12 @@ static std::unique_ptr<LocFilter> getNotTestMainFileLocFilter(ASTContext& Ctx) {
 
 VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
-    explicit Walker(USRCache &UC) : USRCache(UC) {}
+    explicit Walker(USRCache& UC,
+                    LocFilter* absl_nullable NotTestMainFileLocFilter)
+        : USRCache(UC), NotTestMainFileLocFilter(NotTestMainFileLocFilter) {}
     VirtualMethodIndex Index;
     USRCache &USRCache;
+    LocFilter* absl_nullable NotTestMainFileLocFilter;
 
     // Note: the correctness of this function relies on the pre-order traversal
     // order of `Walker` (which is the default for RecursiveASTVisitor), because
@@ -150,19 +153,22 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
 
     bool VisitCXXMethodDecl(const CXXMethodDecl *MD) {
       if (MD && MD->isVirtual()) {
-        llvm::StringSet<> Overridden = getOverridden(MD);
-        if (Overridden.empty()) return true;
-
-        // Filter for Nullability relevance. Optimization note: we filter
-        // *after* calling getOverridden on the assumption that, for irrelevant
-        // methods, it is cheaper, on average, to call `getOverridden` than
-        // `getInferableSlotIndices`. But, no data informed this choice.
+        // Filter for Nullability relevance.
         llvm::SmallVector<int> SlotIndices = getInferableSlotIndices(*MD);
         // No slots -> irrelevant method.
         if (SlotIndices.empty()) return true;
 
         std::string_view USR = getOrGenerateUSR(USRCache, *MD);
         if (USR.empty()) return true;
+
+        if (NotTestMainFileLocFilter != nullptr &&
+            !NotTestMainFileLocFilter->check(
+                MD->getCanonicalDecl()->getBeginLoc())) {
+          Index.IsDefinedInTest.insert(USR);
+        }
+
+        llvm::StringSet<> Overridden = getOverridden(MD);
+        if (Overridden.empty()) return true;
 
         for (auto &O : Overridden) {
           auto &S = Index.Overrides[O.getKey()];
@@ -177,32 +183,53 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
     }
   };
 
-  // Don't use a LocFilter here to restrict to the main file or header, because
-  // we want to propagate evidence from virtual methods to/from their overrides,
-  // no matter where they are each defined.
-  Walker W(UC);
+  // The LocFilter is mainly used to get metadata about where the virtual
+  // method is defined (test/non-test), and filtering happens later.
+  //
+  // We don't support "fast mode" (RestrictToMainFileOrHeader) in this case,
+  // because we want to propagate evidence from virtual methods to/from their
+  // overrides, no matter where they are each defined.
+  std::unique_ptr<LocFilter> NotTestMainFileLocFilter =
+      getNotTestMainFileLocFilter(Ctx);
+  Walker W(UC, NotTestMainFileLocFilter.get());
   W.TraverseAST(Ctx);
   return std::move(W.Index);
 }
 
-RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap &M) {
+static RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap& M) {
   RelatedSymbols Result;
-  auto &RelatedMethods = *Result.mutable_related_symbols();
-  for (auto &[KeyMethod, MethodSet] : M) {
-    RelatedSymbols::SymbolSet &Methods = RelatedMethods[KeyMethod];
-    for (auto &Method : MethodSet)
+  auto& RelatedMethods = *Result.mutable_related_symbols();
+  for (auto& [KeyMethod, MethodSet] : M) {
+    RelatedSymbols::SymbolSet& Methods = RelatedMethods[KeyMethod];
+    for (auto& Method : MethodSet)
       Methods.add_symbols()->set_usr(Method.getKey());
   }
   return Result;
 }
 
-RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols &R) {
+static RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols& R) {
   RelatedVirtualMethodsMap Related;
-  for (const auto &[KeyMethod, Methods] : R.related_symbols()) {
-    llvm::StringSet<> &RelatedMethods = Related[KeyMethod];
-    for (auto &Symbol : Methods.symbols()) RelatedMethods.insert(Symbol.usr());
+  for (const auto& [KeyMethod, Methods] : R.related_symbols()) {
+    llvm::StringSet<>& RelatedMethods = Related[KeyMethod];
+    for (auto& Symbol : Methods.symbols()) RelatedMethods.insert(Symbol.usr());
   }
   return Related;
+}
+
+VirtualMethodIndexSummary saveVirtualMethodsIndex(const VirtualMethodIndex& M) {
+  VirtualMethodIndexSummary Result;
+  *Result.mutable_overrides_to_bases() = saveVirtualMethodsMap(M.Bases);
+  for (auto& Entry : M.IsDefinedInTest)
+    Result.add_virtual_methods_defined_in_tests()->set_usr(Entry.getKey());
+  return Result;
+}
+
+VirtualMethodIndex loadVirtualMethodsIndex(const VirtualMethodIndexSummary& R) {
+  VirtualMethodIndex Result;
+  Result.Bases = loadVirtualMethodsMap(R.overrides_to_bases());
+  for (auto& Symbol : R.virtual_methods_defined_in_tests())
+    Result.IsDefinedInTest.insert(Symbol.usr());
+  return Result;
 }
 
 VirtualMethodEvidenceFlowDirection getFlowDirection(Evidence::Kind Kind,
@@ -264,6 +291,24 @@ static void appendUSRs(const llvm::StringSet<> &Strings,
   for (auto &Entry : Strings) USRs.push_back(Entry.getKey());
 }
 
+// Given a virtual method `USR` and its base methods `BaseUSRs`, append to
+// `Results` only if USR -> Base does not cross a test to non-test boundary.
+static void appendBaseUSRsIfNotLeavingTestBoundary(
+    std::string_view USR, const llvm::StringSet<>& USRsDefinedInTests,
+    const llvm::StringSet<>& BaseUSRs, std::vector<std::string_view>& Results) {
+  if (!USRsDefinedInTests.contains(USR)) {
+    appendUSRs(BaseUSRs, Results);
+    return;
+  }
+  // Otherwise, USR is defined in a test main file, so only propagate to bases
+  // that are also defined in test main files.
+  for (auto& Entry : BaseUSRs) {
+    if (USRsDefinedInTests.contains(Entry.getKey())) {
+      Results.push_back(Entry.getKey());
+    }
+  }
+}
+
 static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
     std::string_view USR, Evidence::Kind Kind, bool ForReturnSlot,
     const VirtualMethodIndex &Index) {
@@ -276,16 +321,20 @@ static std::vector<std::string_view> getAdditionalTargetsForVirtualMethod(
         appendUSRs(It->second.OverridingUSRs, Results);
       return Results;
     case VirtualMethodEvidenceFlowDirection::kFromDerivedToBase:
-      if (auto It = Index.Bases.find(USR); It != Index.Bases.end())
-        appendUSRs(It->second, Results);
+      if (auto It = Index.Bases.find(USR); It != Index.Bases.end()) {
+        appendBaseUSRsIfNotLeavingTestBoundary(USR, Index.IsDefinedInTest,
+                                               It->second, Results);
+      }
       return Results;
     case VirtualMethodEvidenceFlowDirection::kBoth:
       // Simply concatenate the two sets -- given the acyclic nature of the AST,
       // they must be exclusive.
-      if (auto It = Index.Bases.find(USR); It != Index.Bases.end())
-        appendUSRs(It->second, Results);
       if (auto It = Index.Overrides.find(USR); It != Index.Overrides.end())
         appendUSRs(It->second.OverridingUSRs, Results);
+      if (auto It = Index.Bases.find(USR); It != Index.Bases.end()) {
+        appendBaseUSRsIfNotLeavingTestBoundary(USR, Index.IsDefinedInTest,
+                                               It->second, Results);
+      }
       return Results;
   }
 }

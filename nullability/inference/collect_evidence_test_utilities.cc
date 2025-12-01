@@ -93,11 +93,10 @@ collectFromDefinitionViaSummaryWithErrors(
   // then serialized to proto, along with the summaries. We round-trip the index
   // here to ensure proper testing of the full save/restore flow.
   VirtualMethodIndex VMI = getVirtualMethodIndex(ASTCtx, UsrCache);
-  RelatedSymbols VMIProto = saveVirtualMethodsMap(VMI.Bases);
+  VirtualMethodIndexSummary VMIProto = saveVirtualMethodsIndex(VMI);
 
-  VirtualMethodIndex PostVMI;
+  VirtualMethodIndex PostVMI = loadVirtualMethodsIndex(VMIProto);
   PostVMI.Overrides = std::move(VMI.Overrides);
-  PostVMI.Bases = loadVirtualMethodsMap(VMIProto);
   return {collectEvidenceFromSummary(
               *Summary,
               evidenceEmitterWithPropagation(
