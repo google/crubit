@@ -107,6 +107,21 @@ struct EvidenceLocationsWalker : public RecursiveASTVisitor<Derived> {
 };
 }  // namespace
 
+// Returns a LocFilter that allows testing if the SourceLocation is in a
+// GoogleTest "main" file (by inverting, and allowing locations in all files but
+// the main file). Returns nullptr if the `Ctx` does not have any recognized
+// GoogleTest macros, which means that no file in the TU is a GoogleTest main
+// file.
+static std::unique_ptr<LocFilter> getNotTestMainFileLocFilter(ASTContext& Ctx) {
+  if (Ctx.Idents.get("ASSERT_NE").hasMacroDefinition() &&
+      Ctx.Idents.get("GTEST_TEST").hasMacroDefinition()) {
+    return nullability::getLocFilter(
+        Ctx.getSourceManager(),
+        nullability::LocFilterKind::kAllowAllButNotMainFile);
+  }
+  return nullptr;
+}
+
 VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
   struct Walker : public EvidenceLocationsWalker<Walker> {
     explicit Walker(USRCache &UC) : USRCache(UC) {}
@@ -948,28 +963,33 @@ class NullabilityBehaviorVisitor {
   //
   // Instantiate the class only in this function, to restrict the lifetime of
   // the object, which holds reference parameters.
-  static void visit(const std::vector<InferableSlot> &InferableSlots,
-                    USRCache &USRCache,
-                    const PointerNullabilityLattice &Lattice,
-                    const Environment &Env, const SourceManager &SM,
-                    const CFGElement &CFGElem, BehaviorConsumer &BC) {
+  static void visit(const std::vector<InferableSlot>& InferableSlots,
+                    USRCache& USRCache,
+                    const PointerNullabilityLattice& Lattice,
+                    const Environment& Env, const SourceManager& SM,
+                    const CFGElement& CFGElem,
+                    LocFilter* absl_nullable NotTestMainFileLocFilter,
+                    BehaviorConsumer& BC) {
     NullabilityBehaviorVisitor<BehaviorConsumer> Visitor(
-        InferableSlots, USRCache, Lattice, Env, SM, BC);
+        InferableSlots, USRCache, Lattice, Env, SM, NotTestMainFileLocFilter,
+        BC);
     Visitor.visit(CFGElem);
   }
 
  private:
-  NullabilityBehaviorVisitor(const std::vector<InferableSlot> &InferableSlots,
-                             USRCache &USRCache,
-                             const PointerNullabilityLattice &Lattice,
-                             const Environment &Env, const SourceManager &SM,
-                             BehaviorConsumer &BC)
+  NullabilityBehaviorVisitor(const std::vector<InferableSlot>& InferableSlots,
+                             USRCache& USRCache,
+                             const PointerNullabilityLattice& Lattice,
+                             const Environment& Env, const SourceManager& SM,
+                             LocFilter* absl_nullable NotTestMainFileLocFilter,
+                             BehaviorConsumer& BC)
       : Consumer(BC),
         Env(Env),
         HasInferableSlots(!InferableSlots.empty()),
         USRCache(USRCache),
         Lattice(Lattice),
-        SM(SM) {}
+        SM(SM),
+        NotTestMainFileLocFilter(NotTestMainFileLocFilter) {}
 
   void visit(const CFGElement &CFGElem) {
     if (auto CFGStmt = CFGElem.getAs<clang::CFGStmt>()) {
@@ -1124,6 +1144,19 @@ class NullabilityBehaviorVisitor {
     bool CalleeIsInferenceTarget = isInferenceTarget(CalleeDecl);
     bool AnalyzeCallee = CalleeIsInferenceTarget;
     bool AnalyzeCaller = HasInferableSlots;
+
+    // Don't consider nullability behaviors where the caller is in a test main
+    // file, but the callee is not, to avoid collecting such evidence (test
+    // evidence may not be as accurate as non-test evidence). If the caller and
+    // callee are both in test main files, then that will be the only evidence,
+    // so we consider that behavior.
+    if (AnalyzeCallee && NotTestMainFileLocFilter != nullptr) {
+      if (NotTestMainFileLocFilter->check(
+              CalleeDecl.getCanonicalDecl()->getBeginLoc()) &&
+          !NotTestMainFileLocFilter->check(Expr.getBeginLoc())) {
+        AnalyzeCallee = false;
+      }
+    }
 
     for (ParamAndArgIterator<CallOrConstructExpr> Iter(CalleeDecl, Expr); Iter;
          ++Iter) {
@@ -1822,6 +1855,9 @@ class NullabilityBehaviorVisitor {
   USRCache &USRCache;
   const PointerNullabilityLattice &Lattice;
   const SourceManager &SM;
+  // Null if the TU is not a GoogleTest TU. Otherwise, if it is a test TU,
+  // then this LocFilter will allow all locations, except the test main file.
+  LocFilter* absl_nullable NotTestMainFileLocFilter;
 };
 }  // namespace
 
@@ -2062,12 +2098,14 @@ class SummaryCollector {
  public:
   static llvm::SmallVector<NullabilityBehaviorSummary> summarizeElement(
       llvm::ArrayRef<InferableSlot> InferableSlots,
-      llvm::DenseSet<Atom> &UsedTokens, USRCache &USRCache,
-      const PointerNullabilityLattice &Lattice, const Environment &Env,
-      const SourceManager &SM, const CFGElement &CFGElem) {
+      llvm::DenseSet<Atom>& UsedTokens, USRCache& USRCache,
+      const PointerNullabilityLattice& Lattice, const Environment& Env,
+      const SourceManager& SM, const CFGElement& CFGElem,
+      LocFilter* absl_nullable NotTestMainFileLocFilter) {
     SummaryCollector SCollector(Env, UsedTokens);
     NullabilityBehaviorVisitor<SummaryCollector>::visit(
-        InferableSlots, USRCache, Lattice, Env, SM, CFGElem, SCollector);
+        InferableSlots, USRCache, Lattice, Env, SM, CFGElem,
+        NotTestMainFileLocFilter, SCollector);
     // Consume the summaries generated in this visit.
     return std::move(SCollector.Summaries);
   }
@@ -2850,11 +2888,27 @@ static llvm::Expected<Stmt *absl_nonnull> getTarget(
 
 static std::vector<InferableSlot> gatherInferableSlots(
     TypeNullabilityDefaults Defaults,
-    const FunctionDecl *absl_nullable TargetAsFunc,
-    const dataflow::ReferencedDecls &ReferencedDecls,
-    PointerNullabilityAnalysis &Analysis, dataflow::Arena &Arena,
-    USRCache &USRCache) {
+    const FunctionDecl* absl_nullable TargetAsFunc, const Stmt& TargetStmt,
+    const dataflow::ReferencedDecls& ReferencedDecls,
+    PointerNullabilityAnalysis& Analysis, dataflow::Arena& Arena,
+    USRCache& USRCache, LocFilter* absl_nullable NotTestMainFileLocFilter) {
   std::vector<InferableSlot> InferableSlots;
+
+  // Don't consider slots where the target (e.g., caller) is defined in a test
+  // main file, but the referenced decl (e.g., callee) is not.
+  LocFilter* absl_nullable ActiveFilter = nullptr;
+  if (NotTestMainFileLocFilter != nullptr) {
+    bool IsTargetInTestMainFile =
+        !NotTestMainFileLocFilter->check(TargetStmt.getBeginLoc());
+    // If the target is defined in a test main file, then have a LocFilter
+    // to check the referenced decl. Otherwise, we can skip the check.
+    if (IsTargetInTestMainFile) ActiveFilter = NotTestMainFileLocFilter;
+  }
+  auto ShouldConsiderReference = [&](const DeclaratorDecl& D) {
+    if (ActiveFilter == nullptr) return true;
+    return !ActiveFilter->check(D.getCanonicalDecl()->getBeginLoc());
+  };
+
   if (TargetAsFunc && isInferenceTarget(*TargetAsFunc)) {
     auto Parameters = TargetAsFunc->parameters();
     for (auto I = 0; I < Parameters.size(); ++I) {
@@ -2874,7 +2928,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
     const TypeSourceInfo *TSI = Field->getTypeSourceInfo();
     if (isInferenceTarget(*Field) &&
         (!TSI ||
-         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
+         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) &&
+        ShouldConsiderReference(*Field)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Field, Arena), Slot(0), *Field,
           USRCache);
@@ -2884,7 +2939,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
     const TypeSourceInfo *TSI = Global->getTypeSourceInfo();
     if (isInferenceTarget(*Global) &&
         (!TSI ||
-         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults))) {
+         !evidenceKindFromDeclaredTypeLoc(TSI->getTypeLoc(), Defaults)) &&
+        ShouldConsiderReference(*Global)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Global, Arena), Slot(0), *Global,
           USRCache);
@@ -2921,7 +2977,8 @@ static std::vector<InferableSlot> gatherInferableSlots(
     const FunctionDecl* Function = *Iter;
     if (isInferenceTarget(*Function) &&
         hasInferable(Function->getReturnType()) &&
-        !evidenceKindFromDeclaredReturnType(*Function, Defaults)) {
+        !evidenceKindFromDeclaredReturnType(*Function, Defaults) &&
+        ShouldConsiderReference(*Function)) {
       InferableSlots.emplace_back(
           Analysis.assignNullabilityVariable(Function, Arena), SLOT_RETURN_TYPE,
           *Function, USRCache);
@@ -2981,9 +3038,13 @@ llvm::Error collectEvidenceFromDefinition(
                                : Environment(AnalysisContext, TargetStmt);
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
 
+  std::unique_ptr<LocFilter> NotTestMainFileLocFilter =
+      getNotTestMainFileLocFilter(Ctx);
+
   std::vector<InferableSlot> InferableSlots = gatherInferableSlots(
-      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, ReferencedDecls,
-      Analysis, AnalysisContext.arena(), USRCache);
+      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, TargetStmt,
+      ReferencedDecls, Analysis, AnalysisContext.arena(), USRCache,
+      NotTestMainFileLocFilter.get());
 
   // Here, we overlay new knowledge from past iterations over the symbolic
   // entities for the `InferableSlots` (whose symbols are invariant across
@@ -3001,16 +3062,17 @@ llvm::Error collectEvidenceFromDefinition(
       Results;
   dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
   PostAnalysisCallbacks.Before =
-      [&](const CFGElement &Element,
-          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
-              &State) {
+      [&](const CFGElement& Element,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>&
+              State) {
         if (Solver->reachedLimit()) return;
 
         EvidenceCollector Collector(InferableSlots, InferableSlotsConstraint,
                                     State.Env, *Solver, Emit);
         NullabilityBehaviorVisitor<EvidenceCollector>::visit(
             InferableSlots, USRCache, State.Lattice, State.Env,
-            Ctx.getSourceManager(), Element, Collector);
+            Ctx.getSourceManager(), Element, NotTestMainFileLocFilter.get(),
+            Collector);
       };
   if (llvm::Error Error = dataflow::runDataflowAnalysis(*ACFG, Analysis, Env,
                                                         PostAnalysisCallbacks)
@@ -3072,9 +3134,13 @@ llvm::Expected<CFGSummary> summarizeDefinition(
                                : Environment(AnalysisContext, TargetStmt);
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
 
+  std::unique_ptr<LocFilter> NotTestMainFileLocFilter =
+      getNotTestMainFileLocFilter(Ctx);
+
   std::vector<InferableSlot> InferableSlots = gatherInferableSlots(
-      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, ReferencedDecls,
-      Analysis, AnalysisContext.arena(), USRCache);
+      TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, TargetStmt,
+      ReferencedDecls, Analysis, AnalysisContext.arena(), USRCache,
+      NotTestMainFileLocFilter.get());
 
   for (const auto &IS : InferableSlots) {
     *Summary.add_inferable_slots() = saveInferableSlot(IS);
@@ -3086,13 +3152,14 @@ llvm::Expected<CFGSummary> summarizeDefinition(
       Results;
   dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
   PostAnalysisCallbacks.Before =
-      [&](const CFGElement &Element,
-          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>
-              &State) {
+      [&](const CFGElement& Element,
+          const dataflow::DataflowAnalysisState<PointerNullabilityLattice>&
+              State) {
         if (Solver->reachedLimit()) return;
-        for (NullabilityBehaviorSummary &S : SummaryCollector::summarizeElement(
+        for (NullabilityBehaviorSummary& S : SummaryCollector::summarizeElement(
                  InferableSlots, UsedTokens, USRCache, State.Lattice, State.Env,
-                 Ctx.getSourceManager(), Element)) {
+                 Ctx.getSourceManager(), Element,
+                 NotTestMainFileLocFilter.get())) {
           *Summary.add_behavior_summaries() = std::move(S);
         }
       };
