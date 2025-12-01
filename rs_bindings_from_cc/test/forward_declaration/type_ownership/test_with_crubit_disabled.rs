@@ -5,6 +5,6 @@
 use googletest::prelude::*;
 
 #[gtest]
-fn test_build() {
+fn test_completed_forward_decl_compiles() {
     // Crubit is disabled for `definition.h`, no `definition.h` API to test.
 }

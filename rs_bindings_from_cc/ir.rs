@@ -1216,10 +1216,10 @@ impl Record {
             // TODO(b/202258760): Only omit destructor if `Copy` is specified.
             SpecialMemberFunc::Trivial => false,
 
-            // TODO(b/212690698): Avoid calling into the C++ destructor (e.g. let
-            // Rust drive `drop`-ing) to avoid (somewhat unergonomic) ManuallyDrop
-            // if we can ask Rust to preserve C++ field destruction order in
-            // NontrivialMembers case.
+            // TODO(jeanpierreda): b/212690698 - Avoid calling into the C++ destructor
+            // (e.g. let Rust drive `drop`-ing) to avoid (somewhat unergonomic)
+            // ManuallyDrop if we can ask Rust to preserve C++ field destruction
+            // order in NontrivialMembers case.
             SpecialMemberFunc::NontrivialMembers => true,
 
             // The `impl Drop` for NontrivialUserDefined needs to call into the

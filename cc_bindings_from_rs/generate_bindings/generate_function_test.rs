@@ -999,9 +999,9 @@ fn test_format_item_fn_rust_abi() {
             pub fn add(x: f64, y: f64) -> f64 { x * y }
         "#;
     test_format_item(test_src, "add", |result| {
-        // TODO(b/261074843): Re-add thunk name verification once we are using stable
-        // name mangling (which may be coming in Q1 2023).  (This might mean
-        // reverting cl/492333432 + manual review and tweaks.)
+        // TODO(lukasza): b/261074843 - Re-add thunk name verification once we are using
+        // stable name mangling. (This might mean reverting cl/492333432 + manual review
+        // and tweaks.)
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         assert!(main_api.prereqs.is_empty());

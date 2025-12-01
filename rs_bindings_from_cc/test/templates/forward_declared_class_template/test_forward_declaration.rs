@@ -5,4 +5,4 @@
 use googletest::prelude::*;
 
 #[gtest]
-fn test_build() {}
+fn test_forward_template_decl_compiles() {}

@@ -58,12 +58,6 @@ crubit_rust_test(
         ":definition_forward_declared_template",
         ":use_forward_declared_template",
     ],
-    tags = [
-        # TODO(b/318690257): Enable when fixed.
-        "manual",
-        "nobuilder",
-        "notap",
-    ],
     deps = [
         "@crate_index//:googletest",
     ],

@@ -31,8 +31,6 @@
 // type will be assumed to be exactly C ABI compatible (not just of identical
 // layout) with `t`.
 //
-// TODO(b/274834739): also support type aliases.
-//
 // For example, this C++ header:
 //
 // ```c++

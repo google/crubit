@@ -21,11 +21,6 @@ rust_library(
     name = "tuple_structs",
     testonly = 1,
     srcs = ["tuple_structs.rs"],
-
-    # TODO(b/262878759): Remove this once `all` is not automatically added anymore.
-    aspect_hints = [
-        "//features:supported",
-    ],
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

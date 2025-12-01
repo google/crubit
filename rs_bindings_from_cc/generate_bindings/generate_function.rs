@@ -1190,10 +1190,6 @@ fn generate_func_body(
                         __return.assume_init()
                     }
                 } else {
-                    // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
-                    // MaybeUninit<T> in Pin if T is !Unpin. It should understand
-                    // 'structural pinning', so that we do not need into_inner_unchecked()
-                    // here.
                     quote! {
                         ::ctor::FnCtor::new(
                             move |dest: *mut #return_type_or_self| {

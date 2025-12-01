@@ -5,10 +5,4 @@
 use googletest::prelude::*;
 
 #[gtest]
-fn test_build() {
-    // TODO(b/318690257): Currently, the build fails with:
-    // error: "the size for values of type `forward_declare::Unsized` cannot be
-    // known at compilation time"
-    // "help: within `Incomplete<Symbol<...>, ...>`, the trait `Sized` is not
-    // implemented for `forward_declare::Unsized`""
-}
+fn test_completed_forward_decl_compiles() {}

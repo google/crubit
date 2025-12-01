@@ -5,6 +5,6 @@
 use googletest::prelude::*;
 
 #[gtest]
-fn test_build() {
+fn test_completed_forward_template_decl_compiles() {
     // Crubit is disabled, so there isn't any API to test.
 }

@@ -132,9 +132,6 @@ class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
 
   // This function mimics Rust's `char::from_u32_unchecked`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32_unchecked
-  //
-  // TODO(b/254095482): Figure out how to annotate/expose unsafe functions in
-  // C++ and then make this method public.
   static constexpr char_ from_u32_unchecked(uint32_t value) noexcept {
     return char_(value, UnsafePromiseUnicode{});
   }

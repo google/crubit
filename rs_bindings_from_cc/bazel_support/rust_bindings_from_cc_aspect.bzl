@@ -148,8 +148,6 @@ def _collect_hdrs(ctx, crubit_features):
 
 def _make_all_deps_and_target_args(ctx, extra_rule_specific_deps, direct):
     all_deps = getattr(ctx.rule.attr, "deps", []) + extra_rule_specific_deps + [
-        # TODO(b/217667751): This contains a huge list of headers_and_targets; pass them as a file
-        # instead.
         ctx.attr._std,
     ]
 
