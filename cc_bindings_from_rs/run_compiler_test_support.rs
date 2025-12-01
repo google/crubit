@@ -40,33 +40,12 @@ const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
 /// The sysroot is used internally by `run_compiler_for_testing`, but it may
 /// also be passed as `--sysroot=...` in `rustc_args` argument of
 /// `run_compiler`
-
-#[rustversion::before(2025-06-25)]
-pub fn get_sysroot_for_testing() -> PathBuf {
+pub fn sysroot_path() -> PathBuf {
     let runfiles = runfiles::Runfiles::create().unwrap();
     let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
     assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
     assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
     loc
-}
-
-#[rustversion::since(2025-06-25)]
-pub fn get_sysroot_for_testing() -> Sysroot {
-    let runfiles = runfiles::Runfiles::create().unwrap();
-    let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
-    assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
-    assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
-    Sysroot::new(Some(loc))
-}
-
-#[rustversion::before(2025-06-25)]
-pub fn sysroot_path() -> PathBuf {
-    get_sysroot_for_testing()
-}
-
-#[rustversion::since(2025-06-25)]
-pub fn sysroot_path() -> PathBuf {
-    get_sysroot_for_testing().path().to_path_buf()
 }
 
 /// If a rustc --target arg is necessary, sets it up and returns its value.
@@ -196,7 +175,7 @@ fn run_compiler_for_testing_impl(
 
     let mut opts = Options {
         crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-        sysroot: get_sysroot_for_testing(),
+        sysroot: Sysroot::new(Some(sysroot_path())),
         output_types,
         edition: rustc_span::edition::Edition::Edition2021,
         unstable_features: rustc_feature::UnstableFeatures::Allow,
