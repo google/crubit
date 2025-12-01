@@ -1094,7 +1094,18 @@ NullabilityKind TypeNullabilityDefaults::get(FileID File) const {
 TypeNullability getTypeNullability(
     QualType T, FileID File, const TypeNullabilityDefaults &Defaults,
     llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
-  CHECK(!T->isDependentType()) << T.getAsString();
+  if (T->isDependentType()) {
+    auto* absl_nullable PET = dyn_cast<PackExpansionType>(T);
+    // Pack indexing expressions can contain dependent types even in an
+    // instantiation, so we detect and skip attempting to walk these types as
+    // specifically as we can.
+    CHECK((PET && !PET->getPattern().isNull() &&
+           PET->getPattern()->containsUnexpandedParameterPack()))
+        << "Most dependent types should never reach this point of analysis. "
+           "Unexpected dependent type: "
+        << T.getAsString();
+    return {};
+  }
 
   struct Walker : NullabilityWalker<Walker> {
     std::vector<PointerTypeNullability> Annotations;

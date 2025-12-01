@@ -39,9 +39,15 @@
 
 namespace clang::tidy::nullability {
 namespace {
+using ::clang::ast_matchers::declRefExpr;
+using ::clang::ast_matchers::functionDecl;
+using ::clang::ast_matchers::hasDescendant;
 using ::clang::ast_matchers::hasName;
+using ::clang::ast_matchers::isTemplateInstantiation;
 using ::clang::ast_matchers::match;
+using ::clang::ast_matchers::parmVarDecl;
 using ::clang::ast_matchers::selectFirst;
+using ::clang::ast_matchers::to;
 using ::clang::ast_matchers::typeAliasDecl;
 using ::llvm::Annotations;
 using ::testing::ElementsAre;
@@ -701,6 +707,34 @@ TEST_F(GetTypeNullabilityTest, PragmaSmartPointers) {
               ElementsAre(NullabilityKind::Nullable));
   EXPECT_THAT(nullVec("_Null_unspecified opaque::unique_ptr<int>"),
               ElementsAre(NullabilityKind::Nullable));
+}
+
+TEST_F(GetTypeNullabilityTest,
+       PackIndexingExprCanContainDependentTypeEvenInInstantiation) {
+  // This is a crash repro for b/445678706.
+  Inputs.Code = R"cpp(
+    template <typename... T>
+    void foo(T&&... t) {
+      static_cast<T...[0]&&>(t...[0]);
+    }
+
+    void usage() {
+      int* i;
+      foo(i);
+    }
+  )cpp";
+  NullabilityPragmas Pragmas;
+  Inputs.MakeAction = makeRegisterPragmasAction(Pragmas);
+  TestAST AST(Inputs);
+  auto* D = selectFirst<ParmVarDecl>(
+      "t", match(functionDecl(
+                     isTemplateInstantiation(),
+                     hasDescendant(declRefExpr(to(parmVarDecl().bind("t"))))),
+                 AST.context()));
+  ASSERT_NE(D, nullptr);
+  EXPECT_THAT(
+      getTypeNullability(*D, TypeNullabilityDefaults(AST.context(), Pragmas)),
+      IsEmpty());
 }
 
 TEST(IsUnknownValidOnTest, All) {
