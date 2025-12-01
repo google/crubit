@@ -223,17 +223,40 @@ pub fn format_cc_type_name(name: &str) -> Result<TokenStream> {
     }
 }
 
+/// Converts a hyphen-separated string to an underscore-separated string.
+///
+/// Panics if `s` is empty.
+fn hyphen_to_underscore(s: &str) -> Cow<'_, str> {
+    let mut parts = s.split('-');
+    let first_part = parts.next().expect("at least one part expected");
+    let Some(second_part) = parts.next() else {
+        return Cow::Borrowed(first_part);
+    };
+    let mut owned = String::with_capacity(s.len());
+    let _ = write!(&mut owned, "{first_part}_{second_part}");
+    for part in parts {
+        let _ = write!(&mut owned, "_{part}");
+    }
+    Cow::Owned(owned)
+}
+
 /// Makes an 'Ident' to be used in the Rust source code. Escapes Rust keywords.
 /// Panics if `ident` is empty or is otherwise an invalid identifier.
+///
+/// Hyphens are converted to underscores in the identifier.
 pub fn make_rs_ident(ident: &str) -> Ident {
+    // Target names, which become crate names, may sometimes contain hyphens.
+    // Since identifiers cannot contain hyphens, we convert them to underscores.
+    let ident = hyphen_to_underscore(ident);
+
     // TODO(https://github.com/dtolnay/syn/pull/1098): Remove the hardcoded list once syn recognizes
     // newly added keywords.
     // NOTE: the above PR was accepted for 2021 and 2018 editions, but `try` still isn't escaped,
     // so we may need to tweak something.
-    if matches!(ident, "gen" | "async" | "await" | "try" | "dyn") {
+    if matches!(&*ident, "gen" | "async" | "await" | "try" | "dyn") {
         return format_ident!("r#{}", ident);
     }
-    match syn::parse_str::<syn::Ident>(ident) {
+    match syn::parse_str::<syn::Ident>(&ident) {
         Ok(_) => format_ident!("{}", ident),
         Err(_) => format_ident!("r#{}", ident),
     }
