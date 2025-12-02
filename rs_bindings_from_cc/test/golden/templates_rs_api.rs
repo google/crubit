@@ -139,7 +139,9 @@ pub mod test_namespace_bindings {
 
     // Error while generating bindings for type alias 'AliasToTemplateOfATemplate':
     // Can't generate bindings for AliasToTemplateOfATemplate, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for AliasToTemplateOfATemplate (error: Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> due to missing bindings for its dependency)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for AliasToTemplateOfATemplate (error: Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
+    // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation))
 
     // Error while generating bindings for class 'test_namespace_bindings::MyStruct':
     // Class templates are not supported yet
@@ -260,9 +262,9 @@ pub mod private_classes {
 // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::MyTemplate<int> (crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE is a template instantiation)
 
 // Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>':
-// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> due to missing bindings for its dependency: Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, int>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<int, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE is a template instantiation)
+// Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
+// //rs_bindings_from_cc/test/golden:templates_cc needs [//features:wrapper] for test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int> (crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE is a template instantiation)
 
 // Error while generating bindings for struct 'test_namespace_bindings::TemplateWithTwoParams<int, float>':
 // Can't generate bindings for test_namespace_bindings::TemplateWithTwoParams<int, float>, because of missing required features (<internal link>):

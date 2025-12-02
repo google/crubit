@@ -110,66 +110,6 @@ impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
 // Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
 
-// Error while generating bindings for class 'std::allocator<char32_t>':
-// Can't generate bindings for std::allocator<char32_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::allocator<char32_t> (incomplete type)
-
-// Error while generating bindings for class 'std::allocator<char16_t>':
-// Can't generate bindings for std::allocator<char16_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::allocator<char16_t> (incomplete type)
-
-// Error while generating bindings for class 'std::allocator<char8_t>':
-// Can't generate bindings for std::allocator<char8_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::allocator<char8_t> (incomplete type)
-
-// Error while generating bindings for class 'std::allocator<char>':
-// Can't generate bindings for std::allocator<char>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::allocator<char> (incomplete type)
-
-// Error while generating bindings for class 'std::allocator<wchar_t>':
-// Can't generate bindings for std::allocator<wchar_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::allocator<wchar_t> (incomplete type)
-
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<char32_t>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<char32_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::pmr::polymorphic_allocator<char32_t> (incomplete type)
-
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<char16_t>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<char16_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::pmr::polymorphic_allocator<char16_t> (incomplete type)
-
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<char8_t>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<char8_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::pmr::polymorphic_allocator<char8_t> (incomplete type)
-
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<char>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<char>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::pmr::polymorphic_allocator<char> (incomplete type)
-
-// Error while generating bindings for class 'std::pmr::polymorphic_allocator<wchar_t>':
-// Can't generate bindings for std::pmr::polymorphic_allocator<wchar_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::pmr::polymorphic_allocator<wchar_t> (incomplete type)
-
-// Error while generating bindings for struct 'std::char_traits<char>':
-// Can't generate bindings for std::char_traits<char>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::char_traits<char> (incomplete type)
-
-// Error while generating bindings for struct 'std::char_traits<char8_t>':
-// Can't generate bindings for std::char_traits<char8_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::char_traits<char8_t> (incomplete type)
-
-// Error while generating bindings for struct 'std::char_traits<char16_t>':
-// Can't generate bindings for std::char_traits<char16_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::char_traits<char16_t> (incomplete type)
-
-// Error while generating bindings for struct 'std::char_traits<char32_t>':
-// Can't generate bindings for std::char_traits<char32_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::char_traits<char32_t> (incomplete type)
-
-// Error while generating bindings for struct 'std::char_traits<wchar_t>':
-// Can't generate bindings for std::char_traits<wchar_t>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::char_traits<wchar_t> (incomplete type)
-
 // Error while generating bindings for class 'std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>':
 // Can't generate bindings for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/struct/default_member_functions:default_member_functions needs [//features:wrapper] for std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>> (incomplete type)
