@@ -98,9 +98,9 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn DoSomething(mut param: dependency::ParamStruct) -> dependency::ReturnStruct {
+            pub fn DoSomething(mut param: ::dependency::ParamStruct) -> ::dependency::ReturnStruct {
                 unsafe {
-                    let mut __return = ::core::mem::MaybeUninit::<dependency::ReturnStruct>::uninit();
+                    let mut __return = ::core::mem::MaybeUninit::<::dependency::ReturnStruct>::uninit();
                     crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(
                        &raw mut __return as *mut ::core::ffi::c_void,
                        &mut param
@@ -119,7 +119,7 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
             unsafe extern "C" {
                 pub(crate) unsafe fn __rust_thunk___Z11DoSomething11ParamStruct(
                     __return: *mut ::core::ffi::c_void,
-                    param: &mut dependency::ParamStruct
+                    param: &mut ::dependency::ParamStruct
                 );
             }
         }}

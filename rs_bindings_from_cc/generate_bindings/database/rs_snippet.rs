@@ -161,7 +161,7 @@ impl ToTokens for CratePath {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let crate_ident = match self.crate_ident.as_ref() {
             None => quote! { crate },
-            Some(ident) => quote! { #ident },
+            Some(ident) => quote! { :: #ident },
         };
         let crate_root_path = self.crate_root_path.format_for_rs();
         let namespace_qualifier = self.namespace_qualifier.format_for_rs();

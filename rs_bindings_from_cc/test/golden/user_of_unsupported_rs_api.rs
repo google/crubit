@@ -17,7 +17,7 @@
 #[inline(always)]
 pub fn UseNontrivialCustomType(
     non_trivial_custom_type: impl ::ctor::Ctor<
-        Output = unsupported_cc::NontrivialCustomType,
+        Output = ::unsupported_cc::NontrivialCustomType,
         Error = ::ctor::Infallible,
     >,
 ) {
@@ -33,7 +33,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
-            non_trivial_custom_type: &mut unsupported_cc::NontrivialCustomType,
+            non_trivial_custom_type: &mut ::unsupported_cc::NontrivialCustomType,
         );
     }
 }

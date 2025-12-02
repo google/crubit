@@ -84,7 +84,7 @@ forward_declare::forward_declare!(pub ForwardDeclared = forward_declare::symbol!
 ///
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=42
 #[inline(always)]
-pub unsafe fn OtherPubCrateTypes(__param_0: *mut other_pub_crate_types::ForwardDeclared2) {
+pub unsafe fn OtherPubCrateTypes(__param_0: *mut ::other_pub_crate_types::ForwardDeclared2) {
     crate::detail::__rust_thunk___Z18OtherPubCrateTypesP16ForwardDeclared2(__param_0)
 }
 
@@ -217,7 +217,7 @@ mod detail {
             container: &mut crate::CompoundDataType,
         ) -> ::core::ffi::c_int;
         pub(crate) unsafe fn __rust_thunk___Z18OtherPubCrateTypesP16ForwardDeclared2(
-            __param_0: *mut other_pub_crate_types::ForwardDeclared2,
+            __param_0: *mut ::other_pub_crate_types::ForwardDeclared2,
         );
         pub(crate) unsafe fn __rust_thunk___Z28GetOtherPubCrateTemplate2Intv(
             __return: *mut ::core::ffi::c_void,

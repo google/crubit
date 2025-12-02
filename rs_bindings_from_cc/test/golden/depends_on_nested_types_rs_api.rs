@@ -16,7 +16,7 @@
 
 /// This should have bindings because Bar is a nested item of Foo, and the module
 /// "foo" can be generated because it wouldn't conflict with anything else.
-pub type FooBar = nested_types_cc::foo::Bar;
+pub type FooBar = ::nested_types_cc::foo::Bar;
 
 // Error while generating bindings for type alias 'ConflictingSnakeCaseNamesInner':
 // Can't generate bindings for ConflictingSnakeCaseNamesInner, because of missing required features (<internal link>):
