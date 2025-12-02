@@ -15,5 +15,10 @@ categories.workspace = true
 [lib]
 path = "../../../common/dyn_format.rs"
 
+doctest = false
+
 [dependencies]
 anyhow.workspace = true
+[dev-dependencies]
+dyn_format = { path = "../../../cargo/common/dyn_format"}
+googletest.workspace = true

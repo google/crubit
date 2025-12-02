@@ -405,7 +405,10 @@ rust_library(
     name = "ir_testing",
     testonly = 1,
     srcs = ["ir_testing.rs"],
-    visibility = ["//rs_bindings_from_cc/generate_bindings:__subpackages__"],
+    visibility = [
+        "//cargo:__subpackages__",
+        "//rs_bindings_from_cc/generate_bindings:__subpackages__",
+    ],
     deps = [
         ":ir",
         ":json_from_cc",

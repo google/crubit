@@ -15,4 +15,6 @@ categories.workspace = true
 [lib]
 path = "../../../cc_bindings_from_rs/toposort.rs"
 
+doctest = false
+
 [dependencies]

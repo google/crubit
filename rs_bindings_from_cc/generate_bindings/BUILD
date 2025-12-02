@@ -14,6 +14,7 @@ rust_library(
         "cc_api.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -30,6 +31,7 @@ rust_library(
         "lib.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -68,6 +70,7 @@ multiplatform_rust_test(
         "not_run:arm",
         "not_run:mac",
     ],
+    visibility = ["//cargo:__subpackages__"],
     deps = [
         ":multiplatform_ir_testing",
         ":test_generators",
@@ -92,6 +95,7 @@ rust_library(
     name = "cpp_type_name",
     srcs = ["cpp_type_name.rs"],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -111,6 +115,7 @@ rust_library(
         "generate_struct_and_union.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -136,6 +141,7 @@ multiplatform_rust_test(
         "not_run:arm",
         "not_run:mac",
     ],
+    visibility = ["//cargo:__subpackages__"],
     deps = [
         ":generate_bindings",
         ":generate_struct_and_union",
@@ -163,7 +169,10 @@ rust_library(
     name = "multiplatform_ir_testing",
     testonly = True,
     srcs = ["multiplatform_ir_testing.rs"],
-    visibility = ["//rs_bindings_from_cc:__subpackages__"],
+    visibility = [
+        "//cargo:__subpackages__",
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
     deps = [
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
@@ -176,7 +185,10 @@ rust_library(
     name = "test_generators",
     testonly = True,
     srcs = ["test_generators.rs"],
-    visibility = ["//rs_bindings_from_cc:__subpackages__"],
+    visibility = [
+        "//cargo:__subpackages__",
+        "//rs_bindings_from_cc:__subpackages__",
+    ],
     deps = [
         ":generate_bindings",
         ":multiplatform_ir_testing",
@@ -195,6 +207,7 @@ rust_library(
         "generate_comment.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -217,6 +230,7 @@ rust_test(
         "not_run:arm",
         "not_run:mac",
     ],
+    visibility = ["//cargo:__subpackages__"],
     deps = [
         ":generate_bindings",
         ":generate_comment",
@@ -239,6 +253,7 @@ rust_library(
         "generate_enum.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -260,6 +275,7 @@ multiplatform_rust_test(
         "not_run:arm",
         "not_run:mac",
     ],
+    visibility = ["//cargo:__subpackages__"],
     deps = [
         ":generate_bindings",
         ":multiplatform_ir_testing",
@@ -277,6 +293,7 @@ rust_library(
         "generate_function_thunk.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -304,6 +321,7 @@ rust_library(
         "@crate_index//:rustversion",  # v1
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -333,6 +351,7 @@ multiplatform_rust_test(
         "not_run:arm",
         "not_run:mac",
     ],
+    visibility = ["//cargo:__subpackages__"],
     deps = [
         ":generate_bindings",
         ":generate_function_thunk",
@@ -361,6 +380,7 @@ rust_library(
         "has_bindings.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -378,6 +398,7 @@ rust_library(
         "lifetime_defaults_transform.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
@@ -424,6 +445,7 @@ rust_library(
         "rs_type_kind.rs",
     ],
     visibility = [
+        "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [

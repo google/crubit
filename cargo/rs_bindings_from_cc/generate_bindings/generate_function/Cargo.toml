@@ -15,6 +15,8 @@ categories.workspace = true
 [lib]
 path = "../../../../rs_bindings_from_cc/generate_bindings/generate_function.rs"
 
+doctest = false
+
 [dependencies]
 generate_comment = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_comment", package = "rs_bindings_from_cc_generate_comment"}
 generate_function_thunk = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function_thunk", package = "rs_bindings_from_cc_generate_function_thunk"}
@@ -33,3 +35,22 @@ proc-macro2.workspace = true
 quote.workspace = true
 syn.workspace = true
 rustversion.workspace = true
+[dev-dependencies]
+generate_bindings = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings", package = "rs_bindings_from_cc_generate_bindings"}
+generate_function_thunk = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function_thunk", package = "rs_bindings_from_cc_generate_function_thunk"}
+multiplatform_ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing", package = "rs_bindings_from_cc_multiplatform_ir_testing"}
+test_generators = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/test_generators", package = "rs_bindings_from_cc_test_generators"}
+arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
+code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
+crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+multiplatform_testing = { path = "../../../../cargo/common/multiplatform_testing"}
+token_stream_matchers = { path = "../../../../cargo/common/token_stream_matchers"}
+token_stream_printer = { path = "../../../../cargo/common/token_stream_printer"}
+ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
+ir_matchers = { path = "../../../../cargo/rs_bindings_from_cc/ir_matchers", package = "rs_bindings_from_cc_ir_matchers"}
+ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/ir_testing", package = "rs_bindings_from_cc_ir_testing"}
+database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
+googletest.workspace = true
+quote.workspace = true
+static_assertions.workspace = true
+syn.workspace = true

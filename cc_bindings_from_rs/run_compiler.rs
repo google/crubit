@@ -217,12 +217,14 @@ mod tests {
             // Default parameters.
             "run_compiler_unittest_executable".to_string(),
             "--crate-type=lib".to_string(),
-            format!("--sysroot={}", sysroot_path().display()),
             rs_path.display().to_string(),
             // Test-specific parameter: asking for after-analysis output
             "-o".to_string(),
             out_path.display().to_string(),
         ];
+        if let Some(sysroot) = sysroot_path() {
+            rustc_args.push(format!("--sysroot={}", sysroot.display()));
+        }
         if let Some(target_arg) = setup_rustc_target_for_testing(tmpdir.path()) {
             rustc_args.push(format!("--target={}", target_arg));
         }

@@ -15,6 +15,12 @@ categories.workspace = true
 [lib]
 path = "../../../cc_bindings_from_rs/crubit_attr.rs"
 
+doctest = false
+
 [dependencies]
 anyhow.workspace = true
 rustversion.workspace = true
+[dev-dependencies]
+crubit_attr = { path = "../../../cargo/cc_bindings_from_rs/crubit_attr", package = "cc_bindings_from_rs_crubit_attr"}
+run_compiler_test_support = { path = "../../../cargo/cc_bindings_from_rs/run_compiler_test_support", package = "cc_bindings_from_rs_run_compiler_test_support"}
+anyhow.workspace = true

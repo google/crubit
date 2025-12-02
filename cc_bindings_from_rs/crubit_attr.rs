@@ -10,6 +10,7 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_driver;
 extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;

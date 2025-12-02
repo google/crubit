@@ -15,9 +15,14 @@ categories.workspace = true
 [lib]
 path = "../../../rs_bindings_from_cc/collect_instantiations.rs"
 
+doctest = false
+
 [dependencies]
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 ffi_types = { path = "../../../cargo/common/ffi_types"}
 proc-macro2.workspace = true
 serde_json.workspace = true
 syn.workspace = true
+[dev-dependencies]
+googletest.workspace = true
+quote.workspace = true

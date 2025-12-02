@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_has_bindings.
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_multiplatform_ir_testing.
 
 [package]
-name = "rs_bindings_from_cc_has_bindings"
+name = "rs_bindings_from_cc_multiplatform_ir_testing"
 edition.workspace = true
 
 license-file.workspace = true
@@ -13,13 +13,12 @@ repository.workspace = true
 categories.workspace = true
 
 [lib]
-path = "../../../../rs_bindings_from_cc/generate_bindings/has_bindings.rs"
+path = "../../../../rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing.rs"
 
 doctest = false
 
 [dependencies]
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
-crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+multiplatform_testing = { path = "../../../../cargo/common/multiplatform_testing"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
-database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
-heck.workspace = true
+ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/ir_testing", package = "rs_bindings_from_cc_ir_testing"}

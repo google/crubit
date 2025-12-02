@@ -16,6 +16,8 @@ categories.workspace = true
 name = "cc_bindings_from_rs"
 path = "../../../cc_bindings_from_rs/cc_bindings_from_rs.rs"
 
+doctest = false
+
 [dependencies]
 generate_bindings = { path = "../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
 cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline", package = "cc_bindings_from_rs_cmdline"}
@@ -29,3 +31,7 @@ clap.workspace = true
 itertools.workspace = true
 crubit_feature = { path = "../../../cargo/common/crubit_feature"}
 flagset.workspace = true
+[dev-dependencies]
+run_compiler_test_support = { path = "../../../cargo/cc_bindings_from_rs/run_compiler_test_support", package = "cc_bindings_from_rs_run_compiler_test_support"}
+regex.workspace = true
+tempfile.workspace = true

@@ -304,7 +304,7 @@ rust_library(
     name = "token_stream_matchers_fastpath",
     testonly = 1,
     srcs = ["token_stream_matchers_fastpath.rs"],
-    visibility = ["//visibility:private"],
+    visibility = ["//cargo:__subpackages__"],
     deps = [
         ":token_stream_printer",
         "@crate_index//:anyhow",  # v1
@@ -452,6 +452,7 @@ rust_library(
     srcs = ["crubit_abi_type.rs"],
     visibility = [
         "//:__subpackages__",
+        "//cargo:__subpackages__",
     ],
     deps = [
         "@crate_index//:proc-macro2",

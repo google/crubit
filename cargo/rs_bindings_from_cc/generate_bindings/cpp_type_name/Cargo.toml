@@ -15,6 +15,8 @@ categories.workspace = true
 [lib]
 path = "../../../../rs_bindings_from_cc/generate_bindings/cpp_type_name.rs"
 
+doctest = false
+
 [dependencies]
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}

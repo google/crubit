@@ -15,6 +15,11 @@ categories.workspace = true
 [lib]
 path = "../../../common/crubit_feature.rs"
 
+doctest = false
+
 [dependencies]
 flagset.workspace = true
 serde.workspace = true
+[dev-dependencies]
+googletest.workspace = true
+serde_json.workspace = true

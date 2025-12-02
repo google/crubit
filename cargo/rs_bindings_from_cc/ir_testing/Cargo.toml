@@ -1,0 +1,33 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate rs_bindings_from_cc_ir_testing.
+
+[package]
+name = "rs_bindings_from_cc_ir_testing"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../rs_bindings_from_cc/ir_testing.rs"
+
+doctest = false
+
+[dependencies]
+ir = { path = "../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
+json_from_cc_sys = { path = "../../../cargo/rs_bindings_from_cc/json_from_cc_sys", package = "rs_bindings_from_cc_json_from_cc_sys"}
+arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
+crubit_feature = { path = "../../../cargo/common/crubit_feature"}
+ffi_types = { path = "../../../cargo/common/ffi_types"}
+multiplatform_testing = { path = "../../../cargo/common/multiplatform_testing"}
+flagset.workspace = true
+itertools.workspace = true
+[dev-dependencies]
+ir_matchers = { path = "../../../cargo/rs_bindings_from_cc/ir_matchers", package = "rs_bindings_from_cc_ir_matchers"}
+ir_testing = { path = "../../../cargo/rs_bindings_from_cc/ir_testing", package = "rs_bindings_from_cc_ir_testing"}
+googletest.workspace = true
+quote.workspace = true

@@ -15,4 +15,8 @@ categories.workspace = true
 [lib]
 path = "../../../common/memoized.rs"
 
+doctest = false
+
 [dependencies]
+[dev-dependencies]
+googletest.workspace = true

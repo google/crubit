@@ -15,11 +15,14 @@ resolver = "2"
 # will be decided from here.
 [workspace.dependencies]
 anyhow = "1"
+base64 = "0.22"
 clap = { version = "4", features = [ "derive" ] }
 either = "1"
 flagset = "0.4"
+googletest = "0.14"
 heck = "0.5"
 itertools = "0.13"
+indenter = "0.3"
 phf = { version = "0.11", features = [ "macros" ] }
 proc-macro2 = "1"
 quote = "1"
@@ -27,10 +30,11 @@ regex = "1"
 rustversion = "1"
 serde = { version = "1", features = [ "derive", "rc" ] }
 serde_json = "1"
+static_assertions = "1"
 syn = { version = "2", features = [ "extra-traits" ] }
+tempfile = "3"
 tracing = "0.1"
 unicode-ident = "1"
-base64 = "0.22"
 
 [workspace.package]
 

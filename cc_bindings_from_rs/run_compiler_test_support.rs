@@ -5,6 +5,8 @@
 //! A wrapper around `run_compiler` for testing only.
 
 #![feature(rustc_private)]
+#![allow(unexpected_cfgs)]
+
 extern crate rustc_driver;
 extern crate rustc_error_codes;
 extern crate rustc_errors;
@@ -29,23 +31,30 @@ use rustc_target::spec::TargetTuple;
 use std::path::Path;
 use std::path::PathBuf;
 
-#[cfg(oss)]
-const TOOLCHAIN_ROOT: &str = "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu";
-#[cfg(not(oss))]
-const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
-
 /// Returns the `rustc` sysroot that is suitable for the environment where
 /// unit tests run.
 ///
 /// The sysroot is used internally by `run_compiler_for_testing`, but it may
 /// also be passed as `--sysroot=...` in `rustc_args` argument of
 /// `run_compiler`
-pub fn sysroot_path() -> PathBuf {
-    let runfiles = runfiles::Runfiles::create().unwrap();
-    let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
-    assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
-    assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
-    loc
+pub fn sysroot_path() -> Option<PathBuf> {
+    #[cfg(not(bazel))]
+    {
+        None
+    }
+
+    #[cfg(bazel)]
+    {
+        #[cfg(oss)]
+        const TOOLCHAIN_ROOT: &str = "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu";
+        #[cfg(not(oss))]
+        const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
+        let runfiles = runfiles::Runfiles::create().unwrap();
+        let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
+        assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
+        assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
+        Some(loc)
+    }
 }
 
 /// If a rustc --target arg is necessary, sets it up and returns its value.
@@ -175,7 +184,7 @@ fn run_compiler_for_testing_impl(
 
     let mut opts = Options {
         crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-        sysroot: Sysroot::new(Some(sysroot_path())),
+        sysroot: Sysroot::new(sysroot_path()),
         output_types,
         edition: rustc_span::edition::Edition::Edition2021,
         unstable_features: rustc_feature::UnstableFeatures::Allow,

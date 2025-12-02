@@ -18,11 +18,18 @@ _PLATFORMS = [
 def multiplatform_rust_test(name, **kwargs):
     """Macro to parameterize a test target by target platform."""
 
+    visibility = kwargs.get("visibility", None)
+    if visibility:
+        test_suite_kwargs = {"visibility": visibility}
+    else:
+        test_suite_kwargs = {}
+
     # TODO(jeanpierreda): Ideally we'd use `.`, not `-`, but this breaks for non-crate= rust_test targets
     # because they create a crate with `.` in the name. That's illegal.
     native.test_suite(
         name = name,
         tests = [name + "-" + platform for platform in _PLATFORMS],
+        **test_suite_kwargs
     )
     rustc_env = kwargs.setdefault("env", {})
     for platform in _PLATFORMS:
