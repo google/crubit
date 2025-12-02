@@ -204,6 +204,140 @@ pub fn write_unformatted_tokens(
     Ok(())
 }
 
+struct TokenOutputState<'a, T: std::fmt::Write> {
+    /// The result stream.
+    result: &'a mut T,
+    /// Function that when passed `result` returns its length (or None).
+    cur_len: fn(&T) -> Option<usize>,
+    /// The location of the last __CAPTURE_BEGIN__
+    last_capture_begin: Option<usize>,
+    /// The index of the current __CAPTURE_TAG__ (1-based).
+    current_capture_index: usize,
+    /// The current provenance entry being built.
+    provenance_entry: GeneratedOffsetsWithProvenance,
+    /// The provenance map to return.
+    provenance_map: HashMap<usize, GeneratedOffsetsWithProvenance>,
+}
+
+/// State for `write_unformatted_tokens_with_provenance`.
+impl<'a, T: std::fmt::Write> TokenOutputState<'a, T> {
+    fn new(result: &'a mut T, cur_len: fn(&T) -> Option<usize>) -> Self {
+        Self {
+            result,
+            cur_len,
+            last_capture_begin: None,
+            current_capture_index: 0,
+            provenance_entry: GeneratedOffsetsWithProvenance::default(),
+            provenance_map: HashMap::new(),
+        }
+    }
+
+    /// Possibly recursive function to append `tokens` to this `TokenOutputState`.
+    fn write_stream(&mut self, tokens: TokenStream) -> Result<()> {
+        let mut it = tokens.into_iter().peekable();
+        let mut tt_prev = None;
+        while let Some(tt) = it.next() {
+            match &tt {
+                TokenTree::Ident(tt) if tt == "__NEWLINE__" => writeln!(self.result)?,
+                TokenTree::Ident(tt) if tt == "__SPACE__" => write!(self.result, " ")?,
+                TokenTree::Ident(tt) if tt == "__HASH_TOKEN__" => write!(self.result, "#")?,
+                TokenTree::Ident(tt) if tt == "__CAPTURE_TAG__" => {
+                    if let (
+                        Some(TokenTree::Literal(original_path)),
+                        Some(TokenTree::Literal(original_start)),
+                        Some(TokenTree::Literal(original_end)),
+                    ) = (it.next(), it.next(), it.next())
+                    {
+                        if let Some(search_start) = (self.cur_len)(self.result) {
+                            // __CAPTURE_TAG__ srcpath srcofsstart srcofsend
+                            self.current_capture_index += 1;
+                            self.provenance_entry.original_path = clean_literal(original_path);
+                            self.provenance_entry.original_start = clean_literal(original_start);
+                            self.provenance_entry.original_end = clean_literal(original_end);
+                            self.provenance_entry.destination_search_start = search_start;
+                        }
+                    } else {
+                        bail!("__CAPTURE_TAG__ must be followed by three literals")
+                    }
+                }
+                TokenTree::Ident(tt) if tt == "__CAPTURE_BEGIN__" => {
+                    self.last_capture_begin = (self.cur_len)(self.result)
+                }
+                TokenTree::Ident(tt) if tt == "__CAPTURE_END__" => {
+                    if let (Some(last_capture_begin), Some(last_capture_end)) =
+                        (self.last_capture_begin, (self.cur_len)(self.result))
+                    {
+                        self.provenance_map.insert(
+                            self.current_capture_index,
+                            GeneratedOffsetsWithProvenance {
+                                destination_start: last_capture_begin,
+                                destination_end: last_capture_end,
+                                ..self.provenance_entry.clone()
+                            },
+                        );
+                    }
+                }
+                TokenTree::Ident(tt) if tt == "__COMMENT__" => {
+                    if let Some(TokenTree::Literal(lit)) = it.next() {
+                        writeln!(
+                            self.result,
+                            "// {}",
+                            lit.to_string()
+                                .trim_matches('"')
+                                .replace("\\\"", "\"")
+                                .replace("\\n", "\n// ")
+                        )?;
+                    } else {
+                        bail!("__COMMENT__ must be followed by a literal")
+                    }
+                }
+                TokenTree::Ident(tt) if tt == "__LITERALLY__" => {
+                    if let Some(TokenTree::Literal(lit)) = it.next() {
+                        // TokenTree::Literal does not provide a structured way to
+                        // get the value out, so we have to use the Display impl to
+                        // print the string literal as Rust syntax and unescape it.
+                        writeln!(
+                            self.result,
+                            "{}",
+                            lit.to_string()
+                                .trim_matches('"')
+                                .replace("\\\"", "\"")
+                                .replace("\\\\", "\\")
+                        )?;
+                    } else {
+                        bail!("__LITERALLY__ must be followed by a literal")
+                    }
+                }
+                TokenTree::Group(tt) => {
+                    let (open_delimiter, closed_delimiter) = match tt.delimiter() {
+                        Delimiter::Parenthesis => ("(", ")"),
+                        Delimiter::Bracket => ("[", "]"),
+                        Delimiter::Brace => ("{ ", " }"),
+                        Delimiter::None => ("", ""),
+                    };
+                    write!(self.result, "{}", open_delimiter)?;
+                    self.write_stream(tt.stream())?;
+                    write!(self.result, "{}", closed_delimiter)?;
+                }
+                _ => {
+                    write!(self.result, "{}", tt)?;
+
+                    // Insert spaces between tokens when they are needed to separate tokens.
+                    // In particular, `a b` is different than `ab`, and `: ::` is different from
+                    // `:::`.
+                    if let Some(tt_next) = it.peek() {
+                        if tokens_require_whitespace(tt_prev.as_ref(), &tt, tt_next) {
+                            write!(self.result, " ")?;
+                        }
+                    }
+                }
+            }
+            tt_prev = Some(tt);
+        }
+        Ok(())
+    }
+}
+
 /// Produces source code out of the token stream.
 ///
 /// Notable features:
@@ -229,111 +363,9 @@ fn write_unformatted_tokens_with_provenance<T: std::fmt::Write>(
     cur_len: fn(&T) -> Option<usize>,
     tokens: TokenStream,
 ) -> Result<GeneratedOffsetsProvenanceMap> {
-    let mut it = tokens.into_iter().peekable();
-    let mut tt_prev = None;
-    let mut last_capture_begin = None;
-    let mut current_capture_index = 0;
-    let mut provenance_map = HashMap::new();
-    let mut provenance_entry = GeneratedOffsetsWithProvenance::default();
-    while let Some(tt) = it.next() {
-        match &tt {
-            TokenTree::Ident(tt) if tt == "__NEWLINE__" => writeln!(result)?,
-            TokenTree::Ident(tt) if tt == "__SPACE__" => write!(result, " ")?,
-            TokenTree::Ident(tt) if tt == "__HASH_TOKEN__" => write!(result, "#")?,
-            TokenTree::Ident(tt) if tt == "__CAPTURE_TAG__" => {
-                if let (
-                    Some(TokenTree::Literal(original_path)),
-                    Some(TokenTree::Literal(original_start)),
-                    Some(TokenTree::Literal(original_end)),
-                ) = (it.next(), it.next(), it.next())
-                {
-                    if let Some(search_start) = cur_len(result) {
-                        // __CAPTURE_TAG__ srcpath srcofsstart srcofsend
-                        current_capture_index += 1;
-                        provenance_entry.original_path = clean_literal(original_path);
-                        provenance_entry.original_start = clean_literal(original_start);
-                        provenance_entry.original_end = clean_literal(original_end);
-                        provenance_entry.destination_search_start = search_start;
-                    }
-                } else {
-                    bail!("__CAPTURE_TAG__ must be followed by three literals")
-                }
-            }
-            TokenTree::Ident(tt) if tt == "__CAPTURE_BEGIN__" => {
-                last_capture_begin = cur_len(result)
-            }
-            TokenTree::Ident(tt) if tt == "__CAPTURE_END__" => {
-                if let (Some(last_capture_begin), Some(last_capture_end)) =
-                    (last_capture_begin, cur_len(result))
-                {
-                    provenance_map.insert(
-                        current_capture_index,
-                        GeneratedOffsetsWithProvenance {
-                            destination_start: last_capture_begin,
-                            destination_end: last_capture_end,
-                            ..provenance_entry.clone()
-                        },
-                    );
-                }
-            }
-            TokenTree::Ident(tt) if tt == "__COMMENT__" => {
-                if let Some(TokenTree::Literal(lit)) = it.next() {
-                    writeln!(
-                        result,
-                        "// {}",
-                        lit.to_string()
-                            .trim_matches('"')
-                            .replace("\\\"", "\"")
-                            .replace("\\n", "\n// ")
-                    )?;
-                } else {
-                    bail!("__COMMENT__ must be followed by a literal")
-                }
-            }
-            TokenTree::Ident(tt) if tt == "__LITERALLY__" => {
-                if let Some(TokenTree::Literal(lit)) = it.next() {
-                    // TokenTree::Literal does not provide a structured way to
-                    // get the value out, so we have to use the Display impl to
-                    // print the string literal as Rust syntax and unescape it.
-                    writeln!(
-                        result,
-                        "{}",
-                        lit.to_string()
-                            .trim_matches('"')
-                            .replace("\\\"", "\"")
-                            .replace("\\\\", "\\")
-                    )?;
-                } else {
-                    bail!("__LITERALLY__ must be followed by a literal")
-                }
-            }
-            TokenTree::Group(tt) => {
-                let (open_delimiter, closed_delimiter) = match tt.delimiter() {
-                    Delimiter::Parenthesis => ("(", ")"),
-                    Delimiter::Bracket => ("[", "]"),
-                    Delimiter::Brace => ("{ ", " }"),
-                    Delimiter::None => ("", ""),
-                };
-                write!(result, "{}", open_delimiter)?;
-                write_unformatted_tokens_with_provenance(result, cur_len, tt.stream())?;
-                write!(result, "{}", closed_delimiter)?;
-            }
-            _ => {
-                write!(result, "{}", tt)?;
-
-                // Insert spaces between tokens when they are needed to separate tokens.
-                // In particular, `a b` is different than `ab`, and `: ::` is different from
-                // `:::`.
-                if let Some(tt_next) = it.peek() {
-                    if tokens_require_whitespace(tt_prev.as_ref(), &tt, tt_next) {
-                        write!(result, " ")?;
-                    }
-                }
-            }
-        }
-        tt_prev = Some(tt);
-    }
-    Ok(provenance_map)
+    let mut state = TokenOutputState::new(result, cur_len);
+    state.write_stream(tokens)?;
+    Ok(state.provenance_map)
 }
 
 /// Writes unformatted tokens into a string.
@@ -592,6 +624,20 @@ mod tests {
             quote! { a __CAPTURE_TAG__ "foo" "44" "45" b __CAPTURE_BEGIN__ b __CAPTURE_END__ c };
         let (result, provenance_map) = tokens_to_string_with_provenance(token_stream).unwrap();
         assert_eq!(result, "a b b c");
+        let b_data = provenance_map.get(&1).unwrap();
+        assert_eq!(b_data.substring, "b");
+        assert_eq!(b_data.original_path, "foo");
+        assert_eq!(b_data.original_start, "44");
+        assert_eq!(b_data.original_end, "45");
+        assert_eq!(b_data.index, 1);
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_capture_tokens_produce_provenance_map_with_brackets() -> Result<()> {
+        let token_stream = quote! { a __CAPTURE_TAG__ "foo" "44" "45" b [ __CAPTURE_BEGIN__ b __CAPTURE_END__ ] c };
+        let (result, provenance_map) = tokens_to_string_with_provenance(token_stream).unwrap();
+        assert_eq!(result, "a b[b ]c");
         let b_data = provenance_map.get(&1).unwrap();
         assert_eq!(b_data.substring, "b");
         assert_eq!(b_data.original_path, "foo");

@@ -8,7 +8,7 @@ use token_stream_printer::{fix_provenance_map_postformatting, SubstringProvenanc
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
 struct KytheMetadata {
-    #[serde(rename = "name")]
+    #[serde(rename = "type")]
     typ: String,
     meta: Vec<KytheMetadataRule>,
 }
@@ -22,7 +22,7 @@ struct KytheMetadataVName {
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
 struct KytheMetadataRule {
-    #[serde(rename = "name")]
+    #[serde(rename = "type")]
     typ: String,
     source_begin: usize,
     source_end: usize,
@@ -40,8 +40,9 @@ pub fn cc_embed_provenance_map(
     default_corpus: &str,
     mut header: String,
 ) -> String {
+    // NB: the formatter might break the line after the colon.
     let fixed_map =
-        fix_provenance_map_postformatting(&header, "// Generated from: ", provenance_map);
+        fix_provenance_map_postformatting(&header, "// Generated from:", provenance_map);
     let mut sorted_map: Vec<_> = fixed_map.values().collect();
     sorted_map.sort_unstable();
     header.push_str("\n// This file contains Kythe metadata. ");
@@ -90,12 +91,12 @@ mod tests {
         );
         let empty_map = SubstringProvenanceMap::new();
         let result = cc_embed_provenance_map(&empty_map, "corpus", header);
-        // Check for the empty record: {"name":"kythe0","meta":[]}
+        // Check for the empty record: {"type":"kythe0","meta":[]}
         assert_eq!(
             result,
             r#"#ifndef GUARD
 #endif
-// This file contains Kythe metadata. eyJuYW1lIjoia3l0aGUwIiwibWV0YSI6W119
+// This file contains Kythe metadata. eyJ0eXBlIjoia3l0aGUwIiwibWV0YSI6W119
 "#
         );
         Ok(())
