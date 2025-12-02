@@ -306,32 +306,54 @@ fn add_lifetime(generics: &mut syn::Generics, prefix: &str) -> proc_macro2::Toke
     quoted_lifetime
 }
 
+enum RecursivelyPinnedArg {
+    PinnedDrop,
+    MaybeUnpin,
+}
+
+impl Parse for RecursivelyPinnedArg {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(Token![?]) {
+            let _: Token![?] = input.parse().unwrap();
+            let ident: Ident = input.parse()?;
+            if ident == "Unpin" {
+                return Ok(RecursivelyPinnedArg::MaybeUnpin);
+            }
+        } else {
+            let ident: Ident = input.parse()?;
+            if ident == "PinnedDrop" {
+                return Ok(RecursivelyPinnedArg::PinnedDrop);
+            }
+        }
+        Err(syn::Error::new(input.span(), "expected `PinnedDrop` or `?Unpin`"))
+    }
+}
+
 #[derive(Default)]
 struct RecursivelyPinnedArgs {
     is_pinned_drop: bool,
+    is_maybe_unpin: bool,
 }
 
 impl Parse for RecursivelyPinnedArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let args = <syn::punctuated::Punctuated<Ident, Token![,]>>::parse_terminated(input)?;
-        if args.len() > 1 {
-            return Err(syn::Error::new(
-                input.span(), // not args.span(), as that is only for the first argument.
-                &format!("expected at most 1 argument, got: {}", args.len()),
-            ));
-        }
-        let is_pinned_drop = if let Some(arg) = args.first() {
-            if arg != "PinnedDrop" {
-                return Err(syn::Error::new(
-                    arg.span(),
-                    "unexpected argument (wasn't `PinnedDrop`)",
-                ));
+        let mut result = Self::default();
+        let args =
+            <syn::punctuated::Punctuated<RecursivelyPinnedArg, Token![,]>>::parse_terminated(
+                input,
+            )?;
+        for arg in args {
+            match arg {
+                RecursivelyPinnedArg::PinnedDrop => {
+                    result.is_pinned_drop = true;
+                }
+                RecursivelyPinnedArg::MaybeUnpin => {
+                    result.is_maybe_unpin = true;
+                }
             }
-            true
-        } else {
-            false
-        };
-        Ok(RecursivelyPinnedArgs { is_pinned_drop })
+        }
+        Ok(result)
     }
 }
 
@@ -446,6 +468,37 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 ///
 /// (This is analogous to `#[pin_project(PinnedDrop)]`.)
 ///
+/// ## `?Unpin`
+///
+/// `?Unpin` removes the default `!Unpin` impl, instead inheriting pinnedness from the fields
+/// of the struct.
+///
+/// `#[recursively_pinned]`, unlike `#[pin_project]`, by default marks the struct
+/// as `!Unpin`, even if all of the fields are `Unpin`. This is typically desirable,
+/// because `Unpin` is used as a discriminator trait throughout `ctor` to make certain trait
+/// impls available.
+///
+/// In the context of a _generic_ struct such as `Foo<T>`, you might want the struct to be
+/// `!Unpin` if and only if its type parameter `T` is. However, without negative trait bounds
+/// or specialization in the Rust language, this makes it impossible to implement some of the traits
+/// within `ctor`, such as `CtorNew` and `Assign`, which are meant to be near-universal across all
+/// types. To implement that universality, they have a blanket impl for `Unpin` types, which would
+/// collide with any implementation for `Foo<T>` if `Foo<T>` is only conditionally `!Unpin`.
+///
+/// See also the Blanket impls section in the main ctor documentation.
+///
+/// If you do not need your type to work with interfaces that might blanket impl for `Unpin` types,
+/// you can disable the default `!Unpin` impl by passing `?Unpin` to `#[recursively_pinned]`:
+///
+/// ```
+/// #[recursively_pinned(?Unpin)]
+/// struct S {
+///   field: i32,
+/// }
+/// ```
+///
+/// The resulting type will sometimes implement `Unpin`, and never implement `!Unpin`.
+///
 /// ## Direct initialization
 ///
 /// Use the `ctor!` macro to instantiate recursively pinned types. For example:
@@ -527,12 +580,20 @@ fn recursively_pinned_impl(
         }
     };
 
+    let unpin_impl = if args.is_maybe_unpin {
+        quote! {}
+    } else {
+        quote! {
+            impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
+        }
+    };
+
     Ok(quote! {
         #input
         #project_pin_impl
 
         #drop_impl
-        impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
+        #unpin_impl
 
         // Introduce a new scope to limit the blast radius of the CtorInitializedFields type.
         // This lets us use relatively readable names: while the impl is visible outside the scope,
