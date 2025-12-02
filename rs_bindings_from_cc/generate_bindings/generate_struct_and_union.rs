@@ -534,15 +534,12 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
 
     let mut items = vec![];
     let mut nested_items = vec![];
-    for &child_item_id in &record.child_item_ids {
-        let item = ir.find_untyped_decl(child_item_id);
-        api_snippets.append(db.generate_item(item.clone())?);
-        if item.place_in_nested_module_if_nested_in_record()
-            && db.has_bindings(item.clone()).is_ok()
-        {
-            nested_items.push(child_item_id);
+    for child_item in child_items(&record, db) {
+        api_snippets.append(db.generate_item(child_item.item.clone())?);
+        if child_item.is_nested {
+            nested_items.push(child_item.item.id());
         } else {
-            items.push(child_item_id);
+            items.push(child_item.item.id());
         }
     }
 
@@ -700,6 +697,28 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
 
     api_snippets.generated_items.insert(record.id, GeneratedItem::Record(Box::new(record_tokens)));
     Ok(api_snippets)
+}
+
+/// Returns an iterator over the child items of this record, including
+/// whether each child item should be nested in a module.
+pub fn child_items<'a, 'db>(
+    record: &'a Record,
+    db: &'a dyn BindingsGenerator<'db>,
+) -> impl Iterator<Item = ChildItem<'db>> + use<'a, 'db> {
+    record.child_item_ids.iter().map(|&child_item_id| {
+        let item = db.ir().find_untyped_decl(child_item_id);
+        let is_nested = item.place_in_nested_module_if_nested_in_record()
+            && db.has_bindings(item.clone()).is_ok();
+        ChildItem { is_nested, item }
+    })
+}
+
+/// A child item of a record.
+pub struct ChildItem<'a> {
+    /// Whether the child item should be nested in a module.
+    pub is_nested: bool,
+    /// The child item.
+    pub item: &'a Item,
 }
 
 pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> Assertion {

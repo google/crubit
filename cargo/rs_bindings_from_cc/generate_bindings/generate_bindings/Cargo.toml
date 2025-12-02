@@ -38,6 +38,7 @@ token_stream_printer = { path = "../../../../cargo/common/token_stream_printer"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
 flagset.workspace = true
+heck.workspace = true
 itertools.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true

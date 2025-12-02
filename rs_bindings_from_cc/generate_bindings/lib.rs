@@ -17,6 +17,7 @@ use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
 use generate_comment::{generate_comment, generate_doc_comment, generate_unsupported};
 use generate_struct_and_union::generate_incomplete_record;
+use heck::ToSnakeCase;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::Ident;
@@ -113,6 +114,20 @@ fn generate_type_alias(
             .rs_type_kind(type_alias.underlying_type.clone())
             .with_context(|| format!("Failed to format underlying type for {type_alias}"))?;
 
+        // If this type alias refers to a record with nested types,
+        // we need to also re-export the generated module.
+        let mut underlying_nested_module_path = None;
+        if let RsTypeKind::Record { record, crate_path, .. } = &underlying_type {
+            if generate_struct_and_union::child_items(record, db)
+                .any(|child_item| child_item.is_nested)
+            {
+                let underlying_nested_module_name =
+                    make_rs_ident(&record.rs_name.identifier.to_snake_case());
+                underlying_nested_module_path =
+                    Some(quote! { #crate_path #underlying_nested_module_name });
+            }
+        }
+
         GeneratedItem::TypeAlias {
             doc_comment: generate_doc_comment(
                 type_alias.doc_comment.as_deref(),
@@ -123,6 +138,7 @@ fn generate_type_alias(
                 .unwrap_or_default(),
             ident: make_rs_ident(&type_alias.rs_name.identifier),
             underlying_type: underlying_type.to_token_stream(db),
+            underlying_nested_module_path,
         }
     };
     Ok(ApiSnippets {

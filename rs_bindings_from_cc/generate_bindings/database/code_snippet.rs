@@ -764,12 +764,33 @@ pub fn generated_items_to_tokens(
                 }
                 .to_tokens(tokens);
             }
-            GeneratedItem::TypeAlias { doc_comment, visibility, ident, underlying_type } => {
+            GeneratedItem::TypeAlias {
+                doc_comment,
+                visibility,
+                ident,
+                underlying_type,
+                underlying_nested_module_path,
+            } => {
                 quote! {
                     #doc_comment
                     #visibility type #ident = #underlying_type;
                 }
                 .to_tokens(tokens);
+
+                // If we alias a record with nested types, underlying_nested_module_name will be
+                // Some. In this case, we need to re-export the underlying module with the snake
+                // case name of the alias.
+                if let Some(underlying_nested_module_path) = underlying_nested_module_path {
+                    let aliased_nested_module_name =
+                        make_rs_ident(&ident.to_string().to_snake_case());
+
+                    if &aliased_nested_module_name != ident {
+                        quote! {
+                            #visibility use #underlying_nested_module_path as #aliased_nested_module_name;
+                        }
+                        .to_tokens(tokens);
+                    }
+                }
             }
         }
         quote! {
@@ -815,6 +836,7 @@ pub enum GeneratedItem {
         visibility: Visibility,
         ident: Ident,
         underlying_type: TokenStream,
+        underlying_nested_module_path: Option<TokenStream>,
     },
 }
 
