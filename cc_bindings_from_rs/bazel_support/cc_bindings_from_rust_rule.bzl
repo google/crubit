@@ -140,7 +140,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
     for dep_bindings_info in _get_dep_bindings_infos(ctx):
         for header in dep_bindings_info.headers:
             arg = dep_bindings_info.crate_key + "=" + header.short_path
-            crubit_args.add("--bindings-from-dependency", arg)
+            crubit_args.add("--crate-header", arg)
         for feature in dep_bindings_info.features:
             arg = dep_bindings_info.crate_key + "=" + feature
             crubit_args.add("--crate-feature", arg)
