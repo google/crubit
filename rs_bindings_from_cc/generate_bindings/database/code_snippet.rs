@@ -620,9 +620,16 @@ pub fn generated_items_to_tokens(
                 let owned_type_def = owned_type_name.as_ref().map(|owned_type_name| {
                     quote! {
                         __NEWLINE__ __NEWLINE__
-                        __COMMENT__ "Generated due to CRUBIT_OWNED_POINTEE annotation."
+                        __COMMENT__ "HELLO Generated due to CRUBIT_OWNED_POINTEE annotation."
                         #[repr(transparent)]
-                        pub struct #owned_type_name(::core::ptr::NonNull<#ident>);
+                        pub truct #owned_type_name(::core::ptr::NonNull<#ident>);
+
+                        impl Drop for #owned_type_name {
+                            fn drop(&mut self) {
+                                __COMMENT__ "The DropImpl method must be implemented in a user-written .rs file that's included using additional_rust_srcs"
+                                self.DropImpl();
+                            }
+                        }
                     }
                 });
 
