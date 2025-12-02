@@ -2241,7 +2241,7 @@ class SummaryCollector {
     if (ValueNullState)
       *S.mutable_rhs_null_state() = savePointerNullState(*ValueNullState);
     S.set_rhs_loc(ValueLoc.Loc);
-    S.set_evidence_kind(EvidenceKindForAssignmentFromNullable);
+    S.set_evidence_kind_if_nullable(EvidenceKindForAssignmentFromNullable);
   }
 
   void collectArgBinding(std::string_view FunctionUSR, Slot ParamSlot,
@@ -2489,7 +2489,7 @@ class SummaryEvidenceCollector {
 
     Collector.collectAssignmentFromValue(*LHSTypeNullability, RHSNullState,
                                          {Summary.rhs_loc()},
-                                         Summary.evidence_kind());
+                                         Summary.evidence_kind_if_nullable());
     return llvm::Error::success();
   }
 

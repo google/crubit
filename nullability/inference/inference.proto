@@ -334,7 +334,7 @@ message AssignmentFromValueSummary {
   // Genuinely optional: not populated when RHS is a nullptr literal.
   optional PointerNullStateProto rhs_null_state = 2;
   optional string rhs_loc = 3;
-  optional Evidence.Kind evidence_kind = 4;
+  optional Evidence.Kind evidence_kind_if_nullable = 4;
 }
 
 message AbortIfEqualSummary {
