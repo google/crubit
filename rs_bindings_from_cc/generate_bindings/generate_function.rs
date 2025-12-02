@@ -1099,7 +1099,15 @@ fn generate_func_body(
             // not generate the thunk at all, but this would be a bit of extra work.
             //
             // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
-            let mut body = if return_type.is_c_abi_compatible_by_value() {
+            let mut body = if return_type.is_owned_ptr() {
+                quote! {
+                    ::core::mem::transmute(
+                        #crate_root_path::detail::#thunk_ident(
+                            #( #clone_prefixes #thunk_args #clone_suffixes ),*
+                        )
+                    )
+                }
+            } else if return_type.is_c_abi_compatible_by_value() {
                 let negate_symbol = if let ImplKind::Trait {
                     trait_name: TraitName::PartialEq { negate_thunk_result: true, .. },
                     ..
@@ -1355,7 +1363,6 @@ fn rs_type_kinds_for_func(
                     }
                 }
             }
-
             errors.consume_error(
                 db.rs_type_kind_with_lifetime_elision(
                     param_type,
@@ -1811,6 +1818,7 @@ pub fn generate_function(
         cc_details,
         ..Default::default()
     };
+
     Ok(Some(GeneratedFunction {
         snippets: Rc::new(generated_item),
         id: Rc::new(function_id),
@@ -1886,6 +1894,7 @@ fn function_signature(
         }
         _ => None,
     };
+
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
         // If we are generating bindings for a derived record, parameter types should be
         // kept the same because `Self` will refer to the derived record type.
@@ -1912,10 +1921,10 @@ fn function_signature(
                 if should_replace_by_self {
                     type_.to_token_stream_replacing_by_self(db, Some(impl_record))
                 } else {
-                    type_.to_token_stream(db)
+                    type_.to_token_stream_with_owned_ptr_type(db)
                 }
             } else {
-                type_.to_token_stream(db)
+                type_.to_token_stream_with_owned_ptr_type(db)
             };
             *features |= Feature::impl_trait_in_assoc_type;
             api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self, Error=::ctor::Infallible>});
@@ -1926,10 +1935,10 @@ fn function_signature(
                 if should_replace_by_self {
                     type_.to_token_stream_replacing_by_self(db, Some(impl_record))
                 } else {
-                    type_.to_token_stream(db)
+                    type_.to_token_stream_with_owned_ptr_type(db)
                 }
             } else {
-                type_.to_token_stream(db)
+                type_.to_token_stream_with_owned_ptr_type(db)
             };
             if type_.is_crubit_abi_bridge_type() {
                 let crubit_abi_type = db
@@ -1940,6 +1949,9 @@ fn function_signature(
 
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {::bridge_rust::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #ident).as_ptr() as *const u8});
+            } else if type_.is_owned_ptr() {
+                api_params.push(quote! {#ident: #quoted_type_or_self});
+                thunk_args.push(quote! {::core::mem::transmute(#ident)});
             } else if type_.is_c_abi_compatible_by_value() {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {#ident});
@@ -2029,7 +2041,8 @@ fn function_signature(
         if matches!(return_type.unalias(), RsTypeKind::Primitive(Primitive::Void)) {
             quote! {}
         } else {
-            let ty = quoted_return_type.unwrap_or_else(|| return_type.to_token_stream(db));
+            let ty = quoted_return_type
+                .unwrap_or_else(|| return_type.to_token_stream_with_owned_ptr_type(db));
             if return_type.is_unpin() {
                 ty
             } else {

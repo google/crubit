@@ -556,6 +556,7 @@ pub fn generated_items_to_tokens(
                     items,
                     nested_items,
                     indirect_functions,
+                    owned_type_name,
                 } = record_item.as_ref();
 
                 let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
@@ -597,6 +598,15 @@ pub fn generated_items_to_tokens(
                     None
                 };
 
+                let owned_type_def = owned_type_name.as_ref().map(|owned_type_name| {
+                    quote! {
+                        __NEWLINE__ __NEWLINE__
+                        __COMMENT__ "Generated due to CRUBIT_OWNED_POINTEE annotation."
+                        #[repr(transparent)]
+                        pub struct #owned_type_name(::core::ptr::NonNull<#ident>);
+                    }
+                });
+
                 quote! {
                     #doc_comment_attr
                     #derive_attr
@@ -616,6 +626,8 @@ pub fn generated_items_to_tokens(
                     #incomplete_definition
 
                     #no_unique_address_accessors_impl
+
+                    #owned_type_def
 
                     __NEWLINE__ __NEWLINE__
                 }
@@ -886,6 +898,8 @@ pub struct Record {
     pub nested_items: Vec<ItemId>,
     /// Functions that get attached either by a trait or from a base class.
     pub indirect_functions: Vec<TokenStream>,
+    /// The name of the owning wrapper type when the type was annotated with CRUBIT_OWNED_POINTEE.
+    pub owned_type_name: Option<Ident>,
 }
 
 #[derive(Clone, Debug)]

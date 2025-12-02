@@ -530,6 +530,7 @@ pub enum RsTypeKind {
         crate_path: Rc<CratePath>,
         /// If this record is an instantiation of a `UniformReprTemplateType`, this will be set.
         uniform_repr_template_type: Option<Rc<UniformReprTemplateType>>,
+        owned_ptr_type: Option<Rc<str>>,
     },
     Enum {
         enum_: Rc<Enum>,
@@ -766,6 +767,7 @@ impl RsTypeKind {
                 record.template_specialization.as_ref(),
                 is_return_type,
             )?,
+            owned_ptr_type: record.owned_ptr_type.clone(),
             record,
             crate_path,
         })
@@ -1014,6 +1016,24 @@ impl RsTypeKind {
             }
         }
         (missing_features, reasons.into_iter().join(", "))
+    }
+
+    // If the type is pointer annotated with CRUBIT_OWNED_POINTER, returns the pointee type.
+    // Otherwise, returns None.
+    pub fn as_owned_ptr(&self) -> Option<&RsTypeKind> {
+        match self.unalias() {
+            RsTypeKind::Pointer {
+                pointee,
+                kind: RustPtrKind::CcPtr(PointerTypeKind::Owned),
+                ..
+            } => Some(pointee),
+            _ => None,
+        }
+    }
+
+    // Returns true if the type is a pointer annotated with CRUBIT_OWNED_POINTER.
+    pub fn is_owned_ptr(&self) -> bool {
+        self.as_owned_ptr().is_some()
     }
 
     /// Returns true if the type can be passed by value through `extern "C"` ABI
@@ -1312,6 +1332,30 @@ impl RsTypeKind {
         }
     }
 
+    /// The same as [`RsTypeKind::to_token_stream`], except that types of
+    /// `RsTypeKind::Pointer` with kind
+    /// `RustPtrKind::CcPtr(PointerTypeKind::Owned)` will emit the corresponding
+    /// owning Rust type rather than a raw pointer.
+    pub fn to_token_stream_with_owned_ptr_type(&self, db: &dyn BindingsGenerator) -> TokenStream {
+        // If it's not an owned pointer, just use the default implementation.
+        let Some(pointee) = self.as_owned_ptr() else {
+            return self.to_token_stream(db);
+        };
+
+        let RsTypeKind::Record { ref record, ref crate_path, .. } = *pointee else {
+            panic!(
+                "CRUBIT_OWNED_POINTER annotated pointers should point to a struct with an associated CRUBIT_OWNED_POINTEE"
+            )
+        };
+
+        let owned_ptr_type = record.owned_ptr_type.as_ref().expect(
+            "CRUBIT_OWNED_POINTER annotated pointers should point to a struct with an associated CRUBIT_OWNED_POINTEE",
+        );
+
+        let path: syn::Path = syn::parse_str(owned_ptr_type).expect("Couldn't parse path");
+        quote! { #crate_path #path }
+    }
+
     /// Similar to to_token_stream, but replacing RsTypeKind:Record with Self
     /// when the underlying Record matches the given one.
     pub fn to_token_stream_replacing_by_self(
@@ -1486,7 +1530,12 @@ impl RsTypeKind {
                 let record_ident = make_rs_ident(incomplete_record.rs_name.identifier.as_ref());
                 quote! { #crate_path #record_ident }
             }
-            RsTypeKind::Record { record, crate_path, uniform_repr_template_type } => {
+            RsTypeKind::Record {
+                record,
+                crate_path,
+                uniform_repr_template_type,
+                owned_ptr_type: _,
+            } => {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
                     return generic_monomorphization.to_token_stream(db);
                 }

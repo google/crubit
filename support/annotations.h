@@ -289,16 +289,20 @@
 #define CRUBIT_UNSAFE_IGNORE_ATTR(name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr", #name)
 
-// TODO: b/12574907 - Finish implementing generation for these annotations.
-//
 // The CRUBIT_OWNED_POINTER AND CRUBIT_OWNED_POINTEE annotations work together
 // to map conventionally "owned" C++ pointer usages to a Rust type that provides
-// proper Rust-style ownership.
+// Rust-style ownership wrapping a raw pointer.
 //
-// Types annotated with `CRUBIT_OWNED_PTR` are considered "owned": for example,
-// in the return position, they indicate that the function is passing ownership
-// of the pointed-to object to the caller. Similarly, in a parameter position,
-// the callee receiving ownership of the pointed-to object.
+// Think carefully before using these annotations. These annotations exist to
+// support existing APIs that use raw pointers directly, and can not be
+// modified; if your API can be improved to avoid dealing with raw pointers (for
+// example, by using the managed C++ pointer types that crubit supports) that's
+// almost certainly the preferable solution.
+//
+// Types annotated with `CRUBIT_OWNED_PTR` indicate a transfer of ownership: for
+// example, in the return position, they indicate that the function is passing
+// ownership of the pointed-to object to the caller. Similarly, in a parameter
+// position, the callee receiving ownership of the pointed-to object.
 //
 // The annotation is only meaningful on pointer types. When a pointer is
 // annotated with `CRUBIT_OWNED_PTR`, the pointee type must also be annotated
