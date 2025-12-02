@@ -84,6 +84,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling emitting source annotations in bindings.
+#
+# See <internal link>
+crubit_feature_hint(
+    name = "force_annotations",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["force_annotations"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #
@@ -92,7 +102,15 @@ crubit_feature_hint(
     name = "experimental",
     compatible_with = ["//buildenv/target:non_prod"],
     # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
-    crubit_features = ["all"],
+    crubit_features = [
+        "custom_ffi_types",
+        "experimental",
+        "non_unpin_ctor",
+        "std_unique_ptr",
+        "std_vector",
+        "supported",
+        "wrapper",
+    ],
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 

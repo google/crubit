@@ -39,6 +39,15 @@ fn write_file(path: &Path, content: &str) -> Result<()> {
         .with_context(|| format!("Error when writing to {}", path.display()))
 }
 
+// If any input crate has force_annotations turned on, turn annotations on globally.
+// (At the very least we need to postprocess the output file.)
+fn annotations_enabled(cmdline: &Cmdline) -> bool {
+    cmdline.kythe_annotations
+        || cmdline.crate_features.iter().any(|&(_, features)| {
+            features.contains(crubit_feature::CrubitFeature::ForceAnnotations)
+        })
+}
+
 fn new_db<'tcx>(
     cmdline: &Cmdline,
     tcx: TyCtxt<'tcx>,
@@ -86,7 +95,7 @@ fn new_db<'tcx>(
         cmdline.crubit_debug_path_format.clone(),
         cmdline.default_crate_features,
         cmdline.enable_hir_types,
-        cmdline.kythe_annotations,
+        annotations_enabled(cmdline),
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),
         crate_name_to_namespace.into(),
@@ -115,7 +124,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
         return Err(arc_anyhow::Error::msg(fatal_error_message));
     }
 
-    if cmdline.kythe_annotations {
+    if annotations_enabled(cmdline) {
         let (cc_api, provenance_map) = cc_tokens_to_formatted_string_with_provenance(
             cc_api,
             cmdline.clang_format_exe_path.as_deref(),

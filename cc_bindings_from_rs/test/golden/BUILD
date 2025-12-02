@@ -31,7 +31,9 @@ TESTS = [name[:-3] for name in glob(
     srcs = [name + ".rs"],
     aspect_hints = [
         "//features:experimental",
-    ],
+    ] + ([
+        "//features:force_annotations",
+    ] if name.endswith("_annotations") else []),
     deps = [
         "//support:bridge_rust",
     ],

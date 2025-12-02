@@ -33,6 +33,9 @@ flagset::flags! {
 
         /// Enable emitting custom ffi_11 types instead of `core::ffi` types.
         CustomFfiTypes,
+
+        /// Force emitting annotations.
+        ForceAnnotations,
     }
 }
 
@@ -51,6 +54,7 @@ impl CrubitFeature {
             Self::NonUnpinCtor => "non_unpin_ctor",
             Self::Experimental => "experimental",
             Self::CustomFfiTypes => "custom_ffi_types",
+            Self::ForceAnnotations => "force_annotations",
         }
     }
 
@@ -66,6 +70,7 @@ impl CrubitFeature {
             Self::NonUnpinCtor => "//features:non_unpin_ctor",
             Self::Experimental => "//features:experimental",
             Self::CustomFfiTypes => "//features:custom_ffi_types",
+            Self::ForceAnnotations => "//features:force_annotations",
         }
     }
 }
@@ -81,6 +86,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"non_unpin_ctor" => CrubitFeature::NonUnpinCtor.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         b"custom_ffi_types" => CrubitFeature::CustomFfiTypes.into(),
+        b"force_annotations" => CrubitFeature::ForceAnnotations.into(),
         _ => return None,
     };
     Some(features)
@@ -188,6 +194,7 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
+                | CrubitFeature::ForceAnnotations
         );
     }
 
@@ -216,6 +223,7 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
+                | CrubitFeature::ForceAnnotations
         );
     }
 
@@ -232,6 +240,7 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
+                | CrubitFeature::ForceAnnotations
         );
     }
 }
