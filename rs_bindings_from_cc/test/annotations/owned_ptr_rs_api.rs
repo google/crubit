@@ -39,6 +39,12 @@ unsafe impl ::cxx::ExternType for RawThing {
 // Generated due to CRUBIT_OWNED_POINTEE annotation.
 #[repr(transparent)]
 pub struct OwnedThing(::core::ptr::NonNull<RawThing>);
+impl Drop for OwnedThing {
+    fn drop(&mut self) {
+        // The DropImpl method must be implemented in a user-written .rs file that's included using additional_rust_srcs
+        self.DropImpl();
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=18
 impl From<i32> for RawThing {

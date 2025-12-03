@@ -604,6 +604,13 @@ pub fn generated_items_to_tokens(
                         __COMMENT__ "Generated due to CRUBIT_OWNED_POINTEE annotation."
                         #[repr(transparent)]
                         pub struct #owned_type_name(::core::ptr::NonNull<#ident>);
+
+                        impl Drop for #owned_type_name {
+                            fn drop(&mut self) {
+                                __COMMENT__ "The DropImpl method must be implemented in a user-written .rs file that's included using additional_rust_srcs"
+                                self.DropImpl();
+                            }
+                        }
                     }
                 });
 
