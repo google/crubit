@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated Rust bindings for the following C++ target:
-// //rs_bindings_from_cc/test/golden:try_force_template_inst_cc
+// //rs_bindings_from_cc/test/golden:do_not_eagerly_import_template_type_args_cc
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -13,7 +13,7 @@
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
-#include "rs_bindings_from_cc/test/golden/try_force_template_inst.h"
+#include "rs_bindings_from_cc/test/golden/do_not_eagerly_import_template_type_args.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
