@@ -82,11 +82,11 @@ unsafe extern "C" fn __crubit_thunk_maybe_uuninit_uptr_umut(
     unsafe { ::primitive_types_golden::test_maybe_uninit::maybe_uninit_ptr_mut(maybe_uninit) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar_uptr_uarg(__param_0: *const i8) -> () {
+unsafe extern "C" fn __crubit_thunk_c_uchar_uptr_uarg(__param_0: *const ::ffi_11::c_char) -> () {
     unsafe { ::primitive_types_golden::argument_types::c_char_ptr_arg(__param_0) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar_umut_uptr_uarg(__param_0: *mut i8) -> () {
+unsafe extern "C" fn __crubit_thunk_c_uchar_umut_uptr_uarg(__param_0: *mut ::ffi_11::c_char) -> () {
     unsafe { ::primitive_types_golden::argument_types::c_char_mut_ptr_arg(__param_0) }
 }
 #[unsafe(no_mangle)]
@@ -102,15 +102,15 @@ unsafe extern "C" fn __crubit_thunk_c_uvoid_uconst_uptr() -> *const ::core::ffi:
     unsafe { ::primitive_types_golden::return_types::c_void_const_ptr() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar() -> i8 {
+unsafe extern "C" fn __crubit_thunk_c_uchar() -> ::ffi_11::c_char {
     unsafe { ::primitive_types_golden::return_types::c_char() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar_umut_uptr() -> *mut i8 {
+unsafe extern "C" fn __crubit_thunk_c_uchar_umut_uptr() -> *mut ::ffi_11::c_char {
     unsafe { ::primitive_types_golden::return_types::c_char_mut_ptr() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar_uconst_uptr() -> *const i8 {
+unsafe extern "C" fn __crubit_thunk_c_uchar_uconst_uptr() -> *const ::ffi_11::c_char {
     unsafe { ::primitive_types_golden::return_types::c_char_const_ptr() }
 }
 #[unsafe(no_mangle)]
@@ -146,11 +146,11 @@ unsafe extern "C" fn __crubit_thunk_c_uulong() -> u64 {
     unsafe { ::primitive_types_golden::return_types::c_ulong() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_ulonglong() -> i64 {
+unsafe extern "C" fn __crubit_thunk_c_ulonglong() -> ::ffi_11::c_longlong {
     unsafe { ::primitive_types_golden::return_types::c_longlong() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uulonglong() -> u64 {
+unsafe extern "C" fn __crubit_thunk_c_uulonglong() -> ::ffi_11::c_ulonglong {
     unsafe { ::primitive_types_golden::return_types::c_ulonglong() }
 }
 #[unsafe(no_mangle)]
@@ -214,7 +214,7 @@ unsafe extern "C" fn __crubit_thunk_i8_ufunc() -> extern "C" fn(i8) {
     unsafe { ::primitive_types_golden::return_types::i8_func() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar_ufunc() -> extern "C" fn(i8) {
+unsafe extern "C" fn __crubit_thunk_c_uchar_ufunc() -> extern "C" fn(::ffi_11::c_char) {
     unsafe { ::primitive_types_golden::return_types::c_char_func() }
 }
 const _: () = assert!(::std::mem::size_of::<::primitive_types_golden::field_types::Types>() == 152);
