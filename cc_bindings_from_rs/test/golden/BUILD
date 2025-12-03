@@ -42,6 +42,7 @@ TESTS = [name[:-3] for name in glob(
     basename = name,
     golden_h = name + "_cc_api.h",
     golden_rs = name + "_cc_api_impl.rs",
+    kythe_annotations = name.endswith("_annotations"),
     rust_library = name + "_rust",
 ) for name in TESTS]
 
