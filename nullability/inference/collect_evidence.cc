@@ -1049,6 +1049,7 @@ class NullabilityBehaviorVisitor {
       visitConstructExpr(*S);
       visitReturn(*S);
       visitAssignment(*S);
+      visitLambdaExpr(*S);
       visitArithmetic(*S);
       visitAggregateInitialization(*S);
       visitArraySubscript(*S);
@@ -1648,6 +1649,28 @@ class NullabilityBehaviorVisitor {
         &LHSDecl, RHS, Loc, EvidenceKindForAssignmentFromNullable);
   }
 
+  void visitVarInit(const VarDecl& V) {
+    const Expr* absl_nullable Init = V.getInit();
+    if (!Init) {
+      llvm::errs()
+          << "Unexpectedly missing init for the following variable. "
+             "Consider investigating or filing a <internal link>.\n";
+      V.dump();
+      return;
+    }
+    bool DeclTypeSupported =
+        isSupportedPointerType(V.getType().getNonReferenceType());
+    if (!DeclTypeSupported) return;
+    bool InitTypeSupported =
+        isSupportedPointerType(Init->getType().getNonReferenceType());
+    if (!InitTypeSupported) {
+      llvm::errs() << "Unsupported init type for pointer decl: "
+                   << Init->getType() << "\n";
+      return;
+    }
+    visitAssignmentLike(V, *Init, serializeLoc(SM, Init->getExprLoc()));
+  }
+
   /// Analyzes direct assignment statements, e.g. `p = nullptr`, whether
   /// initializing a new declaration or re-assigning to an existing declaration.
   void visitAssignment(const Stmt &S) {
@@ -1656,21 +1679,8 @@ class NullabilityBehaviorVisitor {
     // Initialization of new decl.
     if (auto *DeclStmt = dyn_cast<clang::DeclStmt>(&S)) {
       for (auto *Decl : DeclStmt->decls()) {
-        if (auto *VarDecl = dyn_cast<clang::VarDecl>(Decl);
-            VarDecl && VarDecl->hasInit()) {
-          bool DeclTypeSupported =
-              isSupportedPointerType(VarDecl->getType().getNonReferenceType());
-          bool InitTypeSupported = isSupportedPointerType(
-              VarDecl->getInit()->getType().getNonReferenceType());
-          if (!DeclTypeSupported) return;
-          if (!InitTypeSupported) {
-            llvm::errs() << "Unsupported init type for pointer decl: "
-                         << VarDecl->getInit()->getType() << "\n";
-            return;
-          }
-          visitAssignmentLike(
-              *VarDecl, *VarDecl->getInit(),
-              serializeLoc(SM, VarDecl->getInit()->getExprLoc()));
+        if (auto* V = dyn_cast<clang::VarDecl>(Decl); V && V->hasInit()) {
+          visitVarInit(*V);
         }
       }
       return;
@@ -1718,6 +1728,18 @@ class NullabilityBehaviorVisitor {
     // which is constrained (logically) by previous inferences.
     visitAssignmentLike(LHSType, *TypeNullability, /*LHSDecl*/ nullptr, *RHS,
                         serializeLoc(SM, *Loc));
+  }
+
+  void visitLambdaExpr(const Stmt& S) {
+    auto* L = dyn_cast<LambdaExpr>(&S);
+    if (!L) return;
+
+    for (const LambdaCapture& C : L->captures()) {
+      if (!L->isInitCapture(&C)) continue;
+      if (const auto* V = dyn_cast_if_present<VarDecl>(C.getCapturedVar())) {
+        visitVarInit(*V);
+      }
+    }
   }
 
   void visitArithmeticArg(const Expr *Arg, const SerializedSrcLoc &Loc) {
@@ -3487,7 +3509,7 @@ void EvidenceSites::forDefinitionsAndForDeclarations(
       // we won't otherwise see, even if the variable is not an inference
       // target.
       if (VD->hasInit() && !VD->isTemplated() &&
-          (!VD->getDeclContext()->isFunctionOrMethod() || VD->isInitCapture()))
+          !VD->getDeclContext()->isFunctionOrMethod())
         ForDefinitions(*VD);
       return true;
     }

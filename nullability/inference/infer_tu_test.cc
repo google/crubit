@@ -943,7 +943,7 @@ TEST_P(InferTUTest, FunctionParamToReturn) {
           inference(hasName("D"), {inferredSlot(0, Nullability::NONNULL)})));
 }
 
-TEST_P(InferTUTest, LambdaWithCaptureInit) {
+TEST_P(InferTUTest, LambdaWithCaptureInitDeref) {
   build(R"cc(
     void foo() {
       int* P;
@@ -956,6 +956,41 @@ TEST_P(InferTUTest, LambdaWithCaptureInit) {
               /*Iterations=*/2),
       UnorderedElementsAre(
           inference(hasName("P"), {inferredSlot(0, Nullability::NONNULL)}),
+          inference(hasName("Q"), {inferredSlot(0, Nullability::NONNULL)})));
+}
+
+TEST_P(InferTUTest, LambdaWithCaptureInitFromPreviousInference) {
+  build(R"cc(
+    void foo(int* P) {
+      auto Lambda = [Q = P]() {};
+      *P;  // Intentionally use a behavior for P that creates an inference of
+           // NONNULL but that also doesn't affect the null state of P during
+           // the lambda init-capture. For example, we don't want to dereference
+           // P before the init-capture, which would allow us to assume in the
+           // first iteration that the null state of P at the time of the
+           // init-capture is non-null.
+    }
+  )cc");
+  // ASSERT test precondition, that we only infer NONNULL for P in the first
+  // iteration and UNKNOWN for Q.
+  ASSERT_THAT(
+      inferTU(AST->context(), Pragmas,
+              GetParam() == InferenceMode::kTestWithSummaries,
+              /*Iterations=*/1),
+      UnorderedElementsAre(
+          inference(hasName("foo"), {inferredSlot(1, Nullability::NONNULL)}),
+          inference(hasName("Q"), {inferredSlot(0, Nullability::UNKNOWN)})));
+
+  EXPECT_THAT(
+      inferTU(AST->context(), Pragmas,
+              GetParam() == InferenceMode::kTestWithSummaries,
+              /*Iterations=*/2),
+      UnorderedElementsAre(
+          inference(hasName("foo"), {inferredSlot(1, Nullability::NONNULL)}),
+          // Then in the second iteration, we propagate P's non-null-ness to Q,
+          // successfully incorporating the previous inference into the null
+          // state we see for P in the second iteration's visitation of the
+          // init-capture.
           inference(hasName("Q"), {inferredSlot(0, Nullability::NONNULL)})));
 }
 
