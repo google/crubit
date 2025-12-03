@@ -1399,11 +1399,16 @@ fn formatted_items_in_crate(db: &dyn BindingsGenerator<'_>) -> impl Iterator<Ite
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
-                let api_snippets = db.generate_item(def_id).unwrap_or_else(|err| {
-                    Some(generate_unsupported_def(db, def_id, err).into_main_api())
-                })?;
+                let api_snippets = db.generate_item(def_id).transpose()?;
+                let (api_snippets, aliases) = api_snippets.map_or_else(
+                    |err| (generate_unsupported_def(db, def_id, err).into_main_api(), vec![]),
+                    |api_snippets| {
+                        // Only generate aliases if we generate a definition.
+                        let (_, aliases) = paths.into_canonical_and_aliases();
+                        (api_snippets, aliases)
+                    },
+                );
                 snippets = Some(api_snippets);
-                let (_, aliases) = paths.into_canonical_and_aliases();
                 aliases
             } else {
                 paths.into_extern_aliases()
