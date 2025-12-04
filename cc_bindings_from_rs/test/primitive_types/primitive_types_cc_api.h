@@ -20,6 +20,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/ffi_11/ffi_11.h"
+
 namespace primitive_types {
 
 namespace test_c_void_ptr {
@@ -113,11 +115,11 @@ namespace argument_types {
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=59
-void c_char_ptr_arg(char const* __param_0);
+void c_char_ptr_arg(decltype(char(0)) const* __param_0);
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=60
-void c_char_mut_ptr_arg(char* __param_0);
+void c_char_mut_ptr_arg(decltype(char(0))* __param_0);
 
 }  // namespace argument_types
 
@@ -137,47 +139,47 @@ const void* c_void_const_ptr();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=74
-char c_char();
+decltype(char(0)) c_char();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=77
-char* c_char_mut_ptr();
+decltype(char(0))* c_char_mut_ptr();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=80
-char const* c_char_const_ptr();
+decltype(char(0)) const* c_char_const_ptr();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=84
-signed char c_schar();
+std::int8_t c_schar();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=87
-unsigned char c_uchar();
+std::uint8_t c_uchar();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=90
-short c_short();
+std::int16_t c_short();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=93
-unsigned short c_ushort();
+std::uint16_t c_ushort();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=96
-int c_int();
+std::int32_t c_int();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=99
-unsigned int c_uint();
+std::uint32_t c_uint();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=102
-long c_long();
+std::int64_t c_long();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=105
-unsigned long c_ulong();
+std::uint64_t c_ulong();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=108
@@ -249,7 +251,7 @@ crubit::type_identity_t<void(std::int8_t)>& i8_func();
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=162
-crubit::type_identity_t<void(char)>& c_char_func();
+crubit::type_identity_t<void(decltype(char(0)))>& c_char_func();
 
 }  // namespace return_types
 
@@ -285,7 +287,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=201
-    crubit::type_identity_t<void(char)>* c_char_func;
+    crubit::type_identity_t<void(decltype(char(0)))>* c_char_func;
   };
   union {
     // Generated from:
@@ -300,12 +302,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=180
-    long c_long;
+    std::int64_t c_long;
   };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=181
-    unsigned long c_ulong;
+    std::uint64_t c_ulong;
   };
   union {
     // Generated from:
@@ -350,12 +352,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=178
-    int c_int;
+    std::int32_t c_int;
   };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=179
-    unsigned int c_uint;
+    std::uint32_t c_uint;
   };
   union {
     // Generated from:
@@ -380,12 +382,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=176
-    short c_short;
+    std::int16_t c_short;
   };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=177
-    unsigned short c_ushort;
+    std::uint16_t c_ushort;
   };
   union {
     // Generated from:
@@ -400,17 +402,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=173
-    char c_char;
+    decltype(char(0)) c_char;
   };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=174
-    signed char c_schar;
+    std::int8_t c_schar;
   };
   union {
     // Generated from:
     // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=175
-    unsigned char c_uchar;
+    std::uint8_t c_uchar;
   };
   union {
     // Generated from:
@@ -539,16 +541,16 @@ inline std::int32_t* maybe_uninit_ptr_mut(std::int32_t* maybe_uninit) {
 namespace argument_types {
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar_uptr_uarg(char const*);
+extern "C" void __crubit_thunk_c_uchar_uptr_uarg(decltype(char(0)) const*);
 }
-inline void c_char_ptr_arg(char const* __param_0) {
+inline void c_char_ptr_arg(decltype(char(0)) const* __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_uptr_uarg(__param_0);
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_c_uchar_umut_uptr_uarg(char*);
+extern "C" void __crubit_thunk_c_uchar_umut_uptr_uarg(decltype(char(0))*);
 }
-inline void c_char_mut_ptr_arg(char* __param_0) {
+inline void c_char_mut_ptr_arg(decltype(char(0))* __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_umut_uptr_uarg(__param_0);
 }
 
@@ -576,71 +578,79 @@ inline const void* c_void_const_ptr() {
 }
 
 namespace __crubit_internal {
-extern "C" char __crubit_thunk_c_uchar();
+extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
 }
-inline char c_char() { return __crubit_internal::__crubit_thunk_c_uchar(); }
+inline decltype(char(0)) c_char() {
+  return __crubit_internal::__crubit_thunk_c_uchar();
+}
 
 namespace __crubit_internal {
-extern "C" char* __crubit_thunk_c_uchar_umut_uptr();
+extern "C" decltype(char(0))* __crubit_thunk_c_uchar_umut_uptr();
 }
-inline char* c_char_mut_ptr() {
+inline decltype(char(0))* c_char_mut_ptr() {
   return __crubit_internal::__crubit_thunk_c_uchar_umut_uptr();
 }
 
 namespace __crubit_internal {
-extern "C" char const* __crubit_thunk_c_uchar_uconst_uptr();
+extern "C" decltype(char(0)) const* __crubit_thunk_c_uchar_uconst_uptr();
 }
-inline char const* c_char_const_ptr() {
+inline decltype(char(0)) const* c_char_const_ptr() {
   return __crubit_internal::__crubit_thunk_c_uchar_uconst_uptr();
 }
 
 namespace __crubit_internal {
-extern "C" signed char __crubit_thunk_c_uschar();
+extern "C" std::int8_t __crubit_thunk_c_uschar();
 }
-inline signed char c_schar() {
+inline std::int8_t c_schar() {
   return __crubit_internal::__crubit_thunk_c_uschar();
 }
 
 namespace __crubit_internal {
-extern "C" unsigned char __crubit_thunk_c_uuchar();
+extern "C" std::uint8_t __crubit_thunk_c_uuchar();
 }
-inline unsigned char c_uchar() {
+inline std::uint8_t c_uchar() {
   return __crubit_internal::__crubit_thunk_c_uuchar();
 }
 
 namespace __crubit_internal {
-extern "C" short __crubit_thunk_c_ushort();
+extern "C" std::int16_t __crubit_thunk_c_ushort();
 }
-inline short c_short() { return __crubit_internal::__crubit_thunk_c_ushort(); }
+inline std::int16_t c_short() {
+  return __crubit_internal::__crubit_thunk_c_ushort();
+}
 
 namespace __crubit_internal {
-extern "C" unsigned short __crubit_thunk_c_uushort();
+extern "C" std::uint16_t __crubit_thunk_c_uushort();
 }
-inline unsigned short c_ushort() {
+inline std::uint16_t c_ushort() {
   return __crubit_internal::__crubit_thunk_c_uushort();
 }
 
 namespace __crubit_internal {
-extern "C" int __crubit_thunk_c_uint();
+extern "C" std::int32_t __crubit_thunk_c_uint();
 }
-inline int c_int() { return __crubit_internal::__crubit_thunk_c_uint(); }
+inline std::int32_t c_int() {
+  return __crubit_internal::__crubit_thunk_c_uint();
+}
 
 namespace __crubit_internal {
-extern "C" unsigned int __crubit_thunk_c_uuint();
+extern "C" std::uint32_t __crubit_thunk_c_uuint();
 }
-inline unsigned int c_uint() {
+inline std::uint32_t c_uint() {
   return __crubit_internal::__crubit_thunk_c_uuint();
 }
 
 namespace __crubit_internal {
-extern "C" long __crubit_thunk_c_ulong();
+extern "C" std::int64_t __crubit_thunk_c_ulong();
 }
-inline long c_long() { return __crubit_internal::__crubit_thunk_c_ulong(); }
+inline std::int64_t c_long() {
+  return __crubit_internal::__crubit_thunk_c_ulong();
+}
 
 namespace __crubit_internal {
-extern "C" unsigned long __crubit_thunk_c_uulong();
+extern "C" std::uint64_t __crubit_thunk_c_uulong();
 }
-inline unsigned long c_ulong() {
+inline std::uint64_t c_ulong() {
   return __crubit_internal::__crubit_thunk_c_uulong();
 }
 
@@ -743,9 +753,10 @@ inline crubit::type_identity_t<void(std::int8_t)>& i8_func() {
 }
 
 namespace __crubit_internal {
-extern "C" crubit::type_identity_t<void(char)>& __crubit_thunk_c_uchar_ufunc();
+extern "C" crubit::type_identity_t<void(decltype(char(0)))>&
+__crubit_thunk_c_uchar_ufunc();
 }
-inline crubit::type_identity_t<void(char)>& c_char_func() {
+inline crubit::type_identity_t<void(decltype(char(0)))>& c_char_func() {
   return __crubit_internal::__crubit_thunk_c_uchar_ufunc();
 }
 

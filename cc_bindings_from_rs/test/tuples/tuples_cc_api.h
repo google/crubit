@@ -188,11 +188,11 @@ std::tuple<std::tuple<std::tuple<std::int32_t>>> return_triply_nested_tuple();
 
 // Generated from:
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=87
-void param_ffi_alias_in_tuple(std::tuple<char> five);
+void param_ffi_alias_in_tuple(std::tuple<std::int8_t> five);
 
 // Generated from:
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=90
-std::tuple<char> return_ffi_alias_in_tuple();
+std::tuple<std::int8_t> return_ffi_alias_in_tuple();
 
 // Generated from:
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=94
@@ -462,7 +462,7 @@ return_triply_nested_tuple() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_uffi_ualias_uin_utuple(void**);
 }
-inline void param_ffi_alias_in_tuple(std::tuple<char> five) {
+inline void param_ffi_alias_in_tuple(std::tuple<std::int8_t> five) {
   auto&& five_0 = std::get<0>(five);
   auto&& five_cabi_0 = five_0;
   void* five_cabi[] = {&five_cabi_0};
@@ -473,9 +473,9 @@ inline void param_ffi_alias_in_tuple(std::tuple<char> five) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uffi_ualias_uin_utuple(void** __ret_ptr);
 }
-inline std::tuple<char> return_ffi_alias_in_tuple() {
-  char __return_value_0_ret_val_holder;
-  char* __return_value_0_storage = &__return_value_0_ret_val_holder;
+inline std::tuple<std::int8_t> return_ffi_alias_in_tuple() {
+  std::int8_t __return_value_0_ret_val_holder;
+  std::int8_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
   void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_uffi_ualias_uin_utuple(
       __return_value_storage);

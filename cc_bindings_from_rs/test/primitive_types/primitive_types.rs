@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_c_void_ptr {
-    use core::ffi::c_void;
+    use ffi_11::c_void;
 
     // As struct member.
     pub struct StructWithCVoidPointerMember {
@@ -51,17 +51,17 @@ pub mod test_maybe_uninit {
 }
 
 extern "C" fn i8_func(_: i8) {}
-extern "C" fn c_char_func(_: core::ffi::c_char) {}
+extern "C" fn c_char_func(_: ffi_11::c_char) {}
 
 pub mod argument_types {
-    use core::ffi;
+    use ffi_11 as ffi;
 
     pub fn c_char_ptr_arg(_: *const ffi::c_char) {}
     pub fn c_char_mut_ptr_arg(_: *mut ffi::c_char) {}
 }
 
 pub mod return_types {
-    use core::ffi;
+    use ffi_11 as ffi;
 
     pub fn c_void() {}
     pub fn c_void_mut_ptr() -> *mut ffi::c_void {
@@ -72,7 +72,7 @@ pub mod return_types {
     }
 
     pub fn c_char() -> ffi::c_char {
-        0
+        ffi_11::c_char::from(0i8)
     }
     pub fn c_char_mut_ptr() -> *mut ffi::c_char {
         core::ptr::null_mut()
@@ -82,34 +82,34 @@ pub mod return_types {
     }
 
     pub fn c_schar() -> ffi::c_schar {
-        0
+        0i8
     }
     pub fn c_uchar() -> ffi::c_uchar {
-        0
+        0u8
     }
     pub fn c_short() -> ffi::c_short {
-        0
+        0i16
     }
     pub fn c_ushort() -> ffi::c_ushort {
-        0
+        0u16
     }
     pub fn c_int() -> ffi::c_int {
         0
     }
     pub fn c_uint() -> ffi::c_uint {
-        0
+        0u32
     }
     pub fn c_long() -> ffi::c_long {
-        0
+        0.into()
     }
     pub fn c_ulong() -> ffi::c_ulong {
-        0
+        0u32.into()
     }
     pub fn c_longlong() -> ffi::c_longlong {
-        0
+        0i64.into()
     }
     pub fn c_ulonglong() -> ffi::c_ulonglong {
-        0
+        0u64.into()
     }
     pub fn c_float() -> ffi::c_float {
         0.0
@@ -165,7 +165,7 @@ pub mod return_types {
 }
 
 pub mod field_types {
-    use core::ffi;
+    use ffi_11 as ffi;
     pub struct Types {
         pub c_void_mut_ptr: *mut ffi::c_void,
         pub c_void_const_ptr: *const ffi::c_void,
