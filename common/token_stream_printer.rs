@@ -21,12 +21,6 @@ pub struct RustfmtConfig {
     cmdline_args: Vec<OsString>,
 }
 
-pub const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
-    "rustfmt";
-
-pub const CLANG_FORMAT_EXE_PATH_FOR_TESTING: &str =
-    "clang-format";
-
 impl RustfmtConfig {
     /// Creates a config that will invoke `rustfmt` at the given
     /// `rustfmt_exe_path`.  If `rustfmt_config_path` is specified, then a
@@ -44,7 +38,7 @@ impl RustfmtConfig {
 
     fn for_testing() -> Self {
         Self {
-            exe_path: PathBuf::from(RUSTFMT_EXE_PATH_FOR_TESTING),
+            exe_path: PathBuf::from(external_binaries::RUSTFMT_EXE_PATH),
             cmdline_args: Self::default_cmdline_args(),
         }
     }
@@ -128,7 +122,7 @@ pub fn cc_tokens_to_formatted_string_with_provenance(
 /// should only be called by tests - product code should take the path to the
 /// `clang-format` binary as a cmdline argument.
 pub fn cc_tokens_to_formatted_string_for_tests(tokens: TokenStream) -> Result<String> {
-    clang_format(tokens_to_string(tokens)?, Path::new(CLANG_FORMAT_EXE_PATH_FOR_TESTING))
+    clang_format(tokens_to_string(tokens)?, Path::new(external_binaries::CLANG_FORMAT_EXE_PATH))
 }
 
 /// Tracks the provenance of a substring in source code. Our goal is to attach provenance data
@@ -837,7 +831,7 @@ fn bar() {}
 
     #[gtest]
     fn test_rs_tokens_to_formatted_string() {
-        let cfg = RustfmtConfig::new(Path::new(RUSTFMT_EXE_PATH_FOR_TESTING), None);
+        let cfg = RustfmtConfig::new(Path::new(external_binaries::RUSTFMT_EXE_PATH), None);
         let input = quote! {
             fn bar() {}
             fn foo(x: i32, y: i32) -> i32 { x + y }
@@ -863,8 +857,10 @@ fn foo(x: i32, y: i32) -> i32 {
                 version = "Two"
                 fn_args_layout="Vertical" "#,
         )?;
-        let cfg =
-            RustfmtConfig::new(Path::new(RUSTFMT_EXE_PATH_FOR_TESTING), Some(&rustfmt_toml_path));
+        let cfg = RustfmtConfig::new(
+            Path::new(external_binaries::RUSTFMT_EXE_PATH),
+            Some(&rustfmt_toml_path),
+        );
         let input = quote! {
             fn bar() {}
             fn foo(x: i32, y: i32) -> i32 { x + y }

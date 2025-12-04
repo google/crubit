@@ -18,6 +18,7 @@ path = "../../../common/token_stream_printer.rs"
 doctest = false
 
 [dependencies]
+external_binaries = { path = "../../../cargo/common/external_binaries"}
 ffi_types = { path = "../../../cargo/common/ffi_types"}
 anyhow.workspace = true
 proc-macro2.workspace = true

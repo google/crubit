@@ -189,13 +189,13 @@ fn main() -> Result<()> {
 mod tests {
     use super::*;
 
+    use external_binaries::{CLANG_FORMAT_EXE_PATH, RUSTFMT_EXE_PATH};
     use itertools::Itertools;
     use regex::{Regex, RegexBuilder};
     use run_compiler_test_support::setup_rustc_target_for_testing;
     use run_compiler_test_support::sysroot_path;
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
-    use token_stream_printer::{CLANG_FORMAT_EXE_PATH_FOR_TESTING, RUSTFMT_EXE_PATH_FOR_TESTING};
 
     /// Test data builder (see also
     /// https://testing.googleblog.com/2018/02/testing-on-toilet-cleanly-create-test.html).
@@ -317,8 +317,8 @@ mod tests {
                 format!("--h-out={}", h_path.display()),
                 format!("--rs-out={}", rs_path.display()),
                 "--crubit-support-path-format=<crubit/support/{header}>".to_string(),
-                format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH_FOR_TESTING}"),
-                format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH_FOR_TESTING}"),
+                format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH}"),
+                format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH}"),
             ];
 
             let mut error_report_out_path = None;

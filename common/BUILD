@@ -8,6 +8,7 @@ load(
     "rust_proc_macro",
     "rust_test",
 )
+load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
 package(
@@ -156,6 +157,18 @@ cc_library(
         ":ffi_types",  # buildcleaner: keep
         "@abseil-cpp//absl/strings:string_view",
     ],
+)
+
+cc_library(
+    name = "external_binaries_cc",
+    hdrs = ["external_binaries.h"],
+    deps = ["@abseil-cpp//absl/strings:string_view"],
+)
+
+rust_library(
+    name = "external_binaries",
+    srcs = ["external_binaries.rs"],
+    rustc_env = EXTERNAL_BINARIES,
 )
 
 rust_library(
@@ -318,7 +331,8 @@ rust_library(
     data = [
     ],
     deps = [
-        "//common:ffi_types",
+        ":external_binaries",
+        ":ffi_types",
         "@crate_index//:anyhow",  # v1
         "@crate_index//:proc-macro2",
     ],

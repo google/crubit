@@ -14,6 +14,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "common/external_binaries.h"
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "common/test_utils.h"
@@ -29,12 +30,6 @@ using ::testing::IsEmpty;
 using ::testing::Pair;
 using ::testing::StrEq;
 
-constexpr absl::string_view kDefaultRustfmtExePath =
-    "rustfmt";
-
-constexpr absl::string_view kDefaultClangFormatExePath =
-    "clang-format";
-
 /// Returns a Cmdline for the given header.
 Cmdline MakeCmdline(std::string header) {
   auto args = CmdlineArgs{
@@ -44,8 +39,8 @@ Cmdline MakeCmdline(std::string header) {
       .ir_out = "ir_out",
       .namespaces_out = "namespaces_out",
       .crubit_support_path_format = "<crubit/support/path/{header}>",
-      .clang_format_exe_path = std::string(kDefaultClangFormatExePath),
-      .rustfmt_exe_path = std::string(kDefaultRustfmtExePath),
+      .clang_format_exe_path = std::string(ClangFormatExePath()),
+      .rustfmt_exe_path = std::string(RustfmtExePath()),
       .rustfmt_config_path = "nowhere/rustfmt.toml",
       .environment = Environment::Production,
       .public_headers = {HeaderName(header)},

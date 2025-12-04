@@ -4,6 +4,7 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_binary",
@@ -50,6 +51,7 @@ crubit_rust_test(
     tags = ["not_run:mac"],
     deps = [
         ":run_compiler_test_support",
+        "//common:external_binaries",
         "@crate_index//:regex",  # v1
         "@crate_index//:tempfile",  # v3
     ],

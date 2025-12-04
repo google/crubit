@@ -1,0 +1,20 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the Rust crate external_binaries.
+
+[package]
+name = "external_binaries"
+edition.workspace = true
+
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+[lib]
+path = "../../../common/external_binaries.rs"
+
+doctest = false
+
+[dependencies]

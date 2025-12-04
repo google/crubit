@@ -21,8 +21,7 @@ function delete_all_test_outputs() {
 
 readonly CC_BINDINGS_FROM_RS_PATH="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs"
 readonly SYSROOT_PATH="${RUNFILES}/${G3_SYSROOT_PATH}"
-readonly RUSTFMT_PATH="rustfmt"
-readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/clang-format"
+readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${CRUBIT_CLANG_FORMAT_EXE_PATH}"
 
 # When using a rustc --target json, copy it (dereferencing symlinks) to an
 # arbitrary location using a consistent filename.
@@ -54,8 +53,8 @@ function test::happy_path() {
         \"--h-out=${H_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
-        \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
-        \"--rustfmt-exe-path=$RUSTFMT_PATH\" \
+        \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \
+        \"--rustfmt-exe-path=${CRUBIT_RUSTFMT_EXE_PATH}\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
@@ -139,8 +138,8 @@ function test::invalid_h_out() {
         --h-out=../.. \
         --rs-out=blah \
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
-        \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
-        \"--rustfmt-exe-path=$RUSTFMT_PATH\" \
+        \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \
+        \"--rustfmt-exe-path=$CRUBIT_RUSTFMT_EXE_PATH\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
@@ -184,8 +183,8 @@ function test::rustc_warnings_are_silenced() {
         \"--h-out=${H_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
-        \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
-        \"--rustfmt-exe-path=$RUSTFMT_PATH\" \
+        \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \
+        \"--rustfmt-exe-path=$CRUBIT_RUSTFMT_EXE_PATH\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \

@@ -9,6 +9,7 @@ load(
     "//common:multiplatform_testing.bzl",
     "multiplatform_rust_test",
 )
+load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_cc_test",
@@ -114,6 +115,7 @@ crubit_cc_test(
     srcs = ["generate_bindings_and_metadata_test.cc"],
     data = [
     ],
+    local_defines = EXTERNAL_BINARIES,
     tags = [
         # This test uses e.g. rustfmt and is difficult to run cross-platform. We could run it using
         # cross-compilation, but it's mostly uninteresting from a multi-platform POV.
@@ -126,6 +128,7 @@ crubit_cc_test(
         ":collect_namespaces",
         ":generate_bindings_and_metadata",
         "//common:cc_ffi_types",
+        "//common:external_binaries_cc",
         "//common:status_macros",
         "//common:test_utils",
         "@abseil-cpp//absl/container:flat_hash_map",
