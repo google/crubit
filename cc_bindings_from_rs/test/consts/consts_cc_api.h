@@ -53,7 +53,7 @@ static constexpr std::int64_t LARGE_INT = INT64_C(9223372036854775807);
 static constexpr std::uint32_t UNSIGNED_INT = UINT32_C(4294967295);
 static constexpr std::uintptr_t SLICE_LENGTH = 11;
 static constexpr std::intptr_t ISIZE = INT64_C(42);
-static constexpr char CHAR = 42;
+static constexpr std::int8_t CHAR = 42;
 // Generated from:
 // cc_bindings_from_rs/test/consts/consts.rs;l=49
 struct CRUBIT_INTERNAL_RUST_TYPE(

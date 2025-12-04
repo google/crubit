@@ -145,7 +145,7 @@ pub struct Cmdline {
 
     /// Feature flag for HIR types. When enabled, we will query the HIR for type sugar that does
     /// not appear in MIR types and use it to generate bindings.
-    #[clap(long, value_parser, value_name = "BOOL", default_value_t = true)]
+    #[clap(long, value_parser, value_name = "BOOL", default_value_t = false)]
     pub enable_hir_types: bool,
 
     /// Emit extra source information for generating cross-references.
