@@ -22,6 +22,7 @@ rust_library(
         "//common:error_report",
         "//common:ffi_types",
         "//rs_bindings_from_cc/generate_bindings/database",
+        "@crate_index//:tracing",  # v0_1
     ],
 )
 
