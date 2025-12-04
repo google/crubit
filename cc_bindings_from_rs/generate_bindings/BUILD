@@ -52,6 +52,7 @@ rust_library(
 crubit_rust_test(
     name = "format_type_test",
     srcs = ["format_type_test.rs"],
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":generate_bindings",
         ":test_helpers",
@@ -67,6 +68,7 @@ crubit_rust_test(
 crubit_rust_test(
     name = "generate_bindings_test",
     srcs = ["generate_bindings_test.rs"],
+    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":generate_bindings",
         ":test_helpers",
