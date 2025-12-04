@@ -1281,6 +1281,10 @@ impl RsTypeKind {
         matches!(self.unalias(), RsTypeKind::Primitive(Primitive::Bool))
     }
 
+    pub fn is_char(&self) -> bool {
+        matches!(self.unalias(), RsTypeKind::Primitive(Primitive::Char))
+    }
+
     pub fn is_void(&self) -> bool {
         matches!(self.unalias(), RsTypeKind::Primitive(Primitive::Void))
     }

@@ -6,6 +6,7 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
+use crubit_feature::CrubitFeature;
 use database::code_snippet::{ApiSnippets, Feature, GeneratedItem};
 use database::BindingsGenerator;
 use ir::Enum;
@@ -21,6 +22,9 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
     let name = make_rs_ident(&enum_.rs_name.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
+
+    let features = db.ir().target_crubit_features(&enum_.owning_target);
+    let enable_ffi11_types = features.contains(CrubitFeature::CustomFfiTypes);
     let enumerators = enum_.enumerators.iter().flatten().map(|enumerator| {
         if let Some(unknown_attr) = &enumerator.unknown_attr {
             let comment = format!(
@@ -32,7 +36,7 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
             };
         }
         let ident = make_rs_ident(&enumerator.identifier.identifier);
-        let value = if underlying_type.is_bool() {
+        let mut value = if underlying_type.is_bool() {
             if enumerator.value.wrapped_value == 0 {
                 quote! {false}
             } else {
@@ -44,6 +48,11 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
             } else {
                 Literal::u64_unsuffixed(enumerator.value.wrapped_value).into_token_stream()
             }
+        };
+        if enable_ffi11_types && underlying_type.is_char() {
+            value = quote! {
+                ffi_11::c_char::new(#value as u8)
+            };
         };
         quote! {pub const #ident: #name = #name(#value);}
     });

@@ -117,6 +117,12 @@ new_integer! {
     pub struct c_char(u8);
 }
 
+impl c_char {
+    pub const fn new(value: u8) -> Self {
+        Self(value)
+    }
+}
+
 // Unlike the other new_integer! types, char converts to/from any type with the same bit width.
 
 impl From<c_char> for i8 {
