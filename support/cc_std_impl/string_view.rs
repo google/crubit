@@ -2,9 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate std;
+
 use crate::slice_ptr::get_raw_parts;
 use crate::std::raw_string_view;
 use core::ptr;
+
+#[cfg(unix)]
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
 
 /// Live type for std::string_view bindings.
 ///
@@ -53,6 +58,28 @@ impl<'a> string_view<'a> {
         &*self.raw.as_raw_bytes()
     }
 
+    /// Returns an OsStr referring to the string_view's data.
+    ///
+    /// # Safety
+    ///
+    /// The viewed memory must NOT be mutated by any C++ code during `'a`.
+    /// The returned `ffi::OsStr` requires this immutability. While C++ `std::string_view`
+    /// itself provides read-only access, the C++ code owning the viewed data must
+    /// not modify it via other aliases for the duration of `'a`.
+    #[cfg(unix)]
+    pub unsafe fn as_os_str(&self) -> &'a std::ffi::OsStr {
+        // SAFETY: we forward the safety contract upward.
+        unsafe { std::ffi::OsStr::from_bytes(self.as_bytes()) }
+    }
+
+    /// Returns a Rust OsString referring to the string_view's data.
+    #[cfg(unix)]
+    pub fn to_os_string(self) -> std::ffi::OsString {
+        // SAFETY: the string is valid, and if it is mutably aliased, we do not use any aliases
+        // here.
+        unsafe { std::ffi::OsString::from_vec(std::vec::Vec::from(&*self.raw.as_raw_bytes())) }
+    }
+
     pub fn len(&self) -> usize {
         // SAFETY: `&self.raw` is valid according to the `string_view` invariants.
         unsafe { self.raw.len() }
@@ -74,6 +101,13 @@ impl<'a> string_view<'a> {
         // attempts UTF-8 conversion, yielding a `*const str` if valid. Dereferencing
         // this pointer via `&*s` is safe given the outer contract and successful UTF-8 check.
         self.raw.to_str().map(|s| &*s)
+    }
+
+    /// Perform UTF-8 validation and returns an owned String. Returns an Utf8Error otherwise.
+    pub fn to_string(&self) -> Result<std::string::String, core::str::Utf8Error> {
+        // SAFETY: The memory is valid and will not be mutated during this short borrow, as
+        // we do not call into any C++ code that might mutably alias the string.
+        unsafe { self.raw.to_str().map(|s| (*s).into()) }
     }
 }
 

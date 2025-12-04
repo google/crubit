@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 extern crate alloc;
+extern crate std;
 
 use crate::crubit_cc_std_internal::conversion_function_helpers;
 use alloc::string::String;
@@ -15,6 +16,9 @@ use core::ffi::c_void;
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::ptr::NonNull;
+
+#[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
 
 /// An owned C++ string. The pointer is guaranteed to be a non-null C++
 /// allocated pointer to std::string.
@@ -41,6 +45,20 @@ unsafe impl Sync for string {}
 impl string {
     pub fn as_slice(&self) -> &[u8] {
         self.as_ref()
+    }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.as_slice().into()
+    }
+
+    #[cfg(unix)]
+    pub fn as_os_str(&self) -> &std::ffi::OsStr {
+        std::ffi::OsStr::from_bytes(&self)
+    }
+
+    #[cfg(unix)]
+    pub fn to_os_string(&self) -> std::ffi::OsString {
+        self.as_os_str().into()
     }
 
     /// Returns a `*const c_void` pointing to the underlying C++
