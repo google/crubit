@@ -13,6 +13,7 @@ pub mod test_mod {
 }
 
 mod private_mod {
+    #[crubit_annotate::must_bind]
     pub struct ReexportedStruct {
         pub field: i32,
     }
@@ -33,6 +34,7 @@ pub use private_mod::ReexportedStruct as ExportedStruct;
 pub use private_mod::ReexportedStruct as AliasOfExportedStruct;
 
 mod gg {
+    #[crubit_annotate::must_bind]
     pub use extern_crate::X;
 }
 
@@ -47,16 +49,19 @@ pub fn return_y() -> ::extern_crate::Y {
     ::extern_crate::Y { field: 42 }
 }
 
+#[crubit_annotate::must_bind]
 pub struct Original {
     pub field: i32,
 }
 
+#[crubit_annotate::must_bind]
 pub type Alias = Original;
 
 pub use Alias as Alias2;
 
 pub mod doc_hidden_test {
     mod private_mod {
+        #[crubit_annotate::must_bind]
         pub fn private_fn() -> i32 {
             14568
         }
@@ -75,6 +80,7 @@ pub mod doc_hidden_test {
 pub mod a {
     mod b {
         pub mod c {
+            #[crubit_annotate::must_bind]
             pub fn private_middle_path() -> i32 {
                 742
             }

@@ -6,13 +6,32 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_driver;
+extern crate rustc_errors;
+extern crate rustc_interface;
 extern crate rustc_middle;
+extern crate rustc_session;
+extern crate rustc_span;
+extern crate rustc_target;
 
-use arc_anyhow::{Context, Result};
-use itertools::Itertools;
+use rustc_driver::args;
+use rustc_errors::registry;
+use rustc_interface::Config;
 use rustc_middle::ty::TyCtxt;
-use std::collections::HashMap;
-use std::path::Path;
+use rustc_session::config::{
+    self as config, ErrorOutputType, ExternEntry, ExternLocation, Externs, Sysroot, UnstableOptions,
+};
+use rustc_session::search_paths::{PathKind, SearchPath};
+use rustc_session::utils::CanonicalizedPath;
+use rustc_session::EarlyDiagCtxt;
+use rustc_span::source_map::FilePathMapping;
+use rustc_span::{FileNameDisplayPreference, RealFileName};
+use rustc_target::spec::TargetTuple;
+
+use arc_anyhow::{bail, Context, Result};
+use itertools::Itertools;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use cmdline::Cmdline;
@@ -87,6 +106,7 @@ fn new_db<'tcx>(
         cmdline.default_crate_features,
         cmdline.enable_hir_types,
         cmdline.kythe_annotations,
+        cmdline.enable_rmeta_interface,
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),
         crate_name_to_namespace.into(),
@@ -152,12 +172,150 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     Ok(())
 }
 
+/// Generates bindings using rmeta input files rather than source files and rustc args.
+/// This function exists so we can guard it behind a feature flag and should be cleaned up once
+/// we've migrated to rmetas entirely.
+fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
+    let early_dcx = EarlyDiagCtxt::new(ErrorOutputType::default());
+    rustc_driver::init_rustc_env_logger(&early_dcx);
+    let at_args = &cmdline.rustc_args;
+    let at_args = at_args.get(1..).unwrap_or_default();
+
+    let mut at_args = at_args.to_owned();
+    for (crate_name, metadata) in &cmdline.r#extern {
+        at_args.push(format!("--extern={crate_name}={metadata}"));
+    }
+
+    if let Some(target) = &cmdline.target {
+        at_args.push(format!("--target={}", target));
+    }
+
+    if let Some(sysroot) = &cmdline.sysroot {
+        at_args.push(format!("--sysroot={}", sysroot));
+    }
+
+    for library_path in &cmdline.library_dirs {
+        at_args.push(format!("-L={}", library_path));
+    }
+
+    let Some(matches) = rustc_driver::handle_options(&early_dcx, &at_args) else {
+        bail!("rustc failed to parse provided arguments")
+    };
+
+    // We do not support unstable options at the moment.
+    // We just need an instance of this struct so we can reuse the logic in rustc rather than
+    // duplicate it.
+    let unstable_opts = UnstableOptions::default();
+
+    let mut externs = config::parse_externs(&early_dcx, &matches, &unstable_opts);
+
+    let sysroot = Sysroot::new(matches.opt_str("sysroot").map(PathBuf::from));
+    let target_triple = config::parse_target_triple(&early_dcx, &matches);
+
+    // We eagerly scan all files in each passed -L path. If the same directory is passed multiple
+    // times, and the directory contains a lot of files, this can take a lot of time.
+    // So we remove -L paths that were passed multiple times, and keep only the first occurrence.
+    // We still have to keep the original order of the -L arguments.
+    let search_paths: Vec<SearchPath> = {
+        let mut seen_search_paths: HashSet<&String> = HashSet::default();
+        let search_path_matches: Vec<String> = matches.opt_strs("L");
+        search_path_matches
+            .iter()
+            .filter(|p| seen_search_paths.insert(*p))
+            .map(|path| {
+                SearchPath::from_cli_opt(
+                    sysroot.path(),
+                    &target_triple,
+                    &early_dcx,
+                    &path,
+                    unstable_opts.unstable_options,
+                )
+            })
+            .collect()
+    };
+
+    let Some(crate_name) = cmdline.source_crate_name.as_ref() else {
+        bail!("--source-crate-name must be provided when using rmetas")
+    };
+
+    let input = config::Input::Str {
+        name: rustc_span::FileName::Custom("main.rs".into()),
+        // This tells rustc to load our crate from it's rmeta.
+        input: format!(
+            r#"
+extern crate r#{};
+
+fn main() {{ }}
+"#,
+            crate_name
+        )
+        .into(),
+    };
+    let config = rustc_interface::Config {
+        // Command line options
+        opts: config::Options {
+            externs,
+            // Fix this up
+            search_paths,
+            target_triple,
+            ..config::Options::default()
+        },
+        // cfg! configuration in addition to the default ones
+        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
+        crate_check_cfg: Vec::new(), // CheckCfg
+        input,
+        output_dir: None,  // Option<PathBuf>
+        output_file: None, // Option<PathBuf>
+        file_loader: None, // Option<Box<dyn FileLoader + Send + Sync>>
+        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_owned(),
+        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
+        // This is a callback from the driver that is called when [`ParseSess`] is created.
+        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
+        // This is a callback from the driver that is called when we're registering lints;
+        // it is called during plugin registration when we have the LintStore in a non-shared state.
+        //
+        // Note that if you find a Some here you probably want to call that function in the new
+        // function being registered.
+        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
+        // This is a callback from the driver that is called just after we have populated
+        // the list of queries.
+        //
+        // The second parameter is local providers and the third parameter is external providers.
+        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
+        // Registry of diagnostics codes.
+        registry: registry::Registry::new(rustc_errors::codes::DIAGNOSTICS),
+        make_codegen_backend: None,
+        ice_file: None,
+        hash_untracked_state: None,
+        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
+        extra_symbols: vec![],
+    };
+    rustc_interface::run_compiler(config, |compiler| {
+        // Parse the program and print the syntax tree.
+        let krate = rustc_interface::passes::parse(&compiler.sess);
+        // Analyze the program and inspect the types of definitions.
+        rustc_interface::create_and_enter_global_ctxt(&compiler, krate, |tcx| {
+            // Make sure name resolution and macro expansion is run.
+            let _ = tcx.resolver_for_lowering();
+
+            tcx.ensure_ok().analysis(());
+            // Now that we've run analysis to prime the compiler, run our callback.
+            run_with_tcx(&cmdline, tcx).expect("Binding generation failed")
+        });
+    });
+    Ok(())
+}
+
 /// Main entrypoint that (unlike `main`) doesn't do any intitializations that
 /// should only happen once for the binary (e.g. it doesn't call
 /// `init_env_logger`) and therefore can be used from the tests module below.
-fn run_with_cmdline_args(args: &[String]) -> Result<()> {
-    let cmdline = Cmdline::new(args)?;
-    run_compiler(&cmdline.rustc_args, |tcx| run_with_tcx(&cmdline, tcx))
+fn run_with_cmdline_args(raw_args: &[String]) -> Result<()> {
+    let cmdline = Cmdline::new(raw_args)?;
+    if cmdline.enable_rmeta_interface {
+        run_with_rmetas(&cmdline)
+    } else {
+        run_compiler(&cmdline.rustc_args, |tcx| run_with_tcx(&cmdline, tcx))
+    }
 }
 
 fn main() -> Result<()> {

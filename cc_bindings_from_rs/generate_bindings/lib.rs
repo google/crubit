@@ -119,22 +119,56 @@ fn repr_attrs_from_db(
 }
 
 fn source_crate_num(db: &dyn BindingsGenerator<'_>) -> CrateNum {
-    let Some(source_crate_name) = db.source_crate_name() else {
-        return LOCAL_CRATE;
-    };
-    let source_crate_name = Symbol::intern(&*source_crate_name);
-    let tcx = db.tcx();
-    let Some(crate_num) = tcx
-        .used_crates(())
-        .iter()
-        .copied()
-        .find(|&crate_num| tcx.crate_name(crate_num) == source_crate_name)
-    else {
-        db.fatal_errors()
-            .report(&format!("Failed to resolve source crate name: `{source_crate_name}`"));
-        return LOCAL_CRATE;
-    };
-    crate_num
+    // This is a temporary workaround while migrating to the rmeta interface. Our old implementation
+    // breaks with some rmeta files, notably proto files, due to crate renaming behavior. But our
+    // new implementation relies on assuming our source is the placeholder file provided by
+    // compilation.
+    if db.enable_rmeta_interface() {
+        let tcx = db.tcx();
+        // We know statically this will be the fake input
+        // ```
+        // extern crate <source-crate-name>;
+        // fn main() {}
+        // ```
+        // And we use that fact here to look up the def id of `extern crate <source-crate-name>`.
+        let mod_children = tcx.module_children_local(LOCAL_CRATE.as_def_id().expect_local());
+        mod_children
+            .iter()
+            .find_map(|mod_child| {
+                if db
+                    .source_crate_name()
+                    .is_some_and(|name| name.as_ref() == mod_child.ident.as_str())
+                {
+                    use rustc_middle::metadata::Reexport;
+                    mod_child.reexport_chain.first().and_then(|reexport| match reexport {
+                        Reexport::ExternCrate(def_id) => def_id.as_local(),
+                        _ => None,
+                    })
+                } else {
+                    None
+                }
+            })
+            .and_then(|def_id| tcx.resolutions(()).extern_crate_map.get(&def_id))
+            .cloned()
+            .unwrap_or(LOCAL_CRATE)
+    } else {
+        let Some(source_crate_name) = db.source_crate_name() else {
+            return LOCAL_CRATE;
+        };
+        let source_crate_name = Symbol::intern(source_crate_name.as_ref());
+        let tcx = db.tcx();
+        let Some(crate_num) = tcx
+            .used_crates(())
+            .iter()
+            .copied()
+            .find(|&crate_num| tcx.crate_name(crate_num) == source_crate_name)
+        else {
+            db.fatal_errors()
+                .report(&format!("Failed to resolve source crate name: `{source_crate_name}`"));
+            return LOCAL_CRATE;
+        };
+        crate_num
+    }
 }
 
 pub fn new_database<'db>(
@@ -145,6 +179,7 @@ pub fn new_database<'db>(
     default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     enable_hir_types: bool,
     kythe_annotations: bool,
+    enable_rmeta_interface: bool,
     crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
     crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,
     crate_name_to_namespace: Rc<HashMap<Rc<str>, Rc<str>>>,
@@ -162,6 +197,7 @@ pub fn new_database<'db>(
         default_features,
         enable_hir_types,
         kythe_annotations,
+        enable_rmeta_interface,
         crate_name_to_include_paths,
         crate_name_to_features,
         crate_name_to_namespace,
@@ -538,7 +574,17 @@ fn symbol_canonical_name(
         })
         .or_else(|| db.symbol_unqualified_name(def_id))?;
 
-    let krate = tcx.crate_name(def_id.krate);
+    // `crate_name` gets the crate name written out in the rmeta file, which is not always the name
+    // we want to spell out in our generated bindings. Proto targets, for example, rename their crate
+    // to include the `_rust_proto` suffix, but the rmeta file contains the unsuffixed crate name.
+    // If we're naming a symbol from our source crate, use the source crate name as the krate name
+    // to resolve any renaming issues.
+    let krate = (def_id.krate == db.source_crate_num())
+        .then_some(())
+        .and_then(|_| db.source_crate_name())
+        .map(|source_crate_name| Symbol::intern(source_crate_name.as_ref()))
+        .unwrap_or_else(|| tcx.crate_name(def_id.krate));
+    //let krate = tcx.crate_name(def_id.krate);
     if krate.as_str() == "polars_plan"
         && matches!(unqualified.rs_name.as_str(), "date_range" | "time_range")
     {
@@ -1151,11 +1197,14 @@ fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String
             Err(_) => return "unknown location".to_string(),
         };
     let file_name = file.name.prefer_local().to_string();
+    // Virtual paths will have a "./" prefix that we don't want to display.
+    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
+
     // Note: line_index starts at 0, while most everything else starts indexing at 1.
     let line_number = (lines[0].line_index + 1).to_string();
     if let Some(path_format) = db.crubit_debug_path_format() {
         if file.name.is_real() {
-            return path_format.format(&[file_name.as_str(), line_number.as_str()]);
+            return path_format.format(&[file_name, line_number.as_str()]);
         }
     }
     format!("{file_name};l={line_number}")

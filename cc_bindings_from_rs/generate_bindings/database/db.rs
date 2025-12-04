@@ -61,6 +61,10 @@ memoized::query_group! {
       fn kythe_annotations(&self) -> bool;
 
       #[input]
+      /// Feature flag for rmeta commandline interface.
+      fn enable_rmeta_interface(&self) -> bool;
+
+      #[input]
       /// A map from a crate name to the include paths of the corresponding C++
       /// headers This is used when formatting a type exported from another
       /// crate.

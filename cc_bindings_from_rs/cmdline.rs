@@ -155,6 +155,30 @@ pub struct Cmdline {
     /// Default corpus to use for Kythe vnames.
     #[clap(long, value_parser, value_name = "STRING", default_value = "corpus")]
     pub kythe_default_corpus: Option<String>,
+
+    /// The target triple for our compilation. This must match the target triple originally used to
+    /// compile the Rust crate we're generating bindings for.
+    #[clap(long = "target", value_parser, value_name = "STRING")]
+    pub target: Option<String>,
+
+    /// The sysroot for our compilation.
+    #[clap(long = "sysroot", value_parser, value_name = "STRING")]
+    pub sysroot: Option<String>,
+
+    /// Explicitly specified dependencies of binding generation. This should include the crate to be
+    /// generated alongside it's dependencies.
+    #[clap(long = "extern", value_parser = parse_key_value_pair, value_name = "CRATE_NAME=FILE")]
+    pub r#extern: Vec<(String, String)>,
+
+    /// List of directories to search for dependencies.
+    // We pass this to rustc under the hood and rely on it to parse it correctly, so we only take a
+    // string here.
+    #[clap(short = 'L', value_parser, value_name = "[<KIND>=]<PATH>")]
+    pub library_dirs: Vec<String>,
+
+    /// Enables new command line interface that uses .rmeta files to generate bindings.
+    #[clap(long = "enable-rmeta-interface", value_parser, value_name = "BOOL")]
+    pub enable_rmeta_interface: bool,
 }
 
 impl Cmdline {

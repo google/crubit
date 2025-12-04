@@ -26,8 +26,10 @@ namespace uses {
 // cc_bindings_from_rs/test/uses/uses.rs;l=10
 std::int32_t f();
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=16
+// cc_bindings_from_rs/test/uses/uses.rs;l=17
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") alignas(4) [[clang::trivial_abi]]
 AliasOfExportedStruct final {
@@ -49,12 +51,12 @@ AliasOfExportedStruct final {
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/uses/uses.rs;l=21
+  // cc_bindings_from_rs/test/uses/uses.rs;l=22
   static ::uses::AliasOfExportedStruct create(std::int32_t field);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=17
+    // cc_bindings_from_rs/test/uses/uses.rs;l=18
     std::int32_t field;
   };
 
@@ -63,21 +65,23 @@ AliasOfExportedStruct final {
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=26
+// cc_bindings_from_rs/test/uses/uses.rs;l=27
 std::int32_t private_fn();
 
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=41
+// cc_bindings_from_rs/test/uses/uses.rs;l=43
 ::extern_crate::X return_x();
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=46
+// cc_bindings_from_rs/test/uses/uses.rs;l=48
 ::extern_crate::Y return_y();
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=50
+// cc_bindings_from_rs/test/uses/uses.rs;l=53
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
@@ -97,7 +101,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=51
+    // cc_bindings_from_rs/test/uses/uses.rs;l=54
     std::int32_t field;
   };
 
@@ -107,16 +111,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
 
 namespace doc_hidden_test::visible {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=60
+// cc_bindings_from_rs/test/uses/uses.rs;l=65
 std::int32_t private_fn();
 
 }  // namespace doc_hidden_test::visible
 
 namespace a::c {
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=78
+// cc_bindings_from_rs/test/uses/uses.rs;l=84
 std::int32_t private_middle_path();
 
 }  // namespace a::c
