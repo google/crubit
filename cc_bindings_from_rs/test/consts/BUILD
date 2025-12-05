@@ -27,6 +27,9 @@ rust_library(
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
+    deps = [
+        "//support/ffi_11",
+    ],
 )
 
 golden_test(

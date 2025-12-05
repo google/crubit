@@ -160,6 +160,20 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
                 format!("INT64_C({value})")
             }
         }
+        // Handle ffi_11 wrapper types.
+        TyKind::Adt(adt, _) if tcx.crate_name(adt.did().krate).as_str() == "ffi_11" => {
+            let name = tcx.item_name(adt.did());
+            match name.as_str() {
+                "c_char" => scalar.to_u8().to_string(),
+                // If ffi_11::c_long is a wrapper type (and not a type alias) it will be 32 bit,
+                // same for c_ulong.
+                "c_long" => format!("INT32_C({})", scalar.to_i32()),
+                "c_ulong" => format!("UINT32_C({})", scalar.to_u32()),
+                "c_longlong" => format!("INT64_C({})", scalar.to_i64()),
+                "c_ulonglong" => format!("UINT64_C({})", scalar.to_u64()),
+                _ => bail!("Unsupported ffi_11 type: {:?}", kind),
+            }
+        }
         _ => bail!("Unsupported constant type: {:?}", kind),
     })
 }
