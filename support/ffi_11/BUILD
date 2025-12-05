@@ -7,9 +7,5 @@ rust_library(
     srcs = glob(["src/*.rs"]),
     compatible_with = ["//buildenv/target:non_prod"],
     crate_features = ["crubit"],
-    visibility = [
-        "//:__subpackages__",
-        "//base:__pkg__",
-        "@abseil-cpp//absl/log:__pkg__",
-    ],
+    visibility = ["//visibility:public"],
 )
