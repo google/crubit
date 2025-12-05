@@ -9,5 +9,6 @@ rust_library(
     crate_features = ["crubit"],
     visibility = [
         "//:__subpackages__",
+        "//base:__pkg__",
     ],
 )
