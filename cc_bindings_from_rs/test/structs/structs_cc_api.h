@@ -144,8 +144,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~Point();
 
-  // C++ moves are deleted because there's no non-destructive implementation
-  // available.
+  // C++ move operations are unavailable for this type. See
+  // http://<internal link>/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
   Point(Point&&) = delete;
   Point& operator=(Point&&) = delete;
   // `structs_golden::non_cpp_movable::Point` doesn't implement the `Clone`

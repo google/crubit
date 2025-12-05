@@ -142,8 +142,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   // Drop::drop
   ~NonCppMovable();
 
-  // C++ moves are deleted because there's no non-destructive implementation
-  // available.
+  // C++ move operations are unavailable for this type. See
+  // http://<internal link>/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
   NonCppMovable(NonCppMovable&&) = delete;
   NonCppMovable& operator=(NonCppMovable&&) = delete;
   // `tuples_golden::NonCppMovable` doesn't implement the `Clone` trait

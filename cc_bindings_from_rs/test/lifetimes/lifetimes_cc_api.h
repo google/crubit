@@ -124,8 +124,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~StructWithLifetimeAndDropGlue();
 
-  // C++ moves are deleted because there's no non-destructive implementation
-  // available.
+  // C++ move operations are unavailable for this type. See
+  // http://<internal link>/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
   StructWithLifetimeAndDropGlue(StructWithLifetimeAndDropGlue&&) = delete;
   StructWithLifetimeAndDropGlue& operator=(StructWithLifetimeAndDropGlue&&) =
       delete;
