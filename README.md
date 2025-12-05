@@ -1,6 +1,6 @@
 # Crubit: C++/Rust Bidirectional Interop Tool
 
-[![Build status](https://badge.buildkite.com/7a57a14e68aa3a0ab70972cbf2a35fd79d342ba152fee4a5b4.svg)](https://buildkite.com/bazel/crubit)
+![rust workflow](https://github.com/google/crubit/actions/workflows/rust.yml/badge.svg)
 
 NOTE: Crubit currently expects deep integration with the build system, and is
 difficult to deploy to environments dissimilar to Google's monorepo. External
