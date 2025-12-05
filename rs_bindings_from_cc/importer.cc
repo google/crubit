@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <map>
@@ -606,6 +607,19 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   llvm::copy(GetOrderedItemIdsOfTemplateInstantiations(),
              std::back_inserter(
                  invocation_.ir_.top_level_item_ids[invocation_.target_]));
+
+  // Remove any unsupported alien (to the current target) items.
+  // TODO(zarko): What's the meaning of `label` here? Only running this fixup
+  // step when `label == invocation_.target_` still triggers the gwslog bug.
+  // Does it even make sense to check IsUnsupportedAndAlien for items belonging
+  // to a different label?
+  for (auto& [label, item_ids] : invocation_.ir_.top_level_item_ids) {
+    item_ids.erase(std::remove_if(item_ids.begin(), item_ids.end(),
+                                  [&](ItemId item_id) {
+                                    return IsUnsupportedAndAlien(item_id);
+                                  }),
+                   item_ids.end());
+  }
 }
 
 void Importer::ImportDeclsFromDeclContext(
