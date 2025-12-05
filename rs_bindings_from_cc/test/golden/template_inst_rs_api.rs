@@ -31,7 +31,7 @@ pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
 pub(crate) struct __CcTemplateInst10MyTemplateIiE {
-    pub field: ::core::ffi::c_int,
+    pub field: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}

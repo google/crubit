@@ -18,7 +18,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=type
 pub struct r#type {
-    pub r#dyn: ::core::ffi::c_int,
+    pub r#dyn: ::ffi_11::c_int,
 }
 impl !Send for r#type {}
 impl !Sync for r#type {}
@@ -57,7 +57,7 @@ impl Default for r#type {
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 #[inline(always)]
-pub fn r#impl(r#match: ::core::ffi::c_int) {
+pub fn r#impl(r#match: ::ffi_11::c_int) {
     unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }
 }
 
@@ -73,7 +73,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN4typeC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_Z4impli"]
-        pub(crate) unsafe fn __rust_thunk___Z4impli(r#match: ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z4impli(r#match: ::ffi_11::c_int);
     }
 }
 

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:owned_ptr_user
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]
@@ -20,25 +20,25 @@
 ///
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=14
 #[inline(always)]
-pub fn MakeOwnedThing(value: ::core::ffi::c_int) -> ::owned_ptr::OwnedThing {
+pub fn MakeOwnedThing(value: ::ffi_11::c_int) -> ::owned_ptr::OwnedThing {
     unsafe { ::core::mem::transmute(crate::detail::__rust_thunk___Z14MakeOwnedThingi(value)) }
 }
 
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=16
 #[inline(always)]
-pub fn MakeThing(value: ::core::ffi::c_int) -> *mut ::owned_ptr::RawThing {
+pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
     unsafe { crate::detail::__rust_thunk___Z9MakeThingi(value) }
 }
 
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=18
 #[inline(always)]
-pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::core::ffi::c_int {
+pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z12ThingToValueP5Thing(::core::mem::transmute(thingptr))
 }
 
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=20
 #[inline(always)]
-pub unsafe fn GetThingValue(thingptr: *mut ::owned_ptr::RawThing) -> ::core::ffi::c_int {
+pub unsafe fn GetThingValue(thingptr: *mut ::owned_ptr::RawThing) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z13GetThingValueP5Thing(thingptr)
 }
 
@@ -58,19 +58,19 @@ mod detail {
     unsafe extern "C" {
         #[link_name = "_Z14MakeOwnedThingi"]
         pub(crate) unsafe fn __rust_thunk___Z14MakeOwnedThingi(
-            value: ::core::ffi::c_int,
+            value: ::ffi_11::c_int,
         ) -> *mut ::owned_ptr::RawThing;
         #[link_name = "_Z9MakeThingi"]
         pub(crate) unsafe fn __rust_thunk___Z9MakeThingi(
-            value: ::core::ffi::c_int,
+            value: ::ffi_11::c_int,
         ) -> *mut ::owned_ptr::RawThing;
         #[link_name = "_Z12ThingToValueP5Thing"]
         pub(crate) unsafe fn __rust_thunk___Z12ThingToValueP5Thing(
             thingptr: *mut ::owned_ptr::RawThing,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         #[link_name = "_Z13GetThingValueP5Thing"]
         pub(crate) unsafe fn __rust_thunk___Z13GetThingValueP5Thing(
             thingptr: *mut ::owned_ptr::RawThing,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
     }
 }

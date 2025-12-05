@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/fallback_types:wrapper_library
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]
@@ -26,7 +26,7 @@ pub(crate) fn GetGlobalUnsupportedType(
 #[inline(always)]
 pub(crate) unsafe fn SetValue(
     x: *mut ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()>,
-    value: ::core::ffi::c_int,
+    value: ::ffi_11::c_int,
 ) {
     crate::detail::__rust_thunk___Z8SetValueR15UnsupportedTypei(x, value)
 }
@@ -35,7 +35,7 @@ pub(crate) unsafe fn SetValue(
 #[inline(always)]
 pub(crate) unsafe fn GetValue(
     x: *const ::forward_declare::Incomplete<::forward_declare::symbol!("UnsupportedType"), ()>,
-) -> ::core::ffi::c_int {
+) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z8GetValueRK15UnsupportedType(x)
 }
 
@@ -55,13 +55,13 @@ mod detail {
                 ::forward_declare::symbol!("UnsupportedType"),
                 (),
             >,
-            value: ::core::ffi::c_int,
+            value: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___Z8GetValueRK15UnsupportedType(
             x: *const ::forward_declare::Incomplete<
                 ::forward_declare::symbol!("UnsupportedType"),
                 (),
             >,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
     }
 }

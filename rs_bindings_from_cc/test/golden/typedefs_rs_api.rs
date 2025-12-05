@@ -60,7 +60,7 @@ pub mod some_struct {
     #[allow(unused_imports)]
     use super::*;
 
-    pub type nested_type = ::core::ffi::c_int;
+    pub type nested_type = ::ffi_11::c_int;
 }
 
 // Error while generating bindings for type alias 'SomeStruct':

@@ -21,7 +21,7 @@
 #![deny(warnings)]
 
 #[inline(always)]
-pub unsafe fn free_function(p1: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int {
+pub unsafe fn free_function(p1: *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z13free_functionRi(p1)
 }
 
@@ -53,9 +53,9 @@ impl S {
     #[inline(always)]
     pub unsafe fn const_method(
         __this: *const Self,
-        p1: *mut ::core::ffi::c_int,
-        p2: *mut ::core::ffi::c_int,
-    ) -> *mut ::core::ffi::c_int {
+        p1: *mut ::ffi_11::c_int,
+        p2: *mut ::ffi_11::c_int,
+    ) -> *mut ::ffi_11::c_int {
         crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
 }
@@ -64,9 +64,9 @@ impl S {
     #[inline(always)]
     pub unsafe fn method(
         __this: *mut Self,
-        p1: *mut ::core::ffi::c_int,
-        p2: *mut ::core::ffi::c_int,
-    ) -> *mut ::core::ffi::c_int {
+        p1: *mut ::ffi_11::c_int,
+        p2: *mut ::ffi_11::c_int,
+    ) -> *mut ::ffi_11::c_int {
         crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
@@ -130,7 +130,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 }
 
 #[inline(always)]
-pub unsafe fn take_pointer(p: *mut ::core::ffi::c_int) {
+pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
@@ -150,9 +150,9 @@ unsafe impl ::cxx::ExternType for WrappedValue {
     type Kind = ::cxx::kind::Trivial;
 }
 
-impl From<::core::ffi::c_int> for WrappedValue {
+impl From<::ffi_11::c_int> for WrappedValue {
     #[inline(always)]
-    fn from(value: ::core::ffi::c_int) -> Self {
+    fn from(value: ::ffi_11::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12WrappedValueC1Ei(&raw mut tmp as *mut _, value);
@@ -160,12 +160,12 @@ impl From<::core::ffi::c_int> for WrappedValue {
         }
     }
 }
-impl ::ctor::CtorNew<::core::ffi::c_int> for WrappedValue {
+impl ::ctor::CtorNew<::ffi_11::c_int> for WrappedValue {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
-        <Self as From<::core::ffi::c_int>>::from(args)
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+        <Self as From<::ffi_11::c_int>>::from(args)
     }
 }
 
@@ -191,21 +191,21 @@ mod detail {
     unsafe extern "C" {
         #[link_name = "_Z13free_functionRi"]
         pub(crate) unsafe fn __rust_thunk___Z13free_functionRi(
-            p1: *mut ::core::ffi::c_int,
-        ) -> *mut ::core::ffi::c_int;
+            p1: *mut ::ffi_11::c_int,
+        ) -> *mut ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) unsafe fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const crate::S,
-            p1: *mut ::core::ffi::c_int,
-            p2: *mut ::core::ffi::c_int,
-        ) -> *mut ::core::ffi::c_int;
+            p1: *mut ::ffi_11::c_int,
+            p2: *mut ::ffi_11::c_int,
+        ) -> *mut ::ffi_11::c_int;
         #[link_name = "_ZN1S6methodERiS0_"]
         pub(crate) unsafe fn __rust_thunk___ZN1S6methodERiS0_(
             __this: *mut crate::S,
-            p1: *mut ::core::ffi::c_int,
-            p2: *mut ::core::ffi::c_int,
-        ) -> *mut ::core::ffi::c_int;
+            p1: *mut ::ffi_11::c_int,
+            p2: *mut ::ffi_11::c_int,
+        ) -> *mut ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
             '__return_lifetime,
         >(
@@ -227,10 +227,10 @@ mod detail {
             __this: ::core::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         #[link_name = "_Z12take_pointerPi"]
-        pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(p: *mut ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(p: *mut ::ffi_11::c_int);
         pub(crate) unsafe fn __rust_thunk___ZN12WrappedValueC1Ei(
             __this: *mut ::core::ffi::c_void,
-            value: ::core::ffi::c_int,
+            value: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK12WrappedValueplERKS_(
             __return: *mut ::core::ffi::c_void,

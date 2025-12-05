@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/method:example_lib
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -21,7 +21,7 @@ pub mod foo {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Bar
     pub struct Bar {
-        pub x: ::core::ffi::c_int,
+        pub x: ::ffi_11::c_int,
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}

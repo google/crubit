@@ -11,4 +11,5 @@ SUPPORTED_FEATURES = [
     "non_unpin_ctor",
     "std_vector",
     "std_unique_ptr",
+    "custom_ffi_types",
 ]
