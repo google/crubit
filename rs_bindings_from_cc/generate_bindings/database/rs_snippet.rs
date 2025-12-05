@@ -223,45 +223,14 @@ pub fn should_derive_clone(record: &Record) -> bool {
         TraitImplPolarity::None => {
             if record.is_union() {
                 // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
-                should_derive_copy(record)
+                record.should_derive_copy()
             } else {
                 record.is_unpin()
                     && record.copy_constructor == SpecialMemberFunc::Trivial
-                    && check_by_value(record).is_ok()
+                    && record.check_by_value().is_ok()
             }
         }
     }
-}
-
-pub fn should_derive_copy(record: &Record) -> bool {
-    match record.trait_derives.copy {
-        TraitImplPolarity::Positive => true,
-        TraitImplPolarity::Negative => false,
-        TraitImplPolarity::None => {
-            record.is_unpin()
-                && record.copy_constructor == SpecialMemberFunc::Trivial
-                && record.destructor == SpecialMemberFunc::Trivial
-                && check_by_value(record).is_ok()
-                && record.trait_derives.clone != TraitImplPolarity::Negative
-        }
-    }
-}
-
-/// Returns Ok if the type can exist by value.
-///
-/// This does not necessarily imply that the type is Rust movable, e.g. trivially relocatable.
-pub fn check_by_value(record: &Record) -> Result<()> {
-    ensure!(
-        record.destructor != SpecialMemberFunc::Unavailable,
-        "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
-        record.cc_name
-    );
-    ensure!(
-        !record.is_abstract,
-        "Can't directly construct values of type `{}`: it is abstract",
-        record.cc_name
-    );
-    Ok(())
 }
 
 /// Location where a type is used.
@@ -1094,7 +1063,7 @@ impl RsTypeKind {
     pub fn check_by_value(&self) -> Result<()> {
         match self.unalias() {
             RsTypeKind::Error { error, .. } => bail!("Cannot use an error type by value: {error}"),
-            RsTypeKind::Record { record, .. } => check_by_value(record),
+            RsTypeKind::Record { record, .. } => record.check_by_value(),
             RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
                 bail!(
                     "Attempted to pass incomplete record type `{}` by-value",
@@ -1219,7 +1188,7 @@ impl RsTypeKind {
             RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
             RsTypeKind::RvalueReference { .. } => false,
             RsTypeKind::IncompleteRecord { .. } => false,
-            RsTypeKind::Record { record, .. } => should_derive_copy(record),
+            RsTypeKind::Record { record, .. } => record.should_derive_copy(),
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
