@@ -25,7 +25,7 @@
 ///CRUBIT_ANNOTATE: cpp_type=B
 pub struct B {
     /// Reason for representing this field as a blob of bytes:
-    /// Can't generate bindings for A<B::PrivateMember> due to missing bindings for its dependency: Unsupported type 'B::PrivateMember': No generated bindings found for 'PrivateMember'
+    /// Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
     pub(crate) a_: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for B {}
@@ -48,9 +48,9 @@ impl Default for B {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=11
-// Error while generating bindings for class 'A<B::PrivateMember>':
-// Can't generate bindings for A<B::PrivateMember> due to missing bindings for its dependency: Unsupported type 'B::PrivateMember': No generated bindings found for 'PrivateMember'
+// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=10
+// Error while generating bindings for class 'A':
+// Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
 
 mod detail {
     #[allow(unused_imports)]

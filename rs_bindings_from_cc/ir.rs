@@ -1054,6 +1054,7 @@ pub enum BridgeType {
         rust_name: Rc<str>,
         abi_rust: Rc<str>,
         abi_cpp: Rc<str>,
+        template_args: Rc<[TemplateArg]>,
     },
     StdOptional(CcType),
     StdPair(CcType, CcType),
@@ -1068,14 +1069,30 @@ pub struct TemplateArg {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TemplateSpecialization {
-    /// Is this a `std::string_view`?
-    pub is_string_view: bool,
-    /// Is this a `std::wstring_view`?
-    pub is_wstring_view: bool,
     /// The target containing the template definition
     pub defining_target: BazelLabel,
-    pub template_name: Rc<str>,
-    pub template_args: Vec<TemplateArg>,
+
+    /// The kind of template specialization.
+    pub kind: TemplateSpecializationKind,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum TemplateSpecializationKind {
+    /// std::basic_string_view<char, std::char_traits<char>>
+    StdStringView,
+    /// std::basic_string_view<wchar_t, std::char_traits<wchar_t>>
+    StdWStringView,
+    /// std::vector<T, std::allocator<T>>
+    StdVector { element_type: TemplateArg },
+    /// std::unique_ptr<T, std::default_delete<T>>
+    StdUniquePtr { element_type: TemplateArg },
+    /// c9::Co<T>
+    C9Co { element_type: TemplateArg },
+    /// absl::Span<T>
+    AbslSpan { element_type: TemplateArg },
+    /// Some other template specialization.
+    NonSpecial,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1242,7 +1259,7 @@ impl Record {
     pub fn is_disallowed_template_instantiation(self: &Record) -> bool {
         self.template_specialization
             .as_ref()
-            .is_some_and(|ts| !ts.is_string_view && !ts.is_wstring_view)
+            .is_some_and(|ts| matches!(ts.kind, TemplateSpecializationKind::NonSpecial))
     }
 
     pub fn defining_target(&self) -> Option<&BazelLabel> {
