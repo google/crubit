@@ -729,7 +729,11 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
         },
         RsTypeKind::Record { record, crate_path, .. } => {
-            database::rs_snippet::check_by_value(record.as_ref())?;
+            ensure!(
+                record.is_unpin(),
+                "Type `{}` must be Rust-movable in order to memcpy through a bridge buffer. See <internal link>/cpp/classes_and_structs#rust_movable",
+                record.cc_name
+            );
 
             let rust_type = crate_path
                 .to_fully_qualified_path(make_rs_ident(record.rs_name.identifier.as_ref()));

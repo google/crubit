@@ -247,6 +247,9 @@ pub fn should_derive_copy(record: &Record) -> bool {
     }
 }
 
+/// Returns Ok if the type can exist by value.
+///
+/// This does not necessarily imply that the type is Rust movable, e.g. trivially relocatable.
 pub fn check_by_value(record: &Record) -> Result<()> {
     ensure!(
         record.destructor != SpecialMemberFunc::Unavailable,
