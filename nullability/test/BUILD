@@ -173,6 +173,26 @@ cc_test(
 )
 
 cc_test(
+    name = "default_member_initializers",
+    srcs = ["default_member_initializers.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "default_member_initializers_smart_pointers",
+    srcs = ["default_member_initializers_smart_pointers.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "fields",
     srcs = ["fields.cc"],
     deps = [

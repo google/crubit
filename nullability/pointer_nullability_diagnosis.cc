@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "absl/log/check.h"
@@ -807,29 +808,25 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseReturn(
       PointerNullabilityDiagnostic::Context::ReturnValue);
 }
 
+// Warn when class members are explicitly initialized to a nullable value in the
+// member initializer list. Initialization to null via a default member
+// initializer or default initialization (i.e. no initializer expression) is
+// warned on elsewhere (`checkNonnullPointerMemberDefaultInitializer()` and
+// `diagnoseNonnullPointerFieldNullableAtExit()`).
 static SmallVector<PointerNullabilityDiagnostic> diagnoseMemberInitializer(
     const CXXCtorInitializer* absl_nonnull CI,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
   CHECK(CI->isAnyMemberInitializer());
-  auto* Member = CI->getAnyMember();
-  const auto* InitExpr = CI->getInit();
+  const FieldDecl& Member = *CI->getAnyMember();
+
+  // Ignore default initialization and use of a default member initializer.
   if (!CI->isWritten()) {
-    // Don't warn if a nonnull pointer field is merely default-initialized to
-    // null. (If the constructor doesn't initialize the field to nonnull, we'll
-    // catch this in diagnoseNonnullSmartPointerFieldMovedFromAtExit.)
-    if (!isa<CXXDefaultInitExpr>(InitExpr)) return {};
-    // Do warn if a nonnull pointer field has an in-class initializer that
-    // explicitly initializes it to null.
-    return diagnoseAssignmentLike(
-        Member->getType(),
-        getTypeNullability(*Member, State.Lattice.defaults()), InitExpr, State,
-        *Result.Context, PointerNullabilityDiagnostic::Context::Initializer,
-        nullptr, nullptr,
-        CharSourceRange::getTokenRange(Member->getSourceRange()));
+    return {};
   }
+
   return diagnoseAssignmentLike(
-      Member->getType(), getTypeNullability(*Member, State.Lattice.defaults()),
-      InitExpr, State, *Result.Context,
+      Member.getType(), getTypeNullability(Member, State.Lattice.defaults()),
+      CI->getInit(), State, *Result.Context,
       PointerNullabilityDiagnostic::Context::Initializer);
 }
 
@@ -1087,6 +1084,74 @@ static void checkAnnotationsConsistent(
   }
 }
 
+static void checkNonnullPointerMemberDefaultInitializer(
+    clang::ASTContext& Ctx, const TypeNullabilityDefaults& Defaults,
+    const FieldDecl& Member,
+    llvm::SmallVector<PointerNullabilityDiagnostic>& Diags) {
+  // Ignore if the member is not a pointer annotated as nonnull.
+  TypeNullability MemberTypeNullability = getTypeNullability(Member, Defaults);
+  if (MemberTypeNullability.empty() ||
+      MemberTypeNullability.front().concrete() != NullabilityKind::NonNull) {
+    return;
+  }
+
+  // Ignore if there is no default member initializer.
+  if (!Member.hasInClassInitializer()) {
+    return;
+  }
+  const Expr* Initializer = Member.getInClassInitializer();
+  if (Initializer == nullptr) {
+    return;
+  }
+
+  // Ignore if this is not a C++ class or struct.
+  const CXXRecordDecl* RD =
+      dyn_cast_if_present<CXXRecordDecl>(Member.getParent());
+  if (RD == nullptr) {
+    return;
+  }
+  const TagDecl::TagKind DeclKind = RD->getTagKind();
+  if (DeclKind != TagDecl::TagKind::Class &&
+      DeclKind != TagDecl::TagKind::Struct) {
+    return;
+  }
+
+  // Ignore if the initializer expression is not a null pointer constant.
+  // The constant may be wrapped in casts and, in the case of smart pointers,
+  // converting constructors. `isNullPointerConstant` handles most wrapper nodes
+  // but does not handle constructors (`CXXConstructExpr`), so we use
+  // `getSubExprAsWritten()` for that case.
+  // TODO: b/376638797 - Warn on nullable expressions other than null pointer
+  // constants in default member initializers.
+  if (const CastExpr* SubExpr = dyn_cast<CastExpr>(Initializer)) {
+    Initializer = SubExpr->getSubExprAsWritten();
+  }
+  if (!Initializer->isNullPointerConstant(Ctx,
+                                          Expr::NPC_ValueDependentIsNotNull)) {
+    return;
+  }
+
+  PointerNullabilityDiagnostic Diagnostic = {
+      .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
+      .Ctx = PointerNullabilityDiagnostic::Context::Initializer,
+      .Range = getRangeModuloMacros(
+          CharSourceRange::getTokenRange(Initializer->getSourceRange()), Ctx),
+  };
+
+  // Suggest using `ABSL_REQUIRE_EXPLICIT_INIT` for aggregate classes.
+  if (RD->isAggregate()) {
+    Diagnostic.NoteRange = getRangeModuloMacros(
+        CharSourceRange::getTokenRange(Member.getSourceRange()), Ctx),
+    Diagnostic.NoteMessage =
+        "This nonnull-annotated class member should have a nonnull initializer."
+        " If there is no appropriate default, consider using "
+        "ABSL_REQUIRE_EXPLICIT_INIT and setting each instance to a nonnull "
+        "value (instead of using a null default).";
+  }
+
+  Diags.push_back(std::move(Diagnostic));
+}
+
 static CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl& Method) {
   if (!Method.hasBody()) {
     // If the method doesn't have a body, fall back to using the entire method
@@ -1291,6 +1356,10 @@ diagnosePointerNullability(const ValueDecl* VD,
   TypeNullabilityDefaults Defaults{Ctx, Pragmas};
 
   checkAnnotationsConsistent(VD, Diags, Defaults);
+
+  if (const FieldDecl* Member = dyn_cast<FieldDecl>(VD)) {
+    checkNonnullPointerMemberDefaultInitializer(Ctx, Defaults, *Member, Diags);
+  }
 
   const auto* Func = dyn_cast<FunctionDecl>(VD);
   if (Func == nullptr) return Diags;
