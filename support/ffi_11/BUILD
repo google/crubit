@@ -10,5 +10,6 @@ rust_library(
     visibility = [
         "//:__subpackages__",
         "//base:__pkg__",
+        "@abseil-cpp//absl/log:__pkg__",
     ],
 )
