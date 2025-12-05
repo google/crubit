@@ -646,11 +646,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
-  item_ids.erase(std::remove_if(item_ids.begin(), item_ids.end(),
-                                [&](ItemId item_id) {
-                                  return ictx_.IsUnsupportedAndAlien(item_id);
-                                }),
-                 item_ids.end());
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
 

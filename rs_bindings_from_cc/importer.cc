@@ -519,6 +519,9 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     items.push_back({GetSourceOrderKey(comment), GenerateItemId(comment)});
   }
   for (auto& [decl, item_id] : decl_items.canonical_children) {
+    if (IsUnsupportedAndAlien(item_id)) {
+      continue;
+    }
     items.push_back({GetSourceOrderKey(decl), item_id});
   }
 

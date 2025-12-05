@@ -35,12 +35,6 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
 
   ictx_.ImportDeclsFromDeclContext(namespace_decl);
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
-  item_ids.erase(std::remove_if(item_ids.begin(), item_ids.end(),
-                                [&](ItemId item_id) {
-                                  return ictx_.IsUnsupportedAndAlien(item_id);
-                                }),
-                 item_ids.end());
-
   auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
