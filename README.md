@@ -36,7 +36,7 @@ pub fn IsGreater(lhs: ffi::c_int, rhs: ffi::c_int) -> bool {...}
 ```
 
 Note: There are some temporary restrictions on the API shape. For example,
-functions that accept a type like `std::vector` can't be called from Rust
+functions that accept a type like `std::map` can't be called from Rust
 directly via Crubit. These restrictions will be relaxed over time.
 
 ### Rust {.new-tab}
@@ -77,6 +77,13 @@ includes spanshots of what the generated bindings look like.
 ## Building Crubit
 
 ### Cargo
+
+#### cc_bindings_from_rs
+
+You can build `cc_bindings_from_rs`, which allows Rust code to be called from
+C++, using `cargo build --bin cc_bindings_from_rs`.
+
+#### rs_bindings_from_cc
 
 Prerequisites:
 * Requires LLVM and Clang libraries to be built and installed.
