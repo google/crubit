@@ -523,6 +523,7 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
       case CK_HLSLArrayRValue:
       case CK_HLSLAggregateSplatCast:
       case CK_HLSLElementwiseCast:
+      case CK_HLSLMatrixTruncation:
         return unspecifiedNullability(CE);
 
       case CK_Dependent:
