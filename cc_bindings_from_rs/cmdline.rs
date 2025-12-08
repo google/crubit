@@ -50,7 +50,7 @@ pub struct Cmdline {
     /// This is only used for real files on disk. Virtual files have a hardcoded format.
     ///
     /// If None, uses the default format used for virtual files.
-    #[clap(long, value_parser = validate_crubit_debug_path_format, value_name = "STRING", required=false, default_value = DEFAULT_CRUBIT_DEBUG_PATH_FORMAT)]
+    #[clap(long, value_parser = validate_crubit_debug_path_format, value_name = "STRING", required=false)]
     pub crubit_debug_path_format: Option<Format<2>>,
 
     /// Path to a clang-format executable that will be used to format the
@@ -215,10 +215,6 @@ impl Cmdline {
 fn validate_crubit_support_path_format(s: &str) -> Result<Format<1>> {
     Format::parse_with_metavars(s, &["header"])
 }
-
-/// Migration constant while we move from using copybara to using command line flags to control the
-/// debug path format.
-const DEFAULT_CRUBIT_DEBUG_PATH_FORMAT: Option<&str> = None;
 
 fn validate_crubit_debug_path_format(s: &str) -> Result<Format<2>> {
     Format::parse_with_metavars(s, &["path", "line"])
