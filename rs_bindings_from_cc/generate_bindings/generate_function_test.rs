@@ -1449,7 +1449,7 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
         rs_api,
         quote! {
             impl ::ctor::CtorNew<()> for HasConstructor {
-                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+                type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;
 
                 #[inline(always)]
@@ -1483,7 +1483,7 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
         rs_api,
         quote! {
             impl ::ctor::CtorNew<::core::ffi::c_uchar> for HasConstructor {
-                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+                type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;
 
                 #[inline (always)]
@@ -1517,7 +1517,7 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
         rs_api,
         quote! {
             impl ::ctor::CtorNew<(::core::ffi::c_uchar, ::core::ffi::c_schar)> for HasConstructor {
-                type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+                type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;
 
                 #[inline (always)]
@@ -1876,7 +1876,7 @@ fn test_nonunpin_param() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn TakesByValue(x: impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible>) {
+            pub fn TakesByValue(x: ::ctor::Ctor![crate::Nontrivial]) {
                 unsafe {
                     crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(x)))
                 }
