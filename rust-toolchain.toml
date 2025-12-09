@@ -4,4 +4,4 @@
 
 [toolchain]
 channel = "nightly"
-components = ["rustc-dev", "llvm-tools"]
+components = ["rustc-dev", "llvm-tools", "rustfmt"]
