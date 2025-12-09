@@ -3101,14 +3101,13 @@ fn test_aligned_attr() {
 }
 
 #[gtest]
-fn test_template_with_preferred_name_attribute() {
+fn test_std_string_view() {
     let ir = ir_from_cc(
         r#"
       namespace std {
-      template<typename T> struct basic_string_view;
+      template<typename T> struct char_traits {};
+      template<typename T, typename Traits = char_traits<T>> struct basic_string_view {};
       using string_view = basic_string_view<char>;
-      template<typename T> struct [[clang::preferred_name(string_view)]] basic_string_view {
-      };
       }
       "#,
     )
@@ -3116,68 +3115,10 @@ fn test_template_with_preferred_name_attribute() {
     assert_ir_matches! {ir, quote! {
       ...
       Record {
-        ... cc_name: "std::basic_string_view<char>" ...
+        ... cc_name: "std::basic_string_view<char, std::char_traits<char>>" ...
         ... template_specialization: Some(TemplateSpecialization {
-          ... is_string_view: true ...
+          ... kind: StdStringView ...
           ...
-        }) ...
-        ... unknown_attr: None ...
-      }
-      ...
-    }
-    };
-}
-
-#[gtest]
-fn test_template_without_preferred_name_attribute() {
-    let ir = ir_from_cc(
-        r#"
-      template<typename T> struct basic_string_view {};
-      using string_view = basic_string_view<char>;
-      "#,
-    )
-    .unwrap();
-    assert_ir_matches! {ir, quote! {
-      ...
-      Record {
-        ... cc_name: "basic_string_view<char>" ...
-        ... template_specialization: Some(TemplateSpecialization {
-          ... is_string_view: false ...
-        }) ...
-        ... unknown_attr: None ...
-      }
-      ...
-    }
-    };
-}
-
-#[gtest]
-fn test_class_template_specialization_information_collection() {
-    let ir = ir_from_cc(
-        r#"
-      namespace ns {
-      template<typename T, typename U> struct basic_string {};
-
-      using string = basic_string<char, int>;
-      }
-      "#,
-    )
-    .unwrap();
-    assert_ir_matches! {ir, quote! {
-      ...
-      Record {
-        ... cc_name: "ns::basic_string<char, int>" ...
-        ... template_specialization: Some(TemplateSpecialization {
-            ...
-            template_name: "ns::basic_string",
-            template_args: [
-                TemplateArg {
-                    type_: Ok(CcType { variant: Primitive(Char), ...  }),
-                },
-                TemplateArg {
-                    type_: Ok(CcType { variant: Primitive(Int), ...  }),
-                },
-            ],
         }) ...
       }
       ...

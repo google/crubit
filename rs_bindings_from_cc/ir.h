@@ -516,6 +516,13 @@ struct SizeAlign {
   int64_t alignment;
 };
 
+// TODO: Handle non-type template parameter.
+// A template argument for a template specialization.
+struct TemplateArg {
+  absl::StatusOr<CcType> type;
+  llvm::json::Value ToJson() const;
+};
+
 // Present on records that are bridge types.
 struct BridgeType {
   llvm::json::Value ToJson() const;
@@ -532,6 +539,7 @@ struct BridgeType {
     std::string rust_name;
     std::string abi_rust;
     std::string abi_cpp;
+    std::vector<TemplateArg> template_args;
   };
 
   struct StdOptional {
@@ -554,24 +562,33 @@ struct BridgeType {
       variant;
 };
 
-// TODO: Handle non-type template parameter.
-// A template argument for a template specialization.
-struct TemplateArg {
-  absl::StatusOr<CcType> type;
-  llvm::json::Value ToJson() const;
-};
-
 // A template specialization for a template record, containing information
 // including the template name (like `ns::vector` for `ns::vector<int>`) and the
 // template arguments (like [`int`, `float`] for `ns::map<int, float>`).
 struct TemplateSpecialization {
   llvm::json::Value ToJson() const;
 
-  bool is_string_view;
-  bool is_wstring_view;
+  struct StdStringView {};
+  struct StdWStringView {};
+  struct StdVector {
+    TemplateArg element_type;
+  };
+  struct StdUniquePtr {
+    TemplateArg element_type;
+  };
+  struct AbslSpan {
+    TemplateArg element_type;
+  };
+  struct C9Co {
+    TemplateArg element_type;
+  };
+  struct NonSpecial {};
+
+  using Kind = std::variant<StdStringView, StdWStringView, StdVector,
+                            StdUniquePtr, AbslSpan, C9Co, NonSpecial>;
+
   BazelLabel defining_target;
-  std::string template_name;
-  std::vector<TemplateArg> template_args;
+  Kind kind = NonSpecial{};
 };
 
 enum class TraitImplPolarity : int8_t { kNegative, kNone, kPositive };

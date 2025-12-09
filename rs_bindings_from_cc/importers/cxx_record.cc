@@ -31,6 +31,7 @@
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
@@ -52,17 +53,153 @@ namespace crubit {
 
 namespace {
 
-std::string GetClassTemplateSpecializationCcName(
+// Returns true if the given declaration is publicly accessible, i.e. if it and
+// all its enclosing records and namespaces are not private.
+bool IsDeclPubliclyAccessible(const clang::Decl* decl) {
+  while (decl) {
+    if (clang::isa<clang::TranslationUnitDecl>(decl)) {
+      return true;
+    }
+    if (decl->isInAnonymousNamespace()) {
+      return false;
+    }
+    switch (decl->getAccess()) {
+      case clang::AS_private:
+      case clang::AS_protected:
+        return false;
+      case clang::AS_public:
+        break;
+      case clang::AS_none:
+        if (const auto* rd =
+                clang::dyn_cast<clang::RecordDecl>(decl->getDeclContext())) {
+          if (rd->isClass()) {
+            return false;
+          }
+        }
+        break;
+    }
+    decl = clang::dyn_cast<clang::Decl>(decl->getDeclContext());
+  }
+  return true;
+}
+
+// Checks that the given template argument is publicly accessible.
+absl::Status CheckTemplateArgIsPublic(const clang::TemplateArgument& arg);
+
+// Checks that the given type is publicly accessible.
+absl::Status CheckQualTypeIsPublic(clang::QualType type) {
+  if (type.isNull()) {
+    return absl::OkStatus();
+  }
+  type = type.getCanonicalType();
+
+  // Look through pointers and references.
+  while (type->isPointerType() || type->isReferenceType()) {
+    type = type->getPointeeType();
+  }
+
+  // Some function pointers have __attribute__((preserve_none)), which doesn't
+  // get formatted in a way that clang likes to read back in. For now, such
+  // pointers are conservatively disallowed.
+  if (const clang::FunctionProtoType* fpt =
+          type->getAs<clang::FunctionProtoType>()) {
+    if (fpt->getCallConv() == clang::CallingConv::CC_PreserveNone) {
+      return absl::FailedPreconditionError(
+          absl::StrCat("Type '", type.getAsString(),
+                       "' has unsupported calling convention preserve_none"));
+    }
+  }
+
+  if (const clang::TagType* tag_type = type->getAs<clang::TagType>()) {
+    if (!IsDeclPubliclyAccessible(tag_type->getDecl())) {
+      return absl::FailedPreconditionError(absl::StrCat(
+          "Type '", type.getAsString(), "' uses non-public declaration '",
+          tag_type->getDecl()->getQualifiedNameAsString(),
+          "', which cannot be spelled in C++ by generated code."));
+    }
+  }
+
+  if (const auto* tst = type->getAs<clang::TemplateSpecializationType>()) {
+    for (const auto& arg : tst->template_arguments()) {
+      CRUBIT_RETURN_IF_ERROR(CheckTemplateArgIsPublic(arg));
+    }
+  } else if (const clang::RecordType* rt = type->getAs<clang::RecordType>()) {
+    // If it's a specialization, it might be handled as TagType,
+    // but if it's RecordType we can get template args too.
+    if (auto* spec = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+            rt->getDecl())) {
+      for (const auto& arg : spec->getTemplateArgs().asArray()) {
+        CRUBIT_RETURN_IF_ERROR(CheckTemplateArgIsPublic(arg));
+      }
+    }
+  }
+
+  return absl::OkStatus();
+}
+
+absl::Status CheckTemplateArgIsPublic(const clang::TemplateArgument& arg) {
+  switch (arg.getKind()) {
+    case clang::TemplateArgument::ArgKind::Type:
+      return CheckQualTypeIsPublic(arg.getAsType());
+    case clang::TemplateArgument::ArgKind::Declaration: {
+      clang::NamedDecl* decl = arg.getAsDecl();
+      if (!IsDeclPubliclyAccessible(decl)) {
+        return absl::FailedPreconditionError(absl::StrCat(
+            "Declaration template argument '", decl->getQualifiedNameAsString(),
+            "' is not publicly accessible"));
+      }
+      if (clang::ValueDecl* vd = clang::dyn_cast<clang::ValueDecl>(decl)) {
+        CRUBIT_RETURN_IF_ERROR(CheckQualTypeIsPublic(vd->getType()));
+      }
+      return absl::OkStatus();
+    }
+    case clang::TemplateArgument::ArgKind::Template: {
+      clang::TemplateDecl* decl = arg.getAsTemplate().getAsTemplateDecl();
+      if (!IsDeclPubliclyAccessible(decl)) {
+        return absl::FailedPreconditionError(absl::StrCat(
+            "Template template argument '", decl->getQualifiedNameAsString(),
+            "' is not publicly accessible"));
+      }
+      return absl::OkStatus();
+    }
+    case clang::TemplateArgument::ArgKind::Pack:
+      for (const auto& pack_arg : arg.pack_elements()) {
+        CRUBIT_RETURN_IF_ERROR(CheckTemplateArgIsPublic(pack_arg));
+      }
+      return absl::OkStatus();
+    case clang::TemplateArgument::ArgKind::Expression:
+    case clang::TemplateArgument::ArgKind::Integral:
+    case clang::TemplateArgument::ArgKind::NullPtr:
+    case clang::TemplateArgument::ArgKind::TemplateExpansion:
+    case clang::TemplateArgument::ArgKind::StructuralValue:
+    case clang::TemplateArgument::ArgKind::Null:
+      return absl::OkStatus();
+  }
+}
+
+absl::StatusOr<std::string> CcName(
     const clang::ASTContext& ast_context,
-    const clang::ClassTemplateSpecializationDecl* specialization_decl,
-    bool use_preferred_names) {
+    const clang::ClassTemplateSpecializationDecl* specialization_decl) {
+  if (!IsDeclPubliclyAccessible(
+          specialization_decl->getSpecializedTemplate()->getTemplatedDecl())) {
+    return absl::FailedPreconditionError(
+        absl::StrCat("Template '",
+                     specialization_decl->getSpecializedTemplate()
+                         ->getTemplatedDecl()
+                         ->getQualifiedNameAsString(),
+                     "' is not publicly accessible"));
+  }
+  for (const auto& arg : specialization_decl->getTemplateArgs().asArray()) {
+    CRUBIT_RETURN_IF_ERROR(CheckTemplateArgIsPublic(arg));
+  }
+
   clang::PrintingPolicy policy(ast_context.getLangOpts());
   policy.IncludeTagDefinition = false;
   // Canonicalize types -- in particular, the template parameter types must be
   // desugared out of an `ElaboratedType` so that their namespaces are written
   // down.
   policy.PrintAsCanonical = true;
-  policy.UsePreferredNames = use_preferred_names;
+  policy.UsePreferredNames = false;
   // Use type suffix (e.g. `123u` rather than just `123`) to avoid the
   // `-Wimplicitly-unsigned-literal` warning.  See also b/244616557.
   policy.AlwaysIncludeTypeForTemplateArgument = true;
@@ -134,7 +271,7 @@ std::optional<std::array<std::string, N>> GetKeyValues(
 
 // Returns the bridge type annotation for the given `record_decl` if it exists.
 std::optional<BridgeType> GetBridgeTypeAnnotation(
-    const clang::RecordDecl& record_decl) {
+    ImportContext& ictx, const clang::RecordDecl& record_decl) {
   auto void_converter_values = GetKeyValues<3>(
       record_decl,
       {"crubit_bridge_type", "crubit_bridge_type_rust_to_cpp_converter",
@@ -161,11 +298,27 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
     }};
   }
   if (crubit_abi_values.has_value()) {
+    std::vector<TemplateArg> template_args;
+    // If this is a template specialization, need to iterate through the
+    // template args
+    if (const clang::ClassTemplateSpecializationDecl* specialization_decl =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+                &record_decl)) {
+      for (const clang::TemplateArgument& template_arg :
+           specialization_decl->getTemplateArgs().asArray()) {
+        if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
+          template_args.emplace_back(
+              TemplateArg{ictx.ConvertQualType(template_arg.getAsType(),
+                                               /*lifetimes=*/nullptr)});
+        }
+      }
+    }
     auto [rust_name, abi_rust, abi_cpp] = *crubit_abi_values;
     return BridgeType{BridgeType::Bridge{
         .rust_name = std::move(rust_name),
         .abi_rust = std::move(abi_rust),
         .abi_cpp = std::move(abi_cpp),
+        .template_args = std::move(template_args),
     }};
   }
   return std::nullopt;
@@ -336,6 +489,141 @@ bool MayOverloadOperatorDelete(clang::CXXRecordDecl& record_decl) {
   return OverloadsOperatorDelete(record_decl);
 }
 
+// Similar to `DeclContext::isStdNamespace`, but for any top-level namespace.
+bool IsTopLevelNamespace(std::string_view top_level_namespace,
+                         const clang::DeclContext* context) {
+  if (!context->isNamespace()) return false;
+
+  const auto* namespace_decl = clang::cast<clang::NamespaceDecl>(context);
+  if (namespace_decl->isInline()) {
+    return IsTopLevelNamespace(top_level_namespace,
+                               namespace_decl->getParent());
+  }
+
+  if (!context->getParent()->getRedeclContext()->isTranslationUnit())
+    return false;
+
+  const clang::IdentifierInfo* identifier_info =
+      namespace_decl->getIdentifier();
+  return identifier_info && identifier_info->isStr(top_level_namespace);
+}
+
+// Checks that a ClassTemplateSpecializationDecl has template arguments of the
+// form `<T, std::std_trait_name<T>>`. If so, returns `T`.
+//
+// Examples:
+//
+// ```
+// ParameterizedByTAndStdTraitT(std::vector<T, std::allocator<T>>,
+//                              "allocator") -> T
+// ParameterizedByTAndStdTraitT(std::unique_ptr<T, std::default_delete<T>>,
+//                              "default_delete") -> T
+//
+// ParameterizedByTAndStdTraitT(std::basic_string_view<T, something_else>,
+//                              "char_traits") -> error
+// ```
+absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
+    ImportContext& ictx,
+    const clang::ClassTemplateSpecializationDecl* spec_decl,
+    llvm::StringRef std_trait_name) {
+  const clang::TemplateArgumentList& args = spec_decl->getTemplateArgs();
+  if (args.size() != 2) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template specialization '", spec_decl->getNameAsString(),
+                     "' should have two template arguments"));
+  }
+
+  clang::QualType t = args[0].getAsType();
+  clang::QualType std_trait_t = args[1].getAsType();
+
+  const auto* std_trait_spec_decl =
+      clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
+          std_trait_t->getAsCXXRecordDecl());
+  if (std_trait_spec_decl == nullptr ||
+      std_trait_spec_decl->getTemplateArgs().size() != 1) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
+                     "' should have one template argument"));
+  }
+
+  const clang::CXXRecordDecl* std_trait_templated_decl =
+      std_trait_spec_decl->getSpecializedTemplate()->getTemplatedDecl();
+  if (std_trait_templated_decl == nullptr ||
+      std_trait_templated_decl->getName() != std_trait_name ||
+      !std_trait_templated_decl->getDeclContext()->isStdNamespace()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
+                     "' is not a specialization of std::",
+                     std::string_view(std_trait_name)));
+  }
+
+  const clang::TemplateArgument& arg =
+      std_trait_spec_decl->getTemplateArgs()[0];
+  LOG_IF(FATAL, arg.getKind() != clang::TemplateArgument::Type)
+      << "Expected type template argument on type trait '"
+      << std::string_view(std_trait_name) << "'";
+  if (!ictx.ctx_.hasSameType(arg.getAsType(), t)) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template argument '", t.getAsString(),
+                     "' does not match template argument '",
+                     arg.getAsType().getAsString(), "'"));
+  }
+
+  return t;
+}
+
+absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
+    ImportContext& ictx,
+    const clang::ClassTemplateSpecializationDecl* specialization_decl) {
+  const clang::CXXRecordDecl* templated_decl =
+      specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
+
+  if (templated_decl->getDeclContext()->isStdNamespace()) {
+    if (templated_decl->getName() == "basic_string_view") {
+      CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
+                              ParameterizedByTAndStdTraitT(
+                                  ictx, specialization_decl, "char_traits"));
+      if (t->isCharType()) {
+        return TemplateSpecialization::StdStringView();
+      } else if (t->isWideCharType()) {
+        return TemplateSpecialization::StdWStringView();
+      }
+      // Other character types do not get special support.
+    } else if (templated_decl->getName() == "unique_ptr") {
+      CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
+                              ParameterizedByTAndStdTraitT(
+                                  ictx, specialization_decl, "default_delete"));
+      return TemplateSpecialization::StdUniquePtr(
+          TemplateArg(ictx.ConvertQualType(t, /*lifetimes=*/nullptr)));
+    } else if (templated_decl->getName() == "vector") {
+      CRUBIT_ASSIGN_OR_RETURN(
+          clang::QualType t,
+          ParameterizedByTAndStdTraitT(ictx, specialization_decl, "allocator"));
+      return TemplateSpecialization::StdVector(
+          TemplateArg(ictx.ConvertQualType(t, /*lifetimes=*/nullptr)));
+    }
+  } else if (IsTopLevelNamespace("absl", templated_decl->getDeclContext())) {
+    if (templated_decl->getName() == "Span") {
+      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
+          << "absl::Span should have one template arg";
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+      return TemplateSpecialization::AbslSpan(
+          TemplateArg(ictx.ConvertQualType(t,
+                                           /*lifetimes=*/nullptr)));
+    }
+  } else if (IsTopLevelNamespace("c9", templated_decl->getDeclContext())) {
+    if (templated_decl->getName() == "Co") {
+      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
+          << "c9::Co should have one template arg";
+      return TemplateSpecialization::C9Co(TemplateArg(ictx.ConvertQualType(
+          specialization_decl->getTemplateArgs()[0].getAsType(),
+          /*lifetimes=*/nullptr)));
+    }
+  }
+
+  return TemplateSpecialization::NonSpecial();
+}
+
 }  // namespace
 
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
@@ -436,7 +724,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
   std::optional<TemplateSpecialization> template_specialization;
-  std::optional<BridgeType> bridge_type = GetBridgeTypeAnnotation(*record_decl);
+  std::optional<BridgeType> bridge_type =
+      GetBridgeTypeAnnotation(ictx_, *record_decl);
 
   absl::StatusOr<std::optional<std::string>> owned_ptr_type =
       GetAnnotationWithStringArg(*record_decl, "crubit_owned_pointee");
@@ -454,19 +743,26 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         specialization_decl->getSpecializationKind() ==
         clang::TSK_ExplicitInstantiationDefinition;
     rs_name = ictx_.GetMangledName(specialization_decl);
-    // use_preferred_names = false so that this returns e.g.
-    // `basic_string_view<char16_t>` instead of 'u16string_view' despite
-    // `_LIBCPP_PREFERRED_NAME(u16string_view)`.  See also b/244350186.
-    cc_name = GetClassTemplateSpecializationCcName(
-        ictx_.ctx_, specialization_decl, /*use_preferred_names=*/false);
-    std::string cc_preferred_name =
-        GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl,
-                                             /*use_preferred_names=*/true);
-    template_specialization.emplace();
-    template_specialization->is_string_view =
-        cc_preferred_name == "std::string_view";
-    template_specialization->is_wstring_view =
-        cc_preferred_name == "std::wstring_view";
+    absl::StatusOr<std::string> status_or_cc_name =
+        CcName(ictx_.ctx_, specialization_decl);
+    if (!status_or_cc_name.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          *record_decl, std::nullopt,
+          FormattedError::FromStatus(std::move(status_or_cc_name).status()));
+    }
+    cc_name = *std::move(status_or_cc_name);
+
+    TemplateSpecialization& ts = template_specialization.emplace();
+
+    absl::StatusOr<TemplateSpecialization::Kind> status_or_ts_kind =
+        GetTemplateSpecializationKind(ictx_, specialization_decl);
+    if (!status_or_ts_kind.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          *record_decl, std::nullopt,
+          FormattedError::FromStatus(std::move(status_or_ts_kind).status()));
+    }
+    ts.kind = *std::move(status_or_ts_kind);
+
     doc_comment = ictx_.GetComment(specialization_decl);
     if (!doc_comment.has_value()) {
       doc_comment =
@@ -474,62 +770,46 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
     source_loc = specialization_decl->getBeginLoc();
     // Specify defining_target if it's a template instantiation.
-    if (auto instantiation_source =
-            specialization_decl->getSpecializedTemplateOrPartial()) {
-      clang::NamedDecl* decl;
-      if (auto* template_decl =
-              instantiation_source.dyn_cast<clang::ClassTemplateDecl*>()) {
-        // `getSpecializedTemplateOrPartial()` can return a ClassTemplateDecl
-        // corresponding to a forward declaration, even if a definition is
-        // available elsewhere. If we have a forward declaration, we need to
-        // navigate to the definition's ClassTemplateDecl to ensure we generate
-        // bindings against the full definition of the template instead of just
-        // the forward declaration.
-        // We do this by getting the underlying CXXRecordDecl
-        // (`getTemplatedDecl()`), finding its definition (`getDefinition()`),
-        // and then getting the ClassTemplateDecl that describes that definition
-        // (`getDescribedClassTemplate()`).
-        if (clang::CXXRecordDecl* definition =
-                template_decl->getTemplatedDecl()->getDefinition()) {
-          if (auto* definition_template_decl =
-                  definition->getDescribedClassTemplate()) {
-            template_decl = definition_template_decl;
-          }
+    auto instantiation_source =
+        specialization_decl->getSpecializedTemplateOrPartial();
+    clang::NamedDecl* decl;
+    if (auto* template_decl =
+            instantiation_source.dyn_cast<clang::ClassTemplateDecl*>()) {
+      // `getSpecializedTemplateOrPartial()` can return a ClassTemplateDecl
+      // corresponding to a forward declaration, even if a definition is
+      // available elsewhere. If we have a forward declaration, we need to
+      // navigate to the definition's ClassTemplateDecl to ensure we generate
+      // bindings against the full definition of the template instead of just
+      // the forward declaration.
+      if (clang::CXXRecordDecl* definition =
+              template_decl->getTemplatedDecl()->getDefinition()) {
+        if (auto* definition_template_decl =
+                definition->getDescribedClassTemplate()) {
+          template_decl = definition_template_decl;
         }
-        decl = template_decl;
-      } else {
-        decl = instantiation_source
-                   .get<clang::ClassTemplatePartialSpecializationDecl*>();
       }
-      BazelLabel target = ictx_.GetOwningTarget(decl);
-      // TODO(okabayashi): File a bug for generalizing "canonical insts".
-      // When a template like `std::string_view` is instantiated, it will be
-      // owned by whatever target it was instantiated in. The C++ compiler is
-      // then responsible for unifying identical instantiations. However, this
-      // is a pain for Crubit because we aren't able to generally unify these.
-      // In the case of `std::string_view`, however, we know that there's an
-      // instantiation in the `cc_std` target, so I've chosen that as the
-      // canonical instantiation, and am mapping all other instantiations to
-      // that instantiation.
-      // A problem with this is it's not _actually_ the same ItemId, and it
-      // really should be. This ensures that when we refer to this Item, it's
-      // spelled `cc_std::__CcTemplateInst...`. But a major downside is that we
-      // still generate this template inst struct...
-      if (template_specialization->is_string_view) {
-        owning_target = target;
-      }
-      template_specialization->defining_target = std::move(target);
+      decl = template_decl;
+    } else {
+      decl = instantiation_source
+                 .dyn_cast<clang::ClassTemplatePartialSpecializationDecl*>();
     }
-    template_specialization->template_name =
-        specialization_decl->getQualifiedNameAsString();
-    // preferred_cc_name.substr(0, preferred_cc_name.find('<'));
-    for (const clang::TemplateArgument& template_arg :
-         specialization_decl->getTemplateArgs().asArray()) {
-      if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
-        template_specialization->template_args.emplace_back(
-            TemplateArg{ictx_.ConvertQualType(template_arg.getAsType(),
-                                              /*lifetimes=*/nullptr)});
-      }
+    ts.defining_target = ictx_.GetOwningTarget(decl);
+    // TODO(okabayashi): File a bug for generalizing "canonical insts".
+    // When a template like `std::string_view` is instantiated, it will be
+    // owned by whatever target it was instantiated in. The C++ compiler is
+    // then responsible for unifying identical instantiations. However, this
+    // is a pain for Crubit because we aren't able to generally unify these.
+    // In the case of `std::string_view`, however, we know that there's an
+    // instantiation in the `cc_std` target, so I've chosen that as the
+    // canonical instantiation, and am mapping all other instantiations to
+    // that instantiation.
+    // A problem with this is it's not _actually_ the same ItemId, and it
+    // really should be. This ensures that when we refer to this Item, it's
+    // spelled `cc_std::__CcTemplateInst...`. But a major downside is that we
+    // still generate this template inst struct...
+    if (std::holds_alternative<TemplateSpecialization::StdStringView>(
+            ts.kind)) {
+      owning_target = ts.defining_target;
     }
 
     if (!bridge_type.has_value()) {

@@ -324,7 +324,7 @@ fn type_target_restriction_shallow(
 ) -> TargetRestriction {
     let mut target = match rs_type_kind.unalias() {
         // Template types (except for the special-cased ones like `[w]string_view`).
-        RsTypeKind::Record { record, .. } if record.is_disallowed_template_instantiation() => {
+        RsTypeKind::Record { record, .. } if !record.has_unique_owning_target() => {
             Some(&record.owning_target)
         }
         // All other types are `pub` if they receive bindings.

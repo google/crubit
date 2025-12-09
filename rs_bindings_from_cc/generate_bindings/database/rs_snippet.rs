@@ -274,55 +274,6 @@ pub enum UniformReprTemplateType {
     },
 }
 
-pub fn template_arg_to_record(
-    db: &dyn BindingsGenerator,
-    template_arg: &TemplateArg,
-) -> Result<Option<Rc<Record>>> {
-    let arg_type = match &template_arg.type_ {
-        Ok(arg_type) => arg_type.clone(),
-        Err(e) => bail!("{e}"),
-    };
-
-    let CcTypeVariant::Decl(id) = arg_type.variant else {
-        return Ok(None);
-    };
-    let Item::Record(record) = db.ir().find_untyped_decl(id) else {
-        return Ok(None);
-    };
-    Ok(Some(record.clone()))
-}
-
-fn is_default_delete(
-    db: &dyn BindingsGenerator,
-    template_type: &TemplateArg,
-    deleter: &TemplateArg,
-) -> Result<bool> {
-    let Some(deleter) = template_arg_to_record(db, deleter)? else {
-        return Ok(false);
-    };
-    Ok(deleter.template_specialization.as_ref().is_some_and(|deleter| {
-        deleter.template_name.as_ref() == "std::default_delete"
-            && deleter.template_args.len() == 1
-            && deleter.template_args[0] == *template_type
-    }))
-}
-
-// Returns true if allocator is std::allocator<template_type>
-fn is_std_allocator(
-    db: &dyn BindingsGenerator,
-    template_type: &TemplateArg,
-    allocator: &TemplateArg,
-) -> Result<bool> {
-    let Some(allocator) = template_arg_to_record(db, allocator)? else {
-        return Ok(false);
-    };
-    Ok(allocator.template_specialization.as_ref().is_some_and(|allocator| {
-        allocator.template_name.as_ref() == "std::allocator"
-            && allocator.template_args.len() == 1
-            && allocator.template_args[0] == *template_type
-    }))
-}
-
 impl UniformReprTemplateType {
     /// Returns the `UniformReprTemplateType` for a `TemplateSpecialization`.
     /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
@@ -330,12 +281,9 @@ impl UniformReprTemplateType {
     /// one of `UniformReprTemplateType`s variants.
     fn new(
         db: &dyn BindingsGenerator,
-        template_specialization: Option<&TemplateSpecialization>,
+        template_specialization_kind: Option<&TemplateSpecializationKind>,
         is_return_type: bool,
     ) -> Result<Option<Rc<Self>>> {
-        let Some(template_specialization) = template_specialization else {
-            return Ok(None);
-        };
         let type_arg = |template_arg: &TemplateArg| -> Result<RsTypeKind> {
             let arg_type = match &template_arg.type_ {
                 Ok(arg_type) => arg_type.clone(),
@@ -355,46 +303,36 @@ impl UniformReprTemplateType {
             }
             Ok(arg_type_kind)
         };
-
-        let this = match (
-            template_specialization.template_name.as_ref(),
-            &template_specialization.template_args[..],
-        ) {
-            ("std::unique_ptr", [t, deleter]) => {
-                let has_std_deleter = is_default_delete(db, t, deleter)?;
-                let t = type_arg(t)?;
-                ensure!(t.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", t.display(db));
-                ensure!(t.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
-                if !has_std_deleter {
+        match template_specialization_kind {
+            Some(TemplateSpecializationKind::StdUniquePtr { element_type }) => {
+                let element_type = type_arg(element_type)?;
+                ensure!(element_type.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", element_type.display(db));
+                ensure!(element_type.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", element_type.display(db));
+                if element_type.overloads_operator_delete() {
                     return Ok(None);
                 }
-                if t.overloads_operator_delete() {
-                    return Ok(None);
-                }
-                Self::StdUniquePtr { element_type: t }
+                Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtr { element_type })))
             }
-            ("std::vector", [t, allocator]) => {
-                let has_std_allocator = is_std_allocator(db, t, allocator)?;
-                let t = type_arg(t)?;
-                ensure!(t.is_destructible(), "Rust std::vector<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", t.display(db));
-                if !has_std_allocator {
+            Some(TemplateSpecializationKind::StdVector { element_type }) => {
+                let element_type = type_arg(element_type)?;
+                ensure!(element_type.is_destructible(), "Rust std::vector<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", element_type.display(db));
+                if element_type.overloads_operator_delete() {
                     return Ok(None);
                 }
-                if t.overloads_operator_delete() {
-                    return Ok(None);
-                }
-                if t.is_bool() {
+                if element_type.is_bool() {
                     // The rust implementation doesn't specialize bool like C++ does.
                     return Ok(None);
                 }
-
-                Self::StdVector { element_type: t }
+                Ok(Some(Rc::new(UniformReprTemplateType::StdVector { element_type })))
             }
-            ("absl::Span", [t]) => {
-                // Revisit the CcType of _t to see if it is const.
-                let element_type = type_arg(t)?;
-                let is_const = t.type_.as_ref().expect("should be valid because type_args is the successful result of get_template_args").is_const;
-                Self::AbslSpan {
+            Some(TemplateSpecializationKind::AbslSpan { element_type }) => {
+                let element_type_kind = type_arg(element_type)?;
+                let is_const = element_type
+                    .type_
+                    .as_ref()
+                    .expect("should be okay because type_arg succeeded")
+                    .is_const;
+                Ok(Some(Rc::new(UniformReprTemplateType::AbslSpan {
                     is_const,
 
                     // We always accept lifetime-bound spans as parameters. A C++ function
@@ -403,24 +341,17 @@ impl UniformReprTemplateType {
                     // Spans returned by a C++ function have an unclear lifetime, and so must be
                     // returned as a raw span.
                     include_lifetime: !is_return_type,
-                    element_type,
-                }
+                    element_type: element_type_kind,
+                })))
             }
-            _ if template_specialization.is_string_view
-                || template_specialization.is_wstring_view =>
-            {
-                return Ok(None);
-            }
-            _ => {
-                // If all else fails, it's some unknown template type. Read any errors from the
-                // template arguments.
-                for t in &template_specialization.template_args {
-                    type_arg(t)?;
-                }
-                return Ok(None);
-            }
-        };
-        Ok(Some(Rc::new(this)))
+            Some(
+                TemplateSpecializationKind::StdStringView
+                | TemplateSpecializationKind::StdWStringView
+                | TemplateSpecializationKind::C9Co { .. }
+                | TemplateSpecializationKind::NonSpecial,
+            )
+            | None => Ok(None),
+        }
     }
 
     fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
@@ -537,13 +468,14 @@ fn new_c9_co_record(
     record: Rc<Record>,
     db: &dyn BindingsGenerator,
 ) -> Result<Option<RsTypeKind>> {
-    let Some(ts) = record.template_specialization.as_ref() else {
+    let Some(TemplateSpecialization {
+        kind: TemplateSpecializationKind::C9Co { element_type },
+        ..
+    }) = record.template_specialization.as_ref()
+    else {
         return Ok(None);
     };
-    if ts.template_name.as_ref() != "c9::Co" {
-        return Ok(None);
-    }
-    let arg_type = ts.template_args[0]
+    let arg_type = element_type
         .type_
         .as_ref()
         .map_err(|e: &String| anyhow!("c9::Co T argument is not Crubit compatible: {e}"))?
@@ -604,25 +536,22 @@ impl BridgeRsTypeKind {
             BridgeType::ProtoMessageBridge { rust_name } => {
                 BridgeRsTypeKind::ProtoMessageBridge { rust_name }
             }
-            BridgeType::Bridge { rust_name, abi_rust, abi_cpp } => BridgeRsTypeKind::Bridge {
-                rust_name,
-                abi_rust,
-                abi_cpp,
-                generic_types: record
-                    .template_specialization
-                    .as_ref()
-                    .map(|template_spec| &template_spec.template_args[..])
-                    .unwrap_or_default()
-                    .iter()
-                    .map(|template_arg: &TemplateArg| {
-                        let type_ = template_arg.type_.as_ref().map_err(|err| {
-                            anyhow!("Failed to get type from template arg: {}", err)
-                        })?;
-
-                        db.rs_type_kind(type_.clone())
-                    })
-                    .collect::<Result<Rc<[RsTypeKind]>>>()?,
-            },
+            BridgeType::Bridge { rust_name, abi_rust, abi_cpp, template_args } => {
+                BridgeRsTypeKind::Bridge {
+                    rust_name,
+                    abi_rust,
+                    abi_cpp,
+                    generic_types: template_args
+                        .iter()
+                        .map(|template_arg| {
+                            let type_ = template_arg.type_.as_ref().map_err(|err| {
+                                anyhow!("Failed to get type from template arg: {}", err)
+                            })?;
+                            db.rs_type_kind(type_.clone())
+                        })
+                        .collect::<Result<Rc<[RsTypeKind]>>>()?,
+                }
+            }
             BridgeType::StdOptional(t) => {
                 BridgeRsTypeKind::StdOptional(Rc::new(db.rs_type_kind(t)?))
             }
@@ -736,7 +665,7 @@ impl RsTypeKind {
         Ok(RsTypeKind::Record {
             uniform_repr_template_type: UniformReprTemplateType::new(
                 db,
-                record.template_specialization.as_ref(),
+                record.template_specialization.as_ref().map(|ts| &ts.kind),
                 is_return_type,
             )?,
             owned_ptr_type: record.owned_ptr_type.clone(),
@@ -927,12 +856,6 @@ impl RsTypeKind {
                         format!("{} is not a complete type)", rs_type_kind.display(db)).into()
                     }),
                 ),
-                RsTypeKind::Record { uniform_repr_template_type: Some(x), .. }
-                    if matches!(
-                        **x,
-                        UniformReprTemplateType::StdVector { .. }
-                            | UniformReprTemplateType::StdUniquePtr { .. }
-                    ) => {}
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //
                 // Whether a record type is supported in rust does _not_ depend on whether each
@@ -940,14 +863,17 @@ impl RsTypeKind {
                 // them with opaque blobs.
                 //
                 // Instead, what matters is the abstract properties of the struct itself!
-                RsTypeKind::Record { record, .. } => {
+                RsTypeKind::Record { uniform_repr_template_type, record, .. } => {
                     // Types which aren't rust-movable, or which are general template
                     // instantiations, are only supported experimentally.
                     // But we do want to allow some commonly used template instantiations such as
-                    // std::string_view so we create an allow list fo them. This is just a temporary
-                    // solution until we have a better way to handle template
+                    // std::string_view so we create an allow list for them. This is just a
+                    // temporary solution until we have a better way to handle template
                     // instantiations.
-                    if record.is_disallowed_template_instantiation() {
+
+                    if uniform_repr_template_type.is_some() || record.has_unique_owning_target() {
+                        require_feature(CrubitFeature::Supported, None);
+                    } else {
                         require_feature(
                             CrubitFeature::Wrapper,
                             Some(&|| {
@@ -955,8 +881,6 @@ impl RsTypeKind {
                                     .into()
                             }),
                         )
-                    } else {
-                        require_feature(CrubitFeature::Supported, None)
                     }
                 }
                 RsTypeKind::Enum { .. } => require_feature(CrubitFeature::Supported, None),
@@ -968,7 +892,7 @@ impl RsTypeKind {
                     let is_pointer_bridge =
                         matches!(bridge_type, BridgeRsTypeKind::BridgeVoidConverters { .. });
 
-                    if original_type.is_disallowed_template_instantiation() && is_pointer_bridge {
+                    if !original_type.has_unique_owning_target() && is_pointer_bridge {
                         require_feature(
                             CrubitFeature::Experimental,
                             Some(&|| {

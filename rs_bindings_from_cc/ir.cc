@@ -466,6 +466,7 @@ llvm::json::Value BridgeType::ToJson() const {
                     {"rust_name", annotation.rust_name},
                     {"abi_rust", annotation.abi_rust},
                     {"abi_cpp", annotation.abi_cpp},
+                    {"template_args", annotation.template_args},
                 },
             }};
           },
@@ -503,11 +504,44 @@ llvm::json::Value TemplateArg::ToJson() const {
 
 llvm::json::Value TemplateSpecialization::ToJson() const {
   return llvm::json::Object{
-      {"is_string_view", is_string_view},
-      {"is_wstring_view", is_wstring_view},
       {"defining_target", defining_target},
-      {"template_name", template_name},
-      {"template_args", template_args},
+      {"kind",
+       std::visit(
+           visitor{
+               [&](const StdStringView&) {
+                 return llvm::json::Object{{"StdStringView", nullptr}};
+               },
+               [&](const StdWStringView&) {
+                 return llvm::json::Object{{"StdWStringView", nullptr}};
+               },
+               [&](const StdVector& std_vector) {
+                 return llvm::json::Object{
+                     {"StdVector",
+                      llvm::json::Object{
+                          {"element_type", std_vector.element_type}}}};
+               },
+               [&](const StdUniquePtr& std_unique_ptr) {
+                 return llvm::json::Object{
+                     {"StdUniquePtr",
+                      llvm::json::Object{
+                          {"element_type", std_unique_ptr.element_type}}}};
+               },
+               [&](const AbslSpan& absl_span) {
+                 return llvm::json::Object{
+                     {"AbslSpan",
+                      llvm::json::Object{
+                          {"element_type", absl_span.element_type}}}};
+               },
+               [&](const C9Co& c9_co) {
+                 return llvm::json::Object{
+                     {"C9Co", llvm::json::Object{
+                                  {"element_type", c9_co.element_type}}}};
+               },
+               [&](const NonSpecial&) {
+                 return llvm::json::Object{{"NonSpecial", nullptr}};
+               },
+           },
+           kind)},
   };
 }
 
