@@ -932,11 +932,10 @@ class NullabilityWalker : public TypeAndMaybeLocVisitor<Impl> {
     } else {
       ignoreUnexpectedNullability();
     }
-    visit(RT->getOriginalDecl()->getDeclContext());
+    visit(RT->getDecl()->getDeclContext());
 
     // Visit template arguments of this record type.
-    if (auto* CTSD =
-            dyn_cast<ClassTemplateSpecializationDecl>(RT->getOriginalDecl())) {
+    if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
       unsigned I = 0;
 
       // If we have a sugared template context, use the sugar.
@@ -1234,7 +1233,7 @@ struct Rebuilder : public TypeVisitor<Rebuilder, QualType> {
 
   QualType VisitRecordType(const RecordType *absl_nonnull RT) {
     if (const auto* CTSD =
-            dyn_cast<ClassTemplateSpecializationDecl>(RT->getOriginalDecl())) {
+            dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
       std::vector<TemplateArgument> TransformedArgs;
       for (const auto &Arg : CTSD->getTemplateArgs().asArray())
         TransformedArgs.push_back(Visit(Arg));

@@ -287,8 +287,8 @@ static void transferMemberExpr(
 
     Resugarer Resugar(State.Lattice.defaults());
     if (const auto* RT = BaseType->getAs<RecordType>()) {
-      if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
-              RT->getOriginalDecl())) {
+      if (auto* CTSpec =
+              dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
         Resugar.Enclosing.push_back({CTSpec, BaseNullability});
       }
     }
@@ -373,8 +373,8 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
         Resugarer Resugar(State.Lattice.defaults());
         // Resugar from class template arguments, if any.
         if (const auto* RT = UnderPointers->getAs<RecordType>()) {
-          if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
-                  RT->getOriginalDecl())) {
+          if (auto* CTSpec =
+                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
             Resugar.Enclosing.push_back({CTSpec, UnderPointersNullability});
           }
         }
@@ -601,8 +601,8 @@ static void transferCXXOperatorCallExpr(
       TypeNullability BaseNullability = getNullabilityForChild(Base, State);
       Resugarer Resugar(State.Lattice.defaults());
       if (const auto* RT = Base->getType()->getAs<RecordType>()) {
-        if (auto* CTSpec = dyn_cast<ClassTemplateSpecializationDecl>(
-                RT->getOriginalDecl())) {
+        if (auto* CTSpec =
+                dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
           Resugar.Enclosing.push_back({CTSpec, BaseNullability});
         }
       }
