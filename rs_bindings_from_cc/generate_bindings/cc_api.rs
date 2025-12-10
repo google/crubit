@@ -53,12 +53,10 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     let rustfmt_config_path: OsString =
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
-        let error_report: Option<ErrorReport>;
+        let mut error_report: Option<ErrorReport> = None;
         let errors: &dyn ErrorReporting = if generate_error_report {
-            error_report = Some(ErrorReport::new());
-            error_report.as_ref().unwrap()
+            error_report.insert(ErrorReport::new())
         } else {
-            error_report = None;
             &error_report::IgnoreErrors
         };
         let fatal_errors = FatalErrors::new();
