@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <map>
@@ -609,6 +610,19 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   llvm::copy(GetOrderedItemIdsOfTemplateInstantiations(),
              std::back_inserter(
                  invocation_.ir_.top_level_item_ids[invocation_.target_]));
+
+  // Remove any unsupported alien (to the current target) items.
+  // IsUnsupportedAndAlien only returns true for items outside the current
+  // target that are unsupported. You have to run it only if label is not equal
+  // to the current target; you can skip the current target.
+  for (auto& [label, item_ids] : invocation_.ir_.top_level_item_ids) {
+    if (label == invocation_.target_) continue;
+    item_ids.erase(std::remove_if(item_ids.begin(), item_ids.end(),
+                                  [&](ItemId item_id) {
+                                    return IsUnsupportedAndAlien(item_id);
+                                  }),
+                   item_ids.end());
+  }
 }
 
 void Importer::ImportDeclsFromDeclContext(
