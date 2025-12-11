@@ -17,7 +17,7 @@ use code_gen_utils::{
     escape_non_identifier_chars, expect_format_cc_ident, format_cc_type_name, make_rs_ident,
     CcInclude,
 };
-use crubit_abi_type::CrubitAbiTypeToCppTokens;
+use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::BindingsGenerator;
 use database::{SugaredTy, TypeLocation};
@@ -280,13 +280,15 @@ fn cc_return_value_from_c_abi<'tcx>(
                 // ::crubit::internal::Decode<T>(buffer);
                 prereqs.includes.insert(db.support_header("bridge.h"));
                 let crubit_abi_type = CrubitAbiTypeToCppTokens(&composable.crubit_abi_type);
+                let crubit_abi_type_expr =
+                    CrubitAbiTypeToCppExprTokens(&composable.crubit_abi_type);
                 storage_statements.extend(quote! {
                     unsigned char #storage_name[#crubit_abi_type::kSize];
                 });
                 Ok(ReturnConversion {
                     storage_name: storage_name.clone(),
                     unpack_expr: quote! {
-                        ::crubit::internal::Decode<#crubit_abi_type>(#storage_name)
+                        ::crubit::internal::Decode<#crubit_abi_type>(#crubit_abi_type_expr, #storage_name)
                     },
                 })
             }

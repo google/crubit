@@ -61,6 +61,7 @@ inline std::optional<std::int32_t> returns_some_int() {
   __crubit_internal::__crubit_thunk_returns_usome_uint(__return_value_storage);
   return ::crubit::internal::Decode<
       ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
+      ::crubit::OptionAbi(::crubit::TransmuteAbi<std::int32_t>()),
       __return_value_storage);
 }
 
@@ -73,6 +74,7 @@ inline std::optional<std::int32_t> returns_no_int() {
   __crubit_internal::__crubit_thunk_returns_uno_uint(__return_value_storage);
   return ::crubit::internal::Decode<
       ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
+      ::crubit::OptionAbi(::crubit::TransmuteAbi<std::int32_t>()),
       __return_value_storage);
 }
 
@@ -103,6 +105,7 @@ inline std::optional<std::int32_t> option_increments(
                                                        __return_value_storage);
   return ::crubit::internal::Decode<
       ::crubit::OptionAbi<::crubit::TransmuteAbi<std::int32_t>>>(
+      ::crubit::OptionAbi(::crubit::TransmuteAbi<std::int32_t>()),
       __return_value_storage);
 }
 
@@ -116,6 +119,7 @@ inline std::optional<std::int32_t> make_my_option_rust() {
       __return_value_storage);
   return ::crubit::internal::Decode<
       crubit::OptionalAbi<::crubit::TransmuteAbi<std::int32_t>>>(
+      crubit::OptionalAbi(::crubit::TransmuteAbi<std::int32_t>()),
       __return_value_storage);
 }
 
@@ -128,6 +132,8 @@ inline std::optional<rs_std::SliceRef<const std::int32_t>> maybe_int_slice() {
   __crubit_internal::__crubit_thunk_maybe_uint_uslice(__return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::rs_std::SliceRef<const std::int32_t>>>>(
+      ::crubit::OptionAbi(
+          ::crubit::TransmuteAbi<::rs_std::SliceRef<const std::int32_t>>()),
       __return_value_storage);
 }
 
