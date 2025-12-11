@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 /// This function is only callable from Rust (for now).
-pub fn returns_status(ok: bool) -> status::Status {
+pub fn returns_status(ok: bool) -> status_rs::Status {
     if ok {
         status::OkStatus()
     } else {
