@@ -23,11 +23,12 @@ support/ctor.rs
 
 `Ctor<Output=T, Error=E>` is a trait for implementing **lazily evaluated
 values**. These values are constructed in-place, in a C++-compatible way, and
-pinned.
+pinned. It is typically used as an `impl Ctor<Output=T, ...>`, which is most
+easily spelled as `Ctor![T]` or `Ctor![T, Error=...]`.
 
-However, `Ctor` is not a lazily-initialized value itself. It is a value
-initialization procedure, which returns `T` upon success and `E` upon failure.
-So a `Ctor` creates a value upon request, which is why we describe it as lazy.
+`Ctor` is not a lazily-initialized value itself. It is a value initialization
+procedure, which returns `T` upon success and `E` upon failure. So a `Ctor`
+creates a value upon request, which is why we describe it as lazy.
 
 Since exceptions are disabled at Google, we currently only work with
 `Error=Infallible`, and for exposition will omit the error type.
@@ -36,8 +37,9 @@ Functions accepting and returning a non-Rust movable value in C++ will accept
 and return an `impl Ctor` in Rust, as so:
 
 ```rust
-pub fn accepts_value(x: impl Ctor<Output=CppType, ...>) {...}
-pub fn returns() -> impl Ctor<Output=CppType, ...> {...}
+pub fn accepts_value(x: Ctor![CppType]) {...}
+// equivalent to x: impl Ctor<Output=CppType, Error=Infallible>
+pub fn returns() -> Ctor![CppType] {...}
 ```
 
 The easiest way to work with these types in Rust is to box them into a

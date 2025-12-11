@@ -37,7 +37,7 @@ unsafe impl ::cxx::ExternType for Uncopyable {
 
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=12
 impl ::ctor::CtorNew<()> for Uncopyable {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
@@ -81,7 +81,7 @@ impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
 
 /// Generated from: rs_bindings_from_cc/test/struct/default_member_functions/default_member_functions.h;l=19
 impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
