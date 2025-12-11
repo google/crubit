@@ -96,6 +96,24 @@
 //! A more general solution would be to use a custom auto trait, e.g.
 //! `pub auto trait SelfInit {}`.
 //!
+//! ### Backwards-compatibility
+//!
+//! `ctor` supports the following syntax for defining a function which accepts a type `MyType`:
+//!
+//! ```
+//! fn foo(x: impl Ctor<Output=MyType, Error=Infallible>) {}
+//! ```
+//!
+//! In order to make it as backwards-compatible as possible to "upgrade" a type
+//! from being non-Rust-movable to Rust-movable, this works even `MyType` is changed from
+//! Rust-movable to non-Rust-movable: functions which used to return an opaque `Ctor` object
+//! now instead return the raw value itself, which implements `Ctor<Output=Self, Error=Infallible>`.
+//!
+//! This would also be possible if there were no blanket impl, and instead `Ctor` were manually
+//! implemented for every type. However, this would mean that a large number of types would not
+//! work with `ctor` at all (e.g. everything outside the Rust standard library which does not
+//! depend on `ctor`).
+//!
 //! ## Overload trait
 //!
 //! This module also includes a prototype alternative API which more directly
