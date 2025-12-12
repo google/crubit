@@ -204,15 +204,40 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
 impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self.0 {
-            CrubitAbiType::SignedChar
-            | CrubitAbiType::UnsignedChar
-            | CrubitAbiType::UnsignedShort
-            | CrubitAbiType::UnsignedInt
-            | CrubitAbiType::UnsignedLong
-            | CrubitAbiType::LongLong
-            | CrubitAbiType::UnsignedLongLong
-            | CrubitAbiType::Ptr { .. } => {
-                quote! { ::bridge_rust::transmute_abi() }.to_tokens(tokens);
+            CrubitAbiType::SignedChar => {
+                quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_schar>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedChar => {
+                quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_uchar>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedShort => {
+                quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_ushort>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedInt => {
+                quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_uint>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedLong => {
+                quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_ulong>() }.to_tokens(tokens)
+            }
+            CrubitAbiType::LongLong => {
+                quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_longlong>() }
+                    .to_tokens(tokens)
+            }
+            CrubitAbiType::UnsignedLongLong => {
+                quote! { ::bridge_rust::transmute_abi::<::core::ffi::c_ulonglong>() }
+                    .to_tokens(tokens)
+            }
+            CrubitAbiType::Ptr { is_const, is_rust_slice, rust_type, .. } => {
+                let mut ty = rust_type.clone();
+                if *is_rust_slice {
+                    ty = quote! { [#ty] };
+                }
+                if *is_const {
+                    ty = quote! { *const #ty };
+                } else {
+                    ty = quote! { *mut #ty };
+                }
+                quote! { ::bridge_rust::transmute_abi::<#ty>() }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
                 let first_tokens = Self(first);
@@ -227,8 +252,8 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                 };
                 quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
             }
-            CrubitAbiType::Transmute { .. } => {
-                quote! { ::bridge_rust::transmute_abi() }.to_tokens(tokens);
+            CrubitAbiType::Transmute { rust_type, .. } => {
+                quote! { ::bridge_rust::transmute_abi::<#rust_type>() }.to_tokens(tokens);
             }
             CrubitAbiType::ProtoMessage { proto_message_rust_bridge, .. } => {
                 quote! { #proto_message_rust_bridge(::core::marker::PhantomData) }
