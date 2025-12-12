@@ -16,13 +16,42 @@ use syn::parse::Parse;
 use syn::spanned::Spanned as _;
 use syn::Token;
 
+struct CrateRename(pub Ident);
+
+impl Parse for CrateRename {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let _: Token![crate] = input.parse()?;
+        let _: Token![=] = input.parse()?;
+        let ident = input.parse()?;
+        Ok(CrateRename(ident))
+    }
+}
+
+fn derive_crate_name(input: &syn::DeriveInput) -> syn::Result<Ident> {
+    let mut result = Ident::new("ctor", Span::call_site());
+    for attr in &input.attrs {
+        if !attr.path.is_ident("ctor") {
+            continue;
+        }
+        CrateRename(result) = attr.parse_args()?;
+    }
+    Ok(result)
+}
+
 // TODO(jeanpierreda): derive constructors and assignment for copy and move.
 
 const FIELD_FOR_MUST_USE_CTOR: &'static str = "__must_use_ctor_to_initialize";
 
-#[proc_macro_derive(CtorFrom_Default)]
+#[proc_macro_derive(CtorFrom_Default, attributes(ctor))]
 pub fn derive_default(item: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(item as syn::DeriveInput);
+    match derive_default_impl(syn::parse_macro_input!(item as syn::DeriveInput)) {
+        Ok(t) => t.into(),
+        Err(e) => e.into_compile_error().into(),
+    }
+}
+
+fn derive_default_impl(input: syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+    let ctor = derive_crate_name(&input)?;
 
     let struct_name = input.ident;
     let struct_ctor_name =
@@ -54,28 +83,24 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
             }
         }
         syn::Data::Enum(e) => {
-            return syn::Error::new(e.enum_token.span, "Enums are not supported")
-                .into_compile_error()
-                .into();
+            return Err(syn::Error::new(e.enum_token.span, "Enums are not supported"));
         }
         syn::Data::Union(u) => {
-            return syn::Error::new(u.union_token.span, "Unions are not supported")
-                .into_compile_error()
-                .into();
+            return Err(syn::Error::new(u.union_token.span, "Unions are not supported"));
         }
     };
 
-    let expanded = quote! {
+    Ok(quote! {
         struct #struct_ctor_name();
 
         // SAFETY: unconditionally initializes dest.
-        unsafe impl ::ctor::Ctor for #struct_ctor_name {
+        unsafe impl ::#ctor::Ctor for #struct_ctor_name {
             type Output = #struct_name;
             // TODO(jeanpierreda): This only handles the Infallible case,
             // but a derive should also handle non-infallible cases.
-            type Error = ::ctor::Infallible;
+            type Error = ::#ctor::Infallible;
             unsafe fn ctor(self, dest: *mut Self::Output) -> ::core::result::Result<(), Self::Error> {
-                ::ctor::ctor!(
+                ::#ctor::ctor!(
                     #struct_name #fields
                 ).ctor(dest)
             }
@@ -83,14 +108,13 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 
         impl !::core::marker::Unpin for #struct_ctor_name {}
 
-        impl ::ctor::CtorNew<()> for #struct_name {
+        impl ::#ctor::CtorNew<()> for #struct_name {
             type CtorType = #struct_ctor_name;
-            type Error = ::ctor::Infallible;
+            type Error = ::#ctor::Infallible;
 
             fn ctor_new(_args: ()) -> #struct_ctor_name { #struct_ctor_name() }
         }
-    };
-    TokenStream::from(expanded)
+    })
 }
 
 /// Derives `Ctor`-based move and copy constructors and assignment for a `Copy` type.
@@ -101,29 +125,47 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 /// * `CtorNew<RvalueReference<_, Self>>`
 /// * `UnpinAssign<&Self>`
 /// * `UnpinAssign<RvalueReference<_, Self>>`
-#[proc_macro_derive(MoveAndAssignViaCopy)]
+///
+/// To override the crate name used by the ctor crate, pass in `#[ctor(crate = something_else)]`,
+/// as so:
+///
+/// ```
+/// #[derive(MoveAndAssignViaCopy))]
+/// #[ctor(crate = renamed_ctor)]
+/// struct MyType;
+/// ```
+#[proc_macro_derive(MoveAndAssignViaCopy, attributes(ctor))]
 pub fn derive_move_and_assign_via_copy(item: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(item as syn::DeriveInput);
+    match derive_move_and_assign_via_copy_impl(syn::parse_macro_input!(item as syn::DeriveInput)) {
+        Ok(t) => t.into(),
+        Err(e) => e.into_compile_error().into(),
+    }
+}
+
+fn derive_move_and_assign_via_copy_impl(
+    input: syn::DeriveInput,
+) -> syn::Result<proc_macro2::TokenStream> {
+    let ctor = derive_crate_name(&input)?;
     let type_name = input.ident;
-    quote! {
+    Ok(quote! {
         // Move construct.
-        impl From<::ctor::RvalueReference<'_, Self>> for #type_name {
+        impl From<::#ctor::RvalueReference<'_, Self>> for #type_name {
             #[inline(always)]
-            fn from(this: ::ctor::RvalueReference<'_, Self>) -> Self { *this.get_ref() }
+            fn from(this: ::#ctor::RvalueReference<'_, Self>) -> Self { *this.get_ref() }
         }
 
         // Ctor move construct.
-        impl ::ctor::CtorNew<::ctor::RvalueReference<'_, Self>> for #type_name {
+        impl ::#ctor::CtorNew<::#ctor::RvalueReference<'_, Self>> for #type_name {
             type CtorType = Self;
-            type Error = ::ctor::Infallible;
+            type Error = ::#ctor::Infallible;
             #[inline(always)]
-            fn ctor_new(args: ::ctor::RvalueReference<'_, Self>) -> Self::CtorType {
-                <Self as From<::ctor::RvalueReference<'_, Self>>>::from(args)
+            fn ctor_new(args: ::#ctor::RvalueReference<'_, Self>) -> Self::CtorType {
+                <Self as From<::#ctor::RvalueReference<'_, Self>>>::from(args)
             }
         }
 
         // Copy assign.
-        impl ::ctor::UnpinAssign<&Self> for #type_name {
+        impl ::#ctor::UnpinAssign<&Self> for #type_name {
             #[inline(always)]
             fn unpin_assign(&mut self, other: &Self) {
                 *self = *other;
@@ -131,14 +173,13 @@ pub fn derive_move_and_assign_via_copy(item: TokenStream) -> TokenStream {
         }
 
         // Move assign.
-        impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for #type_name {
+        impl ::#ctor::UnpinAssign<::#ctor::RvalueReference<'_, Self>> for #type_name {
             #[inline(always)]
-            fn unpin_assign(&mut self, other: ::ctor::RvalueReference<'_, Self>) {
+            fn unpin_assign(&mut self, other: ::#ctor::RvalueReference<'_, Self>) {
                 *self = *other.get_ref();
             }
         }
-    }
-    .into()
+    })
 }
 
 /// `project_pin_type!(foo::T)` is the name of the type returned by
@@ -306,32 +347,51 @@ fn add_lifetime(generics: &mut syn::Generics, prefix: &str) -> proc_macro2::Toke
     quoted_lifetime
 }
 
+enum RecursivelyPinnedArg {
+    PinnedDrop,
+    RenamedCrate(Ident),
+}
+
+impl Parse for RecursivelyPinnedArg {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        if input.peek(Token![crate]) {
+            let CrateRename(new_crate) = input.parse()?;
+            Ok(RecursivelyPinnedArg::RenamedCrate(new_crate))
+        } else if input.parse::<Ident>()? == "PinnedDrop" {
+            Ok(RecursivelyPinnedArg::PinnedDrop)
+        } else {
+            Err(syn::Error::new(
+                input.span(),
+                format!("unexpected argument: expected PinnedDrop or crate=..., but got: {input}"),
+            ))
+        }
+    }
+}
+
 #[derive(Default)]
 struct RecursivelyPinnedArgs {
     is_pinned_drop: bool,
+    renamed_crate: Option<Ident>,
 }
 
 impl Parse for RecursivelyPinnedArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let args = <syn::punctuated::Punctuated<Ident, Token![,]>>::parse_terminated(input)?;
-        if args.len() > 1 {
-            return Err(syn::Error::new(
-                input.span(), // not args.span(), as that is only for the first argument.
-                &format!("expected at most 1 argument, got: {}", args.len()),
-            ));
-        }
-        let is_pinned_drop = if let Some(arg) = args.first() {
-            if arg != "PinnedDrop" {
-                return Err(syn::Error::new(
-                    arg.span(),
-                    "unexpected argument (wasn't `PinnedDrop`)",
-                ));
+        let mut result = RecursivelyPinnedArgs::default();
+        let args =
+            <syn::punctuated::Punctuated<RecursivelyPinnedArg, Token![,]>>::parse_terminated(
+                input,
+            )?;
+        for arg in args {
+            match arg {
+                RecursivelyPinnedArg::PinnedDrop => {
+                    result.is_pinned_drop = true;
+                }
+                RecursivelyPinnedArg::RenamedCrate(ident) => {
+                    result.renamed_crate = Some(ident);
+                }
             }
-            true
-        } else {
-            false
-        };
-        Ok(RecursivelyPinnedArgs { is_pinned_drop })
+        }
+        Ok(result)
     }
 }
 
@@ -446,6 +506,20 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 ///
 /// (This is analogous to `#[pin_project(PinnedDrop)]`.)
 ///
+/// ### `crate=<ident>`
+///
+/// If the `ctor` crate is renamed or wrapped, you may need to pass the new
+/// crate name to `#[recursively_pinned]`. For example:
+///
+/// ```
+/// // We depend on `ctor` under the name `ctor2` so that we can also depend on another
+/// // crate called `ctor`. :|
+/// #[recursively_pinned(crate=ctor2)]
+/// struct S {
+///   field: i32,
+/// }
+/// ```
+///
 /// ## Direct initialization
 ///
 /// Use the `ctor!` macro to instantiate recursively pinned types. For example:
@@ -485,6 +559,7 @@ fn recursively_pinned_impl(
     item: proc_macro2::TokenStream,
 ) -> syn::Result<proc_macro2::TokenStream> {
     let args = syn::parse2::<RecursivelyPinnedArgs>(args)?;
+    let ctor = args.renamed_crate.unwrap_or(Ident::new("ctor", Span::call_site()));
     let mut input = syn::parse2::<syn::DeriveInput>(item)?;
 
     let project_pin_impl = project_pin_impl(&input)?;
@@ -512,16 +587,16 @@ fn recursively_pinned_impl(
         quote! {
             impl #input_impl_generics Drop for #name #input_ty_generics #input_where_clause {
                 fn drop(&mut self) {
-                    unsafe {::ctor::PinnedDrop::pinned_drop(::core::pin::Pin::new_unchecked(self))}
+                    unsafe {::#ctor::PinnedDrop::pinned_drop(::core::pin::Pin::new_unchecked(self))}
                 }
             }
         }
     } else {
         quote! {
-            impl #input_impl_generics ::ctor::macro_internal::DoNotImplDrop for #name #input_ty_generics #input_where_clause {}
+            impl #input_impl_generics ::#ctor::macro_internal::DoNotImplDrop for #name #input_ty_generics #input_where_clause {}
             /// A no-op PinnedDrop that will cause an error if the user also defines PinnedDrop,
             /// due to forgetting to pass `PinnedDrop` to #[recursively_pinned(PinnedDrop)]`.
-            impl #input_impl_generics ::ctor::PinnedDrop for #name #input_ty_generics #input_where_clause {
+            impl #input_impl_generics ::#ctor::PinnedDrop for #name #input_ty_generics #input_where_clause {
                 unsafe fn pinned_drop(self: ::core::pin::Pin<&mut Self>) {}
             }
         }
@@ -540,7 +615,7 @@ fn recursively_pinned_impl(
         const _ : () = {
             #ctor_initialized_input
 
-            unsafe impl #input_impl_generics ::ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {
+            unsafe impl #input_impl_generics ::#ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {
                 type CtorInitializedFields = #ctor_initialized_name #input_ty_generics;
             }
         };

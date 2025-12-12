@@ -94,6 +94,23 @@ crubit_rust_test(
     ],
 )
 
+crubit_rust_test(
+    name = "ctor_rename_test",
+    srcs = ["ctor_rename_test.rs"],
+    # Despite the name "aliases", the name `ctor` is actually not available in the test body.
+    # This is important for the purpose of the test.
+    aliases = {
+        "ctor": "renamed_ctor",
+    },
+    # LINT.IfChange
+    rustc_flags = ["-Zallow-features=negative_impls"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    deps = [
+        ":ctor",
+        "@crate_index//:googletest",
+    ],
+)
+
 rust_test(
     name = "ctor_test",
     srcs = ["ctor_test.rs"],
