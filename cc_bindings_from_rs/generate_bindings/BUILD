@@ -24,7 +24,7 @@ rust_library(
         "lib.rs",
     ],
     proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
+        "@crates//:rustversion",  # v1
     ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
@@ -41,11 +41,11 @@ rust_library(
         "//common:crubit_feature",
         "//common:dyn_format",
         "//common:error_report",
-        "@crate_index//:flagset",  # v0_4
-        "@crate_index//:itertools",  # v0_13
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:flagset",  # v0_4
+        "@crates//:itertools",  # v0_13
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:syn",  # v1
     ],
 )
 
@@ -60,8 +60,8 @@ crubit_rust_test(
         "//cc_bindings_from_rs/generate_bindings/database",
         "//common:code_gen_utils",
         "//common:token_stream_matchers",
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
     ],
 )
 
@@ -76,8 +76,8 @@ crubit_rust_test(
         "//common:code_gen_utils",
         "//common:token_stream_matchers",
         "//common:token_stream_printer",
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
     ],
 )
 
@@ -89,9 +89,9 @@ crubit_rust_test(
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:token_stream_matchers",
-        "@crate_index//:flagset",  # v0_4
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
+        "@crates//:flagset",  # v0_4
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
     ],
 )
 
@@ -101,7 +101,7 @@ crubit_rust_test(
     deps = [
         ":test_helpers",
         "//common:token_stream_matchers",
-        "@crate_index//:quote",  # v1
+        "@crates//:quote",  # v1
     ],
 )
 
@@ -125,7 +125,7 @@ rust_library(
         "//common:crubit_feature",
         "//common:dyn_format",
         "//common:error_report",
-        "@crate_index//:flagset",  # v0_4
+        "@crates//:flagset",  # v0_4
     ],
 )
 

@@ -18,6 +18,6 @@ crubit_rust_test(
         ":explicit_specialization",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

@@ -27,6 +27,6 @@ crubit_rust_test(
         ":uses_macro",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

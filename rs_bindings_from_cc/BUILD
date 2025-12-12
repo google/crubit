@@ -51,9 +51,9 @@ deps_for_bindings(
         "//support/rs_std:dyn_callable_rs",
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
-        "@crate_index//:static_assertions",  # v1
+        "@crates//:static_assertions",  # v1
         # Required for `cxx.rs` integration.
-        "@crate_index//:cxx",  # v1
+        "@crates//:cxx",  # v1
     ],
     visibility = ["//:__subpackages__"],
 )
@@ -388,12 +388,12 @@ rust_library(
         "//common:code_gen_utils",
         "//common:crubit_feature",
         "//common:error_report",
-        "@crate_index//:flagset",  # v0_4
-        "@crate_index//:itertools",  # v0_13
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:serde",  # v1
-        "@crate_index//:serde_json",  # v1
+        "@crates//:flagset",  # v0_4
+        "@crates//:itertools",  # v0_13
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:serde",  # v1
+        "@crates//:serde_json",  # v1
     ],
 )
 
@@ -401,7 +401,7 @@ crubit_rust_test(
     name = "rs_ir_test",
     crate = ":ir",
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -420,8 +420,8 @@ rust_library(
         "//common:crubit_feature",
         "//common:ffi_types",
         "//common:multiplatform_testing",
-        "@crate_index//:flagset",  # v0_4
-        "@crate_index//:itertools",  # v0_13
+        "@crates//:flagset",  # v0_4
+        "@crates//:itertools",  # v0_13
     ],
 )
 
@@ -435,8 +435,8 @@ crubit_rust_test(
     deps = [
         ":ir_matchers",
         ":ir_testing",
-        "@crate_index//:googletest",
-        "@crate_index//:quote",  # v1
+        "@crates//:googletest",
+        "@crates//:quote",  # v1
     ],
 )
 
@@ -493,10 +493,10 @@ multiplatform_rust_test(
         ":ir_testing",
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
-        "@crate_index//:googletest",
-        "@crate_index//:itertools",  # v0_13
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
+        "@crates//:googletest",
+        "@crates//:itertools",  # v0_13
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
     ],
 )
 
@@ -562,10 +562,10 @@ rust_library(
         ":ir_testing",
         "//common:token_stream_matchers",
         "//common:token_stream_printer",
-        "@crate_index//:anyhow",  # v1
-        "@crate_index//:itertools",  # v0_13
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
+        "@crates//:anyhow",  # v1
+        "@crates//:itertools",  # v0_13
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
     ],
 )
 
@@ -579,7 +579,7 @@ crubit_rust_test(
     deps = [
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -624,9 +624,9 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "//common:ffi_types",
-        "@crate_index//:proc-macro2",
-        "@crate_index//:serde_json",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:serde_json",  # v1
+        "@crates//:syn",  # v1
     ],
 )
 
@@ -639,8 +639,8 @@ crubit_rust_test(
     ],
     crate = ":collect_instantiations",
     deps = [
-        "@crate_index//:googletest",
-        "@crate_index//:quote",  # v1
+        "@crates//:googletest",
+        "@crates//:quote",  # v1
     ],
 )
 

@@ -40,7 +40,7 @@ crubit_rust_test(
         ":forward_declaration",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -64,7 +64,7 @@ crubit_rust_test(
         ":definition_with_crubit_disabled",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -91,6 +91,6 @@ crubit_rust_test(
         ":definition_with_crubit_disabled_in_deps",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

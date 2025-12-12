@@ -32,9 +32,9 @@ rust_proc_macro(
     srcs = ["ctor_proc_macros.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     deps = [
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:syn",  # v1
     ],
 )
 
@@ -71,9 +71,9 @@ rust_proc_macro(
         "//visibility:public",
     ],
     deps = [
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:syn",  # v1
     ],
 )
 
@@ -90,7 +90,7 @@ crubit_rust_test(
     crate = ":ctor_proc_macros_proc_macro_internal",
     deps = [
         "//common:token_stream_matchers",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -107,7 +107,7 @@ crubit_rust_test(
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":ctor",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -117,7 +117,7 @@ rust_test(
     rustc_flags = ["-Zallow-features=negative_impls"],
     deps = [
         ":ctor",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -129,7 +129,7 @@ rust_test(
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":ctor",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -138,7 +138,7 @@ rust_test(
     srcs = ["ctor_macro_test.rs"],
     deps = [
         ":ctor",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -165,9 +165,9 @@ rust_proc_macro(
         "//google_internal/release:crubit_support_lib_visibility",
     ],
     deps = [
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:syn",  # v1
     ],
 )
 
@@ -176,7 +176,7 @@ rust_test(
     srcs = ["forward_declare_macros_test.rs"],
     deps = [
         ":forward_declare",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -207,7 +207,7 @@ rust_test(
     rustc_flags = ["-Zallow-features=negative_impls"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -224,7 +224,7 @@ rust_test(
     name = "bridge_rust_test",
     srcs = ["bridge.rs"],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 

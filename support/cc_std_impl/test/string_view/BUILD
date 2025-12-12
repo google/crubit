@@ -40,7 +40,7 @@ crubit_rust_test(
         "//support/public:cc_std",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 

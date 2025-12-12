@@ -16,7 +16,7 @@ crubit_rust_test(
         ":failed_template_instantiation_member_function",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -44,6 +44,6 @@ crubit_rust_test(
         "notap",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

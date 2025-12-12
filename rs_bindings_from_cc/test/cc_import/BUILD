@@ -33,6 +33,6 @@ crubit_rust_test(
     name = "math_test",
     crate = ":math",
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

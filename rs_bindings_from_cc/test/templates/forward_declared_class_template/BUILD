@@ -16,7 +16,7 @@ crubit_rust_test(
         ":use_forward_declared_template",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -39,7 +39,7 @@ crubit_rust_test(
         ":use_forward_declared_template",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -59,6 +59,6 @@ crubit_rust_test(
         ":use_forward_declared_template",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

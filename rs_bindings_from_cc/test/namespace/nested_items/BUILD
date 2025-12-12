@@ -16,6 +16,6 @@ crubit_rust_test(
         ":nested_items",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

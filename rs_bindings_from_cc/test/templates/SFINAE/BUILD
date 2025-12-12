@@ -16,6 +16,6 @@ crubit_rust_test(
         ":sfinae",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

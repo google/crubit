@@ -11,7 +11,7 @@ crubit_rust_test(
         "//rs_bindings_from_cc/test/cpp_reserved_target_name/subdir2",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -31,7 +31,7 @@ crubit_rust_test(
         "//common:item_exists",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -52,6 +52,6 @@ crubit_rust_test(
         ":core_user",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

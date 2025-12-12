@@ -28,7 +28,7 @@ crubit_rust_test(
         ":empty_cc_lib_with_additional_rust_srcs",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -61,6 +61,6 @@ crubit_rust_test(
         ":cc_lib_with_additional_rust_srcs_with_namespace_path",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
