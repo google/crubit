@@ -10,7 +10,6 @@ exports_files(
     srcs = glob(["*"]),
     visibility = [
         ":__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
     ],
 )
 
@@ -162,7 +161,6 @@ rust_proc_macro(
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         ":__subpackages__",
-        "//google_internal/release:crubit_support_lib_visibility",
     ],
     deps = [
         "@crate_index//:proc-macro2",
