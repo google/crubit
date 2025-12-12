@@ -55,6 +55,7 @@ DEPS = {
         "template_def_with_crubit",
         "template_fwd_without_crubit",
     ],
+    "callables": ["//support/rs_std:dyn_callable"],
 }
 
 TAGS = {}

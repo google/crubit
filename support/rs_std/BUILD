@@ -1,10 +1,7 @@
 """C++ libraries that help work with Rust types."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load(
-    "@rules_rust//rust:defs.bzl",
-    "rust_library",
-)
+load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
@@ -155,6 +152,42 @@ crubit_cc_test(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@fuzztest",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
+rust_library(
+    name = "dyn_callable_rs",
+    srcs = ["dyn_callable.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//support:bridge_rust",
+    ],
+)
+
+cc_library(
+    name = "dyn_callable",
+    hdrs = ["dyn_callable.h"],
+    aspect_hints = [
+        "//features:experimental",
+        "//features:wrapper",
+    ],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//support:bridge_cpp",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/base:nullability",
+    ],
+)
+
+crubit_cc_test(
+    name = "dyn_callable_test",
+    srcs = ["dyn_callable_test.cc"],
+    deps = [
+        ":dyn_callable",
         "@fuzztest//:fuzztest_gtest_main",
         "@googletest//:gmock",
     ],

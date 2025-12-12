@@ -48,6 +48,7 @@ deps_for_bindings(
         "//support:forward_declare",
         "//support:oops",
         "//support:bridge_rust",
+        "//support/rs_std:dyn_callable_rs",
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
         "@crate_index//:static_assertions",  # v1
