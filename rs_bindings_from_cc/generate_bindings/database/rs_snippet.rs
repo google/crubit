@@ -491,6 +491,63 @@ fn new_c9_co_record(
     }))
 }
 
+/// Information about how the owned function object may be called.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum FnKind {
+    /// A function object that may be called in any context, any number of times.
+    Fn,
+
+    /// A function object that requires mutable access in order to invoke, and may be called any
+    /// number of times.
+    FnMut,
+
+    /// A function object that may be called at most once.
+    FnOnce,
+}
+
+impl ToTokens for FnKind {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            FnKind::Fn => quote! { ::core::ops::Fn },
+            FnKind::FnMut => quote! { ::core::ops::FnMut },
+            FnKind::FnOnce => quote! { ::core::ops::FnOnce },
+        }
+        .to_tokens(tokens);
+    }
+}
+
+/// Information about a dyn callable type.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct DynCallable {
+    pub fn_kind: FnKind,
+    pub return_type: Rc<RsTypeKind>,
+    pub param_types: Rc<[RsTypeKind]>,
+    pub thunk_ident: Ident,
+}
+
+impl DynCallable {
+    /// Returns a `TokenStream` in the shape of `-> Output`, or None if the return type is void.
+    pub fn rust_return_type_fragment(&self, db: &dyn BindingsGenerator) -> Option<TokenStream> {
+        if self.return_type.is_void() {
+            None
+        } else {
+            let return_type_tokens = self.return_type.to_token_stream(db);
+            Some(quote! { -> #return_type_tokens })
+        }
+    }
+
+    /// Returns a `TokenStream` in the shape of `dyn Trait(Inputs) -> Output`.
+    pub fn dyn_fn_spelling(&self, db: &dyn BindingsGenerator) -> TokenStream {
+        let rust_return_type_fragment = self.rust_return_type_fragment(db);
+        let param_type_tokens =
+            self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
+        let fn_kind = self.fn_kind;
+        quote! {
+            dyn #fn_kind(#(#param_type_tokens),*) #rust_return_type_fragment
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum BridgeRsTypeKind {
     BridgeVoidConverters {
@@ -512,6 +569,7 @@ pub enum BridgeRsTypeKind {
     StdString {
         in_cc_std: bool,
     },
+    DynCallable(Rc<DynCallable>),
 }
 
 impl BridgeRsTypeKind {
@@ -564,6 +622,24 @@ impl BridgeRsTypeKind {
                     && record.owning_target.target_name_escaped() == "cc_std";
 
                 BridgeRsTypeKind::StdString { in_cc_std }
+            }
+            BridgeType::DynCallable { fn_kind, return_type, param_types } => {
+                BridgeRsTypeKind::DynCallable(Rc::new(DynCallable {
+                    fn_kind: match fn_kind {
+                        ir::FnKind::Fn => FnKind::Fn,
+                        ir::FnKind::FnMut => FnKind::FnMut,
+                        ir::FnKind::FnOnce => FnKind::FnOnce,
+                    },
+                    return_type: Rc::new(db.rs_type_kind(return_type.clone())?),
+                    param_types: param_types
+                        .iter()
+                        .map(|param_type| db.rs_type_kind(param_type.clone()))
+                        .collect::<Result<_>>()?,
+                    // TODO(okabayashi): use something more sophisticated than the mangled name
+                    // of the class template specialization.
+                    thunk_ident: syn::parse_str(record.rs_name.identifier.as_ref())
+                        .expect("should be a valid identifier"),
+                }))
             }
         };
 
@@ -1123,6 +1199,10 @@ impl RsTypeKind {
                 BridgeRsTypeKind::StdOptional(t) => t.implements_copy(),
                 BridgeRsTypeKind::StdPair(t1, t2) => t1.implements_copy() && t2.implements_copy(),
                 BridgeRsTypeKind::StdString { .. } => false,
+                BridgeRsTypeKind::DynCallable { .. } => {
+                    // DynCallable represents an owned function object, so it is not copyable.
+                    false
+                }
             },
             RsTypeKind::ExistingRustType(_) => true,
             RsTypeKind::C9Co { .. } => false,
@@ -1602,6 +1682,10 @@ impl RsTypeKind {
                             quote! { ::cc_std::std::string }
                         }
                     }
+                    BridgeRsTypeKind::DynCallable(dyn_callable) => {
+                        let dyn_callable_spelling = dyn_callable.dyn_fn_spelling(db);
+                        quote! { ::alloc::boxed::Box<#dyn_callable_spelling> }
+                    }
                 }
             }
             RsTypeKind::ExistingRustType(existing_rust_type) => fully_qualify_type(
@@ -1756,6 +1840,10 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                             self.todo.push(t1);
                         }
                         BridgeRsTypeKind::StdString { .. } => {}
+                        BridgeRsTypeKind::DynCallable(dyn_callable) => {
+                            self.todo.push(&dyn_callable.return_type);
+                            self.todo.extend(dyn_callable.param_types.iter().rev());
+                        }
                     },
                     RsTypeKind::ExistingRustType(_) => {}
                     RsTypeKind::C9Co { result_type, .. } => {
