@@ -351,18 +351,6 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // Can't generate bindings for std::allocator_traits<std::allocator<char>>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::allocator_traits<std::allocator<char>> (crate::__CcTemplateInstNSt3__u16allocator_traitsINS_9allocatorIcEEEE is a template instantiation)
 
-// Error while generating bindings for struct 'std::__allocation_result<char32_t *, unsigned long>':
-// Can't generate bindings for std::__allocation_result<char32_t *, unsigned long>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char32_t *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPDimEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::__allocation_result<char16_t *, unsigned long>':
-// Can't generate bindings for std::__allocation_result<char16_t *, unsigned long>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char16_t *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPDsmEE is a template instantiation)
-
-// Error while generating bindings for struct 'std::__allocation_result<char *, unsigned long>':
-// Can't generate bindings for std::__allocation_result<char *, unsigned long>, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPcmEE is a template instantiation)
-
 // Error while generating bindings for class 'std::basic_filebuf<char, std::char_traits<char>>':
 // Can't generate bindings for std::basic_filebuf<char, std::char_traits<char>>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_filebuf<char, std::char_traits<char>> (incomplete type)
@@ -506,6 +494,18 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
 // Error while generating bindings for struct 'std::char_traits<char32_t>':
 // Can't generate bindings for std::char_traits<char32_t>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<char32_t> (crate::__CcTemplateInstNSt3__u11char_traitsIDiEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::__allocation_result<char32_t *, unsigned long>':
+// Can't generate bindings for std::__allocation_result<char32_t *, unsigned long>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char32_t *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPDimEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::__allocation_result<char16_t *, unsigned long>':
+// Can't generate bindings for std::__allocation_result<char16_t *, unsigned long>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char16_t *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPDsmEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::__allocation_result<char *, unsigned long>':
+// Can't generate bindings for std::__allocation_result<char *, unsigned long>, because of missing required features (<internal link>):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__allocation_result<char *, unsigned long> (crate::__CcTemplateInstNSt3__u19__allocation_resultIPcmEE is a template instantiation)
 
 // Error while generating bindings for class 'std::basic_string_view<char32_t, std::char_traits<char32_t>>':
 // Can't generate bindings for std::basic_string_view<char32_t, std::char_traits<char32_t>>, because of missing required features (<internal link>):
