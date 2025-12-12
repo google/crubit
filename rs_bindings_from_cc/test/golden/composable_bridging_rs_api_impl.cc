@@ -50,7 +50,8 @@ extern "C" void __rust_thunk___Z16MakeOptionalVec3fffb(
     bool is_present) {
   ::crubit::internal::Encode<
       ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
-      ::crubit::MyOptionAbi(::crubit::TransmuteAbi<::Vec3>()),
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
+          ::crubit::TransmuteAbi<::Vec3>()),
       __return_abi_buffer, MakeOptionalVec3(x, y, z, is_present));
 }
 
@@ -61,13 +62,15 @@ extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
     unsigned char* __return_abi_buffer, const unsigned char* v, float factor) {
   ::crubit::internal::Encode<
       ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
-      ::crubit::MyOptionAbi(::crubit::TransmuteAbi<::Vec3>()),
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
+          ::crubit::TransmuteAbi<::Vec3>()),
       __return_abi_buffer,
-      MapMultiply(
-          ::crubit::internal::Decode<
-              ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
-              ::crubit::MyOptionAbi(::crubit::TransmuteAbi<::Vec3>()), v),
-          factor));
+      MapMultiply(::crubit::internal::Decode<
+                      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
+                      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
+                          ::crubit::TransmuteAbi<::Vec3>()),
+                      v),
+                  factor));
 }
 
 static_assert((struct MyOption<Vec3> (*)(struct MyOption<Vec3>,
@@ -77,7 +80,8 @@ extern "C" void __rust_thunk___Z14MakeMyI8Structv(
     unsigned char* __return_abi_buffer) {
   ::crubit::internal::Encode<
       ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>>(
-      ::crubit::MyOptionAbi(::crubit::TransmuteAbi<::MyI8Struct>()),
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>(
+          ::crubit::TransmuteAbi<::MyI8Struct>()),
       __return_abi_buffer, MakeMyI8Struct());
 }
 
@@ -91,7 +95,8 @@ extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
     unsigned char* __return_abi_buffer) {
   ::crubit::internal::Encode<
       ::crubit::MyOptionAbi<::crubit::TransmuteAbi<void*>>>(
-      ::crubit::MyOptionAbi(::crubit::TransmuteAbi<void*>()),
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<void*>>(
+          ::crubit::TransmuteAbi<void*>()),
       __return_abi_buffer, MaybeVoidPtr());
 }
 
@@ -102,7 +107,8 @@ __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE
     unsigned char* __return_abi_buffer, ::rs_std::SliceRef<const int> slice) {
   ::crubit::internal::Encode<::crubit::MyOptionAbi<
       ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>>(
-      ::crubit::MyOptionAbi(
+      ::crubit::MyOptionAbi<
+          ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>(
           ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>()),
       __return_abi_buffer, AcceptsSliceAndReturnsStatusErrorIfEmpty(slice));
 }
@@ -114,7 +120,8 @@ extern "C" void __rust_thunk___Z16ReturnsCStrArrayv(
     unsigned char* __return_abi_buffer) {
   ::crubit::internal::Encode<
       ::crubit::MyOptionAbi<::crubit::TransmuteAbi<char const**>>>(
-      ::crubit::MyOptionAbi(::crubit::TransmuteAbi<char const**>()),
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<char const**>>(
+          ::crubit::TransmuteAbi<char const**>()),
       __return_abi_buffer, ReturnsCStrArray());
 }
 
