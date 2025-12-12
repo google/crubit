@@ -283,9 +283,12 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
                 quote! { ::crubit::TransmuteAbi<#ty> }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
-                let first_tokens = Self(first);
-                let second_tokens = Self(second);
-                quote! { ::crubit::PairAbi<#first_tokens, #second_tokens> }.to_tokens(tokens);
+                let first_crubit_abi_type = Self(first);
+                let second_crubit_abi_type = Self(second);
+                quote! {
+                    ::crubit::PairAbi<#first_crubit_abi_type, #second_crubit_abi_type>
+                }
+                .to_tokens(tokens);
             }
             CrubitAbiType::StdString { .. } => {
                 quote! { ::crubit::BoxedAbi<std::string> }.to_tokens(tokens)
@@ -344,9 +347,17 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
                 quote! { ::crubit::TransmuteAbi<#ty>() }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
-                let first_tokens = Self(first);
-                let second_tokens = Self(second);
-                quote! { ::crubit::PairAbi(#first_tokens, #second_tokens) }.to_tokens(tokens);
+                let first_crubit_abi_type = CrubitAbiTypeToCppTokens(first);
+                let first_crubit_abi_type_expr = Self(first);
+                let second_crubit_abi_type = CrubitAbiTypeToCppTokens(second);
+                let second_crubit_abi_type_expr = Self(second);
+                quote! {
+                    ::crubit::PairAbi<#first_crubit_abi_type, #second_crubit_abi_type>(
+                        #first_crubit_abi_type_expr,
+                        #second_crubit_abi_type_expr
+                    )
+                }
+                .to_tokens(tokens);
             }
             CrubitAbiType::StdString { .. } => {
                 quote! { ::crubit::BoxedAbi<std::string>() }.to_tokens(tokens)
@@ -358,9 +369,19 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
                 quote! { ::crubit::BoxedAbi<#cpp_proto_path>() }.to_tokens(tokens);
             }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
-                cpp_abi_path.to_tokens(tokens);
-                let type_args_tokens = type_args.iter().map(Self);
-                quote! { ( #(#type_args_tokens),* ) }.to_tokens(tokens);
+                if type_args.is_empty() {
+                    // Special empty case since `Foo<>()` is invalid syntax.
+                    quote! { #cpp_abi_path() }.to_tokens(tokens);
+                } else {
+                    let type_args_crubit_abi_types = type_args.iter().map(CrubitAbiTypeToCppTokens);
+                    let type_args_crubit_abi_type_exprs = type_args.iter().map(Self);
+                    quote! {
+                        #cpp_abi_path<#(#type_args_crubit_abi_types),*>(
+                            #(#type_args_crubit_abi_type_exprs),*
+                        )
+                    }
+                    .to_tokens(tokens);
+                }
             }
         }
     }

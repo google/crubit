@@ -136,13 +136,15 @@ fn cc_param_to_c_abi<'tcx>(
                 // We need to encode it into a buffer, then send that over.
                 includes.insert(db.support_header("bridge.h"));
                 let crubit_abi_type = CrubitAbiTypeToCppTokens(&composable.crubit_abi_type);
+                let crubit_abi_type_expr =
+                    CrubitAbiTypeToCppExprTokens(&composable.crubit_abi_type);
 
                 let buffer_name = expect_format_cc_ident(&format!("{cc_ident}_buffer"));
                 // Create a buffer, encode it into the buffer, and then make the buffer be
                 // what we sent to Rust across the C ABI.
                 statements.extend(quote! {
                     unsigned char #buffer_name[#crubit_abi_type::kSize];
-                    ::crubit::internal::Encode<#crubit_abi_type>(#buffer_name, #cc_ident);
+                    ::crubit::internal::Encode<#crubit_abi_type>(#crubit_abi_type_expr, #buffer_name, #cc_ident);
                 });
                 quote! { #buffer_name }
             }
