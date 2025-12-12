@@ -11,24 +11,25 @@ pub struct Vec3<T> {
     pub z: T,
 }
 
-pub struct Vec3Abi<A>(core::marker::PhantomData<A>);
+#[derive(Clone, Default)]
+pub struct Vec3Abi<A>(pub A);
 
-unsafe impl<A: CrubitAbi> CrubitAbi for Vec3Abi<A> {
+unsafe impl<A: CrubitAbi + Clone> CrubitAbi for Vec3Abi<A> {
     type Value = Vec3<A::Value>;
 
     const SIZE: usize = A::SIZE * 3;
 
-    fn encode(value: Self::Value, encoder: &mut Encoder) {
-        encoder.encode::<A>(value.x);
-        encoder.encode::<A>(value.y);
-        encoder.encode::<A>(value.z);
+    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        self.0.clone().encode(value.x, encoder);
+        self.0.clone().encode(value.y, encoder);
+        self.0.encode(value.z, encoder);
     }
 
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+    unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
         unsafe {
-            let x = decoder.decode::<A>();
-            let y = decoder.decode::<A>();
-            let z = decoder.decode::<A>();
+            let x = self.0.clone().decode(decoder);
+            let y = self.0.clone().decode(decoder);
+            let z = self.0.decode(decoder);
             Vec3 { x, y, z }
         }
     }

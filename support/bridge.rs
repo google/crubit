@@ -26,7 +26,7 @@ use core::ptr;
 /// for how it should be bridged, which is represented by a type that implements [`CrubitAbi`]:
 ///
 /// ```rust
-/// pub struct OptionAbi<A>(PhantomData<A>);
+/// pub struct OptionAbi<A>(pub A);
 ///
 /// unsafe impl<A: CrubitAbi> CrubitAbi for OptionAbi<A> {
 ///     type Value = Option<A::Value>;
@@ -47,21 +47,21 @@ use core::ptr;
 ///
 ///     const SIZE: usize = mem::size_of::<bool>() + A::SIZE;
 ///
-///     fn encode(value: Self::Value, encoder: &mut Encoder) {
+///     fn encode(self, value: Self::Value, encoder: &mut Encoder) {
 ///         if let Some(inner) = value {
-///             encoder.encode_transmute(true);
-///             encoder.encode::<A>(inner);
+///             transmute_abi().encode(true, encoder);
+///             self.0.encode(inner, encoder);
 ///         } else {
-///             encoder.encode_transmute(false);
+///             transmute_abi().encode(false, encoder);
 ///         }
 ///     }
 ///
-///     unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+///     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
 ///         // SAFETY: the caller guarantees that the buffer contains a bool, and if the bool is true,
 ///         // that the buffer also contains the value.
 ///         unsafe {
-///             if decoder.decode_transmute() {
-///                 Some(decoder.decode::<A>())
+///             if transmute_abi().decode(decoder) {
+///                 Some(self.0.decode(decoder))
 ///             } else {
 ///                 None
 ///             }
@@ -110,15 +110,15 @@ pub unsafe trait CrubitAbi {
     /// # Examples
     ///
     /// ```rust
-    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for TupleAbi<(A1, A2)> {
-    ///     fn encode((a, b): Self::Value, encoder: &mut Encoder) {
-    ///         encoder.encode::<A1>(a);
-    ///         encoder.encode::<A2>(b);
+    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for (A1, A2) {
+    ///     fn encode(self, (a, b): Self::Value, encoder: &mut Encoder) {
+    ///         self.0.encode(a);
+    ///         self.1.encode(b);
     ///     }
     ///     // other items omitted...
     /// }
     /// ```
-    fn encode(value: Self::Value, encoder: &mut Encoder);
+    fn encode(self, value: Self::Value, encoder: &mut Encoder);
 
     /// Decodes a [`Value`], advancing the decoder's position by `SIZE` bytes.
     ///
@@ -133,15 +133,13 @@ pub unsafe trait CrubitAbi {
     /// # Examples
     ///
     /// ```rust
-    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for TupleAbi<(A1, A2)> {
-    ///     unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+    /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for (A1, A2) {
+    ///     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
     ///         // SAFETY: The caller guarantees that the buffer contains an `A1::Value`, followed
-    ///         // by an `A2::Value`, which is the understood ABI for a `TupleAbi<(A1, A2)>`.
+    ///         // by an `A2::Value`, which is the understood ABI for a `(A1, A2)`.
     ///         unsafe {
-    ///             let a = decoder.decode::<A1>();
-    ///             let b = decoder.decode::<A2>();
-    ///             // At this point, it would be unsafe to call decoder.decode() with anything that
-    ///             // would read from the underlying buffer, since we don't know what's there.
+    ///             let a = self.0.decode();
+    ///             let b = self.1.decode();
     ///             (a, b)
     ///         }
     ///     }
@@ -153,7 +151,7 @@ pub unsafe trait CrubitAbi {
     ///
     /// The caller guarantees that the buffer's current position contains a `Value` that was
     /// encoded with this ABI (either from Rust or C++).
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value;
+    unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value;
 }
 
 /// A wrapper around a buffer that tracks which parts of a buffer have already been written to.
@@ -164,18 +162,6 @@ pub struct Encoder {
     buf: *mut u8,
 }
 
-impl Encoder {
-    /// Encodes a value.
-    pub fn encode<A: CrubitAbi>(&mut self, value: A::Value) {
-        A::encode(value, self);
-    }
-
-    /// Encodes a value via [`core::ptr::copy_nonoverlapping`].
-    pub fn encode_transmute<T>(&mut self, value: T) {
-        self.encode::<TransmuteAbi<T>>(value);
-    }
-}
-
 /// A wrapper around a buffer that tracks which parts of a buffer have already been read from.
 pub struct Decoder {
     // The number of bytes remaining in the buffer. We read backwards (counting down) so that
@@ -184,35 +170,24 @@ pub struct Decoder {
     buf: *const u8,
 }
 
-impl Decoder {
-    /// Decodes a value.
-    ///
-    /// # Safety
-    ///
-    /// See [`CrubitAbi::decode`].
-    pub unsafe fn decode<A: CrubitAbi>(&mut self) -> A::Value {
-        // SAFETY: The caller guarantees the same invariants as [`CrubitAbi::decode`].
-        unsafe { A::decode(self) }
-    }
-
-    /// Decodes a value via [`core::ptr::copy_nonoverlapping`].
-    ///
-    /// # Safety
-    ///
-    /// See [`<TransmuteAbi<T> as CrubitAbi>::decode`].
-    pub unsafe fn decode_transmute<T>(&mut self) -> T {
-        // SAFETY: The caller guarantees the same invariants as
-        // [`<TransmuteAbi<T> as CrubitAbi>::decode`].
-        unsafe { self.decode::<TransmuteAbi<T>>() }
-    }
-}
-
 /// A [`CrubitAbi`] for encoding a value by transmuting it into the buffer.
 pub struct TransmuteAbi<T>(pub PhantomData<T>);
 
 /// Shorthand for constructiong a new [`TransmuteAbi<T>`].
 pub fn transmute_abi<T>() -> TransmuteAbi<T> {
-    TransmuteAbi(PhantomData)
+    Default::default()
+}
+
+impl<T> Default for TransmuteAbi<T> {
+    fn default() -> Self {
+        TransmuteAbi(PhantomData)
+    }
+}
+
+impl<T> Clone for TransmuteAbi<T> {
+    fn clone(&self) -> Self {
+        TransmuteAbi(PhantomData)
+    }
 }
 
 // Every T can be passed by value.
@@ -224,7 +199,7 @@ unsafe impl<T> CrubitAbi for TransmuteAbi<T> {
 
     const SIZE: usize = mem::size_of::<Self::Value>();
 
-    fn encode(value: Self::Value, encoder: &mut Encoder) {
+    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
         // We use the fact that underflow is checked in debug builds to ensure that callers
         // don't overwrite the buffer.
         encoder.remaining_bytes -= Self::SIZE;
@@ -235,7 +210,7 @@ unsafe impl<T> CrubitAbi for TransmuteAbi<T> {
         }
     }
 
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+    unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
         // We use the fact that underflow is checked in debug builds to ensure that callers
         // don't overwrite the buffer.
         decoder.remaining_bytes -= Self::SIZE;
@@ -243,61 +218,6 @@ unsafe impl<T> CrubitAbi for TransmuteAbi<T> {
         // SAFETY: The caller guarantees that the buffer contains a T.
         unsafe { ptr::read_unaligned(decoder.buf.add(decoder.remaining_bytes).cast::<T>()) }
     }
-}
-
-// TODO(okabayashi): TupleAbi only exists for backwards compatibility. Remove it once Crubit is
-// released in Crosstool, where we use a tuple directly.
-pub struct TupleAbi<A>(PhantomData<A>);
-
-// TODO(okabayashi): TupleAbi only exists for backwards compatibility. Remove it once Crubit is
-// released in Crosstool, where we use a tuple directly.
-macro_rules! unsafe_impl_crubit_abi_for_tuple_abi {
-    { $( unsafe impl CrubitAbi for TupleAbi<( $($A:ident,)*)>; )* } => {
-        $(
-            // SAFETY: The bridge schema for a tuple is the same in C++: each element of the tuple
-            // is encoded in order with the corresponding schema.
-            unsafe impl<$($A: CrubitAbi),*> CrubitAbi for TupleAbi<($($A,)*)> {
-                type Value = ( $($A::Value,)* );
-
-                const SIZE: usize = 0 $( + $A::SIZE )*;
-
-                 fn encode(( $($A,)* ): Self::Value, encoder: &mut Encoder) {
-                    #![allow(non_snake_case)]
-                    #![allow(unused_variables)] // for `encoder` in () case
-                    $(
-                        encoder.encode::<$A>($A);
-                    )*
-                }
-
-                unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
-                    #![allow(clippy::unused_unit)] // for () case
-                    #![allow(unused_variables)] // for `decoder` in () case
-
-                    // SAFETY: the caller guarantees that the buffer contains each element of
-                    // the tuple with the correct schema.
-                    ( $( unsafe { decoder.decode::<$A>() },)* )
-                }
-            }
-        )*
-    }
-}
-
-// TODO(okabayashi): TupleAbi only exists for backwards compatibility. Remove it once Crubit is
-// released in Crosstool, where we use a tuple directly.
-unsafe_impl_crubit_abi_for_tuple_abi! {
-    unsafe impl CrubitAbi for TupleAbi<()>;
-    unsafe impl CrubitAbi for TupleAbi<(A1,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8, A9,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11,)>;
-    unsafe impl CrubitAbi for TupleAbi<(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12,)>;
 }
 
 macro_rules! unsafe_impl_crubit_abi_for_tuple {
@@ -310,21 +230,28 @@ macro_rules! unsafe_impl_crubit_abi_for_tuple {
 
                 const SIZE: usize = 0 $( + $A::SIZE )*;
 
-                 fn encode(( $($A,)* ): Self::Value, encoder: &mut Encoder) {
+                 fn encode(self, ( $($A,)* ): Self::Value, encoder: &mut Encoder) {
                     #![allow(non_snake_case)]
                     #![allow(unused_variables)] // for `encoder` in () case
+                    let ($($a,)*) = self;
                     $(
-                        encoder.encode::<$A>($A);
+                        $a.encode($A, encoder);
                     )*
                 }
 
-                unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+                unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
                     #![allow(clippy::unused_unit)] // for () case
                     #![allow(unused_variables)] // for `decoder` in () case
 
+                    let ($($a,)*) = self;
+
                     // SAFETY: the caller guarantees that the buffer contains each element of
                     // the tuple with the correct schema.
-                    ( $( unsafe { decoder.decode::<$A>() },)* )
+                    (
+                        $(
+                            unsafe { $a.decode(decoder) },
+                        )*
+                    )
                 }
             }
         )*
@@ -352,7 +279,8 @@ unsafe_impl_crubit_abi_for_tuple! {
 
 /// A [`CrubitAbi`] for encoding an `Option` by encoding a bool followed by the value if the bool
 /// is true.
-pub struct OptionAbi<A>(PhantomData<A>);
+#[derive(Clone, Default)]
+pub struct OptionAbi<A>(pub A);
 
 // SAFETY: The ABI contract for `OptionAbi<T>` is that the value is encoded as follows:
 // bool, optionally followed by the value if the bool is true.
@@ -361,21 +289,21 @@ unsafe impl<A: CrubitAbi> CrubitAbi for OptionAbi<A> {
 
     const SIZE: usize = mem::size_of::<bool>() + A::SIZE;
 
-    fn encode(value: Self::Value, encoder: &mut Encoder) {
+    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
         if let Some(inner) = value {
-            encoder.encode_transmute(true);
-            encoder.encode::<A>(inner);
+            transmute_abi().encode(true, encoder);
+            self.0.encode(inner, encoder);
         } else {
-            encoder.encode_transmute(false);
+            transmute_abi().encode(false, encoder);
         }
     }
 
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+    unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
         // SAFETY: the caller guarantees that the buffer contains a bool, and if the bool is true,
         // that the buffer also contains the value.
         unsafe {
-            if decoder.decode_transmute() {
-                Some(decoder.decode::<A>())
+            if transmute_abi().decode(decoder) {
+                Some(self.0.decode(decoder))
             } else {
                 None
             }
@@ -396,8 +324,8 @@ pub mod internal {
     ///
     /// `buf` must point to a buffer that is large enough to hold the encoded value. The exact size
     /// written can be determined by `<T as CrubitAbi<S>>::SIZE`.
-    pub unsafe fn encode<A: CrubitAbi>(buf: *mut u8, value: A::Value) {
-        A::encode(value, &mut Encoder { remaining_bytes: A::SIZE, buf });
+    pub unsafe fn encode<A: CrubitAbi>(crubit_abi: A, buf: *mut u8, value: A::Value) {
+        crubit_abi.encode(value, &mut Encoder { remaining_bytes: A::SIZE, buf });
     }
 
     /// Decodes a value from a buffer.
@@ -408,9 +336,9 @@ pub mod internal {
     ///
     /// `buf` must point to a buffer that is at least `<T as CrubitAbi<S>>::SIZE` bytes large, and must
     /// contain a `T` that was encoded with the same schema `S`.
-    pub unsafe fn decode<A: CrubitAbi>(buf: *const u8) -> A::Value {
+    pub unsafe fn decode<A: CrubitAbi>(crubit_abi: A, buf: *const u8) -> A::Value {
         // SAFETY: The caller guarantees that the buffer contains a `T` that was encoded with schema `S`.
-        unsafe { A::decode(&mut Decoder { remaining_bytes: A::SIZE, buf }) }
+        unsafe { crubit_abi.decode(&mut Decoder { remaining_bytes: A::SIZE, buf }) }
     }
 
     /// Helper function that returns an empty buffer to reduce noise in the generated code.
@@ -427,7 +355,7 @@ pub mod internal {
 #[macro_export]
 macro_rules! encode_wrapper {
     {$crubit_abi_expr:expr, $crubit_abi:ty, $buf:expr, $expr:expr} => {
-        $crate::internal::encode::<$crubit_abi>($buf, $expr)
+        $crate::internal::encode::<$crubit_abi>($crubit_abi_expr, $buf, $expr)
     }
 }
 
@@ -437,7 +365,7 @@ macro_rules! encode_wrapper {
 #[macro_export]
 macro_rules! decode_wrapper {
     {$crubit_abi_expr:expr, $crubit_abi:ty, $buf:expr} => {
-        $crate::internal::decode::<$crubit_abi>($buf)
+        $crate::internal::decode::<$crubit_abi>($crubit_abi_expr, $buf)
     }
 }
 
@@ -448,17 +376,12 @@ macro_rules! decode_wrapper {
 #[macro_export]
 macro_rules! unstable_encode {
     {@ $crubit_abi_expr:expr, $crubit_abi:ty, $expr:expr} => {{
-        // TODO(okabayashi): This arm matches the new codegen in Crubit that is going to hit
-        // Crosstool release, but today it just delegates to the old invocation. Once this appears
-        // in Crosstool, I can update the implementation.
-        $crate::unstable_encode!($crubit_abi, $expr)
-    }};
-    {$crubit_abi:ty, $expr:expr} => {{
         let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::CrubitAbi>::SIZE];
         let __crubit_tmp_value = $expr;
         #[allow(unused_unsafe)]
         unsafe {
             $crate::internal::encode::<$crubit_abi>(
+                $crubit_abi_expr,
                 __crubit_tmp_buffer.as_mut_ptr() as *mut u8,
                 __crubit_tmp_value,
             );
@@ -474,17 +397,11 @@ macro_rules! unstable_encode {
 #[macro_export]
 macro_rules! unstable_return {
     {@ $crubit_abi_expr:expr, $crubit_abi:ty, $cb:expr} => {{
-        // TODO(okabayashi): This arm matches the new codegen in Crubit that is going to hit
-        // Crosstool release, but today it just delegates to the old invocation. Once this appears
-        // in Crosstool, I can update the implementation.
-        $crate::unstable_return!($crubit_abi, $cb)
-    }};
-    {$crubit_abi:ty, $cb:expr} => {{
         let mut __crubit_tmp_buffer = [const { ::core::mem::MaybeUninit::<u8>::uninit() }; <$crubit_abi as $crate::CrubitAbi>::SIZE];
         ($cb)(__crubit_tmp_buffer.as_mut_ptr() as *mut u8);
         #[allow(unused_unsafe)]
         unsafe {
-            $crate::internal::decode::<$crubit_abi>(__crubit_tmp_buffer.as_ptr() as *const u8)
+            $crate::internal::decode::<$crubit_abi>($crubit_abi_expr, __crubit_tmp_buffer.as_ptr() as *const u8)
         }
     }};
 }
@@ -496,13 +413,14 @@ mod tests {
 
     #[gtest]
     fn test_encode_decode_u8_pair() {
-        type Abi = TupleAbi<(TransmuteAbi<u8>, TransmuteAbi<u8>)>;
+        type Abi = (TransmuteAbi<u8>, TransmuteAbi<u8>);
 
         let original = (1, 2);
 
         // SAFETY: the buffer contains a T encoded as Abi.
         let value = unsafe {
             internal::decode::<Abi>(
+                Abi::default(),
                 unstable_encode!(@ (transmute_abi(), transmute_abi()), Abi, original).as_ptr()
                     as *const u8,
             )
@@ -512,16 +430,17 @@ mod tests {
 
     #[gtest]
     fn test_encode_decode_stuff() {
-        type Abi = TupleAbi<(
-            OptionAbi<TupleAbi<(TransmuteAbi<i64>, TransmuteAbi<bool>)>>,
-            TupleAbi<(TransmuteAbi<u8>, TransmuteAbi<f32>)>,
-        )>;
+        type Abi = (
+            OptionAbi<(TransmuteAbi<i64>, TransmuteAbi<bool>)>,
+            (TransmuteAbi<u8>, TransmuteAbi<f32>),
+        );
 
         let original = (Some((-8, true)), (1, 2.0));
 
         // SAFETY: the buffer contains a T encoded as Abi.
         let value = unsafe {
             internal::decode::<Abi>(
+                Abi::default(),
                 unstable_encode!(@
                     (
                         OptionAbi((transmute_abi(), transmute_abi())),

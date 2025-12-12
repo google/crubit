@@ -49,7 +49,7 @@ std::optional<std::int32_t> make_my_option_rust();
 std::optional<rs_std::SliceRef<const std::int32_t>> maybe_int_slice();
 
 // Error generating bindings for `MyOptionRustAbi` defined at
-// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=37:
+// cc_bindings_from_rs/test/golden/composable_bridging.rs;l=38:
 // Generic types are not supported yet (b/259749095)
 
 namespace __crubit_internal {

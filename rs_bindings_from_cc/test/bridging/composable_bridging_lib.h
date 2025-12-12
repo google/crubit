@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 #include "absl/status/statusor.h"
@@ -26,20 +27,20 @@ struct CRUBIT_BRIDGE("Vec3", "Vec3Abi", "Vec3Abi") Vec3 {
 };
 
 template <typename Abi>
-  requires(crubit::is_crubit_abi<Abi>)
+  requires(crubit::is_crubit_abi<Abi> && std::is_copy_constructible_v<Abi>)
 struct Vec3Abi {
   using Value = Vec3<typename Abi::Value>;
   static constexpr size_t kSize = Abi::kSize * 3;
-  static void Encode(Value value, crubit::Encoder& encoder) {
-    encoder.Encode<Abi>(std::move(value.x));
-    encoder.Encode<Abi>(std::move(value.y));
-    encoder.Encode<Abi>(std::move(value.z));
+  void Encode(Value value, crubit::Encoder& encoder) && {
+    Abi(abi).Encode(std::move(value.x), encoder);
+    Abi(abi).Encode(std::move(value.y), encoder);
+    std::move(abi).Encode(std::move(value.z), encoder);
   }
-  static Value Decode(crubit::Decoder& decoder) {
+  Value Decode(crubit::Decoder& decoder) && {
     return {
-        .x = decoder.Decode<Abi>(),
-        .y = decoder.Decode<Abi>(),
-        .z = decoder.Decode<Abi>(),
+        .x = Abi(abi).Decode(decoder),
+        .y = Abi(abi).Decode(decoder),
+        .z = std::move(abi).Decode(decoder),
     };
   }
 

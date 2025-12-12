@@ -8,7 +8,7 @@ extern crate std;
 use crate::crubit_cc_std_internal::conversion_function_helpers;
 use alloc::string::String;
 use alloc::vec::Vec;
-use bridge_rust::{CrubitAbi, Decoder, Encoder};
+use bridge_rust::{transmute_abi, CrubitAbi, Decoder, Encoder};
 use core::clone::Clone;
 use core::cmp::Eq;
 use core::cmp::PartialEq;
@@ -276,6 +276,7 @@ impl<'a> core::fmt::Display for Display<'a> {
 /// This pointer should point to a heap allocated `std::string` object, where the pointer is the
 /// owner of the allocation. Alternatively, the pointer can be null if and only if the allocation
 /// failed, in which case it's okay to panic.
+#[derive(Clone, Default)]
 pub struct BoxedCppStringAbi;
 
 unsafe impl CrubitAbi for BoxedCppStringAbi {
@@ -283,14 +284,14 @@ unsafe impl CrubitAbi for BoxedCppStringAbi {
 
     const SIZE: usize = core::mem::size_of::<*mut c_void>();
 
-    fn encode(value: Self::Value, encoder: &mut Encoder) {
-        encoder.encode_transmute(ManuallyDrop::new(value).as_mut_void_ptr());
+    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        transmute_abi().encode(ManuallyDrop::new(value).as_mut_void_ptr(), encoder);
     }
 
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+    unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
         // SAFETY: the caller guarantees that the buffer contains an allocated or null pointer to a
         // C++ `std::string` object.
-        let ptr: *mut c_void = unsafe { decoder.decode_transmute() };
+        let ptr: *mut c_void = unsafe { transmute_abi().decode(decoder) };
 
         Self::Value {
             owned_cpp_string: NonNull::new(ptr).expect("Boxing a std::string shouldn't fail"),

@@ -27,26 +27,26 @@ struct EitherAbi {
       sizeof(bool) +
       (LeftAbi::kSize > RightAbi::kSize ? LeftAbi::kSize : RightAbi::kSize);
 
-  static void Encode(Value value, crubit::Encoder& encoder) {
+  void Encode(Value value, crubit::Encoder& encoder) && {
     if (value.is_left) {
-      encoder.EncodeTransmute(true);
-      encoder.Encode<LeftAbi>(std::move(value.left));
+      crubit::TransmuteAbi<bool>().Encode(true, encoder);
+      std::move(left_abi).Encode(std::move(value.left), encoder);
     } else {
-      encoder.EncodeTransmute(false);
-      encoder.Encode<RightAbi>(std::move(value.right));
+      crubit::TransmuteAbi<bool>().Encode(false, encoder);
+      std::move(right_abi).Encode(std::move(value.right), encoder);
     }
   }
 
-  static Value Decode(crubit::Decoder& decoder) {
-    if (decoder.DecodeTransmute<bool>()) {
+  Value Decode(crubit::Decoder& decoder) && {
+    if (crubit::TransmuteAbi<bool>().Decode(decoder)) {
       return {
           .is_left = true,
-          .left = decoder.Decode<LeftAbi>(),
+          .left = std::move(left_abi).Decode(decoder),
       };
     } else {
       return {
           .is_left = false,
-          .right = decoder.Decode<RightAbi>(),
+          .right = std::move(right_abi).Decode(decoder),
       };
     }
   }

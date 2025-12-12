@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use bridge_rust::{CrubitAbi, Decoder, Encoder};
+use bridge_rust::{transmute_abi, CrubitAbi, Decoder, Encoder};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Either<L, R> {
@@ -10,7 +10,8 @@ pub enum Either<L, R> {
     Right(R),
 }
 
-pub struct EitherAbi<LeftAbi, RightAbi>(core::marker::PhantomData<(LeftAbi, RightAbi)>);
+#[derive(Clone, Default)]
+pub struct EitherAbi<LeftAbi, RightAbi>(pub LeftAbi, pub RightAbi);
 
 unsafe impl<LeftAbi, RightAbi> CrubitAbi for EitherAbi<LeftAbi, RightAbi>
 where
@@ -22,25 +23,25 @@ where
     const SIZE: usize = core::mem::size_of::<bool>()
         + if LeftAbi::SIZE > RightAbi::SIZE { LeftAbi::SIZE } else { RightAbi::SIZE };
 
-    fn encode(value: Self::Value, encoder: &mut Encoder) {
+    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
         match value {
             Either::Left(inner) => {
-                encoder.encode_transmute(true);
-                encoder.encode::<LeftAbi>(inner);
+                transmute_abi().encode(true, encoder);
+                self.0.encode(inner, encoder);
             }
             Either::Right(inner) => {
-                encoder.encode_transmute(false);
-                encoder.encode::<RightAbi>(inner);
+                transmute_abi().encode(false, encoder);
+                self.1.encode(inner, encoder);
             }
         }
     }
 
-    unsafe fn decode(decoder: &mut Decoder) -> Self::Value {
+    unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
         unsafe {
-            if decoder.decode_transmute() {
-                Either::Left(decoder.decode::<LeftAbi>())
+            if transmute_abi().decode(decoder) {
+                Either::Left(self.0.decode(decoder))
             } else {
-                Either::Right(decoder.decode::<RightAbi>())
+                Either::Right(self.1.decode(decoder))
             }
         }
     }

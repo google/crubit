@@ -136,7 +136,8 @@ constexpr bool is_crubit_abi = requires {
   // };
   // ```
   {
-    Abi::Encode(std::declval<typename Abi::Value>(), std::declval<Encoder&>())
+    std::declval<Abi&&>().Encode(std::declval<typename Abi::Value>(),
+                                 std::declval<Encoder&>())
   } -> std::same_as<void>;
 
   // Decodes a [`Value`], advancing the decoder's position by `kSize` bytes.
@@ -171,7 +172,7 @@ constexpr bool is_crubit_abi = requires {
   // The caller guarantees that the buffer's current position contains a
   // `Value` that was encoded with this ABI (either from Rust or C++).
   {
-    Abi::Decode(std::declval<Decoder&>())
+    std::declval<Abi&&>().Decode(std::declval<Decoder&>())
   } -> std::same_as<typename Abi::Value>;
 };
 
@@ -179,19 +180,11 @@ namespace internal {
 
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
-void Encode(unsigned char* buf, typename Abi::Value value);
+void Encode(Abi&& abi, unsigned char* buf, typename Abi::Value value);
 
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
-void Encode(Abi&&, unsigned char* buf, typename Abi::Value value);
-
-template <typename Abi>
-  requires(is_crubit_abi<Abi>)
-typename Abi::Value Decode(const unsigned char* buf);
-
-template <typename Abi>
-  requires(is_crubit_abi<Abi>)
-typename Abi::Value Decode(Abi&&, const unsigned char* buf);
+typename Abi::Value Decode(Abi&& abi, const unsigned char* buf);
 
 }  // namespace internal
 
@@ -202,17 +195,6 @@ class Encoder {
       : remaining_bytes_(remaining_bytes), buf_(buf) {}
 
  public:
-  // Encodes a value by a provided schema.
-  template <typename Abi>
-    requires(is_crubit_abi<Abi>)
-  void Encode(typename Abi::Value value) & {
-    Abi::Encode(std::move(value), *this);
-  }
-
-  // Encodes a value via `memcpy`.
-  template <typename T>
-  void EncodeTransmute(T value) &;
-
   void* Next(size_t size) & {
     remaining_bytes_ -= size;
     return buf_ + remaining_bytes_;
@@ -221,11 +203,7 @@ class Encoder {
  private:
   template <typename Abi>
     requires(is_crubit_abi<Abi>)
-  friend void internal::Encode(unsigned char* buf, typename Abi::Value value);
-
-  template <typename Abi>
-    requires(is_crubit_abi<Abi>)
-  friend void internal::Encode(Abi&&, unsigned char* buf,
+  friend void internal::Encode(Abi&& abi, unsigned char* buf,
                                typename Abi::Value value);
   // The number of bytes remaining in the buffer.
   size_t remaining_bytes_;
@@ -239,19 +217,6 @@ class Decoder {
       : remaining_bytes_(remaining_bytes), buf_(buf) {}
 
  public:
-  // Decodes a value by a provided schema. The caller must ensure that the
-  // buffer contains a value that was encoded with the same schema.
-  template <typename Abi>
-    requires(is_crubit_abi<Abi>)
-  typename Abi::Value Decode() & {
-    return Abi::Decode(*this);
-  }
-
-  // Decodes a value via `memcpy`. The caller must ensure that the buffer
-  // contains a value that was encoded with ByTransmute.
-  template <typename T>
-  T DecodeTransmute() &;
-
   const void* Next(size_t size) & {
     remaining_bytes_ -= size;
     return buf_ + remaining_bytes_;
@@ -260,10 +225,8 @@ class Decoder {
  private:
   template <typename Abi>
     requires(is_crubit_abi<Abi>)
-  friend typename Abi::Value internal::Decode(const unsigned char* buf);
-  template <typename Abi>
-    requires(is_crubit_abi<Abi>)
-  friend typename Abi::Value internal::Decode(Abi&&, const unsigned char* buf);
+  friend typename Abi::Value internal::Decode(Abi&& abi,
+                                              const unsigned char* buf);
   // The number of bytes remaining in the buffer.
   size_t remaining_bytes_;
   const unsigned char* buf_;
@@ -276,7 +239,7 @@ template <typename T>
 struct TransmuteAbi {
   using Value = T;
   static constexpr size_t kSize = sizeof(Value);
-  static void Encode(Value value, Encoder& encoder) {
+  void Encode(Value value, Encoder& encoder) && {
     // Move-construct the value into a type erased buffer, ensuring that value
     // is in a "moved from" state. Then copy the value into the encoder buffer.
     // We use an intermediate buffer and a memcpy to avoid strict aliasing
@@ -285,7 +248,7 @@ struct TransmuteAbi {
     alignas(Value) char buf[kSize];
     std::memcpy(encoder.Next(kSize), new (buf) Value(std::move(value)), kSize);
   }
-  static Value Decode(Decoder& decoder) {
+  Value Decode(Decoder& decoder) && {
     alignas(Value) char buf[kSize];
     // Copy the value from the decoder buffer into the intermediate buffer.
     std::memcpy(buf, decoder.Next(kSize), kSize);
@@ -294,30 +257,28 @@ struct TransmuteAbi {
   }
 };
 
-template <typename T>
-void Encoder::EncodeTransmute(T value) & {
-  TransmuteAbi<T>::Encode(std::move(value), *this);
-}
-
-template <typename T>
-T Decoder::DecodeTransmute() & {
-  return TransmuteAbi<T>::Decode(*this);
-}
-
 template <typename... Abis>
   requires(is_crubit_abi<Abis> && ...)
 struct TupleAbi {
   using Value = std::tuple<typename Abis::Value...>;
   static constexpr size_t kSize = (0 + ... + Abis::kSize);
-  static void Encode(Value value, Encoder& encoder) {
+  void Encode(Value value, Encoder& encoder) && {
     std::apply(
-        [&](typename Abis::Value&&... args) {
-          (encoder.Encode<Abis>(args), ...);
+        [&](auto&&... args) {
+          return std::apply(
+              [&](auto&&... abis) {
+                (std::move(abis).Encode(args, encoder), ...);
+              },
+              std::move(abis));
         },
         std::move(value));
   }
-  static Value Decode(Decoder& decoder) {
-    return std::make_tuple(decoder.Decode<Abis>()...);
+  Value Decode(Decoder& decoder) && {
+    return std::apply(
+        [&](Abis&&... abis) {
+          return std::make_tuple(std::move(abis).Decode(decoder)...);
+        },
+        std::move(abis));
   }
 
   std::tuple<Abis...> abis;
@@ -330,14 +291,14 @@ struct PairAbi {
 
   using Value = std::pair<typename Abi1::Value, typename Abi2::Value>;
   static constexpr size_t kSize = Abi1::kSize + Abi2::kSize;
-  static void Encode(Value value, Encoder& encoder) {
-    encoder.Encode<Abi1>(std::move(value.first));
-    encoder.Encode<Abi2>(std::move(value.second));
+  void Encode(Value value, Encoder& encoder) && {
+    std::move(abis.first).Encode(std::move(value.first), encoder);
+    std::move(abis.second).Encode(std::move(value.second), encoder);
   }
-  static Value Decode(Decoder& decoder) {
+  Value Decode(Decoder& decoder) && {
     return {
-        .first = decoder.Decode<Abi1>(),
-        .second = decoder.Decode<Abi2>(),
+        .first = std::move(abis.first).Decode(decoder),
+        .second = std::move(abis.second).Decode(decoder),
     };
   }
 
@@ -352,19 +313,19 @@ template <typename Abi>
 struct OptionAbi {
   using Value = std::optional<typename Abi::Value>;
   static constexpr size_t kSize = sizeof(bool) + Abi::kSize;
-  static void Encode(Value value, Encoder& encoder) {
+  void Encode(Value value, Encoder& encoder) && {
     if (value.has_value()) {
-      encoder.EncodeTransmute(true);
-      encoder.Encode<Abi>(*std::move(value));
+      TransmuteAbi<bool>().Encode(true, encoder);
+      std::move(abi).Encode(*std::move(value), encoder);
     } else {
-      encoder.EncodeTransmute(false);
+      TransmuteAbi<bool>().Encode(false, encoder);
     }
   }
-  static Value Decode(Decoder& decoder) {
-    if (!decoder.DecodeTransmute<bool>()) {
+  Value Decode(Decoder& decoder) && {
+    if (!TransmuteAbi<bool>().Decode(decoder)) {
       return std::nullopt;
     }
-    return decoder.Decode<Abi>();
+    return std::move(abi).Decode(decoder);
   }
 
   Abi abi;
@@ -379,12 +340,13 @@ template <typename T>
 struct BoxedAbi {
   using Value = T;
   static constexpr size_t kSize = sizeof(void*);
-  static void Encode(Value value, Encoder& encoder) {
+  void Encode(Value value, Encoder& encoder) && {
     void* box = new Value(std::move(value));
-    encoder.EncodeTransmute(box);
+    TransmuteAbi<void*>().Encode(box, encoder);
   }
-  static Value Decode(Decoder& decoder) {
-    Value* box = reinterpret_cast<Value*>(decoder.DecodeTransmute<void*>());
+  Value Decode(Decoder& decoder) && {
+    Value* box =
+        reinterpret_cast<Value*>(TransmuteAbi<void*>().Decode(decoder));
     Value value(std::move(*box));
     delete box;
     return value;
@@ -395,34 +357,34 @@ namespace internal {
 
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
-void Encode(unsigned char* buf, typename Abi::Value value) {
+void Encode(Abi&& abi, unsigned char* buf, typename Abi::Value value) {
   Encoder encoder(Abi::kSize, buf);
-  encoder.Encode<Abi>(std::move(value));
+  std::forward<Abi>(abi).Encode(std::move(value), encoder);
 }
 
-// TODO(okabayashi): Overload for new Crubit codegen, where an instance of the
-// ABI is passed in. After the new codegen hits crosstool release, I will delete
-// other other overload and change the implementation here.
+// TODO(b/461708400): Remove this overload once deletion of
+// http://cc_bindings_from_rs/generate_bindings/generate_function.rs;l=145;rcl=843296833
+// hits crosstool.
 template <typename Abi>
-  requires(is_crubit_abi<Abi>)
-void Encode(Abi&&, unsigned char* buf, typename Abi::Value value) {
-  Encode<Abi>(buf, std::move(value));
+  requires(is_crubit_abi<Abi> && std::is_default_constructible_v<Abi>)
+void Encode(unsigned char* buf, typename Abi::Value value) {
+  Encode(Abi(), buf, std::move(value));
 }
 
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
-typename Abi::Value Decode(const unsigned char* buf) {
+typename Abi::Value Decode(Abi&& abi, const unsigned char* buf) {
   Decoder decoder(Abi::kSize, buf);
-  return decoder.Decode<Abi>();
+  return std::forward<Abi>(abi).Decode(decoder);
 }
 
-// TODO(okabayashi): Overload for new Crubit codegen, where an instance of the
-// ABI is passed in. After the new codegen hits crosstool release, I will delete
-// other other overload and change the implementation here.
+// TODO(b/461708400): Remove this overload once deletion of
+// http://cc_bindings_from_rs/generate_bindings/generate_function.rs;l=289;rcl=836830956
+// hits crosstool.
 template <typename Abi>
-  requires(is_crubit_abi<Abi>)
-typename Abi::Value Decode(Abi&&, const unsigned char* buf) {
-  return Decode<Abi>(buf);
+  requires(is_crubit_abi<Abi> && std::is_default_constructible_v<Abi>)
+typename Abi::Value Decode(const unsigned char* buf) {
+  return Decode(Abi(), buf);
 }
 
 }  // namespace internal
