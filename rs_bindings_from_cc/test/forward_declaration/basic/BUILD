@@ -22,6 +22,6 @@ crubit_rust_test(
         ":forward_declaration",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

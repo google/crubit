@@ -21,7 +21,7 @@ rust_test(
     srcs = ["//support:forward_declare_macros_test.rs"],
     deps = [
         ":forward_declare",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 

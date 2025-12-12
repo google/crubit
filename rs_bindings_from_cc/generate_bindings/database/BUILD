@@ -30,13 +30,13 @@ rust_library(
         "//common:memoized",
         "//common:token_stream_printer",
         "//rs_bindings_from_cc:ir",
-        "@crate_index//:flagset",  # v0_4
-        "@crate_index//:heck",  # v0_5
-        "@crate_index//:itertools",  # v0_13
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:serde_json",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:flagset",  # v0_4
+        "@crates//:heck",  # v0_5
+        "@crates//:itertools",  # v0_13
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:serde_json",  # v1
+        "@crates//:syn",  # v1
     ],
 )
 
@@ -51,6 +51,6 @@ multiplatform_rust_test(
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
         "//rs_bindings_from_cc:ir_matchers",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

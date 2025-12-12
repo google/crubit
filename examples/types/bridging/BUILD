@@ -46,6 +46,6 @@ crubit_rust_test(
         ":int_or_bool",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

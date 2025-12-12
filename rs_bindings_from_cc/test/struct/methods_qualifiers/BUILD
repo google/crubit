@@ -28,6 +28,6 @@ crubit_rust_test(
     cc_deps = [":methods_qualifiers"],
     deps = [
         "//support:ctor",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

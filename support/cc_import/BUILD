@@ -18,8 +18,8 @@ rust_proc_macro(
     ],
     deps = [
         ":cc_import_internal",
-        "@crate_index//:proc-macro2",
-        "@crate_index//:syn",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:syn",  # v1
     ],
 )
 
@@ -31,10 +31,10 @@ rust_library(
     compatible_with = ["//buildenv/target:non_prod"],
     deps = [
         ":merged_namespaces",
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:serde_json",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:serde_json",  # v1
+        "@crates//:syn",  # v1
         "@rules_rust//util/import:import_internal",
     ],
 )
@@ -44,11 +44,11 @@ rust_library(
     srcs = ["merged_namespaces.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     deps = [
-        "@crate_index//:proc-macro2",
-        "@crate_index//:quote",  # v1
-        "@crate_index//:serde",  # v1
-        "@crate_index//:serde_json",  # v1
-        "@crate_index//:syn",  # v1
+        "@crates//:proc-macro2",
+        "@crates//:quote",  # v1
+        "@crates//:serde",  # v1
+        "@crates//:serde_json",  # v1
+        "@crates//:syn",  # v1
         "@rules_rust//util/import:import_internal",
     ],
 )
@@ -58,6 +58,6 @@ crubit_rust_test(
     crate = "merged_namespaces",
     deps = [
         "//common:token_stream_matchers",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

@@ -20,7 +20,7 @@ crubit_rust_test(
     deps = [
         "//support:ctor",
         "//support:oops",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -42,6 +42,6 @@ crubit_rust_test(
     srcs = ["inherited_methods_test.rs"],
     cc_deps = [":inherited_methods"],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

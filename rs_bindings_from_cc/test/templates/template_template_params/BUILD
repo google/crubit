@@ -16,6 +16,6 @@ crubit_rust_test(
     srcs = ["test.rs"],
     cc_deps = [":template_template_params"],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

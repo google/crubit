@@ -23,7 +23,7 @@ rust_library(
     ],
     deps = [
         "//support/ffi_11",
-        "@crate_index//:libc",  # v0_2
+        "@crates//:libc",  # v0_2
     ],
 )
 

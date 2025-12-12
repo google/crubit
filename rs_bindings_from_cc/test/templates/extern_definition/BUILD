@@ -26,6 +26,6 @@ crubit_rust_test(
         ":extern_definition",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

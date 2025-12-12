@@ -14,6 +14,6 @@ crubit_rust_test(
         "CRUBIT_INSTANTIATIONS_FILE": "$(location __cc_template_instantiations.json)",
     },
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

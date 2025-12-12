@@ -23,7 +23,7 @@ rust_library(
         "//support:crubit_annotate",
     ],
     deps = [
-        "@crate_index//:open_enum",  # v0_5
+        "@crates//:open_enum",  # v0_5
     ],
 )
 

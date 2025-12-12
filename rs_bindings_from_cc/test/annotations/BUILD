@@ -32,7 +32,7 @@ crubit_rust_test(
         ":do_not_bind",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -54,7 +54,7 @@ crubit_rust_test(
         ":ignore_attr",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -112,7 +112,7 @@ crubit_rust_test(
         ":owned_ptr_user",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -156,6 +156,6 @@ crubit_rust_test(
         ":rust_name",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

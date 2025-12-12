@@ -42,7 +42,7 @@ crubit_rust_test(
         "//common:item_exists",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -71,7 +71,7 @@ crubit_rust_test(
         "//common:item_exists",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -100,7 +100,7 @@ crubit_rust_test(
         "//common:item_exists",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -129,6 +129,6 @@ crubit_rust_test(
         "//common:item_exists",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

@@ -35,9 +35,9 @@ crubit_rust_binary(
         "//common:error_report",
         "//common:kythe_metadata",
         "//common:token_stream_printer",
-        "@crate_index//:clap",  # v4
-        "@crate_index//:flagset",  # v0_4
-        "@crate_index//:itertools",  # v0_13
+        "@crates//:clap",  # v4
+        "@crates//:flagset",  # v0_4
+        "@crates//:itertools",  # v0_13
     ],
 )
 
@@ -52,8 +52,8 @@ crubit_rust_test(
     deps = [
         ":run_compiler_test_support",
         "//common:external_binaries",
-        "@crate_index//:regex",  # v1
-        "@crate_index//:tempfile",  # v3
+        "@crates//:regex",  # v1
+        "@crates//:tempfile",  # v3
     ],
 )
 
@@ -82,9 +82,9 @@ rust_library(
     deps = [
         "//common:crubit_feature",
         "//common:dyn_format",
-        "@crate_index//:anyhow",  # v1
-        "@crate_index//:clap",  # v4
-        "@crate_index//:flagset",  # v0_4
+        "@crates//:anyhow",  # v1
+        "@crates//:clap",  # v4
+        "@crates//:flagset",  # v0_4
     ],
 )
 
@@ -98,8 +98,8 @@ crubit_rust_test(
     tags = ["not_run:mac"],
     deps = [
         ":run_compiler_test_support",
-        "@crate_index//:itertools",  # v0_13
-        "@crate_index//:tempfile",  # v3
+        "@crates//:itertools",  # v0_13
+        "@crates//:tempfile",  # v3
     ],
 )
 
@@ -107,13 +107,13 @@ rust_library(
     name = "crubit_attr",
     srcs = ["crubit_attr.rs"],
     proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
+        "@crates//:rustversion",  # v1
     ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
-        "@crate_index//:anyhow",  # v1
+        "@crates//:anyhow",  # v1
     ],
 )
 
@@ -128,7 +128,7 @@ crubit_rust_test(
     deps = [
         ":crubit_attr",
         ":run_compiler_test_support",
-        "@crate_index//:anyhow",  # v1
+        "@crates//:anyhow",  # v1
     ],
 )
 
@@ -138,14 +138,14 @@ rust_library(
         "run_compiler.rs",
     ],
     proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
+        "@crates//:rustversion",  # v1
     ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//common:arc_anyhow",
-        "@crate_index//:either",  # v1
+        "@crates//:either",  # v1
     ],
 )
 
@@ -159,7 +159,7 @@ crubit_rust_test(
     tags = ["not_run:mac"],
     deps = [
         ":run_compiler_test_support",
-        "@crate_index//:tempfile",  # v3
+        "@crates//:tempfile",  # v3
     ],
 )
 
@@ -173,14 +173,14 @@ rust_library(
         "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
     ],
     proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
+        "@crates//:rustversion",  # v1
     ],
     rustc_flags = [
         "--cfg=bazel",
         "--cfg=oss",
     ],
     deps = [
-        "@crate_index//:itertools",  # v0_13
+        "@crates//:itertools",  # v0_13
         "@rules_rust//tools/runfiles",
     ],
 )

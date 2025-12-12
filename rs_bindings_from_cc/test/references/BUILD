@@ -30,6 +30,6 @@ crubit_rust_test(
     srcs = ["references_test.rs"],
     cc_deps = [":references"],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

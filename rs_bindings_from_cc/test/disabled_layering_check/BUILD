@@ -19,7 +19,7 @@ crubit_rust_test(
         ":top_lib",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 

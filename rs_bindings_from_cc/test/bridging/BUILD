@@ -47,7 +47,7 @@ crubit_rust_test(
         ":bridging_lib",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -70,7 +70,7 @@ crubit_rust_test(
         "//support/cc_std",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -107,6 +107,6 @@ crubit_rust_test(
     ],
     deps = [
         "@abseil-cpp//absl/status:status_rs_matchers",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

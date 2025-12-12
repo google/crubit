@@ -24,6 +24,6 @@ crubit_rust_test(
         ":uses_dependency",
     ],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

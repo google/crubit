@@ -28,6 +28,6 @@ crubit_rust_test(
     srcs = ["inline_test.rs"],
     cc_deps = [":inline"],
     deps = [
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )

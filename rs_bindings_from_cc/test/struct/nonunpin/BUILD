@@ -20,7 +20,7 @@ crubit_rust_test(
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//support:ctor",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
 
@@ -40,6 +40,6 @@ crubit_rust_test(
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//support:ctor",
-        "@crate_index//:googletest",
+        "@crates//:googletest",
     ],
 )
