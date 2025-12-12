@@ -349,26 +349,6 @@ pub mod internal {
     }
 }
 
-// Temporary wrapper to migrate all callers of `encode` to the new version which
-// takes another argument.
-// TODO(b/461708400): Remove this once the migration is complete.
-#[macro_export]
-macro_rules! encode_wrapper {
-    {$crubit_abi_expr:expr, $crubit_abi:ty, $buf:expr, $expr:expr} => {
-        $crate::internal::encode::<$crubit_abi>($crubit_abi_expr, $buf, $expr)
-    }
-}
-
-// Temporary wrapper to migrate all callers of `decode` to the new version which
-// takes another argument.
-// TODO(b/461708400): Remove this once the migration is complete.
-#[macro_export]
-macro_rules! decode_wrapper {
-    {$crubit_abi_expr:expr, $crubit_abi:ty, $buf:expr} => {
-        $crate::internal::decode::<$crubit_abi>($crubit_abi_expr, $buf)
-    }
-}
-
 // This cannot be a function because it errors with "constant expression depends on a generic
 // parameter" when constructing the buffer.
 // This macro is unstable, and may be changed. Do not use this unless you have been approved by the
