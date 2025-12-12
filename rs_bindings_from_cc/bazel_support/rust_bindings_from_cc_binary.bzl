@@ -47,13 +47,13 @@ rust_bindings_from_cc_binary = rule(
             cfg = "exec",
         ),
         "_rustfmt": attr.label(
-            default = "//third_party/crosstool/rust/unstable:genrustfmt_for_crubit_aspects",
+            default = "@rules_rust//tools/upstream_wrapper:rustfmt",
             executable = True,
             allow_single_file = True,
             cfg = "exec",
         ),
         "_rustfmt_cfg": attr.label(
-            default = "//nowhere:rustfmt.toml",
+            default = "@rules_rust//rust/settings:rustfmt.toml",
             allow_single_file = True,
         ),
     },
