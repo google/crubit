@@ -114,6 +114,7 @@ crubit_rust_test(
 rust_test(
     name = "ctor_test",
     srcs = ["ctor_test.rs"],
+    rustc_flags = ["-Zallow-features=negative_impls"],
     deps = [
         ":ctor",
         "@crate_index//:googletest",
