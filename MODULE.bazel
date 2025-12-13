@@ -7,7 +7,7 @@
 bazel_dep(name = "rules_rust", version = "0.63.0")
 
 bazel_dep(name = "rules_cc", version = "0.2.0")
-bazel_dep(name = "rules_shell", version = "0.5.1")
+bazel_dep(name = "rules_shell", version = "0.6.1")
 
 bazel_dep(name = "abseil-cpp", version = "20250127.1")
 git_override(  # with nullability support
@@ -21,12 +21,26 @@ bazel_dep(name = "fuzztest", version = "20250214.0")
 bazel_dep(name = "google_benchmark", version = "1.9.1")
 bazel_dep(name = "googletest", version = "1.17.0")
 bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "protobuf", version = "31.1")
+bazel_dep(name = "protobuf", version = "33.1")
 bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
-bazel_dep(name = "rules_python", version = "1.5.3")
+bazel_dep(name = "rules_python", version = "1.6.0")
 # We don't directly use rules_foreign_cc, but *something* does, and depends on an
 # out of date version that doesn't work with newer Bazel releases. So here we force
 # it to be a newer version.
 bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+
+crate.from_cargo(
+  name = "crate_index",
+  manifests = [
+   "//:Cargo.toml",
+   "//:cargo/cc_bindings_from_rs/cc_bindings_from_rs/Cargo.toml",
+   "//:cargo/rs_bindings_from_cc/rs_bindings_from_cc/Cargo.toml",
+   "//support/ffi_11:Cargo.toml",
+  ],
+)
+
+use_repo(crate, "crate_index")
