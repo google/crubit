@@ -77,7 +77,7 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 }
 
 impl ::ctor::CtorNew<()> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {

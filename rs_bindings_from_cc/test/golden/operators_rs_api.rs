@@ -529,7 +529,7 @@ unsafe impl ::cxx::ExternType for AddableConstMemberNonunpin {
 }
 
 impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {

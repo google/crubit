@@ -181,7 +181,7 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
 }
 
 impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
@@ -268,7 +268,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
 impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_char, ::core::ffi::c_char)>
     for FieldInTailPadding
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(
