@@ -84,6 +84,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling ergonomic lifetime defaults when interpreting lifetime annotations.
+#
+# See <internal link>
+crubit_feature_hint(
+    name = "assume_lifetimes",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["assume_lifetimes"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #
