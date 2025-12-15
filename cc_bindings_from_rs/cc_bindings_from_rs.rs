@@ -14,19 +14,11 @@ extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
 
-use rustc_driver::args;
 use rustc_errors::registry;
-use rustc_interface::Config;
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{
-    self as config, ErrorOutputType, ExternEntry, ExternLocation, Externs, Sysroot, UnstableOptions,
-};
-use rustc_session::search_paths::{PathKind, SearchPath};
-use rustc_session::utils::CanonicalizedPath;
+use rustc_session::config::{self as config, ErrorOutputType, Sysroot, UnstableOptions};
+use rustc_session::search_paths::SearchPath;
 use rustc_session::EarlyDiagCtxt;
-use rustc_span::source_map::FilePathMapping;
-use rustc_span::RealFileName;
-use rustc_target::spec::TargetTuple;
 
 use arc_anyhow::{bail, Context, Result};
 use itertools::Itertools;
@@ -207,7 +199,7 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     // duplicate it.
     let unstable_opts = UnstableOptions::default();
 
-    let mut externs = config::parse_externs(&early_dcx, &matches, &unstable_opts);
+    let externs = config::parse_externs(&early_dcx, &matches, &unstable_opts);
 
     let sysroot = Sysroot::new(matches.opt_str("sysroot").map(PathBuf::from));
     let target_triple = config::parse_target_triple(&early_dcx, &matches);
