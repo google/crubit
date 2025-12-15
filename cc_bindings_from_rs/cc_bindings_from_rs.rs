@@ -25,7 +25,7 @@ use rustc_session::search_paths::{PathKind, SearchPath};
 use rustc_session::utils::CanonicalizedPath;
 use rustc_session::EarlyDiagCtxt;
 use rustc_span::source_map::FilePathMapping;
-use rustc_span::{FileNameDisplayPreference, RealFileName};
+use rustc_span::RealFileName;
 use rustc_target::spec::TargetTuple;
 
 use arc_anyhow::{bail, Context, Result};

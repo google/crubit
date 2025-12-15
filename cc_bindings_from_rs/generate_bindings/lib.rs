@@ -1183,7 +1183,15 @@ fn generate_kythe_doc_comment(
     // capture tag; it's fine to emit capture tags that never capture anything.)
     let tcx = db.tcx();
     let def_span = tcx.def_ident_span(def_id).unwrap_or_else(|| tcx.def_span(def_id));
+    #[rustversion::before(2025-12-14)]
     let file_name = tcx.sess().source_map().span_to_filename(def_span).prefer_local().to_string();
+    #[rustversion::since(2025-12-14)]
+    let file_name = tcx
+        .sess()
+        .source_map()
+        .span_to_filename(def_span)
+        .prefer_local_unconditionally()
+        .to_string();
     let start = def_span.lo().0.to_string();
     let end = def_span.hi().0.to_string();
     quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
@@ -1197,7 +1205,10 @@ fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String
             Ok(filelines) => filelines,
             Err(_) => return "unknown location".to_string(),
         };
+    #[rustversion::before(2025-12-14)]
     let file_name = file.name.prefer_local().to_string();
+    #[rustversion::since(2025-12-14)]
+    let file_name = file.name.prefer_local_unconditionally().to_string();
     // Virtual paths will have a "./" prefix that we don't want to display.
     let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
 
