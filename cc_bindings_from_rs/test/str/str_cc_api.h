@@ -23,6 +23,10 @@
 namespace str {
 
 // Generated from:
+// cc_bindings_from_rs/test/str/str.rs;l=29
+std::uintptr_t get_str_len(rs_std::StrRef s);
+
+// Generated from:
 // cc_bindings_from_rs/test/str/str.rs;l=9
 struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
     [[clang::trivial_abi]] TypeWithStr final {
@@ -66,27 +70,30 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=27
-void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
-                                         std::uint8_t& __param_1);
-
-// Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=29
-std::uintptr_t get_str_len(rs_std::StrRef s);
-
-// Generated from:
-// cc_bindings_from_rs/test/str/str.rs;l=33
-std::uint8_t const* get_str_data(rs_std::StrRef s);
-
-// Generated from:
 // cc_bindings_from_rs/test/str/str.rs;l=37
 rs_std::StrRef foo_as_str();
-static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
 
 // Error generating bindings for `STATIC_STR_FOO` defined at
 // cc_bindings_from_rs/test/str/str.rs;l=43:
 // Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not,
 // nested: false }
+
+// Generated from:
+// cc_bindings_from_rs/test/str/str.rs;l=33
+std::uint8_t const* get_str_data(rs_std::StrRef s);
+static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
+
+// Generated from:
+// cc_bindings_from_rs/test/str/str.rs;l=27
+void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
+                                         std::uint8_t& __param_1);
+
+namespace __crubit_internal {
+extern "C" std::uintptr_t __crubit_thunk_get_ustr_ulen(rs_std::StrRef);
+}
+inline std::uintptr_t get_str_len(rs_std::StrRef s) {
+  return __crubit_internal::__crubit_thunk_get_ustr_ulen(s);
+}
 
 static_assert(
     sizeof(TypeWithStr) == 16,
@@ -137,6 +144,20 @@ inline void TypeWithStr::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TypeWithStr, str_field));
 }
 namespace __crubit_internal {
+extern "C" rs_std::StrRef __crubit_thunk_foo_uas_ustr();
+}
+inline rs_std::StrRef foo_as_str() {
+  return __crubit_internal::__crubit_thunk_foo_uas_ustr();
+}
+
+namespace __crubit_internal {
+extern "C" std::uint8_t const* __crubit_thunk_get_ustr_udata(rs_std::StrRef);
+}
+inline std::uint8_t const* get_str_data(rs_std::StrRef s) {
+  return __crubit_internal::__crubit_thunk_get_ustr_udata(s);
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
     rs_std::StrRef, std::uint8_t&);
 }
@@ -148,27 +169,6 @@ inline void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
   return __crubit_internal::
       __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(__param_0,
                                                              __param_1);
-}
-
-namespace __crubit_internal {
-extern "C" std::uintptr_t __crubit_thunk_get_ustr_ulen(rs_std::StrRef);
-}
-inline std::uintptr_t get_str_len(rs_std::StrRef s) {
-  return __crubit_internal::__crubit_thunk_get_ustr_ulen(s);
-}
-
-namespace __crubit_internal {
-extern "C" std::uint8_t const* __crubit_thunk_get_ustr_udata(rs_std::StrRef);
-}
-inline std::uint8_t const* get_str_data(rs_std::StrRef s) {
-  return __crubit_internal::__crubit_thunk_get_ustr_udata(s);
-}
-
-namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_foo_uas_ustr();
-}
-inline rs_std::StrRef foo_as_str() {
-  return __crubit_internal::__crubit_thunk_foo_uas_ustr();
 }
 
 }  // namespace str

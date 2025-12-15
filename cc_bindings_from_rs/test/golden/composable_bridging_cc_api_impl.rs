@@ -24,6 +24,18 @@ unsafe extern "C" fn __crubit_thunk_returns_usome_uint(__ret_ptr: *mut core::ffi
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_unwrap_uor_uzero(x: *const core::ffi::c_uchar) -> i32 {
+    unsafe {
+        let x = unsafe {
+            ::bridge_rust::internal::decode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                x,
+            )
+        };
+        ::composable_bridging_rust_golden::unwrap_or_zero(x)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_returns_uno_uint(__ret_ptr: *mut core::ffi::c_uchar) -> () {
     unsafe {
         let __rs_return_value = ::composable_bridging_rust_golden::returns_no_int();
@@ -37,33 +49,12 @@ unsafe extern "C" fn __crubit_thunk_returns_uno_uint(__ret_ptr: *mut core::ffi::
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_unwrap_uor_uzero(x: *const core::ffi::c_uchar) -> i32 {
+unsafe extern "C" fn __crubit_thunk_maybe_uint_uslice(__ret_ptr: *mut core::ffi::c_uchar) -> () {
     unsafe {
-        let x = unsafe {
-            ::bridge_rust::internal::decode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
-                x,
-            )
-        };
-        ::composable_bridging_rust_golden::unwrap_or_zero(x)
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_option_uincrements(
-    x: *const core::ffi::c_uchar,
-    __ret_ptr: *mut core::ffi::c_uchar,
-) -> () {
-    unsafe {
-        let x = unsafe {
-            ::bridge_rust::internal::decode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
-                x,
-            )
-        };
-        let __rs_return_value = ::composable_bridging_rust_golden::option_increments(x);
+        let __rs_return_value = ::composable_bridging_rust_golden::maybe_int_slice();
         unsafe {
             ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<*const [i32]>()),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );
@@ -88,12 +79,21 @@ unsafe extern "C" fn __crubit_thunk_make_umy_uoption_urust(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_maybe_uint_uslice(__ret_ptr: *mut core::ffi::c_uchar) -> () {
+unsafe extern "C" fn __crubit_thunk_option_uincrements(
+    x: *const core::ffi::c_uchar,
+    __ret_ptr: *mut core::ffi::c_uchar,
+) -> () {
     unsafe {
-        let __rs_return_value = ::composable_bridging_rust_golden::maybe_int_slice();
+        let x = unsafe {
+            ::bridge_rust::internal::decode(
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+                x,
+            )
+        };
+        let __rs_return_value = ::composable_bridging_rust_golden::option_increments(x);
         unsafe {
             ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<*const [i32]>()),
+                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );

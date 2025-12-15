@@ -1412,15 +1412,9 @@ pub fn format_namespace_bound_cc_tokens(
 
 /// Compares two `DefId` s
 pub(crate) fn stable_def_id_cmp<'tcx>(tcx: TyCtxt<'tcx>, lhs_id: DefId, rhs_id: DefId) -> Ordering {
-    let lhs_span = tcx.def_span(lhs_id);
-    let rhs_span = tcx.def_span(rhs_id);
-    if lhs_span.source_equal(rhs_span) {
-        let lhs_def_path_hash = tcx.def_path_hash(lhs_id);
-        let rhs_def_path_hash = tcx.def_path_hash(rhs_id);
-        lhs_def_path_hash.cmp(&rhs_def_path_hash)
-    } else {
-        lhs_span.cmp(&rhs_span)
-    }
+    let lhs_def_path_hash = tcx.def_path_hash(lhs_id);
+    let rhs_def_path_hash = tcx.def_path_hash(rhs_id);
+    lhs_def_path_hash.cmp(&rhs_def_path_hash)
 }
 
 pub(crate) trait SortedByDef: Iterator + Sized {

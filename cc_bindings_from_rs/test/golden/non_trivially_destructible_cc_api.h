@@ -20,6 +20,11 @@
 #include <utility>
 
 namespace non_trivially_destructible_rust {
+struct NonTriviallyDestructable;
+
+// Generated from:
+// cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=18
+::non_trivially_destructible_rust::NonTriviallyDestructable return_by_value();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=6
@@ -62,9 +67,18 @@ NonTriviallyDestructable final {
 void take_by_value(
     ::non_trivially_destructible_rust::NonTriviallyDestructable _x);
 
-// Generated from:
-// cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=18
-::non_trivially_destructible_rust::NonTriviallyDestructable return_by_value();
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uby_uvalue(
+    ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
+}
+inline ::non_trivially_destructible_rust::NonTriviallyDestructable
+return_by_value() {
+  crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_return_uby_uvalue(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
 
 static_assert(
     sizeof(NonTriviallyDestructable) == 4,
@@ -128,19 +142,6 @@ inline void take_by_value(
     ::non_trivially_destructible_rust::NonTriviallyDestructable _x) {
   crubit::Slot _x_slot((std::move(_x)));
   return __crubit_internal::__crubit_thunk_take_uby_uvalue(_x_slot.Get());
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uby_uvalue(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
-}
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable
-return_by_value() {
-  crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_return_uby_uvalue(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace non_trivially_destructible_rust

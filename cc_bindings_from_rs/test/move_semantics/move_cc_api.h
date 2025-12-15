@@ -64,10 +64,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/move_semantics/move.rs;l=27
-void consume_foo(::move::Foo _foo);
-
-// Generated from:
 // cc_bindings_from_rs/test/move_semantics/move.rs;l=30
 struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
     [[clang::trivial_abi]] Copyable final {
@@ -113,6 +109,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
  private:
   static void __crubit_field_offset_assertions();
 };
+
+// Generated from:
+// cc_bindings_from_rs/test/move_semantics/move.rs;l=27
+void consume_foo(::move::Foo _foo);
 
 static_assert(
     sizeof(Foo) == 8,
@@ -162,14 +162,6 @@ inline std::uint8_t Foo::into_byte() && {
 inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, buf));
 }
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_consume_ufoo(::move::Foo*);
-}
-inline void consume_foo(::move::Foo _foo) {
-  crubit::Slot _foo_slot((std::move(_foo)));
-  return __crubit_internal::__crubit_thunk_consume_ufoo(_foo_slot.Get());
-}
-
 static_assert(
     sizeof(Copyable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
@@ -206,5 +198,13 @@ inline std::uint8_t Copyable::consume_self() const {
 inline void Copyable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Copyable, field));
 }
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_consume_ufoo(::move::Foo*);
+}
+inline void consume_foo(::move::Foo _foo) {
+  crubit::Slot _foo_slot((std::move(_foo)));
+  return __crubit_internal::__crubit_thunk_consume_ufoo(_foo_slot.Get());
+}
+
 }  // namespace move
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN

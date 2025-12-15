@@ -78,6 +78,48 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
+// cc_bindings_from_rs/test/known_traits/from/from.rs;l=67
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
+    [[clang::trivial_abi]] NotFfiSafe final {
+ public:
+  // `from_golden::NotFfiSafe` doesn't implement the `Default` trait
+  NotFfiSafe() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~NotFfiSafe() = default;
+  NotFfiSafe(NotFfiSafe&&) = default;
+  NotFfiSafe& operator=(NotFfiSafe&&) = default;
+
+  // `from_golden::NotFfiSafe` doesn't implement the `Clone` trait
+  NotFfiSafe(const NotFfiSafe&) = delete;
+  NotFfiSafe& operator=(const NotFfiSafe&) = delete;
+  NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+  // CRUBIT_ANNOTATE: must_bind=
+  //
+  // Generated from:
+  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=74
+  static ::from::NotFfiSafe create();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=78
+  explicit operator std::int32_t();
+
+ private:
+  // Field type has been replaced with a blob of bytes: Function pointers can't
+  // have a thunk: Any calling convention other than `extern "C"` requires a
+  // thunk
+  unsigned char __field0[8];
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
 // cc_bindings_from_rs/test/known_traits/from/from.rs;l=45
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
     [[clang::trivial_abi]] OpaqueRef final {
@@ -118,48 +160,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   // because references are only supported in function parameter types, return
   // types, and consts (b/286256327)
   unsigned char __field0[16];
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-// CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/from/from.rs;l=67
-struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
-    [[clang::trivial_abi]] NotFfiSafe final {
- public:
-  // `from_golden::NotFfiSafe` doesn't implement the `Default` trait
-  NotFfiSafe() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NotFfiSafe() = default;
-  NotFfiSafe(NotFfiSafe&&) = default;
-  NotFfiSafe& operator=(NotFfiSafe&&) = default;
-
-  // `from_golden::NotFfiSafe` doesn't implement the `Clone` trait
-  NotFfiSafe(const NotFfiSafe&) = delete;
-  NotFfiSafe& operator=(const NotFfiSafe&) = delete;
-  NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
-    memcpy(this, &value, sizeof(value));
-  }
-
-  // CRUBIT_ANNOTATE: must_bind=
-  //
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=74
-  static ::from::NotFfiSafe create();
-
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=78
-  explicit operator std::int32_t();
-
- private:
-  // Field type has been replaced with a blob of bytes: Function pointers can't
-  // have a thunk: Any calling convention other than `extern "C"` requires a
-  // thunk
-  unsigned char __field0[8];
 
  private:
   static void __crubit_field_offset_assertions();
@@ -222,6 +222,34 @@ inline void Opaque::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Opaque, __field0));
 }
 static_assert(
+    sizeof(NotFfiSafe) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(NotFfiSafe) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
+static_assert(std::is_trivially_move_constructible_v<NotFfiSafe>);
+static_assert(std::is_trivially_move_assignable_v<NotFfiSafe>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create(::from::NotFfiSafe* __ret_ptr);
+}
+inline ::from::NotFfiSafe NotFfiSafe::create() {
+  crubit::Slot<::from::NotFfiSafe> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_into_ui32(::from::NotFfiSafe*);
+}
+inline NotFfiSafe::operator std::int32_t() {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_into_ui32(&self);
+}
+inline void NotFfiSafe::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(NotFfiSafe, __field0));
+}
+static_assert(
     sizeof(OpaqueRef) == 16,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
@@ -259,34 +287,6 @@ inline OpaqueRef::operator rs_std::StrRef() {
 }
 inline void OpaqueRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OpaqueRef, __field0));
-}
-static_assert(
-    sizeof(NotFfiSafe) == 8,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(NotFfiSafe) == 8,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_constructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_assignable_v<NotFfiSafe>);
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(::from::NotFfiSafe* __ret_ptr);
-}
-inline ::from::NotFfiSafe NotFfiSafe::create() {
-  crubit::Slot<::from::NotFfiSafe> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_create(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(::from::NotFfiSafe*);
-}
-inline NotFfiSafe::operator std::int32_t() {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_into_ui32(&self);
-}
-inline void NotFfiSafe::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NotFfiSafe, __field0));
 }
 }  // namespace from
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN

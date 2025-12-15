@@ -24,6 +24,38 @@ namespace into {
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
+// cc_bindings_from_rs/test/known_traits/into/into.rs;l=76
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
+    [[clang::trivial_abi]] NotFfiSafe final {
+ public:
+  // `into_golden::NotFfiSafe` doesn't implement the `Default` trait
+  NotFfiSafe() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~NotFfiSafe() = default;
+  NotFfiSafe(NotFfiSafe&&) = default;
+  NotFfiSafe& operator=(NotFfiSafe&&) = default;
+
+  // `into_golden::NotFfiSafe` doesn't implement the `Clone` trait
+  NotFfiSafe(const NotFfiSafe&) = delete;
+  NotFfiSafe& operator=(const NotFfiSafe&) = delete;
+  NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+
+ private:
+  // Field type has been replaced with a blob of bytes: Function pointers can't
+  // have a thunk: Any calling convention other than `extern "C"` requires a
+  // thunk
+  unsigned char __field0[8];
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
 // cc_bindings_from_rs/test/known_traits/into/into.rs;l=14
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
     [[clang::trivial_abi]] Convert final {
@@ -64,6 +96,49 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/into/into.rs;l=14
+    std::int32_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
+// cc_bindings_from_rs/test/known_traits/into/into.rs;l=85
+struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
+    [[clang::trivial_abi]] ConvertModule final {
+ public:
+  // `into_golden::ConvertModule` doesn't implement the `Default` trait
+  ConvertModule() = delete;
+
+  // Synthesized tuple constructor
+  explicit ConvertModule(std::int32_t __field0)
+      : __field0(std::move(__field0)) {}
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~ConvertModule() = default;
+  ConvertModule(ConvertModule&&) = default;
+  ConvertModule& operator=(ConvertModule&&) = default;
+
+  // `into_golden::ConvertModule` doesn't implement the `Clone` trait
+  ConvertModule(const ConvertModule&) = delete;
+  ConvertModule& operator=(const ConvertModule&) = delete;
+  ConvertModule(::crubit::UnsafeRelocateTag, ConvertModule&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+  // Generated from:
+  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=91
+  explicit operator std::int32_t();
+
+  // Generated from:
+  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=103
+  explicit operator std::int64_t();
+
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/known_traits/into/into.rs;l=85
     std::int32_t __field0;
   };
 
@@ -123,81 +198,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-// CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/into/into.rs;l=76
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
-    [[clang::trivial_abi]] NotFfiSafe final {
- public:
-  // `into_golden::NotFfiSafe` doesn't implement the `Default` trait
-  NotFfiSafe() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NotFfiSafe() = default;
-  NotFfiSafe(NotFfiSafe&&) = default;
-  NotFfiSafe& operator=(NotFfiSafe&&) = default;
-
-  // `into_golden::NotFfiSafe` doesn't implement the `Clone` trait
-  NotFfiSafe(const NotFfiSafe&) = delete;
-  NotFfiSafe& operator=(const NotFfiSafe&) = delete;
-  NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
-    memcpy(this, &value, sizeof(value));
-  }
-
- private:
-  // Field type has been replaced with a blob of bytes: Function pointers can't
-  // have a thunk: Any calling convention other than `extern "C"` requires a
-  // thunk
-  unsigned char __field0[8];
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-// CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/known_traits/into/into.rs;l=85
-struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
-    [[clang::trivial_abi]] ConvertModule final {
- public:
-  // `into_golden::ConvertModule` doesn't implement the `Default` trait
-  ConvertModule() = delete;
-
-  // Synthesized tuple constructor
-  explicit ConvertModule(std::int32_t __field0)
-      : __field0(std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~ConvertModule() = default;
-  ConvertModule(ConvertModule&&) = default;
-  ConvertModule& operator=(ConvertModule&&) = default;
-
-  // `into_golden::ConvertModule` doesn't implement the `Clone` trait
-  ConvertModule(const ConvertModule&) = delete;
-  ConvertModule& operator=(const ConvertModule&) = delete;
-  ConvertModule(::crubit::UnsafeRelocateTag, ConvertModule&& value) {
-    memcpy(this, &value, sizeof(value));
-  }
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=91
-  explicit operator std::int32_t();
-
-  // Generated from:
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=103
-  explicit operator std::int64_t();
-
-  union {
-    // Generated from:
-    // cc_bindings_from_rs/test/known_traits/into/into.rs;l=85
-    std::int32_t __field0;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
+static_assert(
+    sizeof(NotFfiSafe) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(NotFfiSafe) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
+static_assert(std::is_trivially_move_constructible_v<NotFfiSafe>);
+static_assert(std::is_trivially_move_assignable_v<NotFfiSafe>);
+inline void NotFfiSafe::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(NotFfiSafe, __field0));
+}
 static_assert(
     sizeof(Convert) == 4,
     "Verify that ADT layout didn't change since this header got generated");
@@ -239,6 +251,32 @@ inline Convert::operator std::int16_t() {
 }
 inline void Convert::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Convert, __field0));
+}
+static_assert(
+    sizeof(ConvertModule) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(ConvertModule) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<ConvertModule>);
+static_assert(std::is_trivially_move_constructible_v<ConvertModule>);
+static_assert(std::is_trivially_move_assignable_v<ConvertModule>);
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_into_ui32(::into::ConvertModule*);
+}
+inline ConvertModule::operator std::int32_t() {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_into_ui32(&self);
+}
+namespace __crubit_internal {
+extern "C" std::int64_t __crubit_thunk_into_ui64(::into::ConvertModule*);
+}
+inline ConvertModule::operator std::int64_t() {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_into_ui64(&self);
+}
+inline void ConvertModule::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(ConvertModule, __field0));
 }
 static_assert(
     sizeof(ConvertRef) == 16,
@@ -294,44 +332,6 @@ inline ConvertRef::operator ::into::Convert() {
 }
 inline void ConvertRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ConvertRef, __field0));
-}
-static_assert(
-    sizeof(NotFfiSafe) == 8,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(NotFfiSafe) == 8,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_constructible_v<NotFfiSafe>);
-static_assert(std::is_trivially_move_assignable_v<NotFfiSafe>);
-inline void NotFfiSafe::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NotFfiSafe, __field0));
-}
-static_assert(
-    sizeof(ConvertModule) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(ConvertModule) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<ConvertModule>);
-static_assert(std::is_trivially_move_constructible_v<ConvertModule>);
-static_assert(std::is_trivially_move_assignable_v<ConvertModule>);
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_into_ui32(::into::ConvertModule*);
-}
-inline ConvertModule::operator std::int32_t() {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_into_ui32(&self);
-}
-namespace __crubit_internal {
-extern "C" std::int64_t __crubit_thunk_into_ui64(::into::ConvertModule*);
-}
-inline ConvertModule::operator std::int64_t() {
-  auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_into_ui64(&self);
-}
-inline void ConvertModule::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ConvertModule, __field0));
 }
 }  // namespace into
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INTO_INTO_GOLDEN

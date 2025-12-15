@@ -11,8 +11,23 @@
 #![deny(warnings)]
 
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_f() -> i32 {
-    unsafe { ::uses_golden::f() }
+unsafe extern "C" fn __crubit_thunk_return_ux(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::uses_golden::return_x();
+        (__ret_ptr as *mut ::extern_crate::X).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_private_ufn() -> i32 {
+    unsafe { ::uses_golden::doc_hidden_test::visible::private_fn() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_private_umiddle_upath() -> i32 {
+    unsafe { ::uses_golden::a::c::private_middle_path() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_private_ufn() -> i32 {
+    unsafe { ::uses_golden::private_fn() }
 }
 const _: () = assert!(::std::mem::size_of::<::uses_golden::AliasOfExportedStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_golden::AliasOfExportedStruct>() == 4);
@@ -25,17 +40,6 @@ unsafe extern "C" fn __crubit_thunk_create(field: i32, __ret_ptr: *mut core::ffi
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_golden::AliasOfExportedStruct, field) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_private_ufn() -> i32 {
-    unsafe { ::uses_golden::private_fn() }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_return_ux(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = ::uses_golden::return_x();
-        (__ret_ptr as *mut ::extern_crate::X).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uy(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::uses_golden::return_y();
@@ -46,10 +50,6 @@ const _: () = assert!(::std::mem::size_of::<::uses_golden::Original>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_golden::Original>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_golden::Original, field) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_private_ufn() -> i32 {
-    unsafe { ::uses_golden::doc_hidden_test::visible::private_fn() }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_private_umiddle_upath() -> i32 {
-    unsafe { ::uses_golden::a::c::private_middle_path() }
+unsafe extern "C" fn __crubit_thunk_f() -> i32 {
+    unsafe { ::uses_golden::f() }
 }

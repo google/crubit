@@ -20,10 +20,6 @@
 namespace example_crate {
 
 // Generated from:
-// examples/rust/use_declaration/example.rs;l=6
-void function();
-
-// Generated from:
 // examples/rust/use_declaration/example.rs;l=8
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
     [[clang::trivial_abi]] Type final {
@@ -52,14 +48,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-namespace module {
-using ::example_crate::function;
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_function();
-}
-inline void function() { return __crubit_internal::__crubit_thunk_function(); }
+// Generated from:
+// examples/rust/use_declaration/example.rs;l=6
+void function();
 
 namespace module {
 using Type CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") =
@@ -82,5 +73,15 @@ static_assert(std::is_trivially_move_assignable_v<Type>);
 inline void Type::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Type, x));
 }
+
+namespace module {
+using ::example_crate::function;
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_function();
+}
+inline void function() { return __crubit_internal::__crubit_thunk_function(); }
+
 }  // namespace example_crate
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_USE_DECLARATION_EXAMPLE_CRATE_GOLDEN

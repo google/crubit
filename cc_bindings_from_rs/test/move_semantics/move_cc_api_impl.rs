@@ -45,15 +45,6 @@ unsafe extern "C" fn __crubit_thunk_into_ubyte(
         ::move_golden::Foo::into_byte(__self)
     }
 }
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_consume_ufoo(
-    _foo: &'static mut ::core::mem::MaybeUninit<::move_golden::Foo>,
-) -> () {
-    unsafe {
-        let _foo = _foo.assume_init_read();
-        ::move_golden::consume_foo(_foo)
-    }
-}
 const _: () = assert!(::std::mem::size_of::<::move_golden::Copyable>() == 1);
 const _: () = assert!(::std::mem::align_of::<::move_golden::Copyable>() == 1);
 #[unsafe(no_mangle)]
@@ -80,3 +71,12 @@ unsafe extern "C" fn __crubit_thunk_consume_uself(
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::move_golden::Copyable, field) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_consume_ufoo(
+    _foo: &'static mut ::core::mem::MaybeUninit<::move_golden::Foo>,
+) -> () {
+    unsafe {
+        let _foo = _foo.assume_init_read();
+        ::move_golden::consume_foo(_foo)
+    }
+}

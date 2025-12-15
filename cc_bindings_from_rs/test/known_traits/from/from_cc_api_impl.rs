@@ -62,6 +62,24 @@ unsafe extern "C" fn __crubit_thunk_into_uOpaqueRef_x0000003c_x00000027static_x0
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::from_golden::Opaque, 0) == 0);
+const _: () = assert!(::std::mem::size_of::<::from_golden::NotFfiSafe>() == 8);
+const _: () = assert!(::std::mem::align_of::<::from_golden::NotFfiSafe>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::from_golden::NotFfiSafe::create();
+        (__ret_ptr as *mut ::from_golden::NotFfiSafe).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_ui32(
+    __self: &'static mut ::core::mem::MaybeUninit<::from_golden::NotFfiSafe>,
+) -> i32 {
+    unsafe {
+        let __self = __self.assume_init_read();
+        <::from_golden::NotFfiSafe as ::core::convert::Into<i32>>::into(__self)
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::from_golden::OpaqueRef>() == 16);
 const _: () = assert!(::std::mem::align_of::<::from_golden::OpaqueRef>() == 8);
 #[unsafe(no_mangle)]
@@ -87,23 +105,5 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
     unsafe {
         let __self = __self.assume_init_read();
         <::from_golden::OpaqueRef as ::core::convert::Into<&'static str>>::into(__self)
-    }
-}
-const _: () = assert!(::std::mem::size_of::<::from_golden::NotFfiSafe>() == 8);
-const _: () = assert!(::std::mem::align_of::<::from_golden::NotFfiSafe>() == 8);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = ::from_golden::NotFfiSafe::create();
-        (__ret_ptr as *mut ::from_golden::NotFfiSafe).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ui32(
-    __self: &'static mut ::core::mem::MaybeUninit<::from_golden::NotFfiSafe>,
-) -> i32 {
-    unsafe {
-        let __self = __self.assume_init_read();
-        <::from_golden::NotFfiSafe as ::core::convert::Into<i32>>::into(__self)
     }
 }
