@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Test
       run: cargo test --verbose --workspace --exclude 'rs_bindings_from_cc*' --exclude '*_sys' --no-fail-fast
 # LINT.ThenChange(//depot/copy.bara.sky)
