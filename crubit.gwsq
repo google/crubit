@@ -1,0 +1,8 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+send_cls_to('crubit-reviews');
+
+define Main {
+  reassign_to_list(mdb('crubit-team'));
+}
