@@ -33,9 +33,6 @@ flagset::flags! {
 
         /// Enable emitting custom ffi_11 types instead of `core::ffi` types.
         CustomFfiTypes,
-
-        /// Use ergonomic lifetime defaults when interpreting lifetime annotations.
-        AssumeLifetimes,
     }
 }
 
@@ -54,7 +51,6 @@ impl CrubitFeature {
             Self::NonUnpinCtor => "non_unpin_ctor",
             Self::Experimental => "experimental",
             Self::CustomFfiTypes => "custom_ffi_types",
-            Self::AssumeLifetimes => "assume_lifetimes",
         }
     }
 
@@ -70,7 +66,6 @@ impl CrubitFeature {
             Self::NonUnpinCtor => "//features:non_unpin_ctor",
             Self::Experimental => "//features:experimental",
             Self::CustomFfiTypes => "//features:custom_ffi_types",
-            Self::AssumeLifetimes => "//features:assume_lifetimes",
         }
     }
 }
@@ -86,7 +81,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"non_unpin_ctor" => CrubitFeature::NonUnpinCtor.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         b"custom_ffi_types" => CrubitFeature::CustomFfiTypes.into(),
-        b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         _ => return None,
     };
     Some(features)
@@ -194,7 +188,6 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
-                | CrubitFeature::AssumeLifetimes
         );
     }
 
@@ -223,7 +216,6 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
-                | CrubitFeature::AssumeLifetimes
         );
     }
 
@@ -240,7 +232,6 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
-                | CrubitFeature::AssumeLifetimes
         );
     }
 }
