@@ -1263,7 +1263,6 @@ fn test_cpp_enum_fails_if_implements_method() {
 }
 
 #[test]
-#[should_panic]
 fn test_cpp_enum_fails_for_rust_union() {
     let test_src = r#"
     #![feature(transparent_unions)]
@@ -1275,7 +1274,17 @@ fn test_cpp_enum_fails_for_rust_union() {
     }
     "#;
 
-    test_format_item(test_src, "Color", |_result| {});
+    test_format_item(test_src, "Color", |result| {
+        assert_cc_matches!(
+            result.unwrap().unwrap().main_api.tokens,
+            quote! {
+                ...
+                __COMMENT__ "CRUBIT_ANNOTATE: cpp_enum=enum class\n\nGenerated from: <crubit_unittests.rs>;l=6"
+                union CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Color") Color : std::int32_t {};
+                ...
+            }
+        );
+    });
 }
 
 #[test]
