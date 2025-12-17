@@ -10,6 +10,33 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
+const _: () = assert!(::std::mem::size_of::<::aliasing_references_golden::NonFreezeType>() == 4);
+const _: () = assert!(::std::mem::align_of::<::aliasing_references_golden::NonFreezeType>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::aliasing_references_golden::NonFreezeType as ::core::default::Default>::default();
+        (__ret_ptr as *mut ::aliasing_references_golden::NonFreezeType).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_as_umut_uunchecked(
+    __self: &'static ::aliasing_references_golden::NonFreezeType,
+) -> &'static mut i32 {
+    unsafe { ::aliasing_references_golden::NonFreezeType::as_mut_unchecked(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_shared_uself_umut_uref_uallows_ualias(
+    __self: &'static ::aliasing_references_golden::NonFreezeType,
+    __param_1: &'static mut i32,
+) -> () {
+    unsafe {
+        ::aliasing_references_golden::NonFreezeType::shared_self_mut_ref_allows_alias(
+            __self, __param_1,
+        )
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::aliasing_references_golden::SomeStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::aliasing_references_golden::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
@@ -70,31 +97,4 @@ unsafe extern "C" fn __crubit_thunk_mut_urefs(
     __param_1: &'static mut i32,
 ) -> () {
     unsafe { ::aliasing_references_golden::mut_refs(__param_0, __param_1) }
-}
-const _: () = assert!(::std::mem::size_of::<::aliasing_references_golden::NonFreezeType>() == 4);
-const _: () = assert!(::std::mem::align_of::<::aliasing_references_golden::NonFreezeType>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::aliasing_references_golden::NonFreezeType as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::aliasing_references_golden::NonFreezeType).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_as_umut_uunchecked(
-    __self: &'static ::aliasing_references_golden::NonFreezeType,
-) -> &'static mut i32 {
-    unsafe { ::aliasing_references_golden::NonFreezeType::as_mut_unchecked(__self) }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_shared_uself_umut_uref_uallows_ualias(
-    __self: &'static ::aliasing_references_golden::NonFreezeType,
-    __param_1: &'static mut i32,
-) -> () {
-    unsafe {
-        ::aliasing_references_golden::NonFreezeType::shared_self_mut_ref_allows_alias(
-            __self, __param_1,
-        )
-    }
 }

@@ -11,16 +11,35 @@
 #![deny(warnings)]
 
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_char_uto_uascii_ulowercase(c: char) -> char {
-    unsafe { ::functions_golden::fn_param_ty_tests::char_to_ascii_lowercase(c) }
+unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_uextern_uc_uwith_umangling(
+    x: i32,
+    y: i32,
+) -> i32 {
+    unsafe { ::functions_golden::fn_abi_tests::add_i32_via_extern_c_with_mangling(x, y) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi(x: i32, y: i32) -> i32 {
+    unsafe { ::functions_golden::fn_abi_tests::add_i32_via_rust_abi(x, y) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_add_ui32(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::fn_attribute_tests::add_i32(x, y) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi(x: i32, y: i32) -> i32 {
-    unsafe { ::functions_golden::fn_abi_tests::add_i32_via_rust_abi(x, y) }
+unsafe extern "C" fn __crubit_thunk_msg_uadd(x: i32, y: i32) -> i32 {
+    unsafe { ::functions_golden::fn_must_use_tests::msg_add(x, y) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_no_umsg_uadd(x: i32, y: i32) -> i32 {
+    unsafe { ::functions_golden::fn_must_use_tests::no_msg_add(x, y) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_add_uf64(x: f64, y: f64) -> f64 {
+    unsafe { ::functions_golden::fn_param_ty_tests::add_f64(x, y) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_add_ui32(x: i32, y: i32) -> i32 {
+    unsafe { ::functions_golden::fn_param_ty_tests::add_i32(x, y) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_uptr(
@@ -31,31 +50,6 @@ unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_uptr(
     unsafe { ::functions_golden::fn_param_ty_tests::add_i32_via_ptr(x, y, sum) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_add_ui32(x: i32, y: i32) -> i32 {
-    unsafe { ::functions_golden::fn_param_ty_tests::add_i32(x, y) }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_add_uf64(x: f64, y: f64) -> f64 {
-    unsafe { ::functions_golden::fn_param_ty_tests::add_f64(x, y) }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_uparam_unames(
-    x: i32,
-    y: i32,
-    __param_2: i32,
-    __param_3: i32,
-) -> i32 {
-    unsafe {
-        ::functions_golden::other_fn_param_tests::add_i32_via_rust_abi_with_duplicated_param_names(
-            x, y, __param_2, __param_3,
-        )
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_no_umsg_uadd(x: i32, y: i32) -> i32 {
-    unsafe { ::functions_golden::fn_must_use_tests::no_msg_add(x, y) }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_apply_ubinary_ui32_uop(
     x: i32,
     y: i32,
@@ -64,11 +58,8 @@ unsafe extern "C" fn __crubit_thunk_apply_ubinary_ui32_uop(
     unsafe { ::functions_golden::fn_param_ty_tests::apply_binary_i32_op(x, y, f) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_uextern_uc_uwith_umangling(
-    x: i32,
-    y: i32,
-) -> i32 {
-    unsafe { ::functions_golden::fn_abi_tests::add_i32_via_extern_c_with_mangling(x, y) }
+unsafe extern "C" fn __crubit_thunk_char_uto_uascii_ulowercase(c: char) -> char {
+    unsafe { ::functions_golden::fn_param_ty_tests::char_to_ascii_lowercase(c) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uidentical_uref_uwith_uinferred_ulifetime(
@@ -92,8 +83,17 @@ unsafe extern "C" fn __crubit_thunk_set_umut_uref_uto_usum_uof_uints(
     unsafe { ::functions_golden::fn_param_ty_tests::set_mut_ref_to_sum_of_ints(sum, x, y) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_msg_uadd(x: i32, y: i32) -> i32 {
-    unsafe { ::functions_golden::fn_must_use_tests::msg_add(x, y) }
+unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_uparam_unames(
+    x: i32,
+    y: i32,
+    __param_2: i32,
+    __param_3: i32,
+) -> i32 {
+    unsafe {
+        ::functions_golden::other_fn_param_tests::add_i32_via_rust_abi_with_duplicated_param_names(
+            x, y, __param_2, __param_3,
+        )
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_unsafe_uadd(x: i32, y: i32) -> i32 {

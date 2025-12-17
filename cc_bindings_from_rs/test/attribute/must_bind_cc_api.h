@@ -23,12 +23,6 @@ namespace must_bind {
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/attribute/must_bind.rs;l=20
-void bar();
-
-// CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
 // cc_bindings_from_rs/test/attribute/must_bind.rs;l=7
 struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
@@ -64,10 +58,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_bar();
-}
-inline void bar() { return __crubit_internal::__crubit_thunk_bar(); }
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
+// cc_bindings_from_rs/test/attribute/must_bind.rs;l=20
+void bar();
 
 static_assert(
     sizeof(Original) == 4,
@@ -90,5 +85,10 @@ inline ::must_bind::Original Original::new_() {
 inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, x));
 }
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_bar();
+}
+inline void bar() { return __crubit_internal::__crubit_thunk_bar(); }
+
 }  // namespace must_bind
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_MUST_BIND_GOLDEN

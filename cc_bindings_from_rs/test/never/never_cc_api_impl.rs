@@ -10,10 +10,6 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_never_ureturn() -> ! {
-    unsafe { ::never_golden::never_return() }
-}
 const _: () = assert!(::std::mem::size_of::<::never_golden::NeverStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::never_golden::NeverStruct>() == 4);
 #[unsafe(no_mangle)]
@@ -33,4 +29,8 @@ unsafe extern "C" fn __crubit_thunk_method_unever_ureturn(
     __self: &'static ::never_golden::NeverStruct,
 ) -> ! {
     unsafe { ::never_golden::NeverStruct::method_never_return(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_never_ureturn() -> ! {
+    unsafe { ::never_golden::never_return() }
 }

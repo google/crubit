@@ -153,10 +153,10 @@ fn test_generated_bindings_have_stable_order() {
 #[test]
 fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
     let test_src = r#"
-            #![allow(dead_code)]
+            #![allow(dead_code, non_snake_case)]
 
             // To preserve original API order we need to forward declare S.
-            pub fn f(_: *const S) {}
+            pub fn F(_: *const S) {}
             pub struct S(bool);
         "#;
     test_generated_bindings(test_src, |bindings| {
@@ -171,11 +171,11 @@ fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
                     // below also matters.
                     struct S;
                     ...
-                    void f(::rust_out::S const* __param_0);
+                    void F(::rust_out::S const* __param_0);
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S final { ... }
                     ...
-                    inline void f(::rust_out::S const* __param_0) { ... }
+                    inline void F(::rust_out::S const* __param_0) { ... }
                     ...
                 }  // namespace rust_out
             }
@@ -191,7 +191,7 @@ fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
 fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
     let test_src = r#"
             #[unsafe(no_mangle)]
-            pub extern "C" fn f(s: S) -> bool { s.0 }
+            pub extern "C" fn F(s: S) -> bool { s.0 }
 
             #[repr(C)]
             pub struct S(bool);
@@ -213,7 +213,7 @@ fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
                     ...
                     // `CcPrerequisites` of `f` declaration below (the main api of `f`) should
                     // include `S` as a `fwd_decls` edge, rather than as a `defs` edge.
-                    bool f(::rust_out::S s);
+                    bool F(::rust_out::S s);
                     ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S final { ... }
                     ...
@@ -229,25 +229,25 @@ fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
 #[test]
 fn test_generated_bindings_prereq_fwd_decls_no_duplication() {
     let test_src = r#"
-            #![allow(dead_code)]
+            #![allow(dead_code, non_camel_case_types)]
 
             // All three functions below require a forward declaration of S.
-            pub fn f1(_: *const S) {}
-            pub fn f2(_: *const S) {}
-            pub fn f3(_: *const S) {}
+            pub fn f1(_: *const s) {}
+            pub fn f2(_: *const s) {}
+            pub fn f3(_: *const s) {}
 
-            pub struct S(bool);
+            pub struct s(bool);
 
             // This function also includes S in its CcPrerequisites::fwd_decls
             // (although here it is not required, because the definition of S
             // is already available above).
-            pub fn f4(_: *const S) {}
+            pub fn f4(_: *const s) {}
         "#;
     test_generated_bindings(test_src, |bindings| {
         let bindings = bindings.unwrap().cc_api.to_string();
 
         // Only a single forward declaration is expected.
-        assert_eq!(1, bindings.matches("struct S ;").count(), "bindings = {bindings}");
+        assert_eq!(1, bindings.matches("struct s ;").count(), "bindings = {bindings}");
     });
 }
 
@@ -288,24 +288,20 @@ fn test_generated_bindings_prereq_fwd_decls_deterministic_order() {
                     ...
                     // Verifying that we get the same order in each test
                     // run is the essence of this test.
-                    namespace a {
-                    struct S1;
-                    struct S2;
+                    namespace a { ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S1 final { ... } ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S2 final { ... } ...
                     } ...
 
-                    void f3 ...
 
                     namespace b { ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S3 final { ... } ...
                     } ...
 
-                    void f2 ...
                     void f1 ...
+                    void f2 ...
+                    void f3 ...
 
-                    namespace a { ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S1 final { ... } ...
-                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(...) [[clang::trivial_abi]] S2 final { ... } ...
-                    } ...
                 }  // namespace rust_out
             }
         );
@@ -398,9 +394,9 @@ fn test_generated_bindings_module_name_is_cpp_reserved_keyword() {
                     ...
                     namespace reinterpret_cast_ {
                         ...
-                        void working_module_f2();
-                        ...
                         void working_module_f1();
+                        ...
+                        void working_module_f2();
                         ...
                     }  // namespace reinterpret_cast_
                     ...
@@ -2477,26 +2473,17 @@ fn test_generate_bindings_use_list_items() {
             bindings.cc_api,
             quote! {
                 ...
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") alignas(4)
-                    [[clang::trivial_abi]] Y final {
-                    ...
-                };
-
-                ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") alignas(4)
                     [[clang::trivial_abi]] X final {
                     ...
                 };
 
-
                 ...
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") alignas(4)
+                    [[clang::trivial_abi]] Y final {
+                    ...
+                };
 
-                namespace test_mod {
-
-                using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") =
-                    ::rust_out::Y;
-
-                }  // namespace test_mod
 
                 ...
 
@@ -2504,6 +2491,15 @@ fn test_generate_bindings_use_list_items() {
 
                 using X CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") =
                     ::rust_out::X;
+
+                }  // namespace test_mod
+
+                ...
+
+                namespace test_mod {
+
+                using Y CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") =
+                    ::rust_out::Y;
 
                 }  // namespace test_mod
 
@@ -2534,30 +2530,29 @@ fn test_generate_bindings_use_glob() {
             bindings.cc_api,
             quote! {
                 ...
-                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") alignas(4)
-                    [[clang::trivial_abi]] Y final {
-                    ...
-                };
-
-                ...
                 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: X") alignas(4)
                     [[clang::trivial_abi]] X final {
                     ...
                 };
 
                 ...
-
-                namespace test_mod {
-
-                using Y CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: Y") = ::rust_out::Y;
-
-                }  // namespace test_mod
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Y") alignas(4)
+                    [[clang::trivial_abi]] Y final {
+                    ...
+                };
 
                 ...
 
                 namespace test_mod {
 
                 using X CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: X") = ::rust_out::X;
+
+                }  // namespace test_mod
+                ...
+
+                namespace test_mod {
+
+                using Y CRUBIT_INTERNAL_RUST_TYPE (":: rust_out :: Y") = ::rust_out::Y;
 
                 }  // namespace test_mod
                 ...

@@ -10,42 +10,6 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
-    __param_0: &'static i32,
-) -> () {
-    unsafe { ::lifetimes_golden::function_with_trivial_unnamed_lifetime_param(__param_0) }
-}
-const _: () =
-    assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 32);
-const _: () =
-    assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 8);
-#[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::lifetimes_golden::StructWithLifetimeAndDropGlue,
-    >,
-) {
-    unsafe { __self.assume_init_drop() };
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_make_ustatic_u42(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = ::lifetimes_golden::StructWithLifetimeAndDropGlue::make_static_42();
-        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue<'static>)
-            .write(__rs_return_value);
-    }
-}
-const _: () = assert!(
-    ::core::mem::offset_of!(
-        ::lifetimes_golden::StructWithLifetimeAndDropGlue,
-        field_with_drop_glue
-    ) == 0
-);
-const _: () = assert!(
-    ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetimeAndDropGlue, field_with_lifetime)
-        == 24
-);
 const _: () = assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetime>() == 8);
 const _: () = assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetime>() == 8);
 #[unsafe(no_mangle)]
@@ -146,3 +110,39 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );
+const _: () =
+    assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 32);
+const _: () =
+    assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 8);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_drop(
+    __self: &'static mut ::core::mem::MaybeUninit<
+        ::lifetimes_golden::StructWithLifetimeAndDropGlue,
+    >,
+) {
+    unsafe { __self.assume_init_drop() };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_make_ustatic_u42(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::lifetimes_golden::StructWithLifetimeAndDropGlue::make_static_42();
+        (__ret_ptr as *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue<'static>)
+            .write(__rs_return_value);
+    }
+}
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        ::lifetimes_golden::StructWithLifetimeAndDropGlue,
+        field_with_drop_glue
+    ) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetimeAndDropGlue, field_with_lifetime)
+        == 24
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
+    __param_0: &'static i32,
+) -> () {
+    unsafe { ::lifetimes_golden::function_with_trivial_unnamed_lifetime_param(__param_0) }
+}

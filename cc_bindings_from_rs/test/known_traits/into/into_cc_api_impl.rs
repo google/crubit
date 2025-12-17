@@ -10,29 +10,6 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
-const _: () = assert!(::std::mem::size_of::<::into_golden::ConvertModule>() == 4);
-const _: () = assert!(::std::mem::align_of::<::into_golden::ConvertModule>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ui32(
-    __self: &'static mut ::core::mem::MaybeUninit<::into_golden::ConvertModule>,
-) -> i32 {
-    unsafe {
-        let __self = __self.assume_init_read();
-        <::into_golden::ConvertModule as ::core::convert::Into<i32>>::into(__self)
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ui64(
-    __self: &'static mut ::core::mem::MaybeUninit<::into_golden::ConvertModule>,
-) -> i64 {
-    unsafe {
-        let __self = __self.assume_init_read();
-        <::into_golden::ConvertModule as ::core::convert::Into<i64>>::into(__self)
-    }
-}
-const _: () = assert!(::core::mem::offset_of!(::into_golden::ConvertModule, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::into_golden::NotFfiSafe>() == 8);
-const _: () = assert!(::std::mem::align_of::<::into_golden::NotFfiSafe>() == 8);
 const _: () = assert!(::std::mem::size_of::<::into_golden::Convert>() == 4);
 const _: () = assert!(::std::mem::align_of::<::into_golden::Convert>() == 4);
 #[unsafe(no_mangle)]
@@ -72,6 +49,27 @@ unsafe extern "C" fn __crubit_thunk_into_ui16(
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::into_golden::Convert, 0) == 0);
+const _: () = assert!(::std::mem::size_of::<::into_golden::ConvertModule>() == 4);
+const _: () = assert!(::std::mem::align_of::<::into_golden::ConvertModule>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_ui32(
+    __self: &'static mut ::core::mem::MaybeUninit<::into_golden::ConvertModule>,
+) -> i32 {
+    unsafe {
+        let __self = __self.assume_init_read();
+        <::into_golden::ConvertModule as ::core::convert::Into<i32>>::into(__self)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_ui64(
+    __self: &'static mut ::core::mem::MaybeUninit<::into_golden::ConvertModule>,
+) -> i64 {
+    unsafe {
+        let __self = __self.assume_init_read();
+        <::into_golden::ConvertModule as ::core::convert::Into<i64>>::into(__self)
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::into_golden::ConvertModule, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::into_golden::ConvertRef>() == 16);
 const _: () = assert!(::std::mem::align_of::<::into_golden::ConvertRef>() == 8);
 #[unsafe(no_mangle)]
@@ -117,3 +115,5 @@ unsafe extern "C" fn __crubit_thunk_into_uConvert(
         (__ret_ptr as *mut ::into_golden::Convert).write(__rs_return_value);
     }
 }
+const _: () = assert!(::std::mem::size_of::<::into_golden::NotFfiSafe>() == 8);
+const _: () = assert!(::std::mem::align_of::<::into_golden::NotFfiSafe>() == 8);

@@ -20,14 +20,6 @@
 namespace never {
 
 // Generated from:
-// cc_bindings_from_rs/test/never/never.rs;l=13
-extern "C" [[noreturn]] void extern_never_return();
-
-// Generated from:
-// cc_bindings_from_rs/test/never/never.rs;l=8
-[[noreturn]] void never_return();
-
-// Generated from:
 // cc_bindings_from_rs/test/never/never.rs;l=18
 struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
     [[clang::trivial_abi]] NeverStruct final {
@@ -70,12 +62,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-namespace __crubit_internal {
-extern "C" [[noreturn]] void __crubit_thunk_never_ureturn();
-}
-inline void never_return() {
-  __crubit_internal::__crubit_thunk_never_ureturn();
-}
+// Generated from:
+// cc_bindings_from_rs/test/never/never.rs;l=13
+extern "C" [[noreturn]] void extern_never_return();
+
+// Generated from:
+// cc_bindings_from_rs/test/never/never.rs;l=8
+[[noreturn]] void never_return();
 
 static_assert(
     sizeof(NeverStruct) == 4,
@@ -110,5 +103,12 @@ inline void NeverStruct::method_never_return() const {
 inline void NeverStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NeverStruct, _non_zst_field));
 }
+namespace __crubit_internal {
+extern "C" [[noreturn]] void __crubit_thunk_never_ureturn();
+}
+inline void never_return() {
+  __crubit_internal::__crubit_thunk_never_ureturn();
+}
+
 }  // namespace never
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN

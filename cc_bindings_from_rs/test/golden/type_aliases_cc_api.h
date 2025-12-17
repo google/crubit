@@ -17,12 +17,6 @@
 
 namespace type_aliases_rust {
 
-namespace test_type_aliases {
-using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
-    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias") =
-    std::int32_t;
-}
-
 namespace test_deprecated_type_alias {
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_rust_golden :: test_deprecated_type_alias :: TypeAlias")
@@ -30,13 +24,17 @@ using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
 }
 
 namespace test_type_aliases {
+using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias") =
+    std::int32_t;
+using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
+    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias2") =
+    std::int32_t;
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/type_aliases.rs;l=9
 std::int32_t func_using_alias();
-using TypeAlias2 CRUBIT_INTERNAL_RUST_TYPE(
-    ":: type_aliases_rust_golden :: test_type_aliases :: TypeAlias2") =
-    std::int32_t;
+
 }  // namespace test_type_aliases
 
 namespace test_deprecated_type_alias {}
