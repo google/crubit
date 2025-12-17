@@ -254,14 +254,10 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
         compilation_outputs = compilation_outputs,
         linking_contexts = [cc_info.linking_context],
     )
-    debug_context = cc_common.merge_debug_context([
-        cc_info._debug_context if hasattr(cc_info, "_debug_context") else cc_info.debug_context(),
-        cc_common.create_debug_context(compilation_outputs),
-    ])
+
     return CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,
-        debug_context = debug_context,
     )
 
 def _compile_rs_out_file(ctx, rs_out_file, target):
