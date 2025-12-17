@@ -11,6 +11,39 @@
 #![deny(warnings)]
 
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_unested_uarrays(
+    array: &'static mut ::core::mem::MaybeUninit<[[i32; 2]; 2]>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array = array.assume_init_read();
+        let __rs_return_value = ::arrays_golden::function_with_nested_arrays(array);
+        (__ret_ptr as *mut [[i32; 2]; 2]).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_ustruct_uid(
+    array_struct: &'static mut ::core::mem::MaybeUninit<::arrays_golden::ArrayStruct>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array_struct = array_struct.assume_init_read();
+        let __rs_return_value = ::arrays_golden::function_with_array_struct_id(array_struct);
+        (__ret_ptr as *mut ::arrays_golden::ArrayStruct).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_uid(
+    array: &'static mut ::core::mem::MaybeUninit<[i32; 2]>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array = array.assume_init_read();
+        let __rs_return_value = ::arrays_golden::function_with_array_id(array);
+        (__ret_ptr as *mut [i32; 2]).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_utuple_uid(
     array_tup: *const [*const core::ffi::c_void; 2usize],
     __ret_ptr: *mut core::ffi::c_void,
@@ -41,22 +74,17 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_utuple_uid(
         (__ret_ptr_1 as *mut [i32; 2]).write(__rs_return_value_1);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::arrays_golden::HasDrop>() == 4);
-const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDrop>() == 4);
+const _: () = assert!(::std::mem::size_of::<::arrays_golden::ArrayStruct>() == 8);
+const _: () = assert!(::std::mem::align_of::<::arrays_golden::ArrayStruct>() == 4);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_drop(
-    __self: &'static mut ::core::mem::MaybeUninit<::arrays_golden::HasDrop>,
-) {
-    unsafe { __self.assume_init_drop() };
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::arrays_golden::HasDrop::new(x);
-        (__ret_ptr as *mut ::arrays_golden::HasDrop).write(__rs_return_value);
+        let __rs_return_value =
+            <::arrays_golden::ArrayStruct as ::core::default::Default>::default();
+        (__ret_ptr as *mut ::arrays_golden::ArrayStruct).write(__rs_return_value);
     }
 }
-const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDrop, x) == 0);
+const _: () = assert!(::core::mem::offset_of!(::arrays_golden::ArrayStruct, array) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uret_uonly(
     __ret_ptr: *mut core::ffi::c_void,
@@ -65,6 +93,29 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uret_uonly(
         let __rs_return_value = ::arrays_golden::function_with_has_drop_ret_only();
         (__ret_ptr as *mut [::arrays_golden::HasDrop; 2]).write(__rs_return_value);
     }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarray_uid(
+    array: &'static mut ::core::mem::MaybeUninit<[::arrays_golden::HasDropAndDefault; 2]>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array = array.assume_init_read();
+        let __rs_return_value = ::arrays_golden::function_with_has_drop_and_default_array_id(array);
+        (__ret_ptr as *mut [::arrays_golden::HasDropAndDefault; 2]).write(__rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_umut_uarray_unamed_usize_uptr_uid(
+    array_ptr: *const [i32; 3],
+) -> *const [i32; 3] {
+    unsafe { ::arrays_golden::function_with_mut_array_named_size_ptr_id(array_ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_uconst_uarray_uptr_uid(
+    array_ptr: *const [i32; 2],
+) -> *const [i32; 2] {
+    unsafe { ::arrays_golden::function_with_const_array_ptr_id(array_ptr) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uarray_uid(
@@ -76,62 +127,6 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uarray_uid(
         let __rs_return_value = ::arrays_golden::function_with_has_drop_array_id(array);
         (__ret_ptr as *mut [::arrays_golden::HasDrop; 2]).write(__rs_return_value);
     }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_unested_uarrays(
-    array: &'static mut ::core::mem::MaybeUninit<[[i32; 2]; 2]>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let array = array.assume_init_read();
-        let __rs_return_value = ::arrays_golden::function_with_nested_arrays(array);
-        (__ret_ptr as *mut [[i32; 2]; 2]).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_uid(
-    array: &'static mut ::core::mem::MaybeUninit<[i32; 2]>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let array = array.assume_init_read();
-        let __rs_return_value = ::arrays_golden::function_with_array_id(array);
-        (__ret_ptr as *mut [i32; 2]).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_uarray_ustruct_uid(
-    array_struct: &'static mut ::core::mem::MaybeUninit<::arrays_golden::ArrayStruct>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let array_struct = array_struct.assume_init_read();
-        let __rs_return_value = ::arrays_golden::function_with_array_struct_id(array_struct);
-        (__ret_ptr as *mut ::arrays_golden::ArrayStruct).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
-    array: &'static mut ::core::mem::MaybeUninit<[[::arrays_golden::HasDropAndDefault; 2]; 2]>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let array = array.assume_init_read();
-        let __rs_return_value = ::arrays_golden::function_with_nested_drop_default_arrays(array);
-        (__ret_ptr as *mut [[::arrays_golden::HasDropAndDefault; 2]; 2]).write(__rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_uconst_uarray_uptr_uid(
-    array_ptr: *const [i32; 2],
-) -> *const [i32; 2] {
-    unsafe { ::arrays_golden::function_with_const_array_ptr_id(array_ptr) }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_umut_uarray_unamed_usize_uptr_uid(
-    array_ptr: *const [i32; 3],
-) -> *const [i32; 3] {
-    unsafe { ::arrays_golden::function_with_mut_array_named_size_ptr_id(array_ptr) }
 }
 const _: () = assert!(::std::mem::size_of::<::arrays_golden::HasDropAndDefault>() == 4);
 const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDropAndDefault>() == 4);
@@ -150,15 +145,31 @@ extern "C" fn __crubit_thunk_drop(
     unsafe { __self.assume_init_drop() };
 }
 const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDropAndDefault, x) == 0);
+const _: () = assert!(::std::mem::size_of::<::arrays_golden::HasDrop>() == 4);
+const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDrop>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_uhas_udrop_uand_udefault_uarray_uid(
-    array: &'static mut ::core::mem::MaybeUninit<[::arrays_golden::HasDropAndDefault; 2]>,
+extern "C" fn __crubit_thunk_drop(
+    __self: &'static mut ::core::mem::MaybeUninit<::arrays_golden::HasDrop>,
+) {
+    unsafe { __self.assume_init_drop() };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::arrays_golden::HasDrop::new(x);
+        (__ret_ptr as *mut ::arrays_golden::HasDrop).write(__rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::arrays_golden::HasDrop, x) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_unested_udrop_udefault_uarrays(
+    array: &'static mut ::core::mem::MaybeUninit<[[::arrays_golden::HasDropAndDefault; 2]; 2]>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
         let array = array.assume_init_read();
-        let __rs_return_value = ::arrays_golden::function_with_has_drop_and_default_array_id(array);
-        (__ret_ptr as *mut [::arrays_golden::HasDropAndDefault; 2]).write(__rs_return_value);
+        let __rs_return_value = ::arrays_golden::function_with_nested_drop_default_arrays(array);
+        (__ret_ptr as *mut [[::arrays_golden::HasDropAndDefault; 2]; 2]).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -172,14 +183,3 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_uempty_uarray(
         (__ret_ptr as *mut [i32; 0]).write(__rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::arrays_golden::ArrayStruct>() == 8);
-const _: () = assert!(::std::mem::align_of::<::arrays_golden::ArrayStruct>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_default(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::arrays_golden::ArrayStruct as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::arrays_golden::ArrayStruct).write(__rs_return_value);
-    }
-}
-const _: () = assert!(::core::mem::offset_of!(::arrays_golden::ArrayStruct, array) == 0);

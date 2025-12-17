@@ -10,6 +10,10 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_bar() -> () {
+    unsafe { ::must_bind_golden::bar() }
+}
 const _: () = assert!(::std::mem::size_of::<::must_bind_golden::Original>() == 4);
 const _: () = assert!(::std::mem::align_of::<::must_bind_golden::Original>() == 4);
 #[unsafe(no_mangle)]
@@ -20,7 +24,3 @@ unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> ()
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::must_bind_golden::Original, x) == 0);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_bar() -> () {
-    unsafe { ::must_bind_golden::bar() }
-}

@@ -22,33 +22,36 @@
 
 namespace uses {
 
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=43
-::extern_crate::X return_x();
-
-namespace doc_hidden_test::visible {
-
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=65
-std::int32_t private_fn();
+// cc_bindings_from_rs/test/uses/uses.rs;l=53
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
+    [[clang::trivial_abi]] Original final {
+ public:
+  // `uses_golden::Original` doesn't implement the `Default` trait
+  Original() = delete;
 
-}  // namespace doc_hidden_test::visible
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~Original() = default;
+  Original(Original&&) = default;
+  Original& operator=(Original&&) = default;
 
-namespace a::c {
+  // `uses_golden::Original` doesn't implement the `Clone` trait
+  Original(const Original&) = delete;
+  Original& operator=(const Original&) = delete;
+  Original(::crubit::UnsafeRelocateTag, Original&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/uses/uses.rs;l=54
+    std::int32_t field;
+  };
 
-// CRUBIT_ANNOTATE: must_bind=
-//
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=84
-std::int32_t private_middle_path();
-
-}  // namespace a::c
-
-// Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=27
-std::int32_t private_fn();
+ private:
+  static void __crubit_field_offset_assertions();
+};
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -88,91 +91,60 @@ AliasOfExportedStruct final {
   static void __crubit_field_offset_assertions();
 };
 
+namespace a::c {
+
+// CRUBIT_ANNOTATE: must_bind=
+//
+// Generated from:
+// cc_bindings_from_rs/test/uses/uses.rs;l=84
+std::int32_t private_middle_path();
+
+}  // namespace a::c
+
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=48
 ::extern_crate::Y return_y();
 
+// Generated from:
+// cc_bindings_from_rs/test/uses/uses.rs;l=27
+std::int32_t private_fn();
+
+namespace doc_hidden_test::visible {
+
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=53
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
-    [[clang::trivial_abi]] Original final {
- public:
-  // `uses_golden::Original` doesn't implement the `Default` trait
-  Original() = delete;
+// cc_bindings_from_rs/test/uses/uses.rs;l=65
+std::int32_t private_fn();
 
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Original() = default;
-  Original(Original&&) = default;
-  Original& operator=(Original&&) = default;
-
-  // `uses_golden::Original` doesn't implement the `Clone` trait
-  Original(const Original&) = delete;
-  Original& operator=(const Original&) = delete;
-  Original(::crubit::UnsafeRelocateTag, Original&& value) {
-    memcpy(this, &value, sizeof(value));
-  }
-  union {
-    // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=54
-    std::int32_t field;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
+}  // namespace doc_hidden_test::visible
 
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=10
 std::int32_t f();
 
-using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_ux(::extern_crate::X* __ret_ptr);
-}
-inline ::extern_crate::X return_x() {
-  crubit::Slot<::extern_crate::X> __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_return_ux(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-
-namespace doc_hidden_test::hidden {
-using ::uses::doc_hidden_test::visible::private_fn;
-}
-
-namespace doc_hidden_test::visible {
-
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_private_ufn();
-}
-inline std::int32_t private_fn() {
-  return __crubit_internal::__crubit_thunk_private_ufn();
+// Generated from:
+// cc_bindings_from_rs/test/uses/uses.rs;l=43
+::extern_crate::X return_x();
+using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
+    ::uses::Original;
+using Alias2 CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
+    ::uses::Original;
+static_assert(
+    sizeof(Original) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(Original) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<Original>);
+static_assert(std::is_trivially_move_constructible_v<Original>);
+static_assert(std::is_trivially_move_assignable_v<Original>);
+inline void Original::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Original, field));
 }
 
-}  // namespace doc_hidden_test::visible
-
-namespace a::c {
-
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_private_umiddle_upath();
-}
-inline std::int32_t private_middle_path() {
-  return __crubit_internal::__crubit_thunk_private_umiddle_upath();
-}
-
-}  // namespace a::c
-
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_private_ufn();
-}
-inline std::int32_t private_fn() {
-  return __crubit_internal::__crubit_thunk_private_ufn();
-}
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
 static_assert(
@@ -199,6 +171,17 @@ inline void AliasOfExportedStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(AliasOfExportedStruct, field));
 }
 
+namespace a::c {
+
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_private_umiddle_upath();
+}
+inline std::int32_t private_middle_path() {
+  return __crubit_internal::__crubit_thunk_private_umiddle_upath();
+}
+
+}  // namespace a::c
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uy(::extern_crate::Y* __ret_ptr);
 }
@@ -208,22 +191,28 @@ inline ::extern_crate::Y return_y() {
   __crubit_internal::__crubit_thunk_return_uy(__return_value_storage);
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
-    ::uses::Original;
-using Alias2 CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
-    ::uses::Original;
-static_assert(
-    sizeof(Original) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(Original) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<Original>);
-static_assert(std::is_trivially_move_constructible_v<Original>);
-static_assert(std::is_trivially_move_assignable_v<Original>);
-inline void Original::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Original, field));
+
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_private_ufn();
 }
+inline std::int32_t private_fn() {
+  return __crubit_internal::__crubit_thunk_private_ufn();
+}
+
+namespace doc_hidden_test::hidden {
+using ::uses::doc_hidden_test::visible::private_fn;
+}
+
+namespace doc_hidden_test::visible {
+
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_private_ufn();
+}
+inline std::int32_t private_fn() {
+  return __crubit_internal::__crubit_thunk_private_ufn();
+}
+
+}  // namespace doc_hidden_test::visible
 
 namespace test_mod {
 using ::uses::f;
@@ -234,5 +223,16 @@ extern "C" std::int32_t __crubit_thunk_f();
 }
 inline std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_ux(::extern_crate::X* __ret_ptr);
+}
+inline ::extern_crate::X return_x() {
+  crubit::Slot<::extern_crate::X> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_return_ux(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
 }  // namespace uses
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN

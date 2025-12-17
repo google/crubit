@@ -11,8 +11,23 @@
 #![deny(warnings)]
 
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_foo_uas_ustr() -> &'static str {
+    unsafe { ::str_golden::foo_as_str() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_ustr_udata(s: &'static str) -> *const u8 {
+    unsafe { ::str_golden::get_str_data(s) }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_ustr_ulen(s: &'static str) -> usize {
     unsafe { ::str_golden::get_str_len(s) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
+    __param_0: &'static str,
+    __param_1: &'static mut u8,
+) -> () {
+    unsafe { ::str_golden::str_checked_as_potentially_aliasing(__param_0, __param_1) }
 }
 const _: () = assert!(::std::mem::size_of::<::str_golden::TypeWithStr>() == 16);
 const _: () = assert!(::std::mem::align_of::<::str_golden::TypeWithStr>() == 8);
@@ -46,18 +61,3 @@ unsafe extern "C" fn __crubit_thunk_get_ustr_udata(
     unsafe { ::str_golden::TypeWithStr::get_str_data(__self) }
 }
 const _: () = assert!(::core::mem::offset_of!(::str_golden::TypeWithStr, str_field) == 0);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_foo_uas_ustr() -> &'static str {
-    unsafe { ::str_golden::foo_as_str() }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_get_ustr_udata(s: &'static str) -> *const u8 {
-    unsafe { ::str_golden::get_str_data(s) }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
-    __param_0: &'static str,
-    __param_1: &'static mut u8,
-) -> () {
-    unsafe { ::str_golden::str_checked_as_potentially_aliasing(__param_0, __param_1) }
-}

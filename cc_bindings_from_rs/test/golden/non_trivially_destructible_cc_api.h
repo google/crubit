@@ -20,11 +20,6 @@
 #include <utility>
 
 namespace non_trivially_destructible_rust {
-struct NonTriviallyDestructable;
-
-// Generated from:
-// cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=18
-::non_trivially_destructible_rust::NonTriviallyDestructable return_by_value();
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=6
@@ -63,22 +58,13 @@ NonTriviallyDestructable final {
 };
 
 // Generated from:
+// cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=18
+::non_trivially_destructible_rust::NonTriviallyDestructable return_by_value();
+
+// Generated from:
 // cc_bindings_from_rs/test/golden/non_trivially_destructible.rs;l=16
 void take_by_value(
     ::non_trivially_destructible_rust::NonTriviallyDestructable _x);
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uby_uvalue(
-    ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
-}
-inline ::non_trivially_destructible_rust::NonTriviallyDestructable
-return_by_value() {
-  crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>
-      __return_value_ret_val_holder;
-  auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_return_uby_uvalue(__return_value_storage);
-  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
 
 static_assert(
     sizeof(NonTriviallyDestructable) == 4,
@@ -134,6 +120,19 @@ inline NonTriviallyDestructable& NonTriviallyDestructable::operator=(
 inline void NonTriviallyDestructable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonTriviallyDestructable, field));
 }
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uby_uvalue(
+    ::non_trivially_destructible_rust::NonTriviallyDestructable* __ret_ptr);
+}
+inline ::non_trivially_destructible_rust::NonTriviallyDestructable
+return_by_value() {
+  crubit::Slot<::non_trivially_destructible_rust::NonTriviallyDestructable>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_return_uby_uvalue(__return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_take_uby_uvalue(
     ::non_trivially_destructible_rust::NonTriviallyDestructable*);

@@ -21,6 +21,11 @@
 namespace lifetimes {
 
 // Generated from:
+// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=70
+void function_with_trivial_unnamed_lifetime_param(
+    std::int32_t const& __param_0);
+
+// Generated from:
 // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=72
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
@@ -153,10 +158,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-// Generated from:
-// cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=70
-void function_with_trivial_unnamed_lifetime_param(
-    std::int32_t const& __param_0);
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
+    std::int32_t const&);
+}
+inline void function_with_trivial_unnamed_lifetime_param(
+    std::int32_t const& __param_0) {
+  return __crubit_internal::
+      __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
+          __param_0);
+}
 
 static_assert(
     sizeof(StructWithLifetimeAndDropGlue) == 32,
@@ -328,17 +340,5 @@ inline StructWithLifetime::operator std::int32_t() {
 inline void StructWithLifetime::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithLifetime, field_with_lifetime));
 }
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
-    std::int32_t const&);
-}
-inline void function_with_trivial_unnamed_lifetime_param(
-    std::int32_t const& __param_0) {
-  return __crubit_internal::
-      __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
-          __param_0);
-}
-
 }  // namespace lifetimes
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN

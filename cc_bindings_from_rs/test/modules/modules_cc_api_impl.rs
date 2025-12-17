@@ -10,10 +10,6 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_add_ui32(x: i32, y: i32) -> i32 {
-    unsafe { ::modules_golden::deprecated_module::add_i32(x, y) }
-}
 const _: () =
     assert!(::std::mem::size_of::<::modules_golden::impl_in_separate_private_module::Foo>() == 4);
 const _: () =
@@ -43,4 +39,8 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_add_ui32(x: i32, y: i32) -> i32 {
     unsafe { ::modules_golden::basic_module::add_i32(x, y) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_add_ui32(x: i32, y: i32) -> i32 {
+    unsafe { ::modules_golden::deprecated_module::add_i32(x, y) }
 }

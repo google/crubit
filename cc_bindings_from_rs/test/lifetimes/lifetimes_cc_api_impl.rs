@@ -10,6 +10,12 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
+    __param_0: &'static i32,
+) -> () {
+    unsafe { ::lifetimes_golden::function_with_trivial_unnamed_lifetime_param(__param_0) }
+}
 const _: () =
     assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 32);
 const _: () =
@@ -140,9 +146,3 @@ unsafe extern "C" fn __crubit_thunk_into_ui32(
 const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_function_uwith_utrivial_uunnamed_ulifetime_uparam(
-    __param_0: &'static i32,
-) -> () {
-    unsafe { ::lifetimes_golden::function_with_trivial_unnamed_lifetime_param(__param_0) }
-}

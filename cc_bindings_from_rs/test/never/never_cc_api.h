@@ -20,6 +20,10 @@
 namespace never {
 
 // Generated from:
+// cc_bindings_from_rs/test/never/never.rs;l=13
+extern "C" [[noreturn]] void extern_never_return();
+
+// Generated from:
 // cc_bindings_from_rs/test/never/never.rs;l=8
 [[noreturn]] void never_return();
 
@@ -65,10 +69,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
  private:
   static void __crubit_field_offset_assertions();
 };
-
-// Generated from:
-// cc_bindings_from_rs/test/never/never.rs;l=13
-extern "C" [[noreturn]] void extern_never_return();
 
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_never_ureturn();

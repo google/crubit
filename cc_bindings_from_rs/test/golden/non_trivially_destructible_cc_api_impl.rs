@@ -10,14 +10,6 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_return_uby_uvalue(__ret_ptr: *mut core::ffi::c_void) -> () {
-    unsafe {
-        let __rs_return_value = ::non_trivially_destructible_rust_golden::return_by_value();
-        (__ret_ptr as *mut ::non_trivially_destructible_rust_golden::NonTriviallyDestructable)
-            .write(__rs_return_value);
-    }
-}
 const _: () = assert!(
     ::std::mem::size_of::<::non_trivially_destructible_rust_golden::NonTriviallyDestructable>()
         == 4
@@ -68,6 +60,14 @@ const _: () = assert!(
         field
     ) == 0
 );
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uby_uvalue(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::non_trivially_destructible_rust_golden::return_by_value();
+        (__ret_ptr as *mut ::non_trivially_destructible_rust_golden::NonTriviallyDestructable)
+            .write(__rs_return_value);
+    }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uby_uvalue(
     _x: &'static mut ::core::mem::MaybeUninit<

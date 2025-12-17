@@ -33,14 +33,6 @@ namespace [[deprecated]] innermost_deprecated {
 
 }  // namespace outer::middle
 
-namespace [[deprecated]] deprecated_module {
-
-// Generated from:
-// cc_bindings_from_rs/test/modules/modules.rs;l=16
-[[deprecated]] std::int32_t add_i32(std::int32_t x, std::int32_t y);
-
-}  // namespace deprecated_module
-
 namespace outer {
 
 namespace [[deprecated]] inner_deprecated {
@@ -110,22 +102,19 @@ std::int32_t add_i32(std::int32_t x, std::int32_t y);
 
 }  // namespace basic_module
 
+namespace [[deprecated]] deprecated_module {
+
+// Generated from:
+// cc_bindings_from_rs/test/modules/modules.rs;l=16
+[[deprecated]] std::int32_t add_i32(std::int32_t x, std::int32_t y);
+
+}  // namespace deprecated_module
+
 namespace outer::middle {
 
 namespace [[deprecated]] innermost_deprecated {}
 
 }  // namespace outer::middle
-
-namespace [[deprecated]] deprecated_module {
-
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_add_ui32(std::int32_t, std::int32_t);
-}
-inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
-  return __crubit_internal::__crubit_thunk_add_ui32(x, y);
-}
-
-}  // namespace deprecated_module
 
 namespace outer {
 
@@ -180,6 +169,17 @@ inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
 }
 
 }  // namespace basic_module
+
+namespace [[deprecated]] deprecated_module {
+
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_add_ui32(std::int32_t, std::int32_t);
+}
+inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
+  return __crubit_internal::__crubit_thunk_add_ui32(x, y);
+}
+
+}  // namespace deprecated_module
 
 }  // namespace modules
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN
