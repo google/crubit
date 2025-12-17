@@ -1274,9 +1274,9 @@ fn generate_item_impl(
     def_id: DefId,
 ) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
-    if db.symbol_canonical_name(def_id).is_none() {
+    let Some(canonical_name) = db.symbol_canonical_name(def_id) else {
         return Ok(None);
-    }
+    };
     let item = match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
             let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
@@ -1293,7 +1293,7 @@ fn generate_item_impl(
                 bail!("Generic types are not supported yet (b/259749095)");
             }
 
-            if let Some(cpp_type) = attributes.cpp_type {
+            if let Some(cpp_type) = canonical_name.unqualified.cpp_type {
                 let item_name = tcx.def_path_str(def_id);
                 bail!(
                     "Type bindings for {item_name} suppressed due to being mapped to \
