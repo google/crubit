@@ -680,7 +680,7 @@ llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> GetTemplateArgs(
   } else if (auto record = type->getAs<clang::RecordType>()) {
     if (auto specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
-                record->getOriginalDecl())) {
+                record->getDecl())) {
       result.push_back(specialization_decl->getTemplateArgs().asArray());
     }
   }

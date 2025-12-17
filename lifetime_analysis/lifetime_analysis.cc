@@ -201,14 +201,14 @@ void GenerateConstraintsForAssignmentRecursive(
     }
 
     if (const auto* record_type = call.type->getAs<clang::RecordType>()) {
-      for (auto field : record_type->getOriginalDecl()->fields()) {
+      for (auto field : record_type->getDecl()->fields()) {
         calls_to_make.push_back(
             {field->getType(),
              object_repository.GetFieldObject(call.old_pointees, field),
              object_repository.GetFieldObject(call.new_pointees, field)});
       }
-      if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
-              record_type->getOriginalDecl())) {
+      if (auto* cxxrecord =
+              clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
         for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
           calls_to_make.push_back({base.getType(),
                                    object_repository.GetBaseClassObject(
@@ -247,14 +247,14 @@ void GenerateConstraintsForObjectLifetimeEquality(
   GenerateConstraintsForAssignmentNonRecursive(
       a, b, /*is_in_invariant_context=*/true, constraints);
   if (const auto* record_type = type->getAs<clang::RecordType>()) {
-    for (auto field : record_type->getOriginalDecl()->fields()) {
+    for (auto field : record_type->getDecl()->fields()) {
       GenerateConstraintsForObjectLifetimeEquality(
           object_repository.GetFieldObject(a, field),
           object_repository.GetFieldObject(b, field), field->getType(),
           points_to_map, object_repository, constraints);
     }
-    if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
-            record_type->getOriginalDecl())) {
+    if (auto* cxxrecord =
+            clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
       for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
         GenerateConstraintsForObjectLifetimeEquality(
             object_repository.GetBaseClassObject(a, base.getType()),
@@ -307,8 +307,7 @@ void TransferInitializer(const Object* dest, clang::QualType type,
       // InitListExpr.
       assert(init_list_expr->isSemanticForm());
       size_t init = 0;
-      for (auto f :
-           type->getAs<clang::RecordType>()->getOriginalDecl()->fields()) {
+      for (auto f : type->getAs<clang::RecordType>()->getDecl()->fields()) {
         assert(init < init_list_expr->getNumInits());
         auto field_init = init_list_expr->getInit(init);
         ++init;

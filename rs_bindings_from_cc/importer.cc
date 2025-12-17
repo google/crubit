@@ -1311,7 +1311,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         return absl::UnimplementedError("Unsupported builtin type");
     }
   } else if (const auto* tag_type = type->getAsAdjusted<clang::TagType>()) {
-    return ConvertTypeDecl(tag_type->getOriginalDecl()->getDefinitionOrSelf());
+    return ConvertTypeDecl(tag_type->getDecl()->getDefinitionOrSelf());
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
     return ConvertTypeDecl(typedef_type->getDecl());
