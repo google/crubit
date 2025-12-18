@@ -1881,3 +1881,43 @@ fn test_struct_from_other_target() -> Result<()> {
     assert_cc_not_matches!(rs_api_impl, quote! { SomeStruct });
     Ok(())
 }
+
+#[gtest]
+fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        struct SomeStruct final {
+            void Method1() {}
+            void Method2() {}
+            void Method3() {}
+        };
+        "#,
+    )?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl SomeStruct {
+                ...
+                #[inline(always)]
+                pub fn Method1<'a>(&'a mut self) {
+                    unsafe { crate::detail::__rust_thunk___ZN10SomeStruct7Method1Ev(self) }
+                }
+                ...
+                #[inline(always)]
+                pub fn Method2<'a>(&'a mut self) {
+                    unsafe { crate::detail::__rust_thunk___ZN10SomeStruct7Method2Ev(self) }
+                }
+                ...
+                #[inline(always)]
+                pub fn Method3<'a>(&'a mut self) {
+                    unsafe { crate::detail::__rust_thunk___ZN10SomeStruct7Method3Ev(self) }
+                }
+            }
+        }
+    );
+
+    Ok(())
+}

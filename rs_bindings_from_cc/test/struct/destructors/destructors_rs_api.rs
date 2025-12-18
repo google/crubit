@@ -30,6 +30,31 @@ unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
     type Id = ::cxx::type_id!("DestructionOrderRecorder");
     type Kind = ::cxx::kind::Trivial;
 }
+impl DestructionOrderRecorder {
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
+    #[inline(always)]
+    pub fn RecordDestruction(int_field: ::core::ffi::c_int) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
+                int_field,
+            )
+        }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
+    #[inline(always)]
+    pub fn GetDestructionRecord() -> ::core::ffi::c_int {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
+        }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
+    #[inline(always)]
+    pub fn ClearDestructionRecord() {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv()
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=12
 impl From<::core::ffi::c_int> for DestructionOrderRecorder {
@@ -95,38 +120,6 @@ impl Drop for DestructionOrderRecorder {
     }
 }
 
-impl DestructionOrderRecorder {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
-    #[inline(always)]
-    pub fn RecordDestruction(int_field: ::core::ffi::c_int) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
-                int_field,
-            )
-        }
-    }
-}
-
-impl DestructionOrderRecorder {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
-    #[inline(always)]
-    pub fn GetDestructionRecord() -> ::core::ffi::c_int {
-        unsafe {
-            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
-        }
-    }
-}
-
-impl DestructionOrderRecorder {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=36
-    #[inline(always)]
-    pub fn ClearDestructionRecord() {
-        unsafe {
-            crate::detail::__rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv()
-        }
-    }
-}
-
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
@@ -147,6 +140,36 @@ impl !Sync for FieldDestructionOrderTester {}
 unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
     type Id = ::cxx::type_id!("FieldDestructionOrderTester");
     type Kind = ::cxx::kind::Trivial;
+}
+impl FieldDestructionOrderTester {
+    /// TODO: b/216648347 - Remove once multi-argument constructors are supported.
+    ///
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=52
+    #[inline(always)]
+    pub fn Create(
+        mut field1: crate::DestructionOrderRecorder,
+        mut field2: crate::DestructionOrderRecorder,
+        mut field3: crate::DestructionOrderRecorder,
+    ) -> crate::FieldDestructionOrderTester {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorderS0_S0_(&raw mut __return as*mut::core::ffi::c_void,&mut field1,&mut field2,&mut field3);
+            __return.assume_init()
+        }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=59
+    #[inline(always)]
+    pub fn DestructFromCpp(
+        field1: ::core::ffi::c_int,
+        field2: ::core::ffi::c_int,
+        field3: ::core::ffi::c_int,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
+                field1, field2, field3,
+            )
+        }
+    }
 }
 
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
@@ -193,40 +216,6 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for FieldDestruction
 // Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=44
 // Error while generating bindings for constructor 'FieldDestructionOrderTester::FieldDestructionOrderTester':
 // Constructors with more than one parameter are not yet supported. See b/216648347.
-
-impl FieldDestructionOrderTester {
-    /// TODO: b/216648347 - Remove once multi-argument constructors are supported.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=52
-    #[inline(always)]
-    pub fn Create(
-        mut field1: crate::DestructionOrderRecorder,
-        mut field2: crate::DestructionOrderRecorder,
-        mut field3: crate::DestructionOrderRecorder,
-    ) -> crate::FieldDestructionOrderTester {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorderS0_S0_(&raw mut __return as*mut::core::ffi::c_void,&mut field1,&mut field2,&mut field3);
-            __return.assume_init()
-        }
-    }
-}
-
-impl FieldDestructionOrderTester {
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=59
-    #[inline(always)]
-    pub fn DestructFromCpp(
-        field1: ::core::ffi::c_int,
-        field2: ::core::ffi::c_int,
-        field3: ::core::ffi::c_int,
-    ) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
-                field1, field2, field3,
-            )
-        }
-    }
-}
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for struct 'std::integral_constant<bool, false>':

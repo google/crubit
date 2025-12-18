@@ -35,6 +35,13 @@ unsafe impl ::cxx::ExternType for RawThing {
     type Id = ::cxx::type_id!("Thing");
     type Kind = ::cxx::kind::Trivial;
 }
+impl RawThing {
+    /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
+    #[inline(always)]
+    pub unsafe fn Close(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this)
+    }
+}
 
 // Generated due to CRUBIT_OWNED_POINTEE annotation.
 #[repr(transparent)]
@@ -57,14 +64,6 @@ impl ::ctor::CtorNew<i32> for RawThing {
     #[inline(always)]
     fn ctor_new(args: i32) -> Self::CtorType {
         <Self as From<i32>>::from(args)
-    }
-}
-
-impl RawThing {
-    /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
-    #[inline(always)]
-    pub unsafe fn Close(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN5Thing5CloseEv(__this)
     }
 }
 

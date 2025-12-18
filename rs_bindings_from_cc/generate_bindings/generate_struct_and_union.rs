@@ -618,6 +618,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     };
 
     let owned_type_name = record.owned_ptr_type.as_ref().map(|opt| make_rs_ident(opt.as_ref()));
+    let member_methods = api_snippets.member_functions.remove(&record.id).unwrap_or_default();
 
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
@@ -658,6 +659,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         nested_items,
         indirect_functions,
         owned_type_name,
+        member_methods,
     };
 
     api_snippets.features |= Feature::negative_impls;

@@ -31,6 +31,25 @@ unsafe impl ::cxx::ExternType for DocCommentSlashes {
     type Id = ::cxx::type_id!("DocCommentSlashes");
     type Kind = ::cxx::kind::Trivial;
 }
+impl DocCommentSlashes {
+    /// A non-static member function (`const` flavor).
+    #[inline(always)]
+    pub fn get_field_value<'a>(&'a self) -> ::core::ffi::c_int {
+        unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
+    }
+    /// A non-static member function (non-`const` flavor).
+    #[inline(always)]
+    pub fn set_field_value<'a>(&'a mut self, new_value: ::core::ffi::c_int) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value)
+        }
+    }
+    /// A static method.
+    #[inline(always)]
+    pub fn static_method() -> ::core::ffi::c_int {
+        unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
+    }
+}
 
 // Error while generating bindings for constructor 'DocCommentSlashes::DocCommentSlashes':
 // Can't generate bindings for DocCommentSlashes::DocCommentSlashes, because of missing required features (<internal link>):
@@ -84,32 +103,6 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for DocCommentSlashes {
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         <Self as From<::core::ffi::c_int>>::from(args)
-    }
-}
-
-impl DocCommentSlashes {
-    /// A non-static member function (`const` flavor).
-    #[inline(always)]
-    pub fn get_field_value<'a>(&'a self) -> ::core::ffi::c_int {
-        unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
-    }
-}
-
-impl DocCommentSlashes {
-    /// A non-static member function (non-`const` flavor).
-    #[inline(always)]
-    pub fn set_field_value<'a>(&'a mut self, new_value: ::core::ffi::c_int) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value)
-        }
-    }
-}
-
-impl DocCommentSlashes {
-    /// A static method.
-    #[inline(always)]
-    pub fn static_method() -> ::core::ffi::c_int {
-        unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
     }
 }
 

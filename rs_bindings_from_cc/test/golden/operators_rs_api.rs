@@ -980,6 +980,19 @@ unsafe impl ::cxx::ExternType for ManyOperators {
     type Id = ::cxx::type_id!("ManyOperators");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ManyOperators {
+    #[inline(always)]
+    pub fn unary_plus<'a>(&'a self) -> crate::ManyOperators {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                self,
+            );
+            __return.assume_init()
+        }
+    }
+}
 
 impl Default for ManyOperators {
     #[inline(always)]
@@ -1009,20 +1022,6 @@ impl Default for ManyOperators {
 // Can't generate bindings for ManyOperators::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-impl ManyOperators {
-    #[inline(always)]
-    pub fn unary_plus<'a>(&'a self) -> crate::ManyOperators {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZNK13ManyOperatorspsEv(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                self,
-            );
-            __return.assume_init()
-        }
-    }
-}
 
 impl<'a> ::core::ops::Neg for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;

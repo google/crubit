@@ -29,6 +29,26 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: Trivial");
         type Kind = ::cxx::kind::Trivial;
     }
+    impl Trivial {
+        #[inline(always)]
+        pub fn Unqualified<'a>(&'a mut self) {
+            unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(self) }
+        }
+        #[inline(always)]
+        pub fn ConstQualified<'a>(&'a self) {
+            unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(self) }
+        }
+        #[inline(always)]
+        pub fn LvalueRefQualified<'a>(&'a mut self) {
+            unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(self) }
+        }
+        #[inline(always)]
+        pub fn ConstLvalueRefQualified<'a>(&'a self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(self)
+            }
+        }
+    }
 
     impl Default for Trivial {
         #[inline(always)]
@@ -58,36 +78,6 @@ pub mod ns {
     // Can't generate bindings for Trivial::operator=, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (return type: references are not supported)
     // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-    impl Trivial {
-        #[inline(always)]
-        pub fn Unqualified<'a>(&'a mut self) {
-            unsafe { crate::detail::__rust_thunk___ZN2ns7Trivial11UnqualifiedEv(self) }
-        }
-    }
-
-    impl Trivial {
-        #[inline(always)]
-        pub fn ConstQualified<'a>(&'a self) {
-            unsafe { crate::detail::__rust_thunk___ZNK2ns7Trivial14ConstQualifiedEv(self) }
-        }
-    }
-
-    impl Trivial {
-        #[inline(always)]
-        pub fn LvalueRefQualified<'a>(&'a mut self) {
-            unsafe { crate::detail::__rust_thunk___ZNR2ns7Trivial18LvalueRefQualifiedEv(self) }
-        }
-    }
-
-    impl Trivial {
-        #[inline(always)]
-        pub fn ConstLvalueRefQualified<'a>(&'a self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZNKR2ns7Trivial23ConstLvalueRefQualifiedEv(self)
-            }
-        }
-    }
 
     // Error while generating bindings for function 'Trivial::RvalueRefQualified':
     // Can't generate bindings for Trivial::RvalueRefQualified, because of missing required features (<internal link>):

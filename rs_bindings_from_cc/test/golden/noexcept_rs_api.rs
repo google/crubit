@@ -26,6 +26,24 @@ unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");
     type Kind = ::cxx::kind::Trivial;
 }
+impl SomeClass {
+    #[inline(always)]
+    pub fn create(i: ::core::ffi::c_int, c: ::core::ffi::c_char) {
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
+    }
+    #[inline(always)]
+    pub unsafe fn no_except_member(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn no_except_true_member(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn no_except_false_member(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this)
+    }
+}
 
 impl Default for SomeClass {
     #[inline(always)]
@@ -35,34 +53,6 @@ impl Default for SomeClass {
             crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
-    }
-}
-
-impl SomeClass {
-    #[inline(always)]
-    pub fn create(i: ::core::ffi::c_int, c: ::core::ffi::c_char) {
-        unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
-    }
-}
-
-impl SomeClass {
-    #[inline(always)]
-    pub unsafe fn no_except_member(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this)
-    }
-}
-
-impl SomeClass {
-    #[inline(always)]
-    pub unsafe fn no_except_true_member(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this)
-    }
-}
-
-impl SomeClass {
-    #[inline(always)]
-    pub unsafe fn no_except_false_member(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this)
     }
 }
 

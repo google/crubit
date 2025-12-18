@@ -349,7 +349,14 @@ pub fn generate_bindings_tokens(
     // when we go through the main_api, we want to go through one at a time.
     // if the parent is none, we're responsible.
     // each thing needs to go through all its children.
-    let ApiSnippets { generated_items, thunks, assertions, cc_details, features } = snippets;
+    let ApiSnippets {
+        generated_items,
+        thunks,
+        assertions,
+        cc_details,
+        features,
+        member_functions: _,
+    } = snippets;
     let main_api = code_snippet::generated_items_to_token_stream(
         &generated_items,
         ir,

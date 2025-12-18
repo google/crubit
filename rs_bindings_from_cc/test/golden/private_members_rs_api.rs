@@ -31,6 +31,22 @@ pub mod test_namespace_bindings {
         type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");
         type Kind = ::cxx::kind::Trivial;
     }
+    impl SomeClass {
+        #[inline(always)]
+        pub fn public_method<'a>(&'a mut self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv(
+                    self,
+                )
+            }
+        }
+        #[inline(always)]
+        pub fn public_static_method() {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
+            }
+        }
+    }
 
     impl Default for SomeClass {
         #[inline(always)]
@@ -62,26 +78,6 @@ pub mod test_namespace_bindings {
     // Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
     // //rs_bindings_from_cc/test/golden:private_members_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-    impl SomeClass {
-        #[inline(always)]
-        pub fn public_method<'a>(&'a mut self) {
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv(
-                    self,
-                )
-            }
-        }
-    }
-
-    impl SomeClass {
-        #[inline(always)]
-        pub fn public_static_method() {
-            unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClass20public_static_methodEv()
-            }
-        }
-    }
 }
 
 // namespace test_namespace_bindings

@@ -65,21 +65,6 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: SomeStruct");
             type Kind = ::cxx::kind::Trivial;
         }
-
-        /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=18
-        impl Default for SomeStruct {
-            #[inline(always)]
-            fn default() -> Self {
-                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                unsafe {
-                    crate::detail::__rust_thunk___ZN6crubit4test10SomeStructC1Ev(
-                        &raw mut tmp as *mut _,
-                    );
-                    tmp.assume_init()
-                }
-            }
-        }
-
         impl SomeStruct {
             /// Generated from: support/annotations_internal.h;l=14
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
@@ -100,14 +85,25 @@ pub mod crubit {
                     tmp.assume_init()
                 }
             }
-        }
-
-        impl SomeStruct {
             /// Generated from: support/annotations_internal.h;l=14
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
             pub unsafe fn MethodNewName(__this: *const Self) {
                 crate::detail::__rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(__this)
+            }
+        }
+
+        /// Generated from: rs_bindings_from_cc/test/annotations/rust_name.h;l=18
+        impl Default for SomeStruct {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN6crubit4test10SomeStructC1Ev(
+                        &raw mut tmp as *mut _,
+                    );
+                    tmp.assume_init()
+                }
             }
         }
     }

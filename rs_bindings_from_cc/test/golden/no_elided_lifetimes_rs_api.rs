@@ -37,18 +37,6 @@ unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;
 }
-
-impl Default for S {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
 impl S {
     #[inline(always)]
     pub unsafe fn const_method(
@@ -58,9 +46,6 @@ impl S {
     ) -> *mut ::core::ffi::c_int {
         crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
-}
-
-impl S {
     #[inline(always)]
     pub unsafe fn method(
         __this: *mut Self,
@@ -68,6 +53,17 @@ impl S {
         p2: *mut ::core::ffi::c_int,
     ) -> *mut ::core::ffi::c_int {
         crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
+    }
+}
+
+impl Default for S {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1SC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
     }
 }
 

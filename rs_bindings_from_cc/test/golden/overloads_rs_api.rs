@@ -64,6 +64,12 @@ unsafe impl ::cxx::ExternType for Foo {
     type Id = ::cxx::type_id!("Foo");
     type Kind = ::cxx::kind::Trivial;
 }
+impl Foo {
+    #[inline(always)]
+    pub unsafe fn Bar(__this: *mut Self, __param_0: ::core::ffi::c_int) {
+        crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0)
+    }
+}
 
 impl Default for Foo {
     #[inline(always)]
@@ -87,13 +93,6 @@ impl Default for Foo {
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::BarBridgedFloat (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<float>, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation))
-
-impl Foo {
-    #[inline(always)]
-    pub unsafe fn Bar(__this: *mut Self, __param_0: ::core::ffi::c_int) {
-        crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0)
-    }
-}
 
 // Error while generating bindings for struct 'Sizeof<float>':
 // Can't generate bindings for Sizeof<float>, because of missing required features (<internal link>):

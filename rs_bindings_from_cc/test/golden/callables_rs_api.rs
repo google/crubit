@@ -44,6 +44,12 @@ unsafe impl ::cxx::ExternType for NotCABICompatible {
     type Id = ::cxx::type_id!("NotCABICompatible");
     type Kind = ::cxx::kind::Trivial;
 }
+impl NotCABICompatible {
+    #[inline(always)]
+    pub unsafe fn get(__this: *const Self) -> ::core::ffi::c_int {
+        crate::detail::__rust_thunk___ZNK17NotCABICompatible3getEv(__this)
+    }
+}
 
 impl From<::core::ffi::c_int> for NotCABICompatible {
     #[inline(always)]
@@ -61,13 +67,6 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for NotCABICompatible {
     #[inline(always)]
     fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
         <Self as From<::core::ffi::c_int>>::from(args)
-    }
-}
-
-impl NotCABICompatible {
-    #[inline(always)]
-    pub unsafe fn get(__this: *const Self) -> ::core::ffi::c_int {
-        crate::detail::__rust_thunk___ZNK17NotCABICompatible3getEv(__this)
     }
 }
 

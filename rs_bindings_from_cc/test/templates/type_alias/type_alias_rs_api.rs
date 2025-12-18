@@ -41,19 +41,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE
 );
-
-/// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=11
-impl Default for __CcTemplateInst10MyTemplateIiE {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut tmp as*mut _);
-            tmp.assume_init()
-        }
-    }
-}
-
 impl __CcTemplateInst10MyTemplateIiE {
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=13
     #[inline(always)]
@@ -64,14 +51,23 @@ impl __CcTemplateInst10MyTemplateIiE {
             __return.assume_init()
         }
     }
-}
-
-impl __CcTemplateInst10MyTemplateIiE {
     /// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=19
     #[inline(always)]
     pub fn value<'a>(&'a self) -> &'a ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(self)
+        }
+    }
+}
+
+/// Generated from: rs_bindings_from_cc/test/templates/type_alias/type_alias.h;l=11
+impl Default for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(&raw mut tmp as*mut _);
+            tmp.assume_init()
         }
     }
 }

@@ -77,6 +77,12 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
     type Id = ::cxx::type_id!("PolymorphicBase2");
     type Kind = ::cxx::kind::Opaque;
 }
+impl PolymorphicBase2 {
+    #[inline(always)]
+    pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(self) }
+    }
+}
 
 impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
@@ -102,13 +108,6 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
 // Can't generate bindings for PolymorphicBase2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-impl PolymorphicBase2 {
-    #[inline(always)]
-    pub fn Foo<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase23FooEv(self) }
-    }
-}
 
 impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]

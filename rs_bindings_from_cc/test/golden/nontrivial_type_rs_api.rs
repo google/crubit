@@ -38,6 +38,24 @@ unsafe impl ::cxx::ExternType for Nontrivial {
     type Id = ::cxx::type_id!("Nontrivial");
     type Kind = ::cxx::kind::Opaque;
 }
+impl Nontrivial {
+    #[inline(always)]
+    pub fn Unqualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(self) }
+    }
+    #[inline(always)]
+    pub fn ConstQualified<'a>(&'a self) {
+        unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(self) }
+    }
+    #[inline(always)]
+    pub fn LvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(self) }
+    }
+    #[inline(always)]
+    pub fn ConstLvalueRefQualified<'a>(&'a self) {
+        unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(self) }
+    }
+}
 
 impl ::ctor::CtorNew<()> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
@@ -141,34 +159,6 @@ impl ::ctor::PinnedDrop for Nontrivial {
     }
 }
 
-impl Nontrivial {
-    #[inline(always)]
-    pub fn Unqualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(self) }
-    }
-}
-
-impl Nontrivial {
-    #[inline(always)]
-    pub fn ConstQualified<'a>(&'a self) {
-        unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(self) }
-    }
-}
-
-impl Nontrivial {
-    #[inline(always)]
-    pub fn LvalueRefQualified<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(self) }
-    }
-}
-
-impl Nontrivial {
-    #[inline(always)]
-    pub fn ConstLvalueRefQualified<'a>(&'a self) {
-        unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(self) }
-    }
-}
-
 // Error while generating bindings for function 'Nontrivial::RvalueRefQualified':
 // Can't generate bindings for Nontrivial::RvalueRefQualified, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::RvalueRefQualified (the type of __this (parameter #0): references are not supported)
@@ -211,6 +201,12 @@ impl !Sync for NontrivialInline {}
 unsafe impl ::cxx::ExternType for NontrivialInline {
     type Id = ::cxx::type_id!("NontrivialInline");
     type Kind = ::cxx::kind::Opaque;
+}
+impl NontrivialInline {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
+    }
 }
 
 impl ::ctor::CtorNew<()> for NontrivialInline {
@@ -302,13 +298,6 @@ impl ::ctor::PinnedDrop for NontrivialInline {
     }
 }
 
-impl NontrivialInline {
-    #[inline(always)]
-    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
-    }
-}
-
 /// Nontrivial due to member variables.
 ///
 /// This changes how the destructor / drop impl work -- instead of calling
@@ -383,6 +372,12 @@ unsafe impl ::cxx::ExternType for NontrivialUnpin {
     type Id = ::cxx::type_id!("NontrivialUnpin");
     type Kind = ::cxx::kind::Trivial;
 }
+impl NontrivialUnpin {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(self) }
+    }
+}
 
 impl Default for NontrivialUnpin {
     #[inline(always)]
@@ -447,13 +442,6 @@ impl Drop for NontrivialUnpin {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpinD1Ev(self) }
-    }
-}
-
-impl NontrivialUnpin {
-    #[inline(always)]
-    pub fn MemberFunction<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(self) }
     }
 }
 
@@ -616,6 +604,12 @@ unsafe impl ::cxx::ExternType for Nonmovable {
     type Id = ::cxx::type_id!("Nonmovable");
     type Kind = ::cxx::kind::Opaque;
 }
+impl Nonmovable {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(self) }
+    }
+}
 
 impl ::ctor::CtorNew<()> for Nonmovable {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
@@ -635,13 +629,6 @@ impl ::ctor::PinnedDrop for Nonmovable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self)
-    }
-}
-
-impl Nonmovable {
-    #[inline(always)]
-    pub fn MemberFunction<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(self) }
     }
 }
 

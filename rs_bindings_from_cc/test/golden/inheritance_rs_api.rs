@@ -379,6 +379,24 @@ unsafe impl ::cxx::ExternType for MethodBase1 {
     type Id = ::cxx::type_id!("MethodBase1");
     type Kind = ::cxx::kind::Trivial;
 }
+impl MethodBase1 {
+    #[inline(always)]
+    pub fn Public<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
+    }
+    #[inline(always)]
+    pub unsafe fn Equals<'a>(&'a mut self, __param_0: *const Self) {
+        crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(self, __param_0)
+    }
+    #[inline(always)]
+    pub fn Colliding1<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
+    }
+    #[inline(always)]
+    pub fn Colliding2<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(self) }
+    }
+}
 
 impl Default for MethodBase1 {
     #[inline(always)]
@@ -409,34 +427,6 @@ impl Default for MethodBase1 {
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase1::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-impl MethodBase1 {
-    #[inline(always)]
-    pub fn Public<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
-    }
-}
-
-impl MethodBase1 {
-    #[inline(always)]
-    pub unsafe fn Equals<'a>(&'a mut self, __param_0: *const Self) {
-        crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(self, __param_0)
-    }
-}
-
-impl MethodBase1 {
-    #[inline(always)]
-    pub fn Colliding1<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
-    }
-}
-
-impl MethodBase1 {
-    #[inline(always)]
-    pub fn Colliding2<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(self) }
-    }
-}
-
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase2
@@ -448,6 +438,16 @@ impl !Sync for MethodBase2 {}
 unsafe impl ::cxx::ExternType for MethodBase2 {
     type Id = ::cxx::type_id!("MethodBase2");
     type Kind = ::cxx::kind::Trivial;
+}
+impl MethodBase2 {
+    #[inline(always)]
+    pub fn Colliding1<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(self) }
+    }
+    #[inline(always)]
+    pub fn Colliding2<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(self) }
+    }
 }
 
 impl Default for MethodBase2 {
@@ -478,20 +478,6 @@ impl Default for MethodBase2 {
 // Can't generate bindings for MethodBase2::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodBase2::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-impl MethodBase2 {
-    #[inline(always)]
-    pub fn Colliding1<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(self) }
-    }
-}
-
-impl MethodBase2 {
-    #[inline(always)]
-    pub fn Colliding2<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(self) }
-    }
-}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]

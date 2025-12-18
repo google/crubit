@@ -30,11 +30,17 @@ unsafe impl ::cxx::ExternType for CompatibleType {
     type Id = ::cxx::type_id!("CompatibleType");
     type Kind = ::cxx::kind::Opaque;
 }
-
 impl CompatibleType {
     #[inline(always)]
     pub fn renamed_default_constructor<'a>(self: ::core::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ev(self) }
+    }
+    #[inline(always)]
+    pub fn renamed_constructor<'a>(
+        self: ::core::pin::Pin<&'a mut Self>,
+        __param_0: ::core::ffi::c_int,
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(self, __param_0) }
     }
 }
 
@@ -46,16 +52,6 @@ impl CompatibleType {
 // Can't generate bindings for CompatibleType::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-impl CompatibleType {
-    #[inline(always)]
-    pub fn renamed_constructor<'a>(
-        self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::core::ffi::c_int,
-    ) {
-        unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(self, __param_0) }
-    }
-}
 
 mod detail {
     #[allow(unused_imports)]

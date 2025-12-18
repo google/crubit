@@ -26,6 +26,28 @@ unsafe impl ::cxx::ExternType for Noninline {
     type Id = ::cxx::type_id!("Noninline");
     type Kind = ::cxx::kind::Trivial;
 }
+impl Noninline {
+    #[inline(always)]
+    pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn LvalueMethod(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn LvalueMethodConst(__this: *const Self) {
+        crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn RvalueMethod(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn RvalueMethodConst(__this: *const Self) {
+        crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this)
+    }
+}
 
 impl Default for Noninline {
     #[inline(always)]
@@ -35,41 +57,6 @@ impl Default for Noninline {
             crate::detail::__rust_thunk___ZN9NoninlineC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
-    }
-}
-
-impl Noninline {
-    #[inline(always)]
-    pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this)
-    }
-}
-
-impl Noninline {
-    #[inline(always)]
-    pub unsafe fn LvalueMethod(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this)
-    }
-}
-
-impl Noninline {
-    #[inline(always)]
-    pub unsafe fn LvalueMethodConst(__this: *const Self) {
-        crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this)
-    }
-}
-
-impl Noninline {
-    #[inline(always)]
-    pub unsafe fn RvalueMethod(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this)
-    }
-}
-
-impl Noninline {
-    #[inline(always)]
-    pub unsafe fn RvalueMethodConst(__this: *const Self) {
-        crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this)
     }
 }
 
@@ -85,6 +72,28 @@ unsafe impl ::cxx::ExternType for Inline {
     type Id = ::cxx::type_id!("Inline");
     type Kind = ::cxx::kind::Trivial;
 }
+impl Inline {
+    #[inline(always)]
+    pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn LvalueMethod(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn LvalueMethodConst(__this: *const Self) {
+        crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn RvalueMethod(__this: *mut Self) {
+        crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this)
+    }
+    #[inline(always)]
+    pub unsafe fn RvalueMethodConst(__this: *const Self) {
+        crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this)
+    }
+}
 
 impl Default for Inline {
     #[inline(always)]
@@ -94,41 +103,6 @@ impl Default for Inline {
             crate::detail::__rust_thunk___ZN6InlineC1Ev(&raw mut tmp as *mut _);
             tmp.assume_init()
         }
-    }
-}
-
-impl Inline {
-    #[inline(always)]
-    pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this)
-    }
-}
-
-impl Inline {
-    #[inline(always)]
-    pub unsafe fn LvalueMethod(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this)
-    }
-}
-
-impl Inline {
-    #[inline(always)]
-    pub unsafe fn LvalueMethodConst(__this: *const Self) {
-        crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this)
-    }
-}
-
-impl Inline {
-    #[inline(always)]
-    pub unsafe fn RvalueMethod(__this: *mut Self) {
-        crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this)
-    }
-}
-
-impl Inline {
-    #[inline(always)]
-    pub unsafe fn RvalueMethodConst(__this: *const Self) {
-        crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this)
     }
 }
 

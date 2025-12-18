@@ -1540,13 +1540,18 @@ pub fn generate_function(
             quote! {}
         };
 
-        // If we don't have an outer `impl ... { ... }` block, we have to introduce the
-        // lifetimes and bounds inside this one.
-        let has_wrapping_impl = match impl_kind {
+        // If we are generating a trait impl, its `where` clause will be on the `impl` item.
+        // Otherwise, it must be on the `fn` item.
+        let where_clause_on_impl = match impl_kind {
+            ImplKind::Trait { .. } => true,
+            // Free functions have no impl.
             ImplKind::None { .. } => false,
-            ImplKind::Struct { .. } | ImplKind::Trait { .. } => true,
+            // Struct functions are placed in an inherent impl block later by `generate_record`, but
+            // inherent impls cannot take where clauses in the same way that trait impls can, so the
+            // where clause must be on the function.
+            ImplKind::Struct { .. } => false,
         };
-        let where_clause = if has_wrapping_impl {
+        let where_clause = if where_clause_on_impl {
             None
         } else {
             if let Some(lt) = &error_lifetime_param {
@@ -1610,6 +1615,7 @@ pub fn generate_function(
         generate_doc_comment(func.doc_comment.as_deref(), Some(&func.source_loc), db.environment());
     let api_func: TokenStream;
     let function_id: FunctionId;
+    let mut member_functions_map = HashMap::new();
     match impl_kind {
         ImplKind::None { .. } => {
             api_func = quote! { #unimplemented_trait_def #doc_comment #api_func_def };
@@ -1622,15 +1628,12 @@ pub fn generate_function(
             let record_name = make_rs_ident(
                 derived_record.as_deref().unwrap_or(record.as_ref()).rs_name.identifier.as_ref(),
             );
-            let error_lifetime_generic =
-                error_lifetime_param.as_ref().map(|lifetime| quote! { <#lifetime> });
+            member_functions_map.insert(
+                derived_record.as_deref().unwrap_or(record.as_ref()).id,
+                vec![quote! { #unsatisfied_where_clause #doc_comment #api_func_def }],
+            );
             api_func = quote! {
                 #unimplemented_trait_def
-                impl #error_lifetime_generic #record_name
-                #unsatisfied_where_clause {
-                    #doc_comment
-                    #api_func_def
-                }
             };
             function_id = FunctionId {
                 self_type: None,
@@ -1815,6 +1818,7 @@ pub fn generate_function(
         },
         features,
         cc_details,
+        member_functions: member_functions_map,
         ..Default::default()
     };
 

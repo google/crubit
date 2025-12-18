@@ -45,6 +45,20 @@ unsafe impl ::cxx::ExternType for Struct {
     type Id = ::cxx::type_id!("Struct");
     type Kind = ::cxx::kind::Trivial;
 }
+impl Struct {
+    #[inline(always)]
+    pub fn Make(f1: ::core::ffi::c_int, f2: ::core::ffi::c_char) -> crate::Struct {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN6Struct4MakeEic(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                f1,
+                f2,
+            );
+            __return.assume_init()
+        }
+    }
+}
 
 impl Default for Struct {
     #[inline(always)]
@@ -75,21 +89,6 @@ impl Default for Struct {
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for Struct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-impl Struct {
-    #[inline(always)]
-    pub fn Make(f1: ::core::ffi::c_int, f2: ::core::ffi::c_char) -> crate::Struct {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN6Struct4MakeEic(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                f1,
-                f2,
-            );
-            __return.assume_init()
-        }
-    }
-}
-
 /// Regression test for b/232418721.  This tests that the offset of `field2` is
 /// correct (given its alignment requirements there need to be 3 bytes of padding
 /// between `field1` and `field2`).  The verification is mostly done through
@@ -113,6 +112,20 @@ impl !Sync for PaddingBetweenFields {}
 unsafe impl ::cxx::ExternType for PaddingBetweenFields {
     type Id = ::cxx::type_id!("PaddingBetweenFields");
     type Kind = ::cxx::kind::Trivial;
+}
+impl PaddingBetweenFields {
+    #[inline(always)]
+    pub fn Make(f1: ::core::ffi::c_char, f2: ::core::ffi::c_int) -> crate::PaddingBetweenFields {
+        unsafe {
+            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(
+                &raw mut __return as *mut ::core::ffi::c_void,
+                f1,
+                f2,
+            );
+            __return.assume_init()
+        }
+    }
 }
 
 impl Default for PaddingBetweenFields {
@@ -143,21 +156,6 @@ impl Default for PaddingBetweenFields {
 // Can't generate bindings for PaddingBetweenFields::operator=, because of missing required features (<internal link>):
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for PaddingBetweenFields::operator= (the type of __param_0 (parameter #1): references are not supported)
-
-impl PaddingBetweenFields {
-    #[inline(always)]
-    pub fn Make(f1: ::core::ffi::c_char, f2: ::core::ffi::c_int) -> crate::PaddingBetweenFields {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(
-                &raw mut __return as *mut ::core::ffi::c_void,
-                f1,
-                f2,
-            );
-            __return.assume_init()
-        }
-    }
-}
 
 /// Layout properties of FieldInTailPadding_InnerStruct look as follows:
 /// - alignment: 4 (because of `inner_int_field`)

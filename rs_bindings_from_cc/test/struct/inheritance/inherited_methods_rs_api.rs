@@ -65,6 +65,27 @@ unsafe impl ::cxx::ExternType for Base {
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base"), crate::Base);
+impl Base {
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
+    #[inline(always)]
+    pub fn has_bindings<'a>(&'a self) -> bool {
+        unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(self) }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
+    #[inline(always)]
+    pub fn no_bindings<'error, 'a>(
+        &'a self,
+        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
+    ) where
+        &'error (): BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable,
+    {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=16
 impl Default for Base {
@@ -78,35 +99,10 @@ impl Default for Base {
     }
 }
 
-impl Base {
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
-    #[inline(always)]
-    pub fn has_bindings<'a>(&'a self) -> bool {
-        unsafe { crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(self) }
-    }
-}
-
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nNon-movable, non-trivial_abi type 'crate::Nonmovable' is not supported by value as parameter #1"
 )]
 pub trait BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable {}
-impl<'error> Base
-where
-    &'error (): BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable,
-{
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
-    #[inline(always)]
-    pub fn no_bindings<'a>(
-        &'a self,
-        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
-    ) {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
-    }
-}
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=22
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -122,6 +118,29 @@ unsafe impl ::cxx::ExternType for Derived {
     type Kind = ::cxx::kind::Trivial;
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
+impl Derived {
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
+    #[inline(always)]
+    pub fn has_bindings<'a>(&'a self) -> bool {
+        unsafe {
+            crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(oops::Upcast::<_>::upcast(self))
+        }
+    }
+    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
+    #[inline(always)]
+    pub fn no_bindings<'error, 'a>(
+        &'a self,
+        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
+    ) where
+        &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
+    {
+        #![allow(unused_variables)]
+        unreachable!(
+            "This impl can never be instantiated. \
+                    If this message appears at runtime, please report a <internal link>."
+        )
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=22
 impl Default for Derived {
@@ -135,37 +154,10 @@ impl Default for Derived {
     }
 }
 
-impl Derived {
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=17
-    #[inline(always)]
-    pub fn has_bindings<'a>(&'a self) -> bool {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK4Base12has_bindingsEv(oops::Upcast::<_>::upcast(self))
-        }
-    }
-}
-
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\nNon-movable, non-trivial_abi type 'crate::Nonmovable' is not supported by value as parameter #1"
 )]
 pub trait BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable {}
-impl<'error> Derived
-where
-    &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
-{
-    /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
-    #[inline(always)]
-    pub fn no_bindings<'a>(
-        &'a self,
-        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
-    ) {
-        #![allow(unused_variables)]
-        unreachable!(
-            "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
-        )
-    }
-}
 
 unsafe impl oops::Inherits<crate::Base> for crate::Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base {

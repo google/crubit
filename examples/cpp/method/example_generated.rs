@@ -29,6 +29,13 @@ pub mod foo {
         type Id = ::cxx::type_id!("foo :: Bar");
         type Kind = ::cxx::kind::Trivial;
     }
+    impl Bar {
+        /// Generated from: examples/cpp/method/example.h;l=14
+        #[inline(always)]
+        pub unsafe fn MyMethod(__this: *mut Self) {
+            crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this)
+        }
+    }
 
     /// Generated from: examples/cpp/method/example.h;l=12
     impl Default for Bar {
@@ -39,14 +46,6 @@ pub mod foo {
                 crate::detail::__rust_thunk___ZN3foo3BarC1Ev(&raw mut tmp as *mut _);
                 tmp.assume_init()
             }
-        }
-    }
-
-    impl Bar {
-        /// Generated from: examples/cpp/method/example.h;l=14
-        #[inline(always)]
-        pub unsafe fn MyMethod(__this: *mut Self) {
-            crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this)
         }
     }
 }

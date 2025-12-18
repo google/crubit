@@ -134,6 +134,16 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindMethod");
             type Kind = ::cxx::kind::Trivial;
         }
+        impl StructWithDoNotBindMethod {
+            /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
+            #[inline(always)]
+            pub unsafe fn DoNotBindMethod(
+                __this: *mut Self,
+                mut __param_0: crate::crubit::test::ArgumentToBoundOverload,
+            ) {
+                crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(__this,&mut __param_0)
+            }
+        }
 
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=34
         impl Default for StructWithDoNotBindMethod {
@@ -146,17 +156,6 @@ pub mod crubit {
                     );
                     tmp.assume_init()
                 }
-            }
-        }
-
-        impl StructWithDoNotBindMethod {
-            /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
-            #[inline(always)]
-            pub unsafe fn DoNotBindMethod(
-                __this: *mut Self,
-                mut __param_0: crate::crubit::test::ArgumentToBoundOverload,
-            ) {
-                crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(__this,&mut __param_0)
             }
         }
     }

@@ -49,6 +49,8 @@ pub struct ApiSnippets {
     pub cc_details: Vec<ThunkImpl>,
 
     pub features: FlagSet<Feature>,
+
+    pub member_functions: HashMap<ItemId, Vec<TokenStream>>,
 }
 
 impl ApiSnippets {
@@ -64,6 +66,9 @@ impl ApiSnippets {
                     occupied.get_mut().merge(generated_item);
                 }
             }
+        }
+        for (item_id, member_functions) in other.member_functions {
+            self.member_functions.entry(item_id).or_default().extend(member_functions);
         }
         self.thunks.extend(other.thunks);
         self.assertions.extend(other.assertions);
@@ -557,6 +562,7 @@ pub fn generated_items_to_tokens(
                     nested_items,
                     indirect_functions,
                     owned_type_name,
+                    member_methods,
                 } = record_item.as_ref();
 
                 let repr_attrs = std::iter::once(quote! { C }).chain(align.map(|align| {
@@ -607,6 +613,16 @@ pub fn generated_items_to_tokens(
                     }
                 });
 
+                let member_methods_impl = if !member_methods.is_empty() {
+                    Some(quote! {
+                        impl #ident {
+                            #( #member_methods )*
+                        }
+                    })
+                } else {
+                    None
+                };
+
                 quote! {
                     #doc_comment_attr
                     #derive_attr
@@ -626,6 +642,8 @@ pub fn generated_items_to_tokens(
                     #incomplete_definition
 
                     #no_unique_address_accessors_impl
+
+                    #member_methods_impl
 
                     #owned_type_def
 
@@ -900,6 +918,7 @@ pub struct Record {
     pub indirect_functions: Vec<TokenStream>,
     /// The name of the owning wrapper type when the type was annotated with CRUBIT_OWNED_POINTEE.
     pub owned_type_name: Option<Ident>,
+    pub member_methods: Vec<TokenStream>,
 }
 
 #[derive(Clone, Debug)]
