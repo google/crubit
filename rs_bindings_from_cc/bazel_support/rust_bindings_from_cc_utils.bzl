@@ -210,7 +210,7 @@ bindings_attrs = {
         default = "@@//rs_bindings_from_cc/bazel_support:deps_for_bindings",
     ),
     "_clang_format": attr.label(
-        default = Label("@llvm_toolchain//:clang-format"),
+        default = Label("@llvm_toolchain//:bin/clang-format"),
         executable = True,
         allow_single_file = True,
         cfg = "exec",
