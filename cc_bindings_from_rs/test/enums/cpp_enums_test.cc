@@ -28,6 +28,12 @@ TYPED_TEST(CppEnumTest, BasicTest) {
   EXPECT_EQ(static_cast<int32_t>(blue), 2);
 }
 
+TEST(CppEnumTest, ForwardDeclaredEnum) {
+  cpp_enums::forward_declared_enum::B b =
+      cpp_enums::forward_declared_enum::AFunction();
+  EXPECT_EQ(b, cpp_enums::forward_declared_enum::B::ONE);
+}
+
 TEST(ClasslessEnumTest, IsClasslessEnum) {
   int32_t red = cpp_enums::classless_enum::RED;
   int32_t blue = cpp_enums::classless_enum::BLUE;

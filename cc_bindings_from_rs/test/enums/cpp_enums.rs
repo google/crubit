@@ -42,3 +42,21 @@ pub mod deprecated_enum {
         pub const BLUE: Color = Color(2);
     }
 }
+
+pub mod forward_declared_enum {
+    #![allow(non_snake_case)]
+    //! We sort types by declaration path. We use that ordering here to cause B to be forward declared and test the behavior we want to exercise.
+
+    pub fn AFunction() -> B {
+        B::ONE
+    }
+
+    #[crubit_annotate::cpp_enum(kind = "enum class")]
+    #[repr(transparent)]
+    pub struct B(u8);
+
+    impl B {
+        pub const ONE: B = B(1);
+        pub const TWO: B = B(2);
+    }
+}

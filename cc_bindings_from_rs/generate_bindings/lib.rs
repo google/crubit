@@ -32,7 +32,8 @@ use crate::format_type::{
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
-    from_trait_impls_by_argument, generate_adt, generate_adt_core, scalar_value_to_string,
+    cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt, generate_adt_core,
+    scalar_value_to_string,
 };
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
@@ -1169,6 +1170,17 @@ fn generate_fwd_decl(db: &Database<'_>, def_id: DefId) -> TokenStream {
         .generate_adt_core(def_id)
         .expect("`generate_fwd_decl` should only be called if `generate_adt_core` succeeded");
     let AdtCoreBindings { keyword, cc_short_name, .. } = &*core_bindings;
+
+    // If we're forward declaring a C++ enum, we need to include the underlying type in the forward
+    // declaration. Otherwise, it will default to `int` and cause a compilation error.
+    let tcx = db.tcx();
+    let crubit_attrs = crubit_attr::get_attrs(tcx, core_bindings.def_id).unwrap_or_default();
+    if crubit_attrs.cpp_enum.is_some() {
+        let cpp_enum_cpp_underlying_type_snippet = cpp_enum_cpp_underlying_type(db, def_id)
+            .expect("`generate_fwd_decl` should only be called if we successfully generated an enum for this type");
+        let cpp_enum_cpp_underlying_type = cpp_enum_cpp_underlying_type_snippet.tokens;
+        return quote! { #keyword #cc_short_name : #cpp_enum_cpp_underlying_type; };
+    }
 
     quote! { #keyword #cc_short_name; }
 }

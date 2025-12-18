@@ -56,7 +56,7 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
 }
 
 /// Returns the Rust underlying type of the `cpp_enum` struct specified by the given def id.
-fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
+pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
     let fields = tcx.adt_def(def_id).all_fields().collect::<Vec<_>>();
     if fields.len() != 1 {
         return Err(anyhow!(
@@ -72,7 +72,10 @@ fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
 }
 
 /// Returns the C++ underlying type of the `cpp_enum` struct specified by the given def id.
-fn cpp_enum_cpp_underlying_type(db: &dyn BindingsGenerator, def_id: DefId) -> Result<CcSnippet> {
+pub(crate) fn cpp_enum_cpp_underlying_type(
+    db: &dyn BindingsGenerator,
+    def_id: DefId,
+) -> Result<CcSnippet> {
     let tcx = db.tcx();
 
     let field_middle_ty = cpp_enum_rust_underlying_type(tcx, def_id)?;
