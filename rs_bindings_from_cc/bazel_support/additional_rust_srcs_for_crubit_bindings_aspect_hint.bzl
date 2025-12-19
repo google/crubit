@@ -32,8 +32,6 @@ through Crubit.
 SUMMARY: If a newly-introduced item in an additional Rust source file might conflict with a future Crubit
 release, then rename the C++ entity using CRUBIT_RUST_NAME.
 
-TODO: b/402478920 - Renamed constructor traits are not callable in any useful way at the moment.
-
 Changes to Crubit can introduce new items into the automatically generated bindings,
 which can introduce a conflict when you use `additional_rust_srcs_for_crubit_bindings`.
 
