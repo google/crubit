@@ -13,7 +13,7 @@ integrating the C++ and Rust ecosystems.
 
 ## Status
 
-See the [status](http://<internal link>/overview/status) page for an overview of the
+See the [status](https://github.com/google/crubit/blob/main/docs/overview/status.md) page for an overview of the
 current supported features.
 
 ## Example
