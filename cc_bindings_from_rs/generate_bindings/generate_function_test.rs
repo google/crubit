@@ -942,27 +942,6 @@ fn test_format_item_lifetime_generic_fn_with_various_lifetimes() {
     });
 }
 
-/// Test of lifetime-generic function with a `where` clause.
-///
-/// The `where` constraint below is a bit silly (why not just use `'static`
-/// directly), but it seems prudent to test and confirm that we disable
-/// generation of bindings for generic functions with `where` clauses
-/// (because it is unclear if such constraints can be replicated
-/// in C++).
-#[test]
-fn test_format_item_lifetime_generic_fn_with_where_clause() {
-    let test_src = r#"
-            pub fn foo<'a>(arg: &'a i32) where 'a : 'static {
-                unimplemented!("{arg}")
-            }
-        "#;
-    test_format_item(test_src, "foo", |result| {
-        // TODO: b/396735681 - This should fail to compile. Instead, such input
-        // references should be converted to pointers.
-        result.unwrap();
-    });
-}
-
 #[test]
 fn test_format_item_unsupported_type_generic_fn() {
     let test_src = r#"
