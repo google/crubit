@@ -45,5 +45,10 @@ TEST(UsesTest, PrivateModuleInMiddleOfPath) {
   EXPECT_EQ(uses::a::c::private_middle_path(), 742);
 }
 
+TEST(UsesTest, FunctionWithMultipleAliases) {
+  uses::public_name();
+  uses::other_public_name();
+}
+
 }  // namespace
 }  // namespace crubit

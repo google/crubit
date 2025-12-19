@@ -21,6 +21,13 @@ unsafe extern "C" fn __crubit_thunk_private_umiddle_upath() -> i32 {
 unsafe extern "C" fn __crubit_thunk_private_ufn() -> i32 {
     unsafe { ::uses_golden::doc_hidden_test::visible::private_fn() }
 }
+const _: () = assert!(::std::mem::size_of::<::uses_golden::OtherPublicName>() == 4);
+const _: () = assert!(::std::mem::align_of::<::uses_golden::OtherPublicName>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::uses_golden::OtherPublicName, 0) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_other_upublic_uname() -> () {
+    unsafe { ::uses_golden::other_public_name() }
+}
 const _: () = assert!(::std::mem::size_of::<::uses_golden::AliasOfExportedStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_golden::AliasOfExportedStruct>() == 4);
 #[unsafe(no_mangle)]

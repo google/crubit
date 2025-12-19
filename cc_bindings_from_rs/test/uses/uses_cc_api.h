@@ -25,7 +25,7 @@ namespace uses {
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=53
+// cc_bindings_from_rs/test/uses/uses.rs;l=63
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
@@ -45,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   }
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=54
+    // cc_bindings_from_rs/test/uses/uses.rs;l=64
     std::int32_t field;
   };
 
@@ -58,7 +58,7 @@ namespace a::c {
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=84
+// cc_bindings_from_rs/test/uses/uses.rs;l=109
 std::int32_t private_middle_path();
 
 }  // namespace a::c
@@ -68,15 +68,52 @@ namespace doc_hidden_test::visible {
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=65
+// cc_bindings_from_rs/test/uses/uses.rs;l=90
 std::int32_t private_fn();
 
 }  // namespace doc_hidden_test::visible
 
+// Generated from:
+// cc_bindings_from_rs/test/uses/uses.rs;l=74
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
+    [[clang::trivial_abi]] OtherPublicName final {
+ public:
+  // `uses_golden::OtherPublicName` doesn't implement the `Default` trait
+  OtherPublicName() = delete;
+
+  // Synthesized tuple constructor
+  explicit OtherPublicName(std::int32_t __field0)
+      : __field0(std::move(__field0)) {}
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~OtherPublicName() = default;
+  OtherPublicName(OtherPublicName&&) = default;
+  OtherPublicName& operator=(OtherPublicName&&) = default;
+
+  // `uses_golden::OtherPublicName` doesn't implement the `Clone` trait
+  OtherPublicName(const OtherPublicName&) = delete;
+  OtherPublicName& operator=(const OtherPublicName&) = delete;
+  OtherPublicName(::crubit::UnsafeRelocateTag, OtherPublicName&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/uses/uses.rs;l=74
+    std::int32_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Generated from:
+// cc_bindings_from_rs/test/uses/uses.rs;l=75
+void other_public_name();
+
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=17
+// cc_bindings_from_rs/test/uses/uses.rs;l=21
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") alignas(4) [[clang::trivial_abi]]
 AliasOfExportedStruct final {
@@ -98,12 +135,12 @@ AliasOfExportedStruct final {
   }
 
   // Generated from:
-  // cc_bindings_from_rs/test/uses/uses.rs;l=22
+  // cc_bindings_from_rs/test/uses/uses.rs;l=26
   static ::uses::AliasOfExportedStruct create(std::int32_t field);
 
   union {
     // Generated from:
-    // cc_bindings_from_rs/test/uses/uses.rs;l=18
+    // cc_bindings_from_rs/test/uses/uses.rs;l=22
     std::int32_t field;
   };
 
@@ -112,21 +149,25 @@ AliasOfExportedStruct final {
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=27
+// cc_bindings_from_rs/test/uses/uses.rs;l=31
 std::int32_t private_fn();
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=43
+// cc_bindings_from_rs/test/uses/uses.rs;l=53
 ::extern_crate::X return_x();
 
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=48
+// cc_bindings_from_rs/test/uses/uses.rs;l=58
 ::extern_crate::Y return_y();
 
+// CRUBIT_ANNOTATE: must_bind=
+//
 // Generated from:
-// cc_bindings_from_rs/test/uses/uses.rs;l=10
+// cc_bindings_from_rs/test/uses/uses.rs;l=14
 std::int32_t f();
 
 using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
@@ -173,6 +214,30 @@ inline std::int32_t private_fn() {
 }  // namespace doc_hidden_test::visible
 
 using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
+using XFromExternCrate CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") =
+    ::extern_crate::X;
+
+using PublicName CRUBIT_INTERNAL_RUST_TYPE(
+    ":: uses_golden :: OtherPublicName") = ::uses::OtherPublicName;
+static_assert(
+    sizeof(OtherPublicName) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(OtherPublicName) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<OtherPublicName>);
+static_assert(std::is_trivially_move_constructible_v<OtherPublicName>);
+static_assert(std::is_trivially_move_assignable_v<OtherPublicName>);
+inline void OtherPublicName::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(OtherPublicName, __field0));
+}
+constexpr auto public_name = ::uses::other_public_name;
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_other_upublic_uname();
+}
+inline void other_public_name() {
+  return __crubit_internal::__crubit_thunk_other_upublic_uname();
+}
 
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;

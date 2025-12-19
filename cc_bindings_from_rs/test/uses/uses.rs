@@ -2,11 +2,15 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Put before the real definition to make sure that the generarated C++ bindings
-// is not affected by the order of the imports.
+use crubit_annotate::must_bind;
+
+// Used before the real definition to make sure that the generarated C++ bindings
+// are not affected by the order of the imports.
+#[must_bind]
 pub use test_mod::f;
 
 pub mod test_mod {
+    #[crubit_annotate::must_bind]
     pub fn f() -> i32 {
         42
     }
@@ -29,8 +33,11 @@ mod private_mod {
     }
 }
 
+#[must_bind]
 pub use private_mod::private_fn;
+#[must_bind]
 pub use private_mod::ReexportedStruct as ExportedStruct;
+#[must_bind]
 pub use private_mod::ReexportedStruct as AliasOfExportedStruct;
 
 mod gg {
@@ -38,26 +45,44 @@ mod gg {
     pub use extern_crate::X;
 }
 
-// TODO(b/350772554): `use extern_crate::*`.
+pub use extern_crate::X as XFromExternCrate;
+#[must_bind]
 pub use gg::X;
+
+#[must_bind]
 pub fn return_x() -> X {
     X { field: 42 }
 }
 
-#[crubit_annotate::must_bind]
+#[must_bind]
 pub fn return_y() -> ::extern_crate::Y {
     ::extern_crate::Y { field: 42 }
 }
 
-#[crubit_annotate::must_bind]
+#[must_bind]
 pub struct Original {
     pub field: i32,
 }
 
-#[crubit_annotate::must_bind]
+#[must_bind]
 pub type Alias = Original;
 
+#[must_bind]
 pub use Alias as Alias2;
+
+mod private_for_renaming {
+    pub struct NonPublicName(pub i32);
+    pub fn non_public_name() {}
+}
+#[must_bind]
+pub use private_for_renaming::non_public_name as public_name;
+#[must_bind]
+pub use private_for_renaming::NonPublicName as PublicName;
+
+#[must_bind]
+pub use private_for_renaming::non_public_name as other_public_name;
+#[must_bind]
+pub use private_for_renaming::NonPublicName as OtherPublicName;
 
 pub mod doc_hidden_test {
     mod private_mod {

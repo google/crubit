@@ -719,7 +719,6 @@ fn generate_using(
     let tcx = db.tcx();
     match tcx.def_kind(def_id) {
         DefKind::Fn => {
-            // TODO(b/350772554): Support exporting private functions.
             let mut prereqs = match db.generate_function(def_id) {
                 Ok(snippet) => snippet.main_api.prereqs,
                 Err(err) => {
@@ -733,15 +732,14 @@ fn generate_using(
             let main_api_fn_name =
                 format_cc_ident(db, fully_qualified_fn_name.unqualified.cpp_name.as_str())
                     .context("Error formatting function name")?;
-            let using_name =
+            let using_name_ident =
                 format_cc_ident(db, using_name.as_str()).context("Error formatting using name")?;
 
             prereqs.defs.insert(def_id);
-            let tokens = if format!("{}", using_name) == format!("{}", main_api_fn_name) {
+            let tokens = if using_name_ident.to_string() == main_api_fn_name.to_string() {
                 quote! { using #formatted_fully_qualified_fn_name; }
             } else {
-                // TODO(b/350772554): Support function alias.
-                bail!("Unsupported function alias");
+                quote! { constexpr auto #using_name_ident = #formatted_fully_qualified_fn_name; }
             };
             Ok(CcSnippet { prereqs, tokens })
         }
