@@ -27,9 +27,13 @@
 
 namespace clang::tidy::nullability {
 namespace {
-MATCHER_P3(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher, "") {
+MATCHER_P4(isEvidenceMatcher, SlotMatcher, KindMatcher, SymbolMatcher,
+           CrossesFromTestToNontestMatcher, "") {
   return SlotMatcher.Matches(static_cast<Slot>(arg.slot())) &&
-         KindMatcher.Matches(arg.kind()) && SymbolMatcher.Matches(arg.symbol());
+         KindMatcher.Matches(arg.kind()) &&
+         SymbolMatcher.Matches(arg.symbol()) &&
+         CrossesFromTestToNontestMatcher.Matches(
+             arg.crosses_from_test_to_nontest());
 }
 
 MATCHER(notPropagated, "") { return !arg.has_propagated_from(); }
@@ -41,16 +45,21 @@ MATCHER_P(propagatedFrom, PropagatedFromMatcher, "") {
 
 testing::Matcher<const Evidence&> evidence(
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
-    testing::Matcher<const Symbol&> SymbolMatcher) {
-  return AllOf(isEvidenceMatcher(S, Kind, SymbolMatcher), notPropagated());
+    testing::Matcher<const Symbol&> SymbolMatcher,
+    testing::Matcher<bool> CrossesFromTestToNontest) {
+  return AllOf(
+      isEvidenceMatcher(S, Kind, SymbolMatcher, CrossesFromTestToNontest),
+      notPropagated());
 }
 
 testing::Matcher<const Evidence&> evidencePropagatedFrom(
     testing::Matcher<const Symbol&> PropagatedFromMatcher,
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
-    testing::Matcher<const Symbol&> SymbolMatcher) {
-  return AllOf(isEvidenceMatcher(S, Kind, SymbolMatcher),
-               propagatedFrom(PropagatedFromMatcher));
+    testing::Matcher<const Symbol&> SymbolMatcher,
+    testing::Matcher<bool> CrossesFromTestToNontest) {
+  return AllOf(
+      isEvidenceMatcher(S, Kind, SymbolMatcher, CrossesFromTestToNontest),
+      propagatedFrom(PropagatedFromMatcher));
 }
 
 std::string printToString(DefinitionCollectionMode Mode) {

@@ -13,13 +13,15 @@
 #ifndef CRUBIT_NULLABILITY_INFERENCE_MERGE_H_
 #define CRUBIT_NULLABILITY_INFERENCE_MERGE_H_
 
+#include <optional>
+
 #include "nullability/inference/inference.proto.h"
 #include "llvm/ADT/ArrayRef.h"
 
 namespace clang::tidy::nullability {
 
 // Build a SlotPartial representing a single piece of evidence.
-SlotPartial partialFromEvidence(const Evidence &);
+std::optional<SlotPartial> partialFromEvidence(const Evidence&);
 // Update LHS to include the evidence from RHS.
 // The merging of partials is commutative and associative.
 void mergePartials(SlotPartial &LHS, const SlotPartial &RHS);
@@ -47,10 +49,18 @@ InferResult infer(llvm::ArrayRef<unsigned> EventCounts,
 // This signature fundamentally limits the scalability of merging: we must see
 // all the evidence for a slot at once.
 inline SlotInference mergeEvidence(llvm::ArrayRef<Evidence> Ev) {
-  SlotPartial P = partialFromEvidence(Ev.front());
-  for (const auto &E : Ev.drop_front())
-    mergePartials(P, partialFromEvidence(E));
-  return finalize(P);
+  std::optional<SlotPartial> P;
+  for (const auto& E : Ev) {
+    std::optional<SlotPartial> Next = partialFromEvidence(E);
+    if (!Next.has_value()) continue;
+    if (!P.has_value()) {
+      P = *Next;
+      continue;
+    }
+    mergePartials(*P, *Next);
+  }
+  if (!P.has_value()) return SlotInference();
+  return finalize(*P);
 }
 
 }  // namespace clang::tidy::nullability

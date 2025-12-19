@@ -77,17 +77,21 @@ inline auto localVarNamed(llvm::StringRef VarName,
 }
 
 /// Returns a matcher for non-propagated Evidence, checking slot number, Kind,
-/// and Symbol.
+/// Symbol, and whether the Evidence is collected from a test file but
+/// contributes to the inference for a slot in a non-test file.
 testing::Matcher<const Evidence&> evidence(
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
-    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target"));
+    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target"),
+    testing::Matcher<bool> CrossesFromTestToNontest = false);
 
 /// Returns a matcher for propagated Evidence, checking the propagation source,
-/// slot number, Kind, and Symbol.
+/// slot number, Kind, Symbol, and whether the Evidence is collected from a test
+/// file but contributes to the inference for a slot in a non-test file.
 testing::Matcher<const Evidence&> evidencePropagatedFrom(
     testing::Matcher<const Symbol&> PropagatedFromMatcher,
     testing::Matcher<Slot> S, testing::Matcher<Evidence::Kind> Kind,
-    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target"));
+    testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target"),
+    testing::Matcher<bool> CrossesFromTestToNontest = false);
 
 /// Used to parameterize tests over the implementation pattern of evidence
 /// collection, to easily cover both implementations.

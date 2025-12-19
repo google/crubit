@@ -51,6 +51,7 @@ message Evidence {
   // If set, this evidence was originally collected from the virtual or override
   // function identified by this symbol and propagated to `symbol`.
   optional Symbol propagated_from = 5;
+  optional bool crosses_from_test_to_nontest = 6;
 
   // A pattern in the code that might help us determine nullability.
   enum Kind {
@@ -300,15 +301,17 @@ message TypeAssignedToInvariantTypeSummary {
   // checked for an override.
   optional uint64 nullability_to_match_fingerprint = 2;
 
-  // Exactly one of `target_nullability` or (`target_symbol` and `target_slot`)
-  // should be set, depending on whether the side of the assignment we are
-  // inferring for was a known decl or a potentially arbitrary expression.
+  // Exactly one of `target_nullability` or (`target_symbol`, `target_slot`,
+  // and `crosses_from_test_to_nontest`) should be set, depending on whether the
+  // side of the assignment we are inferring for was a known decl or a
+  // potentially arbitrary expression.
 
   optional PointerTypeNullabilityProto target_nullability = 3;
   optional Symbol target_symbol = 4;
   optional uint32 target_slot = 5;
+  optional bool crosses_from_test_to_nontest = 6;
 
-  optional string location = 6;
+  optional string location = 7;
 }
 
 // Encodes properties of an assignment relevant to collecting evidence for the
@@ -353,9 +356,10 @@ message BindingSummary {
   optional bool type_is_lvalue_ref = 3;
   // b) const, after stripping any reference qualifier.
   optional bool type_is_const = 4;
+  optional bool crosses_from_test_to_nontest = 5;
   // Genuinely optional: not populated when the value is a nullptr literal.
-  optional PointerNullStateProto null_state = 5;
-  optional string location = 6;
+  optional PointerNullStateProto null_state = 6;
+  optional string location = 7;
 }
 
 // For initialization functions -- constructors and "late" initializers -- we
@@ -395,6 +399,7 @@ message InferableSlotProto {
   optional uint32 nullable_atom = 2;
   optional uint32 slot = 3;
   optional Symbol symbol = 4;
+  optional bool crosses_from_test_to_nontest = 5;
 }
 
 // The logical context for a function definition.

@@ -31,7 +31,11 @@ static void mergeSampleEvidence(SlotPartial::SampleEvidence& LHS,
   }
 }
 
-SlotPartial partialFromEvidence(const Evidence &E) {
+std::optional<SlotPartial> partialFromEvidence(const Evidence& E) {
+  // TODO(b/446913855): for now, we skip evidence from across test boundaries.
+  // As a next step, try to incorporate as fall back.
+  if (E.crosses_from_test_to_nontest()) return std::nullopt;
+
   SlotPartial P;
   ++(*P.mutable_kind_count())[E.kind()];
   // Save the evidence as a sample, only if it has a location.

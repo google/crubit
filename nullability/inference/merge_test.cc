@@ -5,6 +5,7 @@
 #include "nullability/inference/merge.h"
 
 #include <array>
+#include <optional>
 
 #include "absl/log/check.h"
 #include "nullability/inference/inference.proto.h"
@@ -15,6 +16,10 @@
 #include "google/protobuf/text_format.h"
 
 namespace clang::tidy::nullability {
+namespace {
+using testing::Optional;
+}
+
 template <typename T>
 static T proto(llvm::StringRef Text) {
   T Result;
@@ -24,14 +29,14 @@ static T proto(llvm::StringRef Text) {
 
 namespace {
 TEST(PartialFromEvidenceTest, ContainsEvidenceInfo) {
+  std::optional<SlotPartial> P = partialFromEvidence(proto<Evidence>(R"pb(
+    symbol { usr: "func" }
+    slot: 1
+    kind: UNCHECKED_DEREFERENCE
+    location: "foo.cc:42"
+  )pb"));
   EXPECT_THAT(
-      partialFromEvidence(proto<Evidence>(R"pb(
-        symbol { usr: "func" }
-        slot: 1
-        kind: UNCHECKED_DEREFERENCE
-        location: "foo.cc:42"
-      )pb")),
-      EqualsProto(R"pb(
+      P, Optional(EqualsProto(R"pb(
         kind_count { key: 3 value: 1 }
         kind_samples {
           key: 3
@@ -39,7 +44,7 @@ TEST(PartialFromEvidenceTest, ContainsEvidenceInfo) {
             evidence { kind: UNCHECKED_DEREFERENCE location: "foo.cc:42" }
           }
         }
-      )pb"));
+      )pb")));
 }
 
 TEST(MergePartialsTest, BothContainEvidence) {
@@ -144,43 +149,47 @@ TEST(FinalizeTest, AnnotatedNonUnknown) {
 }
 
 TEST(MergeEvidenceTest, TreeShapedMerge) {
-  SlotPartial P1 = partialFromEvidence(
+  std::optional<SlotPartial> P1 = partialFromEvidence(
       proto<Evidence>(R"pb(kind: ASSIGNED_FROM_UNKNOWN)pb"));
-  SlotPartial P2 = partialFromEvidence(
+  std::optional<SlotPartial> P2 = partialFromEvidence(
       proto<Evidence>(R"pb(kind: ASSIGNED_FROM_NONNULL)pb"));
-  SlotPartial P3 = partialFromEvidence(
+  std::optional<SlotPartial> P3 = partialFromEvidence(
       proto<Evidence>(R"pb(kind: GCC_NONNULL_ATTRIBUTE)pb"));
-  SlotPartial P4 = partialFromEvidence(
+  std::optional<SlotPartial> P4 = partialFromEvidence(
       proto<Evidence>(R"pb(kind: ASSIGNED_FROM_NULLABLE)pb"));
+  ASSERT_TRUE(P1.has_value());
+  ASSERT_TRUE(P2.has_value());
+  ASSERT_TRUE(P3.has_value());
+  ASSERT_TRUE(P4.has_value());
 
   auto Expected = EqualsProto(R"pb(nullability: NULLABLE)pb");
 
   EXPECT_THAT(
       [&] {
-        SlotPartial P = P1;
-        mergePartials(P, P2);
-        mergePartials(P, P3);
-        mergePartials(P, P4);
+        SlotPartial P = *P1;
+        mergePartials(P, *P2);
+        mergePartials(P, *P3);
+        mergePartials(P, *P4);
         return finalize(P);
       }(),
       Expected);
 
   EXPECT_THAT(
       [&] {
-        SlotPartial P = P4;
-        mergePartials(P, P3);
-        mergePartials(P, P2);
-        mergePartials(P, P1);
+        SlotPartial P = *P4;
+        mergePartials(P, *P3);
+        mergePartials(P, *P2);
+        mergePartials(P, *P1);
         return finalize(P);
       }(),
       Expected);
 
   EXPECT_THAT(
       [&] {
-        SlotPartial PA = P1;
-        mergePartials(PA, P2);
-        SlotPartial PB = P3;
-        mergePartials(PB, P4);
+        SlotPartial PA = *P1;
+        mergePartials(PA, *P2);
+        SlotPartial PB = *P3;
+        mergePartials(PB, *P4);
         mergePartials(PA, PB);
         return finalize(PA);
       }(),

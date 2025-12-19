@@ -267,12 +267,14 @@ TEST(SummarizeDefinitionTest, Deref) {
       nonnull_atom: 1
       nullable_atom: 2
       slot: 1
+      crosses_from_test_to_nontest: false
       symbol { usr: "c:@F@target#*I#S0_#" }
     }
     inferable_slots {
       nonnull_atom: 3
       nullable_atom: 4
       slot: 2
+      crosses_from_test_to_nontest: false
       symbol { usr: "c:@F@target#*I#S0_#" }
     }
     behavior_summaries {
@@ -323,6 +325,7 @@ TEST(SummarizeDefinitionTest, NullableArgPassed) {
         slot: 2
         type_is_lvalue_ref: false
         type_is_const: false
+        crosses_from_test_to_nontest: false
         null_state {
           from_nullable { serialized: "T" }
           is_null { serialized: "V5" }
@@ -4533,18 +4536,18 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   }
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCallFromTestToNontestCode) {
+TEST_P(CollectEvidenceFromDefinitionTest, CallFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
     int* testCallee(int* P);
 
     GTEST_TEST(UserInTestFile, WithNull) {
       int* P = nullptr;
-      // Test -> Test uses should not be ignored.
+      // Test -> Test does not cross a test boundary.
       int* Q = testCallee(P);
       *Q = 1;
 
-      // but Test -> NonTest uses should be ignored.
+      // but Test -> NonTest crosses a test boundary.
       Q = nontestCallee(P);
       *Q = 2;
     }
@@ -4580,20 +4583,22 @@ TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCallFromTestToNontestCode) {
   const Decl& NontestDecl =
       *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
 
-  // The non-test caller should produce evidence for nontestCallee's return slot
-  // and parameter slot.
+  // The non-test caller should produce evidence that does not cross the test
+  // boundary, for nontestCallee's return slot and parameter slot.
   EXPECT_THAT(
       collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
       UnorderedElementsAre(evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("nontestCallee")),
+                                    functionNamed("nontestCallee"),
+                                    /*CrossesFromTestToNontest=*/false),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
                                     localVarNamed("Y", "nontestCaller")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                                    functionNamed("nontestCallee"))));
+                                    functionNamed("nontestCallee"),
+                                    /*CrossesFromTestToNontest=*/false)));
 
-  // However, the test caller should NOT produce evidence for nontestCallee's
-  // return slot and parameter slot. It should only produce evidence for
-  // testCallee.
+  // However, the test caller will produce evidence that does cross the test
+  // boundary, for nontestCallee's return slot and parameter slot.
+  // Evidence for testCallee does not cross the test boundary.
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
       UnorderedElementsAre(
@@ -4604,25 +4609,40 @@ TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCallFromTestToNontestCode) {
           evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
                    localVarNamed("Q", "UserInTestFile_WithNull")),
           evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
-                   functionNamed("testCallee")),
+                   functionNamed("testCallee"),
+                   /*CrossesFromTestToNontest=*/false),
           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   functionNamed("testCallee"))));
+                   functionNamed("testCallee"),
+                   /*CrossesFromTestToNontest=*/false),
+          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                   functionNamed("nontestCallee"),
+                   /*CrossesFromTestToNontest=*/true),
+          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   functionNamed("nontestCallee"),
+                   /*CrossesFromTestToNontest=*/true)));
 
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestInitWithTestCalleeDecl, Pragmas,
                             getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    functionNamed("testCallee")),
+                                    functionNamed("testCallee"),
+                                    /*CrossesFromTestToNontest=*/false),
                            evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("testCallee"))));
+                                    functionNamed("testCallee"),
+                                    /*CrossesFromTestToNontest=*/false)));
 
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestInitWithNonTestCalleeDecl,
                             Pragmas, getMode()),
-      IsEmpty());
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    functionNamed("nontestCallee"),
+                                    /*CrossesFromTestToNontest=*/true),
+                           evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
+                                    functionNamed("nontestCallee"),
+                                    /*CrossesFromTestToNontest=*/true)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCtorFromTestToNontestCode) {
+TEST_P(CollectEvidenceFromDefinitionTest, CtorFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
 
@@ -4633,10 +4653,10 @@ TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCtorFromTestToNontestCode) {
 
     GTEST_TEST(UserInTestFile, WithNull) {
       int* P = nullptr;
-      // Test -> Test constructor calls should not be ignored.
+      // Test -> Test constructor calls do not cross a test boundary.
       TestClass TC(P);
 
-      // but Test -> NonTest constructor calls should be ignored.
+      // but Test -> NonTest constructor calls do cross a test boundary.
       NontestClass NTC(P);
     }
   )cc";
@@ -4664,25 +4684,31 @@ TEST_P(CollectEvidenceFromDefinitionTest, IgnoreCtorFromTestToNontestCode) {
   const Decl& NontestDecl =
       *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
 
-  // The non-test caller should produce evidence for NontestClass's ctor param.
+  // The non-test caller should produce evidence for NontestClass's ctor param
+  // that does not cross the test boundary.
   EXPECT_THAT(
       collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
       UnorderedElementsAre(evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
-                                    functionNamed("NontestClass"))));
+                                    functionNamed("NontestClass"),
+                                    /*CrossesFromTestToNontest=*/false)));
 
-  // However, the test caller should NOT produce evidence for NontestClass's
-  // ctor param. It should only produce evidence for TestClass.
+  // However, the test caller should produce evidence for NontestClass's
+  // ctor param that does cross the test boundary.
+  // The evidence for TestClass does not cross the test boundary.
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
       UnorderedElementsAre(
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    localVarNamed("P", "UserInTestFile_WithNull")),
           evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
-                   functionNamed("TestClass"))));
+                   functionNamed("TestClass"),
+                   /*CrossesFromTestToNontest=*/false),
+          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                   functionNamed("NontestClass"),
+                   /*CrossesFromTestToNontest=*/true)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
-       IgnoreMemberVarFromTestToNontestCode) {
+TEST_P(CollectEvidenceFromDefinitionTest, MemberVarFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
 
@@ -4693,14 +4719,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 
     GTEST_TEST(UserInTestFile, WithNull) {
       int* P = nullptr;
-      // Test -> Test member var uses should not be ignored.
+      // Test -> Test member var uses do not cross a test boundary.
       TestClass TC;
       TC.P = P;
       TestClass TC2 = {P};
       TestClass TC3 = getTestClass();
       *TC3.P;
 
-      // but Test -> NonTest member var uses should be ignored.
+      // but Test -> NonTest member var do cross a test boundary.
       NontestClass NTC;
       NTC.P = P;
       NontestClass NTC2 = {P};
@@ -4739,11 +4765,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                    fieldNamed("NontestClass::P")),
+                                    fieldNamed("NontestClass::P"),
+                                    /*CrossesFromTestToNontest=*/false),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                    fieldNamed("NontestClass::P")),
+                                    fieldNamed("NontestClass::P"),
+                                    /*CrossesFromTestToNontest=*/false),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                                    fieldNamed("NontestClass::P"))));
+                                    fieldNamed("NontestClass::P"),
+                                    /*CrossesFromTestToNontest=*/false)));
 
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
@@ -4751,15 +4780,27 @@ TEST_P(CollectEvidenceFromDefinitionTest,
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    localVarNamed("P", "UserInTestFile_WithNull")),
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   fieldNamed("TestClass::P")),
+                   fieldNamed("TestClass::P"),
+                   /*CrossesFromTestToNontest=*/false),
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   fieldNamed("TestClass::P")),
+                   fieldNamed("TestClass::P"),
+                   /*CrossesFromTestToNontest=*/false),
           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   fieldNamed("TestClass::P"))));
+                   fieldNamed("TestClass::P"),
+                   /*CrossesFromTestToNontest=*/false),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   fieldNamed("NontestClass::P"),
+                   /*CrossesFromTestToNontest=*/true),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   fieldNamed("NontestClass::P"),
+                   /*CrossesFromTestToNontest=*/true),
+          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   fieldNamed("NontestClass::P"),
+                   /*CrossesFromTestToNontest=*/true)));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest,
-       IgnoreGlobalOrStaticMemberVarFromTestToNontestCode) {
+       GlobalOrStaticMemberVarFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
 
@@ -4771,12 +4812,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 
     GTEST_TEST(UserInTestFile, WithNull) {
       int* P = nullptr;
-      // Test -> Test uses should not be ignored.
+      // Test -> Test uses do not cross a test boundary.
       *TestGlobal;
       TestGlobal = P;
       TestClass::TestStatic = P;
 
-      // but Test -> NonTest uses should be ignored.
+      // but Test -> NonTest uses do cross a test boundary.
       *NontestGlobal;
       NontestGlobal = P;
       NontestClass::TestStatic = P;
@@ -4790,7 +4831,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   Inputs.ExtraFiles["input.h"] = R"cc(
     void foo();
 
-    // Want to see if the test can introduce evidence for NontestClass's member.
+    // Also have a non-test use of NontestClass's member.
     struct NontestClass {
       static int* TestStatic;
     };
@@ -4816,11 +4857,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
       UnorderedElementsAre(
           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   globalVarNamed("NontestGlobal")),
+                   globalVarNamed("NontestGlobal"),
+                   /*CrossesFromTestToNontest=*/false),
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                   globalVarNamed("NontestGlobal")),
+                   globalVarNamed("NontestGlobal"),
+                   /*CrossesFromTestToNontest=*/false),
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                   staticFieldNamed("NontestClass::TestStatic"))));
+                   staticFieldNamed("NontestClass::TestStatic"),
+                   /*CrossesFromTestToNontest=*/false)));
 
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestTargetDecl, Pragmas, getMode()),
@@ -4828,15 +4872,27 @@ TEST_P(CollectEvidenceFromDefinitionTest,
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    localVarNamed("P", "UserInTestFile_WithNull")),
           evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   globalVarNamed("TestGlobal")),
+                   globalVarNamed("TestGlobal"),
+                   /*CrossesFromTestToNontest=*/false),
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   globalVarNamed("TestGlobal")),
+                   globalVarNamed("TestGlobal"),
+                   /*CrossesFromTestToNontest=*/false),
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   staticFieldNamed("TestClass::TestStatic"))));
+                   staticFieldNamed("TestClass::TestStatic"),
+                   /*CrossesFromTestToNontest=*/false),
+          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                   globalVarNamed("NontestGlobal"),
+                   /*CrossesFromTestToNontest=*/true),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   globalVarNamed("NontestGlobal"),
+                   /*CrossesFromTestToNontest=*/true),
+          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                   staticFieldNamed("NontestClass::TestStatic"),
+                   /*CrossesFromTestToNontest=*/true)));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest,
-       IgnoreTestToNontestFromVirtualDerivedForReturn) {
+       TestToNontestFromVirtualDerivedForReturn) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
 
@@ -4889,7 +4945,8 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   const Decl& TestToTestNotRootDecl = *dataflow::test::findValueDecl(
       AST.context(), "TestToTestNotRootDerived::foo");
 
-  // In the non-test case, we can propagate from Derived::foo to Base::foo.
+  // In the non-test case, we propagate from Derived::foo to Base::foo
+  // and do not consider that crossing from test to non-test.
   EXPECT_THAT(
       collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
       UnorderedElementsAre(
@@ -4897,17 +4954,23 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                    functionNamed("Derived@F@foo")),
           evidencePropagatedFrom(functionNamed("Derived@F@foo"),
                                  SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                 functionNamed("Base@F@foo"))));
+                                 functionNamed("Base@F@foo"),
+                                 /*CrossesFromTestToNontest=*/false)));
 
-  // In the test case, we only propagate from
-  // TestToTest{Root,NotRoot}Derived::foo to TestBase{Root,NotRoot}::foo, but
-  // not TestToNontestDerived::foo to Base::foo, or
-  // TestToTestNotRootDerived::foo to Base::foo.
-  EXPECT_THAT(collectFromDefinition(AST.context(), TestToNontestDecl, Pragmas,
-                                    getMode()),
-              UnorderedElementsAre(
-                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                           functionNamed("TestToNontestDerived@F@foo"))));
+  // When we propagate from TestToNontestDerived::foo to Base::foo, or
+  // TestToTestNotRootDerived::foo to Base::foo, make sure we track that this
+  // involved crossing a test boundary.
+  // Other cases (from test to test) don't cross a test boundary.
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestToNontestDecl, Pragmas,
+                            getMode()),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                   functionNamed("TestToNontestDerived@F@foo")),
+          evidencePropagatedFrom(functionNamed("TestToNontestDerived@F@foo"),
+                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                                 functionNamed("Base@F@foo"),
+                                 /*CrossesFromTestToNontest=*/true)));
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestToTestRootDecl, Pragmas,
                             getMode()),
@@ -4916,16 +4979,22 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                    functionNamed("TestToTestRootDerived@F@foo")),
           evidencePropagatedFrom(functionNamed("TestToTestRootDerived@F@foo"),
                                  SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                 functionNamed("TestBaseRoot@F@foo"))));
-  EXPECT_THAT(collectFromDefinition(AST.context(), TestToTestNotRootDecl,
-                                    Pragmas, getMode()),
-              UnorderedElementsAre(
-                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                           functionNamed("TestToTestNotRootDerived@F@foo")),
-                  evidencePropagatedFrom(
-                      functionNamed("TestToTestNotRootDerived@F@foo"),
-                      SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                      functionNamed("TestBaseNotRoot@F@foo"))));
+                                 functionNamed("TestBaseRoot@F@foo"),
+                                 /*CrossesFromTestToNontest=*/false)));
+  EXPECT_THAT(
+      collectFromDefinition(AST.context(), TestToTestNotRootDecl, Pragmas,
+                            getMode()),
+      UnorderedElementsAre(
+          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                   functionNamed("TestToTestNotRootDerived@F@foo")),
+          evidencePropagatedFrom(
+              functionNamed("TestToTestNotRootDerived@F@foo"), SLOT_RETURN_TYPE,
+              Evidence::NULLABLE_RETURN, functionNamed("TestBaseNotRoot@F@foo"),
+              /*CrossesFromTestToNontest=*/false),
+          evidencePropagatedFrom(
+              functionNamed("TestToTestNotRootDerived@F@foo"), SLOT_RETURN_TYPE,
+              Evidence::NULLABLE_RETURN, functionNamed("Base@F@foo"),
+              /*CrossesFromTestToNontest=*/true)));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {

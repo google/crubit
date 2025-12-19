@@ -93,6 +93,8 @@ class InferTUTest : public testing::TestWithParam<InferenceMode> {
     AST.emplace(getAugmentedTestInputs(Code, Pragmas));
   }
 
+  void build(TestInputs Inputs) { AST.emplace(Inputs); }
+
   auto infer() {
     return inferTU(AST->context(), Pragmas,
                    GetParam() == InferenceMode::kTestWithSummaries);
@@ -158,11 +160,14 @@ TEST_P(InferTUTest, Samples) {
   EXPECT_THAT(Results.begin()->second[Slot(1)].sample_evidence(),
               testing::UnorderedElementsAre(
                   EqualsProto(R"pb(location: "input.cc:2:30"
-                                   kind: NONNULL_ARGUMENT)pb"),
+                                   kind: NONNULL_ARGUMENT
+                                   crosses_from_test_to_nontest: false)pb"),
                   EqualsProto(R"pb(location: "input.cc:1:24"
-                                   kind: UNCHECKED_DEREFERENCE)pb"),
+                                   kind: UNCHECKED_DEREFERENCE
+                                   crosses_from_test_to_nontest: false)pb"),
                   EqualsProto(R"pb(location: "input.cc:1:29"
-                                   kind: UNCHECKED_DEREFERENCE)pb")));
+                                   kind: UNCHECKED_DEREFERENCE
+                                   crosses_from_test_to_nontest: false)pb")));
 }
 
 TEST_P(InferTUTest, Annotations) {
@@ -1061,6 +1066,44 @@ TEST_P(InferTUSmartPointerTest, ReturnTypeNonnull) {
   EXPECT_THAT(infer(),
               Contains(inference(hasName("target"),
                                  {inferredSlot(0, Nullability::NONNULL)})));
+}
+
+TEST_P(InferTUSmartPointerTest, IterateAcrossTestNontestBoundary) {
+  static constexpr llvm::StringRef TestSrc = R"cc(
+#include "nontest.h"
+
+    // Minimal macro definitions to mimic GoogleTest.
+#define GTEST_TEST(test_suite_name, test_name) \
+      void test_suite_name##_##test_name()
+#define ASSERT_NE
+
+    GTEST_TEST(InTestFile, ForgotToCheckForNullptr) {
+      int* P = getOrNull(10);
+      *P = 2;
+    }
+  )cc";
+
+  NullabilityPragmas Pragmas;
+  TestInputs Inputs = getAugmentedTestInputs(TestSrc, Pragmas);
+  Inputs.FileName = "input_test.cc";
+
+  Inputs.ExtraFiles["nontest.h"] = R"cc(
+    int* getOrNull(int X) {
+      if (X == 0) return nullptr;
+      return new int(X);
+    }
+  )cc";
+
+  build(Inputs);
+  bool UseSummaries = GetParam() == InferenceMode::kTestWithSummaries;
+  EXPECT_THAT(
+      inferTU(AST->context(), Pragmas, UseSummaries, /*Iterations=*/2),
+      UnorderedElementsAre(
+          inference(hasName("P"), {inferredSlot(0, Nullability::NULLABLE,
+                                                /*Conflict*/ false)}),
+          inference(
+              hasName("getOrNull"),
+              {inferredSlot(0, Nullability::NULLABLE, /*Conflict*/ false)})));
 }
 
 TEST_P(InferTUSmartPointerTest,
