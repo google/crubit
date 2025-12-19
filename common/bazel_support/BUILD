@@ -4,6 +4,7 @@ load(
     "string_list_flag",
 )
 load("//cc_bindings_from_rs/bazel_support:toolchain.bzl", "cc_bindings_from_rs_toolchain")
+load("//rs_bindings_from_cc/bazel_support:toolchain.bzl", "rs_bindings_from_cc_toolchain")
 
 package(
     default_applicable_licenses = ["//:license"],
