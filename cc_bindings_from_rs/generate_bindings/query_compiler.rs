@@ -50,14 +50,6 @@ pub fn is_c_abi_compatible_by_value(tcx: TyCtxt<'_>, ty: Ty) -> bool {
         // See `rust_builtin_type_abi_assumptions.md` for more details.
         ty::TyKind::Char => true,
 
-        // TODO(b/271016831): When launching `&[T]` (not just `*const T`), consider returning
-        // `true` for `TyKind::Ref` and document the rationale for such decision - maybe
-        // something like this will be sufficient:
-        // - In general `TyKind::Ref` should have the same ABI as `TyKind::RawPtr`
-        // - References to slices (`&[T]`) or strings (`&str`) rely on assumptions
-        //   spelled out in `rust_builtin_type_abi_assumptions.md`.
-        ty::TyKind::Slice { .. } => false,
-
         // Crubit's C++ bindings for tuples, structs, and other ADTs may not preserve
         // their ABI (even if they *do* preserve their memory layout).  For example:
         // - In System V ABI replacing a field with a fixed-length array of bytes may affect
@@ -89,9 +81,9 @@ pub fn is_c_abi_compatible_by_value(tcx: TyCtxt<'_>, ty: Ty) -> bool {
         ty::TyKind::Array { .. } => false,
         ty::TyKind::Alias { .. } => false,
 
-        // These kinds of reference-related types are not implemented yet - `is_c_abi_compatible_by_value`
-        // should never need to handle them, because `format_ty_for_cc` fails for such types.
-        ty::TyKind::Str => unimplemented!(),
+        // Slice references (`&[T]`, `&str`) are not guaranteed to be ABI-compatible when passed
+        // by-value.
+        ty::TyKind::Slice { .. } | ty::TyKind::Str => false,
 
         // `format_ty_for_cc` is expected to fail for other kinds of types
         // and therefore `is_c_abi_compatible_by_value` should never be called for
