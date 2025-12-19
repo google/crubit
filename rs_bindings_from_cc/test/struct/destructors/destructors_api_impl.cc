@@ -45,11 +45,12 @@ extern "C" void __rust_thunk___ZN24DestructionOrderRecorderD1Ev(
   std::destroy_at(__this);
 }
 
-static_assert((void (*)(int))&DestructionOrderRecorder::RecordDestruction);
+static_assert((void (*)(int)) & ::DestructionOrderRecorder::RecordDestruction);
 
-static_assert((int (*)())&DestructionOrderRecorder::GetDestructionRecord);
+static_assert((int (*)()) & ::DestructionOrderRecorder::GetDestructionRecord);
 
-static_assert((void (*)())&DestructionOrderRecorder::ClearDestructionRecord);
+static_assert((void (*)()) &
+              ::DestructionOrderRecorder::ClearDestructionRecord);
 
 static_assert(CRUBIT_SIZEOF(class FieldDestructionOrderTester) == 12);
 static_assert(alignof(class FieldDestructionOrderTester) == 4);
@@ -82,9 +83,11 @@ __rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorder
       std::move(*field1), std::move(*field2), std::move(*field3)));
 }
 
-static_assert((class FieldDestructionOrderTester (*)(
-    class DestructionOrderRecorder, class DestructionOrderRecorder,
-    class DestructionOrderRecorder))&FieldDestructionOrderTester::Create);
+static_assert(
+    (class FieldDestructionOrderTester (*)(class DestructionOrderRecorder,
+                                           class DestructionOrderRecorder,
+                                           class DestructionOrderRecorder)) &
+    ::FieldDestructionOrderTester::Create);
 
 extern "C" void
 __rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
@@ -92,7 +95,7 @@ __rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
   FieldDestructionOrderTester::DestructFromCpp(field1, field2, field3);
 }
 
-static_assert((void (*)(int, int,
-                        int))&FieldDestructionOrderTester::DestructFromCpp);
+static_assert((void (*)(int, int, int)) &
+              ::FieldDestructionOrderTester::DestructFromCpp);
 
 #pragma clang diagnostic pop

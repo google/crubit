@@ -32,6 +32,6 @@ extern "C" void __rust_thunk___ZN5Thing5CloseEv(struct Thing* __this) {
   __this->Close();
 }
 
-static_assert((void (::Thing::*)())&Thing::Close);
+static_assert((void (Thing::*)()) & ::Thing::Close);
 
 #pragma clang diagnostic pop

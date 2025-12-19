@@ -781,13 +781,6 @@ pub struct InstanceMethodMetadata {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct MemberFuncMetadata {
-    pub record_id: ItemId,
-    pub instance_method_metadata: Option<InstanceMethodMetadata>,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
     pub type_: CcType,
@@ -828,7 +821,7 @@ pub struct Func {
     /// not originally part of the IR.
     pub lifetime_params: Vec<LifetimeName>,
     pub is_inline: bool,
-    pub member_func_metadata: Option<MemberFuncMetadata>,
+    pub instance_method_metadata: Option<InstanceMethodMetadata>,
     pub is_extern_c: bool,
     pub is_noreturn: bool,
     pub is_variadic: bool,
@@ -850,6 +843,11 @@ pub struct Func {
     pub safety_annotation: SafetyAnnotation,
     pub source_loc: Rc<str>,
     pub id: ItemId,
+    /// The enclosing item ID.
+    ///
+    /// If this is a free function, then this will be None or a namespace. If this is
+    /// a member function, it will be a record type in C++, but might be an
+    /// `ExistingRustType` if it was renamed.
     pub enclosing_item_id: Option<ItemId>,
 
     /// If this function was declared as a `friend` inside of a record
@@ -870,25 +868,31 @@ impl GenericItem for Func {
         Some(self.owning_target.clone())
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
-        let record: Option<Rc<str>> = ir.record_for_member_func(self).map(|r| r.debug_name(ir));
-        let record: Option<&str> = record.as_deref();
-
-        let func_name = match &self.rs_name {
-            UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
-            UnqualifiedIdentifier::Operator(op) => op.cc_name(),
-            UnqualifiedIdentifier::Destructor => {
-                format!("~{}", record.expect("destructor must be associated with a record"))
-            }
-            UnqualifiedIdentifier::Constructor => {
-                record.expect("constructor must be associated with a record").to_string()
-            }
+        let mut name = ir.namespace_qualifier(self).format_for_cc_debug();
+        let record_name = || -> Option<Rc<str>> {
+            let record = ir.find_decl::<Rc<Record>>(self.enclosing_item_id?).ok()?;
+            Some(record.cc_name.identifier.clone())
         };
 
-        if let Some(record_name) = record {
-            format!("{}::{}", record_name, func_name).into()
-        } else {
-            func_name.into()
+        match &self.cc_name {
+            UnqualifiedIdentifier::Identifier(id) => {
+                name.push_str(&id.identifier);
+            }
+            UnqualifiedIdentifier::Operator(op) => {
+                name.push_str(&op.cc_name());
+            }
+            UnqualifiedIdentifier::Destructor => {
+                name.push_str("~");
+                name.push_str(&record_name().expect("destructor must be associated with a record"));
+            }
+            UnqualifiedIdentifier::Constructor => {
+                name.push_str(
+                    &record_name().expect("constructor must be associated with a record"),
+                );
+            }
         }
+
+        name.into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         if self.cc_name == UnqualifiedIdentifier::Constructor {
@@ -910,10 +914,7 @@ impl GenericItem for Func {
 
 impl Func {
     pub fn is_instance_method(&self) -> bool {
-        self.member_func_metadata
-            .as_ref()
-            .filter(|meta| meta.instance_method_metadata.is_some())
-            .is_some()
+        self.instance_method_metadata.is_some()
     }
 }
 
@@ -987,8 +988,9 @@ impl GenericItem for IncompleteRecord {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
@@ -1176,8 +1178,9 @@ impl GenericItem for Record {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
@@ -1325,8 +1328,9 @@ impl GenericItem for GlobalVar {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
@@ -1370,8 +1374,9 @@ impl GenericItem for Enum {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Enum
@@ -1419,8 +1424,9 @@ impl GenericItem for TypeAlias {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::TypeAlias
@@ -1640,7 +1646,7 @@ impl GenericItem for Comment {
         None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        "comment".into()
+        "<comment>".into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
@@ -1680,8 +1686,9 @@ impl GenericItem for Namespace {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.to_string().into()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Namespace
@@ -1714,7 +1721,7 @@ impl GenericItem for UseMod {
         None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        format!("[internal] use mod {}::* = {}", self.mod_name, self.path).into()
+        format!("<[internal] use mod {}::* = {}>", self.mod_name, self.path).into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
@@ -2263,20 +2270,6 @@ impl IR {
             )
         })? - 1;
         Ok(idx == last_item_idx)
-    }
-
-    /// Returns the `Item` defining `func`, or `None` if `func` is not a
-    /// member function.
-    ///
-    /// Note that even if `func` is a member function, the associated record
-    /// might not be a Record IR Item (e.g. it has its type changed via
-    /// crubit_internal_rust_type).
-    pub fn record_for_member_func(&self, func: &Func) -> Option<&Item> {
-        if let Some(meta) = func.member_func_metadata.as_ref() {
-            Some(self.find_untyped_decl(meta.record_id))
-        } else {
-            None
-        }
     }
 
     pub fn crate_root_path(&self) -> Option<Rc<str>> {

@@ -16,17 +16,18 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert((void (*)(crubit::type_identity_t<void()>*))&AddHook);
+static_assert((void (*)(crubit::type_identity_t<void()>*)) & ::AddHook);
 
-static_assert((void (*)(crubit::type_identity_t<void()>*))&AddHookWithTypedef);
+static_assert((void (*)(crubit::type_identity_t<void()>*)) &
+              ::AddHookWithTypedef);
 
-static_assert((void (*)(crubit::type_identity_t<void()>&))&AddAnotherHook);
+static_assert((void (*)(crubit::type_identity_t<void()>&)) & ::AddAnotherHook);
 
-static_assert(
-    (void (*)(crubit::type_identity_t<void()>&))&AddAnotherHookWithTypedef);
+static_assert((void (*)(crubit::type_identity_t<void()>&)) &
+              ::AddAnotherHookWithTypedef);
 
-static_assert((void (*)(int*))&ConsumeArray);
+static_assert((void (*)(int*)) & ::ConsumeArray);
 
-static_assert((void (*)(int*))&ConsumeArrayWithTypedef);
+static_assert((void (*)(int*)) & ::ConsumeArrayWithTypedef);
 
 #pragma clang diagnostic pop

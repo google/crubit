@@ -29,31 +29,29 @@ extern "C" void __rust_thunk___ZN34UnpinStructWithRefQualifiedMethodsC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert((void (
-    ::UnpinStructWithRefQualifiedMethods::*)())&UnpinStructWithRefQualifiedMethods::
-                  increment_i);
+static_assert((void (UnpinStructWithRefQualifiedMethods::*)()) &
+              ::UnpinStructWithRefQualifiedMethods::increment_i);
 
-static_assert((int (
-    ::UnpinStructWithRefQualifiedMethods::*)())&UnpinStructWithRefQualifiedMethods::
-                  unqualified_get_i);
+static_assert((int (UnpinStructWithRefQualifiedMethods::*)()) &
+              ::UnpinStructWithRefQualifiedMethods::unqualified_get_i);
 
-static_assert((int (::UnpinStructWithRefQualifiedMethods::*)() const) &
-              UnpinStructWithRefQualifiedMethods::const_qualified_get_i);
+static_assert((int (UnpinStructWithRefQualifiedMethods::*)() const) &
+              ::UnpinStructWithRefQualifiedMethods::const_qualified_get_i);
 
-static_assert((int (
-    ::UnpinStructWithRefQualifiedMethods::*)() &)&UnpinStructWithRefQualifiedMethods::
-                  lvalue_ref_qualified_get_i);
+static_assert(
+    (int (UnpinStructWithRefQualifiedMethods::*)() &)&::
+        UnpinStructWithRefQualifiedMethods::lvalue_ref_qualified_get_i);
 
-static_assert((int (::UnpinStructWithRefQualifiedMethods::*)()
-                   const&)&UnpinStructWithRefQualifiedMethods::
+static_assert((int (UnpinStructWithRefQualifiedMethods::*)()
+                   const&)&::UnpinStructWithRefQualifiedMethods::
                   const_lvalue_ref_qualified_get_i);
 
-static_assert((int (
-    ::UnpinStructWithRefQualifiedMethods::*)() &&)&UnpinStructWithRefQualifiedMethods::
-                  rvalue_ref_qualified_get_i);
+static_assert(
+    (int (UnpinStructWithRefQualifiedMethods::*)() &&)&::
+        UnpinStructWithRefQualifiedMethods::rvalue_ref_qualified_get_i);
 
-static_assert((int (::UnpinStructWithRefQualifiedMethods::*)()
-                   const&&)&UnpinStructWithRefQualifiedMethods::
+static_assert((int (UnpinStructWithRefQualifiedMethods::*)()
+                   const&&)&::UnpinStructWithRefQualifiedMethods::
                   const_rvalue_ref_qualified_get_i);
 
 #pragma clang diagnostic pop

@@ -30,13 +30,13 @@ extern "C" class MyBadClass* __rust_thunk___ZN10MyBadClass7ReturnsEv() {
   return std::addressof(MyBadClass::Returns());
 }
 
-static_assert((class MyBadClass & (*)()) & MyBadClass::Returns);
+static_assert((class MyBadClass & (*)()) & ::MyBadClass::Returns);
 
 extern "C" void __rust_thunk___ZN10MyBadClass7AcceptsERS_(
     class MyBadClass* __param_0) {
   MyBadClass::Accepts(*__param_0);
 }
 
-static_assert((void (*)(class MyBadClass&))&MyBadClass::Accepts);
+static_assert((void (*)(class MyBadClass&)) & ::MyBadClass::Accepts);
 
 #pragma clang diagnostic pop

@@ -122,7 +122,7 @@ impl Default for already_snake_case {
     }
 }
 
-// Error while generating bindings for struct 'Inner':
+// Error while generating bindings for struct 'already_snake_case::Inner':
 // parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -151,7 +151,7 @@ impl Default for ConflictingSnakeCaseNames {
     }
 }
 
-// Error while generating bindings for struct 'Inner':
+// Error while generating bindings for struct 'ConflictingSnakeCaseNames::Inner':
 // records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -182,7 +182,7 @@ impl Default for ConflictingSnakeCaseNames_ {
     }
 }
 
-// Error while generating bindings for struct 'Inner':
+// Error while generating bindings for struct 'ConflictingSnakeCaseNames_::Inner':
 // records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -292,7 +292,7 @@ impl Default for SameNameAsNamespace {
     }
 }
 
-// Error while generating bindings for struct 'Inner':
+// Error while generating bindings for struct 'SameNameAsNamespace::Inner':
 // parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 
 // namespace same_name_as_namespace
@@ -382,7 +382,7 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'Inner':
+    // Error while generating bindings for struct 'no_longer_top_level::already_snake_case::Inner':
     // parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -411,7 +411,7 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'Inner':
+    // Error while generating bindings for struct 'no_longer_top_level::ConflictingSnakeCaseNames::Inner':
     // records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -440,7 +440,7 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'Inner':
+    // Error while generating bindings for struct 'no_longer_top_level::ConflictingSnakeCaseNames_::Inner':
     // records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -554,7 +554,7 @@ pub mod no_longer_top_level {
         }
     }
 
-    // Error while generating bindings for struct 'Inner':
+    // Error while generating bindings for struct 'no_longer_top_level::SameNameAsNamespace::Inner':
     // parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 
     // namespace same_name_as_namespace

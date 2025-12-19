@@ -191,9 +191,9 @@ impl Default for HasCustomAlignmentWithGnuAttr {
 pub mod template_with_preferred_name { // Error while generating bindings for class 'template_with_preferred_name::SomeTemplate':
                                        // Class templates are not supported yet
 
-    // Error while generating bindings for type alias 'SpecializedTypeAlias':
-    // Can't generate bindings for SpecializedTypeAlias, because of missing required features (<internal link>):
-    // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for SpecializedTypeAlias (error: Can't generate bindings for template_with_preferred_name::SomeTemplate<int>, because of missing required features (<internal link>):
+    // Error while generating bindings for type alias 'template_with_preferred_name::SpecializedTypeAlias':
+    // Can't generate bindings for template_with_preferred_name::SpecializedTypeAlias, because of missing required features (<internal link>):
+    // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SpecializedTypeAlias (error: Can't generate bindings for template_with_preferred_name::SomeTemplate<int>, because of missing required features (<internal link>):
     // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SomeTemplate<int> (crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE is a template instantiation)
     // //rs_bindings_from_cc/test/golden:clang_attrs_cc needs [//features:wrapper] for template_with_preferred_name::SomeTemplate<int> (crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE is a template instantiation))
 

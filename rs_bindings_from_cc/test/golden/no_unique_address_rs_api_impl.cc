@@ -32,7 +32,7 @@ extern "C" void __rust_thunk___ZN6Struct4MakeEic(struct Struct* __return,
   new (__return) auto(Struct::Make(f1, f2));
 }
 
-static_assert((struct Struct (*)(int, char))&Struct::Make);
+static_assert((struct Struct (*)(int, char)) & ::Struct::Make);
 
 static_assert(CRUBIT_SIZEOF(struct PaddingBetweenFields) == 8);
 static_assert(alignof(struct PaddingBetweenFields) == 4);
@@ -49,8 +49,8 @@ extern "C" void __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
   new (__return) auto(PaddingBetweenFields::Make(f1, f2));
 }
 
-static_assert(
-    (struct PaddingBetweenFields (*)(char, int))&PaddingBetweenFields::Make);
+static_assert((struct PaddingBetweenFields (*)(char, int)) &
+              ::PaddingBetweenFields::Make);
 
 static_assert(CRUBIT_SIZEOF(struct FieldInTailPadding_InnerStruct) == 8);
 static_assert(alignof(struct FieldInTailPadding_InnerStruct) == 4);

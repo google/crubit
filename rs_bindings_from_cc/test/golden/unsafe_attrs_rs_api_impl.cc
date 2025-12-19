@@ -18,22 +18,22 @@
 
 extern "C" bool __rust_thunk___ZL11ReturnsTruev() { return ReturnsTrue(); }
 
-static_assert((bool (*)())&ReturnsTrue);
+static_assert((bool (*)()) & ::ReturnsTrue);
 
 extern "C" bool __rust_thunk___ZL12ReturnsFalsev() { return ReturnsFalse(); }
 
-static_assert((bool (*)())&ReturnsFalse);
+static_assert((bool (*)()) & ::ReturnsFalse);
 
-static_assert((void (*)())&TotallySafe);
+static_assert((void (*)()) & ::TotallySafe);
 
-static_assert((void (*)(void*))&TotallyUnsafe);
+static_assert((void (*)(void*)) & ::TotallyUnsafe);
 
-static_assert((void (*)())&SafeSignatureButAnnotatedUnsafe);
+static_assert((void (*)()) & ::SafeSignatureButAnnotatedUnsafe);
 
-static_assert((void (*)())&SafeSignatureButAnnotatedSafe);
+static_assert((void (*)()) & ::SafeSignatureButAnnotatedSafe);
 
-static_assert((void (*)(void*))&UnsafeSignatureButAnnotatedUnsafe);
+static_assert((void (*)(void*)) & ::UnsafeSignatureButAnnotatedUnsafe);
 
-static_assert((void (*)(void*))&UnsafeSignatureButAnnotatedSafe);
+static_assert((void (*)(void*)) & ::UnsafeSignatureButAnnotatedSafe);
 
 #pragma clang diagnostic pop

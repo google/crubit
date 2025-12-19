@@ -19,12 +19,12 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert((struct Thing * (*)(int)) & MakeOwnedThing);
+static_assert((struct Thing * (*)(int)) & ::MakeOwnedThing);
 
-static_assert((struct Thing * (*)(int)) & MakeThing);
+static_assert((struct Thing * (*)(int)) & ::MakeThing);
 
-static_assert((int (*)(struct Thing*))&ThingToValue);
+static_assert((int (*)(struct Thing*)) & ::ThingToValue);
 
-static_assert((int (*)(struct Thing*))&GetThingValue);
+static_assert((int (*)(struct Thing*)) & ::GetThingValue);
 
 #pragma clang diagnostic pop

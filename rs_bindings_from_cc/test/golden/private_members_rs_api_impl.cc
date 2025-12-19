@@ -28,11 +28,10 @@ extern "C" void __rust_thunk___ZN23test_namespace_bindings9SomeClassC1Ev(
   crubit::construct_at(__this);
 }
 
-static_assert(
-    (void (::test_namespace_bindings::SomeClass::*)())&test_namespace_bindings::
-        SomeClass::public_method);
+static_assert((void (test_namespace_bindings::SomeClass::*)()) &
+              ::test_namespace_bindings::SomeClass::public_method);
 
-static_assert(
-    (void (*)())&test_namespace_bindings::SomeClass::public_static_method);
+static_assert((void (*)()) &
+              ::test_namespace_bindings::SomeClass::public_static_method);
 
 #pragma clang diagnostic pop
