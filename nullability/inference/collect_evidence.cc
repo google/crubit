@@ -196,17 +196,6 @@ VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC) {
   return std::move(W.Index);
 }
 
-static RelatedSymbols saveVirtualMethodsMap(const RelatedVirtualMethodsMap& M) {
-  RelatedSymbols Result;
-  auto& RelatedMethods = *Result.mutable_related_symbols();
-  for (auto& [KeyMethod, MethodSet] : M) {
-    RelatedSymbols::SymbolSet& Methods = RelatedMethods[KeyMethod];
-    for (auto& Method : MethodSet)
-      Methods.add_symbols()->set_usr(Method.getKey());
-  }
-  return Result;
-}
-
 static RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols& R) {
   RelatedVirtualMethodsMap Related;
   for (const auto& [KeyMethod, Methods] : R.related_symbols()) {
@@ -214,14 +203,6 @@ static RelatedVirtualMethodsMap loadVirtualMethodsMap(const RelatedSymbols& R) {
     for (auto& Symbol : Methods.symbols()) RelatedMethods.insert(Symbol.usr());
   }
   return Related;
-}
-
-VirtualMethodIndexSummary saveVirtualMethodsIndex(const VirtualMethodIndex& M) {
-  VirtualMethodIndexSummary Result;
-  *Result.mutable_overrides_to_bases() = saveVirtualMethodsMap(M.Bases);
-  for (auto& Entry : M.IsDefinedInTest)
-    Result.add_virtual_methods_defined_in_tests()->set_usr(Entry.getKey());
-  return Result;
 }
 
 VirtualMethodIndex loadVirtualMethodsIndex(const VirtualMethodIndexSummary& R) {
@@ -586,16 +567,16 @@ static bool isOrIsConstructedFromNullPointerConstant(const Expr *absl_nonnull E,
 }
 
 llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
-    llvm::unique_function<EvidenceEmitter> Emit, VirtualMethodIndex Index) {
-  return [Emit = std::move(Emit),
-          Index = std::move(Index)](Evidence E) mutable {
+    llvm::unique_function<EvidenceEmitter> Emit,
+    absl_nonnull std::shared_ptr<const VirtualMethodIndex> Index) {
+  return [Index, Emit = std::move(Emit)](Evidence E) mutable {
     Emit(E);
     // Virtual methods and their overrides constrain each other's nullabilities,
     // so propagate evidence in the appropriate direction based on the evidence
     // kind and whether the evidence is for the return type or a parameter type.
     AdditionalVirtualMethodTargets Targets =
         getAdditionalTargetsForVirtualMethod(
-            E.symbol().usr(), E.kind(), E.slot() == SLOT_RETURN_TYPE, Index);
+            E.symbol().usr(), E.kind(), E.slot() == SLOT_RETURN_TYPE, *Index);
     *E.mutable_propagated_from() = E.symbol();
     for (std::string_view USR : Targets.NotCrossesFromTestToNontest) {
       E.mutable_symbol()->set_usr(USR);
@@ -612,8 +593,9 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
 llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
     llvm::unique_function<EvidenceEmitter> Emit, USRCache &USRCache,
     ASTContext &Ctx) {
-  return evidenceEmitterWithPropagation(std::move(Emit),
-                                        getVirtualMethodIndex(Ctx, USRCache));
+  return evidenceEmitterWithPropagation(
+      std::move(Emit), std::make_shared<VirtualMethodIndex>(
+                           getVirtualMethodIndex(Ctx, USRCache)));
 }
 
 static Evidence makeEvidence(std::string_view USR, Slot S, Evidence::Kind Kind,
@@ -3243,9 +3225,52 @@ llvm::Error collectEvidenceFromDefinition(
   return llvm::Error::success();
 }
 
+static void summarizeFromTUIndexIfPresent(
+    const FunctionDecl* absl_nullable Func, const VirtualMethodIndex& TUIndex,
+    USRCache& Cache, VirtualMethodIndexSummary& Summary) {
+  if (!Func) return;
+  // If Func isn't actually an override of a virtual method, we won't find it in
+  // TUIndex.Bases and will return early.
+  std::string_view OverrideUSR = getOrGenerateUSR(Cache, *Func);
+
+  auto It = TUIndex.Bases.find(OverrideUSR);
+  if (It == TUIndex.Bases.end()) return;
+  if (TUIndex.IsDefinedInTest.contains(OverrideUSR)) {
+    Summary.add_virtual_methods_defined_in_tests()->set_usr(OverrideUSR);
+  }
+  // All overrides tracked in TUIndex are expected have at least one base. If
+  // that's not the case, we can still safely proceed, but it would be nice to
+  // find out.
+  DCHECK(!It->second.empty());
+  RelatedSymbols::SymbolSet& BasesInSummary =
+      (*Summary.mutable_overrides_to_bases()
+            ->mutable_related_symbols())[OverrideUSR];
+  for (const auto& [BaseUSR, _] : It->second) {
+    BasesInSummary.add_symbols()->set_usr(BaseUSR);
+    if (TUIndex.IsDefinedInTest.contains(BaseUSR)) {
+      Summary.add_virtual_methods_defined_in_tests()->set_usr(BaseUSR);
+    }
+  }
+}
+
+static void saveCFGScopeVirtualMethodIndex(
+    const dataflow::ReferencedDecls& ReferencedDecls,
+    const FunctionDecl* absl_nullable TargetFunc,
+    const VirtualMethodIndex& VirtualMethodsInTU, USRCache& Cache,
+    VirtualMethodIndexSummary& CFGVirtualMethodSummary) {
+  for (const FunctionDecl* ReferencedFunc : ReferencedDecls.Functions) {
+    summarizeFromTUIndexIfPresent(ReferencedFunc, VirtualMethodsInTU, Cache,
+                                  CFGVirtualMethodSummary);
+  }
+  summarizeFromTUIndexIfPresent(TargetFunc, VirtualMethodsInTU, Cache,
+                                CFGVirtualMethodSummary);
+}
+
 llvm::Expected<CFGSummary> summarizeDefinition(
-    const Decl &Definition, USRCache &USRCache,
-    const NullabilityPragmas &Pragmas, const SolverFactory &MakeSolver) {
+    const Decl& Definition, USRCache& USRCache,
+    const NullabilityPragmas& Pragmas,
+    const VirtualMethodIndex& VirtualMethodsInTU,
+    const SolverFactory& MakeSolver) {
   std::optional<DeclStmt> DeclStmtForVarDecl;
   llvm::Expected<Stmt *absl_nonnull> T =
       getTarget(Definition, DeclStmtForVarDecl);
@@ -3285,10 +3310,13 @@ llvm::Expected<CFGSummary> summarizeDefinition(
       TypeNullabilityDefaults(Ctx, Pragmas), TargetFunc, TargetStmt,
       ReferencedDecls, Analysis, AnalysisContext.arena(), USRCache,
       NotTestMainFileLocFilter.get());
-
   for (const auto &IS : InferableSlots) {
     *Summary.add_inferable_slots() = saveInferableSlot(IS);
   }
+
+  saveCFGScopeVirtualMethodIndex(ReferencedDecls, TargetFunc,
+                                 VirtualMethodsInTU, USRCache,
+                                 *Summary.mutable_virtual_method_index());
 
   llvm::DenseSet<Atom> UsedTokens;
   std::vector<
@@ -3337,6 +3365,9 @@ llvm::Expected<CFGSummary> summarizeDefinition(
 
   *Summary.mutable_logical_context() =
       saveLogicalContext(std::move(UsedTokens), AnalysisContext);
+  SourceLocation Loc = Definition.getLocation();
+  if (Loc = Ctx.getSourceManager().getFileLoc(Loc); Loc.isValid())
+    Summary.set_definition_location(Loc.printToString(Ctx.getSourceManager()));
 
   if (Solver->reachedLimit()) {
     return llvm::createStringError(llvm::errc::interrupted,

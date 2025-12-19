@@ -295,9 +295,11 @@ TEST(SummarizeDefinitionTest, Deref) {
       }
       block_atom: 39
     }
+    virtual_method_index {}
+    definition_location: "input.cc:2:10"
   )pb";
 
-  auto Summary = summarizeTargetFuncDefinition(Src);
+  llvm::Expected<CFGSummary> Summary = summarizeTargetFuncDefinition(Src);
   ASSERT_THAT_EXPECTED(Summary, llvm::Succeeded());
   // Given our reliance on particular atoms, we verify that the atom maps are
   // not empty. It is difficult to meaningfully connect the input code to more
@@ -334,9 +336,11 @@ TEST(SummarizeDefinitionTest, NullableArgPassed) {
       }
       block_atom: 17
     }
+    virtual_method_index {}
+    definition_location: "input.cc:3:10"
   )pb";
 
-  auto Summary = summarizeTargetFuncDefinition(Src);
+  llvm::Expected<CFGSummary> Summary = summarizeTargetFuncDefinition(Src);
   ASSERT_THAT_EXPECTED(Summary, llvm::Succeeded());
   // Given our reliance on particular atoms, we verify that the atom maps are
   // not empty. It is difficult to meaningfully connect the input code to more
@@ -4467,7 +4471,8 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   switch (getMode()) {
     case DefinitionCollectionMode::kTestWithSummaries:
       EXPECT_THAT_EXPECTED(
-          summarizeDefinition(Decl, UsrCache, Pragmas),
+          summarizeDefinition(Decl, UsrCache, Pragmas,
+                              getVirtualMethodIndex(AST.context(), UsrCache)),
           llvm::FailedWithMessage(
               "Variable template specializations with InitListExprs in their "
               "initializers are currently unsupported."));
@@ -4517,7 +4522,8 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   switch (getMode()) {
     case DefinitionCollectionMode::kTestWithSummaries:
       EXPECT_THAT_EXPECTED(
-          summarizeDefinition(Decl, UsrCache, Pragmas),
+          summarizeDefinition(Decl, UsrCache, Pragmas,
+                              getVirtualMethodIndex(AST.context(), UsrCache)),
           llvm::FailedWithMessage(
               "Variable template specializations with InitListExprs in their "
               "initializers are currently unsupported."));

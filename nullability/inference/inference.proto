@@ -420,13 +420,6 @@ message LogicalContext {
   map<uint32, AtomSet> atom_deps = 3;
 }
 
-// Summarizes Nullability-relevant "behaviors" and relevant context from a CFG.
-message CFGSummary {
-  repeated InferableSlotProto inferable_slots = 1;
-  optional LogicalContext logical_context = 2;
-  repeated NullabilityBehaviorSummary behavior_summaries = 3;
-}
-
 // A generic serialization format for a relation between symbols. Currently,
 // used as for the `RelatedVirtualMethodsMap` type.
 //
@@ -447,10 +440,19 @@ message VirtualMethodIndexSummary {
   optional RelatedSymbols overrides_to_bases = 2;
 }
 
-// A summary for a whole translation unit.
-message TUSummary {
-  repeated CFGSummary cfg_summaries = 1;
-  optional VirtualMethodIndexSummary virtual_method_index = 2;
-  // Information about the TU that could be useful for debug logs.
-  optional string path = 3;
+// Summarizes Nullability-relevant "behaviors" and relevant context from a CFG.
+message CFGSummary {
+  repeated InferableSlotProto inferable_slots = 1;
+  optional LogicalContext logical_context = 2;
+  repeated NullabilityBehaviorSummary behavior_summaries = 3;
+  // `virtual_method_index` is not specific to a particular TU where the
+  // summarized CFG was seen, because it only summarizes overrides referenced in
+  // the CFG and their bases, which are the same in every TU where the CFG is
+  // present. Bases referenced in the CFG and their sets of overrides are
+  // collected across all TUs being summarized and stored elsewhere. Those sets
+  // are used globally for evidence propagation from bases to overrides across
+  // all TUs.
+  optional VirtualMethodIndexSummary virtual_method_index = 4;
+  // Stringified SourceLocation at which the summarized definition was found.
+  optional string definition_location = 5;
 }

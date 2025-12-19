@@ -88,7 +88,9 @@ class InferenceManager {
   }
 
   struct FunctionSummariesAndEvidence {
-    TUSummary Summary;
+    // Theoretically, could deduplicate Summaries, but there shouldn't generally
+    // be duplicates in a single TU.
+    std::vector<CFGSummary> Summaries;
     std::vector<Evidence> DeclarationsEvidence;
     llvm::StringMap<MethodSummary> BaseToOverrides;
   };
@@ -97,32 +99,24 @@ class InferenceManager {
       const EvidenceSites& Sites, USRCache& USRCache) const {
     FunctionSummariesAndEvidence Result;
 
-    VirtualMethodIndex VMI = getVirtualMethodIndex(Ctx, USRCache);
-    // Exercise round-tripping parts of the VMI with saveVirtualMethodsIndex and
-    // loadVirtualMethodsIndex.
-    *Result.Summary.mutable_virtual_method_index() =
-        saveVirtualMethodsIndex(VMI);
+    auto VMI = std::make_shared<VirtualMethodIndex>(
+        getVirtualMethodIndex(Ctx, USRCache));
+    Result.BaseToOverrides = VMI->Overrides;
 
-    Result.BaseToOverrides = VMI.Overrides;
-
-    // Collect evidence for decls, and summaries for definitions.
+    // Collect evidence from decls and summaries of definitions.
     auto DeclEmitter = evidenceEmitterWithPropagation(
-        [&](Evidence E) { Result.DeclarationsEvidence.push_back(E); },
-        std::move(VMI));
+        [&](Evidence E) { Result.DeclarationsEvidence.push_back(E); }, VMI);
     for (const auto* Decl : Sites.Declarations) {
       if (Filter && !Filter(*Decl)) continue;
       collectEvidenceFromTargetDeclaration(*Decl, DeclEmitter, USRCache,
                                            Pragmas);
     }
-    if (auto MainFile = Ctx.getSourceManager().getFileEntryRefForID(
-            Ctx.getSourceManager().getMainFileID()))
-      *Result.Summary.mutable_path() = MainFile->getName().str();
     for (const auto* Impl : Sites.Definitions) {
       if (Filter && !Filter(*Impl)) continue;
 
       if (llvm::Expected<CFGSummary> Summary =
-              summarizeDefinition(*Impl, USRCache, Pragmas)) {
-        *Result.Summary.add_cfg_summaries() = *std::move(Summary);
+              summarizeDefinition(*Impl, USRCache, Pragmas, *VMI)) {
+        Result.Summaries.push_back(*std::move(Summary));
       } else {
         llvm::errs() << "Error summarizing definition: " << Summary.takeError()
                      << "\n";
@@ -137,17 +131,15 @@ class InferenceManager {
     std::vector<Evidence> AllEvidence =
         SummariesAndEvidence.DeclarationsEvidence;
 
-    VirtualMethodIndex VMI = loadVirtualMethodsIndex(
-        SummariesAndEvidence.Summary.virtual_method_index());
-    VMI.Overrides = SummariesAndEvidence.BaseToOverrides;
-
     // Collect evidence from summaries.
-    auto Emitter = evidenceEmitterWithPropagation(
-        [&](Evidence E) { AllEvidence.push_back(E); }, std::move(VMI));
-    for (const auto& FuncSummary :
-         SummariesAndEvidence.Summary.cfg_summaries()) {
+    for (const CFGSummary& Summary : SummariesAndEvidence.Summaries) {
+      auto VMI = std::make_shared<VirtualMethodIndex>(
+          loadVirtualMethodsIndex(Summary.virtual_method_index()));
+      VMI->Overrides = SummariesAndEvidence.BaseToOverrides;
+      auto Emitter = evidenceEmitterWithPropagation(
+          [&](Evidence E) { AllEvidence.push_back(E); }, VMI);
       if (llvm::Error Err = collectEvidenceFromSummary(
-              FuncSummary, Emitter, InferencesFromLastRound)) {
+              Summary, Emitter, InferencesFromLastRound)) {
         llvm::errs() << "Error collecting evidence from summary "
                      << llvm::toString(std::move(Err)) << "\n";
       }

@@ -98,7 +98,6 @@ struct VirtualMethodIndex {
 /// Index the relationships between virtual methods in the TU.
 VirtualMethodIndex getVirtualMethodIndex(ASTContext &Ctx, USRCache &UC);
 
-VirtualMethodIndexSummary saveVirtualMethodsIndex(const VirtualMethodIndex& M);
 VirtualMethodIndex loadVirtualMethodsIndex(const VirtualMethodIndexSummary& R);
 
 class SortedFingerprintVector {
@@ -175,7 +174,8 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
 /// Creates an EvidenceEmitter as above, but allows re-use of a
 /// VirtualMethodIndex.
 llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
-    llvm::unique_function<EvidenceEmitter> Emit, VirtualMethodIndex Index);
+    llvm::unique_function<EvidenceEmitter> Emit,
+    absl_nonnull std::shared_ptr<const VirtualMethodIndex> Index);
 
 /// Analyze code (such as a function body or variable initializer) to infer
 /// nullability.
@@ -192,12 +192,13 @@ llvm::Error collectEvidenceFromDefinition(
     const PreviousInferences &PreviousInferences = {},
     const SolverFactory &MakeSolver = makeDefaultSolverForInference);
 
-// Summarizes Nullability-relevant behaviors in `Definition`. If the resulting
-// summary has no `behavior_summaries`, the analysis succeeded, but there's no
-// relevant content.
+// Summarizes Nullability-relevant behaviors in and context for `Definition`.
+// If the resulting summary has no `behavior_summaries`, the analysis succeeded,
+// but there's no relevant content.
 llvm::Expected<CFGSummary> summarizeDefinition(
     const Decl& Definition, USRCache& USRCache,
     const NullabilityPragmas& Pragmas,
+    const VirtualMethodIndex& VirtualMethodsInTU,
     const SolverFactory& MakeSolver = makeDefaultSolverForInference);
 
 llvm::Error collectEvidenceFromSummary(

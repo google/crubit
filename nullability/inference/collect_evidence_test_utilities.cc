@@ -4,6 +4,7 @@
 
 #include "nullability/inference/collect_evidence_test_utilities.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -79,7 +80,8 @@ static llvm::Expected<CFGSummary> summarizeDefinitionNamed(
   clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
   const Decl& Definition =
       *dataflow::test::findValueDecl(AST.context(), TargetName);
-  return summarizeDefinition(Definition, UsrCache, Pragmas);
+  return summarizeDefinition(Definition, UsrCache, Pragmas,
+                             getVirtualMethodIndex(AST.context(), UsrCache));
 }
 
 llvm::Expected<CFGSummary> summarizeTargetFuncDefinition(
@@ -95,22 +97,21 @@ collectFromDefinitionViaSummaryWithErrors(
     const SolverFactory& MakeSolver) {
   USRCache UsrCache;
   std::vector<Evidence> Results;
-  auto Summary = summarizeDefinition(Definition, UsrCache, Pragmas, MakeSolver);
+  VirtualMethodIndex TUScopeVMI = getVirtualMethodIndex(ASTCtx, UsrCache);
+  llvm::Expected<CFGSummary> Summary = summarizeDefinition(
+      Definition, UsrCache, Pragmas, TUScopeVMI, MakeSolver);
   if (!Summary) return {Summary.takeError(), Results};
 
-  // In the context of a pipeline, the index would be created from the AST and
-  // then serialized to proto, along with the summaries. We round-trip the index
-  // here to ensure proper testing of the full save/restore flow.
-  VirtualMethodIndex VMI = getVirtualMethodIndex(ASTCtx, UsrCache);
-  VirtualMethodIndexSummary VMIProto = saveVirtualMethodsIndex(VMI);
-
-  VirtualMethodIndex PostVMI = loadVirtualMethodsIndex(VMIProto);
-  PostVMI.Overrides = std::move(VMI.Overrides);
+  auto VMIForPropagation = std::make_shared<VirtualMethodIndex>(
+      loadVirtualMethodsIndex(Summary->virtual_method_index()));
+  // All overrides from anywhere in the TU are relevant for propagating
+  // evidence, so we use the entire TU-scoped collection for this direction.
+  VMIForPropagation->Overrides = std::move(TUScopeVMI.Overrides);
   return {collectEvidenceFromSummary(
               *Summary,
               evidenceEmitterWithPropagation(
                   [&Results](const Evidence& E) { Results.push_back(E); },
-                  std::move(PostVMI)),
+                  VMIForPropagation),
               InputInferences, MakeSolver),
           Results};
 }
