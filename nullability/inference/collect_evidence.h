@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -193,9 +194,9 @@ llvm::Error collectEvidenceFromDefinition(
     const SolverFactory &MakeSolver = makeDefaultSolverForInference);
 
 // Summarizes Nullability-relevant behaviors in and context for `Definition`.
-// If the resulting summary has no `behavior_summaries`, the analysis succeeded,
-// but there's no relevant content.
-llvm::Expected<CFGSummary> summarizeDefinition(
+// If std::nullopt is returned, the analysis succeeded, but there's no relevant
+// content.
+llvm::Expected<std::optional<CFGSummary>> summarizeDefinition(
     const Decl& Definition, USRCache& USRCache,
     const NullabilityPragmas& Pragmas,
     const VirtualMethodIndex& VirtualMethodsInTU,

@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_TEST_UTILITIES_H_
 #define THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_TEST_UTILITIES_H_
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -105,7 +106,7 @@ std::string printToString(DefinitionCollectionMode Mode);
 
 /// Summarizes the definition in `Source` with the name "target" (a generic name
 /// using the LLVM-style capitalization for function names).
-llvm::Expected<CFGSummary> summarizeTargetFuncDefinition(
+llvm::Expected<std::optional<CFGSummary>> summarizeTargetFuncDefinition(
     llvm::StringRef Source);
 
 //// Returns both an error and a vector to represent partial computations --

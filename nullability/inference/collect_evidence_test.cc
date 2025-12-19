@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -299,18 +300,21 @@ TEST(SummarizeDefinitionTest, Deref) {
     definition_location: "input.cc:2:10"
   )pb";
 
-  llvm::Expected<CFGSummary> Summary = summarizeTargetFuncDefinition(Src);
-  ASSERT_THAT_EXPECTED(Summary, llvm::Succeeded());
+  llvm::Expected<std::optional<CFGSummary>> SummaryResult =
+      summarizeTargetFuncDefinition(Src);
+  ASSERT_THAT_EXPECTED(SummaryResult, llvm::Succeeded());
+  ASSERT_TRUE(SummaryResult->has_value());
+  CFGSummary& Summary = **SummaryResult;
   // Given our reliance on particular atoms, we verify that the atom maps are
   // not empty. It is difficult to meaningfully connect the input code to more
   // detailed aspects of these maps.
-  EXPECT_THAT(Summary->logical_context().atom_defs(), Not(IsEmpty()));
-  Summary->mutable_logical_context()->clear_atom_defs();
+  EXPECT_THAT(Summary.logical_context().atom_defs(), Not(IsEmpty()));
+  Summary.mutable_logical_context()->clear_atom_defs();
 
-  EXPECT_THAT(Summary->logical_context().atom_deps(), Not(IsEmpty()));
-  Summary->mutable_logical_context()->clear_atom_deps();
+  EXPECT_THAT(Summary.logical_context().atom_deps(), Not(IsEmpty()));
+  Summary.mutable_logical_context()->clear_atom_deps();
 
-  EXPECT_THAT(*Summary, EqualsProto(Proto));
+  EXPECT_THAT(Summary, EqualsProto(Proto));
 }
 
 TEST(SummarizeDefinitionTest, NullableArgPassed) {
@@ -340,18 +344,21 @@ TEST(SummarizeDefinitionTest, NullableArgPassed) {
     definition_location: "input.cc:3:10"
   )pb";
 
-  llvm::Expected<CFGSummary> Summary = summarizeTargetFuncDefinition(Src);
-  ASSERT_THAT_EXPECTED(Summary, llvm::Succeeded());
+  llvm::Expected<std::optional<CFGSummary>> SummaryResult =
+      summarizeTargetFuncDefinition(Src);
+  ASSERT_THAT_EXPECTED(SummaryResult, llvm::Succeeded());
+  ASSERT_TRUE(SummaryResult->has_value());
+  CFGSummary& Summary = **SummaryResult;
   // Given our reliance on particular atoms, we verify that the atom maps are
   // not empty. It is difficult to meaningfully connect the input code to more
   // detailed aspects of these maps.
-  EXPECT_THAT(Summary->logical_context().atom_defs(), Not(IsEmpty()));
-  Summary->mutable_logical_context()->clear_atom_defs();
+  EXPECT_THAT(Summary.logical_context().atom_defs(), Not(IsEmpty()));
+  Summary.mutable_logical_context()->clear_atom_defs();
 
-  EXPECT_THAT(Summary->logical_context().atom_deps(), Not(IsEmpty()));
-  Summary->mutable_logical_context()->clear_atom_deps();
+  EXPECT_THAT(Summary.logical_context().atom_deps(), Not(IsEmpty()));
+  Summary.mutable_logical_context()->clear_atom_deps();
 
-  EXPECT_THAT(*Summary, EqualsProto(Proto));
+  EXPECT_THAT(Summary, EqualsProto(Proto));
 }
 
 class CollectEvidenceFromDefinitionTest

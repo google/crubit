@@ -3266,7 +3266,7 @@ static void saveCFGScopeVirtualMethodIndex(
                                 CFGVirtualMethodSummary);
 }
 
-llvm::Expected<CFGSummary> summarizeDefinition(
+llvm::Expected<std::optional<CFGSummary>> summarizeDefinition(
     const Decl& Definition, USRCache& USRCache,
     const NullabilityPragmas& Pragmas,
     const VirtualMethodIndex& VirtualMethodsInTU,
@@ -3290,7 +3290,7 @@ llvm::Expected<CFGSummary> summarizeDefinition(
   // functions.
   if (!TargetFunc && !isInferenceTarget(Definition) &&
       !hasAnyInferenceTargets(ReferencedDecls))
-    return Summary;
+    return std::nullopt;
 
   ASTContext &Ctx = Definition.getASTContext();
   llvm::Expected<dataflow::AdornedCFG> ACFG =
@@ -3340,10 +3340,10 @@ llvm::Expected<CFGSummary> summarizeDefinition(
                               .moveInto(Results))
     return Error;
 
-  // When `Results` are empty, the post-analysis callbacks should not have been
-  // called, so `Summary` should be empty. But, to be sure, explicitly return a
-  // fresh empty summary.
-  if (Results.empty()) return CFGSummary();
+  // When `Results` are empty, there's nothing to summarize and the
+  // post-analysis callbacks should not have been called, so `Summary` should be
+  // empty. Instead of returning an empty summary, don't return one.
+  if (Results.empty()) return std::nullopt;
 
   if (std::optional<dataflow::DataflowAnalysisState<PointerNullabilityLattice>>
           &ExitBlockResult = Results[ACFG->getCFG().getExit().getBlockID()]) {
@@ -3374,6 +3374,7 @@ llvm::Expected<CFGSummary> summarizeDefinition(
                                    "SAT solver reached iteration limit");
   }
 
+  if (Summary.behavior_summaries_size() <= 0) return std::nullopt;
   return Summary;
 }
 

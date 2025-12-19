@@ -5,6 +5,7 @@
 #include "nullability/inference/collect_evidence_test_utilities.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -73,7 +74,7 @@ std::string printToString(DefinitionCollectionMode Mode) {
   llvm_unreachable("Unknown CollectionMode");
 }
 
-static llvm::Expected<CFGSummary> summarizeDefinitionNamed(
+static llvm::Expected<std::optional<CFGSummary>> summarizeDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source) {
   USRCache UsrCache;
   NullabilityPragmas Pragmas;
@@ -84,7 +85,7 @@ static llvm::Expected<CFGSummary> summarizeDefinitionNamed(
                              getVirtualMethodIndex(AST.context(), UsrCache));
 }
 
-llvm::Expected<CFGSummary> summarizeTargetFuncDefinition(
+llvm::Expected<std::optional<CFGSummary>> summarizeTargetFuncDefinition(
     llvm::StringRef Source) {
   return summarizeDefinitionNamed("target", Source);
 }
@@ -98,17 +99,20 @@ collectFromDefinitionViaSummaryWithErrors(
   USRCache UsrCache;
   std::vector<Evidence> Results;
   VirtualMethodIndex TUScopeVMI = getVirtualMethodIndex(ASTCtx, UsrCache);
-  llvm::Expected<CFGSummary> Summary = summarizeDefinition(
+  llvm::Expected<std::optional<CFGSummary>> SummaryResult = summarizeDefinition(
       Definition, UsrCache, Pragmas, TUScopeVMI, MakeSolver);
-  if (!Summary) return {Summary.takeError(), Results};
+  if (!SummaryResult) return {SummaryResult.takeError(), Results};
+  if (!SummaryResult->has_value())
+    return {llvm::Error::success(), std::vector<Evidence>{}};
+  CFGSummary& Summary = **SummaryResult;
 
   auto VMIForPropagation = std::make_shared<VirtualMethodIndex>(
-      loadVirtualMethodsIndex(Summary->virtual_method_index()));
+      loadVirtualMethodsIndex(Summary.virtual_method_index()));
   // All overrides from anywhere in the TU are relevant for propagating
   // evidence, so we use the entire TU-scoped collection for this direction.
   VMIForPropagation->Overrides = std::move(TUScopeVMI.Overrides);
   return {collectEvidenceFromSummary(
-              *Summary,
+              Summary,
               evidenceEmitterWithPropagation(
                   [&Results](const Evidence& E) { Results.push_back(E); },
                   VMIForPropagation),

@@ -5,6 +5,7 @@
 #include "nullability/inference/infer_tu.h"
 
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -114,9 +115,11 @@ class InferenceManager {
     for (const auto* Impl : Sites.Definitions) {
       if (Filter && !Filter(*Impl)) continue;
 
-      if (llvm::Expected<CFGSummary> Summary =
+      if (llvm::Expected<std::optional<CFGSummary>> Summary =
               summarizeDefinition(*Impl, USRCache, Pragmas, *VMI)) {
-        Result.Summaries.push_back(*std::move(Summary));
+        if (Summary->has_value()) {
+          Result.Summaries.push_back(**std::move(Summary));
+        }
       } else {
         llvm::errs() << "Error summarizing definition: " << Summary.takeError()
                      << "\n";
