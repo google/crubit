@@ -55,16 +55,18 @@ not be null, and if they point to a nonzero span of memory, must not be
 dangling. (The behavior of a program which violates these rules is undefined.)
 
 C++ doesn't share these rules, and care must be taken when converting Rust
-references to and from C++ pointers. For example, spans/slices are particularly
-error-prone: a Rust empty slice uses a dangling pointer (which produces UB in
-C++ when used in pointer arithmetic), and a C++ empty span (often) uses nullptr
-(which is UB in Rust). To effectively use spans in FFI, one must either use
-non-native types, or perform a conversion operation which rewrites the pointer
-values. For that, we recommend using the conversion routines provided by Crubit
-support library (e.g. `impl From<string_view> for &[u8]`).
+references to and from C++ pointers.
 
-TODO(b/271016831, b/262580415): Cover `rs_std::Slice<T>` and/or `rs_std::str`
-above once these types are provided by Crubit.
+Spans/slices are particularly error-prone: a Rust empty slice (`&[]`) is
+represented using a dangling pointer with length zero, while a C++ empty span
+typically uses nullptr. Using a nullptr with a Rust empty slice would result in
+UB, as would using a dangling pointer in C++. In order to address this,
+Crubit provides non-native types with conversion operators:
+
+*   Rust has `absl::{string_view, span<T>}` types which provide `From`-based
+    conversions to `&str` and `&[T]`.
+*   C++ has `rs_std::{StrRef, Slice<T>}` types which provide implicit
+    conversions to and from `string_view` and `span<T>`.
 
 ## References to uninitialized memory or invalid values
 
