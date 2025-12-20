@@ -44,7 +44,7 @@ extern "C" void __rust_thunk___ZN16PolymorphicBase23FooEv(
   __this->Foo();
 }
 
-static_assert((void (::PolymorphicBase2::*)())&PolymorphicBase2::Foo);
+static_assert((void (PolymorphicBase2::*)()) & ::PolymorphicBase2::Foo);
 
 extern "C" void __rust_thunk___ZN16PolymorphicBase2D1Ev(
     class PolymorphicBase2* __this) {

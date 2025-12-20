@@ -23,7 +23,7 @@ extern "C" void __rust_thunk___Z13GetMyTemplatev(
   new (__return) auto(GetMyTemplate());
 }
 
-static_assert((struct MyTemplate<int> (*)())&GetMyTemplate);
+static_assert((struct MyTemplate<int> (*)()) & ::GetMyTemplate);
 
 static_assert(CRUBIT_SIZEOF(struct MyTemplate<int>) == 4);
 static_assert(alignof(struct MyTemplate<int>) == 4);

@@ -183,11 +183,7 @@ fn parse_any(ident: &str) -> syn::Result<Ident> {
 /// Formats a C++ (qualified) identifier. Returns an error when `ident` is a C++
 /// reserved keyword or is an invalid identifier.
 pub fn format_cc_ident(ident: &str) -> Result<Ident> {
-    ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
-    ensure!(
-        !is_cpp_reserved_keyword(ident),
-        "`{ident}` is a C++ reserved keyword and can't be used as a C++ identifier",
-    );
+    check_valid_cc_name(ident)?;
     // Explicitly mapping the error via `anyhow!`, because `LexError` is not `Sync`
     // (required for `anyhow::Error` to implement `From<LexError>`) and
     // therefore we can't just use `?`.
@@ -378,12 +374,26 @@ impl NamespaceQualifier {
 
     /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
     pub fn format_for_cc(&self) -> Result<TokenStream> {
-        let namespace_cc_idents = self.cc_idents()?;
-        Ok(quote! { #(#namespace_cc_idents::)* })
+        let mut path = quote! {};
+        for namespace in &self.namespaces {
+            let namespace = format_cc_ident(namespace)?;
+            path.extend(quote! { #namespace :: });
+        }
+        for (rs_name, cc_name) in &self.nested_records {
+            let cc_name = format_cc_type_name(&cc_name)?;
+            path.extend(quote! { #cc_name ::});
+        }
+        Ok(path)
     }
 
-    pub fn cc_idents(&self) -> Result<Vec<Ident>> {
-        self.parts().map(|ns| format_cc_ident(ns)).collect()
+    /// Returns `foo::bar::baz::` (never reporting errors).
+    pub fn format_for_cc_debug(&self) -> String {
+        let mut path = String::new();
+        for part in self.parts() {
+            path.push_str(part);
+            path.push_str("::");
+        }
+        path
     }
 }
 

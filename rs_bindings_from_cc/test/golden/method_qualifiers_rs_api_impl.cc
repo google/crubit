@@ -25,15 +25,15 @@ extern "C" void __rust_thunk___ZN9NoninlineC1Ev(struct Noninline* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (::Noninline::*)())&Noninline::UnqualifiedMethod);
+static_assert((void (Noninline::*)()) & ::Noninline::UnqualifiedMethod);
 
-static_assert((void (::Noninline::*)() &)&Noninline::LvalueMethod);
+static_assert((void (Noninline::*)() &)&::Noninline::LvalueMethod);
 
-static_assert((void (::Noninline::*)() const&)&Noninline::LvalueMethodConst);
+static_assert((void (Noninline::*)() const&)&::Noninline::LvalueMethodConst);
 
-static_assert((void (::Noninline::*)() &&)&Noninline::RvalueMethod);
+static_assert((void (Noninline::*)() &&)&::Noninline::RvalueMethod);
 
-static_assert((void (::Noninline::*)() const&&)&Noninline::RvalueMethodConst);
+static_assert((void (Noninline::*)() const&&)&::Noninline::RvalueMethodConst);
 
 static_assert(sizeof(struct Inline) == 1);
 static_assert(alignof(struct Inline) == 1);
@@ -47,34 +47,34 @@ extern "C" void __rust_thunk___ZN6Inline17UnqualifiedMethodEv(
   __this->UnqualifiedMethod();
 }
 
-static_assert((void (::Inline::*)())&Inline::UnqualifiedMethod);
+static_assert((void (Inline::*)()) & ::Inline::UnqualifiedMethod);
 
 extern "C" void __rust_thunk___ZNR6Inline12LvalueMethodEv(
     struct Inline* __this) {
   __this->LvalueMethod();
 }
 
-static_assert((void (::Inline::*)() &)&Inline::LvalueMethod);
+static_assert((void (Inline::*)() &)&::Inline::LvalueMethod);
 
 extern "C" void __rust_thunk___ZNKR6Inline17LvalueMethodConstEv(
     struct Inline const* __this) {
   __this->LvalueMethodConst();
 }
 
-static_assert((void (::Inline::*)() const&)&Inline::LvalueMethodConst);
+static_assert((void (Inline::*)() const&)&::Inline::LvalueMethodConst);
 
 extern "C" void __rust_thunk___ZNO6Inline12RvalueMethodEv(
     struct Inline* __this) {
   std::move(*__this).RvalueMethod();
 }
 
-static_assert((void (::Inline::*)() &&)&Inline::RvalueMethod);
+static_assert((void (Inline::*)() &&)&::Inline::RvalueMethod);
 
 extern "C" void __rust_thunk___ZNKO6Inline17RvalueMethodConstEv(
     struct Inline const* __this) {
   std::move(*__this).RvalueMethodConst();
 }
 
-static_assert((void (::Inline::*)() const&&)&Inline::RvalueMethodConst);
+static_assert((void (Inline::*)() const&&)&::Inline::RvalueMethodConst);
 
 #pragma clang diagnostic pop

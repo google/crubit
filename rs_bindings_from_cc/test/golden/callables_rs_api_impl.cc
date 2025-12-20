@@ -31,6 +31,6 @@ extern "C" int __rust_thunk___ZNK17NotCABICompatible3getEv(
   return __this->get();
 }
 
-static_assert((int (::NotCABICompatible::*)() const) & NotCABICompatible::get);
+static_assert((int (NotCABICompatible::*)() const) & ::NotCABICompatible::get);
 
 #pragma clang diagnostic pop

@@ -29,7 +29,7 @@ extern "C" void __rust_thunk___ZN3FooC1Ev(struct Foo* __this) {
 
 extern "C" void __rust_thunk___Z3foov() { foo(); }
 
-static_assert((void (*)())&foo);
+static_assert((void (*)()) & ::foo);
 
 static_assert(CRUBIT_SIZEOF(struct Bar) == 4);
 static_assert(alignof(struct Bar) == 4);

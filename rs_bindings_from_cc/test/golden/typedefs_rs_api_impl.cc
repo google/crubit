@@ -47,6 +47,6 @@ extern "C" void __rust_thunk___ZN14SomeOtherUnionC1Ev(SomeOtherUnion* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((SomeStruct::nested_type (*)())&FunctionUsingNestedType);
+static_assert((SomeStruct::nested_type (*)()) & ::FunctionUsingNestedType);
 
 #pragma clang diagnostic pop

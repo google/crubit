@@ -92,7 +92,7 @@ extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();
 }
 
-static_assert((void (*)())&VoidReturningFunction);
+static_assert((void (*)()) & ::VoidReturningFunction);
 
 extern "C" crubit::type_identity_t<int&(int const&, int*)>*
 __rust_thunk___Z32FunctionPointerReturningFunctionv() {
@@ -100,13 +100,13 @@ __rust_thunk___Z32FunctionPointerReturningFunctionv() {
 }
 
 static_assert((crubit::type_identity_t<int&(int const&, int*)> * (*)()) &
-              FunctionPointerReturningFunction);
+              ::FunctionPointerReturningFunction);
 
 extern "C" void* __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
     void* __param_0, void const* __param_1) {
   return FunctionWithVoidPointers(__param_0, __param_1);
 }
 
-static_assert((void* (*)(void*, void const*)) & FunctionWithVoidPointers);
+static_assert((void* (*)(void*, void const*)) & ::FunctionWithVoidPointers);
 
 #pragma clang diagnostic pop

@@ -25,7 +25,7 @@ extern "C" void __rust_thunk___Z15ReturnCppStructv(
       ::crubit::CppStructAbi(), __return_abi_buffer, ReturnCppStruct());
 }
 
-static_assert((struct CppStruct (*)())&ReturnCppStruct);
+static_assert((struct CppStruct (*)()) & ::ReturnCppStruct);
 
 extern "C" void __rust_thunk___Z13TakeCppStruct9CppStruct(
     const unsigned char* __param_0) {
@@ -33,7 +33,7 @@ extern "C" void __rust_thunk___Z13TakeCppStruct9CppStruct(
       ::crubit::CppStructAbi(), __param_0));
 }
 
-static_assert((void (*)(struct CppStruct))&TakeCppStruct);
+static_assert((void (*)(struct CppStruct)) & ::TakeCppStruct);
 
 static_assert(CRUBIT_SIZEOF(struct Vec3) == 12);
 static_assert(alignof(struct Vec3) == 4);
@@ -55,8 +55,8 @@ extern "C" void __rust_thunk___Z16MakeOptionalVec3fffb(
       __return_abi_buffer, MakeOptionalVec3(x, y, z, is_present));
 }
 
-static_assert((struct MyOption<Vec3> (*)(float, float, float,
-                                         bool))&MakeOptionalVec3);
+static_assert((struct MyOption<Vec3> (*)(float, float, float, bool)) &
+              ::MakeOptionalVec3);
 
 extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
     unsigned char* __return_abi_buffer, const unsigned char* v, float factor) {
@@ -73,8 +73,8 @@ extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
                   factor));
 }
 
-static_assert((struct MyOption<Vec3> (*)(struct MyOption<Vec3>,
-                                         float))&MapMultiply);
+static_assert((struct MyOption<Vec3> (*)(struct MyOption<Vec3>, float)) &
+              ::MapMultiply);
 
 extern "C" void __rust_thunk___Z14MakeMyI8Structv(
     unsigned char* __return_abi_buffer) {
@@ -85,11 +85,12 @@ extern "C" void __rust_thunk___Z14MakeMyI8Structv(
       __return_abi_buffer, MakeMyI8Struct());
 }
 
-static_assert((struct MyOption<MyI8Struct> (*)())&MakeMyI8Struct);
+static_assert((struct MyOption<MyI8Struct> (*)()) & ::MakeMyI8Struct);
 
 static_assert(
-    (void (*)(::rs_std::SliceRef<class std::basic_string_view<
-                  char, std::char_traits<char>>>))&InspectStringViews);
+    (void (*)(::rs_std::SliceRef<
+              class std::basic_string_view<char, std::char_traits<char>>>)) &
+    ::InspectStringViews);
 
 extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
     unsigned char* __return_abi_buffer) {
@@ -100,7 +101,7 @@ extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
       __return_abi_buffer, MaybeVoidPtr());
 }
 
-static_assert((struct MyOption<void*> (*)())&MaybeVoidPtr);
+static_assert((struct MyOption<void*> (*)()) & ::MaybeVoidPtr);
 
 extern "C" void
 __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
@@ -114,7 +115,8 @@ __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE
 }
 
 static_assert((struct MyOption<rs_std::SliceRef<const int>> (*)(
-    ::rs_std::SliceRef<const int>))&AcceptsSliceAndReturnsStatusErrorIfEmpty);
+                  ::rs_std::SliceRef<const int>)) &
+              ::AcceptsSliceAndReturnsStatusErrorIfEmpty);
 
 extern "C" void __rust_thunk___Z16ReturnsCStrArrayv(
     unsigned char* __return_abi_buffer) {
@@ -125,7 +127,7 @@ extern "C" void __rust_thunk___Z16ReturnsCStrArrayv(
       __return_abi_buffer, ReturnsCStrArray());
 }
 
-static_assert((struct MyOption<const char**> (*)())&ReturnsCStrArray);
+static_assert((struct MyOption<const char**> (*)()) & ::ReturnsCStrArray);
 
 static_assert(
     CRUBIT_SIZEOF(
