@@ -35,10 +35,6 @@ callable from Rust as if it were defined as:
 pub fn IsGreater(lhs: ffi::c_int, rhs: ffi::c_int) -> bool {...}
 ```
 
-Note: There are some temporary restrictions on the API shape. For example,
-functions that accept a type like `std::map` can't be called from Rust
-directly via Crubit. These restrictions will be relaxed over time.
-
 ### Rust {.new-tab}
 
 Consider the following Rust function:
@@ -52,10 +48,6 @@ This function becomes callable from C++ as if it were defined as:
 ```c++
 bool is_greater(int32_t lhs, int32_t rhs);
 ```
-
-Note: There are some temporary restrictions on the API shape. For example,
-functions that accept two mutable references can't be called from C++
-directly via Crubit. These restrictions will be relaxed over time.
 
 </section>
 
