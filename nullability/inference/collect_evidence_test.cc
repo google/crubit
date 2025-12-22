@@ -2951,28 +2951,67 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartInitWithMakeUniqueCtor) {
                                     globalVarNamed("AssignedToNonnull"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
-       GlobalSmartInitWithMakeUniqueAggregate) {
+TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitArrayOfAggregates) {
   llvm::StringLiteral Src = R"cc(
-#include <memory>
     struct S {
-      int *P;
-      Nonnull<int *> Q;
+      int* P;
+      int* _Nonnull Q;
+      int* R;
     };
 
-    int *Foo();
+    int* Foo();
     int GInt;
-    int *AssignedToNonnull = Foo();
-    std::unique_ptr<S> Target = std::make_unique<S>(&GInt, AssignedToNonnull);
+    int* AssignedToNonnull = Foo();
+    S Target[] = {{&GInt, AssignedToNonnull, nullptr},
+                  {nullptr, AssignedToNonnull, nullptr}};
   )cc";
   EXPECT_THAT(
       collectFromDefinitionNamed("Target", Src, getMode()),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                    globalVarNamed("Target")),
-                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    fieldNamed("S::P")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("S::P")),
                            evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
-                                    globalVarNamed("AssignedToNonnull"))));
+                                    globalVarNamed("AssignedToNonnull")),
+                           evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    globalVarNamed("AssignedToNonnull")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("S::R")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("S::R"))));
+}
+
+TEST_P(CollectEvidenceFromDefinitionTest,
+       GlobalInitArrayOfSmartPtrsWithMakeUniqueAggregate) {
+  llvm::StringLiteral Src = R"cc(
+#include <memory>
+    struct S {
+      int* P;
+      int* _Nonnull Q;
+      int* R;
+    };
+
+    int* Foo();
+    int GInt;
+    int* AssignedToNonnull = Foo();
+    std::unique_ptr<S> Target[] = {
+        std::make_unique<S>(&GInt, AssignedToNonnull, nullptr),
+        std::make_unique<S>(nullptr, AssignedToNonnull, nullptr)};
+  )cc";
+  EXPECT_THAT(
+      collectFromDefinitionNamed("Target", Src, getMode()),
+      UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                                    fieldNamed("S::P")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("S::P")),
+                           evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    globalVarNamed("AssignedToNonnull")),
+                           evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
+                                    globalVarNamed("AssignedToNonnull")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("S::R")),
+                           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                                    fieldNamed("S::R"))));
 }
 
 TEST_P(CollectEvidenceFromDefinitionTest, StaticInitInClass) {
