@@ -58,7 +58,7 @@ for how to call it from Rust.
 Calling C++ APIs which use protobuf is slightly more difficult.
 
 First of all, add your `proto_library` target to the
-[allowlist](http://<internal link>). See b/414381884 for more context
+[allowlist](http://crubit.rs-proto-allowlist). See b/414381884 for more context
 & information on when this allowlist will be removed.
 
 ### Passing by value

@@ -39,20 +39,20 @@ impl Default for TrivialCustomType {
 }
 
 // Error while generating bindings for constructor 'TrivialCustomType::TrivialCustomType':
-// Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
+// Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'TrivialCustomType::TrivialCustomType':
-// Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (<internal link>):
+// Can't generate bindings for TrivialCustomType::TrivialCustomType, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::TrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'TrivialCustomType::operator=':
-// Can't generate bindings for TrivialCustomType::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for TrivialCustomType::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'TrivialCustomType::operator=':
-// Can't generate bindings for TrivialCustomType::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for TrivialCustomType::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TrivialCustomType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -77,7 +77,7 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 }
 
 // Error while generating bindings for constructor 'NontrivialCustomType::NontrivialCustomType':
-// Can't generate bindings for NontrivialCustomType::NontrivialCustomType, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialCustomType::NontrivialCustomType, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for NontrivialCustomType::NontrivialCustomType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialCustomType::operator||':
@@ -92,7 +92,7 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 
 // Error while generating bindings for struct 'TypeWithUnknownAttribute':
-// Can't generate bindings for TypeWithUnknownAttribute, because of missing required features (<internal link>):
+// Can't generate bindings for TypeWithUnknownAttribute, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TypeWithUnknownAttribute (unknown attribute(s): gnu::abi_tag)
 
 // Error while generating bindings for function 'FuncWithUnknownAttribute':
@@ -100,7 +100,7 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 // Unknown attribute: gnu::abi_tag`
 
 // Error while generating bindings for function 'ParamWithUnknownAttribute':
-// Can't generate bindings for ParamWithUnknownAttribute, because of missing required features (<internal link>):
+// Can't generate bindings for ParamWithUnknownAttribute, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for ParamWithUnknownAttribute (param i has unknown attribute(s): gnu::abi_tag)
 
 mod detail {

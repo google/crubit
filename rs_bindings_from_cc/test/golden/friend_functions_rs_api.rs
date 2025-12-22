@@ -39,20 +39,20 @@ impl Default for SomeClass {
 }
 
 // Error while generating bindings for constructor 'SomeClass::SomeClass':
-// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::SomeClass, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'SomeClass::SomeClass':
-// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::SomeClass, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeClass::operator=':
-// Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeClass::operator=':
-// Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -63,19 +63,19 @@ pub fn visible_val(mut __param_0: crate::SomeClass) {
 }
 
 // Error while generating bindings for function 'visible_ref':
-// Can't generate bindings for visible_ref, because of missing required features (<internal link>):
+// Can't generate bindings for visible_ref, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for visible_ref (the type of __param_0 (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'visible_cref':
-// Can't generate bindings for visible_cref, because of missing required features (<internal link>):
+// Can't generate bindings for visible_cref, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for visible_cref (the type of __param_0 (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'visible_rref':
-// Can't generate bindings for visible_rref, because of missing required features (<internal link>):
+// Can't generate bindings for visible_rref, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for visible_rref (the type of __param_0 (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'multiple_declarations':
-// Can't generate bindings for multiple_declarations, because of missing required features (<internal link>):
+// Can't generate bindings for multiple_declarations, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:friend_functions_cc needs [//features:experimental] for multiple_declarations (the type of __param_0 (parameter #0): references are not supported)
 
 mod detail {

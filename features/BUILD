@@ -20,7 +20,7 @@ _EXPERIMENTAL_CLIENTS = [
 # A feature set containing all supported Crubit features.
 # Add this to the `aspect_hints` of a `cc_library` to generate Rust bindings for that library.
 #
-# See <internal link>
+# See crubit.rs-features#supported
 crubit_feature_hint(
     name = "supported",
     compatible_with = ["//buildenv/target:non_prod"],
@@ -36,7 +36,7 @@ _WRAPPER_FEATURES = [
 # A feature set containing wrapper-library Crubit features, in addition to the officially supported
 # features.
 #
-# See <internal link>
+# See crubit.rs-features#wrapper
 crubit_feature_hint(
     name = "wrapper",
     compatible_with = ["//buildenv/target:non_prod"],
@@ -46,7 +46,7 @@ crubit_feature_hint(
 
 # A feature set which specifically std::vector support.
 #
-# See <internal link>
+# See crubit.rs-features#other
 crubit_feature_hint(
     name = "std_vector",
     compatible_with = ["//buildenv/target:non_prod"],
@@ -56,7 +56,7 @@ crubit_feature_hint(
 
 # A feature set which specifically enables std::unique_ptr support.
 #
-# See <internal link>
+# See crubit.rs-features#other
 crubit_feature_hint(
     name = "std_unique_ptr",
     compatible_with = ["//buildenv/target:non_prod"],
@@ -66,7 +66,7 @@ crubit_feature_hint(
 
 # A feature set which specifically enables non-`Unpin` type handling with the `ctor` crate.
 #
-# See <internal link>
+# See crubit.rs-features#other
 crubit_feature_hint(
     name = "non_unpin_ctor",
     compatible_with = ["//buildenv/target:non_prod"],
@@ -76,7 +76,7 @@ crubit_feature_hint(
 
 # A feature set enabling emitting `ffi_11` types in bindings.
 #
-# See <internal link>
+# See crubit.rs-features#other
 crubit_feature_hint(
     name = "custom_ffi_types",
     compatible_with = ["//buildenv/target:non_prod"],
@@ -87,7 +87,7 @@ crubit_feature_hint(
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #
-# See <internal link>
+# See crubit.rs-features#experimental
 crubit_feature_hint(
     name = "experimental",
     compatible_with = ["//buildenv/target:non_prod"],

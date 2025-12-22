@@ -1089,7 +1089,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
             } else {
                 bail!(
                     "C++ move operations are unavailable for this type. See \
-                    http://<internal link>/rust/movable_types for an explanation of Rust types that are C++ \
+                    http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
                     movable."
                 );
             }

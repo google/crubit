@@ -1509,7 +1509,7 @@ pub fn generate_function(
                 #![allow(unused_variables)]
                 unreachable!(
                     "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
+                    If this message appears at runtime, please report a crubit.rs-bug."
                 )
             };
             if !return_type.is_unpin() {

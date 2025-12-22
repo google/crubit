@@ -116,7 +116,7 @@ There are two ways to look at the generated header file:
 ### Unsupported features
 
 Some features are either unsupported, or else only supported with experimental
-feature flags (<internal link>). In order to get bindings for a Rust
+feature flags (crubit.rs-features). In order to get bindings for a Rust
 interface, that interface must only use the subset of features currently
 supported.
 

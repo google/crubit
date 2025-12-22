@@ -738,7 +738,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
         RsTypeKind::Record { record, crate_path, .. } => {
             ensure!(
                 record.is_unpin(),
-                "Type `{}` must be Rust-movable in order to memcpy through a bridge buffer. See <internal link>/cpp/classes_and_structs#rust_movable",
+                "Type `{}` must be Rust-movable in order to memcpy through a bridge buffer. See crubit.rs/cpp/classes_and_structs#rust_movable",
                 record.cc_name
             );
 

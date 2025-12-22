@@ -15,8 +15,8 @@
 #![deny(warnings)]
 
 // Error while generating bindings for function 'UseNotCrubitExposed':
-// Can't generate bindings for UseNotCrubitExposed, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc needs [//features:wrapper] for UseNotCrubitExposed (the type of not_crubit_exposed (parameter #0): error: Can't generate bindings for NotCrubitExposed, because of missing required features (<internal link>):
+// Can't generate bindings for UseNotCrubitExposed, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc needs [//features:wrapper] for UseNotCrubitExposed (the type of not_crubit_exposed (parameter #0): error: Can't generate bindings for NotCrubitExposed, because of missing required features (crubit.rs-features):
 // rs_bindings_from_cc/test/golden/not_crubit_exposed.h needs [//features:supported] for NotCrubitExposed)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]

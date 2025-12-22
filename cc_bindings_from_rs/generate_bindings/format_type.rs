@@ -568,7 +568,7 @@ fn treat_ref_as_ptr<'tcx>(
     // valid exclusively for the lifetime of the function.
     //
     // References with a more complex lifetime are converted to pointers.
-    // See <internal link> for more details on the motivation.
+    // See crubit.rs-special-lifetimes for more details on the motivation.
     let TypeLocation::FnParam { is_self_param, elided_is_output } = location else {
         return RefConvert::ToRef;
     };

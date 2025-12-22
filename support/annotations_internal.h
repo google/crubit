@@ -8,7 +8,7 @@
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 
-// Style waiver granted in <internal link>
+// Style waiver granted in crubit.rs-style-waiver-attribute-annotate
 #if ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate) && \
     ABSL_HAVE_CPP_ATTRIBUTE(clang::annotate_type)
 #define CRUBIT_INTERNAL_ANNOTATE(...) [[clang::annotate(__VA_ARGS__)]]

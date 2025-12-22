@@ -94,7 +94,7 @@ not generate:
 ```rust
 // Generated from: examples/cpp/function/example.h;l=11
 // Error while generating bindings for item 'crubit_add_two_integers':
-// Can't generate bindings for crubit_add_two_integers, because of missing required features (<internal link>):
+// Can't generate bindings for crubit_add_two_integers, because of missing required features (crubit.rs-features):
 // //examples/cpp/function:example_lib_broken needs [//features:supported] for crubit_add_two_integers (return type)
 // //examples/cpp/function:example_lib_broken needs [//features:supported] for crubit_add_two_integers (the type of x (parameter #0))
 // //examples/cpp/function:example_lib_broken needs [//features:supported] for crubit_add_two_integers (the type of y (parameter #1))
@@ -110,7 +110,7 @@ itself in the abstract.
 `supported` indicates that a library target supports Rust callers via Crubit,
 using the stable features. Other functions and classes might require
 `experimental`, for experimental features of Crubit. For example, if we had
-defined an`operator+`. For more on this, see <internal link>.
+defined an`operator+`. For more on this, see crubit.rs-features.
 
 ### Enable Crubit on a target {#enable}
 
@@ -156,7 +156,7 @@ cs/file:examples/cpp/function/main.rs
 ### Unsupported features
 
 Some features are either unsupported, or else only supported with experimental
-feature flags (<internal link>). In order to get bindings for a C++
+feature flags (crubit.rs-features). In order to get bindings for a C++
 interface, that interface must only use the subset of features currently
 supported.
 

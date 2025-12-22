@@ -1,6 +1,6 @@
 # Customizing bindings using annotations
 
-<internal link>/cpp/customizing
+crubit.rs/cpp/customizing
 
 [TOC]
 

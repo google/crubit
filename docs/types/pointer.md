@@ -92,4 +92,4 @@ are an unsupported type which do not map to any C++ type at all.
 The one exception to this rule are function parameters. In some limited
 circumstances, Rust functions may accept references, and the corresponding C++
 interface will accept C++ references. This is documented in
-<internal link>/rust/functions.
+crubit.rs/rust/functions.

@@ -68,20 +68,20 @@ impl Default for SomeClass {
 }
 
 // Error while generating bindings for constructor 'SomeClass::SomeClass':
-// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::SomeClass, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'SomeClass::SomeClass':
-// Can't generate bindings for SomeClass::SomeClass, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::SomeClass, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::SomeClass (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeClass::operator=':
-// Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeClass::operator=':
-// Can't generate bindings for SomeClass::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for SomeClass::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:static_methods_cc needs [//features:experimental] for SomeClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 

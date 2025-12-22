@@ -51,20 +51,20 @@ impl Default for UserOfImportedType {
 }
 
 // Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
-// Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
+// Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'UserOfImportedType::UserOfImportedType':
-// Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (<internal link>):
+// Can't generate bindings for UserOfImportedType::UserOfImportedType, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::UserOfImportedType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'UserOfImportedType::operator=':
-// Can't generate bindings for UserOfImportedType::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for UserOfImportedType::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'UserOfImportedType::operator=':
-// Can't generate bindings for UserOfImportedType::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for UserOfImportedType::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc needs [//features:experimental] for UserOfImportedType::operator= (the type of __param_0 (parameter #1): references are not supported)
 

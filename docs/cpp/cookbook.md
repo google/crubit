@@ -18,7 +18,7 @@ the recommended practices to evolve over time, as Crubit's capabilities expand!
 
 ## Making types Rust-movable {#rust_movable}
 
-As described in <internal link>/cpp/classes_and_structs#rust_movable, types cannot be
+As described in crubit.rs/cpp/classes_and_structs#rust_movable, types cannot be
 passed by value in Rust unless they are Rust-movable.
 
 This can happen for a couple of easily fixable reasons, described in
@@ -38,7 +38,7 @@ more radically restructuring your code to avoid those patterns.
 
 ### `ABSL_ATTRIBUTE_TRIVIAL_ABI` {#trivial_abi}
 
-<internal link>/cpp/cookbook#trivial_abi
+crubit.rs/cpp/cookbook#trivial_abi
 
 One of the ways a type can become non-Rust-movable is if it has a copy/move
 constructor / assignment operator, or a destructor. In that case, Clang will
@@ -80,7 +80,7 @@ struct ABSL_ATTRIBUTE_TRIVIAL_ABI LogWhenDestroyed {
 
 ### Boxing in a pointer {#boxing}
 
-<internal link>/cpp/cookbook#boxing
+crubit.rs/cpp/cookbook#boxing
 
 One of the ways a type can become non-Rust-movable is if it has a field, where
 the type of that field is not Rust-movable. There is no way to override this:
@@ -135,7 +135,7 @@ struct Person {
 
 ```c++ {.good}
 struct Person {
-  // boxed to make Person rust-movable: <internal link>/cpp/cookbook#boxing
+  // boxed to make Person rust-movable: crubit.rs/cpp/cookbook#boxing
   std::unique_ptr<std::string> name;
   int age;
 }
@@ -162,7 +162,7 @@ struct Person {
 
 ```c++ {.good}
 struct ABSL_ATTRIBUTE_TRIVIAL_ABI Person {
-  // Owned, boxed to make Person rust-movable: <internal link>/cpp/cookbook#boxing
+  // Owned, boxed to make Person rust-movable: crubit.rs/cpp/cookbook#boxing
   std::string* name;
   int age;
 
@@ -180,7 +180,7 @@ does not care about the address of `Person`.)
 
 ## Renaming functions for Rust {#renaming}
 
-<internal link>/cpp/cookbook#renaming
+crubit.rs/cpp/cookbook#renaming
 
 Overloaded functions cannot be called from Rust (yet: b/213280424). To make them
 available anyway, you can define new non-overloaded functions with different
@@ -195,9 +195,9 @@ void Foo(float x);
 void Foo(int x);
 void Foo(float x);
 
-// For Rust callers: <internal link>/cpp/cookbook#renaming
+// For Rust callers: crubit.rs/cpp/cookbook#renaming
 inline void FooInt(int x) {return Foo(x);}
-// For Rust callers: <internal link>/cpp/cookbook#renaming
+// For Rust callers: crubit.rs/cpp/cookbook#renaming
 inline void FooFloat(float x) {return Foo(x);}
 ```
 

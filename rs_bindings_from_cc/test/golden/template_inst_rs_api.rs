@@ -41,23 +41,23 @@ forward_declare::unsafe_define!(
 );
 
 // Error while generating bindings for constructor 'MyTemplate<int>::MyTemplate<int>':
-// Can't generate bindings for MyTemplate<int>::MyTemplate<int>, because of missing required features (<internal link>):
+// Can't generate bindings for MyTemplate<int>::MyTemplate<int>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:template_inst_cc needs [//features:experimental] for MyTemplate<int>::MyTemplate<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Error while generating bindings for constructor 'MyTemplate<int>::MyTemplate<int>':
-// Can't generate bindings for MyTemplate<int>::MyTemplate<int>, because of missing required features (<internal link>):
+// Can't generate bindings for MyTemplate<int>::MyTemplate<int>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:template_inst_cc needs [//features:experimental] for MyTemplate<int>::MyTemplate<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Error while generating bindings for constructor 'MyTemplate<int>::MyTemplate<int>':
-// Can't generate bindings for MyTemplate<int>::MyTemplate<int>, because of missing required features (<internal link>):
+// Can't generate bindings for MyTemplate<int>::MyTemplate<int>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:template_inst_cc needs [//features:experimental] for MyTemplate<int>::MyTemplate<int> (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Error while generating bindings for function 'MyTemplate<int>::operator=':
-// Can't generate bindings for MyTemplate<int>::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for MyTemplate<int>::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:template_inst_cc needs [//features:experimental] for MyTemplate<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 // Error while generating bindings for function 'MyTemplate<int>::operator=':
-// Can't generate bindings for MyTemplate<int>::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for MyTemplate<int>::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:template_inst_cc needs [//features:experimental] for MyTemplate<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
 
 mod detail {

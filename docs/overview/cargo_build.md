@@ -2,7 +2,7 @@
 
 # Cargo Build of Crubit
 
-<internal link>/overview/cargo_build
+crubit.rs/overview/cargo_build
 
 <!--*
 # Document freshness: For more information, see <internal link>.

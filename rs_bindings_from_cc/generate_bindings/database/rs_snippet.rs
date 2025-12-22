@@ -1061,7 +1061,7 @@ impl RsTypeKind {
         match self {
             RsTypeKind::Pointer { .. } => {
                 // TODO(jeanpierreda): provide end-user-facing docs, and insert a link to e.g.
-                // something like <internal link>
+                // something like crubit.rs-self-lifetime
                 bail!(
                     "`self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function."
                 )

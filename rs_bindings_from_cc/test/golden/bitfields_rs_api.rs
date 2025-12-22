@@ -53,20 +53,20 @@ impl Default for WithBitfields {
 }
 
 // Error while generating bindings for constructor 'WithBitfields::WithBitfields':
-// Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
+// Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'WithBitfields::WithBitfields':
-// Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (<internal link>):
+// Can't generate bindings for WithBitfields::WithBitfields, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::WithBitfields (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'WithBitfields::operator=':
-// Can't generate bindings for WithBitfields::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for WithBitfields::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'WithBitfields::operator=':
-// Can't generate bindings for WithBitfields::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for WithBitfields::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for WithBitfields::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -99,20 +99,20 @@ impl Default for AlignmentRegressionTest {
 }
 
 // Error while generating bindings for constructor 'AlignmentRegressionTest::AlignmentRegressionTest':
-// Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
+// Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AlignmentRegressionTest::AlignmentRegressionTest':
-// Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (<internal link>):
+// Can't generate bindings for AlignmentRegressionTest::AlignmentRegressionTest, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::AlignmentRegressionTest (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AlignmentRegressionTest::operator=':
-// Can't generate bindings for AlignmentRegressionTest::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AlignmentRegressionTest::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AlignmentRegressionTest::operator=':
-// Can't generate bindings for AlignmentRegressionTest::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AlignmentRegressionTest::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:bitfields_cc needs [//features:experimental] for AlignmentRegressionTest::operator= (the type of __param_0 (parameter #1): references are not supported)
 

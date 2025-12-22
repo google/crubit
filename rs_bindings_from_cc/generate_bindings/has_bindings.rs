@@ -269,7 +269,7 @@ pub fn type_target_restriction(
             type_target_restriction_shallow(db, child_type.clone()),
         )
         .with_context(|| {
-            format!("<internal link>_visibility_error: {} has child types which are `pub(crate)` in two different crates, and cannot be used", rs_type_kind.display(db))
+            format!("crubit.rs-type_visibility_error: {} has child types which are `pub(crate)` in two different crates, and cannot be used", rs_type_kind.display(db))
         })?;
     }
     Ok(most_restricted_subtype.target)

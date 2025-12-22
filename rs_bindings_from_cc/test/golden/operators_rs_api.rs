@@ -48,25 +48,25 @@ impl Default for AddableConstMember {
 }
 
 // Error while generating bindings for constructor 'AddableConstMember::AddableConstMember':
-// Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableConstMember::AddableConstMember':
-// Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMember::AddableConstMember, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::AddableConstMember (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableConstMember::operator=':
-// Can't generate bindings for AddableConstMember::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMember::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableConstMember::operator=':
-// Can't generate bindings for AddableConstMember::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMember::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableConstMember::operator+':
-// Can't generate bindings for AddableConstMember::operator+, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMember::operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMember::operator+ (the type of rhs (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -97,25 +97,25 @@ impl Default for AddableNonConstMember {
 }
 
 // Error while generating bindings for constructor 'AddableNonConstMember::AddableNonConstMember':
-// Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
+// Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableNonConstMember::AddableNonConstMember':
-// Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (<internal link>):
+// Can't generate bindings for AddableNonConstMember::AddableNonConstMember, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::AddableNonConstMember (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableNonConstMember::operator=':
-// Can't generate bindings for AddableNonConstMember::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableNonConstMember::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableNonConstMember::operator=':
-// Can't generate bindings for AddableNonConstMember::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableNonConstMember::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableNonConstMember::operator+':
-// Can't generate bindings for AddableNonConstMember::operator+, because of missing required features (<internal link>):
+// Can't generate bindings for AddableNonConstMember::operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableNonConstMember::operator+ (the type of rhs (parameter #1): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -146,25 +146,25 @@ impl Default for AddableFriend {
 }
 
 // Error while generating bindings for constructor 'AddableFriend::AddableFriend':
-// Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableFriend::AddableFriend':
-// Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFriend::AddableFriend, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::AddableFriend (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFriend::operator=':
-// Can't generate bindings for AddableFriend::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFriend::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFriend::operator=':
-// Can't generate bindings for AddableFriend::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFriend::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFriend::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+':
-// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// Can't generate bindings for operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of rhs (parameter #1): references are not supported)
 
@@ -193,20 +193,20 @@ impl Default for AddableFreeByConstRef {
 }
 
 // Error while generating bindings for constructor 'AddableFreeByConstRef::AddableFreeByConstRef':
-// Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableFreeByConstRef::AddableFreeByConstRef':
-// Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByConstRef::AddableFreeByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::AddableFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByConstRef::operator=':
-// Can't generate bindings for AddableFreeByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByConstRef::operator=':
-// Can't generate bindings for AddableFreeByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -235,20 +235,20 @@ impl Default for AddableFreeByMutRef {
 }
 
 // Error while generating bindings for constructor 'AddableFreeByMutRef::AddableFreeByMutRef':
-// Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableFreeByMutRef::AddableFreeByMutRef':
-// Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByMutRef::AddableFreeByMutRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::AddableFreeByMutRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByMutRef::operator=':
-// Can't generate bindings for AddableFreeByMutRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByMutRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByMutRef::operator=':
-// Can't generate bindings for AddableFreeByMutRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByMutRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByMutRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -277,20 +277,20 @@ impl Default for AddableFreeByValue {
 }
 
 // Error while generating bindings for constructor 'AddableFreeByValue::AddableFreeByValue':
-// Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableFreeByValue::AddableFreeByValue':
-// Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByValue::AddableFreeByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::AddableFreeByValue (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByValue::operator=':
-// Can't generate bindings for AddableFreeByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByValue::operator=':
-// Can't generate bindings for AddableFreeByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -319,30 +319,30 @@ impl Default for AddableFreeByRValueRef {
 }
 
 // Error while generating bindings for constructor 'AddableFreeByRValueRef::AddableFreeByRValueRef':
-// Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableFreeByRValueRef::AddableFreeByRValueRef':
-// Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByRValueRef::AddableFreeByRValueRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::AddableFreeByRValueRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByRValueRef::operator=':
-// Can't generate bindings for AddableFreeByRValueRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByRValueRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableFreeByRValueRef::operator=':
-// Can't generate bindings for AddableFreeByRValueRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableFreeByRValueRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableFreeByRValueRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+':
-// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// Can't generate bindings for operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+':
-// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// Can't generate bindings for operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of rhs (parameter #1): references are not supported)
 
@@ -390,29 +390,29 @@ impl Default for Overloaded {
 }
 
 // Error while generating bindings for constructor 'Overloaded::Overloaded':
-// Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
+// Can't generate bindings for Overloaded::Overloaded, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Overloaded::Overloaded':
-// Can't generate bindings for Overloaded::Overloaded, because of missing required features (<internal link>):
+// Can't generate bindings for Overloaded::Overloaded, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::Overloaded (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Overloaded::operator=':
-// Can't generate bindings for Overloaded::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Overloaded::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Overloaded::operator=':
-// Can't generate bindings for Overloaded::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Overloaded::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for Overloaded::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+':
-// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// Can't generate bindings for operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'operator+':
-// Can't generate bindings for operator+, because of missing required features (<internal link>):
+// Can't generate bindings for operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+ (the type of lhs (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -440,20 +440,20 @@ impl Default for IncompatibleLHS {
 }
 
 // Error while generating bindings for constructor 'IncompatibleLHS::IncompatibleLHS':
-// Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
+// Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'IncompatibleLHS::IncompatibleLHS':
-// Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (<internal link>):
+// Can't generate bindings for IncompatibleLHS::IncompatibleLHS, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::IncompatibleLHS (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'IncompatibleLHS::operator=':
-// Can't generate bindings for IncompatibleLHS::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for IncompatibleLHS::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'IncompatibleLHS::operator=':
-// Can't generate bindings for IncompatibleLHS::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for IncompatibleLHS::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -491,25 +491,25 @@ impl Default for AddableReturnsVoid {
 }
 
 // Error while generating bindings for constructor 'AddableReturnsVoid::AddableReturnsVoid':
-// Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
+// Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddableReturnsVoid::AddableReturnsVoid':
-// Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (<internal link>):
+// Can't generate bindings for AddableReturnsVoid::AddableReturnsVoid, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::AddableReturnsVoid (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableReturnsVoid::operator=':
-// Can't generate bindings for AddableReturnsVoid::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableReturnsVoid::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableReturnsVoid::operator=':
-// Can't generate bindings for AddableReturnsVoid::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableReturnsVoid::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableReturnsVoid::operator+':
-// Can't generate bindings for AddableReturnsVoid::operator+, because of missing required features (<internal link>):
+// Can't generate bindings for AddableReturnsVoid::operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableReturnsVoid::operator+ (the type of rhs (parameter #1): references are not supported)
 
 #[::ctor::recursively_pinned(PinnedDrop)]
@@ -545,16 +545,16 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
 }
 
 // Error while generating bindings for constructor 'AddableConstMemberNonunpin::AddableConstMemberNonunpin':
-// Can't generate bindings for AddableConstMemberNonunpin::AddableConstMemberNonunpin, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMemberNonunpin::AddableConstMemberNonunpin, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::AddableConstMemberNonunpin (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableConstMemberNonunpin::operator=':
-// Can't generate bindings for AddableConstMemberNonunpin::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMemberNonunpin::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddableConstMemberNonunpin::operator+':
-// Can't generate bindings for AddableConstMemberNonunpin::operator+, because of missing required features (<internal link>):
+// Can't generate bindings for AddableConstMemberNonunpin::operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddableConstMemberNonunpin::operator+ (the type of rhs (parameter #1): references are not supported)
 
 impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
@@ -589,20 +589,20 @@ impl Default for AddAssignMemberInt {
 }
 
 // Error while generating bindings for constructor 'AddAssignMemberInt::AddAssignMemberInt':
-// Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignMemberInt::AddAssignMemberInt':
-// Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberInt::AddAssignMemberInt, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::AddAssignMemberInt (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignMemberInt::operator=':
-// Can't generate bindings for AddAssignMemberInt::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberInt::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignMemberInt::operator=':
-// Can't generate bindings for AddAssignMemberInt::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberInt::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -640,25 +640,25 @@ impl Default for AddAssignMemberByConstRef {
 }
 
 // Error while generating bindings for constructor 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
-// Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignMemberByConstRef::AddAssignMemberByConstRef':
-// Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberByConstRef::AddAssignMemberByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::AddAssignMemberByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignMemberByConstRef::operator=':
-// Can't generate bindings for AddAssignMemberByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignMemberByConstRef::operator=':
-// Can't generate bindings for AddAssignMemberByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignMemberByConstRef::operator+=':
-// Can't generate bindings for AddAssignMemberByConstRef::operator+=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignMemberByConstRef::operator+=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator+= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberByConstRef::operator+= (the type of rhs (parameter #1): references are not supported)
 
@@ -687,20 +687,20 @@ impl Default for AddAssignFreeByConstRef {
 }
 
 // Error while generating bindings for constructor 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
-// Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignFreeByConstRef::AddAssignFreeByConstRef':
-// Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByConstRef::AddAssignFreeByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::AddAssignFreeByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFreeByConstRef::operator=':
-// Can't generate bindings for AddAssignFreeByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFreeByConstRef::operator=':
-// Can't generate bindings for AddAssignFreeByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -738,25 +738,25 @@ impl Default for AddAssignFreeByValue {
 }
 
 // Error while generating bindings for constructor 'AddAssignFreeByValue::AddAssignFreeByValue':
-// Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignFreeByValue::AddAssignFreeByValue':
-// Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByValue::AddAssignFreeByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::AddAssignFreeByValue (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFreeByValue::operator=':
-// Can't generate bindings for AddAssignFreeByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFreeByValue::operator=':
-// Can't generate bindings for AddAssignFreeByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFreeByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFreeByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+=':
-// Can't generate bindings for operator+=, because of missing required features (<internal link>):
+// Can't generate bindings for operator+=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (the type of lhs (parameter #0): references are not supported)
 
@@ -785,20 +785,20 @@ impl Default for AddAssignFriendByConstRef {
 }
 
 // Error while generating bindings for constructor 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
-// Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignFriendByConstRef::AddAssignFriendByConstRef':
-// Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByConstRef::AddAssignFriendByConstRef, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::AddAssignFriendByConstRef (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFriendByConstRef::operator=':
-// Can't generate bindings for AddAssignFriendByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFriendByConstRef::operator=':
-// Can't generate bindings for AddAssignFriendByConstRef::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByConstRef::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByConstRef::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -836,25 +836,25 @@ impl Default for AddAssignFriendByValue {
 }
 
 // Error while generating bindings for constructor 'AddAssignFriendByValue::AddAssignFriendByValue':
-// Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignFriendByValue::AddAssignFriendByValue':
-// Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByValue::AddAssignFriendByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::AddAssignFriendByValue (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFriendByValue::operator=':
-// Can't generate bindings for AddAssignFriendByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignFriendByValue::operator=':
-// Can't generate bindings for AddAssignFriendByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignFriendByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignFriendByValue::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+=':
-// Can't generate bindings for operator+=, because of missing required features (<internal link>):
+// Can't generate bindings for operator+=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (the type of lhs (parameter #0): references are not supported)
 
@@ -885,20 +885,20 @@ impl Default for AddAssignProhibitedConstMember {
 }
 
 // Error while generating bindings for constructor 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
-// Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignProhibitedConstMember::AddAssignProhibitedConstMember':
-// Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::AddAssignProhibitedConstMember (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignProhibitedConstMember::operator=':
-// Can't generate bindings for AddAssignProhibitedConstMember::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedConstMember::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignProhibitedConstMember::operator=':
-// Can't generate bindings for AddAssignProhibitedConstMember::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedConstMember::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedConstMember::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -915,7 +915,7 @@ where
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
+                    If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
 }
@@ -947,25 +947,25 @@ impl Default for AddAssignProhibitedFriendConstLhs {
 }
 
 // Error while generating bindings for constructor 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
-// Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs':
-// Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::AddAssignProhibitedFriendConstLhs (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::operator=':
-// Can't generate bindings for AddAssignProhibitedFriendConstLhs::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'AddAssignProhibitedFriendConstLhs::operator=':
-// Can't generate bindings for AddAssignProhibitedFriendConstLhs::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for AddAssignProhibitedFriendConstLhs::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignProhibitedFriendConstLhs::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+=':
-// Can't generate bindings for operator+=, because of missing required features (<internal link>):
+// Can't generate bindings for operator+=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for operator+= (the type of lhs (parameter #0): references are not supported)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -1006,20 +1006,20 @@ impl Default for ManyOperators {
 }
 
 // Error while generating bindings for constructor 'ManyOperators::ManyOperators':
-// Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'ManyOperators::ManyOperators':
-// Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::ManyOperators, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::ManyOperators (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator=':
-// Can't generate bindings for ManyOperators::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator=':
-// Can't generate bindings for ManyOperators::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -1057,92 +1057,92 @@ impl<'a> ::core::ops::Not for &'a crate::ManyOperators {
 // Bindings for this kind of operator (operator ~ with 1 parameter(s)) are not supported
 
 // Error while generating bindings for function 'ManyOperators::operator+':
-// Can't generate bindings for ManyOperators::operator+, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+ (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator-':
-// Can't generate bindings for ManyOperators::operator-, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator-, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator- (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator*':
-// Can't generate bindings for ManyOperators::operator*, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator*, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator* (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator/':
-// Can't generate bindings for ManyOperators::operator/, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator/, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/ (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator%':
-// Can't generate bindings for ManyOperators::operator%, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator%, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator% (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator&':
-// Can't generate bindings for ManyOperators::operator&, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator&, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator& (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator|':
-// Can't generate bindings for ManyOperators::operator|, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator|, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator| (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator^':
-// Can't generate bindings for ManyOperators::operator^, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator^, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^ (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator<<':
-// Can't generate bindings for ManyOperators::operator<<, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator<<, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<< (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator>>':
-// Can't generate bindings for ManyOperators::operator>>, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>> (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator+=':
-// Can't generate bindings for ManyOperators::operator+=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator+=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator+= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator-=':
-// Can't generate bindings for ManyOperators::operator-=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator-=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator-= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator-= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator*=':
-// Can't generate bindings for ManyOperators::operator*=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator*=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator*= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator*= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator/=':
-// Can't generate bindings for ManyOperators::operator/=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator/=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator/= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator%=':
-// Can't generate bindings for ManyOperators::operator%=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator%=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator%= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator%= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator&=':
-// Can't generate bindings for ManyOperators::operator&=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator&=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator&= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator&= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator|=':
-// Can't generate bindings for ManyOperators::operator|=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator|=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator|= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator|= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator^=':
-// Can't generate bindings for ManyOperators::operator^=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator^=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator^= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator<<=':
-// Can't generate bindings for ManyOperators::operator<<=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator<<=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<<= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator<<= (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ManyOperators::operator>>=':
-// Can't generate bindings for ManyOperators::operator>>=, because of missing required features (<internal link>):
+// Can't generate bindings for ManyOperators::operator>>=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>>= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for ManyOperators::operator>>= (the type of rhs (parameter #1): references are not supported)
 

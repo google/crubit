@@ -20,5 +20,5 @@ pub type FooBar = ::nested_types_cc::foo::Bar;
 pub use ::nested_types_cc::foo::bar as foo_bar;
 
 // Error while generating bindings for type alias 'ConflictingSnakeCaseNamesInner':
-// Can't generate bindings for ConflictingSnakeCaseNamesInner, because of missing required features (<internal link>):
+// Can't generate bindings for ConflictingSnakeCaseNamesInner, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:depends_on_nested_types_cc needs [//features:wrapper] for ConflictingSnakeCaseNamesInner (error: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`)

@@ -1,6 +1,6 @@
 # Debugging Crubit
 
-<internal link>/overview/debugging
+crubit.rs/overview/debugging
 
 <!--*
 # Document freshness: For more information, see <internal link>.
@@ -16,7 +16,7 @@ go wrong, and it's nice to have tools and methods to diagnose those problems.
 
 NOTE: This feature is under development and is planned to be complete by the end
 of 2025. There might not be much in the logs yet. See b/449749452 for status,
-and the design doc <internal link>.
+and the design doc crubit.rs-logging.
 
 Crubit tool invocations only log at the error level or higher to keep spam out
 of build logs, but the stderr logging verbosity level is configurable.

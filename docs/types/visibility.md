@@ -7,7 +7,7 @@ exposing them everywhere, if their bindings are flawed or need work.
 
 ## Visibility errors
 
-<internal link>_visibility_error
+crubit.rs-type_visibility_error
 
 If the generated bindings for a type are `pub(crate)`, then bindings will not be
 generated when the type is used outside of that library. For example, consider

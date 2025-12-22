@@ -69,20 +69,20 @@ impl Default for ExistingRustTypeFieldTypes {
 }
 
 // Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
-// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
+// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes':
-// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (<internal link>):
+// Can't generate bindings for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::ExistingRustTypeFieldTypes (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ExistingRustTypeFieldTypes::operator=':
-// Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'ExistingRustTypeFieldTypes::operator=':
-// Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for ExistingRustTypeFieldTypes::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc needs [//features:experimental] for ExistingRustTypeFieldTypes::operator= (the type of __param_0 (parameter #1): references are not supported)
 

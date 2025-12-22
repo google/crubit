@@ -39,20 +39,20 @@ impl Default for r#type {
 }
 
 // Error while generating bindings for constructor 'type::type':
-// Can't generate bindings for type::type, because of missing required features (<internal link>):
+// Can't generate bindings for type::type, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'type::type':
-// Can't generate bindings for type::type, because of missing required features (<internal link>):
+// Can't generate bindings for type::type, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::type (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'type::operator=':
-// Can't generate bindings for type::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for type::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'type::operator=':
-// Can't generate bindings for type::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for type::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:escaping_keywords_cc needs [//features:experimental] for type::operator= (the type of __param_0 (parameter #1): references are not supported)
 

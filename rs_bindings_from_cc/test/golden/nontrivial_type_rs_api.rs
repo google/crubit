@@ -116,25 +116,25 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
 }
 
 // Error while generating bindings for constructor 'Nontrivial::Nontrivial':
-// Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Nontrivial::Nontrivial':
-// Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator=':
-// Can't generate bindings for Nontrivial::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator=':
-// Can't generate bindings for Nontrivial::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator=':
-// Can't generate bindings for Nontrivial::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator= (return type: references are not supported)
 
 impl ::ctor::Assign<f32> for Nontrivial {
@@ -160,26 +160,26 @@ impl ::ctor::PinnedDrop for Nontrivial {
 }
 
 // Error while generating bindings for function 'Nontrivial::RvalueRefQualified':
-// Can't generate bindings for Nontrivial::RvalueRefQualified, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::RvalueRefQualified, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::RvalueRefQualified (the type of __this (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::ConstRvalueRefQualified':
-// Can't generate bindings for Nontrivial::ConstRvalueRefQualified, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::ConstRvalueRefQualified, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::ConstRvalueRefQualified (the type of __this (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator==':
-// Can't generate bindings for Nontrivial::operator==, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::operator==, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator== (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator!=':
 // operator== is present, skipping bindings for operator!=
 
 // Error while generating bindings for function 'Nontrivial::operator<':
-// Can't generate bindings for Nontrivial::operator<, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::operator<, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator< (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator+':
-// Can't generate bindings for Nontrivial::operator+, because of missing required features (<internal link>):
+// Can't generate bindings for Nontrivial::operator+, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for Nontrivial::operator+ (the type of rhs (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Nontrivial::operator+=':
@@ -270,25 +270,25 @@ impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for NontrivialInl
 }
 
 // Error while generating bindings for constructor 'NontrivialInline::NontrivialInline':
-// Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'NontrivialInline::NontrivialInline':
-// Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialInline::NontrivialInline, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::NontrivialInline (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialInline::operator=':
-// Can't generate bindings for NontrivialInline::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialInline::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialInline::operator=':
-// Can't generate bindings for NontrivialInline::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialInline::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialInline::operator=':
-// Can't generate bindings for NontrivialInline::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialInline::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialInline::operator= (return type: references are not supported)
 
 impl ::ctor::PinnedDrop for NontrivialInline {
@@ -335,11 +335,11 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 }
 
 // Error while generating bindings for constructor 'NontrivialMembers::NontrivialMembers':
-// Can't generate bindings for NontrivialMembers::NontrivialMembers, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialMembers::NontrivialMembers, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::NontrivialMembers (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'NontrivialMembers::NontrivialMembers':
-// Can't generate bindings for NontrivialMembers::NontrivialMembers, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialMembers::NontrivialMembers, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::NontrivialMembers (the type of __param_0 (parameter #1): references are not supported)
 
 impl ::ctor::PinnedDrop for NontrivialMembers {
@@ -350,12 +350,12 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 }
 
 // Error while generating bindings for function 'NontrivialMembers::operator=':
-// Can't generate bindings for NontrivialMembers::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialMembers::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialMembers::operator=':
-// Can't generate bindings for NontrivialMembers::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialMembers::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialMembers::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -413,29 +413,29 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialUnpin {
 // Constructors with more than one parameter are not yet supported. See b/216648347.
 
 // Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
-// Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
-// Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
-// Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::NontrivialUnpin (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialUnpin::operator=':
-// Can't generate bindings for NontrivialUnpin::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialUnpin::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialUnpin::operator=':
-// Can't generate bindings for NontrivialUnpin::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialUnpin::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialUnpin::operator=':
-// Can't generate bindings for NontrivialUnpin::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialUnpin::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialUnpin::operator= (return type: references are not supported)
 
 impl Drop for NontrivialUnpin {
@@ -486,42 +486,42 @@ pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::Nontr
 }
 
 // Error while generating bindings for function 'TakesByReference':
-// Can't generate bindings for TakesByReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesByReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByReference (the type of nontrivial (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'TakesUnpinByReference':
-// Can't generate bindings for TakesUnpinByReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesUnpinByReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByReference (the type of nontrivial (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'TakesByConstReference':
-// Can't generate bindings for TakesByConstReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesByConstReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByConstReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByConstReference (the type of nontrivial (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'TakesUnpinByConstReference':
-// Can't generate bindings for TakesUnpinByConstReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesUnpinByConstReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByConstReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByConstReference (the type of nontrivial (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'TakesByRvalueReference':
-// Can't generate bindings for TakesByRvalueReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesByRvalueReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByRvalueReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByRvalueReference (the type of nontrivial (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'TakesUnpinByRvalueReference':
-// Can't generate bindings for TakesUnpinByRvalueReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesUnpinByRvalueReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByRvalueReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByRvalueReference (the type of nontrivial (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'TakesByConstRvalueReference':
-// Can't generate bindings for TakesByConstRvalueReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesByConstRvalueReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByConstRvalueReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesByConstRvalueReference (the type of nontrivial (parameter #0): references are not supported)
 
 // Error while generating bindings for function 'TakesUnpinByConstRvalueReference':
-// Can't generate bindings for TakesUnpinByConstRvalueReference, because of missing required features (<internal link>):
+// Can't generate bindings for TakesUnpinByConstRvalueReference, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByConstRvalueReference (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for TakesUnpinByConstRvalueReference (the type of nontrivial (parameter #0): references are not supported)
 
@@ -540,20 +540,20 @@ unsafe impl ::cxx::ExternType for NontrivialByValue {
 }
 
 // Error while generating bindings for constructor 'NontrivialByValue::NontrivialByValue':
-// Can't generate bindings for NontrivialByValue::NontrivialByValue, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialByValue::NontrivialByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::NontrivialByValue (the type of other (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'NontrivialByValue::NontrivialByValue':
-// Can't generate bindings for NontrivialByValue::NontrivialByValue, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialByValue::NontrivialByValue, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::NontrivialByValue (the type of other (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialByValue::operator=':
-// Can't generate bindings for NontrivialByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::operator= (the type of other (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'NontrivialByValue::operator=':
-// Can't generate bindings for NontrivialByValue::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for NontrivialByValue::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc needs [//features:experimental] for NontrivialByValue::operator= (the type of other (parameter #1): references are not supported)
 
@@ -587,7 +587,7 @@ where
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
+                    If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
 }
@@ -645,7 +645,7 @@ pub fn TakesNonmovableByValue<'error>(
     #![allow(unused_variables)]
     unreachable!(
         "This impl can never be instantiated. \
-                    If this message appears at runtime, please report a <internal link>."
+                    If this message appears at runtime, please report a crubit.rs-bug."
     )
 }
 

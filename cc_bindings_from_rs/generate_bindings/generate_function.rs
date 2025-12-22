@@ -675,7 +675,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 let tcx = db.tcx();
                 // Ref-qualify if the lifetime of `&self` is a named lifetime or if the elided
                 // lifetime appears in the return type.
-                // See <internal link> for more details on the motivation.
+                // See crubit.rs-special-lifetimes for more details on the motivation.
                 let ref_qualifier = if !region_is_elided(tcx, *region) {
                     let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
                     quote! { & #lifetime_annotation }

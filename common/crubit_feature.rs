@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 //! Supporting types to read and display Crubit feature flags
-//! (<internal link>)
+//! (crubit.rs-features)
 use serde::Deserialize;
 
 flagset::flags! {

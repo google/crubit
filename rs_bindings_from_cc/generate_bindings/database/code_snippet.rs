@@ -421,7 +421,7 @@ impl From<NoBindingsReason> for Error {
                     all_missing.push(missing.to_string());
                 }
                 anyhow!(
-                    "Can't generate bindings for {context}, because of missing required features (<internal link>):\n{}",
+                    "Can't generate bindings for {context}, because of missing required features (crubit.rs-features):\n{}",
                     all_missing.join("\n")
                 )
             }

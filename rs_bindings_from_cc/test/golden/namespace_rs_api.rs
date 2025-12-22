@@ -42,20 +42,20 @@ pub mod test_namespace_bindings {
     }
 
     // Error while generating bindings for constructor 'S::S':
-    // Can't generate bindings for S::S, because of missing required features (<internal link>):
+    // Can't generate bindings for S::S, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for constructor 'S::S':
-    // Can't generate bindings for S::S, because of missing required features (<internal link>):
+    // Can't generate bindings for S::S, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for function 'S::operator=':
-    // Can't generate bindings for S::operator=, because of missing required features (<internal link>):
+    // Can't generate bindings for S::operator=, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (return type: references are not supported)
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (the type of __param_0 (parameter #1): references are not supported)
 
     // Error while generating bindings for function 'S::operator=':
-    // Can't generate bindings for S::operator=, because of missing required features (<internal link>):
+    // Can't generate bindings for S::operator=, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (return type: references are not supported)
     // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -137,20 +137,20 @@ pub mod test_namespace_bindings_reopened {
         }
 
         // Error while generating bindings for constructor 'S::S':
-        // Can't generate bindings for S::S, because of missing required features (<internal link>):
+        // Can't generate bindings for S::S, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
 
         // Error while generating bindings for constructor 'S::S':
-        // Can't generate bindings for S::S, because of missing required features (<internal link>):
+        // Can't generate bindings for S::S, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::S (the type of __param_0 (parameter #1): references are not supported)
 
         // Error while generating bindings for function 'S::operator=':
-        // Can't generate bindings for S::operator=, because of missing required features (<internal link>):
+        // Can't generate bindings for S::operator=, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (return type: references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (the type of __param_0 (parameter #1): references are not supported)
 
         // Error while generating bindings for function 'S::operator=':
-        // Can't generate bindings for S::operator=, because of missing required features (<internal link>):
+        // Can't generate bindings for S::operator=, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (return type: references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for S::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -198,20 +198,20 @@ pub mod test_namespace_bindings_inline {
         }
 
         // Error while generating bindings for constructor 'StructInInlineNamespace::StructInInlineNamespace':
-        // Can't generate bindings for StructInInlineNamespace::StructInInlineNamespace, because of missing required features (<internal link>):
+        // Can't generate bindings for StructInInlineNamespace::StructInInlineNamespace, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::StructInInlineNamespace (the type of __param_0 (parameter #1): references are not supported)
 
         // Error while generating bindings for constructor 'StructInInlineNamespace::StructInInlineNamespace':
-        // Can't generate bindings for StructInInlineNamespace::StructInInlineNamespace, because of missing required features (<internal link>):
+        // Can't generate bindings for StructInInlineNamespace::StructInInlineNamespace, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::StructInInlineNamespace (the type of __param_0 (parameter #1): references are not supported)
 
         // Error while generating bindings for function 'StructInInlineNamespace::operator=':
-        // Can't generate bindings for StructInInlineNamespace::operator=, because of missing required features (<internal link>):
+        // Can't generate bindings for StructInInlineNamespace::operator=, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::operator= (return type: references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::operator= (the type of __param_0 (parameter #1): references are not supported)
 
         // Error while generating bindings for function 'StructInInlineNamespace::operator=':
-        // Can't generate bindings for StructInInlineNamespace::operator=, because of missing required features (<internal link>):
+        // Can't generate bindings for StructInInlineNamespace::operator=, because of missing required features (crubit.rs-features):
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::operator= (return type: references are not supported)
         // //rs_bindings_from_cc/test/golden:namespace_cc needs [//features:experimental] for StructInInlineNamespace::operator= (the type of __param_0 (parameter #1): references are not supported)
     }

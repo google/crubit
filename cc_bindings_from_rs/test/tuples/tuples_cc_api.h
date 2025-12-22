@@ -78,7 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
   ~NonCppMovable();
 
   // C++ move operations are unavailable for this type. See
-  // http://<internal link>/rust/movable_types for an explanation of Rust types that
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
   // are C++ movable.
   NonCppMovable(NonCppMovable&&) = delete;
   NonCppMovable& operator=(NonCppMovable&&) = delete;

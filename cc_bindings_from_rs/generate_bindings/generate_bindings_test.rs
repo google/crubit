@@ -1922,7 +1922,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_nor_clone_impl(
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let move_deleted_msg = "C++ move operations are unavailable for this type. See \
-                                http://<internal link>/rust/movable_types for an explanation of Rust \
+                                http://crubit.rs/rust/movable_types for an explanation of Rust \
                                 types that are C++ movable.";
         let pass_by_value_msg = format!(
             "Error generating bindings for `TypeUnderTest::pass_by_value` \
@@ -2305,7 +2305,7 @@ fn test_format_item_unsupported_struct_with_custom_drop_and_default_and_nonunpin
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let move_deleted_msg = "C++ move operations are unavailable for this type. See \
-                                http://<internal link>/rust/movable_types for an explanation of Rust \
+                                http://crubit.rs/rust/movable_types for an explanation of Rust \
                                 types that are C++ movable.";
         let pass_by_value_msg = format!(
             "Error generating bindings for `SomeStruct::pass_by_value` \

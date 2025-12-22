@@ -49,20 +49,20 @@ impl Default for Foo {
 }
 
 // Error while generating bindings for constructor 'Foo::Foo':
-// Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
+// Can't generate bindings for Foo::Foo, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Foo::Foo':
-// Can't generate bindings for Foo::Foo, because of missing required features (<internal link>):
+// Can't generate bindings for Foo::Foo, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::Foo (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Foo::operator=':
-// Can't generate bindings for Foo::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Foo::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Foo::operator=':
-// Can't generate bindings for Foo::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Foo::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Foo::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -113,20 +113,20 @@ impl Default for Bar {
 }
 
 // Error while generating bindings for constructor 'Bar::Bar':
-// Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
+// Can't generate bindings for Bar::Bar, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'Bar::Bar':
-// Can't generate bindings for Bar::Bar, because of missing required features (<internal link>):
+// Can't generate bindings for Bar::Bar, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::Bar (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Bar::operator=':
-// Can't generate bindings for Bar::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Bar::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'Bar::operator=':
-// Can't generate bindings for Bar::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for Bar::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for Bar::operator= (the type of __param_0 (parameter #1): references are not supported)
 
@@ -156,20 +156,20 @@ impl Default for HasNoComments {
 }
 
 // Error while generating bindings for constructor 'HasNoComments::HasNoComments':
-// Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
+// Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'HasNoComments::HasNoComments':
-// Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (<internal link>):
+// Can't generate bindings for HasNoComments::HasNoComments, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::HasNoComments (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'HasNoComments::operator=':
-// Can't generate bindings for HasNoComments::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for HasNoComments::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'HasNoComments::operator=':
-// Can't generate bindings for HasNoComments::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for HasNoComments::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:comment_cc needs [//features:experimental] for HasNoComments::operator= (the type of __param_0 (parameter #1): references are not supported)
 

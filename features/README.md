@@ -47,7 +47,7 @@ or generally-agreed upon impositions on library owners.
 
 Rust targets are well behaved, and are expected to support C++ callers and
 integrate into the existing C++ codebase. For that reason, Crubit is
-automatically enabled on all Rust targets. See <internal link>/rust.
+automatically enabled on all Rust targets. See crubit.rs/rust.
 
 However, by default, Crubit does not run at all on C++ targets. On a
 sufficiently "strange" target, Crubit can fail arbitrarily badly. As a
@@ -68,7 +68,7 @@ short of what you get with `:supported`.
 The `supported` feature enables generally-available C++/Rust interop
 capabilities, for libraries that specifically support FFI callers.
 
-See <internal link>/cpp for documentation on what this includes.
+See crubit.rs/cpp for documentation on what this includes.
 
 This is a no-op on Rust targets.
 
@@ -94,7 +94,7 @@ When bindings are generated for `:wrapper` that are not generated for
 `:supported`, they are marked `pub(crate)` and only usable with
 `additional_rust_srcs_for_crubit_bindings`.
 
-See <internal link> for more detail.
+See crubit.rs-comprehensive-fallbacks for more detail.
 
 As a result of all of these, the `:wrapper` feature is very unstable. For
 instance, if `absl::Cord` does not enable Crubit, or if Crubit is missing a
@@ -130,7 +130,7 @@ The other features float over time, as new features are taken from `:wrapper` or
 `:experimental` and moved into a separate, individual feature, and then released
 as part of `:supported` in a Bazel configuration change.
 
-See <internal link>/team/release for why features are released this way.
+See crubit.rs/team/release for why features are released this way.
 
 ## How-to: Testing Features {#testing}
 

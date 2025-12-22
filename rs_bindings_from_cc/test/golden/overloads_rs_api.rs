@@ -83,24 +83,24 @@ impl Default for Foo {
 }
 
 // Error while generating bindings for function 'Foo::BarBridgedInt':
-// Can't generate bindings for Foo::BarBridgedInt, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::BarBridgedInt (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<int>, because of missing required features (<internal link>):
+// Can't generate bindings for Foo::BarBridgedInt, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::BarBridgedInt (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<int>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation))
 
 // Error while generating bindings for function 'Foo::BarBridgedFloat':
-// Can't generate bindings for Foo::BarBridgedFloat, because of missing required features (<internal link>):
-// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::BarBridgedFloat (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<float>, because of missing required features (<internal link>):
+// Can't generate bindings for Foo::BarBridgedFloat, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Foo::BarBridgedFloat (the type of __param_0 (parameter #1): error: Can't generate bindings for Sizeof<float>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation))
 
 // Error while generating bindings for struct 'Sizeof<float>':
-// Can't generate bindings for Sizeof<float>, because of missing required features (<internal link>):
+// Can't generate bindings for Sizeof<float>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<float> (crate::__CcTemplateInst6SizeofIfE is a template instantiation)
 
 // Error while generating bindings for struct 'Sizeof<int>':
-// Can't generate bindings for Sizeof<int>, because of missing required features (<internal link>):
+// Can't generate bindings for Sizeof<int>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
 // //rs_bindings_from_cc/test/golden:overloads_cc needs [//features:wrapper] for Sizeof<int> (crate::__CcTemplateInst6SizeofIiE is a template instantiation)
 

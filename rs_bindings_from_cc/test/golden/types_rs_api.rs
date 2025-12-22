@@ -45,25 +45,25 @@ impl Default for SomeStruct {
 }
 
 // Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'SomeStruct::SomeStruct':
-// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (<internal link>):
+// Can't generate bindings for SomeStruct::SomeStruct, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::SomeStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeStruct::operator=':
-// Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for SomeStruct::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'SomeStruct::operator=':
-// Can't generate bindings for SomeStruct::operator=, because of missing required features (<internal link>):
+// Can't generate bindings for SomeStruct::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for SomeStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for struct 'ForwardDeclaredStruct':
-// Can't generate bindings for ForwardDeclaredStruct, because of missing required features (<internal link>):
+// Can't generate bindings for ForwardDeclaredStruct, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -113,7 +113,7 @@ pub struct FieldTypeTestStruct {
     /// const SomeStruct&& const_struct_rvalue_ref_field;
     ///
     /// Reason for representing this field as a blob of bytes:
-    /// missing features: [//features:wrapper]: error: Can't generate bindings for ForwardDeclaredStruct, because of missing required features (<internal link>):
+    /// missing features: [//features:wrapper]: error: Can't generate bindings for ForwardDeclaredStruct, because of missing required features (crubit.rs-features):
     /// //rs_bindings_from_cc/test/golden:types_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
     pub(crate) forward_declared_ptr_field: [::core::mem::MaybeUninit<u8>; 8],
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
@@ -126,15 +126,15 @@ unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
 }
 
 // Error while generating bindings for constructor 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
+// Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for constructor 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (<internal link>):
+// Can't generate bindings for FieldTypeTestStruct::FieldTypeTestStruct, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FieldTypeTestStruct::FieldTypeTestStruct (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'FunctionTakingPointersAndReferences':
-// Can't generate bindings for FunctionTakingPointersAndReferences, because of missing required features (<internal link>):
+// Can't generate bindings for FunctionTakingPointersAndReferences, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of const_ref_param (parameter #0): references are not supported)
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:experimental] for FunctionTakingPointersAndReferences (the type of mut_ref_param (parameter #1): references are not supported)
 

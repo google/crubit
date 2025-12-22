@@ -1123,7 +1123,7 @@ fn test_default_crubit_features_disabled_supported() -> Result<()> {
         let expected = &format!("\
             // Generated from: ir_from_cc_virtual_header.h;l=3\n\
             // Error while generating bindings for {kind} 'NotPresent':\n\
-            // Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+            // Can't generate bindings for NotPresent, because of missing required features (crubit.rs-features):\n\
             // //test:testing_target needs [//features:supported] for NotPresent");
         assert!(contents.contains(expected), "Missing expected string: {contents}\n")
     }
@@ -1143,7 +1143,7 @@ fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
     assert_cc_not_matches!(rs_api_impl, quote! {NotPresent});
     let expected = "\
         Error while generating bindings for struct 'NotPresent':\n\
-        Can't generate bindings for NotPresent, because of missing required features (<internal link>):\n\
+        Can't generate bindings for NotPresent, because of missing required features (crubit.rs-features):\n\
         //test:testing_target needs [//features:wrapper] for NotPresent (incomplete type)";
     assert_rs_matches!(rs_api, quote! { __COMMENT__ #expected});
     Ok(())

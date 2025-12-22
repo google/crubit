@@ -55,7 +55,7 @@
 // `do_not_bind_allowlist` or bindings generation will fail with a hard error.
 #define CRUBIT_DO_NOT_BIND CRUBIT_INTERNAL_ANNOTATE("crubit_do_not_bind")
 
-// By default, <internal link> will infer Rust safety based on the types of the
+// By default, crubit.rs will infer Rust safety based on the types of the
 // function's parameters. This annotation can be used to override that
 // inference.
 #define CRUBIT_OVERRIDE_UNSAFE(function_is_unsafe) \
@@ -113,7 +113,7 @@
 // pub unsafe fn foo() -> i32;  // returns 42
 // ```
 //
-// By default, <internal link> will infer Rust safety based on the types of the
+// By default, crubit.rs will infer Rust safety based on the types of the
 // function's parameters. This annotation can be used to override that
 // inference.
 #define CRUBIT_UNSAFE CRUBIT_OVERRIDE_UNSAFE(true)
@@ -134,7 +134,7 @@
 // pub fn foo(*mut u64) -> u64;  // returns 42
 // ```
 //
-// By default, <internal link> will infer Rust safety based on the types of the
+// By default, crubit.rs will infer Rust safety based on the types of the
 // function's parameters. This annotation can be used to override that
 // inference.
 #define CRUBIT_UNSAFE_MARK_SAFE CRUBIT_OVERRIDE_UNSAFE(false)

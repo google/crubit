@@ -21,12 +21,12 @@ This page should evolve over time:
 
 ## Types
 
-See <internal link>/types for more details about types in general, including
+See crubit.rs/types for more details about types in general, including
 explanations of what it means for a type to be ABI-compatible versus
 layout-compatible.
 
 Unless otherwise specified, the types below are supported and ABI-compatible
-(see <internal link>/types/primitive, <internal link>/types/pointer):
+(see crubit.rs/types/primitive, crubit.rs/types/pointer):
 
 *   integer types (except 128-bit integers)
 *   floating point types
