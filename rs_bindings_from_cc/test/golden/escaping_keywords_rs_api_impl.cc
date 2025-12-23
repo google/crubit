@@ -26,6 +26,6 @@ extern "C" void __rust_thunk___ZN4typeC1Ev(struct type* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (*)(int))&impl);
+static_assert((void (*)(int)) & ::impl);
 
 #pragma clang diagnostic pop

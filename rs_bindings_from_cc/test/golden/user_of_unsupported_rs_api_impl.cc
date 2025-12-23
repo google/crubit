@@ -23,6 +23,7 @@ extern "C" void __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
   UseNontrivialCustomType(std::move(*non_trivial_custom_type));
 }
 
-static_assert((void (*)(struct NontrivialCustomType))&UseNontrivialCustomType);
+static_assert((void (*)(struct NontrivialCustomType)) &
+              ::UseNontrivialCustomType);
 
 #pragma clang diagnostic pop

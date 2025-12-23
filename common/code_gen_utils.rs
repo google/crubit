@@ -378,12 +378,16 @@ impl NamespaceQualifier {
 
     /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
     pub fn format_for_cc(&self) -> Result<TokenStream> {
-        let namespace_cc_idents = self.cc_idents()?;
-        Ok(quote! { #(#namespace_cc_idents::)* })
-    }
-
-    pub fn cc_idents(&self) -> Result<Vec<Ident>> {
-        self.parts().map(|ns| format_cc_ident(ns)).collect()
+        let mut path = quote! {};
+        for namespace in &self.namespaces {
+            let namespace = format_cc_ident(namespace)?;
+            path.extend(quote! { #namespace :: });
+        }
+        for (_rs_name, cc_name) in &self.nested_records {
+            let cc_name = format_cc_type_name(cc_name)?;
+            path.extend(quote! { #cc_name ::});
+        }
+        Ok(path)
     }
 }
 

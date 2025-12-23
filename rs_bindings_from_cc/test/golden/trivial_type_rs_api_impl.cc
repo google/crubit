@@ -26,20 +26,21 @@ extern "C" void __rust_thunk___ZN2ns7TrivialC1Ev(struct ns::Trivial* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (::ns::Trivial::*)())&ns::Trivial::Unqualified);
+static_assert((void (ns::Trivial::*)()) & ::ns::Trivial::Unqualified);
 
-static_assert((void (::ns::Trivial::*)() const) & ns::Trivial::ConstQualified);
+static_assert((void (ns::Trivial::*)() const) & ::ns::Trivial::ConstQualified);
 
-static_assert((void (::ns::Trivial::*)() &)&ns::Trivial::LvalueRefQualified);
+static_assert((void (ns::Trivial::*)() &)&::ns::Trivial::LvalueRefQualified);
 
-static_assert((void (::ns::Trivial::*)()
-                   const&)&ns::Trivial::ConstLvalueRefQualified);
+static_assert((void (ns::Trivial::*)()
+                   const&)&::ns::Trivial::ConstLvalueRefQualified);
 
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
     struct ns::Trivial* __return, struct ns::Trivial* trivial) {
   new (__return) auto(ns::TakesByValue(std::move(*trivial)));
 }
 
-static_assert((struct ns::Trivial (*)(struct ns::Trivial))&ns::TakesByValue);
+static_assert((struct ns::Trivial (*)(struct ns::Trivial)) &
+              ::ns::TakesByValue);
 
 #pragma clang diagnostic pop

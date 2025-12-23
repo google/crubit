@@ -41,8 +41,8 @@ __rust_thunk___ZN6crubit4test11DoNotBindFnENS0_23ArgumentToBoundOverloadE(
   crubit::test::DoNotBindFn(std::move(*__param_0));
 }
 
-static_assert((void (*)(
-    struct crubit::test::ArgumentToBoundOverload))&crubit::test::DoNotBindFn);
+static_assert((void (*)(struct crubit::test::ArgumentToBoundOverload)) &
+              ::crubit::test::DoNotBindFn);
 
 static_assert(sizeof(struct crubit::test::StructWithDoNotBindConstructor) == 1);
 static_assert(alignof(struct crubit::test::StructWithDoNotBindConstructor) ==
@@ -70,8 +70,8 @@ __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23
   __this->DoNotBindMethod(std::move(*__param_0));
 }
 
-static_assert((void (::crubit::test::StructWithDoNotBindMethod::*)(
-    struct crubit::test::ArgumentToBoundOverload))&crubit::test::
-                  StructWithDoNotBindMethod::DoNotBindMethod);
+static_assert((void (crubit::test::StructWithDoNotBindMethod::*)(
+                  struct crubit::test::ArgumentToBoundOverload)) &
+              ::crubit::test::StructWithDoNotBindMethod::DoNotBindMethod);
 
 #pragma clang diagnostic pop

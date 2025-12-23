@@ -260,44 +260,32 @@ fn generate_function_assertation_for_identifier(
     let ir = db.ir();
 
     let fn_ident = expect_format_cc_ident(&id.identifier);
+    let path_to_func = ir.namespace_qualifier(func).format_for_cc()?;
+    let implementation_function = quote! { :: #path_to_func #fn_ident };
     let method_qualification;
-    let implementation_function;
     let member_function_prefix;
     let func_params;
-    if let Some(meta) = func.member_func_metadata.as_ref() {
-        let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
-        let record_ident = expect_format_cc_type_name(record.cc_name.identifier.as_ref());
-        let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
-        if let Some(instance_method_metadata) = meta.instance_method_metadata.as_ref() {
-            let const_qualifier = if instance_method_metadata.is_const {
-                quote! {const}
-            } else {
-                quote! {}
-            };
-
-            method_qualification = match instance_method_metadata.reference {
-                ir::ReferenceQualification::Unqualified => const_qualifier,
-                ir::ReferenceQualification::LValue => {
-                    quote! { #const_qualifier & }
-                }
-                ir::ReferenceQualification::RValue => {
-                    quote! { #const_qualifier && }
-                }
-            };
-            implementation_function = quote! { #namespace_qualifier #record_ident :: #fn_ident };
-            member_function_prefix = quote! { :: #namespace_qualifier #record_ident :: };
-            // The first parameter of instance methods is `this`.
-            func_params = &func.params[1..];
+    if let Some(instance_method_metadata) = func.instance_method_metadata() {
+        let const_qualifier = if instance_method_metadata.is_const {
+            quote! {const}
         } else {
-            method_qualification = quote! {};
-            implementation_function = quote! { #namespace_qualifier #record_ident :: #fn_ident };
-            member_function_prefix = quote! {};
-            func_params = &func.params[..];
-        }
+            quote! {}
+        };
+
+        method_qualification = match instance_method_metadata.reference {
+            ir::ReferenceQualification::Unqualified => const_qualifier,
+            ir::ReferenceQualification::LValue => {
+                quote! { #const_qualifier & }
+            }
+            ir::ReferenceQualification::RValue => {
+                quote! { #const_qualifier && }
+            }
+        };
+        member_function_prefix = path_to_func;
+        // The first parameter of instance methods is `this`.
+        func_params = &func.params[1..];
     } else {
-        let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
         method_qualification = quote! {};
-        implementation_function = quote! { #namespace_qualifier #fn_ident };
         member_function_prefix = quote! {};
         func_params = &func.params[..];
     }
@@ -394,22 +382,11 @@ pub fn generate_function_thunk_impl(
         }
         UnqualifiedIdentifier::Identifier(id) => {
             let fn_ident = expect_format_cc_ident(&id.identifier);
-            match func.member_func_metadata.as_ref() {
-                Some(meta) => {
-                    if meta.instance_method_metadata.is_some() {
-                        quote! { #fn_ident }
-                    } else {
-                        let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
-                        let record_name =
-                            expect_format_cc_type_name(record.cc_name.identifier.as_ref());
-                        let namespace_qualifier = ir.namespace_qualifier(record).format_for_cc()?;
-                        quote! { #namespace_qualifier #record_name :: #fn_ident }
-                    }
-                }
-                None => {
-                    let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
-                    quote! { #namespace_qualifier #fn_ident }
-                }
+            let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
+            if func.instance_method_metadata().is_some() {
+                quote! {#fn_ident}
+            } else {
+                quote! { #namespace_qualifier #fn_ident }
             }
         }
         // Use `destroy_at` to avoid needing to spell out the class name. Destructor identiifers

@@ -34,7 +34,7 @@ __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbi
   new (__return) auto(MyTemplate<int>::Create(value));
 }
 
-static_assert((class MyTemplate<int> (*)(int))&MyTemplate<int>::Create);
+static_assert((class MyTemplate<int> (*)(int)) & ::MyTemplate<int>::Create);
 
 extern "C" int const*
 __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2ftemplates_2ftype_5falias_3atype_5falias(
@@ -42,7 +42,7 @@ __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbi
   return std::addressof(__this->value());
 }
 
-static_assert((int const& (::MyTemplate<int>::*)() const) &
-              MyTemplate<int>::value);
+static_assert((int const& (MyTemplate<int>::*)() const) &
+              ::MyTemplate<int>::value);
 
 #pragma clang diagnostic pop

@@ -81,14 +81,14 @@ extern "C" void __rust_thunk___ZN11MethodBase1C1Ev(class MethodBase1* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (::MethodBase1::*)())&MethodBase1::Public);
+static_assert((void (MethodBase1::*)()) & ::MethodBase1::Public);
 
-static_assert(
-    (void (::MethodBase1::*)(class MethodBase1 const*))&MethodBase1::Equals);
+static_assert((void (MethodBase1::*)(class MethodBase1 const*)) &
+              ::MethodBase1::Equals);
 
-static_assert((void (::MethodBase1::*)())&MethodBase1::Colliding1);
+static_assert((void (MethodBase1::*)()) & ::MethodBase1::Colliding1);
 
-static_assert((void (::MethodBase1::*)())&MethodBase1::Colliding2);
+static_assert((void (MethodBase1::*)()) & ::MethodBase1::Colliding2);
 
 static_assert(sizeof(class MethodBase2) == 1);
 static_assert(alignof(class MethodBase2) == 1);
@@ -97,9 +97,9 @@ extern "C" void __rust_thunk___ZN11MethodBase2C1Ev(class MethodBase2* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert((void (::MethodBase2::*)())&MethodBase2::Colliding1);
+static_assert((void (MethodBase2::*)()) & ::MethodBase2::Colliding1);
 
-static_assert((void (::MethodBase2::*)())&MethodBase2::Colliding2);
+static_assert((void (MethodBase2::*)()) & ::MethodBase2::Colliding2);
 
 static_assert(sizeof(class MethodDerived) == 1);
 static_assert(alignof(class MethodDerived) == 1);

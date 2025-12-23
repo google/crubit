@@ -137,25 +137,6 @@ pub fn format_cpp_type_inner(
 /// For example, for `namespace x { struct Y { using X = int; }; }`, the name
 /// for `X` is `x::Y::X`.
 pub fn tagless_cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
-    /// Returns the namespace / class qualifiers necessary to access the item.
-    ///
-    /// For example, for `namespace x { struct Y { using X = int; }; }`, the prefix
-    /// for `X` is `x::Y::`.
-    fn cpp_qualified_path_prefix(item: &ir::Item, ir: &ir::IR) -> Result<TokenStream> {
-        let Some(parent) = item.enclosing_item_id() else {
-            return Ok(quote! {});
-        };
-        let parent: &ir::Item = ir.find_decl(parent)?;
-        match parent {
-            ir::Item::Namespace(_) => Ok(ir.namespace_qualifier(item).format_for_cc()?),
-            ir::Item::Record(r) => {
-                let name = cpp_tagless_type_name_for_record(r, ir)?;
-                Ok(quote! {#name ::})
-            }
-            _ => bail!("Unexpected enclosing item: {item:?}"),
-        }
-    }
-
     match item {
         Item::IncompleteRecord(incomplete_record) => {
             let ident = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
@@ -165,12 +146,12 @@ pub fn tagless_cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenS
         Item::Record(record) => cpp_tagless_type_name_for_record(record, ir),
         Item::Enum(enum_) => {
             let ident = expect_format_cc_type_name(&enum_.rs_name.identifier);
-            let namespace_qualifier = cpp_qualified_path_prefix(item, ir)?;
+            let namespace_qualifier = ir.namespace_qualifier(item).format_for_cc()?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
             let ident = expect_format_cc_type_name(&type_alias.cc_name.identifier);
-            let namespace_qualifier = cpp_qualified_path_prefix(item, ir)?;
+            let namespace_qualifier = ir.namespace_qualifier(item).format_for_cc()?;
             Ok(quote! { #namespace_qualifier #ident })
         }
         Item::ExistingRustType(existing_rust_type) => existing_rust_type

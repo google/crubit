@@ -23,7 +23,7 @@ extern "C" int __rust_thunk___Z18hello_world_inlinev() {
   return hello_world_inline();
 }
 
-static_assert((int (*)())&hello_world_inline);
+static_assert((int (*)()) & ::hello_world_inline);
 
 static_assert(CRUBIT_SIZEOF(struct SomeStruct) == 4);
 static_assert(alignof(struct SomeStruct) == 4);
@@ -38,19 +38,19 @@ extern "C" int __rust_thunk___Z24take_struct_by_const_ptrPK10SomeStruct(
   return take_struct_by_const_ptr(s);
 }
 
-static_assert((int (*)(struct SomeStruct const*))&take_struct_by_const_ptr);
+static_assert((int (*)(struct SomeStruct const*)) & ::take_struct_by_const_ptr);
 
 extern "C" unsigned int __rust_thunk___Z19double_unsigned_intj(unsigned int i) {
   return double_unsigned_int(i);
 }
 
-static_assert((unsigned int (*)(unsigned int))&double_unsigned_int);
+static_assert((unsigned int (*)(unsigned int)) & ::double_unsigned_int);
 
 extern "C" int __rust_thunk___ZN10namespaced24forward_declared_doublerEi(
     int x) {
   return namespaced::forward_declared_doubler(x);
 }
 
-static_assert((int (*)(int))&namespaced::forward_declared_doubler);
+static_assert((int (*)(int)) & ::namespaced::forward_declared_doubler);
 
 #pragma clang diagnostic pop

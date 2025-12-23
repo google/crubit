@@ -909,11 +909,16 @@ impl GenericItem for Func {
 }
 
 impl Func {
+    pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata> {
+        if let Some(meta) = &self.member_func_metadata {
+            if let Some(instance_method_metadata) = &meta.instance_method_metadata {
+                return Some(instance_method_metadata);
+            }
+        }
+        None
+    }
     pub fn is_instance_method(&self) -> bool {
-        self.member_func_metadata
-            .as_ref()
-            .filter(|meta| meta.instance_method_metadata.is_some())
-            .is_some()
+        self.instance_method_metadata().is_some()
     }
 }
 

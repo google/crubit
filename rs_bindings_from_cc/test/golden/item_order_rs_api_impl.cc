@@ -28,7 +28,7 @@ extern "C" void __rust_thunk___ZN11FirstStructC1Ev(struct FirstStruct* __this) {
 
 extern "C" int __rust_thunk___Z10first_funcv() { return first_func(); }
 
-static_assert((int (*)())&first_func);
+static_assert((int (*)()) & ::first_func);
 
 static_assert(CRUBIT_SIZEOF(struct SecondStruct) == 4);
 static_assert(alignof(struct SecondStruct) == 4);
@@ -41,6 +41,6 @@ extern "C" void __rust_thunk___ZN12SecondStructC1Ev(
 
 extern "C" int __rust_thunk___Z11second_funcv() { return second_func(); }
 
-static_assert((int (*)())&second_func);
+static_assert((int (*)()) & ::second_func);
 
 #pragma clang diagnostic pop
