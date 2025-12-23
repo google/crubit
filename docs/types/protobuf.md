@@ -57,10 +57,6 @@ for how to call it from Rust.
 
 Calling C++ APIs which use protobuf is slightly more difficult.
 
-First of all, add your `proto_library` target to the
-[allowlist](http://crubit.rs-proto-allowlist). See b/414381884 for more context
-& information on when this allowlist will be removed.
-
 ### Passing by value
 
 | C++       | Rust      |
@@ -69,18 +65,6 @@ First of all, add your `proto_library` target to the
 
 When a C++ proto message is passed or returned by value, it is mapped directly
 to the Rust message type, as you would expect.
-
-C++:
-
-```live-snippet
-cs/file:google_internal/protobuf/by_value.h content:foo::Message
-```
-
-Rust:
-
-```live-snippet
-cs/file:google_internal/protobuf/by_value_test.rs content:by_value\:\:|\bmsg\b
-```
 
 ### Passing by reference
 
@@ -111,6 +95,3 @@ file does not get piped through Crubit.
 
 See support/forward_declare.rs for the definition of
 `Incomplete`, `CppCast`, and `UnsafeCppCast`.
-
-For copy-pastable example code, see the examples in
-google_internal/protobuf/

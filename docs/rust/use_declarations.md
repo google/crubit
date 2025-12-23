@@ -15,12 +15,16 @@ equivalent `using` declarations in C++.
 
 Given the following Rust crate:
 
-```live-snippet
-cs/file:examples/rust/use_declaration/example.rs content:\bpub\ use\b
 ```
+{{ #include ../../examples/rust/use_declaration/example.rs }}
+```
+<!--  content:\bpub\ use\b -->
+
 
 Crubit will generate the following bindings:
 
-```live-snippet
-cs/file:examples/rust/use_declaration/example_generated.h content:\busing\b
 ```
+{{ #include ../../examples/rust/use_declaration/example_generated.h }}
+```
+<!--  content:\busing\b -->
+

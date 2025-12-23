@@ -2,16 +2,18 @@
 
 ## Overview
 
-crubit.rs/overview/status#types outlines the current and future status of
-Crubit's type support.
+[crubit.rs/overview/status#types](http://crubit.rs/overview/status#types)
+describes Crubit's current and future for various types.
 
 In brief, Crubit supports:
 
-*   Primitive types ([crubit.rs/types/primitive][]), such as `float` or `i32`.
-*   Pointer types ([crubit.rs/types/pointer][]), such as `float*` or `*const
+*   [Primitive types](http://crubit.rs/types/primitive), such as `float` or
+    `i32`.
+*   [Pointer types](http://crubit.rs/types/pointer), such as `float*` or `*const
     i32`, including function pointers.
 *   User-defined types, with some language-specific rules and restrictions. (See
-    [crubit.rs/cpp][] and [crubit.rs/rust][]).
+    [crubit.rs/cpp](http://crubit.rs/cpp) and
+    [crubit.rs/rust](http://crubit.rs/rust)).
 
 ## ABI-Compatibility
 
@@ -41,9 +43,9 @@ Layout-compatible C++ type  | `absl::string_view` | Y                 | if Rust-
 Layout-compatible Rust type | `UserDefinedStruct` | Y                 | if C++ movable[^3]  | Y                   | Y      | N
 Bridged                     | `(i32, i32)`        | N                 | Y                   | Y                   | N      | N
 
-[^1]: See [crubit.rs/cpp/classes_and_structs#trivially_relocatable][]
-[^2]: See [crubit.rs/cpp/classes_and_structs#trivially_relocatable][]
-[^3]: See [crubit.rs/rust/movable_types][]
+[^1]: See <http://crubit.rs/cpp/classes_and_structs#trivially_relocatable>
+[^2]: See <http://crubit.rs/cpp/classes_and_structs#trivially_relocatable>
+[^3]: See <http://crubit.rs/rust/movable_types>
 
 NOTE: All primitive and pointer types are ABI-compatible. However, due to
 b/369895805, all non-bridged user-defined types are **only** layout-compatible.

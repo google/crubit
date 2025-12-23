@@ -10,17 +10,21 @@ To receive C++ bindings, the `enum` must be movable in C++. See
 
 Given the following Rust crate:
 
-```live-snippet
-cs/file:examples/rust/enum/example.rs class:Color
 ```
+{{ #include ../../examples/rust/enum/example.rs }}
+```
+<!--  class:Color -->
+
 
 Crubit will generate the following bindings:
 
 <!-- Note: Kythe currently indexes this as class `CRUBIT_INTERNAL_RUST_TYPE` because it doesn't have a build rule. -->
 
-```live-snippet
-cs/file:examples/rust/enum/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE|Color
 ```
+{{ #include ../../examples/rust/enum/example_generated.h }}
+```
+<!--  class:CRUBIT_INTERNAL_RUST_TYPE|Color -->
+
 
 ## Why isn't it a C++ `enum`? {#cpp_enum}
 

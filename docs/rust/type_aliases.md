@@ -13,12 +13,16 @@ C++ type alias, such as `using X = ...;`.
 
 Given the following Rust crate:
 
-```live-snippet
-cs/file:examples/rust/type_alias/example.rs content:\bpub\ type\b
 ```
+{{ #include ../../examples/rust/type_alias/example.rs }}
+```
+<!--  content:\bpub\ type\b -->
+
 
 Crubit will generate the following bindings:
 
-```live-snippet
-cs/file:examples/rust/type_alias/example_generated.h content:\busing\b
 ```
+{{ #include ../../examples/rust/type_alias/example_generated.h }}
+```
+<!--  content:\busing\b -->
+

@@ -18,15 +18,19 @@ supported:
 
 Given the following C++ header:
 
-```live-snippet
-cs/file:examples/cpp/enum/example.h class:Color
 ```
+{{ #include ../../examples/cpp/enum/example.h }}
+```
+<!--  class:Color -->
+
 
 Crubit will generate the following bindings:
 
-```live-snippet
-cs/file:examples/cpp/enum/example_generated.rs class:Color
 ```
+{{ #include ../../examples/cpp/enum/example_generated.rs }}
+```
+<!--  class:Color -->
+
 
 ## Why isn't it an `enum`?
 

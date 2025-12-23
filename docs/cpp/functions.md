@@ -22,34 +22,44 @@ are translated as non-method associated functions.
 
 Given the following C++ header:
 
-```live-snippet
-cs/file:examples/cpp/function/example.h function:add_two_integers
 ```
+{{ #include ../../examples/cpp/function/example.h }}
+```
+<!--  function:add_two_integers -->
+
 
 Crubit will generate the following bindings, with a safe public function that
 calls into the corresponding FFI glue:
 
-```live-snippet
-cs/file:examples/cpp/function/example_generated.rs function:add_two_integers
 ```
+{{ #include ../../examples/cpp/function/example_generated.rs }}
+```
+<!--  function:add_two_integers -->
+
 
 ### Methods
 
 Given the following C++ header:
 
-```live-snippet
-cs/file:examples/cpp/method/example.h class:Bar
 ```
+{{ #include ../../examples/cpp/method/example.h }}
+```
+<!--  class:Bar -->
+
 
 Crubit will generate the following bindings:
 
-```live-snippet
-cs/file:examples/cpp/method/example_generated.rs class:Bar
 ```
+{{ #include ../../examples/cpp/method/example_generated.rs }}
+```
+<!--  class:Bar -->
 
-```live-snippet
-cs/file:examples/cpp/method/example_generated.rs snippet:0,6 "impl Bar"
+
 ```
+{{ #include ../../examples/cpp/method/example_generated.rs }}
+```
+<!--  snippet:0,6 "impl Bar" -->
+
 
 ### `unsafe` functions {#unsafe}
 
@@ -65,15 +75,19 @@ This behavior can be overridden using the `CRUBIT_UNSAFE`,
 
 For example, given the following C++ header:
 
-```live-snippet
-cs/file:examples/cpp/unsafe_attributes/example.h content:^([^/#\n])[^\n]*
 ```
+{{ #include ../../examples/cpp/unsafe_attributes/example.h }}
+```
+<!--  content:^([^/#\n])[^\n]* -->
+
 
 Crubit will generate the following bindings:
 
-```live-snippet
-cs/file:examples/cpp/unsafe_attributes/example_generated.rs content:^([^/\n])([^!\n]|$)[^\n]*
 ```
+{{ #include ../../examples/cpp/unsafe_attributes/example_generated.rs }}
+```
+<!--  content:^([^/\n])([^!\n]|$)[^\n]* -->
+
 
 #### Correct usage of `unsafe` {#using-unsafe}
 

@@ -27,15 +27,19 @@ StatusError>`.)
 
 C++ functions returning `Status`/`StatusOr` can be defined as normal:
 
-```live-snippet
-cs/file:examples/types/absl_status/cpp_api.h content:ReturnsStatus
 ```
+{{ #include ../../examples/types/absl_status/cpp_api.h }}
+```
+<!--  content:ReturnsStatus -->
+
 
 ...and will return a `Result`:
 
-```live-snippet
-cs/file:examples/types/absl_status/user_of_cpp_api.rs content:ReturnsStatus
 ```
+{{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
+```
+<!--  content:ReturnsStatus -->
+
 
 ## Calling Rust APIs using `Status` {#rust}
 
@@ -43,15 +47,19 @@ Unlike when calling C++ APIs, currently you cannot directly call a Rust API
 returning a `Status` or `StatusOr`. Instead, it must use a workaround type,
 `StatusWrapper`. This is tracked by b/441266536.
 
-```live-snippet
-cs/file:examples/types/absl_status/rust_api.rs
 ```
+{{ #include ../../examples/types/absl_status/rust_api.rs }}
+```
+<!--  -->
+
 
 The `StatusWrapper` type automatically becomes an `absl::Status` in C++:
 
-```live-snippet
-cs/file:examples/types/absl_status/user_of_rust_api.cc content:rust_api::ReturnsStatus
 ```
+{{ #include ../../examples/types/absl_status/user_of_rust_api.cc }}
+```
+<!--  content:rust_api::ReturnsStatus -->
+
 
 ## Future Evolution
 

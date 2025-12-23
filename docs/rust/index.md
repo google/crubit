@@ -5,9 +5,10 @@ that entails, and additional subpages (available in the left-hand navigation)
 document specific aspects of the generated bindings.
 
 Tip: The code examples below are pulled straight from
-examples/rust/function/. The other examples in
-examples/rust/ are also useful. If you prefer just
-copy-pasting something, start there.
+
+<https://github.com/google/crubit/tree/main/examples/rust/function/>. The other examples
+in <https://github.com/google/crubit/tree/main/examples/rust/> are also useful. If you
+prefer just copy-pasting something, start there.
 
 ## How to use Crubit {#introduction}
 
@@ -40,16 +41,20 @@ called from C++, and how to actually use it from C++. The quick summary is:
 The first part of creating a library that can be used by Crubit is to write a
 `rust_library` target. For example:
 
-```live-snippet
-cs/file:examples/rust/function/example.rs content:^[^/].*
 ```
+{{ #include ../../examples/rust/function/example.rs }}
+```
+<!--  content:^[^/].* -->
+
 
 In the BUILD file, in addition to defining the `rust_library`, you should also
 define the `cc_bindings_from_rust` target to make it easier to use from C++:
 
-```live-snippet
-cs/file:examples/rust/function/BUILD symbol:example_crate|example_crate_cc_api
 ```
+{{ #include ../../examples/rust/function/BUILD }}
+```
+<!--  symbol:example_crate|example_crate_cc_api -->
+
 
 Example: If your Rust library is named `//path/to:example_crate`, then the C++
 header file is `"path/to/example_crate.h"`, and the C++ namespace is
@@ -62,13 +67,17 @@ bindings for a target, they must depend on the `cc_bindings_from_rust` rule.
 
 For example:
 
-```live-snippet
-cs/file:examples/rust/function/BUILD symbol:main
 ```
+{{ #include ../../examples/rust/function/BUILD }}
+```
+<!--  symbol:main -->
 
-```live-snippet
-cs/file:examples/rust/function/main.cc content:^[^/\n].*
+
 ```
+{{ #include ../../examples/rust/function/main.cc }}
+```
+<!--  content:^[^/\n].* -->
+
 
 NOTE: Other than for declaring the dependency, all other information about the
 generated bindings comes from the actual `rust_library` rule. For example, the
@@ -84,16 +93,20 @@ The crate name might make a poor namespace. In addition, typically, multiple C++
 headers and build targets share the same namespace. To customize the namespace
 name, use `cc_bindings_from_rust_library_config`:
 
-```live-snippet
-cs/file:examples/rust/library_config/BUILD symbol:custom_namespace|example_crate
 ```
+{{ #include ../../examples/rust/library_config/BUILD }}
+```
+<!--  symbol:custom_namespace|example_crate -->
+
 
 Now, instead of the crate name, the generated bindings will use the namespace
 name you provided:
 
-```live-snippet
-cs/file:examples/rust/library_config/main.cc content:^[^/\n].*
 ```
+{{ #include ../../examples/rust/library_config/main.cc }}
+```
+<!--  content:^[^/\n].* -->
+
 
 ### Look at the generated bindings {#examine}
 

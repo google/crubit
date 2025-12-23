@@ -21,46 +21,42 @@ This page should evolve over time:
 
 ## Types
 
-See crubit.rs/types for more details about types in general, including
-explanations of what it means for a type to be ABI-compatible versus
-layout-compatible.
+See [crubit.rs/types](http://crubit.rs/types) for more details about types in
+general, including explanations of what it means for a type to be ABI-compatible
+versus layout-compatible.
 
-Unless otherwise specified, the types below are supported and ABI-compatible
-(see crubit.rs/types/primitive, crubit.rs/types/pointer):
+The following types are supported:
 
-*   integer types (except 128-bit integers)
-*   floating point types
-*   user-defined types
-    *   These are either layout-compatible (usually) or ABI-compatible (rarely –
-        if all member types are supported, and it's nonempty, and it uses no
-        obscure attributes)
-*   function pointers, where the parameters and return type are in this list and
-    are ABI-compatible
-*   `std::string_view` / `absl::string_view`
-*   Bridged: `std::string`
-*   Bridged: `&str`
-*   Bridged: Rust tuples (e.g. `(i32, i64)`)
-*   Bridged: `std::optional<T>`
-*   Bridged: (allowlisted) protocol buffers
-*   Bridged: `absl::Status`
-*   raw pointers to any ABI-compatible or layout-compatible item in this list
+*   ABI compatible:
+    *   integer types (except 128-bit integers)
+    *   floating point types
+    *   function pointers with ABI-compatible arguments and return types
+    *   Raw pointers to an ABI-compatible or layout-compatible type
+*   Layout compatible:
+    *   user-defined types
+    *   `std::string_view` / `absl::string_view`
+    *   `[T; N]`, `&[T]`, `&mut [T]`, and `&str`
+    *   `std::vector<T>`
+    *   `std::unique_ptr<T>`
+*   Bridged:
+    *   `std::string`
+    *   Rust tuples (e.g. `(i32, i64)`)
+    *   `std::optional<T>`
+    *   Protocol buffers
+    *   `absl::Status`
 
 We have *experimental* unreleased support for the following types:
 
-*   (2025H2) b/362475441: references and pointers to `MaybeUninit<T>`, which are
-    treated as `T`.
+*   b/362475441: references and pointers to `MaybeUninit<T>`, which are treated
+    as `T`.
 
 We have planned support for the following types:
 
-*   (2025H2) b/271016831: layout-compatible `*const [T]`, `*mut [T]`
-*   (2025H2) bridged `Option<T>`
-*   (2025) b/356638830: layout-compatible `std::vector`
-*   (2025) b/369994952: layout-compatible `std::unique_ptr`
+*   Bridged `Option<T>`
 
 The following types are **not** yet supported, among many others:
 
 *   b/254507801: Rust `!`
-*   b/260128806: Arrays (`std::array<T, N>`, `[T; N]`)
 *   b/254094650: `i128` and `u128`
 *   Rust `String`
 *   `Result<T, E>`

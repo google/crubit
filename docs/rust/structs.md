@@ -11,17 +11,21 @@ To receive C++ bindings, the `struct` must be movable in C++. See
 
 Given the following Rust module:
 
-```live-snippet
-cs/file:examples/rust/struct/example.rs class:Struct
 ```
+{{ #include ../../examples/rust/struct/example.rs }}
+```
+<!--  class:Struct -->
+
 
 Crubit will generate the following bindings:
 
 <!-- Note: Kythe currently indexes this as class `CRUBIT_INTERNAL_RUST_TYPE` because it doesn't have a build rule. -->
 
-```live-snippet
-cs/file:examples/rust/struct/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE|Struct
 ```
+{{ #include ../../examples/rust/struct/example_generated.h }}
+```
+<!--  class:CRUBIT_INTERNAL_RUST_TYPE|Struct -->
+
 
 ## Fields {#fields}
 

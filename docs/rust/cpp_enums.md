@@ -22,12 +22,16 @@ the same value, which can be enabled in Rust by using
 Given the following Rust crate that uses `#[cpp_enum]` and
 `#[open_enum(allow_alias)]`:
 
-```live-snippet
-cs/file:examples/rust/cpp_enum/example.rs class:Color
 ```
+{{ #include ../../examples/rust/cpp_enum/example.rs }}
+```
+<!--  class:Color -->
+
 
 Crubit will generate the following bindings:
 
-```live-snippet
-cs/file:examples/rust/cpp_enum/example_generated.h class:CRUBIT_INTERNAL_RUST_TYPE|Color
 ```
+{{ #include ../../examples/rust/cpp_enum/example_generated.h }}
+```
+<!--  class:CRUBIT_INTERNAL_RUST_TYPE|Color -->
+

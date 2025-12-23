@@ -6,9 +6,9 @@ This page documents roughly what that entails, and additional subpages
 generated bindings.
 
 Tip: The code examples below are pulled straight from
-examples/cpp/function/. The other examples in
-examples/cpp/ are also useful. If you prefer just
-copy-pasting something, start there.
+<https://github.com/google/crubit/tree/main/examples/cpp/function/>. The other examples
+in <https://github.com/google/crubit/tree/main/examples/cpp/> are also useful. If you
+prefer just copy-pasting something, start there.
 
 ## How to use Crubit {#introduction}
 
@@ -38,16 +38,20 @@ called from Rust, and how to actually call it from Rust. The quick summary is:
 The first part of creating a library that can be used by Crubit is to write a
 `cc_library` target. For example:
 
-```live-snippet
-cs/file:examples/cpp/function/example.h
 ```
+{{ #include ../../examples/cpp/function/example.h }}
+```
+<!--  -->
+
 
 If you write a BUILD target as normal, it will not actually get Crubit bindings,
 but we'll start from there:
 
-```live-snippet
-cs/file:examples/cpp/function/BUILD symbol:example_lib_broken
 ```
+{{ #include ../../examples/cpp/function/BUILD }}
+```
+<!--  symbol:example_lib_broken -->
+
 
 ### Look at the generated bindings {#examine}
 
@@ -118,9 +122,11 @@ To enable Crubit on a C++ target, one must pass an argument, via `aspect_hints`.
 Specifically, as mentioned in the comments, the target must enable the
 `supported` feature:
 
-```live-snippet
-cs/file:examples/cpp/function/BUILD symbol:\bexample_lib\b
 ```
+{{ #include ../../examples/cpp/function/BUILD }}
+```
+<!--  symbol:\bexample_lib\b -->
+
 
 This tells Crubit that it can generate bindings for this target, for any part of
 the library that uses features from `supported`. Now, if we look at a preview of
@@ -132,33 +138,38 @@ $ bazel build --config=crubit-genfiles //examples/cpp/function:example_lib
 
 We can see the fully-fledged bindings for the library:
 
-```live-snippet
-cs/file:examples/cpp/function/example_generated.rs
 ```
+{{ #include ../../examples/cpp/function/example_generated.rs }}
+```
+<!--  -->
+
 
 ### Use a C++ library from Rust {#use}
 
 To depend on a C++ library from Rust, add it to `cc_deps`:
 
-```live-snippet
-cs/file:examples/cpp/function/BUILD symbol:main
 ```
+{{ #include ../../examples/cpp/function/BUILD }}
+```
+<!--  symbol:main -->
+
 
 At that point, the bindings are directly usable from Rust. The interface is
 identical to the `.rs` file previewed earlier, but can be used directly:
 
-```live-snippet
-cs/file:examples/cpp/function/main.rs
 ```
+{{ #include ../../examples/cpp/function/main.rs }}
+```
+<!--  -->
+
 
 ## Common Errors {#errors}
 
 ### Unsupported features
 
 Some features are either unsupported, or else only supported with experimental
-feature flags (crubit.rs-features). In order to get bindings for a C++
-interface, that interface must only use the subset of features currently
-supported.
+feature flags . In order to get bindings for a C++ interface, that
+interface must only use the subset of features currently supported.
 
 For a particularly notable example, a class cannot have a `std::string` field,
 because `std::string` has properties around move semantics that Crubit does not
