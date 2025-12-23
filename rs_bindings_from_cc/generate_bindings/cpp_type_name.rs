@@ -111,37 +111,32 @@ pub fn format_cpp_type_inner(
                 > #ptr
             })
         }
-        RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
-            cpp_type_name_for_item(&Item::IncompleteRecord(Rc::clone(incomplete_record)), ir)
-        }
+        RsTypeKind::IncompleteRecord { incomplete_record, .. } => tagless_cpp_type_name_for_item(
+            &Item::IncompleteRecord(Rc::clone(incomplete_record)),
+            ir,
+        ),
         RsTypeKind::Record { record, .. } => cpp_type_name_for_record(record, ir),
-        RsTypeKind::Enum { enum_, .. } => cpp_type_name_for_item(&Item::Enum(Rc::clone(enum_)), ir),
+        RsTypeKind::Enum { enum_, .. } => {
+            tagless_cpp_type_name_for_item(&Item::Enum(Rc::clone(enum_)), ir)
+        }
         RsTypeKind::TypeAlias { type_alias, .. } => {
-            cpp_type_name_for_item(&Item::TypeAlias(Rc::clone(type_alias)), ir)
+            tagless_cpp_type_name_for_item(&Item::TypeAlias(Rc::clone(type_alias)), ir)
         }
         RsTypeKind::Primitive(primitive) => Ok(quote! { #primitive }),
         RsTypeKind::BridgeType { original_type, .. } => cpp_type_name_for_record(original_type, ir),
-        RsTypeKind::ExistingRustType(existing_rust_type) => {
-            cpp_type_name_for_item(&Item::ExistingRustType(Rc::clone(existing_rust_type)), ir)
-        }
+        RsTypeKind::ExistingRustType(existing_rust_type) => tagless_cpp_type_name_for_item(
+            &Item::ExistingRustType(Rc::clone(existing_rust_type)),
+            ir,
+        ),
         RsTypeKind::C9Co { original_type, .. } => cpp_type_name_for_record(original_type, ir),
     }
 }
 
-/// Returns the fully-qualified name for an item, not including the type tag.
-pub fn tagless_cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
-    if let ir::Item::Record(record) = item {
-        cpp_tagless_type_name_for_record(record, ir)
-    } else {
-        cpp_type_name_for_item(item, ir)
-    }
-}
-
-/// Returns the fully qualified name for an item.
+/// Returns the fully qualified name for an item (not including type tags).
 ///
 /// For example, for `namespace x { struct Y { using X = int; }; }`, the name
 /// for `X` is `x::Y::X`.
-fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
+pub fn tagless_cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     /// Returns the namespace / class qualifiers necessary to access the item.
     ///
     /// For example, for `namespace x { struct Y { using X = int; }; }`, the prefix
@@ -165,19 +160,18 @@ fn cpp_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
         Item::IncompleteRecord(incomplete_record) => {
             let ident = expect_format_cc_type_name(incomplete_record.cc_name.identifier.as_ref());
             let namespace_qualifier = ir.namespace_qualifier(incomplete_record).format_for_cc()?;
-            let tag_kind = incomplete_record.record_type;
-            Ok(quote! { #tag_kind #namespace_qualifier #ident })
+            Ok(quote! { #namespace_qualifier #ident })
         }
-        Item::Record(record) => cpp_type_name_for_record(record, ir),
+        Item::Record(record) => cpp_tagless_type_name_for_record(record, ir),
         Item::Enum(enum_) => {
             let ident = expect_format_cc_type_name(&enum_.rs_name.identifier);
-            let qualifier = cpp_qualified_path_prefix(item, ir)?;
-            Ok(quote! { #qualifier #ident })
+            let namespace_qualifier = cpp_qualified_path_prefix(item, ir)?;
+            Ok(quote! { #namespace_qualifier #ident })
         }
         Item::TypeAlias(type_alias) => {
             let ident = expect_format_cc_type_name(&type_alias.cc_name.identifier);
-            let qualifier = cpp_qualified_path_prefix(item, ir)?;
-            Ok(quote! { #qualifier #ident })
+            let namespace_qualifier = cpp_qualified_path_prefix(item, ir)?;
+            Ok(quote! { #namespace_qualifier #ident })
         }
         Item::ExistingRustType(existing_rust_type) => existing_rust_type
             .cc_name
