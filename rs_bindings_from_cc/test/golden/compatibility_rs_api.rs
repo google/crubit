@@ -44,9 +44,9 @@ impl CompatibleType {
     }
 }
 
-// Error while generating bindings for constructor 'CompatibleType::renamed_copy_constructor':
-// Can't generate bindings for CompatibleType::renamed_copy_constructor, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::renamed_copy_constructor (the type of __param_0 (parameter #1): references are not supported)
+// Error while generating bindings for constructor 'CompatibleType::CompatibleType':
+// Can't generate bindings for CompatibleType::CompatibleType, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:compatibility_cc needs [//features:experimental] for CompatibleType::CompatibleType (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'CompatibleType::operator=':
 // Can't generate bindings for CompatibleType::operator=, because of missing required features (crubit.rs-features):

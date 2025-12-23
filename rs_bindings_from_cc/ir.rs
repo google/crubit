@@ -873,7 +873,7 @@ impl GenericItem for Func {
         let record: Option<Rc<str>> = ir.record_for_member_func(self).map(|r| r.debug_name(ir));
         let record: Option<&str> = record.as_deref();
 
-        let func_name = match &self.rs_name {
+        let func_name = match &self.cc_name {
             UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
             UnqualifiedIdentifier::Operator(op) => op.cc_name(),
             UnqualifiedIdentifier::Destructor => {
@@ -1331,7 +1331,7 @@ impl GenericItem for GlobalVar {
         Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.identifier.clone()
+        self.cc_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
@@ -1376,7 +1376,7 @@ impl GenericItem for Enum {
         Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.identifier.clone()
+        self.cc_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Enum
@@ -1425,7 +1425,7 @@ impl GenericItem for TypeAlias {
         Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.identifier.clone()
+        self.cc_name.identifier.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::TypeAlias
@@ -1686,7 +1686,7 @@ impl GenericItem for Namespace {
         Some(self.owning_target.clone())
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.rs_name.to_string().into()
+        self.cc_name.to_string().into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Namespace
