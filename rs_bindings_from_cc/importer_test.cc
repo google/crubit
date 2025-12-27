@@ -906,25 +906,29 @@ TEST(ImporterTest, FailedClassTemplateMethod) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  const UnsupportedItem* unsupported_method = nullptr;
+  const UnsupportedItem* unsupported_a = nullptr;
+  const UnsupportedItem* unsupported_b = nullptr;
   for (auto unsupported_item : ir.get_items_if<UnsupportedItem>()) {
-    if (unsupported_item->name == "A<NoMethod>::CallMethod") {
-      unsupported_method = unsupported_item;
-      break;
+    if (unsupported_item->name == "A") {
+      unsupported_a = unsupported_item;
+    } else if (unsupported_item->name == "B") {
+      unsupported_b = unsupported_item;
     }
   }
-  ASSERT_TRUE(unsupported_method != nullptr);
+  ASSERT_TRUE(unsupported_a != nullptr);
+  ASSERT_TRUE(unsupported_b != nullptr);
+  EXPECT_THAT(unsupported_a->errors,
+              Contains(testing::Property(
+                  "message", &FormattedError::message,
+                  HasSubstr("Class templates are not supported yet"))));
   EXPECT_THAT(
-      unsupported_method->errors,
+      unsupported_b->errors,
       Contains(testing::Property(
           "message", &FormattedError::message,
           HasSubstr(
-              // clang-format off
-R"(Diagnostics emitted:
-ir_from_cc_virtual_header.h:5:12: note: in instantiation of member function 'A<NoMethod>::CallMethod' requested here
-ir_from_cc_virtual_header.h:5:39: error: no member named 'method' in 'NoMethod')")
-          // clang-format on
-          )));
+              "Unsupported type 'A<NoMethod>': Failed to complete template "
+              "specialization type A<NoMethod>: template belongs to target "
+              "//test:testing_target, which does not support Crubit."))));
 }
 
 TEST(ImporterTest, CrashRepro_FunctionTypeAlias) {

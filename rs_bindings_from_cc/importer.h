@@ -116,6 +116,7 @@ class Importer final : public ImportContext {
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
   bool IsFromCurrentTarget(const clang::Decl* decl) const override;
   bool IsFromProtoTarget(const clang::Decl& decl) const override;
+  bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(

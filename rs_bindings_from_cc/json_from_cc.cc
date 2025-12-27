@@ -26,21 +26,26 @@ static constexpr absl::string_view kDependencyHeaderName =
 extern "C" FfiU8SliceBox json_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source) {
-  absl::StatusOr<IR> ir = IrFromCc(
-      {.extra_source_code_for_testing = StringViewFromFfiU8Slice(header_source),
-       .current_target = BazelLabel{"//test:testing_target"},
-       .virtual_headers_contents_for_testing =
-           {{HeaderName(std::string(kDependencyHeaderName)),
-             std::string(StringViewFromFfiU8Slice(dependency_header_source))}},
-       .headers_to_targets = {{HeaderName(std::string(kDependencyHeaderName)),
-                               BazelLabel{std::string(kDependencyTarget)}}},
-       .clang_args = {
-           // The version should be consistent with the one passed by the C++
-           // toolchain.
-           "-std=gnu++20",
-           "-target",
-           StringViewFromFfiU8Slice(target_triple),
-       }});
+  absl::StatusOr<IR> ir = IrFromCc({
+      .extra_source_code_for_testing = StringViewFromFfiU8Slice(header_source),
+      .current_target = BazelLabel{"//test:testing_target"},
+      .virtual_headers_contents_for_testing =
+          {{HeaderName(std::string(kDependencyHeaderName)),
+            std::string(StringViewFromFfiU8Slice(dependency_header_source))}},
+      .headers_to_targets = {{HeaderName(std::string(kDependencyHeaderName)),
+                              BazelLabel{std::string(kDependencyTarget)}}},
+      .clang_args =
+          {
+              // The version should be consistent with the one passed by the C++
+              // toolchain.
+              "-std=gnu++20",
+              "-target",
+              StringViewFromFfiU8Slice(target_triple),
+          },
+      .crubit_features = {{BazelLabel{std::string(kDependencyTarget)},
+                           {"supported"}},
+                          {BazelLabel{"//test:testing_target"}, {"supported"}}},
+  });
 
   // TODO(forster): For now it is good enough to just exit: We are just
   // using this from tests, which are ok to just fail. Clang has already
