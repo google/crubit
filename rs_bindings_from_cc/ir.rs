@@ -781,13 +781,6 @@ pub struct InstanceMethodMetadata {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct MemberFuncMetadata {
-    pub record_id: ItemId,
-    pub instance_method_metadata: Option<InstanceMethodMetadata>,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
     pub type_: CcType,
@@ -828,7 +821,7 @@ pub struct Func {
     /// not originally part of the IR.
     pub lifetime_params: Vec<LifetimeName>,
     pub is_inline: bool,
-    pub member_func_metadata: Option<MemberFuncMetadata>,
+    pub instance_method_metadata: Option<InstanceMethodMetadata>,
     pub is_extern_c: bool,
     pub is_noreturn: bool,
     pub is_variadic: bool,
@@ -850,6 +843,11 @@ pub struct Func {
     pub safety_annotation: SafetyAnnotation,
     pub source_loc: Rc<str>,
     pub id: ItemId,
+    /// The enclosing item ID.
+    ///
+    /// If this is a free function, then this will be None or a namespace. If this is
+    /// a member function, it will be a record type in C++, but might be an
+    /// `ExistingRustType` if it was renamed.
     pub enclosing_item_id: Option<ItemId>,
 
     /// If this function was declared as a `friend` inside of a record
@@ -872,12 +870,8 @@ impl GenericItem for Func {
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         let mut name = ir.namespace_qualifier(self).format_for_cc_debug();
         let record_name = || -> Option<Rc<str>> {
-            let record = ir.record_for_member_func(self)?;
-            if let Item::Record(r) = record {
-                Some(r.cc_name.identifier.clone())
-            } else {
-                None
-            }
+            let record = ir.find_decl::<Rc<Record>>(self.enclosing_item_id?).ok()?;
+            Some(record.cc_name.identifier.clone())
         };
 
         match &self.cc_name {
@@ -919,16 +913,8 @@ impl GenericItem for Func {
 }
 
 impl Func {
-    pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata> {
-        if let Some(meta) = &self.member_func_metadata {
-            if let Some(instance_method_metadata) = &meta.instance_method_metadata {
-                return Some(instance_method_metadata);
-            }
-        }
-        None
-    }
     pub fn is_instance_method(&self) -> bool {
-        self.instance_method_metadata().is_some()
+        self.instance_method_metadata.is_some()
     }
 }
 
@@ -2285,20 +2271,6 @@ impl IR {
             )
         })? - 1;
         Ok(idx == last_item_idx)
-    }
-
-    /// Returns the `Item` defining `func`, or `None` if `func` is not a
-    /// member function.
-    ///
-    /// Note that even if `func` is a member function, the associated record
-    /// might not be a Record IR Item (e.g. it has its type changed via
-    /// crubit_internal_rust_type).
-    pub fn record_for_member_func(&self, func: &Func) -> Option<&Item> {
-        if let Some(meta) = func.member_func_metadata.as_ref() {
-            Some(self.find_untyped_decl(meta.record_id))
-        } else {
-            None
-        }
     }
 
     pub fn crate_root_path(&self) -> Option<Rc<str>> {

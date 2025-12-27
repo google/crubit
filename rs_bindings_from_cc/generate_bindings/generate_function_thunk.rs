@@ -61,11 +61,9 @@ pub fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
     // In terms of runtime performance, since this only occurs for virtual function
     // calls, which are already slow, it may not be such a big deal. We can
     // benchmark it later. :)
-    if let Some(meta) = &func.member_func_metadata {
-        if let Some(inst_meta) = &meta.instance_method_metadata {
-            if inst_meta.is_virtual {
-                return false;
-            }
+    if let Some(inst_meta) = &func.instance_method_metadata {
+        if inst_meta.is_virtual {
+            return false;
         }
     }
     // ## Custom calling convention requires a thunk.
@@ -265,7 +263,7 @@ fn generate_function_assertation_for_identifier(
     let method_qualification;
     let member_function_prefix;
     let func_params;
-    if let Some(instance_method_metadata) = func.instance_method_metadata() {
+    if let Some(instance_method_metadata) = &func.instance_method_metadata {
         let const_qualifier = if instance_method_metadata.is_const {
             quote! {const}
         } else {
@@ -383,7 +381,7 @@ pub fn generate_function_thunk_impl(
         UnqualifiedIdentifier::Identifier(id) => {
             let fn_ident = expect_format_cc_ident(&id.identifier);
             let namespace_qualifier = ir.namespace_qualifier(func).format_for_cc()?;
-            if func.instance_method_metadata().is_some() {
+            if func.instance_method_metadata.is_some() {
                 quote! {#fn_ident}
             } else {
                 quote! { #namespace_qualifier #fn_ident }
@@ -396,8 +394,8 @@ pub fn generate_function_thunk_impl(
         // using destroy_at, we avoid needing to determine or remember what the correct spelling
         // is. Similar arguments apply to `construct_at`.
         UnqualifiedIdentifier::Constructor => {
-            if let Some(meta) = func.member_func_metadata.as_ref() {
-                let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
+            if let Some(parent_id) = func.enclosing_item_id {
+                let record: &Rc<Record> = ir.find_decl(parent_id)?;
                 if is_copy_constructor(func, record.id)
                     && record.copy_constructor == SpecialMemberFunc::Unavailable
                 {
@@ -542,14 +540,12 @@ pub fn generate_function_thunk_impl(
         return_type_cpp_spelling.clone()
     };
 
-    let mut this_ref_qualification =
-        func.member_func_metadata.as_ref().and_then(|meta| match &func.rs_name {
-            UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
-            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => meta
-                .instance_method_metadata
-                .as_ref()
-                .map(|instance_method| instance_method.reference),
-        });
+    let mut this_ref_qualification = match &func.rs_name {
+        UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
+        UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => {
+            func.instance_method_metadata.as_ref().map(|meta| meta.reference)
+        }
+    };
     if func.cc_name.is_constructor() {
         this_ref_qualification = None;
     }

@@ -865,11 +865,9 @@ fn api_func_shape_for_constructor(
 /// become a `RvalueReference<'_, T>`.
 ///
 /// Returns:
-///
-///  * `Err(_)`: something went wrong importing this function.
-///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
+///  * `None`: the function imported as "nothing". (For example, a defaulted
 ///    destructor might be mapped to no `Drop` impl at all.)
-///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
+///  * `(func_name, impl_kind)`: The function name and ImplKind.
 fn api_func_shape(
     db: &dyn BindingsGenerator,
     func: &Func,
@@ -877,14 +875,16 @@ fn api_func_shape(
     errors: &Errors,
 ) -> Option<(Ident, ImplKind)> {
     let ir = db.ir();
-    let maybe_record = match ir.record_for_member_func(func).map(<&Rc<Record>>::try_from) {
+    let maybe_record = match func.enclosing_item_id.map(|id| ir.find_untyped_decl(id)) {
         None => None,
-        Some(Ok(record)) => Some(record),
-        // Functions whose record was replaced with some other IR Item type are ignored.
-        // This occurs for instance if you use crubit_internal_rust_type: member functions defined
-        // out-of-line, such as implicitly generated constructors, will still be present in the IR,
-        // but should be ignored.
-        Some(Err(_)) => return None,
+        Some(ir::Item::Namespace(_)) => None,
+        Some(ir::Item::Record(record)) => Some(record),
+        // If the record was replaced by an existing Rust type using `crubit_internal_rust_type`,
+        // don't generate any bindings for its functions. (That can't work!)
+        Some(ir::Item::ExistingRustType(_)) => return None,
+        // (This case should be impossible.)
+        // TODO(jeanpierreda): Add an error here.
+        Some(_) => return None,
     };
 
     if is_friend_of_record_not_visible_by_adl(db, func, param_types) {
@@ -2256,7 +2256,10 @@ fn has_copy_assignment_operator_from_const_reference(
     if first_param_type.is_err() {
         return false;
     };
-    let Some(Item::Record(record)) = db.ir().record_for_member_func(copy_constructor) else {
+    let Some(parent_id) = copy_constructor.enclosing_item_id else {
+        return false;
+    };
+    let Ok(record) = db.ir().find_decl::<Rc<Record>>(parent_id) else {
         return false;
     };
     record

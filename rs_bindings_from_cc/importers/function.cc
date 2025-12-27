@@ -507,33 +507,28 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     errors.Add(FormattedError::Static("Inline function is not defined"));
   }
 
-  std::optional<MemberFuncMetadata> member_func_metadata;
+  std::optional<InstanceMethodMetadata> instance_metadata;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    std::optional<MemberFuncMetadata::InstanceMethodMetadata> instance_metadata;
     if (method_decl->isInstance()) {
-      MemberFuncMetadata::ReferenceQualification reference;
+      InstanceMethodMetadata::ReferenceQualification reference;
       switch (method_decl->getRefQualifier()) {
         case clang::RQ_LValue:
-          reference = MemberFuncMetadata::kLValue;
+          reference = InstanceMethodMetadata::kLValue;
           break;
         case clang::RQ_RValue:
-          reference = MemberFuncMetadata::kRValue;
+          reference = InstanceMethodMetadata::kRValue;
           break;
         case clang::RQ_None:
-          reference = MemberFuncMetadata::kUnqualified;
+          reference = InstanceMethodMetadata::kUnqualified;
           break;
       }
-      instance_metadata = MemberFuncMetadata::InstanceMethodMetadata{
+      instance_metadata = InstanceMethodMetadata{
           .reference = reference,
           .is_const = method_decl->isConst(),
           .is_virtual = method_decl->isVirtual(),
       };
     }
-
-    member_func_metadata = MemberFuncMetadata{
-        .record_id = ictx_.GenerateItemId(method_decl->getParent()),
-        .instance_method_metadata = instance_metadata};
   }
 
   if (!errors.error_set.empty()) {
@@ -618,7 +613,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .params = std::move(params),
       .lifetime_params = std::move(lifetime_params),
       .is_inline = is_inline,
-      .member_func_metadata = std::move(member_func_metadata),
+      .instance_method_metadata = std::move(instance_metadata),
       .is_extern_c = function_decl->isExternC(),
       .is_noreturn = function_decl->isNoReturn(),
       .is_variadic = function_decl->isVariadic(),

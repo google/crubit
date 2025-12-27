@@ -346,33 +346,20 @@ struct TranslatedIdentifier {
   Identifier& rs_identifier();
 };
 
-struct MemberFuncMetadata {
+// TODO(lukasza): Consider extracting a separate ConstructorMetadata struct to
+// account for the fact that `is_const` and `is_virtual` never applies to
+// constructors.
+struct InstanceMethodMetadata {
   enum ReferenceQualification : char {
     kLValue,       // void Foo() &;
     kRValue,       // void Foo() &&;
     kUnqualified,  // void Foo();
   };
-
-  // TODO(lukasza): Consider extracting a separate ConstructorMetadata struct to
-  // account for the fact that `is_const` and `is_virtual` never applies to
-  // constructors.
-  struct InstanceMethodMetadata {
-    llvm::json::Value ToJson() const;
-
-    ReferenceQualification reference = kUnqualified;
-    bool is_const = false;
-    bool is_virtual = false;
-  };
-
   llvm::json::Value ToJson() const;
 
-  // The type that this is a member function for.
-  ItemId record_id;
-
-  // Qualifiers for the instance method.
-  //
-  // If null, this is a static method.
-  std::optional<InstanceMethodMetadata> instance_method_metadata;
+  ReferenceQualification reference = kUnqualified;
+  bool is_const = false;
+  bool is_virtual = false;
 };
 
 // A function involved in the bindings.
@@ -388,8 +375,8 @@ struct Func {
   std::vector<FuncParam> params;
   std::vector<LifetimeName> lifetime_params;
   bool is_inline;
-  // If null, this is not a member function.
-  std::optional<MemberFuncMetadata> member_func_metadata;
+  // If null, this is not an instance method.
+  std::optional<InstanceMethodMetadata> instance_method_metadata;
   bool is_extern_c = false;
   bool is_noreturn = false;
   bool is_variadic = false;

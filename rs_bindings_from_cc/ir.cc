@@ -251,16 +251,16 @@ Identifier& TranslatedIdentifier::rs_identifier() {
   return cc_identifier;
 }
 
-llvm::json::Value MemberFuncMetadata::InstanceMethodMetadata::ToJson() const {
+llvm::json::Value InstanceMethodMetadata::ToJson() const {
   const char* reference_str = nullptr;
   switch (reference) {
-    case MemberFuncMetadata::kLValue:
+    case InstanceMethodMetadata::kLValue:
       reference_str = "LValue";
       break;
-    case MemberFuncMetadata::kRValue:
+    case InstanceMethodMetadata::kRValue:
       reference_str = "RValue";
       break;
-    case MemberFuncMetadata::kUnqualified:
+    case InstanceMethodMetadata::kUnqualified:
       reference_str = "Unqualified";
       break;
   }
@@ -269,13 +269,6 @@ llvm::json::Value MemberFuncMetadata::InstanceMethodMetadata::ToJson() const {
       {"reference", reference_str},
       {"is_const", is_const},
       {"is_virtual", is_virtual},
-  };
-}
-
-llvm::json::Value MemberFuncMetadata::ToJson() const {
-  return llvm::json::Object{
-      {"record_id", record_id},
-      {"instance_method_metadata", instance_method_metadata},
   };
 }
 
@@ -334,7 +327,7 @@ llvm::json::Value Func::ToJson() const {
       {"params", params},
       {"lifetime_params", lifetime_params},
       {"is_inline", is_inline},
-      {"member_func_metadata", member_func_metadata},
+      {"instance_method_metadata", instance_method_metadata},
       {"is_extern_c", is_extern_c},
       {"is_noreturn", is_noreturn},
       {"is_variadic", is_variadic},
