@@ -13,6 +13,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
 
 #include <cstddef>
 #include <utility>
@@ -49,9 +50,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=24
-  const ::foo_service::FooRequestStats* request_stats()
-      const& [[clang::annotate_type("lifetime",
-                                    "__anon1")]] CRUBIT_LIFETIME_BOUND;
+  const ::foo_service::FooRequestStats* request_stats() const& $(__anon1)
+      CRUBIT_LIFETIME_BOUND;
 
   // Generated from:
   // cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=28
@@ -113,8 +113,7 @@ extern "C" void __crubit_thunk_request_ustats(
     const ::foo_service::FooRequestStats** __ret_ptr);
 }
 inline const ::foo_service::FooRequestStats* FooService::request_stats()
-    const& [[clang::annotate_type("lifetime",
-                                  "__anon1")]] CRUBIT_LIFETIME_BOUND {
+    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}

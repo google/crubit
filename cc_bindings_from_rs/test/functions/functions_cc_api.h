@@ -13,6 +13,7 @@
 
 #include "support/annotations_internal.h"
 #include "support/internal/cxx20_backports.h"
+#include "support/lifetime_annotations.h"
 #include "support/rs_std/char.h"
 
 #include <cstdint>
@@ -130,25 +131,14 @@ rs_std::char_ char_to_ascii_lowercase(rs_std::char_ c);
 
 // Generated from:
 // cc_bindings_from_rs/test/functions/functions.rs;l=92
-std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "__anon1")]] get_identical_ref_with_inferred_lifetime(std::
-                                                              int32_t const* [[clang::annotate_type(
-                                                                  "lifetime",
-                                                                  "__"
-                                                                  "anon"
-                                                                  "1")]] crubit_nonnull
-                                                                  x CRUBIT_LIFETIME_BOUND);
+std::int32_t const& $(__anon1) get_identical_ref_with_inferred_lifetime(
+    std::int32_t const* $(__anon1) crubit_nonnull x CRUBIT_LIFETIME_BOUND);
 
 // Generated from:
 // cc_bindings_from_rs/test/functions/functions.rs;l=84
-std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "a")]] get_ref_to_smaller_int(std::
-                                      int32_t const* [[clang::annotate_type(
-                                          "lifetime", "a")]] crubit_nonnull x,
-                                  std::int32_t const* [[clang::annotate_type(
-                                      "lifetime", "a")]] crubit_nonnull y);
+std::int32_t const& $a
+get_ref_to_smaller_int(std::int32_t const* $a crubit_nonnull x,
+                       std::int32_t const* $a crubit_nonnull y);
 
 // Generated from:
 // cc_bindings_from_rs/test/functions/functions.rs;l=96
@@ -301,44 +291,24 @@ inline rs_std::char_ char_to_ascii_lowercase(rs_std::char_ c) {
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "__anon1")]] __crubit_thunk_get_uidentical_uref_uwith_uinferred_ulifetime(std::
-                                                                                  int32_t const* [[clang::annotate_type(
-                                                                                      "lifetime",
-                                                                                      "__anon1")]] crubit_nonnull);
+extern "C" std::int32_t const& $(__anon1)
+    __crubit_thunk_get_uidentical_uref_uwith_uinferred_ulifetime(
+        std::int32_t const* $(__anon1) crubit_nonnull);
 }
-inline std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "__anon1")]] get_identical_ref_with_inferred_lifetime(std::
-                                                              int32_t const* [[clang::annotate_type(
-                                                                  "lifetime",
-                                                                  "__"
-                                                                  "anon"
-                                                                  "1")]] crubit_nonnull
-                                                                  x CRUBIT_LIFETIME_BOUND) {
+inline std::int32_t const& $(__anon1) get_identical_ref_with_inferred_lifetime(
+    std::int32_t const* $(__anon1) crubit_nonnull x CRUBIT_LIFETIME_BOUND) {
   return __crubit_internal::
       __crubit_thunk_get_uidentical_uref_uwith_uinferred_ulifetime(x);
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "a")]] __crubit_thunk_get_uref_uto_usmaller_uint(std::
-                                                         int32_t const* [[clang::annotate_type(
-                                                             "lifetime",
-                                                             "a")]] crubit_nonnull,
-                                                     std::int32_t const* [[clang::annotate_type(
-                                                         "lifetime",
-                                                         "a")]] crubit_nonnull);
+extern "C" std::int32_t const& $a __crubit_thunk_get_uref_uto_usmaller_uint(
+    std::int32_t const* $a crubit_nonnull,
+    std::int32_t const* $a crubit_nonnull);
 }
-inline std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "a")]] get_ref_to_smaller_int(std::
-                                      int32_t const* [[clang::annotate_type(
-                                          "lifetime", "a")]] crubit_nonnull x,
-                                  std::int32_t const* [[clang::annotate_type(
-                                      "lifetime", "a")]] crubit_nonnull y) {
+inline std::int32_t const& $a
+get_ref_to_smaller_int(std::int32_t const* $a crubit_nonnull x,
+                       std::int32_t const* $a crubit_nonnull y) {
   return __crubit_internal::__crubit_thunk_get_uref_uto_usmaller_uint(x, y);
 }
 

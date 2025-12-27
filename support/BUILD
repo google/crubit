@@ -62,6 +62,15 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "lifetime_annotations",
+    hdrs = ["lifetime_annotations.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
 rust_proc_macro(
     name = "crubit_annotate",
     srcs = ["crubit_annotate.rs"],

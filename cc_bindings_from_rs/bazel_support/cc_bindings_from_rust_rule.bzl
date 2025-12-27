@@ -425,6 +425,7 @@ cc_bindings_from_rust_aspect = aspect(
             default = [
                 "//support/public:bindings_support",
                 "//support:annotations_internal",
+                "//support:lifetime_annotations",
                 "//support/public:char",
                 "//support/public:slice_ref",
                 "//support/public:str_ref",

@@ -446,7 +446,7 @@ pub fn format_ty_for_cc<'tcx>(
 
             let mut prereqs = CcPrerequisites::default();
             let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
-                let lifetime = format_region_as_cc_lifetime(tcx, region);
+                let lifetime = format_region_as_cc_lifetime(db, region, &mut prereqs);
                 // Don't annotate maybe uninit with crubit_nonnull.
                 let annotation = if try_ty_as_maybe_uninit(db, referent_mid).is_some() {
                     quote! {}
@@ -460,18 +460,19 @@ pub fn format_ty_for_cc<'tcx>(
                 // References with non-trivial lifetimes will be converted to pointers above.
                 quote! { & }
             } else {
-                let lifetime = format_region_as_cc_lifetime(tcx, region);
+                let lifetime = format_region_as_cc_lifetime(db, region, &mut prereqs);
                 quote! { & #lifetime }
             };
 
             // Early return in case we handle a transparent reference type.
-            if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
+            if let Some(mut snippet) = format_transparent_pointee_or_reference_for_cc(
                 db,
                 *referent_mid,
                 referent_hir,
                 *mutability,
                 ptr_or_ref_prefix.clone(),
             ) {
+                snippet.prereqs += prereqs;
                 return Ok(snippet);
             }
 
@@ -934,19 +935,29 @@ pub fn format_ty_for_rs<'tcx>(
 }
 
 pub fn format_region_as_cc_lifetime<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
     region: &ty::Region<'tcx>,
+    prereqs: &mut CcPrerequisites,
 ) -> TokenStream {
     let name = region
-        .get_name(tcx)
+        .get_name(db.tcx())
         .expect("Caller should use `liberate_and_deanonymize_late_bound_regions`");
     let name = name
         .as_str()
         .strip_prefix('\'')
         .expect("All Rust lifetimes are expected to begin with the \"'\" character");
 
-    // TODO(b/286299326): Use `$a` or `$(foo)` or `$static` syntax below.
-    quote! { [[clang::annotate_type("lifetime", #name)]] }
+    // Needed for the definitions of the `$static` / `$a` / `$(my_lt)` macros.
+    prereqs.includes.insert(db.support_header("lifetime_annotations.h"));
+    if name == "static" {
+        quote! { $static }
+    } else if let [b'a'..=b'z'] = name.as_bytes() {
+        let name_ident = Ident::new(name, proc_macro2::Span::call_site());
+        quote! { $#name_ident }
+    } else {
+        let name_ident = Ident::new(name, proc_macro2::Span::call_site());
+        quote! { $(#name_ident) }
+    }
 }
 
 pub fn format_region_as_rs_lifetime<'tcx>(

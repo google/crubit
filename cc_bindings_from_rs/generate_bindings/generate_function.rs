@@ -677,10 +677,12 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 // lifetime appears in the return type.
                 // See crubit.rs-special-lifetimes for more details on the motivation.
                 let ref_qualifier = if !region_is_elided(tcx, *region) {
-                    let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
+                    let lifetime_annotation =
+                        format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
                     quote! { & #lifetime_annotation }
                 } else if has_elided_region(tcx, sig_mid.output()) {
-                    let lifetime_annotation = format_region_as_cc_lifetime(tcx, region);
+                    let lifetime_annotation =
+                        format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
                     main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
                     quote! { & #lifetime_annotation CRUBIT_LIFETIME_BOUND }
                 } else {

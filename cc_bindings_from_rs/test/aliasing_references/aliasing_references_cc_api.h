@@ -13,6 +13,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -53,10 +54,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   //
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=32
-  std::int32_t& [[clang::annotate_type("lifetime",
-                                       "__anon1")]] as_mut_unchecked()
-      const& [[clang::annotate_type("lifetime",
-                                    "__anon1")]] CRUBIT_LIFETIME_BOUND;
+  std::int32_t& $(__anon1)
+      as_mut_unchecked() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=35
@@ -147,15 +146,11 @@ static_assert(std::is_trivially_destructible_v<NonFreezeType>);
 static_assert(std::is_trivially_move_constructible_v<NonFreezeType>);
 static_assert(std::is_trivially_move_assignable_v<NonFreezeType>);
 namespace __crubit_internal {
-extern "C" std::int32_t& [[clang::annotate_type(
-    "lifetime",
-    "__anon1")]] __crubit_thunk_as_umut_uunchecked(::aliasing_references::
-                                                       NonFreezeType const&);
+extern "C" std::int32_t& $(__anon1) __crubit_thunk_as_umut_uunchecked(
+    ::aliasing_references::NonFreezeType const&);
 }
-inline std::int32_t& [[clang::annotate_type(
-    "lifetime", "__anon1")]] NonFreezeType::as_mut_unchecked()
-    const& [[clang::annotate_type("lifetime",
-                                  "__anon1")]] CRUBIT_LIFETIME_BOUND {
+inline std::int32_t& $(__anon1)
+    NonFreezeType::as_mut_unchecked() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_as_umut_uunchecked(self);
 }

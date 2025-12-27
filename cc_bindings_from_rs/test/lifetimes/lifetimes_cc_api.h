@@ -12,6 +12,7 @@
 
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -46,13 +47,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=32
   static ::lifetimes::StructWithLifetime from_ref(
-      std::int32_t const* [[clang::annotate_type(
-          "lifetime", "a")]] crubit_nonnull field_with_lifetime);
+      std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=36
-  std::int32_t const& [[clang::annotate_type("lifetime",
-                                             "a")]] into_ref() const;
+  std::int32_t const& $a into_ref() const;
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=40
@@ -60,10 +59,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=44
-  std::int32_t const& [[clang::annotate_type("lifetime",
-                                             "__anon1")]] borrow_from_self()
-      const& [[clang::annotate_type("lifetime",
-                                    "__anon1")]] CRUBIT_LIFETIME_BOUND;
+  std::int32_t const& $(__anon1)
+      borrow_from_self() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=50
@@ -72,25 +69,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=54
   static ::lifetimes::StructWithLifetime from_static_ref(
-      std::int32_t const* [[clang::annotate_type(
-          "lifetime", "static")]] crubit_nonnull field_with_lifetime);
+      std::int32_t const* $static crubit_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=58
   static ::lifetimes::StructWithLifetime from_static_ref_where_bound(
-      std::int32_t const* [[clang::annotate_type(
-          "lifetime", "a")]] crubit_nonnull field_with_lifetime);
+      std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=65
-  std::int32_t const& [[clang::annotate_type(
-      "lifetime", "static")]] borrow_from_static_self()
-      const& [[clang::annotate_type("lifetime", "static")]];
+  std::int32_t const& $static borrow_from_static_self() const& $static;
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=19
-  explicit operator std::int32_t const& [[clang::annotate_type("lifetime",
-                                                               "a")]] ();
+  explicit operator std::int32_t const& $a();
 
   // Generated from:
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=25
@@ -171,13 +163,11 @@ static_assert(std::is_trivially_copy_constructible_v<StructWithLifetime>);
 static_assert(std::is_trivially_copy_assignable_v<StructWithLifetime>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
-    std::int32_t const* [[clang::annotate_type("lifetime",
-                                               "a")]] crubit_nonnull,
+    std::int32_t const* $a crubit_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
-    std::int32_t const* [[clang::annotate_type(
-        "lifetime", "a")]] crubit_nonnull field_with_lifetime) {
+    std::int32_t const* $a crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_uref(field_with_lifetime,
@@ -186,12 +176,10 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::from_ref(
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "a")]] __crubit_thunk_into_uref(::lifetimes::StructWithLifetime*);
+extern "C" std::int32_t const& $a
+__crubit_thunk_into_uref(::lifetimes::StructWithLifetime*);
 }
-inline std::int32_t const& [[clang::annotate_type(
-    "lifetime", "a")]] StructWithLifetime::into_ref() const {
+inline std::int32_t const& $a StructWithLifetime::into_ref() const {
   auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_into_uref(&self);
 }
@@ -205,15 +193,11 @@ inline std::int32_t StructWithLifetime::value() const {
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "__anon1")]] __crubit_thunk_borrow_ufrom_uself(::lifetimes::
-                                                       StructWithLifetime const&);
+extern "C" std::int32_t const& $(__anon1)
+    __crubit_thunk_borrow_ufrom_uself(::lifetimes::StructWithLifetime const&);
 }
-inline std::int32_t const& [[clang::annotate_type(
-    "lifetime", "__anon1")]] StructWithLifetime::borrow_from_self()
-    const& [[clang::annotate_type("lifetime",
-                                  "__anon1")]] CRUBIT_LIFETIME_BOUND {
+inline std::int32_t const& $(__anon1) StructWithLifetime::borrow_from_self()
+    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_borrow_ufrom_uself(self);
 }
@@ -231,13 +215,11 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::make_static_42() {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref(
-    std::int32_t const* [[clang::annotate_type("lifetime",
-                                               "static")]] crubit_nonnull,
+    std::int32_t const* $static crubit_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
-    std::int32_t const* [[clang::annotate_type(
-        "lifetime", "static")]] crubit_nonnull field_with_lifetime) {
+    std::int32_t const* $static crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref(field_with_lifetime,
@@ -247,14 +229,12 @@ inline ::lifetimes::StructWithLifetime StructWithLifetime::from_static_ref(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ustatic_uref_uwhere_ubound(
-    std::int32_t const* [[clang::annotate_type("lifetime",
-                                               "a")]] crubit_nonnull,
+    std::int32_t const* $a crubit_nonnull,
     ::lifetimes::StructWithLifetime* __ret_ptr);
 }
 inline ::lifetimes::StructWithLifetime
 StructWithLifetime::from_static_ref_where_bound(
-    std::int32_t const* [[clang::annotate_type(
-        "lifetime", "a")]] crubit_nonnull field_with_lifetime) {
+    std::int32_t const* $a crubit_nonnull field_with_lifetime) {
   crubit::Slot<::lifetimes::StructWithLifetime> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ustatic_uref_uwhere_ubound(
@@ -263,25 +243,21 @@ StructWithLifetime::from_static_ref_where_bound(
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "static")]] __crubit_thunk_borrow_ufrom_ustatic_uself(::lifetimes::
-                                                              StructWithLifetime const&);
+extern "C" std::int32_t const& $static
+__crubit_thunk_borrow_ufrom_ustatic_uself(
+    ::lifetimes::StructWithLifetime const&);
 }
-inline std::int32_t const& [[clang::annotate_type(
-    "lifetime", "static")]] StructWithLifetime::borrow_from_static_self()
-    const& [[clang::annotate_type("lifetime", "static")]] {
+inline std::int32_t const& $static
+StructWithLifetime::borrow_from_static_self() const& $static {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_borrow_ufrom_ustatic_uself(self);
 }
 namespace __crubit_internal {
-extern "C" std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "a")]] __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(::lifetimes::
-                                                                       StructWithLifetime*);
+extern "C" std::int32_t const& $a
+__crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(
+    ::lifetimes::StructWithLifetime*);
 }
-inline StructWithLifetime::operator std::int32_t const& [[clang::annotate_type(
-    "lifetime", "a")]] () {
+inline StructWithLifetime::operator std::int32_t const& $a() {
   auto& self = const_cast<std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
       __crubit_thunk_into_u_x00000026_x00000027a_x00000020i32(&self);

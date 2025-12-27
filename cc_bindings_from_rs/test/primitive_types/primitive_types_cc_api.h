@@ -14,6 +14,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -417,20 +418,12 @@ std::int32_t* maybe_uninit_ptr_mut(std::int32_t* maybe_uninit);
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=34
-std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "static")]] maybe_uninit_ref(std::
-                                     int32_t const* [[clang::annotate_type(
-                                         "lifetime", "static")]] maybe_uninit);
+std::int32_t const& $static
+maybe_uninit_ref(std::int32_t const* $static maybe_uninit);
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=38
-std::int32_t& [[clang::annotate_type(
-    "lifetime",
-    "static")]] maybe_uninit_ref_mut(std::
-                                         int32_t* [[clang::annotate_type(
-                                             "lifetime",
-                                             "static")]] maybe_uninit);
+std::int32_t& $static maybe_uninit_ref_mut(std::int32_t* $static maybe_uninit);
 
 }  // namespace test_maybe_uninit
 
@@ -771,35 +764,20 @@ inline std::int32_t* maybe_uninit_ptr_mut(std::int32_t* maybe_uninit) {
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "static")]] __crubit_thunk_maybe_uuninit_uref(std::
-                                                      int32_t const* [[clang::annotate_type(
-                                                          "lifetime",
-                                                          "static")]]);
+extern "C" std::int32_t const& $static
+__crubit_thunk_maybe_uuninit_uref(std::int32_t const* $static);
 }
-inline std::int32_t const& [[clang::annotate_type(
-    "lifetime",
-    "static")]] maybe_uninit_ref(std::
-                                     int32_t const* [[clang::annotate_type(
-                                         "lifetime", "static")]] maybe_uninit) {
+inline std::int32_t const& $static
+maybe_uninit_ref(std::int32_t const* $static maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uref(maybe_uninit);
 }
 
 namespace __crubit_internal {
-extern "C" std::int32_t& [[clang::annotate_type(
-    "lifetime",
-    "static")]] __crubit_thunk_maybe_uuninit_uref_umut(std::
-                                                           int32_t* [[clang::annotate_type(
-                                                               "lifetime",
-                                                               "static")]]);
+extern "C" std::int32_t& $static
+__crubit_thunk_maybe_uuninit_uref_umut(std::int32_t* $static);
 }
-inline std::int32_t& [[clang::annotate_type(
-    "lifetime",
-    "static")]] maybe_uninit_ref_mut(std::
-                                         int32_t* [[clang::annotate_type(
-                                             "lifetime",
-                                             "static")]] maybe_uninit) {
+inline std::int32_t& $static
+maybe_uninit_ref_mut(std::int32_t* $static maybe_uninit) {
   return __crubit_internal::__crubit_thunk_maybe_uuninit_uref_umut(
       maybe_uninit);
 }
