@@ -58,7 +58,7 @@ fn test_function() {
                 ],
                 lifetime_params: [],
                 is_inline: false,
-                member_func_metadata: None,
+                instance_method_metadata: None,
                 is_extern_c: false,
                 is_noreturn: false,
                 is_variadic: false,
@@ -1233,10 +1233,8 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
             mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of GetValue method."), ...
             is_inline: true, ...
-            member_func_metadata: Some(MemberFuncMetadata {
-                record_id: ItemId(#record_id),
-                instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
-            }), ...
+            instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
+            enclosing_item_id: Some(ItemId(#record_id)), ...
           }
         }
     );
@@ -1324,10 +1322,8 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
             mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of the GetValue method specialization for T=int."), ...
             is_inline: true, ...
-            member_func_metadata: Some(MemberFuncMetadata {
-                record_id: ItemId(#record_id),
-                instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
-            }), ...
+            instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
+            enclosing_item_id: Some(ItemId(#record_id)), ...
           }
         }
     );
@@ -1365,8 +1361,8 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
 
     // Verify that there is only 1 function per instantiation.
     assert_eq!(2, functions.len());
-    let rec_id1 = functions[0].member_func_metadata.as_ref().unwrap().record_id;
-    let rec_id2 = functions[1].member_func_metadata.as_ref().unwrap().record_id;
+    let rec_id1 = functions[0].enclosing_item_id.unwrap();
+    let rec_id2 = functions[1].enclosing_item_id.unwrap();
     assert_ne!(rec_id1, rec_id2);
     Ok(())
 }
@@ -1629,7 +1625,7 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
             },
             params: [], ...
             is_inline: false, ...
-            member_func_metadata: None, ...
+            instance_method_metadata: None, ...
             has_c_calling_convention: true, ...
             is_member_or_descendant_of_class_template: false, ...
           }
@@ -1683,7 +1679,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
                 unknown_attr: None,
             }], ...
             is_inline: false, ...
-            member_func_metadata: None, ...
+            instance_method_metadata: None, ...
             has_c_calling_convention: true, ...
             is_member_or_descendant_of_class_template: false, ...
           }
@@ -2698,14 +2694,9 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
         .records()
         .find(|r| r.rs_name.identifier.as_ref() == record_name)
         .expect("Struct not found");
-    let function = ir.functions().find(|f| func_predicate(f));
-    let meta = function
-        .expect("Function not found")
-        .member_func_metadata
-        .as_ref()
-        .expect("Member function should specify member_func_metadata");
-    assert_eq!(meta.record_id, record.id);
-    assert_eq!(&meta.instance_method_metadata, expected_metadata);
+    let function = ir.functions().find(|f| func_predicate(f)).expect("Function not found");
+    assert_eq!(function.enclosing_item_id, Some(record.id));
+    assert_eq!(&function.instance_method_metadata, expected_metadata);
 }
 
 fn assert_member_function_has_instance_method_metadata(
@@ -3025,17 +3016,17 @@ fn test_operator_names() {
     .unwrap();
     let operator_names: HashSet<&str> = ir
         .functions()
-        .filter(|f| {
+        .filter_map(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
-            if let Some(Ok(r)) = ir.record_for_member_func(f).map(<&Rc<Record>>::try_from) {
-                r.rs_name.identifier.as_ref() == "SomeStruct"
-            } else {
-                false
+            let r = ir.find_decl::<Rc<Record>>(f.enclosing_item_id?).ok()?;
+            if r.rs_name.identifier.as_ref() != "SomeStruct" {
+                return None;
             }
-        })
-        .flat_map(|f| match &f.rs_name {
-            UnqualifiedIdentifier::Operator(op) => Some(op.name.as_ref()),
-            _ => None,
+
+            match &f.rs_name {
+                UnqualifiedIdentifier::Operator(op) => Some(op.name.as_ref()),
+                _ => None,
+            }
         })
         .collect();
     assert!(operator_names.contains("="));
