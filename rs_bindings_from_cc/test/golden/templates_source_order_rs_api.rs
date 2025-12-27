@@ -104,21 +104,21 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // Error while generating bindings for type alias 'Alias7':
-    // Can't generate bindings for Alias7, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias7 (error: Can't generate bindings for MyTemplate<char>, because of missing required features (crubit.rs-features):
+    // Error while generating bindings for type alias 'test_namespace_bindings::Alias7':
+    // Can't generate bindings for test_namespace_bindings::Alias7, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for test_namespace_bindings::Alias7 (error: Can't generate bindings for MyTemplate<char>, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<char> (crate::__CcTemplateInst10MyTemplateIcE is a template instantiation)
     // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<char> (crate::__CcTemplateInst10MyTemplateIcE is a template instantiation))
 
-    // Error while generating bindings for type alias 'Alias8':
-    // Can't generate bindings for Alias8, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias8 (error: Can't generate bindings for MyTemplate<test_namespace_bindings::Inner>, because of missing required features (crubit.rs-features):
+    // Error while generating bindings for type alias 'test_namespace_bindings::Alias8':
+    // Can't generate bindings for test_namespace_bindings::Alias8, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for test_namespace_bindings::Alias8 (error: Can't generate bindings for MyTemplate<test_namespace_bindings::Inner>, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation)
     // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<test_namespace_bindings::Inner> (crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE is a template instantiation))
 
-    // Error while generating bindings for type alias 'Alias9':
-    // Can't generate bindings for Alias9, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for Alias9 (error: Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>>, because of missing required features (crubit.rs-features):
+    // Error while generating bindings for type alias 'test_namespace_bindings::Alias9':
+    // Can't generate bindings for test_namespace_bindings::Alias9, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for test_namespace_bindings::Alias9 (error: Can't generate bindings for MyTemplate<MyTemplate<test_namespace_bindings::Inner>>, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation)
     // //rs_bindings_from_cc/test/golden:templates_source_order_cc needs [//features:wrapper] for MyTemplate<MyTemplate<test_namespace_bindings::Inner>> (crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE is a template instantiation))
 }

@@ -61,31 +61,31 @@ pub mod ns {
         }
     }
 
-    // Error while generating bindings for constructor 'Trivial::Trivial':
-    // Can't generate bindings for Trivial::Trivial, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)
+    // Error while generating bindings for constructor 'ns::Trivial::Trivial':
+    // Can't generate bindings for ns::Trivial::Trivial, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for constructor 'Trivial::Trivial':
-    // Can't generate bindings for Trivial::Trivial, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)
+    // Error while generating bindings for constructor 'ns::Trivial::Trivial':
+    // Can't generate bindings for ns::Trivial::Trivial, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::Trivial (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for function 'Trivial::operator=':
-    // Can't generate bindings for Trivial::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (the type of __param_0 (parameter #1): references are not supported)
+    // Error while generating bindings for function 'ns::Trivial::operator=':
+    // Can't generate bindings for ns::Trivial::operator=, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for function 'Trivial::operator=':
-    // Can't generate bindings for Trivial::operator=, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::operator= (the type of __param_0 (parameter #1): references are not supported)
+    // Error while generating bindings for function 'ns::Trivial::operator=':
+    // Can't generate bindings for ns::Trivial::operator=, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::operator= (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-    // Error while generating bindings for function 'Trivial::RvalueRefQualified':
-    // Can't generate bindings for Trivial::RvalueRefQualified, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::RvalueRefQualified (the type of __this (parameter #0): references are not supported)
+    // Error while generating bindings for function 'ns::Trivial::RvalueRefQualified':
+    // Can't generate bindings for ns::Trivial::RvalueRefQualified, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::RvalueRefQualified (the type of __this (parameter #0): references are not supported)
 
-    // Error while generating bindings for function 'Trivial::ConstRvalueRefQualified':
-    // Can't generate bindings for Trivial::ConstRvalueRefQualified, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for Trivial::ConstRvalueRefQualified (the type of __this (parameter #0): references are not supported)
+    // Error while generating bindings for function 'ns::Trivial::ConstRvalueRefQualified':
+    // Can't generate bindings for ns::Trivial::ConstRvalueRefQualified, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::Trivial::ConstRvalueRefQualified (the type of __this (parameter #0): references are not supported)
 
     #[inline(always)]
     pub fn TakesByValue(mut trivial: crate::ns::Trivial) -> crate::ns::Trivial {
@@ -99,25 +99,25 @@ pub mod ns {
         }
     }
 
-    // Error while generating bindings for function 'TakesByReference':
-    // Can't generate bindings for TakesByReference, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByReference (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByReference (the type of trivial (parameter #0): references are not supported)
+    // Error while generating bindings for function 'ns::TakesByReference':
+    // Can't generate bindings for ns::TakesByReference, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByReference (the type of trivial (parameter #0): references are not supported)
 
-    // Error while generating bindings for function 'TakesByConstReference':
-    // Can't generate bindings for TakesByConstReference, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstReference (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstReference (the type of trivial (parameter #0): references are not supported)
+    // Error while generating bindings for function 'ns::TakesByConstReference':
+    // Can't generate bindings for ns::TakesByConstReference, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByConstReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByConstReference (the type of trivial (parameter #0): references are not supported)
 
-    // Error while generating bindings for function 'TakesByRvalueReference':
-    // Can't generate bindings for TakesByRvalueReference, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByRvalueReference (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByRvalueReference (the type of trivial (parameter #0): references are not supported)
+    // Error while generating bindings for function 'ns::TakesByRvalueReference':
+    // Can't generate bindings for ns::TakesByRvalueReference, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByRvalueReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByRvalueReference (the type of trivial (parameter #0): references are not supported)
 
-    // Error while generating bindings for function 'TakesByConstRvalueReference':
-    // Can't generate bindings for TakesByConstRvalueReference, because of missing required features (crubit.rs-features):
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstRvalueReference (return type: references are not supported)
-    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for TakesByConstRvalueReference (the type of trivial (parameter #0): references are not supported)
+    // Error while generating bindings for function 'ns::TakesByConstRvalueReference':
+    // Can't generate bindings for ns::TakesByConstRvalueReference, because of missing required features (crubit.rs-features):
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByConstRvalueReference (return type: references are not supported)
+    // //rs_bindings_from_cc/test/golden:trivial_type_cc needs [//features:experimental] for ns::TakesByConstRvalueReference (the type of trivial (parameter #0): references are not supported)
 }
 
 // namespace ns

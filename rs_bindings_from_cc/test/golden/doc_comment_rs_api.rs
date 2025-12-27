@@ -325,8 +325,8 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 
 // Error while generating bindings for type alias 'ConcreteNestedStruct':
 // Can't generate bindings for ConcreteNestedStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for ConcreteNestedStruct (error: Can't generate bindings for NestedStruct, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for NestedStruct (incomplete type))
+// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for ConcreteNestedStruct (error: Can't generate bindings for OuterTemplate<int>::NestedStruct, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:doc_comment_cc needs [//features:wrapper] for OuterTemplate<int>::NestedStruct (incomplete type))
 
 // Error while generating bindings for struct 'MyTemplate<int>':
 // Can't generate bindings for MyTemplate<int>, because of missing required features (crubit.rs-features):

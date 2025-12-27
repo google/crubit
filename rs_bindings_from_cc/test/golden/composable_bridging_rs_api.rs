@@ -540,9 +540,9 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstNSt3__u17basic_string_viewIwNS_11char_traitsIwEEEE
 );
 
-// Error while generating bindings for type alias 'traits_type':
-// Can't generate bindings for traits_type, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for traits_type (error: Can't generate bindings for std::char_traits<wchar_t>, because of missing required features (crubit.rs-features):
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::traits_type':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::traits_type, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::traits_type (error: Can't generate bindings for std::char_traits<wchar_t>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<wchar_t> (crate::__CcTemplateInstNSt3__u11char_traitsIwEE is a template instantiation))
 
 // Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::value_type':
@@ -566,22 +566,22 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::iterator':
 // Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for type alias 'const_reverse_iterator':
-// Can't generate bindings for const_reverse_iterator, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation))
 
-// Error while generating bindings for type alias 'reverse_iterator':
-// Can't generate bindings for reverse_iterator, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for reverse_iterator (error: Can't generate bindings for const_reverse_iterator, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::reverse_iterator':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::reverse_iterator, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::reverse_iterator (error: Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation)))
 
-// Error while generating bindings for type alias 'size_type':
-// Can't generate bindings for size_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::size_type':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::size_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
 
-// Error while generating bindings for type alias 'difference_type':
-// Can't generate bindings for difference_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::difference_type':
+// Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::difference_type, because it is unsupported: b/200067824: type definitions nested inside templated records are not yet supported
 
 // Error while generating bindings for global variable 'std::basic_string_view<wchar_t>::npos':
 // static data members are not supported
@@ -622,23 +622,23 @@ forward_declare::unsafe_define!(
 // Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rbegin':
-// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
+// Cannot use an error type by value: Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation))
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rend':
-// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
+// Cannot use an error type by value: Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation))
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::crbegin':
-// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
+// Cannot use an error type by value: Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation))
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::crend':
-// Cannot use an error type by value: Can't generate bindings for const_reverse_iterator, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
+// Cannot use an error type by value: Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation))
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t>::size':

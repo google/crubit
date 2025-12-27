@@ -870,25 +870,35 @@ impl GenericItem for Func {
         Some(self.owning_target.clone())
     }
     fn debug_name(&self, ir: &IR) -> Rc<str> {
-        let record: Option<Rc<str>> = ir.record_for_member_func(self).map(|r| r.debug_name(ir));
-        let record: Option<&str> = record.as_deref();
-
-        let func_name = match &self.cc_name {
-            UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
-            UnqualifiedIdentifier::Operator(op) => op.cc_name(),
-            UnqualifiedIdentifier::Destructor => {
-                format!("~{}", record.expect("destructor must be associated with a record"))
-            }
-            UnqualifiedIdentifier::Constructor => {
-                record.expect("constructor must be associated with a record").to_string()
+        let mut name = ir.namespace_qualifier(self).format_for_cc_debug();
+        let record_name = || -> Option<Rc<str>> {
+            let record = ir.record_for_member_func(self)?;
+            if let Item::Record(r) = record {
+                Some(r.cc_name.identifier.clone())
+            } else {
+                None
             }
         };
 
-        if let Some(record_name) = record {
-            format!("{}::{}", record_name, func_name).into()
-        } else {
-            func_name.into()
+        match &self.cc_name {
+            UnqualifiedIdentifier::Identifier(id) => {
+                name.push_str(&id.identifier);
+            }
+            UnqualifiedIdentifier::Operator(op) => {
+                name.push_str(&op.cc_name());
+            }
+            UnqualifiedIdentifier::Destructor => {
+                name.push('~');
+                name.push_str(&record_name().expect("destructor must be associated with a record"));
+            }
+            UnqualifiedIdentifier::Constructor => {
+                name.push_str(
+                    &record_name().expect("constructor must be associated with a record"),
+                );
+            }
         }
+
+        name.into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         if self.cc_name == UnqualifiedIdentifier::Constructor {
@@ -992,8 +1002,9 @@ impl GenericItem for IncompleteRecord {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
@@ -1181,8 +1192,9 @@ impl GenericItem for Record {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
@@ -1330,8 +1342,9 @@ impl GenericItem for GlobalVar {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
@@ -1375,8 +1388,9 @@ impl GenericItem for Enum {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Enum
@@ -1424,8 +1438,9 @@ impl GenericItem for TypeAlias {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.identifier.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::TypeAlias
@@ -1551,6 +1566,7 @@ impl GenericItem for UnsupportedItem {
         None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
+        // Note: name is supposed to be populated with the `debug_name()` of the unsupported item.
         self.name.clone()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
@@ -1645,7 +1661,7 @@ impl GenericItem for Comment {
         None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        "comment".into()
+        "<comment>".into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
@@ -1685,8 +1701,9 @@ impl GenericItem for Namespace {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.to_string().into()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name.identifier)
+            .into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Namespace
@@ -1719,7 +1736,7 @@ impl GenericItem for UseMod {
         None
     }
     fn debug_name(&self, _: &IR) -> Rc<str> {
-        format!("[internal] use mod {}::* = {}", self.mod_name, self.path).into()
+        format!("<[internal] use mod {}::* = {}>", self.mod_name, self.path).into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
@@ -1755,8 +1772,8 @@ impl GenericItem for ExistingRustType {
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
     }
-    fn debug_name(&self, _: &IR) -> Rc<str> {
-        self.cc_name.clone()
+    fn debug_name(&self, ir: &IR) -> Rc<str> {
+        format!("{}{}", ir.namespace_qualifier(self).format_for_cc_debug(), self.cc_name).into()
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other

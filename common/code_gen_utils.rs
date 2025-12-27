@@ -389,6 +389,16 @@ impl NamespaceQualifier {
         }
         Ok(path)
     }
+
+    /// Returns `foo::bar::baz::` (never reporting errors).
+    pub fn format_for_cc_debug(&self) -> String {
+        let mut path = String::new();
+        for part in self.parts() {
+            path.push_str(part);
+            path.push_str("::");
+        }
+        path
+    }
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
