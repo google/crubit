@@ -912,11 +912,6 @@ forward_declare::unsafe_define!(
 // Can't generate bindings for std::placeholders::__ph<9>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<9> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi9EEE is a template instantiation)
 
-// Error while generating bindings for struct 'absl::swap_internal::IsSwappable<void ()>':
-// Can't generate bindings for absl::swap_internal::IsSwappable<void ()>, because of missing required features (crubit.rs-features):
-// third_party/absl/meta/type_traits.h needs [//features:wrapper] for absl::swap_internal::IsSwappable<void ()> (crate::__CcTemplateInstN4absl13swap_internal11IsSwappableIFvvEEE is a template instantiation)
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for absl::swap_internal::IsSwappable<void ()> (crate::__CcTemplateInstN4absl13swap_internal11IsSwappableIFvvEEE is a template instantiation)
-
 // Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::core::ffi::c_int])
 
 // Type bindings for rs_std::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE])

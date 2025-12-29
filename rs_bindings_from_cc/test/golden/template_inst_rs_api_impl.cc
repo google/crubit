@@ -7,9 +7,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
-#include "support/internal/sizeof.h"
 
-#include <cstddef>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
@@ -17,16 +15,5 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
-
-extern "C" void __rust_thunk___Z13GetMyTemplatev(
-    struct MyTemplate<int>* __return) {
-  new (__return) auto(GetMyTemplate());
-}
-
-static_assert((struct MyTemplate<int> (*)()) & ::GetMyTemplate);
-
-static_assert(CRUBIT_SIZEOF(struct MyTemplate<int>) == 4);
-static_assert(alignof(struct MyTemplate<int>) == 4);
-static_assert(CRUBIT_OFFSET_OF(field, struct MyTemplate<int>) == 0);
 
 #pragma clang diagnostic pop
