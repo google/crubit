@@ -46,6 +46,7 @@ Cmdline MakeCmdline(std::string header) {
       .public_headers = {HeaderName(header)},
   };
   args.headers_to_targets[args.public_headers[0]] = args.current_target;
+  args.target_to_features[args.current_target] = {"supported"};
   absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
   CHECK_OK(cmdline);
   return *cmdline;

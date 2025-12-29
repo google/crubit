@@ -35,7 +35,9 @@ class Invocation {
   Invocation(
       BazelLabel target, absl::Span<const HeaderName> public_headers,
       const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets,
-      std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist)
+      std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist,
+      absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
+          crubit_features)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
@@ -49,6 +51,7 @@ class Invocation {
     ir_.public_headers.insert(ir_.public_headers.end(), public_headers_.begin(),
                               public_headers.end());
     ir_.current_target = target_;
+    ir_.crubit_features = std::move(crubit_features);
   }
 
   // Returns the target of a header, if any.
@@ -160,6 +163,9 @@ class ImportContext {
   // Returns true iff the `decl` is from a proto target. Does not look into
   // other redeclarations of the decl.
   virtual bool IsFromProtoTarget(const clang::Decl& decl) const = 0;
+
+  // Returns true iff `label` has opted in to crubit support.
+  virtual bool IsCrubitEnabledForTarget(const BazelLabel& label) const = 0;
 
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //

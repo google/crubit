@@ -891,6 +891,20 @@ bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
   return filename.has_value() && filename->ends_with(".proto.h");
 }
 
+bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
+  if (auto i = invocation_.ir_.crubit_features.find(label);
+      i != invocation_.ir_.crubit_features.end()) {
+    return !i->second.empty();
+  }
+  // TODO(b/471240594): This is a hack for this specific header. We need to
+  // properly fix target assignment for Crubit support libraries.
+  if (label.value().starts_with("//_unknown_target:") &&
+      label.value().ends_with("crubit/support/rs_std/slice_ref.h")) {
+    return true;
+  }
+  return false;
+}
+
 IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
   return ImportUnsupportedItem(decl, std::nullopt, {error},
                                /*is_hard_error=*/true);
@@ -1059,6 +1073,16 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
         "Template specialization '$0' without an associated record decl "
         "is not supported.",
         type_string));
+  }
+
+  if (auto* template_decl = type->getTemplateName().getAsTemplateDecl()) {
+    auto target = GetOwningTarget(template_decl);
+    if (!IsCrubitEnabledForTarget(target)) {
+      return absl::InvalidArgumentError(absl::Substitute(
+          "Failed to complete template specialization type $0: template "
+          "belongs to target $1, which does not support Crubit.",
+          type_string, target.value()));
+    }
   }
 
   if (HasBeenAlreadySuccessfullyImported(specialization_decl))
