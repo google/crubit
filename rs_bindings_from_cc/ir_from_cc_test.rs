@@ -41,6 +41,15 @@ fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
     )
 }
 
+fn ir_from_fmt_cc(program: &str) -> Result<IR> {
+    ir_testing::ir_from_cc_dependency(
+        multiplatform_testing::test_platform(),
+        program,
+        "// empty header",
+        Some("fmt"),
+    )
+}
+
 #[gtest]
 fn test_function() {
     let ir = ir_from_cc("int f(int a, int b);").unwrap();
@@ -4550,6 +4559,32 @@ fn test_assumed_lifetimes_lifetime_capture_by_multiple_params() {
                 ...
             }
             ...
+        }
+    );
+}
+
+#[gtest]
+fn test_detects_formatter() {
+    let ir = ir_from_fmt_cc(
+        r#"
+        struct Foo {
+          template <typename Sink>
+          friend void AbslStringify(Sink&, const Foo&) {}
+        };"#,
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+          ...
+          Record {
+            ...
+            cc_name: "Foo",
+            ...
+            detected_formatter: true,
+            ...
+          }
+          ...
         }
     );
 }

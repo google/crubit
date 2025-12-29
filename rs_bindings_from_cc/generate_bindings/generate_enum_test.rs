@@ -280,3 +280,40 @@ fn test_generate_enum_bool_alias() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_fmt() -> Result<()> {
+    let mut ir = ir_from_cc(
+        r#"
+        enum class Enum {
+            kEnum,
+        };
+        template <typename Sink>
+        void AbslStringify(Sink& sink, Enum) {
+            sink.Append("Enum");
+        }
+    "#,
+    )?;
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Fmt;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for Enum {
+              ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Display for Enum {
+              ...
+            }
+        }
+    );
+    Ok(())
+}
