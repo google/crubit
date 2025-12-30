@@ -578,6 +578,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           return true;  // Handled in `GetSafetyAnnotation()`
         } else if (clang::isa<clang::AsmLabelAttr>(attr) ||
                    clang::isa<clang::ConstAttr>(attr) ||
+                   clang::isa<clang::FinalAttr>(attr) ||
                    clang::isa<clang::ExcludeFromExplicitInstantiationAttr>(
                        attr) ||
                    clang::isa<clang::NoThrowAttr>(attr) ||
