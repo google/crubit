@@ -101,6 +101,10 @@ std::string RecordingDiagnosticConsumer::ConcatenatedDiagnostics(
 RecordingDiagnosticConsumer RecordDiagnostics(
     clang::DiagnosticsEngine& diagnostic_engine,
     std::function<void(void)> callback) {
+  // Reset the diagnostic engine to a known state. In particular, if there were
+  // too many diagnostics reported previously (even in sfinae contexts),
+  // the diagnostic engine's fatal bit will get stuck on.
+  diagnostic_engine.Reset(/*soft=*/true);
   RecordingDiagnosticConsumer diagnostic_recorder;
   std::unique_ptr<clang::DiagnosticConsumer> original_consumer =
       diagnostic_engine.takeClient();
