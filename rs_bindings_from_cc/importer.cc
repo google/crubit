@@ -1076,6 +1076,17 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
   }
 
   if (auto* template_decl = type->getTemplateName().getAsTemplateDecl()) {
+    // Resolve template_decl to its definition if possible.
+    if (auto* class_template_decl =
+            clang::dyn_cast<clang::ClassTemplateDecl>(template_decl)) {
+      if (clang::CXXRecordDecl* definition =
+              class_template_decl->getTemplatedDecl()->getDefinition()) {
+        if (auto* definition_template_decl =
+                definition->getDescribedClassTemplate()) {
+          template_decl = definition_template_decl;
+        }
+      }
+    }
     auto target = GetOwningTarget(template_decl);
     if (!IsCrubitEnabledForTarget(target)) {
       return absl::InvalidArgumentError(absl::Substitute(
