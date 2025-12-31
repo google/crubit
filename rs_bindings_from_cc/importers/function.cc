@@ -497,10 +497,14 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (def->isInlined()) is_inline = true;
     if (def->isThisDeclarationADefinition()) is_defined = true;
   }
-  if (!is_defined)  // Template members may not be defined until instantiation.
+  if (!is_defined) {
+    // Template members may not be defined until instantiation.
     if (auto* pat = function_decl->getTemplateInstantiationPattern()) {
-      if (pat->isThisDeclarationADefinition()) is_defined = true;
+      if (pat->isThisDeclarationADefinition()) {
+        is_defined = true;
+      }
     }
+  }
   // It is valid to declare an inline function but not define it, as long as it
   // is not odr-used. Our thunk can't call it, so it is not callable from Rust.
   if (is_inline && !is_defined) {
