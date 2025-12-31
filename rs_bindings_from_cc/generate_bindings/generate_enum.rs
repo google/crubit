@@ -28,7 +28,7 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
     let enumerators = enum_.enumerators.iter().flatten().map(|enumerator| {
         if let Some(unknown_attr) = &enumerator.unknown_attr {
             let comment = format!(
-                "Omitting bindings for {ident}\nreason: unknown attribute(s): {unknown_attr}",
+                "Omitting bindings for {ident}\nreason: crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}",
                 ident = &enumerator.identifier.identifier
             );
             return quote! {

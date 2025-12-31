@@ -15,7 +15,11 @@ pub fn rs_type_kind_with_lifetime_elision(
     ty: CcType,
     lifetime_options: LifetimeOptions,
 ) -> Result<RsTypeKind> {
-    ensure!(ty.unknown_attr.is_empty(), "unknown attribute(s): {}", ty.unknown_attr);
+    ensure!(
+        ty.unknown_attr.is_empty(),
+        "crubit.rs/errors/unknown_attribute: unknown attribute(s): {}",
+        ty.unknown_attr
+    );
     match &ty.variant {
         CcTypeVariant::Primitive(primitive) => Ok(RsTypeKind::Primitive(*primitive)),
         CcTypeVariant::Pointer(pointer) => {

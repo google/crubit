@@ -2127,7 +2127,7 @@ fn function_signature(
         let enabled_features = db.ir().target_crubit_features(target);
         ensure!(
             enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
-            "unknown function attributes are only supported with experimental features enabled on \
+            "crubit.rs/errors/unknown_attribute: unknown function attributes are only supported with experimental features enabled on \
             {target}\nUnknown attribute: {unknown_attr}`",
         );
     }

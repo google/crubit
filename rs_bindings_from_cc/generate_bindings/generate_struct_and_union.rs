@@ -116,7 +116,8 @@ fn get_field_rs_type_kind_for_layout(
                 let enabled_features = db.ir().target_crubit_features(target);
                 ensure!(
                     enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
-                    "unknown field attributes are only supported with experimental features \
+                    "crubit.rs/errors/unknown_attribute: unknown field attributes are only \
+                    supported with experimental features \
                     enabled on {target}\nUnknown attribute: {unknown_attr}`"
                 );
             }

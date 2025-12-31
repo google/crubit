@@ -195,7 +195,10 @@ pub fn required_crubit_features(
         require_any_feature(
             &mut missing_features,
             crubit_feature::CrubitFeature::Experimental.into(),
-            &|| format!("unknown attribute(s): {unknown_attr}").into(),
+            &|| {
+                format!("crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}")
+                    .into()
+            },
         );
     }
     match item {
@@ -274,7 +277,7 @@ pub fn required_crubit_features(
                             crubit_feature::CrubitFeature::Experimental.into(),
                             &|| {
                                 format!(
-                                    "param {param} has unknown attribute(s): {unknown_attr}",
+                                    "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
                                     param = &param.identifier.identifier
                                 )
                                 .into()

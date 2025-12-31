@@ -1,11 +1,9 @@
-# Type visibility
+# Visibility errors
 
 In Crubit's `:wrapper` mode, `pub(crate)` types can be generated, which are
 restricted to a specific library. This is generally a temporary state of
 affairs: as a way of enabling types to be used for a specific library, without
 exposing them everywhere, if their bindings are flawed or need work.
-
-## Visibility errors
 
 If the generated bindings for a type are `pub(crate)`, then bindings will not be
 generated when the type is used outside of that library. For example, consider
@@ -39,7 +37,7 @@ for this reason that these `pub(crate)` type bindings are only used sparingly,
 typically for early release of features that cannot yet be globally supported.
 You should not rely on the `pub(crate)` status of a type!
 
-### Fix
+## Fix
 
 To work around this, you can wrap or hide the type as it is used in the public
 API. For example, if you needed to accept a pointer to `X`, but `X` is
