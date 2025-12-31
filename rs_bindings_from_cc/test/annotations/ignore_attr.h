@@ -12,7 +12,7 @@ namespace crubit::test {
 // This struct would not have bindings generated without the ignore annotation.
 // `gnu::abi_tag` is an arbitrarily selected attribute that Crubit doesn't
 // handle.
-struct CRUBIT_UNSAFE_IGNORE_ATTR(gnu::abi_tag) [[gnu::abi_tag("foo")]]
+struct CRUBIT_UNSAFE_IGNORE_ATTR("gnu::abi_tag") [[gnu::abi_tag("foo")]]
 MyStruct {};
 
 }  // namespace crubit::test

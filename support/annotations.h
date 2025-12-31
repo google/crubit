@@ -284,10 +284,11 @@
 // ```c++
 // // example.h
 // // SAFETY: `my_attribute` does not affect ABI.
-// struct CRUBIT_UNSAFE_IGNORE_ATTR(my_attribute) [[my_attribute]] MyStruct {};
+// struct CRUBIT_UNSAFE_IGNORE_ATTR("my_attr") [[my_attr]] MyStruct {};
 // ```
-#define CRUBIT_UNSAFE_IGNORE_ATTR(name) \
-  CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr", #name)
+#define CRUBIT_UNSAFE_IGNORE_ATTR(...)                                \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_unsafe_ignore_attr" __VA_OPT__(, ) \
+                               __VA_ARGS__)
 
 // The CRUBIT_OWNED_POINTER AND CRUBIT_OWNED_POINTEE annotations work together
 // to map conventionally "owned" C++ pointer usages to a Rust type that provides
