@@ -93,15 +93,15 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 
 // Error while generating bindings for struct 'TypeWithUnknownAttribute':
 // Can't generate bindings for TypeWithUnknownAttribute, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TypeWithUnknownAttribute (unknown attribute(s): gnu::abi_tag)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for TypeWithUnknownAttribute (crubit.rs/errors/unknown_attribute: unknown attribute(s): gnu::abi_tag)
 
 // Error while generating bindings for function 'FuncWithUnknownAttribute':
-// unknown function attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:unsupported_cc
+// crubit.rs/errors/unknown_attribute: unknown function attributes are only supported with experimental features enabled on //rs_bindings_from_cc/test/golden:unsupported_cc
 // Unknown attribute: gnu::abi_tag`
 
 // Error while generating bindings for function 'ParamWithUnknownAttribute':
 // Can't generate bindings for ParamWithUnknownAttribute, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for ParamWithUnknownAttribute (param i has unknown attribute(s): gnu::abi_tag)
+// //rs_bindings_from_cc/test/golden:unsupported_cc needs [//features:experimental] for ParamWithUnknownAttribute (crubit.rs/errors/unknown_attribute: param i has unknown attribute(s): gnu::abi_tag)
 
 mod detail {
     #[allow(unused_imports)]
