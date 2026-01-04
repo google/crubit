@@ -103,6 +103,29 @@ def _target_name_to_include_guard(target):
         for c in (target.label.package + "/" + target.label.name).upper().elems()
     ])
 
+def _rustc_lib_env(ctx):
+    """Returns an environment that sets the dylib search path to include rustc libraries.
+
+    This is needed in bazel where rustc_private dynamically links against librustc_driver.
+    Internally, we statically link against the compiler so this isn't an issue.  If the path to
+    rustc's libraries cannot be determined this returns an empty dictionary.
+
+    Args:
+      ctx: The rule context.
+
+    Returns:
+      A dictionary of environment variables to set.
+    """
+    rust_toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
+    if rust_toolchain == None:
+        return {}
+    rustc_lib = rust_toolchain.rustc_lib.to_list()
+    if len(rustc_lib) <= 0:
+        return {}
+    return {
+        "LD_LIBRARY_PATH": rustc_lib[0].dirname,
+    }
+
 def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_crate_renames):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
@@ -188,7 +211,7 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
                 [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
                 transitive = [inputs],
             ),
-            env = rustc_env | verbose_log_env,
+            env = rustc_env | verbose_log_env | _rustc_lib_env(ctx),
             tools = [toolchain.binary],
             executable = ctx.executable._process_wrapper,
             mnemonic = "CcBindingsFromRust",
