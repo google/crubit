@@ -13,7 +13,7 @@ def _cc_bindings_from_rs_toolchain_impl(ctx):
     return [
         platform_common.ToolchainInfo(
             cc_bindings_from_rs_toolchain_info = CcBindingsFromRustToolchainInfo(
-                binary = ctx.file.binary,
+                binary = ctx.executable.binary,
             ),
         ),
     ]

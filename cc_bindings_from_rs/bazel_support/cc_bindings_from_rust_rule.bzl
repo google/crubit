@@ -208,11 +208,11 @@ def _generate_bindings(ctx, target, basename, inputs, args, rustc_env, proto_cra
         ctx.actions.run(
             outputs = outputs,
             inputs = depset(
-                [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
+                [ctx.file._rustfmt_cfg],
                 transitive = [inputs],
             ),
             env = rustc_env | verbose_log_env | _rustc_lib_env(ctx),
-            tools = [toolchain.binary],
+            tools = [toolchain.binary, ctx.executable._rustfmt, ctx.executable._clang_format],
             executable = ctx.executable._process_wrapper,
             mnemonic = "CcBindingsFromRust",
             progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
