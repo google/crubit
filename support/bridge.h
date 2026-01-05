@@ -355,29 +355,11 @@ void Encode(Abi&& abi, unsigned char* buf, typename Abi::Value value) {
   std::forward<Abi>(abi).Encode(std::move(value), encoder);
 }
 
-// TODO(b/461708400): Remove this overload once deletion of
-// http://cc_bindings_from_rs/generate_bindings/generate_function.rs;l=145;rcl=843296833
-// hits crosstool.
-template <typename Abi>
-  requires(is_crubit_abi<Abi> && std::is_default_constructible_v<Abi>)
-void Encode(unsigned char* buf, typename Abi::Value value) {
-  Encode(Abi(), buf, std::move(value));
-}
-
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
 typename Abi::Value Decode(Abi&& abi, const unsigned char* buf) {
   Decoder decoder(Abi::kSize, buf);
   return std::forward<Abi>(abi).Decode(decoder);
-}
-
-// TODO(b/461708400): Remove this overload once deletion of
-// http://cc_bindings_from_rs/generate_bindings/generate_function.rs;l=289;rcl=836830956
-// hits crosstool.
-template <typename Abi>
-  requires(is_crubit_abi<Abi> && std::is_default_constructible_v<Abi>)
-typename Abi::Value Decode(const unsigned char* buf) {
-  return Decode(Abi(), buf);
 }
 
 }  // namespace internal
