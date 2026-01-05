@@ -305,9 +305,6 @@ struct PairAbi {
   std::pair<Abi1, Abi2> abis;
 };
 
-template <typename Abi1, typename Abi2>
-PairAbi(Abi1, Abi2) -> PairAbi<Abi1, Abi2>;
-
 template <typename Abi>
   requires(is_crubit_abi<Abi>)
 struct OptionAbi {
@@ -330,10 +327,6 @@ struct OptionAbi {
 
   Abi abi;
 };
-
-template <typename Abi>
-  requires(is_crubit_abi<Abi>)
-OptionAbi(Abi) -> OptionAbi<Abi>;
 
 template <typename T>
   requires(std::move_constructible<T>)
