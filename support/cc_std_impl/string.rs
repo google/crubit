@@ -61,6 +61,12 @@ impl string {
         self.as_os_str().into()
     }
 
+    #[cfg(windows)]
+    pub fn to_os_string(&self) -> std::ffi::OsString {
+        let s = String::from_utf8_lossy(self.as_slice());
+        std::ffi::OsString::from(s.into_owned())
+    }
+
     /// Returns a `*const c_void` pointing to the underlying C++
     /// `std::string` object.
     ///
