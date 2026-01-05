@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 extern crate rustc_abi;
+extern crate rustc_apfloat;
 extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
@@ -112,7 +113,7 @@ pub(crate) fn cpp_enum_cpp_underlying_type(
 }
 
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
-pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<String> {
+pub fn scalar_value_to_snippet(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<CcSnippet> {
     let scalar = match scalar {
         Scalar::Int(i) => i,
         Scalar::Ptr(..) => bail!("Pointer values cannot be used as scalar constants."),
@@ -123,7 +124,7 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
     if matches!(kind, TyKind::Uint(_)) {
         let value: u128 = scalar.to_bits_unchecked();
         if value < (i16::MAX as u128) {
-            return Ok((value as i16).to_string());
+            return Ok(CcSnippet::new((value as i16).to_string().parse::<TokenStream>().unwrap()));
         }
     }
 
@@ -132,7 +133,7 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
     use ty::TyKind;
     use ty::UintTy::*;
 
-    Ok(match kind {
+    let string_value = match kind {
         TyKind::Bool => scalar.try_to_bool().unwrap().to_string(),
         TyKind::Int(I8) => scalar.to_i8().to_string(),
         TyKind::Int(I16) => scalar.to_i16().to_string(),
@@ -141,8 +142,52 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
         TyKind::Uint(U16) => format!("UINT16_C({})", scalar.to_u16()),
         TyKind::Uint(U32) => format!("UINT32_C({})", scalar.to_u32()),
         TyKind::Uint(U64) => format!("UINT64_C({})", scalar.to_u64()),
-        TyKind::Float(F32) => format!("{}f", scalar.to_f32()),
-        TyKind::Float(F64) => format!("{}L", scalar.to_f64()),
+        TyKind::Float(F32) => {
+            use rustc_apfloat::Float;
+            let value = scalar.to_f32();
+            if value.is_pos_infinity() {
+                return Ok(CcSnippet::with_include(
+                    quote! { std::numeric_limits<float>::infinity() },
+                    CcInclude::limits(),
+                ));
+            }
+            if value.is_neg_infinity() {
+                return Ok(CcSnippet::with_include(
+                    quote! { -std::numeric_limits<float>::infinity() },
+                    CcInclude::limits(),
+                ));
+            }
+            if value.is_nan() {
+                return Ok(CcSnippet::with_include(
+                    quote! { std::numeric_limits<float>::quiet_NaN() },
+                    CcInclude::limits(),
+                ));
+            }
+            format!("{}f", value)
+        }
+        TyKind::Float(F64) => {
+            use rustc_apfloat::Float;
+            let value = scalar.to_f64();
+            if value.is_pos_infinity() {
+                return Ok(CcSnippet::with_include(
+                    quote! { std::numeric_limits<double>::infinity() },
+                    CcInclude::limits(),
+                ));
+            }
+            if value.is_neg_infinity() {
+                return Ok(CcSnippet::with_include(
+                    quote! { -std::numeric_limits<double>::infinity() },
+                    CcInclude::limits(),
+                ));
+            }
+            if value.is_nan() {
+                return Ok(CcSnippet::with_include(
+                    quote! { std::numeric_limits<double>::quiet_NaN() },
+                    CcInclude::limits(),
+                ));
+            }
+            format!("{}L", value)
+        }
         TyKind::Uint(Usize) => format!("UINT64_C({})", scalar.to_target_usize(tcx)),
 
         // Signed integer minimums cannot be expressed with literals, as `-<int>` parses as a unary
@@ -178,7 +223,10 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
             }
         }
         _ => bail!("Unsupported constant type: {:?}", kind),
-    })
+    };
+
+    let tokens = string_value.parse::<TokenStream>().unwrap();
+    Ok(CcSnippet::new(tokens))
 }
 
 /// Formats a struct that is annotated with the `cpp_enum` attribute.
@@ -253,10 +301,8 @@ fn generate_cpp_enum<'tcx>(
                     panic!("Unexpected non-scalar ConstValue type in cpp_enum: {other:?}")
                 }
             };
-            let enumerator_value = scalar_value_to_string(tcx, scalar, value_kind)
-                .unwrap()
-                .parse::<TokenStream>()
-                .unwrap();
+            let enumerator_value = scalar_value_to_snippet(tcx, scalar, value_kind).unwrap();
+            let enumerator_value = enumerator_value.into_tokens(&mut main_api_prereqs);
 
             Some(quote! { #enumerator_name = #enumerator_value, })
         })

@@ -471,6 +471,13 @@ impl CcInclude {
         Self::SystemHeader("type_traits".into())
     }
 
+    /// Creates a `CcInclude` that represents `#include <limits>` and
+    /// provides C++ APIs like `std::numeric_limits`.
+    /// See https://en.cppreference.com/w/cpp/header/limits
+    pub fn limits() -> Self {
+        Self::SystemHeader("limits".into())
+    }
+
     /// Creates a user include: `#include "some/path/to/header.h"`.
     pub fn user_header(path: Rc<str>) -> Self {
         Self::UserHeader(path)

@@ -21,40 +21,40 @@
 #include "support/ffi_11/ffi_11.h"
 
 namespace consts {
-static constexpr decltype(char(0)) CHAR = 42;
-static constexpr float FLOAT_32 = 0.125f;
-static constexpr double FLOAT_64 = 0.0078125L;
-static constexpr std::int32_t INT_NEG = INT32_C(-17);
-static constexpr std::int32_t INT_POS = INT32_C(42);
-static constexpr std::intptr_t ISIZE = INT64_C(42);
-static constexpr std::int64_t LARGE_INT = INT64_C(9223372036854775807);
-static constexpr float RUST_F32_MAX = 3.40282347E+38f;
-static constexpr float RUST_F32_MIN = -3.40282347E+38f;
-static constexpr double RUST_F64_MAX = 1.7976931348623157E+308L;
-static constexpr double RUST_F64_MIN = -1.7976931348623157E+308L;
-static constexpr bool RUST_FALSE = false;
-static constexpr std::int16_t RUST_INT16_MAX = 32767;
-static constexpr std::int16_t RUST_INT16_MIN = -32768;
-static constexpr std::int32_t RUST_INT32_MAX = INT32_C(2147483647);
-static constexpr std::int32_t RUST_INT32_MIN = INT32_C(-2147483648);
-static constexpr std::int64_t RUST_INT64_MAX = INT64_C(9223372036854775807);
-static constexpr std::int64_t RUST_INT64_MIN = INT64_MIN;
-static constexpr std::int8_t RUST_INT8_MAX = 127;
-static constexpr std::int8_t RUST_INT8_MIN = -128;
-static constexpr std::intptr_t RUST_ISIZE_MAX = INT64_C(9223372036854775807);
-static constexpr std::intptr_t RUST_ISIZE_MIN = INT64_MIN;
-static constexpr bool RUST_TRUE = true;
-static constexpr std::uint16_t RUST_UINT16_MAX = UINT16_C(65535);
-static constexpr std::uint16_t RUST_UINT16_MIN = 0;
-static constexpr std::uint32_t RUST_UINT32_MAX = UINT32_C(4294967295);
-static constexpr std::uint32_t RUST_UINT32_MIN = 0;
-static constexpr std::uint64_t RUST_UINT64_MAX = UINT64_C(18446744073709551615);
-static constexpr std::uint64_t RUST_UINT64_MIN = 0;
-static constexpr std::uint8_t RUST_UINT8_MAX = 255;
-static constexpr std::uint8_t RUST_UINT8_MIN = 0;
-static constexpr std::intptr_t RUST_USIZE_MAX = INT64_C(9223372036854775807);
-static constexpr std::intptr_t RUST_USIZE_MIN = INT64_MIN;
-static constexpr std::uintptr_t SLICE_LENGTH = 11;
+static constexpr decltype(char(0)) kChar = 42;
+static constexpr float kFloat32 = 0.125f;
+static constexpr double kFloat64 = 0.0078125L;
+static constexpr std::int32_t kIntNeg = INT32_C(-17);
+static constexpr std::int32_t kIntPos = INT32_C(42);
+static constexpr std::intptr_t kIsize = INT64_C(42);
+static constexpr std::int64_t kLargeInt = INT64_C(9223372036854775807);
+static constexpr float kRustF32Max = 3.40282347E+38f;
+static constexpr float kRustF32Min = -3.40282347E+38f;
+static constexpr double kRustF64Max = 1.7976931348623157E+308L;
+static constexpr double kRustF64Min = -1.7976931348623157E+308L;
+static constexpr bool kRustFalse = false;
+static constexpr std::int16_t kRustInt16Max = 32767;
+static constexpr std::int16_t kRustInt16Min = -32768;
+static constexpr std::int32_t kRustInt32Max = INT32_C(2147483647);
+static constexpr std::int32_t kRustInt32Min = INT32_C(-2147483648);
+static constexpr std::int64_t kRustInt64Max = INT64_C(9223372036854775807);
+static constexpr std::int64_t kRustInt64Min = INT64_MIN;
+static constexpr std::int8_t kRustInt8Max = 127;
+static constexpr std::int8_t kRustInt8Min = -128;
+static constexpr std::intptr_t kRustIsizeMax = INT64_C(9223372036854775807);
+static constexpr std::intptr_t kRustIsizeMin = INT64_MIN;
+static constexpr bool kRustTrue = true;
+static constexpr std::uint16_t kRustUint16Max = UINT16_C(65535);
+static constexpr std::uint16_t kRustUint16Min = 0;
+static constexpr std::uint32_t kRustUint32Max = UINT32_C(4294967295);
+static constexpr std::uint32_t kRustUint32Min = 0;
+static constexpr std::uint64_t kRustUint64Max = UINT64_C(18446744073709551615);
+static constexpr std::uint64_t kRustUint64Min = 0;
+static constexpr std::uint8_t kRustUint8Max = 255;
+static constexpr std::uint8_t kRustUint8Min = 0;
+static constexpr std::intptr_t kRustUsizeMax = INT64_C(9223372036854775807);
+static constexpr std::intptr_t kRustUsizeMin = INT64_MIN;
+static constexpr std::uintptr_t kSliceLength = 11;
 // Generated from:
 // cc_bindings_from_rs/test/consts/consts.rs;l=49
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -75,7 +75,7 @@ TyWithAssocConsts final {
   TyWithAssocConsts(::crubit::UnsafeRelocateTag, TyWithAssocConsts&& value) {
     memcpy(this, &value, sizeof(value));
   }
-  static constexpr std::int32_t ASSOC_42 = INT32_C(42);
+  static constexpr std::int32_t kAssoc42 = INT32_C(42);
 
  private:
   union {
@@ -87,7 +87,7 @@ TyWithAssocConsts final {
  private:
   static void __crubit_field_offset_assertions();
 };
-static constexpr std::uint32_t UNSIGNED_INT = UINT32_C(4294967295);
+static constexpr std::uint32_t kUnsignedInt = UINT32_C(4294967295);
 static_assert(
     sizeof(TyWithAssocConsts) == 1,
     "Verify that ADT layout didn't change since this header got generated");

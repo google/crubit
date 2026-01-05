@@ -33,10 +33,12 @@ use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt, generate_adt_core,
-    scalar_value_to_string,
+    scalar_value_to_snippet,
 };
 use arc_anyhow::{Context, Error, Result};
-use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
+use code_gen_utils::{
+    format_cc_includes, format_cc_type_name, CcConstQualifier, CcInclude, NamespaceQualifier,
+};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
 use database::{
     AdtCoreBindings, BindingsGenerator, ExportedPath, FineGrainedFeature, FullyQualifiedName,
@@ -518,14 +520,21 @@ fn symbol_unqualified_name(
     let attributes = crubit_attr::get_attrs(tcx, def_id)
         .unwrap_or_else(|_| panic!("Expected crubit_attrs on {def_id:?}"));
     let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).unwrap_or_else(|| {
-        // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
-        // This prevents silly Rust names like "reinterpret_cast" from trying to be named
-        // "reinterpret_cast" in C++, which would be an error.
-        // If the user has opted in to one of these reserved names by setting cpp_name, however,
-        // we should _not_ implicitly change it, and should instead given them an error.
-        // Hence, this unkeywording behavior only happens in the case where we implicitly
-        // delegate to the Rust name.
-        Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref())
+        match tcx.def_kind(def_id) {
+            DefKind::Const | DefKind::AssocConst => {
+                use heck::ToUpperCamelCase;
+                // Because we prepend a k here we can be confident this won't be a keyword
+                Symbol::intern(format!("k{}", rs_name.as_str().to_upper_camel_case()).as_str())
+            }
+            // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
+            // This prevents silly Rust names like "reinterpret_cast" from trying to be named
+            // "reinterpret_cast" in C++, which would be an error.
+            // If the user has opted in to one of these reserved names by setting cpp_name, however,
+            // we should _not_ implicitly change it, and should instead given them an error.
+            // Hence, this unkeywording behavior only happens in the case where we implicitly
+            // delegate to the Rust name.
+            _ => Symbol::intern(code_gen_utils::unkeyword_cpp_ident(rs_name.as_str()).as_ref()),
+        }
     });
     let cpp_type = attributes.cpp_type;
     Some(UnqualifiedName { cpp_name, rs_name, cpp_type })
@@ -788,16 +797,20 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSn
     } else {
         SugaredTy::missing_hir(ty)
     };
-    let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
+    let mut prereqs = CcPrerequisites::default();
+    let unqualified = db.symbol_unqualified_name(def_id).expect("Expected constant to have a name");
+    let cc_type = match unqualified.cpp_type {
+        Some(cpp_type) => format_cc_type_name(cpp_type.as_str())?,
+        None => db.format_ty_for_cc(rust_type, TypeLocation::Const)?.into_tokens(&mut prereqs),
+    };
 
-    let cc_type = cc_type_snippet.tokens;
-    let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
+    let cc_name = format_cc_ident(db, unqualified.cpp_name.as_str())?;
 
     // Note that `&str` constants may appear as either `ConstValue::Slice` or
     // `ConstValue::Indirect`.
     let const_value: ConstValue = tcx.const_eval_poly(def_id).unwrap();
     let cc_value = match const_value {
-        ConstValue::Scalar(scalar) => scalar_value_to_string(tcx, scalar, *ty.kind()),
+        ConstValue::Scalar(scalar) => scalar_value_to_snippet(tcx, scalar, *ty.kind()),
         ConstValue::ZeroSized => bail!("const of type `{rust_type}` cannot be generated as zero-sized consts are not supported in C++."),
         ConstValue::Slice { .. } | ConstValue::Indirect { .. } => {
             let string_literal = match ty.kind() {
@@ -817,17 +830,19 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSn
             string_literal.ok_or_else(|| {
                 anyhow!("const of type `{rust_type}` cannot be generated as only scalar consts are supported.")
             })
+            .map(|string_literal| {
+                CcSnippet::new(string_literal.parse::<TokenStream>().unwrap())
+            })
         }
-    }?
-    .parse::<TokenStream>()
-    .unwrap();
+    }?;
+    let cc_value = cc_value.into_tokens(&mut prereqs);
 
     Ok(ApiSnippets {
         main_api: CcSnippet {
             tokens: quote! {
                 static constexpr #cc_type #cc_name = #cc_value;
             },
-            ..cc_type_snippet
+            prereqs,
         },
         cc_details: CcSnippet::default(),
         rs_details: RsSnippet::default(),

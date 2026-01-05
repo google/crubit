@@ -33,7 +33,7 @@ TEST(StrTest, StrAsPotentiallyAliasingArgument) {
   str::str_checked_as_potentially_aliasing(StrRef("hello"), x);
 }
 
-constexpr static StrRef kConst = str::CONST_STR_FOO;
+constexpr static StrRef kConst = str::kConstStrFoo;
 static_assert(kConst == "foo");
 static_assert(kConst != "bar");
 
