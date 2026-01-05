@@ -624,6 +624,77 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
   return TemplateSpecialization::NonSpecial();
 }
 
+// Returns the `DynCallable` information for the given `specialization_decl`.
+//
+// This should only be called on template specializations of
+// `rs_std::DynCallable`.
+absl::StatusOr<BridgeType::DynCallable> GetDynCallable(
+    ImportContext& ictx,
+    const clang::ClassTemplateSpecializationDecl& specialization_decl) {
+  if (specialization_decl.getTemplateArgs().size() != 1) {
+    return absl::InvalidArgumentError(
+        "DynCallable template specialization must have exactly one template "
+        "argument");
+  }
+  const clang::FunctionProtoType* sig_fn_type =
+      specialization_decl.getTemplateArgs()
+          .get(0)
+          .getAsType()
+          .getTypePtr()
+          ->getAs<clang::FunctionProtoType>();
+
+  if (sig_fn_type == nullptr) {
+    return absl::InvalidArgumentError(
+        "Failed to get function signature for DynCallable");
+  }
+
+  // Extract the function kind based on the qualifiers.
+  BridgeType::DynCallable::FnKind fn_kind;
+  if (sig_fn_type->getRefQualifier() == clang::RQ_RValue) {
+    // Regardless of whether it's && or const &&, it's a FnOnce.
+    fn_kind = BridgeType::DynCallable::FnKind::kFnOnce;
+  } else if (sig_fn_type->getMethodQuals().hasConst()) {
+    fn_kind = BridgeType::DynCallable::FnKind::kFn;
+  } else {
+    fn_kind = BridgeType::DynCallable::FnKind::kFnMut;
+  }
+
+  // Convert the return type, ensuring that it is complete first.
+  if (sig_fn_type->getReturnType()->isIncompleteType()) {
+    bool is_complete = ictx.sema_.isCompleteType(
+        specialization_decl.getLocation(), sig_fn_type->getReturnType());
+    // void is always considered incomplete, but is valid.
+    if (!is_complete && !sig_fn_type->getReturnType()->isVoidType()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Return type of DynCallable is incomplete: ",
+                       sig_fn_type->getReturnType().getAsString()));
+    }
+  }
+  CRUBIT_ASSIGN_OR_RETURN(CcType return_type,
+                          ictx.ConvertQualType(sig_fn_type->getReturnType(),
+                                               /*lifetimes=*/nullptr));
+
+  std::vector<CcType> param_types;
+  // Convert the parameter types, ensuring that they are complete first.
+  param_types.reserve(sig_fn_type->getNumParams());
+  for (clang::QualType param_type : sig_fn_type->getParamTypes()) {
+    if (param_type->isIncompleteType()) {
+      (void)ictx.sema_.isCompleteType(specialization_decl.getLocation(),
+                                      param_type);
+    }
+    CRUBIT_ASSIGN_OR_RETURN(
+        CcType param_cc_type,
+        ictx.ConvertQualType(param_type, /*lifetimes=*/nullptr));
+    param_types.push_back(std::move(param_cc_type));
+  }
+
+  return BridgeType::DynCallable{
+      .fn_kind = fn_kind,
+      .return_type = std::make_shared<CcType>(std::move(return_type)),
+      .param_types = std::move(param_types),
+  };
+}
+
 }  // namespace
 
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
@@ -810,6 +881,24 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     if (std::holds_alternative<TemplateSpecialization::StdStringView>(
             ts.kind)) {
       owning_target = ts.defining_target;
+    }
+
+    const clang::CXXRecordDecl* templated_decl =
+        specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
+    if (IsTopLevelNamespace("rs_std", templated_decl->getDeclContext())) {
+      if (templated_decl->getName() == "DynCallable") {
+        LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
+            << "rs_std::DynCallable should have one template arg";
+        absl::StatusOr<BridgeType::DynCallable> status_or_dyn_callable =
+            GetDynCallable(ictx_, *specialization_decl);
+        if (!status_or_dyn_callable.ok()) {
+          return ictx_.ImportUnsupportedItem(
+              *record_decl, std::nullopt,
+              FormattedError::FromStatus(
+                  std::move(status_or_dyn_callable).status()));
+        }
+        bridge_type.emplace().variant = *std::move(status_or_dyn_callable);
+      }
     }
 
     if (!bridge_type.has_value()) {

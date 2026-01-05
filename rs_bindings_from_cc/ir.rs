@@ -1043,6 +1043,14 @@ pub struct SizeAlign {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub enum FnKind {
+    Fn,
+    FnMut,
+    FnOnce,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub enum BridgeType {
     BridgeVoidConverters {
         rust_name: Rc<str>,
@@ -1061,6 +1069,11 @@ pub enum BridgeType {
     StdOptional(CcType),
     StdPair(CcType, CcType),
     StdString,
+    DynCallable {
+        fn_kind: FnKind,
+        return_type: CcType,
+        param_types: Vec<CcType>,
+    },
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

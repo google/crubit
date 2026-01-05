@@ -439,6 +439,17 @@ llvm::json::Value SizeAlign::ToJson() const {
   };
 }
 
+static llvm::json::Value toJSON(BridgeType::DynCallable::FnKind fn_kind) {
+  switch (fn_kind) {
+    case BridgeType::DynCallable::FnKind::kFn:
+      return "Fn";
+    case BridgeType::DynCallable::FnKind::kFnMut:
+      return "FnMut";
+    case BridgeType::DynCallable::FnKind::kFnOnce:
+      return "FnOnce";
+  }
+}
+
 llvm::json::Value BridgeType::ToJson() const {
   return std::visit(
       visitor{
@@ -485,7 +496,16 @@ llvm::json::Value BridgeType::ToJson() const {
                 },
             }};
           },
-      },
+          [&](const BridgeType::DynCallable& dyn_callable) {
+            return llvm::json::Object{{
+                "DynCallable",
+                llvm::json::Object{
+                    {"fn_kind", dyn_callable.fn_kind},
+                    {"return_type", dyn_callable.return_type->ToJson()},
+                    {"param_types", dyn_callable.param_types},
+                },
+            }};
+          }},
       variant);
 }
 

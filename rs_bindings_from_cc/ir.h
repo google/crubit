@@ -544,8 +544,19 @@ struct BridgeType {
 
   struct StdString {};
 
+  struct DynCallable {
+    enum FnKind {
+      kFn,
+      kFnMut,
+      kFnOnce,
+    };
+    FnKind fn_kind;
+    std::shared_ptr<CcType> return_type;
+    std::vector<CcType> param_types;
+  };
+
   std::variant<BridgeVoidConverters, Bridge, StdOptional, StdPair,
-               ProtoMessageBridge, StdString>
+               ProtoMessageBridge, StdString, DynCallable>
       variant;
 };
 

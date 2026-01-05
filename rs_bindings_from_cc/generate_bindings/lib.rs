@@ -464,6 +464,14 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
                     || db.is_rs_type_kind_unsafe(t2.as_ref().clone())
             }
             BridgeRsTypeKind::StdString { .. } => false,
+            BridgeRsTypeKind::DynCallable(dyn_callable) => {
+                db.is_rs_type_kind_unsafe(dyn_callable.return_type.as_ref().clone())
+                    || dyn_callable
+                        .param_types
+                        .iter()
+                        .cloned()
+                        .any(|param_type| db.is_rs_type_kind_unsafe(param_type))
+            }
         },
         RsTypeKind::Record { record, .. } => is_record_unsafe(db, &record),
         RsTypeKind::C9Co { result_type, .. } => {
@@ -734,6 +742,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
+            BridgeRsTypeKind::DynCallable(_) => bail!("DynCallable is not supported yet"),
         },
         RsTypeKind::Record { record, crate_path, .. } => {
             ensure!(
