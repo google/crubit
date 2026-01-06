@@ -159,24 +159,6 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "bool", cc:  "bool"),
         case!(rs: "f32", cc: "float"),
         case!(rs: "f64", cc: "double"),
-        // The ffi aliases are special-cased to refer to the C++ fundamental integer types,
-        // if the type alias information is not lost (e.g. from generics).
-        case!(rs: "std::ffi::c_char", cc:  "char"),
-        case!(rs: "::std::ffi::c_char", cc:  "char"),
-        case!(rs: "core::ffi::c_char", cc:  "char"),
-        case!(rs: "::core::ffi::c_char", cc:  "char"),
-        case!(rs: "std::ffi::c_uchar", cc: "unsigned char"),
-        case!(rs: "std::ffi::c_longlong", cc: "long long"),
-        case!(rs: "c_char", cc:  "char"),
-        // Simple pointers/references do not lose the type alias information.
-        case!(rs: "*const std::ffi::c_uchar", cc: "unsigned char const *"),
-        case!(
-            rs: "&'static std::ffi::c_uchar",
-            cc: "unsigned char const * $static crubit_nonnull",
-            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
-        ),
-        // Generics lose type alias information.
-        case!(rs: "Identity<std::ffi::c_longlong>", cc: "std::int64_t", includes: ["<cstdint>"]),
         case!(rs: "i8", cc: "std::int8_t", includes: ["<cstdint>"]),
         case!(rs: "i16", cc:  "std::int16_t", includes: ["<cstdint>"]),
         case!(rs: "i32", cc:  "std::int32_t", includes: ["<cstdint>"]),
@@ -217,11 +199,6 @@ fn test_format_ty_for_cc_successes() {
             rs: "*mut [i64]",
             cc: "rs_std::SliceRef<std::int64_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
-        ),
-        case!(
-            rs: "*const [c_char]",
-            cc: "rs_std::SliceRef<const char>",
-            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [SomeStruct]",
@@ -334,10 +311,6 @@ fn test_format_ty_for_cc_successes() {
 
         #[allow(unused)]
         type Identity<T> = T;
-
-        pub use core::ffi::c_char;
-        // TODO(b/283258442): Correctly handle something like this:
-        // pub type MyChar = core::ffi::c_char;
     };
     test_ty(
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },

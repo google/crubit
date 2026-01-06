@@ -54,7 +54,6 @@ use query_compiler::{
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
-use rustc_hir::{Item, ItemKind, Node};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::metadata::{ModChild, Reexport};
 use rustc_middle::mir::ConstValue;
@@ -773,21 +772,8 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSn
             tcx.item_name(def_id).as_str()
         )
     }
-    let unsupported_node_item_msg = "Called `generate_const` with a `rustc_hir::Node` that is not a `Node::Item` or `Node::ImplItem`";
     let ty = tcx.type_of(def_id).instantiate_identity();
-    let rust_type = if db.enable_hir_types() {
-        let hir_ty = def_id.as_local().map(|local_def_id| {
-            let hir_node = tcx.hir_node_by_def_id(local_def_id);
-            match hir_node {
-                Node::Item(item) => item.expect_const().2,
-                Node::ImplItem(item) => item.expect_const().0,
-                _ => panic!("{}", unsupported_node_item_msg),
-            }
-        });
-        SugaredTy::new(ty, hir_ty)
-    } else {
-        SugaredTy::missing_hir(ty)
-    };
+    let rust_type = SugaredTy::missing_hir(ty);
     let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
 
     let cc_type = cc_type_snippet.tokens;
@@ -841,19 +827,7 @@ fn generate_type_alias(
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
     let mir_ty = tcx.type_of(def_id).instantiate_identity();
-    let alias_type = if db.enable_hir_types() {
-        let hir_ty = def_id.as_local().map(|local_def_id| {
-            let Item { kind: ItemKind::TyAlias(_, _, hir_ty, ..), .. } =
-                tcx.hir_expect_item(local_def_id)
-            else {
-                panic!("called generate_type_alias on a non-type-alias");
-            };
-            *hir_ty
-        });
-        SugaredTy::new(mir_ty, hir_ty)
-    } else {
-        SugaredTy::missing_hir(mir_ty)
-    };
+    let alias_type = SugaredTy::missing_hir(mir_ty);
     create_type_alias(db, def_id, using_name, alias_type)
 }
 

@@ -88,10 +88,10 @@ pub fn generate_thunk_decl<'tcx>(
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid, sig_hir)?.into_tokens(&mut prereqs);
+    let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid)?.into_tokens(&mut prereqs);
 
     let mut thunk_params = {
-        let cpp_types = format_param_types_for_cc(db, sig_mid, sig_hir, has_self_param)?;
+        let cpp_types = format_param_types_for_cc(db, sig_mid, has_self_param)?;
         sig_mid
             .inputs()
             .iter()
@@ -131,7 +131,7 @@ pub fn generate_thunk_decl<'tcx>(
     };
 
     // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
-    // TODO: b/ 459482188 - The order of this check must align with the order in `cc_return_value_from_c_abi`.
+    // TODO: The order of this check must align with the order in `cc_return_value_from_c_abi`.
     // We should centralize this logic so that the order exists in a singular location used by both
     // places.
     let thunk_ret_type = if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
@@ -161,8 +161,7 @@ pub fn generate_thunk_decl<'tcx>(
 
     let mut attributes = vec![];
     // Attribute: noreturn
-    let rs_return_type =
-        SugaredTy::fn_output(sig_mid, if db.enable_hir_types() { sig_hir } else { None });
+    let rs_return_type = SugaredTy::fn_output(sig_mid, None);
     if *rs_return_type.mid().kind() == ty::TyKind::Never {
         attributes.push(quote! {[[noreturn]]});
     }

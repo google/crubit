@@ -80,33 +80,7 @@ pub(crate) fn cpp_enum_cpp_underlying_type(
 
     let field_middle_ty = cpp_enum_rust_underlying_type(tcx, def_id)?;
 
-    let field_type = if db.enable_hir_types() {
-        use rustc_hir::ItemKind;
-        let field_hir_ty = match tcx.hir_node_by_def_id(def_id.expect_local()) {
-            rustc_hir::Node::Item(hir_item) => match hir_item.kind {
-                ItemKind::Struct(_, _, variant_data) => {
-                    if variant_data.fields().len() != 1 {
-                        return Err(anyhow!(
-                            "Expected one field in cpp_enum hir item, got {:?}",
-                            variant_data.fields().len()
-                        ));
-                    }
-                    Some(variant_data.fields()[0].ty)
-                }
-                _ => {
-                    // ItemKind is not Struct.
-                    return Err(anyhow!(
-                        "Unexpected `ItemKind` in cpp_enum hir item: {:?}",
-                        hir_item.kind
-                    ));
-                }
-            },
-            _ => None, // HIR node is not an Item.
-        };
-        SugaredTy::new(field_middle_ty, field_hir_ty)
-    } else {
-        SugaredTy::missing_hir(field_middle_ty)
-    };
+    let field_type = SugaredTy::missing_hir(field_middle_ty);
 
     db.format_ty_for_cc(field_type, TypeLocation::Other)
 }
@@ -914,7 +888,7 @@ fn generate_tuple_struct_ctor<'tcx>(
     let field_tys = variant_fields_iter(tcx, core.as_ref())
         .next()
         .expect("Tuple structs must have one variant")
-        .map(|IndexedVariantField { field_def, hir_field_ty, .. }| {
+        .map(|IndexedVariantField { field_def, .. }| {
             if field_def.vis != ty::Visibility::Public {
                 // If our synthesized constructor would have a non public visibility, don't generate it as
                 // we can't mirror that visibility in C++.
@@ -932,11 +906,7 @@ fn generate_tuple_struct_ctor<'tcx>(
                 return None;
             }
 
-            if db.enable_hir_types() {
-                Some(SugaredTy::new(ty, hir_field_ty))
-            } else {
-                Some(SugaredTy::missing_hir(ty))
-            }
+            Some(SugaredTy::missing_hir(ty))
         })
         .collect::<Option<Vec<_>>>()?;
 
@@ -1083,12 +1053,8 @@ fn generate_fields<'tcx>(
             let mut variants_fields = variant_fields_iter(tcx, core)
                 .map(|field_iter| {
                     field_iter
-                        .map(|IndexedVariantField { index, field_def, hir_field_ty }| {
-                            let ty = if db.enable_hir_types() {
-                                SugaredTy::new(field_def.ty(tcx, adt_generic_args), hir_field_ty)
-                            } else {
-                                SugaredTy::missing_hir(field_def.ty(tcx, adt_generic_args))
-                            };
+                        .map(|IndexedVariantField { index, field_def, .. }| {
+                            let ty = SugaredTy::missing_hir(field_def.ty(tcx, adt_generic_args));
                             let size =
                                 get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {

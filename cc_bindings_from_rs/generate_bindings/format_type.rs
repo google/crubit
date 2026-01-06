@@ -122,7 +122,6 @@ pub fn format_str_ref_for_cc(db: &dyn BindingsGenerator<'_>) -> CcSnippet {
 pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     referent_ty: Ty<'tcx>,
-    referer_hir: Option<&rustc_hir::Ty<'tcx>>,
     mutability: rustc_middle::mir::Mutability,
     pointer_sigil: TokenStream,
 ) -> Option<CcSnippet> {
@@ -137,11 +136,7 @@ pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     }
 
     let referent_mid = substs[0].expect_ty();
-    let referent = if db.enable_hir_types() {
-        SugaredTy::new(referent_mid, referer_hir)
-    } else {
-        SugaredTy::missing_hir(referent_mid)
-    };
+    let referent = SugaredTy::missing_hir(referent_mid);
     format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
 }
 
@@ -157,14 +152,6 @@ pub fn format_ty_for_cc<'tcx>(
     }
     fn keyword(tokens: TokenStream) -> CcSnippet {
         CcSnippet::new(tokens)
-    }
-
-    // format_core_alias_for_cc relies on hir types to determine if an alias is present, so there's
-    // no reason to check one if hir types are disabled.
-    if db.enable_hir_types() {
-        if let Some(alias) = format_core_alias_for_cc(db, ty) {
-            return Ok(alias);
-        }
     }
 
     Ok(match ty.mid().kind() {
@@ -371,44 +358,20 @@ pub fn format_ty_for_cc<'tcx>(
         ty::TyKind::RawPtr(pointee_mid, mutbl) => {
             if let ty::TyKind::Slice(slice_ty) = pointee_mid.kind() {
                 check_slice_layout(db.tcx(), ty.mid());
-                let sugared_ty = if db.enable_hir_types() {
-                    let mut slice_hir_ty = None;
-                    if let Some(hir) = ty.hir(db) {
-                        if let rustc_hir::TyKind::Ptr(pointee) = &hir.kind {
-                            if let rustc_hir::TyKind::Slice(slice_ty) = &pointee.ty.kind {
-                                slice_hir_ty = Some(*slice_ty);
-                            }
-                        }
-                    }
-                    SugaredTy::new(*slice_ty, slice_hir_ty)
-                } else {
-                    SugaredTy::missing_hir(*slice_ty)
-                };
+                let sugared_ty = SugaredTy::missing_hir(*slice_ty);
                 return format_slice_pointer_for_cc(db, sugared_ty, *mutbl);
             }
-            let mut pointee_hir = None;
-            if let Some(hir) = ty.hir(db) {
-                if let rustc_hir::TyKind::Ptr(mut_p) = hir.kind {
-                    pointee_hir = Some(mut_p.ty);
-                }
-            }
-
             // Early return in case we handle a transparent pointer type.
             if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
                 db,
                 *pointee_mid,
-                pointee_hir,
                 *mutbl,
                 quote! { * },
             ) {
                 return Ok(snippet);
             }
 
-            let pointee = if db.enable_hir_types() {
-                SugaredTy::new(*pointee_mid, pointee_hir)
-            } else {
-                SugaredTy::missing_hir(*pointee_mid)
-            };
+            let pointee = SugaredTy::missing_hir(*pointee_mid);
             format_pointer_or_reference_ty_for_cc(db, pointee, *mutbl, quote! { * }).with_context(
                 || format!("Failed to format the pointee of the pointer type `{ty}`"),
             )?
@@ -433,13 +396,6 @@ pub fn format_ty_for_cc<'tcx>(
                     bail!("Mutable references to `str` are not yet supported.")
                 }
                 return Ok(format_str_ref_for_cc(db));
-            }
-
-            let mut referent_hir = None;
-            if let Some(hir) = ty.hir(db) {
-                if let rustc_hir::TyKind::Ref(_, mut_p, ..) = &hir.kind {
-                    referent_hir = Some(mut_p.ty);
-                }
             }
 
             let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty.mid(), location);
@@ -468,7 +424,6 @@ pub fn format_ty_for_cc<'tcx>(
             if let Some(mut snippet) = format_transparent_pointee_or_reference_for_cc(
                 db,
                 *referent_mid,
-                referent_hir,
                 *mutability,
                 ptr_or_ref_prefix.clone(),
             ) {
@@ -476,11 +431,7 @@ pub fn format_ty_for_cc<'tcx>(
                 return Ok(snippet);
             }
 
-            let referent = if db.enable_hir_types() {
-                SugaredTy::new(*referent_mid, referent_hir)
-            } else {
-                SugaredTy::missing_hir(*referent_mid)
-            };
+            let referent = SugaredTy::missing_hir(*referent_mid);
             let tokens =
                 format_pointer_or_reference_ty_for_cc(db, referent, *mutability, ptr_or_ref_prefix)
                     .with_context(|| {
@@ -526,17 +477,10 @@ pub fn format_ty_for_cc<'tcx>(
             let mut prereqs = CcPrerequisites::default();
             prereqs.includes.insert(db.support_header("internal/cxx20_backports.h"));
 
-            let mut sig_hir = None;
-            if let Some(hir) = ty.hir(db) {
-                if let rustc_hir::TyKind::FnPtr(bare_fn) = &hir.kind {
-                    sig_hir = Some(bare_fn.decl);
-                }
-            }
-            let ret_type = format_ret_ty_for_cc(db, &sig, sig_hir)?.into_tokens(&mut prereqs);
-            let param_types =
-                format_param_types_for_cc(db, &sig, sig_hir, /*has_self_param=*/ false)?
-                    .into_iter()
-                    .map(|cc_param| cc_param.snippet.into_tokens(&mut prereqs));
+            let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
+            let param_types = format_param_types_for_cc(db, &sig, /*has_self_param=*/ false)?
+                .into_iter()
+                .map(|cc_param| cc_param.snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
                 crubit::type_identity_t<
                     #ret_type( #( #param_types ),* )
@@ -593,84 +537,12 @@ fn treat_ref_as_ptr<'tcx>(
     RefConvert::ToRef
 }
 
-/// Returns `Some(CcSnippet)` if `ty` is a special-cased alias type from
-/// `core::ffi` (AKA `std::ffi`).
-///
-/// TODO(b/283258442): Also handle `libc` aliases.
-fn format_core_alias_for_cc<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
-    ty: SugaredTy<'tcx>,
-) -> Option<CcSnippet> {
-    use rustc_hir::definitions::{DefPathData::TypeNs, DisambiguatedDefPathData};
-    fn matches_type_path(actual: &[DisambiguatedDefPathData], expected: &[&str]) -> bool {
-        if actual.len() != expected.len() {
-            return false;
-        }
-        for i in 0..actual.len() {
-            let TypeNs(actual_elem) = actual[i].data else {
-                return false;
-            };
-            if actual_elem.as_str() != expected[i] {
-                return false;
-            }
-        }
-        true
-    }
-
-    let tcx = db.tcx();
-    let hir_ty = ty.hir(db)?;
-    let rustc_hir::TyKind::Path(rustc_hir::QPath::Resolved(None, path)) = &hir_ty.kind else {
-        return None;
-    };
-    let rustc_hir::def::Res::Def(rustc_hir::def::DefKind::TyAlias, alias_def_id) = &path.res else {
-        return None;
-    };
-    let def_path = tcx.def_path(*alias_def_id);
-
-    // Note: the `std::ffi` aliases are still originally defined in `core::ffi`, so
-    // we only need to check for a crate name of `core` here.
-    if tcx.crate_name(def_path.krate) != sym::core {
-        return None;
-    };
-    let [module_path @ .., item] = def_path.data.as_slice() else { return None };
-    // Primitives are defined in both `core::ffi` and `core::ffi::primitives
-    if !matches_type_path(module_path, &["ffi"])
-        && !matches_type_path(module_path, &["ffi", "primitives"])
-    {
-        return None;
-    }
-    let TypeNs(item) = item.data else {
-        return None;
-    };
-
-    let cpp_type = match item.as_str() {
-        "c_char" => quote! { char},
-        "c_schar" => quote! { signed char},
-        "c_uchar" => quote! { unsigned char},
-        "c_short" => quote! { short},
-        "c_ushort" => quote! { unsigned short},
-        "c_int" => quote! { int},
-        "c_uint" => quote! { unsigned int},
-        "c_long" => quote! { long},
-        "c_ulong" => quote! { unsigned long},
-        "c_longlong" => quote! { long long},
-        "c_ulonglong" => quote! { unsigned long long},
-        _ => return None,
-    };
-    Some(CcSnippet::new(cpp_type))
-}
-
 /// Returns the C++ return type.
-///
-/// `sig_hir` is the optional HIR `FnDecl`, if available. This is used to
-/// retrieve alias information.
 pub fn format_ret_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
-    sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
 ) -> Result<CcSnippet> {
-    let output_ty =
-        SugaredTy::fn_output(sig_mid, if db.enable_hir_types() { sig_hir } else { None });
+    let output_ty = SugaredTy::fn_output(sig_mid, None);
     db.format_ty_for_cc(output_ty, TypeLocation::FnReturn)
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
@@ -712,18 +584,13 @@ pub struct CcParamTy {
 }
 
 /// Returns the C++ parameter types.
-///
-/// `sig_hir` is the optional HIR FnSig, if available. This is used to retrieve
-/// alias information.
 pub fn format_param_types_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
-    sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     has_self_param: bool,
 ) -> Result<Vec<CcParamTy>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
-    let param_types =
-        SugaredTy::fn_inputs(sig_mid, if db.enable_hir_types() { sig_hir } else { None });
+    let param_types = SugaredTy::fn_inputs(sig_mid, None);
     let mut snippets = Vec::with_capacity(param_types.len());
     for (i, param_type) in param_types.enumerate() {
         let is_self_param = i == 0 && has_self_param;
