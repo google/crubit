@@ -5511,7 +5511,7 @@ TEST(EvidenceSitesTest, LambdaNoPtr) {
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations, IsEmpty());
   EXPECT_THAT(Sites.Definitions,
-              UnorderedElementsAre(declNamed("(anonymous class)::operator()"),
+              UnorderedElementsAre(declNamed("(lambda)::operator()"),
                                    declNamed("NoPtrs")));
 }
 
@@ -5521,9 +5521,9 @@ TEST(EvidenceSitesTest, LambdaWithPtr) {
   )cc");
   auto Sites = EvidenceSites::discover(AST.context());
   EXPECT_THAT(Sites.Declarations,
-              UnorderedElementsAre(declNamed("(anonymous class)::operator()")));
+              UnorderedElementsAre(declNamed("(lambda)::operator()")));
   EXPECT_THAT(Sites.Definitions,
-              UnorderedElementsAre(declNamed("(anonymous class)::operator()"),
+              UnorderedElementsAre(declNamed("(lambda)::operator()"),
                                    declNamed("Ptr")));
 }
 
