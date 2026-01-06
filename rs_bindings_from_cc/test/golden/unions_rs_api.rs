@@ -67,7 +67,7 @@ impl Default for EmptyUnion {
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: ::core::ffi::c_int,
+    pub field: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
@@ -170,9 +170,9 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion
 pub union NonEmptyUnion {
     pub bool_field: bool,
-    pub char_field: ::core::ffi::c_char,
-    pub int_field: ::core::ffi::c_int,
-    pub long_long_field: ::core::ffi::c_longlong,
+    pub char_field: ::ffi_11::c_char,
+    pub int_field: ::ffi_11::c_int,
+    pub long_long_field: ::ffi_11::c_longlong,
 }
 impl !Send for NonEmptyUnion {}
 impl !Sync for NonEmptyUnion {}
@@ -304,7 +304,7 @@ impl Default for UnionWithOpaqueField {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable
 pub struct TrivialButInheritable {
-    pub x: ::core::ffi::c_int,
+    pub x: ::ffi_11::c_int,
 }
 impl !Send for TrivialButInheritable {}
 impl !Sync for TrivialButInheritable {}
@@ -529,9 +529,9 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::NonEmptyUnion, int_field) == 0);
     assert!(::core::mem::offset_of!(crate::NonEmptyUnion, long_long_field) == 0);
     static_assertions::assert_impl_all!(bool: Copy);
-    static_assertions::assert_impl_all!(::core::ffi::c_char: Copy);
-    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
-    static_assertions::assert_impl_all!(::core::ffi::c_longlong: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_char: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_longlong: Copy);
     assert!(::core::mem::size_of::<crate::NonCopyUnion>() == 4);
     assert!(::core::mem::align_of::<crate::NonCopyUnion>() == 4);
     static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy,Drop);

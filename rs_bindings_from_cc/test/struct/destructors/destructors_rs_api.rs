@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/struct/destructors:destructors
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -33,7 +33,7 @@ unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
 impl DestructionOrderRecorder {
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=34
     #[inline(always)]
-    pub fn RecordDestruction(int_field: ::core::ffi::c_int) {
+    pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
                 int_field,
@@ -42,7 +42,7 @@ impl DestructionOrderRecorder {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=35
     #[inline(always)]
-    pub fn GetDestructionRecord() -> ::core::ffi::c_int {
+    pub fn GetDestructionRecord() -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv()
         }
@@ -57,9 +57,9 @@ impl DestructionOrderRecorder {
 }
 
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=12
-impl From<::core::ffi::c_int> for DestructionOrderRecorder {
+impl From<::ffi_11::c_int> for DestructionOrderRecorder {
     #[inline(always)]
-    fn from(int_field: ::core::ffi::c_int) -> Self {
+    fn from(int_field: ::ffi_11::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorderC1Ei(
@@ -70,12 +70,12 @@ impl From<::core::ffi::c_int> for DestructionOrderRecorder {
         }
     }
 }
-impl ::ctor::CtorNew<::core::ffi::c_int> for DestructionOrderRecorder {
+impl ::ctor::CtorNew<::ffi_11::c_int> for DestructionOrderRecorder {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
-        <Self as From<::core::ffi::c_int>>::from(args)
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+        <Self as From<::ffi_11::c_int>>::from(args)
     }
 }
 
@@ -160,9 +160,9 @@ impl FieldDestructionOrderTester {
     /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=59
     #[inline(always)]
     pub fn DestructFromCpp(
-        field1: ::core::ffi::c_int,
-        field2: ::core::ffi::c_int,
-        field3: ::core::ffi::c_int,
+        field1: ::ffi_11::c_int,
+        field2: ::ffi_11::c_int,
+        field3: ::ffi_11::c_int,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
@@ -233,7 +233,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderC1Ei(
             __this: *mut ::core::ffi::c_void,
-            int_field: ::core::ffi::c_int,
+            int_field: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorderC1EOS_(
             __this: *mut ::core::ffi::c_void,
@@ -248,11 +248,11 @@ mod detail {
         );
         #[link_name = "_ZN24DestructionOrderRecorder17RecordDestructionEi"]
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorder17RecordDestructionEi(
-            int_field: ::core::ffi::c_int,
+            int_field: ::ffi_11::c_int,
         );
         #[link_name = "_ZN24DestructionOrderRecorder20GetDestructionRecordEv"]
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorder20GetDestructionRecordEv(
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         #[link_name = "_ZN24DestructionOrderRecorder22ClearDestructionRecordEv"]
         pub(crate) unsafe fn __rust_thunk___ZN24DestructionOrderRecorder22ClearDestructionRecordEv();
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterC1EOS_(
@@ -275,9 +275,9 @@ mod detail {
             field3: &mut crate::DestructionOrderRecorder,
         );
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
-            field1: ::core::ffi::c_int,
-            field2: ::core::ffi::c_int,
-            field3: ::core::ffi::c_int,
+            field1: ::ffi_11::c_int,
+            field2: ::ffi_11::c_int,
+            field3: ::ffi_11::c_int,
         );
     }
 }

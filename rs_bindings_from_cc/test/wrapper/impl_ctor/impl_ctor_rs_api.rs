@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/impl_ctor:impl_ctor
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(
@@ -27,7 +27,7 @@
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub value: ::core::ffi::c_int,
+    pub value: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
@@ -38,11 +38,11 @@ unsafe impl ::cxx::ExternType for Nontrivial {
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
-impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
+impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut x = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
@@ -54,13 +54,13 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
         }
     }
 }
-impl ::ctor::CtorNew<(::core::ffi::c_int,)> for Nontrivial {
+impl ::ctor::CtorNew<(::ffi_11::c_int,)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
+    fn ctor_new(args: (::ffi_11::c_int,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::core::ffi::c_int>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ffi_11::c_int>>::ctor_new(arg)
     }
 }
 
@@ -123,7 +123,7 @@ pub fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor:
 #[inline(always)]
 pub fn Read(
     nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
-) -> ::core::ffi::c_int {
+) -> ::ffi_11::c_int {
     unsafe {
         crate::detail::__rust_thunk___Z4Read10Nontrivial(::core::pin::Pin::into_inner_unchecked(
             ::ctor::emplace!(nontrivial),
@@ -142,7 +142,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ei(
             __this: *mut ::core::ffi::c_void,
-            x: ::core::ffi::c_int,
+            x: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1EOS_<'__unelided>(
             __this: *mut ::core::ffi::c_void,
@@ -158,7 +158,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z6Createv(__return: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z4Read10Nontrivial(
             nontrivial: &mut crate::Nontrivial,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
     }
 }
 
@@ -168,5 +168,5 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
     assert!(::core::mem::offset_of!(crate::Nontrivial, value) == 0);
-    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
 };

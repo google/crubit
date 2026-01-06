@@ -30,7 +30,7 @@ fn test_extern_c_directly_function() {
 #[gtest]
 fn test_void_ptr_function() {
     let value = 1;
-    let ptr = &value as *const _ as *const std::ffi::c_void;
+    let ptr = &value as *const _ as *const ffi_11::c_void;
     // Safety: the pointer is valid in both C++ and Rust, and is not dereferenced.
     let result_ptr = unsafe { has_bindings::crubit_void_ptr_identity(ptr) };
     assert_eq!(ptr, result_ptr);
@@ -39,7 +39,7 @@ fn test_void_ptr_function() {
 #[gtest]
 fn test_nullability_annotated_function() {
     let value = 1;
-    let ptr = &value as *const _ as *const std::ffi::c_void;
+    let ptr = &value as *const _ as *const ffi_11::c_void;
     // Regression test: Check that we produce bindings for a function that has
     // nullability annotations.
     unsafe { has_bindings::crubit_nullability_annotated_function(ptr) };
@@ -47,14 +47,14 @@ fn test_nullability_annotated_function() {
 
 #[gtest]
 fn test_user_struct() {
-    let mut i: core::ffi::c_int = 123;
-    let s = has_bindings::Struct { x: &mut i, y: 123, z: 0 as *mut _ };
+    let mut i: ffi_11::c_int = 123;
+    let s = has_bindings::Struct { x: &mut i, y: 123i8.into(), z: 0 as *mut _ };
     let s2 = unsafe { has_bindings::crubit_anystruct(s, &s) };
-    assert_eq!(s2.x, &mut i as *mut core::ffi::c_int);
+    assert_eq!(s2.x, &mut i as *mut ffi_11::c_int);
 
     use std::any::Any;
-    assert_eq!(s.x.type_id(), std::any::TypeId::of::<*mut core::ffi::c_int>());
-    assert_eq!(s.y.type_id(), std::any::TypeId::of::<core::ffi::c_char>());
+    assert_eq!(s.x.type_id(), std::any::TypeId::of::<*mut ffi_11::c_int>());
+    assert_eq!(s.y.type_id(), std::any::TypeId::of::<ffi_11::c_char>());
     assert_eq!(s.z.type_id(), std::any::TypeId::of::<*mut has_bindings::Struct>());
 }
 
@@ -94,7 +94,7 @@ fn test_alias() {
 
 #[gtest]
 fn test_crubit_add() {
-    assert_eq!(has_bindings::crubit_add(1, 2), 3);
+    assert_eq!(has_bindings::crubit_add(1, 2i8.into()), 3);
 }
 
 #[gtest]
@@ -117,7 +117,7 @@ fn test_crubit_union_function() {
 
 #[gtest]
 fn test_function_pointer() {
-    extern "C" fn my_callback(a: *mut std::ffi::c_int) {
+    extern "C" fn my_callback(a: *mut ffi_11::c_int) {
         // SAFETY: we're going to pass it a valid pointer to an integer, it's OK!
         unsafe {
             *a = 42;
@@ -136,7 +136,7 @@ fn test_function_pointer() {
 
 #[gtest]
 fn test_nullable_function_pointer() {
-    extern "C" fn my_callback(a: *mut std::ffi::c_int) {
+    extern "C" fn my_callback(a: *mut ffi_11::c_int) {
         // SAFETY: we're going to pass it a valid pointer to an integer, it's OK!
         unsafe {
             *a = 42;

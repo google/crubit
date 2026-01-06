@@ -163,7 +163,7 @@ impl Default for Base2 {
 ///CRUBIT_ANNOTATE: cpp_type=Derived
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
-    pub derived_1: ::core::ffi::c_char,
+    pub derived_1: ::ffi_11::c_char,
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}

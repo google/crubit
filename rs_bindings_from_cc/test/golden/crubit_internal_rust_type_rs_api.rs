@@ -30,13 +30,13 @@
 /// intent was to override it.)
 /// Uncomment these invalid annotations to observe the build-time errors.
 /// TODO: b/402989591 - Use compile-fail UI test to check these outputs.
-pub type TooFewArgs = ::core::ffi::c_uchar;
+pub type TooFewArgs = ::ffi_11::c_uchar;
 
-pub type TooManyArgs = ::core::ffi::c_uchar;
+pub type TooManyArgs = ::ffi_11::c_uchar;
 
-pub type NonStringArg = ::core::ffi::c_uchar;
+pub type NonStringArg = ::ffi_11::c_uchar;
 
-pub type BadSameAbiAttr = ::core::ffi::c_uchar;
+pub type BadSameAbiAttr = ::ffi_11::c_uchar;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/trivial_struct:example_lib
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -20,8 +20,8 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Position
 pub struct Position {
-    pub x: ::core::ffi::c_int,
-    pub y: ::core::ffi::c_int,
+    pub x: ::ffi_11::c_int,
+    pub y: ::ffi_11::c_int,
 }
 impl !Send for Position {}
 impl !Sync for Position {}

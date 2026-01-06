@@ -18,7 +18,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialCustomType
 pub struct TrivialCustomType {
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for TrivialCustomType {}
 impl !Sync for TrivialCustomType {}
@@ -67,7 +67,7 @@ impl Default for TrivialCustomType {
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType
 pub struct NontrivialCustomType {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for NontrivialCustomType {}
 impl !Sync for NontrivialCustomType {}

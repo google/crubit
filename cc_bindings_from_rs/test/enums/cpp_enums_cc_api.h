@@ -4,7 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // cpp_enums_golden
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector,
+// supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN

@@ -40,14 +40,14 @@ unsafe impl ::cxx::ExternType for NotCABICompatible {
 }
 impl NotCABICompatible {
     #[inline(always)]
-    pub unsafe fn get(__this: *const Self) -> ::core::ffi::c_int {
+    pub unsafe fn get(__this: *const Self) -> ::ffi_11::c_int {
         crate::detail::__rust_thunk___ZNK17NotCABICompatible3getEv(__this)
     }
 }
 
-impl From<::core::ffi::c_int> for NotCABICompatible {
+impl From<::ffi_11::c_int> for NotCABICompatible {
     #[inline(always)]
-    fn from(x: ::core::ffi::c_int) -> Self {
+    fn from(x: ::ffi_11::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17NotCABICompatibleC1Ei(&raw mut tmp as *mut _, x);
@@ -55,12 +55,12 @@ impl From<::core::ffi::c_int> for NotCABICompatible {
         }
     }
 }
-impl ::ctor::CtorNew<::core::ffi::c_int> for NotCABICompatible {
+impl ::ctor::CtorNew<::ffi_11::c_int> for NotCABICompatible {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
-        <Self as From<::core::ffi::c_int>>::from(args)
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+        <Self as From<::ffi_11::c_int>>::from(args)
     }
 }
 
@@ -81,11 +81,11 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN17NotCABICompatibleC1Ei(
             __this: *mut ::core::ffi::c_void,
-            x: ::core::ffi::c_int,
+            x: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK17NotCABICompatible3getEv(
             __this: *const crate::NotCABICompatible,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
     }
 }
 

@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/enum:example_lib
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, register_tool)]
@@ -18,19 +18,19 @@
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 ///CRUBIT_ANNOTATE: cpp_type=Color
-pub struct Color(::core::ffi::c_uint);
+pub struct Color(::ffi_11::c_uint);
 impl Color {
     pub const kRed: Color = Color(0);
     pub const kBlue: Color = Color(1);
     pub const kGreen: Color = Color(2);
 }
-impl From<::core::ffi::c_uint> for Color {
-    fn from(value: ::core::ffi::c_uint) -> Color {
+impl From<::ffi_11::c_uint> for Color {
+    fn from(value: ::ffi_11::c_uint) -> Color {
         Color(value)
     }
 }
-impl From<Color> for ::core::ffi::c_uint {
-    fn from(value: Color) -> ::core::ffi::c_uint {
+impl From<Color> for ::ffi_11::c_uint {
+    fn from(value: Color) -> ::ffi_11::c_uint {
         value.0
     }
 }

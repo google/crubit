@@ -95,23 +95,23 @@ pub unsafe fn InspectStringViews(
 }
 
 #[inline(always)]
-pub fn MaybeVoidPtr() -> crate::MyOption<*mut ::core::ffi::c_void> {
+pub fn MaybeVoidPtr() -> crate::MyOption<*mut ::ffi_11::c_void> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut::core::ffi::c_void>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut::core::ffi::c_void>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z12MaybeVoidPtrv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut::ffi_11::c_void>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut::ffi_11::c_void>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z12MaybeVoidPtrv(__return_abi_buffer,); })
     }
 }
 
 #[inline(always)]
 pub unsafe fn AcceptsSliceAndReturnsStatusErrorIfEmpty(
-    slice: *const [::core::ffi::c_int],
-) -> crate::MyOption<*const [::core::ffi::c_int]> {
-    ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::core::ffi::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::core::ffi::c_int]>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__return_abi_buffer,slice); })
+    slice: *const [::ffi_11::c_int],
+) -> crate::MyOption<*const [::ffi_11::c_int]> {
+    ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*const[::ffi_11::c_int]>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*const[::ffi_11::c_int]>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(__return_abi_buffer,slice); })
 }
 
 #[inline(always)]
-pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::core::ffi::c_char> {
+pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
     unsafe {
-        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut*const::core::ffi::c_char>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut*const::core::ffi::c_char>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z16ReturnsCStrArrayv(__return_abi_buffer,); })
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut*const::ffi_11::c_char>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut*const::ffi_11::c_char>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z16ReturnsCStrArrayv(__return_abi_buffer,); })
     }
 }
 
@@ -912,7 +912,7 @@ forward_declare::unsafe_define!(
 // Can't generate bindings for std::placeholders::__ph<9>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::placeholders::__ph<9> (crate::__CcTemplateInstNSt3__u12placeholders4__phILi9EEE is a template instantiation)
 
-// Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::core::ffi::c_int])
+// Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
 
 // Type bindings for rs_std::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE])
 
@@ -951,7 +951,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
-            slice: *const [::core::ffi::c_int],
+            slice: *const [::ffi_11::c_int],
         );
         pub(crate) unsafe fn __rust_thunk___Z16ReturnsCStrArrayv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
@@ -993,8 +993,8 @@ const _: () = {
             __size_
         ) == 8
     );
-    assert!(::core::mem::size_of::<*const [::core::ffi::c_int]>() == 16);
-    assert!(::core::mem::align_of::<*const [::core::ffi::c_int]>() == 8);
+    assert!(::core::mem::size_of::<*const [::ffi_11::c_int]>() == 16);
+    assert!(::core::mem::align_of::<*const [::ffi_11::c_int]>() == 8);
     assert!(
         ::core::mem::size_of::<
             *mut [::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],

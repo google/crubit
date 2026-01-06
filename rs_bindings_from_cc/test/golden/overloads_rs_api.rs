@@ -28,7 +28,7 @@ pub fn Overload2() {
 }
 
 #[inline(always)]
-pub fn RenamedOverload2(__param_0: ::core::ffi::c_int) {
+pub fn RenamedOverload2(__param_0: ::ffi_11::c_int) {
     unsafe { crate::detail::__rust_thunk___Z9Overlaod2i(__param_0) }
 }
 
@@ -66,7 +66,7 @@ unsafe impl ::cxx::ExternType for Foo {
 }
 impl Foo {
     #[inline(always)]
-    pub unsafe fn Bar(__this: *mut Self, __param_0: ::core::ffi::c_int) {
+    pub unsafe fn Bar(__this: *mut Self, __param_0: ::ffi_11::c_int) {
         crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0)
     }
 }
@@ -111,13 +111,13 @@ mod detail {
         #[link_name = "_Z9Overload2v"]
         pub(crate) unsafe fn __rust_thunk___Z9Overload2v();
         #[link_name = "_Z9Overlaod2i"]
-        pub(crate) unsafe fn __rust_thunk___Z9Overlaod2i(__param_0: ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z9Overlaod2i(__param_0: ::ffi_11::c_int);
         pub(crate) unsafe fn __rust_thunk___Z20AlsoTemplateOverloadv();
         pub(crate) unsafe fn __rust_thunk___ZN3FooC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN3Foo3BarEi"]
         pub(crate) unsafe fn __rust_thunk___ZN3Foo3BarEi(
             __this: *mut crate::Foo,
-            __param_0: ::core::ffi::c_int,
+            __param_0: ::ffi_11::c_int,
         );
     }
 }

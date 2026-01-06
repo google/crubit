@@ -20,7 +20,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=X
 pub struct X {
-    pub a: ::core::ffi::c_int,
+    pub a: ::ffi_11::c_int,
 }
 impl !Send for X {}
 impl !Sync for X {}
@@ -45,10 +45,10 @@ pub fn ffi(a: i8, mut b: crate::X) -> i8 {
     unsafe { crate::detail::__rust_thunk___Z3ffi4MyI81X(a, &mut b) }
 }
 
-pub type MyTypedefDecl = ::core::ffi::c_int;
+pub type MyTypedefDecl = ::ffi_11::c_int;
 
 #[inline(always)]
-pub unsafe fn f(a: crate::MyTypedefDecl, b: *mut ::core::ffi::c_void, c: ::core::ffi::c_int) {
+pub unsafe fn f(a: crate::MyTypedefDecl, b: *mut ::ffi_11::c_void, c: ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z1fiPvi(a, b, c)
 }
 
@@ -60,8 +60,8 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
         pub(crate) unsafe fn __rust_thunk___Z1fiPvi(
             a: crate::MyTypedefDecl,
-            b: *mut ::core::ffi::c_void,
-            c: ::core::ffi::c_int,
+            b: *mut ::ffi_11::c_void,
+            c: ::ffi_11::c_int,
         );
     }
 }

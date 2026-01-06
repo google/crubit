@@ -71,26 +71,26 @@ impl Default for SomeStruct {
 ///CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
-    pub char_field: ::core::ffi::c_char,
-    pub unsigned_char_field: ::core::ffi::c_uchar,
-    pub signed_char_field: ::core::ffi::c_schar,
+    pub char_field: ::ffi_11::c_char,
+    pub unsigned_char_field: ::ffi_11::c_uchar,
+    pub signed_char_field: ::ffi_11::c_schar,
     pub char16_t_field: u16,
     pub char32_t_field: u32,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'wchar_t': Unsupported builtin type
     pub(crate) wchar_t_field: [::core::mem::MaybeUninit<u8>; 4],
-    pub short_field: ::core::ffi::c_short,
-    pub int_field: ::core::ffi::c_int,
-    pub long_field: ::core::ffi::c_long,
-    pub long_long_field: ::core::ffi::c_longlong,
-    pub unsigned_short_field: ::core::ffi::c_ushort,
-    pub unsigned_int_field: ::core::ffi::c_uint,
-    pub unsigned_long_field: ::core::ffi::c_ulong,
-    pub unsigned_long_long_field: ::core::ffi::c_ulonglong,
-    pub signed_short_field: ::core::ffi::c_short,
-    pub signed_int_field: ::core::ffi::c_int,
-    pub signed_long_field: ::core::ffi::c_long,
-    pub signed_long_long_field: ::core::ffi::c_longlong,
+    pub short_field: ::ffi_11::c_short,
+    pub int_field: ::ffi_11::c_int,
+    pub long_field: ::ffi_11::c_long,
+    pub long_long_field: ::ffi_11::c_longlong,
+    pub unsigned_short_field: ::ffi_11::c_ushort,
+    pub unsigned_int_field: ::ffi_11::c_uint,
+    pub unsigned_long_field: ::ffi_11::c_ulong,
+    pub unsigned_long_long_field: ::ffi_11::c_ulonglong,
+    pub signed_short_field: ::ffi_11::c_short,
+    pub signed_int_field: ::ffi_11::c_int,
+    pub signed_long_field: ::ffi_11::c_long,
+    pub signed_long_long_field: ::ffi_11::c_longlong,
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'PtrDiff': No generated bindings found for 'PtrDiff'
     pub(crate) ptrdiff_t_field: [::core::mem::MaybeUninit<u8>; 8],
@@ -99,10 +99,10 @@ pub struct FieldTypeTestStruct {
     pub(crate) size_t_field: [::core::mem::MaybeUninit<u8>; 8],
     pub float_field: f32,
     pub double_field: f64,
-    pub ptr_field: *mut ::core::ffi::c_int,
-    pub void_ptr_field: *mut ::core::ffi::c_void,
-    pub const_void_ptr_field: *const ::core::ffi::c_void,
-    pub void_double_ptr_field: *mut *mut ::core::ffi::c_void,
+    pub ptr_field: *mut ::ffi_11::c_int,
+    pub void_ptr_field: *mut ::ffi_11::c_void,
+    pub const_void_ptr_field: *const ::ffi_11::c_void,
+    pub void_double_ptr_field: *mut *mut ::ffi_11::c_void,
     pub struct_field: crate::SomeStruct,
     pub struct_ptr_field: *mut crate::SomeStruct,
     pub const_struct_ptr_field: *const crate::SomeStruct,
@@ -149,19 +149,16 @@ pub fn VoidReturningFunction() {
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
 #[inline(always)]
 pub fn FunctionPointerReturningFunction() -> Option<
-    unsafe extern "C" fn(
-        *const ::core::ffi::c_int,
-        *mut ::core::ffi::c_int,
-    ) -> *mut ::core::ffi::c_int,
+    unsafe extern "C" fn(*const ::ffi_11::c_int, *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int,
 > {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
-    __param_0: *mut ::core::ffi::c_void,
-    __param_1: *const ::core::ffi::c_void,
-) -> *mut ::core::ffi::c_void {
+    __param_0: *mut ::ffi_11::c_void,
+    __param_1: *const ::ffi_11::c_void,
+) -> *mut ::ffi_11::c_void {
     crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1)
 }
 
@@ -173,14 +170,14 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) unsafe fn __rust_thunk___Z32FunctionPointerReturningFunctionv() -> Option<
             unsafe extern "C" fn(
-                *const ::core::ffi::c_int,
-                *mut ::core::ffi::c_int,
-            ) -> *mut ::core::ffi::c_int,
+                *const ::ffi_11::c_int,
+                *mut ::ffi_11::c_int,
+            ) -> *mut ::ffi_11::c_int,
         >;
         pub(crate) unsafe fn __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
-            __param_0: *mut ::core::ffi::c_void,
-            __param_1: *const ::core::ffi::c_void,
-        ) -> *mut ::core::ffi::c_void;
+            __param_0: *mut ::ffi_11::c_void,
+            __param_1: *const ::ffi_11::c_void,
+        ) -> *mut ::ffi_11::c_void;
     }
 }
 

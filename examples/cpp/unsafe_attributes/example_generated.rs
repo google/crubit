@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //examples/cpp/unsafe_attributes:example_lib
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]
@@ -29,13 +29,13 @@ pub unsafe fn SafeSignatureButAnnotatedUnsafe() {
 
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=13
 #[inline(always)]
-pub unsafe fn UnsafeSignatureWithoutAnnotation(__param_0: *mut ::core::ffi::c_void) {
+pub unsafe fn UnsafeSignatureWithoutAnnotation(__param_0: *mut ::ffi_11::c_void) {
     crate::detail::__rust_thunk___Z32UnsafeSignatureWithoutAnnotationPv(__param_0)
 }
 
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=14
 #[inline(always)]
-pub fn UnsafeSignatureButAnnotatedSafe(__param_0: *mut ::core::ffi::c_void) {
+pub fn UnsafeSignatureButAnnotatedSafe(__param_0: *mut ::ffi_11::c_void) {
     unsafe { crate::detail::__rust_thunk___Z31UnsafeSignatureButAnnotatedSafePv(__param_0) }
 }
 
@@ -72,10 +72,10 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z30SafeSignatureWithoutAnnotationv();
         pub(crate) unsafe fn __rust_thunk___Z31SafeSignatureButAnnotatedUnsafev();
         pub(crate) unsafe fn __rust_thunk___Z32UnsafeSignatureWithoutAnnotationPv(
-            __param_0: *mut ::core::ffi::c_void,
+            __param_0: *mut ::ffi_11::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z31UnsafeSignatureButAnnotatedSafePv(
-            __param_0: *mut ::core::ffi::c_void,
+            __param_0: *mut ::ffi_11::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z18SafeBasedOnBooleanv();
         pub(crate) unsafe fn __rust_thunk___Z20UnsafeBasedOnBooleanv();

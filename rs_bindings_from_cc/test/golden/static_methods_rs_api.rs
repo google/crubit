@@ -32,7 +32,7 @@ unsafe impl ::cxx::ExternType for SomeClass {
 impl SomeClass {
     /// Example of a factory method.
     #[inline(always)]
-    pub fn static_factory_method(initial_value_of_field: ::core::ffi::c_int) -> crate::SomeClass {
+    pub fn static_factory_method(initial_value_of_field: ::ffi_11::c_int) -> crate::SomeClass {
         unsafe {
             let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
@@ -45,9 +45,9 @@ impl SomeClass {
     /// Static method working on primitive types (and unrelated to the struct).
     #[inline(always)]
     pub fn static_method_that_multiplies_its_args(
-        x: ::core::ffi::c_int,
-        y: ::core::ffi::c_int,
-    ) -> ::core::ffi::c_int {
+        x: ::ffi_11::c_int,
+        y: ::ffi_11::c_int,
+    ) -> ::ffi_11::c_int {
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
                 x, y,
@@ -92,13 +92,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
             __return: *mut ::core::ffi::c_void,
-            initial_value_of_field: ::core::ffi::c_int,
+            initial_value_of_field: ::ffi_11::c_int,
         );
         #[link_name = "_ZN9SomeClass38static_method_that_multiplies_its_argsEii"]
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
-            x: ::core::ffi::c_int,
-            y: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
+            x: ::ffi_11::c_int,
+            y: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
     }
 }
 

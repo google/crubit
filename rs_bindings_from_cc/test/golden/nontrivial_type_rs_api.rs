@@ -30,7 +30,7 @@
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: ::core::ffi::c_int,
+    pub field: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
@@ -71,11 +71,11 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     }
 }
 
-impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
+impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
@@ -87,21 +87,21 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for Nontrivial {
         }
     }
 }
-impl ::ctor::CtorNew<(::core::ffi::c_int,)> for Nontrivial {
+impl ::ctor::CtorNew<(::ffi_11::c_int,)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
+    fn ctor_new(args: (::ffi_11::c_int,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::core::ffi::c_int>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ffi_11::c_int>>::ctor_new(arg)
     }
 }
 
-impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for Nontrivial {
+impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
+    fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
@@ -194,7 +194,7 @@ impl ::ctor::PinnedDrop for Nontrivial {
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
 pub struct NontrivialInline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: ::core::ffi::c_int,
+    pub field: ::ffi_11::c_int,
 }
 impl !Send for NontrivialInline {}
 impl !Sync for NontrivialInline {}
@@ -225,11 +225,11 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
     }
 }
 
-impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialInline {
+impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
         let mut field = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
@@ -241,21 +241,21 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialInline {
         }
     }
 }
-impl ::ctor::CtorNew<(::core::ffi::c_int,)> for NontrivialInline {
+impl ::ctor::CtorNew<(::ffi_11::c_int,)> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: (::core::ffi::c_int,)) -> Self::CtorType {
+    fn ctor_new(args: (::ffi_11::c_int,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::core::ffi::c_int>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ffi_11::c_int>>::ctor_new(arg)
     }
 }
 
-impl ::ctor::CtorNew<(::core::ffi::c_int, ::core::ffi::c_int)> for NontrivialInline {
+impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: (::core::ffi::c_int, ::core::ffi::c_int)) -> Self::CtorType {
+    fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
         let (mut field, mut unused) = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: *mut Self| {
@@ -364,7 +364,7 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
 pub struct NontrivialUnpin {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-    pub field: ::core::ffi::c_int,
+    pub field: ::ffi_11::c_int,
 }
 impl !Send for NontrivialUnpin {}
 impl !Sync for NontrivialUnpin {}
@@ -390,9 +390,9 @@ impl Default for NontrivialUnpin {
     }
 }
 
-impl From<::core::ffi::c_int> for NontrivialUnpin {
+impl From<::ffi_11::c_int> for NontrivialUnpin {
     #[inline(always)]
-    fn from(field: ::core::ffi::c_int) -> Self {
+    fn from(field: ::ffi_11::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ei(&raw mut tmp as *mut _, field);
@@ -400,12 +400,12 @@ impl From<::core::ffi::c_int> for NontrivialUnpin {
         }
     }
 }
-impl ::ctor::CtorNew<::core::ffi::c_int> for NontrivialUnpin {
+impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialUnpin {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
-        <Self as From<::core::ffi::c_int>>::from(args)
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+        <Self as From<::ffi_11::c_int>>::from(args)
     }
 }
 
@@ -670,13 +670,13 @@ mod detail {
         #[link_name = "_ZN10NontrivialC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Ei(
             __this: *mut ::core::ffi::c_void,
-            field: ::core::ffi::c_int,
+            field: ::ffi_11::c_int,
         );
         #[link_name = "_ZN10NontrivialC1Eii"]
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialC1Eii(
             __this: *mut ::core::ffi::c_void,
-            field: ::core::ffi::c_int,
-            unused: ::core::ffi::c_int,
+            field: ::ffi_11::c_int,
+            unused: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10NontrivialaSEf<'a>(
             __return: *mut ::core::ffi::c_void,
@@ -708,12 +708,12 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Ei(
             __this: *mut ::core::ffi::c_void,
-            field: ::core::ffi::c_int,
+            field: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Eii(
             __this: *mut ::core::ffi::c_void,
-            field: ::core::ffi::c_int,
-            unused: ::core::ffi::c_int,
+            field: ::ffi_11::c_int,
+            unused: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::NontrivialInline>,
@@ -734,7 +734,7 @@ mod detail {
         #[link_name = "_ZN15NontrivialUnpinC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1Ei(
             __this: *mut ::core::ffi::c_void,
-            field: ::core::ffi::c_int,
+            field: ::ffi_11::c_int,
         );
         #[link_name = "_ZN15NontrivialUnpinD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(
@@ -783,13 +783,13 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
     assert!(::core::mem::offset_of!(crate::Nontrivial, field) == 0);
-    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     assert!(::core::mem::size_of::<crate::NontrivialInline>() == 4);
     assert!(::core::mem::align_of::<crate::NontrivialInline>() == 4);
     static_assertions::assert_impl_all!(crate::NontrivialInline: Drop);
     static_assertions::assert_not_impl_any!(crate::NontrivialInline: Copy);
     assert!(::core::mem::offset_of!(crate::NontrivialInline, field) == 0);
-    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     assert!(::core::mem::size_of::<crate::NontrivialMembers>() == 4);
     assert!(::core::mem::align_of::<crate::NontrivialMembers>() == 4);
     static_assertions::assert_impl_all!(crate::NontrivialMembers: Drop);
@@ -800,7 +800,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::NontrivialUnpin: Drop);
     static_assertions::assert_not_impl_any!(crate::NontrivialUnpin: Copy);
     assert!(::core::mem::offset_of!(crate::NontrivialUnpin, field) == 0);
-    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     assert!(::core::mem::size_of::<crate::NontrivialByValue>() == 1);
     assert!(::core::mem::align_of::<crate::NontrivialByValue>() == 1);
     static_assertions::assert_impl_all!(crate::NontrivialByValue: Copy,Clone);

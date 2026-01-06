@@ -21,7 +21,7 @@ pub mod ns {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: Trivial
     pub struct Trivial {
-        pub trivial_field: ::core::ffi::c_int,
+        pub trivial_field: ::ffi_11::c_int,
     }
     impl !Send for Trivial {}
     impl !Sync for Trivial {}

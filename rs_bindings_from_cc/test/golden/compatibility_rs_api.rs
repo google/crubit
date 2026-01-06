@@ -38,7 +38,7 @@ impl CompatibleType {
     #[inline(always)]
     pub fn renamed_constructor<'a>(
         self: ::core::pin::Pin<&'a mut Self>,
-        __param_0: ::core::ffi::c_int,
+        __param_0: ::ffi_11::c_int,
     ) {
         unsafe { crate::detail::__rust_thunk___ZN14CompatibleTypeC1Ei(self, __param_0) }
     }
@@ -64,7 +64,7 @@ mod detail {
         #[link_name = "_ZN14CompatibleTypeC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN14CompatibleTypeC1Ei<'a>(
             __this: ::core::pin::Pin<&'a mut crate::CompatibleType>,
-            __param_0: ::core::ffi::c_int,
+            __param_0: ::ffi_11::c_int,
         );
     }
 }

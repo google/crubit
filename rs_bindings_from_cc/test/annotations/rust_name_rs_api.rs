@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/annotations:rust_name
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -57,7 +57,7 @@ pub mod crubit {
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct
         pub struct SomeStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
-            pub field_new_name: ::core::ffi::c_int,
+            pub field_new_name: ::ffi_11::c_int,
         }
         impl !Send for SomeStruct {}
         impl !Sync for SomeStruct {}
@@ -70,9 +70,9 @@ pub mod crubit {
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=19
             #[inline(always)]
             pub fn ConstructorNewName(
-                a: ::core::ffi::c_int,
-                b: ::core::ffi::c_int,
-                c: ::core::ffi::c_int,
+                a: ::ffi_11::c_int,
+                b: ::ffi_11::c_int,
+                c: ::ffi_11::c_int,
             ) -> Self {
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
@@ -134,9 +134,9 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test10SomeStructC1Eiii(
             __this: *mut crate::crubit::test::SomeStruct,
-            a: ::core::ffi::c_int,
-            b: ::core::ffi::c_int,
-            c: ::core::ffi::c_int,
+            a: ::ffi_11::c_int,
+            b: ::ffi_11::c_int,
+            c: ::ffi_11::c_int,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test10SomeStruct13MethodOldNameEv(
             __this: *const crate::crubit::test::SomeStruct,

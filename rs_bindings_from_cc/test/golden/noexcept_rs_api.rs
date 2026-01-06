@@ -28,7 +28,7 @@ unsafe impl ::cxx::ExternType for SomeClass {
 }
 impl SomeClass {
     #[inline(always)]
-    pub fn create(i: ::core::ffi::c_int, c: ::core::ffi::c_char) {
+    pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
     }
     #[inline(always)]
@@ -78,8 +78,8 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN9SomeClass6createEic"]
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClass6createEic(
-            i: ::core::ffi::c_int,
-            c: ::core::ffi::c_char,
+            i: ::ffi_11::c_int,
+            c: ::ffi_11::c_char,
         );
         #[link_name = "_ZN9SomeClass16no_except_memberEv"]
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClass16no_except_memberEv(

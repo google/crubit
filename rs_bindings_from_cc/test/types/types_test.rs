@@ -72,7 +72,7 @@ macro_rules! type_is {
 type_is!(
     types_nonptr,
     Bool => bool,
-    Char => ::core::ffi::c_char,
+    Char => ::ffi_11::c_char,
 
     UnsignedChar => u8,
     SignedChar => i8,
@@ -82,17 +82,17 @@ type_is!(
     Short => i16,
     Int => i32,
     Long => i64,
-    LongLong => i64,
+    LongLong => ::ffi_11::c_longlong,
 
     UnsignedShort => u16,
     UnsignedInt => u32,
     UnsignedLong => u64,
-    UnsignedLongLong => u64,
+    UnsignedLongLong => ::ffi_11::c_ulonglong,
 
     SignedShort => i16,
     SignedInt => i32,
     SignedLong => i64,
-    SignedLongLong => i64,
+    SignedLongLong => ::ffi_11::c_longlong,
 
     Int8 => i8,
     Int16 => i16,

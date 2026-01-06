@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/function/simple:simple
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes)]
@@ -17,58 +17,58 @@
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=10
 #[inline(always)]
-pub fn return_value() -> ::core::ffi::c_int {
+pub fn return_value() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z12return_valuev() }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=11
 #[inline(always)]
-pub fn return_pointer() -> *mut ::core::ffi::c_int {
+pub fn return_pointer() -> *mut ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z14return_pointerv() }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=12
 #[inline(always)]
-pub fn return_reference() -> *mut ::core::ffi::c_int {
+pub fn return_reference() -> *mut ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z16return_referencev() }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=13
 #[inline(always)]
-pub unsafe fn take_pointer(i: *mut ::core::ffi::c_int) {
+pub unsafe fn take_pointer(i: *mut ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z12take_pointerPi(i)
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=14
 #[inline(always)]
-pub unsafe fn take_reference(i: *mut ::core::ffi::c_int) {
+pub unsafe fn take_reference(i: *mut ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z14take_referenceRi(i)
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=15
 #[inline(always)]
-pub fn forward_pointer(i: *const ::core::ffi::c_int) -> *const ::core::ffi::c_int {
+pub fn forward_pointer(i: *const ::ffi_11::c_int) -> *const ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z15forward_pointerPKi(i) }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=17
 #[inline(always)]
-pub unsafe fn forward_reference(i: *const ::core::ffi::c_int) -> *const ::core::ffi::c_int {
+pub unsafe fn forward_reference(i: *const ::ffi_11::c_int) -> *const ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z17forward_referenceRKi(i)
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=18
 #[inline(always)]
-pub fn multiply(x: ::core::ffi::c_int, y: ::core::ffi::c_int) -> ::core::ffi::c_int {
+pub fn multiply(x: ::ffi_11::c_int, y: ::ffi_11::c_int) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z8multiplyii(x, y) }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=19
 #[inline(always)]
 pub fn multiply_with_unnamed_parameters(
-    __param_0: ::core::ffi::c_int,
-    __param_1: ::core::ffi::c_int,
-) -> ::core::ffi::c_int {
+    __param_0: ::ffi_11::c_int,
+    __param_1: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
     unsafe {
         crate::detail::__rust_thunk___Z32multiply_with_unnamed_parametersii(__param_0, __param_1)
     }
@@ -77,10 +77,10 @@ pub fn multiply_with_unnamed_parameters(
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=20
 #[inline(always)]
 pub fn multiply_with_keyword_named_parameters(
-    __param_0: ::core::ffi::c_int,
-    __param_1: ::core::ffi::c_int,
-    __param_2: ::core::ffi::c_int,
-) -> ::core::ffi::c_int {
+    __param_0: ::ffi_11::c_int,
+    __param_1: ::ffi_11::c_int,
+    __param_2: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
     unsafe {
         crate::detail::__rust_thunk___Z38multiply_with_keyword_named_parametersiii(
             __param_0, __param_1, __param_2,
@@ -96,7 +96,7 @@ pub fn multiply_with_keyword_named_parameters(
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=32
 #[inline(always)]
-pub fn llvm_no_mangle_marker() -> ::core::ffi::c_int {
+pub fn llvm_no_mangle_marker() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___llvm_no_mangle_marker() }
 }
 
@@ -106,7 +106,7 @@ pub fn llvm_no_mangle_marker() -> ::core::ffi::c_int {
 ///
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=40
 #[inline(always)]
-pub fn asm_name_with_dollar_sign() -> ::core::ffi::c_int {
+pub fn asm_name_with_dollar_sign() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk__asm_u36_name_u36_with_u36_dollar_u36_sign() }
 }
 
@@ -117,7 +117,7 @@ pub fn asm_name_with_dollar_sign() -> ::core::ffi::c_int {
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=46
 #[inline(always)]
 pub fn get_pointer_to_multiply_function(
-) -> Option<extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int> {
+) -> Option<extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int> {
     unsafe { crate::detail::__rust_thunk___Z32get_pointer_to_multiply_functionv() }
 }
 
@@ -126,24 +126,24 @@ pub fn get_pointer_to_multiply_function(
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=49
 #[inline(always)]
 pub fn get_reference_to_multiply_function(
-) -> extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int {
+) -> extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z34get_reference_to_multiply_functionv() }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=51
 #[inline(always)]
 pub fn inline_get_pointer_to_multiply_function(
-) -> Option<extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int> {
+) -> Option<extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int> {
     unsafe { crate::detail::__rust_thunk___Z39inline_get_pointer_to_multiply_functionv() }
 }
 
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=56
 #[inline(always)]
 pub fn apply_binary_op(
-    x: ::core::ffi::c_int,
-    y: ::core::ffi::c_int,
-    op: Option<extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int>,
-) -> ::core::ffi::c_int {
+    x: ::ffi_11::c_int,
+    y: ::ffi_11::c_int,
+    op: Option<extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int>,
+) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z15apply_binary_opiiPFiiiE(x, y, op) }
 }
 
@@ -168,56 +168,56 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         #[link_name = "_Z12return_valuev"]
-        pub(crate) unsafe fn __rust_thunk___Z12return_valuev() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z12return_valuev() -> ::ffi_11::c_int;
         #[link_name = "_Z14return_pointerv"]
-        pub(crate) unsafe fn __rust_thunk___Z14return_pointerv() -> *mut ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z14return_pointerv() -> *mut ::ffi_11::c_int;
         #[link_name = "_Z16return_referencev"]
-        pub(crate) unsafe fn __rust_thunk___Z16return_referencev() -> *mut ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z16return_referencev() -> *mut ::ffi_11::c_int;
         #[link_name = "_Z12take_pointerPi"]
-        pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(i: *mut ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z12take_pointerPi(i: *mut ::ffi_11::c_int);
         #[link_name = "_Z14take_referenceRi"]
-        pub(crate) unsafe fn __rust_thunk___Z14take_referenceRi(i: *mut ::core::ffi::c_int);
+        pub(crate) unsafe fn __rust_thunk___Z14take_referenceRi(i: *mut ::ffi_11::c_int);
         #[link_name = "_Z15forward_pointerPKi"]
         pub(crate) unsafe fn __rust_thunk___Z15forward_pointerPKi(
-            i: *const ::core::ffi::c_int,
-        ) -> *const ::core::ffi::c_int;
+            i: *const ::ffi_11::c_int,
+        ) -> *const ::ffi_11::c_int;
         #[link_name = "_Z17forward_referenceRKi"]
         pub(crate) unsafe fn __rust_thunk___Z17forward_referenceRKi(
-            i: *const ::core::ffi::c_int,
-        ) -> *const ::core::ffi::c_int;
+            i: *const ::ffi_11::c_int,
+        ) -> *const ::ffi_11::c_int;
         #[link_name = "_Z8multiplyii"]
         pub(crate) unsafe fn __rust_thunk___Z8multiplyii(
-            x: ::core::ffi::c_int,
-            y: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
+            x: ::ffi_11::c_int,
+            y: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
         #[link_name = "_Z32multiply_with_unnamed_parametersii"]
         pub(crate) unsafe fn __rust_thunk___Z32multiply_with_unnamed_parametersii(
-            __param_0: ::core::ffi::c_int,
-            __param_1: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
+            __param_0: ::ffi_11::c_int,
+            __param_1: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
         #[link_name = "_Z38multiply_with_keyword_named_parametersiii"]
         pub(crate) unsafe fn __rust_thunk___Z38multiply_with_keyword_named_parametersiii(
-            __param_0: ::core::ffi::c_int,
-            __param_1: ::core::ffi::c_int,
-            __param_2: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
+            __param_0: ::ffi_11::c_int,
+            __param_1: ::ffi_11::c_int,
+            __param_2: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
         #[link_name = "\u{1}_llvm_no_mangle_marker"]
-        pub(crate) unsafe fn __rust_thunk___llvm_no_mangle_marker() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___llvm_no_mangle_marker() -> ::ffi_11::c_int;
         #[link_name = "asm$name$with$dollar$sign"]
         pub(crate) unsafe fn __rust_thunk__asm_u36_name_u36_with_u36_dollar_u36_sign(
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         #[link_name = "_Z32get_pointer_to_multiply_functionv"]
         pub(crate) unsafe fn __rust_thunk___Z32get_pointer_to_multiply_functionv(
-        ) -> Option<extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int>;
+        ) -> Option<extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int>;
         #[link_name = "_Z34get_reference_to_multiply_functionv"]
         pub(crate) unsafe fn __rust_thunk___Z34get_reference_to_multiply_functionv(
-        ) -> extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int;
+        ) -> extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z39inline_get_pointer_to_multiply_functionv(
-        ) -> Option<extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int>;
+        ) -> Option<extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int>;
         pub(crate) unsafe fn __rust_thunk___Z15apply_binary_opiiPFiiiE(
-            x: ::core::ffi::c_int,
-            y: ::core::ffi::c_int,
-            op: Option<extern "C" fn(::core::ffi::c_int, ::core::ffi::c_int) -> ::core::ffi::c_int>,
-        ) -> ::core::ffi::c_int;
+            x: ::ffi_11::c_int,
+            y: ::ffi_11::c_int,
+            op: Option<extern "C" fn(::ffi_11::c_int, ::ffi_11::c_int) -> ::ffi_11::c_int>,
+        ) -> ::ffi_11::c_int;
     }
 }

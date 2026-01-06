@@ -30,7 +30,7 @@
 ///CRUBIT_ANNOTATE: cpp_type=Derived2
 pub struct Derived2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 20],
-    pub derived_1: ::core::ffi::c_char,
+    pub derived_1: ::ffi_11::c_char,
 }
 impl !Send for Derived2 {}
 impl !Sync for Derived2 {}

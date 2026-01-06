@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/wrapper/pub_crate_types:pub_crate_types
-// Features: non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #![rustfmt::skip]
 #![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
@@ -71,7 +71,7 @@ extern "C" {
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=31
 #[inline(always)]
-pub fn ConsumeCompoundDataType(mut container: crate::CompoundDataType) -> ::core::ffi::c_int {
+pub fn ConsumeCompoundDataType(mut container: crate::CompoundDataType) -> ::ffi_11::c_int {
     unsafe {
         crate::detail::__rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(&mut container)
     }
@@ -116,7 +116,7 @@ pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template2 < int >
 pub(crate) struct __CcTemplateInst9Template2IiE {
-    pub value: ::core::ffi::c_int,
+    pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst9Template2IiE {}
 impl !Sync for __CcTemplateInst9Template2IiE {}
@@ -155,7 +155,7 @@ forward_declare::unsafe_define!(
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template < int >
 pub(crate) struct __CcTemplateInst8TemplateIiE {
-    pub value: ::core::ffi::c_int,
+    pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst8TemplateIiE {}
 impl !Sync for __CcTemplateInst8TemplateIiE {}
@@ -215,7 +215,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z14GetTemplateIntv(__return: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(
             container: &mut crate::CompoundDataType,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z18OtherPubCrateTypesP16ForwardDeclared2(
             __param_0: *mut ::other_pub_crate_types::ForwardDeclared2,
         );

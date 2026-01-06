@@ -458,10 +458,10 @@ impl Default for IncompatibleLHS {
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for IncompatibleLHS::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 // Error while generating bindings for function 'operator+':
-// Non-record-nor-reference operator parameters are not yet supported, found ::core::ffi::c_int
+// Non-record-nor-reference operator parameters are not yet supported, found ::ffi_11::c_int
 
 // Error while generating bindings for function 'operator+':
-// Expected first operator parameter to be a record or incomplete record, found ::core::ffi::c_int
+// Expected first operator parameter to be a record or incomplete record, found ::ffi_11::c_int
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
@@ -606,9 +606,9 @@ impl Default for AddAssignMemberInt {
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:operators_cc needs [//features:experimental] for AddAssignMemberInt::operator= (the type of __param_0 (parameter #1): references are not supported)
 
-impl ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignMemberInt {
+impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
+    fn add_assign<'a>(&'a mut self, rhs: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN18AddAssignMemberIntpLEi(self, rhs);
         }
@@ -906,12 +906,12 @@ impl Default for AddAssignProhibitedConstMember {
     message = "binding generation for function failed\nCompound assignment with const left-hand side is not supported, found &'a crate::AddAssignProhibitedConstMember"
 )]
 pub trait BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi {}
-impl<'error> ::core::ops::AddAssign<::core::ffi::c_int> for AddAssignProhibitedConstMember
+impl<'error> ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignProhibitedConstMember
 where
     &'error (): BindingFailedFor_ZNK30AddAssignProhibitedConstMemberpLEi,
 {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: ::core::ffi::c_int) {
+    fn add_assign<'a>(&'a mut self, rhs: ::ffi_11::c_int) {
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
@@ -1193,8 +1193,8 @@ mod detail {
         #[link_name = "_ZN18AddAssignMemberIntpLEi"]
         pub(crate) unsafe fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
             __this: &'a mut crate::AddAssignMemberInt,
-            rhs: ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
+            rhs: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(
             __this: *mut ::core::ffi::c_void,
         );

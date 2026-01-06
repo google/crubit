@@ -26,9 +26,9 @@
 ///CRUBIT_ANNOTATE: cpp_type=Foo
 pub struct Foo {
     /// A field
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
     /// Another field
-    pub j: ::core::ffi::c_int,
+    pub j: ::ffi_11::c_int,
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
@@ -92,7 +92,7 @@ pub fn foo() {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Bar
 pub struct Bar {
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for Bar {}
 impl !Sync for Bar {}
@@ -135,7 +135,7 @@ impl Default for Bar {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasNoComments
 pub struct HasNoComments {
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for HasNoComments {}
 impl !Sync for HasNoComments {}

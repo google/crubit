@@ -23,7 +23,7 @@
 pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for DocCommentSlashes {}
 impl !Sync for DocCommentSlashes {}
@@ -34,19 +34,19 @@ unsafe impl ::cxx::ExternType for DocCommentSlashes {
 impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
-    pub fn get_field_value<'a>(&'a self) -> ::core::ffi::c_int {
+    pub fn get_field_value<'a>(&'a self) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
     }
     /// A non-static member function (non-`const` flavor).
     #[inline(always)]
-    pub fn set_field_value<'a>(&'a mut self, new_value: ::core::ffi::c_int) {
+    pub fn set_field_value<'a>(&'a mut self, new_value: ::ffi_11::c_int) {
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value)
         }
     }
     /// A static method.
     #[inline(always)]
-    pub fn static_method() -> ::core::ffi::c_int {
+    pub fn static_method() -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
     }
 }
@@ -84,9 +84,9 @@ impl Default for DocCommentSlashes {
 
 /// An implicit conversion constructor which will get translated into `impl
 /// From<int> for DocCommentSlashes`.
-impl From<::core::ffi::c_int> for DocCommentSlashes {
+impl From<::ffi_11::c_int> for DocCommentSlashes {
     #[inline(always)]
-    fn from(__param_0: ::core::ffi::c_int) -> Self {
+    fn from(__param_0: ::ffi_11::c_int) -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(
@@ -97,12 +97,12 @@ impl From<::core::ffi::c_int> for DocCommentSlashes {
         }
     }
 }
-impl ::ctor::CtorNew<::core::ffi::c_int> for DocCommentSlashes {
+impl ::ctor::CtorNew<::ffi_11::c_int> for DocCommentSlashes {
     type CtorType = Self;
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: ::core::ffi::c_int) -> Self::CtorType {
-        <Self as From<::core::ffi::c_int>>::from(args)
+    fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
+        <Self as From<::ffi_11::c_int>>::from(args)
     }
 }
 
@@ -114,7 +114,7 @@ impl ::ctor::CtorNew<::core::ffi::c_int> for DocCommentSlashes {
 ///CRUBIT_ANNOTATE: cpp_type=DocCommentBang
 pub struct DocCommentBang {
     /// A field
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for DocCommentBang {}
 impl !Sync for DocCommentBang {}
@@ -160,7 +160,7 @@ impl Default for DocCommentBang {
 ///CRUBIT_ANNOTATE: cpp_type=MultilineCommentTwoStars
 pub struct MultilineCommentTwoStars {
     /// A field
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for MultilineCommentTwoStars {}
 impl !Sync for MultilineCommentTwoStars {}
@@ -206,7 +206,7 @@ impl Default for MultilineCommentTwoStars {
 ///CRUBIT_ANNOTATE: cpp_type=LineComment
 pub struct LineComment {
     /// A field
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for LineComment {}
 impl !Sync for LineComment {}
@@ -252,7 +252,7 @@ impl Default for LineComment {
 ///CRUBIT_ANNOTATE: cpp_type=MultilineOneStar
 pub struct MultilineOneStar {
     /// A field
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
 }
 impl !Send for MultilineOneStar {}
 impl !Sync for MultilineOneStar {}
@@ -292,7 +292,7 @@ impl Default for MultilineOneStar {
 
 /// A function
 #[inline(always)]
-pub fn foo() -> ::core::ffi::c_int {
+pub fn foo() -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
@@ -354,20 +354,20 @@ mod detail {
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
         pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashesC1Ei(
             __this: *mut ::core::ffi::c_void,
-            __param_0: ::core::ffi::c_int,
+            __param_0: ::ffi_11::c_int,
         );
         #[link_name = "_ZNK17DocCommentSlashes15get_field_valueEv"]
         pub(crate) unsafe fn __rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv<'a>(
             __this: &'a crate::DocCommentSlashes,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         #[link_name = "_ZN17DocCommentSlashes15set_field_valueEi"]
         pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashes15set_field_valueEi<'a>(
             __this: &'a mut crate::DocCommentSlashes,
-            new_value: ::core::ffi::c_int,
+            new_value: ::ffi_11::c_int,
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
         pub(crate) unsafe fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv(
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN14DocCommentBangC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -378,7 +378,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN16MultilineOneStarC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___Z3foov() -> ::core::ffi::c_int;
+        pub(crate) unsafe fn __rust_thunk___Z3foov() -> ::ffi_11::c_int;
     }
 }
 

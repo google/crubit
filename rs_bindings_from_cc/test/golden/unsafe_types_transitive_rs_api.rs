@@ -18,7 +18,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PublicPointer
 pub struct PublicPointer {
-    pub p: *mut ::core::ffi::c_int,
+    pub p: *mut ::ffi_11::c_int,
 }
 impl !Send for PublicPointer {}
 impl !Sync for PublicPointer {}
@@ -66,7 +66,7 @@ impl Default for PrivatePointer {
 }
 
 #[inline(always)]
-pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::core::ffi::c_int {
+pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z19DerefPrivatePointer14PrivatePointer(&mut p) }
 }
 
@@ -99,7 +99,7 @@ impl Default for TransitivePublicPointer {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Union
 pub union Union {
-    pub i: ::core::ffi::c_int,
+    pub i: ::ffi_11::c_int,
     pub f: f32,
 }
 impl !Send for Union {}
@@ -121,24 +121,24 @@ impl Default for Union {
 }
 
 #[inline(always)]
-pub unsafe fn DerefPointer(p: *mut ::core::ffi::c_int) -> ::core::ffi::c_int {
+pub unsafe fn DerefPointer(p: *mut ::ffi_11::c_int) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z12DerefPointerPi(p)
 }
 
 #[inline(always)]
-pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::core::ffi::c_int {
+pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p)
 }
 
 #[inline(always)]
 pub unsafe fn DerefTransitivePublicPointer(
     mut p: crate::TransitivePublicPointer,
-) -> ::core::ffi::c_int {
+) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(&mut p)
 }
 
 #[inline(always)]
-pub unsafe fn ReadUnion(mut u: crate::Union) -> ::core::ffi::c_int {
+pub unsafe fn ReadUnion(mut u: crate::Union) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z9ReadUnion5Union(&mut u)
 }
 
@@ -152,24 +152,24 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
             p: &mut crate::PrivatePointer,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN23TransitivePublicPointerC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN5UnionC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_Z12DerefPointerPi"]
         pub(crate) unsafe fn __rust_thunk___Z12DerefPointerPi(
-            p: *mut ::core::ffi::c_int,
-        ) -> ::core::ffi::c_int;
+            p: *mut ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z18DerefPublicPointer13PublicPointer(
             p: &mut crate::PublicPointer,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(
             p: &mut crate::TransitivePublicPointer,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z9ReadUnion5Union(
             u: &mut crate::Union,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
     }
 }
 
@@ -196,6 +196,6 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::Union: Drop);
     assert!(::core::mem::offset_of!(crate::Union, i) == 0);
     assert!(::core::mem::offset_of!(crate::Union, f) == 0);
-    static_assertions::assert_impl_all!(::core::ffi::c_int: Copy);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     static_assertions::assert_impl_all!(f32: Copy);
 };

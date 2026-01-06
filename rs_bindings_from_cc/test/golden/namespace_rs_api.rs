@@ -19,7 +19,7 @@ pub mod test_namespace_bindings {
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: S
     pub struct S {
-        pub i: ::core::ffi::c_int,
+        pub i: ::ffi_11::c_int,
     }
     impl !Send for S {}
     impl !Sync for S {}
@@ -61,7 +61,7 @@ pub mod test_namespace_bindings {
 
     /// Free comment inside namespace
     #[inline(always)]
-    pub fn f(mut s: crate::test_namespace_bindings::S) -> ::core::ffi::c_int {
+    pub fn f(mut s: crate::test_namespace_bindings::S) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(&mut s) }
     }
 
@@ -261,7 +261,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
             s: &mut crate::test_namespace_bindings::S,
-        ) -> ::core::ffi::c_int;
+        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings15inline_functionEv();
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
