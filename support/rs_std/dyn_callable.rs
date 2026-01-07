@@ -127,13 +127,15 @@ unsafe impl<F: ?Sized> CrubitAbi for DynCallableAbi<F> {
         /// RelocateFromToAndQueryRust, then `to` must also point to a `*mut bool` which can be
         /// written to.
         unsafe extern "C" fn manager<T>(operation: FunctionToCall, from: *mut T, to: *mut T) {
-            // SAFETY: The caller guarantees that `from` is valid for reads.
-            let from = unsafe { ptr::read(from) };
             match operation {
-                FunctionToCall::Dispose => drop(from),
+                FunctionToCall::Dispose => {
+                    // SAFETY: The caller guarantees that `from` is valid for reads.
+                    unsafe { ptr::drop_in_place(from) }
+                }
                 FunctionToCall::RelocateFromTo => {
-                    // SAFETY: The caller guarantees that `to` is valid for writes.
-                    unsafe { ptr::write(to, from) };
+                    // SAFETY: The caller guarantees that `from` is valid for reads and `to` is
+                    // valid for writes.
+                    unsafe { ptr::copy_nonoverlapping(from, to, 1) };
                 }
                 FunctionToCall::RelocateFromToAndQueryRust => {
                     // This case happens right before passing an AnyInvocable to Rust. When it
@@ -145,8 +147,9 @@ unsafe impl<F: ?Sized> CrubitAbi for DynCallableAbi<F> {
                         let is_rust = to as *mut *mut bool;
                         **is_rust = true;
                     }
-                    // SAFETY: The caller guarantees that `to` is valid for writes.
-                    unsafe { ptr::write(to, from) };
+                    // SAFETY: The caller guarantees that `from` is valid for reads and `to` is
+                    // valid for writes.
+                    unsafe { ptr::copy_nonoverlapping(from, to, 1) };
                 }
             }
         }
