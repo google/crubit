@@ -1087,23 +1087,24 @@ pub mod macro_internal {
 // =====================
 
 /// The `RecursivelyPinned` trait asserts that when the struct is pinned, every
-/// field is also pinned.
+/// (non-Unpin) field is also pinned.
 ///
 /// This trait is automatically implemented for any `#[recursively_pinned]`
 /// struct.
 ///
 /// ## Safety
 ///
-/// Only use if you never directly access fields of a pinned object. For
-/// example, with the pin-project crate, all fields should be marked `#[pin]`.
+/// * All fields of the struct are pinned in all code paths that access them.
+/// * The `CtorInitializedFields` type has the same fields as `Self`, except
+///   for any fields that do not need initialization. (For instance, ZST fields
+///   or fields of type `MaybeUninit`.)
 pub unsafe trait RecursivelyPinned {
-    /// An associated type with the same fields, minus any which are not
-    /// initialized by the `ctor!()` macro.
+    /// An associated type with the same fields as `Self`, minus any ZST
+    /// fields hich are not initialized by the `ctor!()` macro.
     ///
-    /// For example, the following struct `CtorOnly` can be constructed by value
-    /// using `ctor!()`, but not using normal Rust initialization.
-    /// Effectively, the struct is forced into only ever existing in a
-    /// pinned state.
+    /// The intended use of this is to help disable direct initialization of
+    /// the type and *require* the use of `ctor!()`. This forces the struct
+    /// to only ever exist in a pinned state.
     ///
     /// ```
     /// // (Alternatively, `#[non_exhaustive]` may be used instead of the private field.)
@@ -1142,7 +1143,8 @@ pub unsafe trait RecursivelyPinned {
     /// The size and layout of `CtorInitializedFields` is ignored; it only
     /// affects which field names are required for complete `ctor!()`
     /// initialization. Any fields left out of the `CtorInitializedFields` type
-    /// will not be initialized, so they should generally be zero-sized.
+    /// will not be initialized, so they must permit uninitialized memory.
+    /// (For example, ZST or MaybeUninit.)
     type CtorInitializedFields;
 }
 
@@ -1176,9 +1178,6 @@ pub trait PinnedDrop {
 /// The `ctor!` macro evaluates to a `Ctor` for a Rust struct, with
 /// user-specified fields.
 ///
-/// (This was inspired by, but takes no code from, https://crates.io/crates/project-uninit.
-/// It is also substantially identical to `pin_init!`.)
-///
 /// Example use:
 ///
 /// ```
@@ -1188,6 +1187,9 @@ pub trait PinnedDrop {
 ///
 /// // Actually invoke the Ctor to create a new MyStruct:
 /// let mut my_struct = emplace!(MyStruct::new());
+///
+/// The type must implement `RecursivelyPinned`, so that `ctor!()` can
+/// safely construct the struct pinned in place.
 /// ```
 #[macro_export]
 macro_rules! ctor {
@@ -1233,7 +1235,7 @@ macro_rules! ctor {
                 $crate::macro_internal::require_recursively_pinned::<Type $(< $( $gp ),+ >)?>();
 
                 $(
-                    let sub_ctor = $sub_ctor;
+                    let sub_ctor = $sub_ctor; // outside of unsafe block.
                     let field_drop = unsafe {
                         // SAFETY: the place is in bounds, just uninitialized. See e.g. second
                         // example: https://doc.rust-lang.org/nightly/std/ptr/macro.addr_of_mut.html
