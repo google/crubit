@@ -21,30 +21,29 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvEEE(
-    ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state);
+    ::rs_std::internal_dyn_callable::TypeErasedState* state);
 
 extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvOEEE(
-    ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state);
+    ::rs_std::internal_dyn_callable::TypeErasedState* state);
 
 extern "C" void __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE(
-    ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state,
+    ::rs_std::internal_dyn_callable::TypeErasedState* state,
     struct ABICompatible* param_0, struct ABICompatible* out);
 
 extern "C" void
 __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE(
-    ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state,
+    ::rs_std::internal_dyn_callable::TypeErasedState* state,
     class LayoutCompatible* param_0, class LayoutCompatible* out);
 
 extern "C" void __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE(
-    ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state,
+    ::rs_std::internal_dyn_callable::TypeErasedState* state,
     unsigned char* param_0, unsigned char* out);
 
 extern "C" int __CcTemplateInstN6rs_std11DynCallableIKFiiEEE(
-    ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state,
-    int param_0);
+    ::rs_std::internal_dyn_callable::TypeErasedState* state, int param_0);
 
 extern "C" void __CcTemplateInstN6rs_std11DynCallableIKFvvEEE(
-    ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state);
+    ::rs_std::internal_dyn_callable::TypeErasedState* state);
 
 extern "C" void __rust_thunk___Z11invoke_onceN6rs_std11DynCallableIFvvOEEE(
     const unsigned char* f) {
@@ -106,8 +105,7 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
                   struct Bridged) const>>(
               ::rs_std::internal_dyn_callable::DynCallableAbi<struct Bridged(
                   struct Bridged) const>(
-                  [](::rs_std::internal_dyn_callable::UnmanagedZeroableCallable*
-                         state,
+                  [](::rs_std::internal_dyn_callable::TypeErasedState* state,
                      struct Bridged param_0) -> struct Bridged {
                     unsigned char bridge_param_0[::crubit::BridgedAbi::kSize];
                     ::crubit::internal::Encode(::crubit::BridgedAbi(),
@@ -147,8 +145,7 @@ __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EE
               struct ABICompatible) const>>(
           ::rs_std::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
               struct ABICompatible) const>(
-              [](::rs_std::internal_dyn_callable::UnmanagedZeroableCallable*
-                     state,
+              [](::rs_std::internal_dyn_callable::TypeErasedState* state,
                  struct ABICompatible param_0) -> struct ABICompatible {
                 ::crubit::Slot<struct ABICompatible> stack_param_0(
                     std::move(param_0));
@@ -193,8 +190,8 @@ __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibl
               class LayoutCompatible(class LayoutCompatible) const>>(
           ::rs_std::internal_dyn_callable::DynCallableAbi<
               class LayoutCompatible(class LayoutCompatible)
-                  const>([](::rs_std::internal_dyn_callable::
-                                UnmanagedZeroableCallable* state,
+                  const>([](::rs_std::internal_dyn_callable::TypeErasedState*
+                                state,
                             class LayoutCompatible param_0)
                              -> class LayoutCompatible {
             ::crubit::Slot<class LayoutCompatible> stack_param_0(

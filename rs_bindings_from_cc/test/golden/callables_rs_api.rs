@@ -221,23 +221,23 @@ mod detail {
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvEEE(
-        zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<
+        f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        (unsafe { (&mut *zeroable_callable).unwrap_mut() })();
+        (unsafe { &mut *f })();
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvOEEE(
-        zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<
+        f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        (unsafe { (&mut *zeroable_callable).unwrap_take() })();
+        (unsafe { ::core::ptr::read(f) })();
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE(
-        zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<
+        f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(crate::ABICompatible) -> crate::ABICompatible
                 + ::core::marker::Send
                 + ::core::marker::Sync
@@ -247,7 +247,7 @@ mod detail {
         out: *mut crate::ABICompatible,
     ) {
         let param_0 = ::core::ptr::read(param_0);
-        match (unsafe { (&mut *zeroable_callable).unwrap_ref() })(param_0) {
+        match (unsafe { &*f })(param_0) {
             result => unsafe {
                 ::core::ptr::write(out, result);
             },
@@ -255,7 +255,7 @@ mod detail {
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE(
-        zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<
+        f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(crate::LayoutCompatible) -> crate::LayoutCompatible
                 + ::core::marker::Send
                 + ::core::marker::Sync
@@ -265,7 +265,7 @@ mod detail {
         out: *mut crate::LayoutCompatible,
     ) {
         let param_0 = ::core::ptr::read(param_0);
-        match (unsafe { (&mut *zeroable_callable).unwrap_ref() })(param_0) {
+        match (unsafe { &*f })(param_0) {
             result => unsafe {
                 ::core::ptr::write(out, result);
             },
@@ -273,7 +273,7 @@ mod detail {
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE(
-        zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<
+        f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(crate::RustBridged) -> crate::RustBridged
                 + ::core::marker::Send
                 + ::core::marker::Sync
@@ -286,12 +286,12 @@ mod detail {
         ::bridge_rust::internal::encode(
             crate::RustBridgedAbi,
             bridge_buffer,
-            (unsafe { (&mut *zeroable_callable).unwrap_ref() })(param_0),
+            (unsafe { &*f })(param_0),
         );
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFiiEEE(
-        zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<
+        f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
                 + ::core::marker::Send
                 + ::core::marker::Sync
@@ -299,15 +299,15 @@ mod detail {
         >,
         param_0: ::ffi_11::c_int,
     ) -> ::ffi_11::c_int {
-        (unsafe { (&mut *zeroable_callable).unwrap_ref() })(param_0)
+        (unsafe { &*f })(param_0)
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFvvEEE(
-        zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<
+        f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        (unsafe { (&mut *zeroable_callable).unwrap_ref() })();
+        (unsafe { &*f })();
     }
 }
 

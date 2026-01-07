@@ -85,7 +85,7 @@ pub fn dyn_callable_crubit_abi_type(
 ///
 /// ```cpp
 /// [](
-///     ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state
+///     ::rs_std::internal_dyn_callable::TypeErasedState* state
 ///     P...,
 /// ) -> R {
 ///     // impl
@@ -186,7 +186,7 @@ fn generate_invoker_function_pointer(
     }
     Ok(quote! {
         [](
-            ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state
+            ::rs_std::internal_dyn_callable::TypeErasedState* state
             #(
                 , #cpp_param_types #param_idents
             )*

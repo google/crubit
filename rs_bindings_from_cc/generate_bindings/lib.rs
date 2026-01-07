@@ -920,7 +920,7 @@ fn generate_dyn_callable_cpp_thunk(
 
     Some(quote! {
         extern "C" #decl_return_type_tokens #thunk_ident(
-            ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state
+            ::rs_std::internal_dyn_callable::TypeErasedState* state
             #(
                 , #param_types #param_idents
             )*
@@ -934,7 +934,7 @@ fn generate_dyn_callable_cpp_thunk(
 /// ```rust
 /// #[unsafe(no_mangle)]
 /// unsafe extern "C" fn some_mangled_name(
-///     zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<dyn Fn()>,
+///     f: *mut ::alloc::boxed::Box<dyn Fn()>,
 /// ) {
 ///     // do argument conversions, invoke the callable, and convert the result.
 /// }
@@ -980,13 +980,16 @@ fn generate_dyn_callable_rust_thunk_impl(
         .collect::<Option<Vec<TokenStream>>>()?;
 
     let unwrapper = match dyn_callable.fn_kind {
-        FnKind::Fn => quote! { unwrap_ref },
-        FnKind::FnMut => quote! { unwrap_mut },
-        FnKind::FnOnce => quote! { unwrap_take },
+        FnKind::Fn => quote! { &*f },
+        FnKind::FnMut => quote! { &mut *f },
+        FnKind::FnOnce => quote! {
+            // SAFETY: For FnOnce, DynCallable ensures that the invoker (where this read occurs) is
+            // replaced after the first call, ensuring that this happens at most once.
+            ::core::ptr::read(f)
+        },
     };
     let mut invoke_rust_and_return_to_ffi = quote! {
-        (unsafe { (&mut *zeroable_callable).#unwrapper() })
-            (#(#param_idents),*)
+        (unsafe { #unwrapper })(#(#param_idents),*)
     };
 
     let return_type_fragment;
@@ -1045,7 +1048,7 @@ fn generate_dyn_callable_rust_thunk_impl(
     Some(quote! {
         #[unsafe(no_mangle)]
         unsafe extern "C" fn #thunk_ident(
-            zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<#dyn_fn_spelling>,
+            f: *mut ::alloc::boxed::Box<#dyn_fn_spelling>,
             #(
                 #param_idents: #param_types_tokens,
             )*
