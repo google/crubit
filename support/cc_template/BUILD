@@ -24,6 +24,7 @@ rust_library(
     name = "cc_template_impl",
     srcs = ["cc_template_impl.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2021",
     deps = [
         "@crate_index//:anyhow",  # v1
         "@crate_index//:proc-macro2",
