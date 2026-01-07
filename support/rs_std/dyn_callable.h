@@ -35,9 +35,6 @@ struct UnmanagedZeroableCallable {
     repr[1] = 0;
   }
 
-  // Check whether or not the DynCallable is in the empty state.
-  bool HasValue() const { return repr[0] != 0 && repr[1] != 0; }
-
   uintptr_t repr[2] = {0, 0};
 };
 
@@ -118,7 +115,7 @@ class Impl {};
 
 // Raises a fatal error when the DynCallable is invoked after a move.
 template <class ReturnType, class... P>
-inline ReturnType DefaultInvoker(UnmanagedZeroableCallable*, P...) {
+inline ReturnType InvokedAfterMove(UnmanagedZeroableCallable*, P...) {
   std::terminate();
 }
 
@@ -149,9 +146,9 @@ inline ReturnType DefaultInvoker(UnmanagedZeroableCallable*, P...) {
     ReturnType operator()(P... args) qual {                                   \
       using Self = std::remove_pointer_t<decltype(this)>;                     \
                                                                               \
-      InvokerType* absl_nonnull invoker_copy = invoker_;                      \
+      InvokerType* invoker_copy = invoker_;                                   \
       if constexpr (std::is_rvalue_reference_v<Self>) {                       \
-        invoker_ = DefaultInvoker<ReturnType, P...>;                          \
+        invoker_ = InvokedAfterMove<ReturnType, P...>;                        \
       }                                                                       \
       if constexpr (std::is_const_v<Self>) {                                  \
         return invoker_copy(const_cast<Impl*>(this), args...);                \
@@ -160,8 +157,10 @@ inline ReturnType DefaultInvoker(UnmanagedZeroableCallable*, P...) {
       }                                                                       \
     }                                                                         \
                                                                               \
-   private:                                                                   \
-    InvokerType* absl_nonnull invoker_ = DefaultInvoker<ReturnType, P...>;    \
+    bool HasValue() const { return invoker_ != nullptr; }                     \
+                                                                              \
+   protected:                                                                 \
+    InvokerType* invoker_ = nullptr;                                          \
   };
 
 CRUBIT_INTERNAL_RUST_ANY_CALLABLE_IMPL(const)
