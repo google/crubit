@@ -543,8 +543,17 @@ impl DynCallable {
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
         let fn_kind = self.fn_kind;
         quote! {
-            dyn #fn_kind(#(#param_type_tokens),*) #rust_return_type_fragment
+            dyn #fn_kind(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send + ::core::marker::Sync + 'static
         }
+    }
+
+    /// Returns true if the function type signature is C ABI compatible.
+    ///
+    /// A function signature is C ABI compatible if and only if all of its parameters and the
+    /// return type are C ABI compatible by value.
+    pub fn is_c_abi_compatible(&self) -> bool {
+        self.param_types.iter().all(|param_type| param_type.is_c_abi_compatible_by_value())
+            && self.return_type.is_c_abi_compatible_by_value()
     }
 }
 

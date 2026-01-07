@@ -85,6 +85,12 @@ pub enum CrubitAbiType {
         /// cpp foo::Message
         cpp_proto_path: FullyQualifiedPath,
     },
+    DynCallable {
+        rust_type_tokens: TokenStream,
+        rust_expr_tokens: TokenStream,
+        cpp_type_tokens: TokenStream,
+        cpp_expr_tokens: TokenStream,
+    },
     Type {
         rust_abi_path: FullyQualifiedPath,
         cpp_abi_path: FullyQualifiedPath,
@@ -190,6 +196,9 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
             CrubitAbiType::ProtoMessage { proto_message_rust_bridge, rust_proto_path, .. } => {
                 quote! { #proto_message_rust_bridge<#rust_proto_path> }.to_tokens(tokens);
             }
+            CrubitAbiType::DynCallable { rust_type_tokens, .. } => {
+                rust_type_tokens.to_tokens(tokens);
+            }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
                 rust_abi_path.to_tokens(tokens);
                 if !type_args.is_empty() {
@@ -259,6 +268,9 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                 quote! { #proto_message_rust_bridge(::core::marker::PhantomData) }
                     .to_tokens(tokens);
             }
+            CrubitAbiType::DynCallable { rust_expr_tokens, .. } => {
+                rust_expr_tokens.to_tokens(tokens);
+            }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
                 rust_abi_path.to_tokens(tokens);
                 if !type_args.is_empty() {
@@ -323,6 +335,9 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
             }
             CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
                 quote! { ::crubit::BoxedAbi<#cpp_proto_path> }.to_tokens(tokens);
+            }
+            CrubitAbiType::DynCallable { cpp_type_tokens, .. } => {
+                cpp_type_tokens.to_tokens(tokens);
             }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
                 cpp_abi_path.to_tokens(tokens);
@@ -392,6 +407,9 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
             }
             CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
                 quote! { ::crubit::BoxedAbi<#cpp_proto_path>() }.to_tokens(tokens);
+            }
+            CrubitAbiType::DynCallable { cpp_expr_tokens, .. } => {
+                cpp_expr_tokens.to_tokens(tokens);
             }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
                 if type_args.is_empty() {
