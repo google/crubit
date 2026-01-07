@@ -422,7 +422,7 @@ fn public_paths_by_def_id(
             // SIMD primitives often have name collisions with SIMD primitives in C++. The C++
             // primitives are macros, so namespacing does not prevent collision. We expect people
             // will not need bindings to these primitives, so we exclude them to prevent the
-            // collission.
+            // collision.
             if ["simd_arch", "simd_x86"].contains(&stability.feature.as_str()) {
                 return;
             }

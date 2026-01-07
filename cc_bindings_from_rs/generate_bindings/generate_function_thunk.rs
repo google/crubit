@@ -131,7 +131,7 @@ pub fn generate_thunk_decl<'tcx>(
     };
 
     // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
-    // TODO: The order of this check must align with the order in `cc_return_value_from_c_abi`.
+    // TODO: b/ 459482188 - The order of this check must align with the order in `cc_return_value_from_c_abi`.
     // We should centralize this logic so that the order exists in a singular location used by both
     // places.
     let thunk_ret_type = if let Some(briging) = is_bridged_type(db, sig_mid.output())? {

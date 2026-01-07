@@ -187,7 +187,7 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     }
 
     for library_path in &cmdline.library_dirs {
-        at_args.push(format!("-L={}", library_path));
+        at_args.push(format!("-L{}", library_path));
     }
 
     let Some(matches) = rustc_driver::handle_options(&early_dcx, &at_args) else {
@@ -231,13 +231,11 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     };
 
     let input = config::Input::Str {
-        name: rustc_span::FileName::Custom("main.rs".into()),
+        name: rustc_span::FileName::Custom("lib.rs".into()),
         // This tells rustc to load our crate from it's rmeta.
         input: format!(
             r#"
 extern crate r#{};
-
-fn main() {{ }}
 "#,
             crate_name
         )
