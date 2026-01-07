@@ -489,23 +489,29 @@ bool MayOverloadOperatorDelete(clang::CXXRecordDecl& record_decl) {
   return OverloadsOperatorDelete(record_decl);
 }
 
-// Similar to `DeclContext::isStdNamespace`, but for any top-level namespace.
-bool IsTopLevelNamespace(std::string_view top_level_namespace,
-                         const clang::DeclContext* context) {
-  if (!context->isNamespace()) return false;
+// Returns the name of this DeclContext if it is a top-level namespace,
+// otherwise std::nullopt.
+std::optional<llvm::StringRef> AsTopLevelNamespace(
+    const clang::DeclContext* context) {
+  if (!context->isNamespace()) {
+    return std::nullopt;
+  }
 
   const auto* namespace_decl = clang::cast<clang::NamespaceDecl>(context);
   if (namespace_decl->isInline()) {
-    return IsTopLevelNamespace(top_level_namespace,
-                               namespace_decl->getParent());
+    return AsTopLevelNamespace(namespace_decl->getParent());
   }
 
-  if (!context->getParent()->getRedeclContext()->isTranslationUnit())
-    return false;
+  if (!context->getParent()->getRedeclContext()->isTranslationUnit()) {
+    return std::nullopt;
+  }
 
   const clang::IdentifierInfo* identifier_info =
       namespace_decl->getIdentifier();
-  return identifier_info && identifier_info->isStr(top_level_namespace);
+  if (!identifier_info) {
+    return std::nullopt;
+  }
+  return identifier_info->getName();
 }
 
 // Checks that a ClassTemplateSpecializationDecl has template arguments of the
@@ -578,7 +584,9 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
   const clang::CXXRecordDecl* templated_decl =
       specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
 
-  if (templated_decl->getDeclContext()->isStdNamespace()) {
+  std::optional<llvm::StringRef> top_level_namespace =
+      AsTopLevelNamespace(templated_decl->getDeclContext());
+  if (top_level_namespace == "std") {
     if (templated_decl->getName() == "basic_string_view") {
       CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
                               ParameterizedByTAndStdTraitT(
@@ -602,7 +610,7 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       return TemplateSpecialization::StdVector(
           TemplateArg(ictx.ConvertQualType(t, /*lifetimes=*/nullptr)));
     }
-  } else if (IsTopLevelNamespace("absl", templated_decl->getDeclContext())) {
+  } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
           << "absl::Span should have one template arg";
@@ -611,7 +619,7 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
           TemplateArg(ictx.ConvertQualType(t,
                                            /*lifetimes=*/nullptr)));
     }
-  } else if (IsTopLevelNamespace("c9", templated_decl->getDeclContext())) {
+  } else if (top_level_namespace == "c9") {
     if (templated_decl->getName() == "Co") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
           << "c9::Co should have one template arg";
@@ -885,7 +893,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
     const clang::CXXRecordDecl* templated_decl =
         specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
-    if (IsTopLevelNamespace("rs_std", templated_decl->getDeclContext())) {
+    if (AsTopLevelNamespace(templated_decl->getDeclContext()) == "rs_std") {
       if (templated_decl->getName() == "DynCallable") {
         LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
             << "rs_std::DynCallable should have one template arg";
