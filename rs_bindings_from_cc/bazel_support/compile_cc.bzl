@@ -7,6 +7,7 @@
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "escape_cpp_target_name")
 
 def compile_cc(
         ctx,
@@ -51,6 +52,13 @@ def compile_cc(
         compilation_contexts = [cc_info.compilation_context],
     )
 
+    # We need to allow "backwards" dependencies from the impl library onto Rust-generated thunk
+    # code, because this is used to implement Rust callbacks from C++.
+    # TODO(b/468327990): Make this portable in OSS.
+    backrefs_flag = []
+    if cc_toolchain.target_gnu_system_name == "x86_64-unknown-linux-gnu":
+        backrefs_flag.append("-Wl,--warn-backrefs-exclude=*/{package}/lib{target}-*".format(package = ctx.label.package, target = escape_cpp_target_name(ctx.label.package, ctx.label.name)))
+
     (linking_context, _) = cc_common.create_linking_context_from_compilation_outputs(
         name = src.basename,
         actions = ctx.actions,
@@ -58,6 +66,7 @@ def compile_cc(
         cc_toolchain = cc_toolchain,
         compilation_outputs = compilation_outputs,
         linking_contexts = [cc_info.linking_context],
+        user_link_flags = backrefs_flag,
     )
 
     debug_context = cc_common.merge_debug_context([
