@@ -6,12 +6,14 @@
 use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use cpp_type_name::format_cpp_type_with_references;
-use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
+use crubit_abi_type::{CrubitAbiType, CrubitAbiTypeToRustExprTokens, FullyQualifiedPath};
 use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
 use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
-use database::rs_snippet::{BridgeRsTypeKind, Mutability, RsTypeKind, RustPtrKind};
+use database::rs_snippet::{
+    BridgeRsTypeKind, DynCallable, FnKind, Mutability, RsTypeKind, RustPtrKind,
+};
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
 use generate_comment::generate_top_level_comment;
@@ -20,8 +22,8 @@ use generate_struct_and_union::generate_incomplete_record;
 use heck::ToSnakeCase;
 use ir::*;
 use itertools::Itertools;
-use proc_macro2::Ident;
-use quote::{quote, ToTokens};
+use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
@@ -32,6 +34,8 @@ use token_stream_printer::{
 };
 
 use dyn_format::Format;
+
+mod generate_dyn_callable;
 
 /// Deserializes IR from `json` and generates bindings source code.
 pub fn generate_bindings(
@@ -346,6 +350,43 @@ pub fn generate_bindings_tokens(
         snippets.append(db.generate_item(item.clone())?);
     }
 
+    // Since Idents are not free, we reuse them across records.
+    let mut param_idents_buffer = vec![];
+    let (dyn_callable_cpp_decls, dyn_callable_rust_impls): (Vec<TokenStream>, Vec<TokenStream>) =
+        ir.records()
+            .filter_map(|record| {
+                // Find records that are template instantiations of `rs_std::DynCallable`.
+                let Ok(Some(BridgeRsTypeKind::DynCallable(dyn_callable))) =
+                    BridgeRsTypeKind::new(record, &db)
+                else {
+                    return None;
+                };
+
+                // The parameters shall be named `param_0`, `param_1`, etc.
+                // These names can be reused across different dyn callables, so we reuse the same vec
+                // and just grow it when we need more Idents than it currently contains.
+                while dyn_callable.param_types.len() > param_idents_buffer.len() {
+                    param_idents_buffer.push(format_ident!("param_{}", param_idents_buffer.len()));
+                }
+                // Only take as many filled in names as we need.
+                let param_idents = &param_idents_buffer[..dyn_callable.param_types.len()];
+
+                // If generate_dyn_callable_cpp_thunk fails, skip. We don't need to generate a nice
+                // error because whoever uses this will also fail and generate an error at the relevant
+                // site.
+                let dyn_callable_cpp_decl =
+                    generate_dyn_callable_cpp_thunk(&db, &dyn_callable, param_idents)?;
+                let dyn_callable_rust_impl =
+                    generate_dyn_callable_rust_thunk_impl(&db, dyn_callable.clone(), param_idents)?;
+
+                Some((dyn_callable_cpp_decl, dyn_callable_rust_impl))
+            })
+            .unzip();
+
+    // Callables use `Box<dyn F>`.
+    let extern_crate_alloc = (!dyn_callable_rust_impls.is_empty())
+        .then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  });
+
     // when we go through the main_api, we want to go through one at a time.
     // if the parent is none, we're responsible.
     // each thing needs to go through all its children.
@@ -363,21 +404,40 @@ pub fn generate_bindings_tokens(
         ir.top_level_item_ids(),
     );
 
-    let cc_details =
-        CppDetails::new(generate_rs_api_impl_includes(&db, crubit_support_path_format), cc_details);
+    let cc_details = CppDetails {
+        includes: generate_rs_api_impl_includes(&db, crubit_support_path_format),
+        dyn_callable_cpp_decls,
+        thunks: cc_details,
+    };
 
-    let mod_detail = if thunks.is_empty() {
-        quote! {}
+    let thunks = if thunks.is_empty() {
+        None
     } else {
-        quote! {
+        Some(quote! {
+            unsafe extern "C" {
+                #( #thunks )*
+            }
+        })
+    };
+
+    let dyn_callable_rust_impls = if dyn_callable_rust_impls.is_empty() {
+        None
+    } else {
+        Some(quote! { #( #dyn_callable_rust_impls )* })
+    };
+
+    let mod_detail = if thunks.is_none() && dyn_callable_rust_impls.is_none() {
+        None
+    } else {
+        Some(quote! {
             mod detail {
                 #[allow(unused_imports)]
                 use super::*;
-                unsafe extern "C" {
-                    #( #thunks )*
-                }
+                #thunks
+                __NEWLINE__
+                #dyn_callable_rust_impls
             }
-        }
+        })
     };
 
     let features = if features.is_empty() {
@@ -417,6 +477,8 @@ pub fn generate_bindings_tokens(
             // (b/349776381).
             #![allow(dead_code, unused_mut)] __NEWLINE__
             #![deny(warnings)] __NEWLINE__ __NEWLINE__
+
+            #extern_crate_alloc
 
             #main_api
 
@@ -531,14 +593,21 @@ fn generate_rs_api_impl_includes(
         // Err means that this bridge type has some issues. For the purpose of generating includes,
         // we can ignore it.
         if let Ok(Some(bridge_type)) = BridgeRsTypeKind::new(record, db) {
-            internal_includes.insert(CcInclude::SupportLibHeader(
-                crubit_support_path_format.clone(),
-                if bridge_type.is_void_converters_bridge_type() {
-                    "internal/lazy_init.h".into()
-                } else {
-                    "bridge.h".into()
-                },
-            ));
+            if bridge_type.is_void_converters_bridge_type() {
+                internal_includes.insert(CcInclude::SupportLibHeader(
+                    crubit_support_path_format.clone(),
+                    "internal/lazy_init.h".into(),
+                ));
+            } else {
+                internal_includes.insert(CcInclude::SupportLibHeader(
+                    crubit_support_path_format.clone(),
+                    "bridge.h".into(),
+                ));
+                internal_includes.insert(CcInclude::SupportLibHeader(
+                    crubit_support_path_format.clone(),
+                    "internal/slot.h".into(),
+                ));
+            }
         }
 
         if let Ok(rs_type_kind) = db.rs_type_kind((&**record).into()) {
@@ -563,14 +632,21 @@ fn generate_rs_api_impl_includes(
         };
 
         if let RsTypeKind::BridgeType { bridge_type, .. } = rs_type_kind.unalias() {
-            internal_includes.insert(CcInclude::SupportLibHeader(
-                crubit_support_path_format.clone(),
-                if bridge_type.is_void_converters_bridge_type() {
-                    "internal/lazy_init.h".into()
-                } else {
-                    "bridge.h".into()
-                },
-            ));
+            if bridge_type.is_void_converters_bridge_type() {
+                internal_includes.insert(CcInclude::SupportLibHeader(
+                    crubit_support_path_format.clone(),
+                    "internal/lazy_init.h".into(),
+                ));
+            } else {
+                internal_includes.insert(CcInclude::SupportLibHeader(
+                    crubit_support_path_format.clone(),
+                    "bridge.h".into(),
+                ));
+                internal_includes.insert(CcInclude::SupportLibHeader(
+                    crubit_support_path_format.clone(),
+                    "internal/slot.h".into(),
+                ));
+            }
         }
     }
 
@@ -742,7 +818,9 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
-            BridgeRsTypeKind::DynCallable(_) => bail!("DynCallable is not supported yet"),
+            BridgeRsTypeKind::DynCallable(dyn_callable) => {
+                generate_dyn_callable::dyn_callable_crubit_abi_type(db, &dyn_callable)
+            }
         },
         RsTypeKind::Record { record, crate_path, .. } => {
             ensure!(
@@ -780,6 +858,203 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
         }
         _ => bail!("Unsupported RsTypeKind: {}", rs_type_kind.display(db)),
     }
+}
+
+/// Generates a unique C++ declaration of an extern "C" function.
+///
+/// `None` is returned if there is issue generating the thunk. The specific error is not reported
+/// because it will be reported elsewhere.
+fn generate_dyn_callable_cpp_thunk(
+    db: &dyn BindingsGenerator,
+    dyn_callable: &DynCallable,
+    param_idents: &[Ident],
+) -> Option<TokenStream> {
+    assert!(
+        param_idents.len() == dyn_callable.param_types.len(),
+        "param_idents and param_types should have the same length, this is a Crubit bug."
+    );
+    let param_types = dyn_callable
+        .param_types
+        .iter()
+        .map(|param_type| -> Option<TokenStream> {
+            if param_type.is_c_abi_compatible_by_value() {
+                cpp_type_name::format_cpp_type(param_type, db.ir()).ok()
+            } else if param_type.is_crubit_abi_bridge_type() {
+                Some(quote! { unsigned char* })
+            } else {
+                // For the layout compatible types, we take a pointer and then ptr::read the
+                // contents into Rust.
+                let param_type_tokens = cpp_type_name::format_cpp_type(param_type, db.ir()).ok()?;
+                Some(quote! { #param_type_tokens* })
+            }
+        })
+        .collect::<Option<Vec<TokenStream>>>()?;
+
+    let out_param_ident;
+    let out_param_type;
+    let decl_return_type_tokens;
+    if dyn_callable.return_type.is_void() {
+        out_param_ident = None;
+        out_param_type = None;
+        decl_return_type_tokens = quote! { void };
+    } else if dyn_callable.return_type.is_c_abi_compatible_by_value() {
+        out_param_ident = None;
+        out_param_type = None;
+        decl_return_type_tokens =
+            cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
+    } else if dyn_callable.return_type.is_crubit_abi_bridge_type() {
+        out_param_ident = Some(format_ident!("out"));
+        out_param_type = Some(quote! { unsigned char* });
+        decl_return_type_tokens = quote! { void };
+    } else {
+        let return_type_tokens =
+            cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
+        out_param_ident = Some(format_ident!("out"));
+        out_param_type = Some(quote! { #return_type_tokens* });
+        decl_return_type_tokens = quote! { void };
+    };
+
+    let param_idents = param_idents.iter().chain(out_param_ident.as_ref());
+    let param_types = param_types.iter().chain(out_param_type.as_ref());
+    let thunk_ident = &dyn_callable.thunk_ident;
+
+    Some(quote! {
+        extern "C" #decl_return_type_tokens #thunk_ident(
+            ::rs_std::internal_dyn_callable::UnmanagedZeroableCallable* state
+            #(
+                , #param_types #param_idents
+            )*
+        );
+    })
+}
+
+/// Generates a unique Rust definition of an extern "C" function.
+///
+/// This roughly has the form:
+/// ```rust
+/// #[unsafe(no_mangle)]
+/// unsafe extern "C" fn some_mangled_name(
+///     zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<dyn Fn()>,
+/// ) {
+///     // do argument conversions, invoke the callable, and convert the result.
+/// }
+/// ```
+///
+/// This definition is responsible for actually calling the `dyn Fn()` object, and is exposed to C++
+/// by the thunk generated by `generate_dyn_callable_cpp_thunk`.
+///
+/// `None` is returned if there is issue generating the definition. The specific error is not
+/// reported because it will be reported elsewhere.
+fn generate_dyn_callable_rust_thunk_impl(
+    db: &dyn BindingsGenerator,
+    dyn_callable: Rc<DynCallable>,
+    param_idents: &[Ident],
+) -> Option<TokenStream> {
+    assert!(
+        param_idents.len() == dyn_callable.param_types.len(),
+        "param_idents and param_types should have the same length, this is a Crubit bug."
+    );
+    let mut ffi_to_rust_transforms = quote! {};
+
+    let param_types_tokens = param_idents
+        .iter()
+        .zip(dyn_callable.param_types.iter())
+        .map(|(ident, ty)| -> Option<TokenStream> {
+            if ty.is_crubit_abi_bridge_type() {
+                let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                ffi_to_rust_transforms.extend(quote! {
+                    let #ident = ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident);
+                });
+                Some(quote! { *mut ::core::ffi::c_uchar })
+            } else if ty.is_c_abi_compatible_by_value() {
+                Some(ty.to_token_stream(db))
+            } else {
+                ffi_to_rust_transforms.extend(quote! {
+                    let #ident = ::core::ptr::read(#ident);
+                });
+                let ty_tokens = ty.to_token_stream(db);
+                Some(quote! { *mut #ty_tokens })
+            }
+        })
+        .collect::<Option<Vec<TokenStream>>>()?;
+
+    let unwrapper = match dyn_callable.fn_kind {
+        FnKind::Fn => quote! { unwrap_ref },
+        FnKind::FnMut => quote! { unwrap_mut },
+        FnKind::FnOnce => quote! { unwrap_take },
+    };
+    let mut invoke_rust_and_return_to_ffi = quote! {
+        (unsafe { (&mut *zeroable_callable).#unwrapper() })
+            (#(#param_idents),*)
+    };
+
+    let return_type_fragment;
+    let out_param_ident;
+    let out_param_type;
+    if dyn_callable.return_type.is_void() {
+        // Put a semicolon at the end to clarify that we do not return anything.
+        invoke_rust_and_return_to_ffi = quote! {
+            #invoke_rust_and_return_to_ffi;
+        };
+
+        return_type_fragment = None;
+        out_param_ident = None;
+        out_param_type = None;
+    } else if dyn_callable.return_type.is_c_abi_compatible_by_value() {
+        let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
+        return_type_fragment = Some(quote! { -> #ffi_return_type });
+        out_param_ident = None;
+        out_param_type = None;
+    } else if dyn_callable.return_type.is_crubit_abi_bridge_type() {
+        let crubit_abi_type = db.crubit_abi_type(dyn_callable.return_type.as_ref().clone()).ok()?;
+        let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+        let bridge_buffer_ident = format_ident!("bridge_buffer");
+        invoke_rust_and_return_to_ffi = quote! {
+            ::bridge_rust::internal::encode(
+                #crubit_abi_type_expr_tokens,
+                #bridge_buffer_ident,
+                #invoke_rust_and_return_to_ffi
+            );
+        };
+
+        return_type_fragment = None;
+        out_param_ident = Some(bridge_buffer_ident);
+        out_param_type = Some(quote! { *mut ::core::ffi::c_uchar });
+    } else {
+        let out_ident = format_ident!("out");
+        invoke_rust_and_return_to_ffi = quote! {
+            match #invoke_rust_and_return_to_ffi {
+                result => unsafe {
+                    ::core::ptr::write(#out_ident, result);
+                }
+            }
+        };
+
+        let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
+        return_type_fragment = None;
+        out_param_ident = Some(out_ident);
+        out_param_type = Some(quote! { *mut #ffi_return_type });
+    }
+
+    let param_idents = param_idents.iter().chain(out_param_ident.as_ref());
+    let param_types_tokens = param_types_tokens.iter().chain(out_param_type.as_ref());
+    let dyn_fn_spelling = dyn_callable.dyn_fn_spelling(db);
+    let thunk_ident = &dyn_callable.thunk_ident;
+
+    Some(quote! {
+        #[unsafe(no_mangle)]
+        unsafe extern "C" fn #thunk_ident(
+            zeroable_callable: *mut ::dyn_callable_rs::ZeroableCallable<#dyn_fn_spelling>,
+            #(
+                #param_idents: #param_types_tokens,
+            )*
+        ) #return_type_fragment {
+            #ffi_to_rust_transforms
+
+            #invoke_rust_and_return_to_ffi
+        }
+    })
 }
 
 /// Parses the given Rust path into a [`FullyQualifiedPath`].
