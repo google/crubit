@@ -480,6 +480,9 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 /// }
 /// ```
 ///
+/// And it provides a `project_pin()` method which returns a struct containing pinned
+/// references to each field, see below.
+///
 /// ## Arguments
 ///
 /// ### `PinnedDrop`
@@ -537,6 +540,31 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 /// `#[non_exhaustive]`, and structs with named fields use a private field named
 /// `__must_use_ctor_to_initialize`. This can lead to confusing error messages,
 /// so watch out!
+///
+/// ## Pin-projection
+///
+/// `#[recursively_pinned]` adds a `project_pin` method to the type, shaped like this:
+///
+/// ```
+/// pub fn project_pin(self: Pin<&mut Self>) -> <Projected>;
+/// ```
+///
+/// `project_pin` accepts a `Pin<&mut Self>`, and returns a struct containing pinned mutable
+/// references to each field. For example, given:
+///
+/// ```
+/// #[recursively_pinned]
+/// struct Point {
+///   x: i32,
+///   y: i32,
+/// }
+/// ```
+///
+/// One can mutate the `x` field of a `Pin<&mut Point>` as follows:
+///
+/// ```
+/// p.as_mut().project_pin().x.set(42);
+/// ```
 ///
 /// ## Supported types
 ///
