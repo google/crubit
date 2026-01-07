@@ -204,18 +204,20 @@ std::array<std::array<::arrays::HasDropAndDefault, 2>, 2>
 function_with_nested_drop_default_arrays(
     std::array<std::array<::arrays::HasDropAndDefault, 2>, 2> array);
 
-// Error generating bindings for `function_with_nested_droponly_arrays` defined
-// at cc_bindings_from_rs/test/arrays/arrays.rs;l=98:
-// b/260128806 - nested array [HasDrop; 2] is not supported because it contains
-// a type that implements Drop but not Default
+// Error generating bindings for
+// `arrays_golden::function_with_nested_droponly_arrays` defined at
+// cc_bindings_from_rs/test/arrays/arrays.rs;l=98:
+// b/260128806 - nested array [arrays_golden::HasDrop; 2] is not supported
+// because it contains a type that implements Drop but not Default
 
-// Error generating bindings for `function_with_nested_nested_droponly_arrays`
-// defined at
+// Error generating bindings for
+// `arrays_golden::function_with_nested_nested_droponly_arrays` defined at
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=104:
-// b/260128806 - nested array [[HasDrop; 2]; 2] is not supported because it
-// contains a type that implements Drop but not Default
+// b/260128806 - nested array [[arrays_golden::HasDrop; 2]; 2] is not supported
+// because it contains a type that implements Drop but not Default
 
-// Error generating bindings for `function_with_tuple_array_id` defined at
+// Error generating bindings for `arrays_golden::function_with_tuple_array_id`
+// defined at
 // cc_bindings_from_rs/test/arrays/arrays.rs;l=27:
 // Tuple types cannot be used inside of compound data types, because std::tuple
 // is not layout-compatible with a Rust tuple.

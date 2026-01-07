@@ -4,8 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // traits_golden
-// Features: custom_ffi_types, experimental, non_unpin_ctor, std_unique_ptr,
-// std_vector, supported, wrapper
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector,
+// supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_TRAITS_GOLDEN
@@ -68,7 +68,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `GenericTrait` defined at
+// Error generating bindings for `traits_golden::GenericTrait` defined at
 // cc_bindings_from_rs/test/traits/traits.rs;l=39:
 // Trait is not yet supported
 
