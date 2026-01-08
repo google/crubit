@@ -93,18 +93,21 @@ fn test_recursively_pinned_unit_struct() {
     struct S;
     let _ = Box::pin(S).as_mut().project_pin();
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
+    let _ = Box::pin(S).as_ref().project_ref();
+    assert_eq!(::std::mem::size_of::<::ctor::project_ref_type!(S)>(), 0);
 }
 
 #[gtest]
 fn test_recursively_pinned_fieldless_struct() {
     #[::ctor::recursively_pinned]
     struct S {}
-    let _ = Box::pin(S {
+    let mut b = Box::pin(S {
         __must_use_ctor_to_initialize: [],  // for tests only!
-    })
-    .as_mut()
-    .project_pin();
+    });
+    let _ = b.as_mut().project_pin();
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
+    let _ = b.as_ref().project_ref();
+    assert_eq!(::std::mem::size_of::<::ctor::project_ref_type!(S)>(), 0);
 }
 
 #[gtest]
@@ -113,6 +116,8 @@ fn test_recursively_pinned_fieldless_tuple_struct() {
     struct S();
     let _ = Box::pin(S()).as_mut().project_pin();
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
+    let _ = Box::pin(S()).as_ref().project_ref();
+    assert_eq!(::std::mem::size_of::<::ctor::project_ref_type!(S)>(), 0);
 }
 
 #[gtest]
@@ -123,6 +128,8 @@ fn test_recursively_pinned_fieldless_enum() {
     }
     let <::ctor::project_pin_type!(E)>::A = Box::pin(E::A).as_mut().project_pin();
     assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(E)>(), 0);
+    let <::ctor::project_ref_type!(E)>::A = Box::pin(E::A).as_ref().project_ref();
+    assert_eq!(::std::mem::size_of::<::ctor::project_ref_type!(E)>(), 0);
 }
 
 #[gtest]
@@ -132,6 +139,7 @@ fn test_recursively_pinned_in_module() {
         pub struct S;
     }
     let _: ::ctor::project_pin_type!(submodule::S) = Box::pin(submodule::S).as_mut().project_pin();
+    let _: ::ctor::project_ref_type!(submodule::S) = Box::pin(submodule::S).as_ref().project_ref();
 }
 
 #[gtest]
@@ -140,13 +148,13 @@ fn test_recursively_pinned_struct() {
     struct S {
         x: i32,
     }
-    let _: ::std::pin::Pin<&mut i32> = Box::pin(S {
+    let mut b = Box::pin(S {
         x: 42,
         __must_use_ctor_to_initialize: [], // for tests only!
-    })
-    .as_mut()
-    .project_pin()
-    .x;
+    });
+    let _: ::std::pin::Pin<&mut i32> = b.as_mut().project_pin().x;
+
+    let _: ::std::pin::Pin<&i32> = b.as_ref().project_ref().x;
 }
 
 #[gtest]
@@ -154,6 +162,7 @@ fn test_recursively_pinned_tuple_struct() {
     #[::ctor::recursively_pinned]
     struct S(i32);
     let _: ::std::pin::Pin<&mut i32> = Box::pin(S(42)).as_mut().project_pin().0;
+    let _: ::std::pin::Pin<&i32> = Box::pin(S(42)).as_ref().project_ref().0;
 }
 
 // TODO(b/331688163): remove this workaround.
@@ -165,9 +174,15 @@ fn test_recursively_pinned_enum_struct() {
     enum E {
         A { x: i32 },
     }
-    match Box::pin(E::A { x: 42 }).as_mut().project_pin() {
+    let mut b = Box::pin(E::A { x: 42 });
+    match b.as_mut().project_pin() {
         Identity::<::ctor::project_pin_type!(E)>::A { x } => {
             let _: ::std::pin::Pin<&mut i32> = x;
+        }
+    }
+    match b.as_ref().project_ref() {
+        Identity::<::ctor::project_ref_type!(E)>::A { x } => {
+            let _: ::std::pin::Pin<&i32> = x;
         }
     }
 }
@@ -178,9 +193,15 @@ fn test_recursively_pinned_enum_tuple() {
     enum E {
         A(i32),
     }
-    match Box::pin(E::A(42)).as_mut().project_pin() {
+    let mut b = Box::pin(E::A(42));
+    match b.as_mut().project_pin() {
         Identity::<::ctor::project_pin_type!(E)>::A(x) => {
             let _: ::std::pin::Pin<&mut i32> = x;
+        }
+    }
+    match b.as_ref().project_ref() {
+        Identity::<::ctor::project_ref_type!(E)>::A(x) => {
+            let _: ::std::pin::Pin<&i32> = x;
         }
     }
 }
@@ -197,14 +218,13 @@ fn test_recursively_pinned_generic() {
         /// the works.
         _phantom: ::std::marker::PhantomData<&'proj &'proj_2 &'proj_4 T>,
     }
-    let _: ::std::pin::Pin<&mut i32> = Box::pin(S::<i32> {
+    let mut b = Box::pin(S::<i32> {
         x: 42,
         _phantom: ::std::marker::PhantomData,
         __must_use_ctor_to_initialize: [], // for tests only!
-    })
-    .as_mut()
-    .project_pin()
-    .x;
+    });
+    let _: ::std::pin::Pin<&mut i32> = b.as_mut().project_pin().x;
+    let _: ::std::pin::Pin<&i32> = b.as_ref().project_ref().x;
 }
 
 #[gtest]

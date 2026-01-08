@@ -153,7 +153,7 @@ use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 
 pub use ctor_proc_macros::{
-    project_pin_type, recursively_pinned, CtorFrom_Default, MoveAndAssignViaCopy,
+    project_pin_type, project_ref_type, recursively_pinned, CtorFrom_Default, MoveAndAssignViaCopy,
 };
 
 /// The error type for an infallible `Ctor`.

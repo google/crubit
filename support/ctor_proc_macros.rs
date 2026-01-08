@@ -189,6 +189,28 @@ fn derive_move_and_assign_via_copy_impl(
 /// would have used, but is essentially useless.
 #[proc_macro]
 pub fn project_pin_type(name: TokenStream) -> TokenStream {
+    project_type_impl(name, project_pin_ident)
+}
+
+fn project_pin_ident(ident: &Ident) -> Ident {
+    Ident::new(&format!("__CrubitProjectPin{}", ident), Span::call_site())
+}
+
+/// `project_ref_type!(foo::T)` is the name of the type returned by
+/// `foo::T::project_ref()`.
+///
+/// If `foo::T` is not `#[recursively_pinned]`, then this returns the name it
+/// would have used, but is essentially useless.
+#[proc_macro]
+pub fn project_ref_type(name: TokenStream) -> TokenStream {
+    project_type_impl(name, project_ref_ident)
+}
+
+fn project_ref_ident(ident: &Ident) -> Ident {
+    Ident::new(&format!("__CrubitProjectRef{}", ident), Span::call_site())
+}
+
+fn project_type_impl(name: TokenStream, project_ident: fn(&Ident) -> Ident) -> TokenStream {
     let mut name = syn::parse_macro_input!(name as syn::Path);
     match name.segments.last_mut() {
         None => {
@@ -205,21 +227,30 @@ pub fn project_pin_type(name: TokenStream) -> TokenStream {
                 .into_compile_error()
                 .into();
             }
-            last.ident = project_pin_ident(&last.ident);
+            last.ident = project_ident(&last.ident);
         }
     }
     TokenStream::from(quote! { #name })
 }
 
-fn project_pin_ident(ident: &Ident) -> Ident {
-    Ident::new(&format!("__CrubitProjectPin{}", ident), Span::call_site())
-}
-
-/// Defines the `project_pin` function, and its return value.
+/// Defines the `project_pin`/`project_ref` function, and its return type.
 ///
 /// If the input is a union, this returns nothing, and pin-projection is not
 /// implemented.
-fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+///
+/// Args:
+///   * input: the input type to project.
+///   * method_name: the name of the method to define (`project_pin` or
+///     `project_ref`).
+///   * mut_: Mutability qualifier: `mut` for `project_pin`, empty for `project_ref`.
+///   * project_ident: a function that takes an identifier for the type and returns the
+///     identifier to use for the projection type.
+fn project_method_impl(
+    input: &syn::DeriveInput,
+    method_name: proc_macro2::TokenStream,
+    mut_: proc_macro2::TokenStream,
+    project_ident: fn(&Ident) -> Ident,
+) -> syn::Result<proc_macro2::TokenStream> {
     let is_fieldless = match &input.data {
         syn::Data::Struct(data) => data.fields.is_empty(),
         syn::Data::Enum(e) => e.variants.iter().all(|variant| variant.fields.is_empty()),
@@ -231,7 +262,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
     let mut projected = input.clone();
     // TODO(jeanpierreda): check attributes for repr(packed)
     projected.attrs.clear();
-    projected.ident = project_pin_ident(&projected.ident);
+    projected.ident = project_ident(&projected.ident);
 
     let lifetime = if is_fieldless {
         quote! {}
@@ -242,7 +273,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
     let project_field = |field: &mut syn::Field| {
         field.attrs.clear();
         let field_ty = &field.ty;
-        let pin_ty = syn::parse_quote!(::core::pin::Pin<& #lifetime mut #field_ty>);
+        let pin_ty = syn::parse_quote!(::core::pin::Pin<& #lifetime #mut_ #field_ty>);
         field.ty = syn::Type::Path(pin_ty);
     };
     // returns the braced parts of a projection pattern and return value.
@@ -304,7 +335,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
             };
         }
         syn::Data::Union(_) => {
-            unreachable!("project_pin_impl should early return when it finds a union")
+            unreachable!("project_method_impl should early return when it finds a union")
         }
     }
 
@@ -317,7 +348,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
 
         impl #input_impl_generics #input_ident #input_ty_generics #input_where_clause {
             #[must_use]
-            pub fn project_pin<#lifetime>(self: ::core::pin::Pin<& #lifetime mut Self>) -> #projected_ident #projected_generics {
+            pub fn #method_name<#lifetime>(self: ::core::pin::Pin<& #lifetime #mut_ Self>) -> #projected_ident #projected_generics {
                 unsafe {
                     let from = ::core::pin::Pin::into_inner_unchecked(self);
                     #project_body
@@ -480,8 +511,8 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 /// }
 /// ```
 ///
-/// And it provides a `project_pin()` method which returns a struct containing pinned
-/// references to each field, see below.
+/// `#[recursively_pinned]` also provides `project_pin()` and `project_ref()` methods
+/// which return a struct containing pinned references to each field, see below.
 ///
 /// ## Arguments
 ///
@@ -543,14 +574,19 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 ///
 /// ## Pin-projection
 ///
-/// `#[recursively_pinned]` adds a `project_pin` method to the type, shaped like this:
+/// `#[recursively_pinned]` adds `project_pin` and `project_ref` methods to the
+/// type, shaped like this:
 ///
 /// ```
 /// pub fn project_pin(self: Pin<&mut Self>) -> <Projected>;
+/// pub fn project_ref(self: Pin<&Self>) -> <Projected>;
 /// ```
 ///
-/// `project_pin` accepts a `Pin<&mut Self>`, and returns a struct containing pinned mutable
-/// references to each field. For example, given:
+/// `project_pin()` is a method on `Pin<&mut Self>`, and returns a type
+/// containing pinned mutable references to each field. Similarly,
+/// `project_ref()` projects to a type with pinned shared reference fields.
+///
+/// For example, given:
 ///
 /// ```
 /// #[recursively_pinned]
@@ -569,7 +605,7 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 /// ## Supported types
 ///
 /// Structs, enums, and unions are all supported. However, unions do not receive
-/// a `pin_project` method, as there is no way to implement pin projection for
+/// a `project_{pin,ref}` methods, as there is no way to implement pin projection for
 /// unions. (One cannot know which field is active.)
 #[proc_macro_attribute]
 pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -590,7 +626,10 @@ fn recursively_pinned_impl(
     let ctor = args.renamed_crate.unwrap_or(Ident::new("ctor", Span::call_site()));
     let mut input = syn::parse2::<syn::DeriveInput>(item)?;
 
-    let project_pin_impl = project_pin_impl(&input)?;
+    let project_pin_impl =
+        project_method_impl(&input, quote! {project_pin}, quote! {mut}, project_pin_ident)?;
+    let project_ref_impl =
+        project_method_impl(&input, quote! {project_ref}, quote! {}, project_ref_ident)?;
     let name = input.ident.clone();
 
     // Create two copies of input: one (public) has a private field that can't be
@@ -633,6 +672,7 @@ fn recursively_pinned_impl(
     Ok(quote! {
         #input
         #project_pin_impl
+        #project_ref_impl
 
         #drop_impl
         impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
