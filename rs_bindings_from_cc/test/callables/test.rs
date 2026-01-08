@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use calls_back_to_rust::{
-    invoke, invoke_const, invoke_once, map_abi_compatible, map_int, map_layout_compatible,
-    map_optional_int, ABICompatible, LayoutCompatible,
+    bridge_to_and_from_cpp, invoke, invoke_const, invoke_once, map_abi_compatible, map_int,
+    map_layout_compatible, map_optional_int, ABICompatible, LayoutCompatible,
 };
 use googletest::{expect_eq, gtest};
 use std::sync::{Arc, Mutex};
@@ -81,4 +81,23 @@ fn test_map_layout_compatible() {
         LayoutCompatible::Create(10),
     );
     expect_eq!(LayoutCompatible::get(&result), 20);
+}
+
+#[gtest]
+fn test_bridge_to_and_from_cpp() {
+    let state = Arc::new(Mutex::new(0));
+    let f = {
+        let state = Arc::clone(&state);
+        bridge_to_and_from_cpp(Box::new(move || {
+            *state.lock().unwrap() = 42;
+        }))
+    };
+
+    expect_eq!(*state.lock().unwrap(), 0);
+    expect_eq!(Arc::strong_count(&state), 2, "The function hasn't been invoked yet");
+
+    f();
+
+    expect_eq!(*state.lock().unwrap(), 42);
+    expect_eq!(Arc::strong_count(&state), 1, "The function has been invoked");
 }

@@ -34,3 +34,8 @@ LayoutCompatible map_layout_compatible(
     LayoutCompatible arg) {
   return f(arg);
 }
+
+rs_std::DynCallable<void() &&> bridge_to_and_from_cpp(
+    rs_std::DynCallable<void() &&> f) {
+  return f;
+}

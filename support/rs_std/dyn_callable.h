@@ -182,11 +182,13 @@ struct DynCallableAbi {
   void Encode(Value value, crubit::Encoder& encoder) && {
     // Encode whether true if the value is present, false if it's in the
     // moved-from state.
-    crubit::TransmuteAbi<bool>().Encode(value, encoder);
+    crubit::TransmuteAbi<bool>().Encode(static_cast<bool>(value), encoder);
     if (value) {
       // If present, encode the state.
-      crubit::TransmuteAbi<TypeErasedState>().Encode(value.state, encoder);
+      crubit::TransmuteAbi<TypeErasedState>().Encode(value, encoder);
     }
+    // Remove the manager since the value is moved-from.
+    value.manager_ = [](FunctionToCall, TypeErasedState*, TypeErasedState*) {};
   }
 
   Value Decode(crubit::Decoder& decoder) && {
