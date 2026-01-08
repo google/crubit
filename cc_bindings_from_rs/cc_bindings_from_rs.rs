@@ -236,6 +236,8 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         input: format!(
             r#"
 extern crate r#{};
+
+fn main() {{}}
 "#,
             crate_name
         )
