@@ -14,6 +14,11 @@
 #include "absl/base/nullability.h"
 #include "support/bridge.h"
 
+namespace absl {
+template <class Sig>
+class AnyInvocable;
+}
+
 namespace rs_std {
 
 template <class Sig>
@@ -275,6 +280,14 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   explicit operator bool() const noexcept { return this->HasValue(); }
 
   using Impl::operator();
+
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator absl::AnyInvocable<Sig>() && {
+    return absl::AnyInvocable<Sig>(
+        reinterpret_cast<void*>(&this->storage),
+        reinterpret_cast<void (*)()>(this->manager_),
+        reinterpret_cast<void (*)()>(this->invoker_));
+  }
 
   // Returns `true` if `f` is empty.
   friend bool operator==(const DynCallable& f, std::nullptr_t) noexcept {

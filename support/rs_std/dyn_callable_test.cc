@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "absl/functional/any_invocable.h"
 
 namespace {
 
@@ -47,6 +48,17 @@ TEST(DynCallableTest, Move) {
   rs_std::DynCallable<void()> empty;
   rs_std::DynCallable<void()> empty_copy(std::move(empty));
   EXPECT_FALSE(empty_copy);
+}
+
+TEST(DynCallableTest, CheckThatInternalDetailsAreReused) {
+  rs_std::DynCallable<void()> dyn_callable;
+  // When AnyInvocable is created from a callable using the template
+  // constructor, it is considered non-empty. However, we should witness that
+  // creating it from an empty DynCallable results in an empty AnyInvocable,
+  // because we use the special operator AnyInvocable (which reuses internal
+  // details) instead of the template constructor.
+  absl::AnyInvocable<void()> any_invocable = std::move(dyn_callable);
+  EXPECT_FALSE(any_invocable);
 }
 
 }  // namespace

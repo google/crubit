@@ -170,6 +170,7 @@ crubit_cc_test(
     srcs = ["dyn_callable_test.cc"],
     deps = [
         ":dyn_callable",
+        "@abseil-cpp//absl/functional:any_invocable",
         "@fuzztest//:fuzztest_gtest_main",
         "@googletest//:gmock",
     ],
