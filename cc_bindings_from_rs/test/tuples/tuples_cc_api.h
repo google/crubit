@@ -62,9 +62,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 //  The same as NontrivialDrop, but without a C++ move operation. This can be
-//  returned by value,
-//
-//  even inside a tuple!
+//  returned by value, even inside a tuple!
 //
 // Generated from:
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=58

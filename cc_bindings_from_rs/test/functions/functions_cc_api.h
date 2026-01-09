@@ -23,7 +23,6 @@ namespace functions {
 namespace fn_abi_tests {
 
 //  Testing `#[unsafe(export_name = ...)]` - the generated bindings need to
-//
 //  forward/proxy the call into a function with a different name.
 //
 // Generated from:
@@ -32,23 +31,14 @@ std::int32_t add_i32_via_extern_c_with_export_name(std::int32_t x,
                                                    std::int32_t y);
 
 //  Testing bindings for an `extern "C"` function (no thunk required) with a
-//
 //  mangled name. This test verifies that:
-//
 //  * `cc_bindings_from_rs` can correctly discover mangled names that
-//
 //    `rustc` produces
-//
 //  * Bazel support for `cc_bindings_from_rs` invokes it with the same
-//
 //    command line flags as the ones used when invoking `rustc` when
-//
 //    building the `functions` crate.
 //
-//
-//
 //  TODO(b/262904507): Bazel integration is currently broken and the
-//
 //  coresponding test is commented out in `functions_test.cc`.
 //
 // Generated from:
@@ -62,11 +52,8 @@ std::int32_t add_i32_via_extern_c_with_mangling(std::int32_t x, std::int32_t y);
 std::int32_t add_i32_via_rust_abi(std::int32_t x, std::int32_t y);
 
 //  Testing one of simpler function bindings:
-//
 //  - `extern "C"` means that no thunk is required
-//
 //  - `#[unsafe(no_mangle)]` means that the function is already exposed with
-//
 //    the desired, public name (and just needs to be redeclared in C++).
 //
 // Generated from:
@@ -99,7 +86,6 @@ namespace fn_must_use_tests {
 namespace fn_param_ty_tests {
 
 //  Testing a type that maps to a built-in C++ type (spelled with a
-//
 //  keyword). `float` is one such example.
 //
 // Generated from:
@@ -107,7 +93,6 @@ namespace fn_param_ty_tests {
 double add_f64(double x, double y);
 
 //  Testing a type that requires `#include`ing a standard C++ header.
-//
 //  `std::int32_t` is one such example - it requires `#include <cstdint>`.
 //
 // Generated from:
@@ -173,10 +158,7 @@ namespace unsafe_fn_tests {
 
 //  # Safety
 //
-//
-//
 //  This function has no safety requirements - it is only marked as `unsafe`
-//
 //  to facilitate minimal testing of bindings generated for such functions.
 //
 // Generated from:

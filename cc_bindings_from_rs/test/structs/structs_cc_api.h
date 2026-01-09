@@ -25,9 +25,7 @@ namespace structs {
 namespace abi_classification {
 
 // CRUBIT_ANNOTATE: must_bind=
-//
 //  Expected ABI classification: SSE.  (For indirect confirmation, see the
-//
 //  disassembly at https://godbolt.org/z/b7eeGcrGn).
 //
 // Generated from:
@@ -91,9 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
 //  Expected ABI classification: integer.  (For indirect confirmation, see
-//
 //  the disassembly at https://godbolt.org/z/b7eeGcrGn).
 //
 // Generated from:
@@ -151,9 +147,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
-//
 //  Expected ABI classification: memory.  (For indirect confirmation, see
-//
 //  the disassembly at https://godbolt.org/z/b7eeGcrGn).
 //
 // Generated from:

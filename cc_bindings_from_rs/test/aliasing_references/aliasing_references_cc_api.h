@@ -46,12 +46,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   //  # Safety
   //
-  //
-  //
   //  This function must not be called while an outstanding reference to the
-  //  underlying
-  //
-  //  `i32` is held.
+  //  underlying `i32` is held.
   //
   // Generated from:
   // cc_bindings_from_rs/test/aliasing_references/aliasing_references.rs;l=32

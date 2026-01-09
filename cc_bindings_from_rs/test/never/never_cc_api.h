@@ -51,7 +51,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
  private:
   union {
     //  Having a non-ZST field avoids hitting the following error:
-    //
     //  "Zero-sized types (ZSTs) are not supported (b/258259459)"
     //
     // Generated from:

@@ -1210,14 +1210,21 @@ fn generate_source_location(db: &dyn BindingsGenerator, def_id: DefId) -> String
 /// `local_def_id`, and appends the source location at which the item is
 /// defined.
 fn generate_doc_comment(db: &dyn BindingsGenerator, def_id: DefId) -> TokenStream {
-    let doc_comment = db
+    let mut docs = db
         .tcx()
         .get_all_attrs(def_id)
         .iter()
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
-        .chain(once(format!("Generated from: {}", generate_source_location(db, def_id))))
-        .join("\n\n");
+        .peekable();
+    let leading_newline = if docs.peek().is_none() { "" } else { "\n" };
+    let doc_comment = docs
+        .chain(once(format!(
+            "{}Generated from: {}",
+            leading_newline,
+            generate_source_location(db, def_id)
+        )))
+        .join("\n");
     if db.kythe_annotations() {
         generate_kythe_doc_comment(db, def_id, doc_comment)
     } else {

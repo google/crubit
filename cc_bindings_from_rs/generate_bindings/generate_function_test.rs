@@ -687,10 +687,8 @@ fn test_format_item_fn_with_doc_comment_with_unmangled_name() {
         assert!(main_api.prereqs.is_empty());
         let doc_comments = [
             " Outer line doc.",
-            "",
             " Outer block doc that spans lines.",
             "         ",
-            "",
             "Doc comment via doc attribute.",
             "",
             "Generated from: <crubit_unittests.rs>;l=7",
@@ -722,9 +720,10 @@ fn test_format_item_fn_with_inner_doc_comment_with_unmangled_name() {
         let doc_comments = [
             " Outer doc comment.",
             " Inner doc comment.",
+            "",
             "Generated from: <crubit_unittests.rs>;l=4",
         ]
-        .join("\n\n");
+        .join("\n");
         assert_cc_matches!(
             main_api.tokens,
             quote! {

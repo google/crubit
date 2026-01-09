@@ -105,9 +105,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace field_with_no_default {
 
 //  It is important that `StructWithoutDefault` is `pub` so that `field`
-//
 //  above is typed correctly in the C++ bindings and not replaced with a
-//
 //  blob of bytes.
 //
 // Generated from:

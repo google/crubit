@@ -48,12 +48,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   static ::move::Copyable from_byte(std::uint8_t byte);
 
   //  Typically, `self`-by-value methods turn into `&&`-qualified methods in
-  //  C++.
-  //
-  //  However, for `Copy` types, there's no need to consume the argument, as it
-  //  will be copied
-  //
-  //  regardless.
+  //  C++. However, for `Copy` types, there's no need to consume the argument,
+  //  as it will be copied regardless.
   //
   // Generated from:
   // cc_bindings_from_rs/test/move_semantics/move.rs;l=42
