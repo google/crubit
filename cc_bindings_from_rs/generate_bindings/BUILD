@@ -100,6 +100,7 @@ crubit_rust_test(
     srcs = ["generate_struct_and_union_test.rs"],
     deps = [
         ":test_helpers",
+        "//common:crubit_feature",
         "//common:token_stream_matchers",
         "@crate_index//:quote",  # v1
     ],
