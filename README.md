@@ -18,52 +18,6 @@ current supported features.
 
 ## Example
 
-<section class="tabs">
-
-### C++ {.new-tab}
-
-Consider the following C++ function:
-
-```c++
-bool IsGreater(int lhs, int rhs);
-```
-
-This function, if present in a header file which is processed by Crubit, becomes
-callable from Rust as if it were defined as:
-
-```rs
-pub fn IsGreater(lhs: ffi::c_int, rhs: ffi::c_int) -> bool {...}
-```
-
-### Rust {.new-tab}
-
-Consider the following Rust function:
-
-```rust
-pub fn is_greater(lhs: i32, rhs: i32) -> bool { ... }
-```
-
-This function becomes callable from C++ as if it were defined as:
-
-```c++
-bool is_greater(int32_t lhs, int32_t rhs);
-```
-
-</section>
-
-## Getting Started
-
-We have detailed walkthroughs on how to use C++ from Rust, or Rust from C++,
-using Crubit, as well as copy-pastable example code. The example code also
-includes spanshots of what the generated bindings look like.
-
-*   Walkthrough: [Rust Bindings for C++ Libraries](http://crubit.rs/cpp)
-    *   Examples:
-        [`examples/cpp/`](https://github.com/google/crubit/tree/main/examples/cpp)
-*   Walkthrough: [C++ Bindings for Rust Libraries](http://crubit.rs/rust)
-    *   Examples:
-        [`examples/rust/`](https://github.com/google/crubit/tree/main/examples/rust)
-
 ## Building Crubit
 
 ### Cargo
