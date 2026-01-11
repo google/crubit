@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{anyhow, bail, Context, Error, Result};
+use arc_anyhow::{Context, Error, Result};
 use database::code_snippet::{
     required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature,
     ResolvedTypeName, Visibility,
@@ -10,6 +10,7 @@ use database::code_snippet::{
 use database::db;
 use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
+use error_report::{anyhow, bail};
 use heck::ToSnakeCase;
 use ir::{BazelLabel, Func, GenericItem, Item, ItemId, Record};
 use std::collections::HashMap;
