@@ -820,6 +820,30 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSn
     })
 }
 
+fn generate_trait(
+    db: &dyn BindingsGenerator<'_>,
+    trait_id: DefId,
+) -> arc_anyhow::Result<ApiSnippets> {
+    let canonical_name = db
+        .symbol_canonical_name(trait_id)
+        .expect("generate_trait was unexpectedly called on an item without a canonical name");
+
+    let doc_comment = generate_doc_comment(db, trait_id);
+    let trait_name = format_cc_ident(db, canonical_name.unqualified.cpp_name.as_str())?;
+    let rs_type = canonical_name.format_for_rs().to_string();
+    let attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
+
+    let main_api = CcSnippet::new(quote! {
+        __NEWLINE__ #doc_comment
+        template <typename Type>
+        struct #(#attributes)* #trait_name {
+          __NEWLINE__ static constexpr bool is_implemented = false;
+        };
+        __NEWLINE__
+    });
+    Ok(ApiSnippets { main_api, ..Default::default() })
+}
+
 fn generate_type_alias(
     db: &dyn BindingsGenerator<'_>,
     def_id: DefId,
@@ -1297,6 +1321,7 @@ fn generate_item_impl(
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
         DefKind::Const => generate_const(db, def_id).map(Some),
+        DefKind::Trait => generate_trait(db, def_id).map(Some),
         DefKind::Impl { .. } => Ok(None), // Handled by `generate_adt`
         DefKind::Mod => Ok(None),         // Handled by `generate_crate`
         kind => bail!("Unsupported rustc_hir::hir::DefKind: {kind:?}"),
