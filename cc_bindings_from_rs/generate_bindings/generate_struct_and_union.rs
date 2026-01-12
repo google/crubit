@@ -220,6 +220,14 @@ fn generate_cpp_enum<'tcx>(
                 return None;
             };
             let enumerator_name = format_cc_ident(db, name.as_str()).unwrap();
+            let (opt_doc_comment, bracketed_enumerator_name) = if db.kythe_annotations() {
+                (
+                    generate_doc_comment(db, assoc_item.def_id),
+                    quote! { __CAPTURE_BEGIN__ #enumerator_name __CAPTURE_END__ },
+                )
+            } else {
+                (TokenStream::new(), quote! { #enumerator_name })
+            };
             let value_kind = *cpp_enum_rust_underlying_type(tcx, core.def_id).unwrap().kind();
             let scalar = match tcx.const_eval_poly(assoc_item.def_id).unwrap() {
                 ConstValue::Scalar(scalar) => scalar,
@@ -232,7 +240,7 @@ fn generate_cpp_enum<'tcx>(
                 .parse::<TokenStream>()
                 .unwrap();
 
-            Some(quote! { #enumerator_name = #enumerator_value, })
+            Some(quote! { #opt_doc_comment #bracketed_enumerator_name = #enumerator_value, })
         })
         .collect();
 
@@ -240,11 +248,16 @@ fn generate_cpp_enum<'tcx>(
     let keyword = &core.keyword;
     let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, core.def_id).unwrap();
     let underlying_cc_type = underlying_cc_type_snippet.tokens;
+    let bracketed_enumeration_cc_name = if db.kythe_annotations() {
+        quote! { __CAPTURE_BEGIN__ #enumeration_cc_name __CAPTURE_END__ }
+    } else {
+        quote! { #enumeration_cc_name }
+    };
 
     let main_api = CcSnippet {
         tokens: quote! {
             __NEWLINE__ #doc_comment
-            #keyword #(#attributes)* #enumeration_cc_name : #underlying_cc_type {
+            #keyword #(#attributes)* #bracketed_enumeration_cc_name : #underlying_cc_type {
                 #( __NEWLINE__ #enumerator_lines)*
             };
             __NEWLINE__

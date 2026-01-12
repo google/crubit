@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use quote::quote;
-use test_helpers::{test_format_item, test_generated_bindings};
+use test_helpers::{test_format_item, test_format_item_with_features, test_generated_bindings};
 use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
 
 /// The `test_generated_bindings_struct` test covers only a single example
@@ -973,6 +973,49 @@ fn test_format_item_enum_with_only_discriminant_items() {
             }
         );
     });
+}
+
+#[test]
+fn test_format_item_enum_with_kythe_annotations() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+            #[repr(transparent)]
+            pub struct SomeEnum(i32);
+            impl SomeEnum {
+                pub const VARIANT_0: SomeEnum = SomeEnum(0);
+                pub const VARIANT_1: SomeEnum = SomeEnum(1);
+                pub const VARIANT_2: SomeEnum = SomeEnum(2);
+            }
+        "#;
+    test_format_item_with_features(
+        test_src,
+        "SomeEnum",
+        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        /* with_kythe_annotations= */ true,
+        |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let comment =
+                "CRUBIT_ANNOTATE: cpp_enum=enum class\n\nGenerated from: <crubit_unittests.rs>;l=4";
+            let provenance_0 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "184" "193" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=6" };
+            let provenance_1 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "245" "254" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=7" };
+            let provenance_2 = quote! { __CAPTURE_TAG__ "<crubit_unittests.rs>" "306" "315" __COMMENT__ "Generated from: <crubit_unittests.rs>;l=8" };
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "115" "123" __COMMENT__ #comment
+                    enum class CRUBIT_INTERNAL_RUST_TYPE(...) __CAPTURE_BEGIN__ SomeEnum __CAPTURE_END__
+                    ... {
+                    ... #provenance_0 __CAPTURE_BEGIN__ VARIANT_0 __CAPTURE_END__ = ...
+                    ... #provenance_1 __CAPTURE_BEGIN__ VARIANT_1 __CAPTURE_END__ = ...
+                    ... #provenance_2 __CAPTURE_BEGIN__ VARIANT_2 __CAPTURE_END__ = ...
+                    }
+                    ...
+                }
+            );
+        },
+    );
 }
 
 /// This is a test for an enum that has `EnumItemTuple` and `EnumItemStruct`
