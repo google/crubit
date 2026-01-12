@@ -7,7 +7,7 @@
 //! Unit tests for the `ctor` crate.
 
 use ctor::{
-    copy, ctor, emplace, mov, try_emplace, Assign, Ctor, CtorNew, Emplace, FnCtor,
+    copy, ctor, emplace, mov, raw_ctor, try_emplace, Assign, Ctor, CtorNew, Emplace, FnCtor,
     ManuallyDropCtor, Reconstruct, RecursivelyPinned, RvalueReference, Slot, UnreachableCtor,
 };
 use googletest::gtest;
@@ -629,4 +629,34 @@ fn test_ctor_dst() {
         #[allow(unreachable_code)]
         UnreachableCtor::new()
     }
+}
+
+/// raw_ctor allows use for arbitrary struct types, just be careful! It pins!
+#[gtest]
+fn test_raw_ctor() {
+    struct MyStruct {
+        x: i32,
+    }
+    let x = emplace!(unsafe { raw_ctor!(MyStruct { x: 42 }) }).x;
+    assert_eq!(x, 42);
+}
+
+#[gtest]
+fn test_raw_ctor_partial_init() {
+    struct MyStruct {
+        x: i32,
+        _y: (),
+    }
+    #[allow(dead_code)]
+    struct MyStructCtorFields {
+        x: i32,
+    }
+    let x = emplace!(unsafe {
+        raw_ctor!(
+            #[fields = MyStructCtorFields]
+            MyStruct { x: 42 }
+        )
+    })
+    .x;
+    assert_eq!(x, 42);
 }

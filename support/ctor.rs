@@ -1080,6 +1080,11 @@ pub mod macro_internal {
     }
 
     pub fn require_recursively_pinned<_T: RecursivelyPinned>() {}
+
+    /// Function which requires `unsafe` and is called by `raw_ctor!()`.
+    ///
+    /// This gives a pleasing error message, as they have the same name.
+    pub unsafe fn raw_ctor() {}
 }
 
 // =====================
@@ -1193,60 +1198,17 @@ pub trait PinnedDrop {
 /// ```
 #[macro_export]
 macro_rules! ctor {
-    // Note: we're using `ident (::ident)*` for the type names because neither `ident` nor `path`
-    // really work perfectly -- `ident` is great, except that `foo::bar` isn't an ident. `path` is
-    // great, except that e.g. parentheses can't follow a path. (This is not fixable: FnOnce(T) is
-    // also a path, so parens can't follow paths due to the ambiguous parse). Thus... we use ident,
-    // and manually reconstruct the path.
-    //
-    // TODO(jeanpierreda): support <X as Y> and foo<Z> in paths.
-    //
-    // tt is used for the field names, because this allows for both integer fields for tuple
-    // structs, and named fields for non-tuple structs.
-    ( $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$( $name:tt: $sub_ctor:expr ),* $(,)?} ) => {
+    // Struct {} ctor.
+    ( $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$($body:tt)*} ) => {
         {
             use $t $(:: $ts)* as Type;
-            $crate::FnCtor::new(|x: *mut Type $(< $( $gp ),+ >)?| {
-                struct DropGuard;
-                let drop_guard = DropGuard;
-                let _ = &x; // silence unused_variables warning if Type is fieldless.
 
-                // Enforce that the ctor!() expression resembles a valid direct initialization
-                // expression, by using the names in a conventional literal.
-                // For structs, this fails to compile unless the names are fully exhaustive.
-                // For unions, it fails to compile unless precisely one name is used.
-                // In both cases, this ensures that we only compile when expressions corresponding
-                // to normal init are used, with unsurprising semantics.
-                let _ = |x: Type $(< $( $gp ),+ >)?| {
-                    let _ = &x; // silence unused_variables warning if Type is fieldless.
-                    // If this fails to compile, not every field was specified in the ctor! invocation.
-                    // The `panic!(...)` allows us to avoid moving out of x, while still pretending to
-                    // fill in each field.
-                    #[allow(unreachable_code, unused_unsafe)] $crate::macro_internal::Identity::<
-                        <Type $(< $( $gp ),+ >)? as $crate::RecursivelyPinned>::CtorInitializedFields> {
-                            // SAFETY: this code is not executed.
-                            // The unsafe {} block is in case this is a *union* literal, rather than
-                            // a struct literal.
-                            $($name: panic!("{}", unsafe {&x.$name} as *const _ as usize),)*
-                        };
-                };
-
-                // Enforce that the type is RecursivelyPinned.
-                $crate::macro_internal::require_recursively_pinned::<Type $(< $( $gp ),+ >)?>();
-
-                $(
-                    let sub_ctor = $sub_ctor; // outside of unsafe block.
-                    let field_drop = unsafe {
-                        // SAFETY: the place is in bounds, just uninitialized. See e.g. second
-                        // example: https://doc.rust-lang.org/nightly/std/ptr/macro.addr_of_mut.html
-                        $crate::macro_internal::init_field(
-                            &raw mut (*x).$name,
-                            sub_ctor)
-                    };
-                    let drop_guard = (drop_guard, field_drop);
-                )*
-                ::core::mem::forget(drop_guard);
-            })
+            $crate::unsafe_ctor_impl!(
+                #[fields =
+                    <Type $(< $( $gp ),+ >)? as $crate::RecursivelyPinned>::CtorInitializedFields]
+                #[unsafe_assert = $crate::macro_internal::require_recursively_pinned::<Type $(< $( $gp ),+ >)?>();]
+                Type $(< $($gp),+ >)? {$($body)*}
+            )
         }
     };
 
@@ -1268,7 +1230,109 @@ macro_rules! ctor {
     ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4 })};
     ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5 })};
     ($t:ident $(:: $ts:ident)* ($ctor_0:expr, $ctor_1:expr, $ctor_2:expr, $ctor_3:expr, $ctor_4:expr, $ctor_5:expr, $ctor_6:expr)) => {$crate::ctor!($t $(:: $ts)* { 0: $ctor_0, 1: $ctor_1, 2: $ctor_2, 3: $ctor_3, 4: $ctor_4, 5: $ctor_5, 6: $ctor_6 })};
+}
 
+/// The `raw_ctor!` macro evaluates to a `Ctor` for a Rust struct, with
+/// user-specified fields.
+///
+/// This is identical in use to `ctor!`, but it does not enforce that the
+/// struct is `RecursivelyPinned`.
+///
+/// The caller must ensure that the struct meets the safety criteria of
+/// `RecursivelyPinned`.
+///
+/// If the struct would have used a different `CtorInitializedFields` type,
+/// this can be specified using `#[fields = ...]`, as so:
+///
+/// ```
+/// raw_ctor!(#[fields = Mystruct2] MyStruct { field: 42 })
+/// ```
+///
+/// NOTE: `raw_ctor` only supports `struct {}` syntax.
+#[macro_export]
+macro_rules! raw_ctor {
+    ( $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$($body:tt)*} ) => {
+        {
+            use $t $(:: $ts)* as Type;
+
+            $crate::unsafe_ctor_impl!(
+                #[fields = Type $(< $( $gp ),+ >)?]
+                #[unsafe_assert = $crate::macro_internal::raw_ctor();]
+                Type $(< $($gp),+ >)? {$($body)*}
+            )
+        }
+    };
+    ( #[fields = $($fields_ty:tt)*] $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$($body:tt)*} ) => {
+        {
+            use $t $(:: $ts)* as Type;
+
+            $crate::unsafe_ctor_impl!(
+                #[fields = $($fields_ty)*]
+                #[unsafe_assert = $crate::macro_internal::raw_ctor();]
+                Type $(< $($gp),+ >)? {$($body)*}
+            )
+        }
+    };
+}
+
+// Note: we're using `ident (::ident)*` for the type names because neither `ident` nor `path`
+// really work perfectly -- `ident` is great, except that `foo::bar` isn't an ident. `path` is
+// great, except that e.g. parentheses can't follow a path. (This is not fixable: FnOnce(T) is
+// also a path, so parens can't follow paths due to the ambiguous parse). Thus... we use ident,
+// and manually reconstruct the path.
+//
+// TODO(jeanpierreda): support <X as Y> and foo<Z> in paths.
+//
+// tt is used for the field names, because this allows for both integer fields for tuple
+// structs, and named fields for non-tuple structs.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! unsafe_ctor_impl {
+    (   #[fields = $($fields_ty:tt)*]
+        #[unsafe_assert = $($unsafe_assert:tt)*]
+        $Type:ident $(< $($gp:tt),+ >)? {$( $name:tt: $sub_ctor:expr ),* $(,)?}
+    ) => {
+        $crate::FnCtor::new(|x: *mut $Type $(< $( $gp ),+ >)?| {
+            struct DropGuard;
+            let drop_guard = DropGuard;
+            let _ = &x; // silence unused_variables warning if Type is fieldless.
+
+            // Enforce that the ctor!()/etc. expression resembles a valid direct initialization
+            // expression, by using the names in a conventional literal.
+            // For structs, this fails to compile unless the names are fully exhaustive.
+            // For unions, it fails to compile unless precisely one name is used.
+            // In both cases, this ensures that we only compile when expressions corresponding
+            // to normal init are used, with unsurprising semantics.
+            let _ = |x: $Type $(< $( $gp ),+ >)?| {
+                let _ = &x; // silence unused_variables warning if Type is fieldless.
+                // If this fails to compile, not every field was specified in the ctor! invocation.
+                // The `panic!(...)` allows us to avoid moving out of x, while still pretending to
+                // fill in each field.
+                #[allow(unreachable_code, unused_unsafe)] $crate::macro_internal::Identity::<
+                    $($fields_ty)*> {
+                        // SAFETY: this code is not executed.
+                        // The unsafe {} block is in case this is a *union* literal, rather than
+                        // a struct literal.
+                        $($name: panic!("{}", unsafe {&x.$name} as *const _ as usize),)*
+                    };
+            };
+
+            $($unsafe_assert)*
+
+            $(
+                let sub_ctor = $sub_ctor;
+                let field_drop = unsafe {
+                    // SAFETY: the place is in bounds, just uninitialized. See e.g. second
+                    // example: https://doc.rust-lang.org/nightly/std/ptr/macro.addr_of_mut.html
+                    $crate::macro_internal::init_field(
+                        &raw mut (*x).$name,
+                        sub_ctor)
+                };
+                let drop_guard = (drop_guard, field_drop);
+            )*
+            ::core::mem::forget(drop_guard);
+        })
+    };
 }
 
 // ==========
