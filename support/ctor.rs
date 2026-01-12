@@ -1330,6 +1330,7 @@ macro_rules! unsafe_ctor_impl {
                 };
                 let drop_guard = (drop_guard, field_drop);
             )*
+            #[allow(clippy::forget_non_drop)] // if fieldless
             ::core::mem::forget(drop_guard);
         })
     };
