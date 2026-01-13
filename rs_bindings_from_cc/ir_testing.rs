@@ -99,7 +99,7 @@ pub fn ir_from_cc_dependency(
 ) -> Result<IR> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
-    extern "C" {
+    unsafe extern "C" {
         fn json_from_cc_dependency(
             target_triple: FfiU8Slice,
             header_source: FfiU8Slice,

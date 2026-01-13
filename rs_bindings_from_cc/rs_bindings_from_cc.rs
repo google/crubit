@@ -5,7 +5,7 @@
 use std::ffi::{c_char, c_int, CString};
 use std::process::ExitCode;
 
-extern "C" {
+unsafe extern "C" {
     // In rs_bindings_from_cc.cc:
     fn crubit_rs_bindings_from_cc_main(argc: c_int, argv: *mut *mut c_char) -> std::ffi::c_int;
 }
