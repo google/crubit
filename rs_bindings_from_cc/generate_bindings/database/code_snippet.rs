@@ -6,8 +6,9 @@
 /// gating, etc.
 use crate::db::BindingsGenerator;
 use crate::rs_snippet::RsTypeKind;
-use arc_anyhow::{anyhow, bail, ensure, Error, Result};
+use arc_anyhow::{Error, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
+use error_report::{anyhow, bail, ensure};
 use ffi_types::FfiU8SliceBox;
 use flagset::FlagSet;
 use heck::ToSnakeCase;

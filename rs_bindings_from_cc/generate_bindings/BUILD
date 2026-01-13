@@ -389,6 +389,7 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "//common:crubit_feature",
+        "//common:error_report",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
         "@crate_index//:heck",  # v0_5

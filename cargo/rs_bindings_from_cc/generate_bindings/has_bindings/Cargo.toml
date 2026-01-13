@@ -20,6 +20,7 @@ doctest = false
 [dependencies]
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+error_report = { path = "../../../../cargo/common/error_report"}
 ir = { path = "../../../../cargo/rs_bindings_from_cc/ir", package = "rs_bindings_from_cc_ir"}
 database = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/database/database", package = "rs_bindings_from_cc_database"}
 heck.workspace = true
