@@ -49,22 +49,10 @@ fn test_ty<TestFn, Expectation>(
         tcx: TyCtxt<'tcx>,
         type_location: TypeLocation,
     ) -> SugaredTy<'tcx> {
-        let (sig_mid, sig_hir_opt) =
-            get_fn_sig(tcx, find_def_id_by_name(tcx, "test_function").to_def_id());
-        let sig_hir = sig_hir_opt.unwrap();
+        let sig_mid = get_fn_sig(tcx, find_def_id_by_name(tcx, "test_function").to_def_id());
         match type_location {
-            TypeLocation::FnReturn => {
-                let FnRetTy::Return(ty_hir) = sig_hir.output else {
-                    unreachable!(
-                        "HIR return type should be fully specified, got: {:?}",
-                        sig_hir.output
-                    );
-                };
-                SugaredTy::new(sig_mid.output(), Some(ty_hir))
-            }
-            TypeLocation::FnParam { .. } => {
-                SugaredTy::new(sig_mid.inputs()[0], Some(&sig_hir.inputs[0]))
-            }
+            TypeLocation::FnReturn => SugaredTy::missing_hir(sig_mid.output()),
+            TypeLocation::FnParam { .. } => SugaredTy::missing_hir(sig_mid.inputs()[0]),
             _ => unimplemented!(),
         }
     }

@@ -82,7 +82,6 @@ fn array_c_abi_c_type<'tcx>(tcx: ty::TyCtxt<'tcx>, inner_ty: ty::Ty<'tcx>) -> Re
 pub fn generate_thunk_decl<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
-    sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
     thunk_name: &Ident,
     has_self_param: bool,
 ) -> Result<CcSnippet> {
@@ -161,7 +160,7 @@ pub fn generate_thunk_decl<'tcx>(
 
     let mut attributes = vec![];
     // Attribute: noreturn
-    let rs_return_type = SugaredTy::fn_output(sig_mid, None);
+    let rs_return_type = SugaredTy::fn_output(sig_mid);
     if *rs_return_type.mid().kind() == ty::TyKind::Never {
         attributes.push(quote! {[[noreturn]]});
     }
@@ -719,16 +718,11 @@ pub fn generate_trait_thunks<'tcx>(
             tcx.fn_sig(method.def_id).instantiate(tcx, substs),
             method.def_id,
         );
-        // TODO(b/254096006): Preserve the HIR here, if possible?
-        // Cannot in general (e.g. blanket impl from another crate), but should be able
-        // to for traits defined or implemented in the current crate.
-        let sig_hir = None;
 
         let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
         cc_thunk_decls.add_assign(generate_thunk_decl(
             db,
             &sig_mid,
-            sig_hir,
             &thunk_name_cc_ident,
             /*has_self_param=*/ true,
         )?);

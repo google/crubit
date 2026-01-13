@@ -31,7 +31,7 @@ use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
 use rustc_span::def_id::CrateNum;
-use rustc_span::symbol::{sym, Symbol};
+use rustc_span::symbol::Symbol;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
@@ -163,7 +163,7 @@ pub fn format_ty_for_cc<'tcx>(
             }
         },
         ty::TyKind::Tuple(_) => {
-            let types = ty.as_tuple(db).unwrap();
+            let types = ty.as_tuple().unwrap();
             if types.is_empty() && matches!(location, TypeLocation::FnReturn) {
                 keyword(quote! { void })
             } else if !location.is_bridgeable() {
@@ -542,7 +542,7 @@ pub fn format_ret_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
 ) -> Result<CcSnippet> {
-    let output_ty = SugaredTy::fn_output(sig_mid, None);
+    let output_ty = SugaredTy::fn_output(sig_mid);
     db.format_ty_for_cc(output_ty, TypeLocation::FnReturn)
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
@@ -590,7 +590,7 @@ pub fn format_param_types_for_cc<'tcx>(
     has_self_param: bool,
 ) -> Result<Vec<CcParamTy>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
-    let param_types = SugaredTy::fn_inputs(sig_mid, None);
+    let param_types = SugaredTy::fn_inputs(sig_mid);
     let mut snippets = Vec::with_capacity(param_types.len());
     for (i, param_type) in param_types.enumerate() {
         let is_self_param = i == 0 && has_self_param;

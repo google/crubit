@@ -27,11 +27,11 @@ use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 use rustc_abi::{FieldsShape, VariantIdx, Variants};
 use rustc_hir::attrs::AttributeKind;
-use rustc_hir::{self as hir, Attribute};
+use rustc_hir::Attribute;
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, Ty, TyCtxt, TyKind, TypeFlags};
-use rustc_span::def_id::{CrateNum, DefId, LocalDefId, LOCAL_CRATE};
+use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::sym;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
@@ -792,77 +792,28 @@ pub fn generate_adt_core<'tcx>(
     }))
 }
 
-fn hir_fields_per_variant<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    local_def_id: LocalDefId,
-) -> Vec<&'tcx [hir::FieldDef<'tcx>]> {
-    let hir::Node::Item(item) = tcx.hir_node_by_def_id(local_def_id) else {
-        panic!("internal error: def_id referring to an ADT was not a HIR Item.");
-    };
-
-    match &item.kind {
-        hir::ItemKind::Struct(_, _, variant) | hir::ItemKind::Union(_, _, variant) => {
-            vec![variant.fields()]
-        }
-        hir::ItemKind::Enum(_, _, enum_info) => {
-            enum_info.variants.iter().map(|variant| variant.data.fields()).collect()
-        }
-        _ => {
-            panic!("internal error: def_id referring to a non-enum ADT was not a struct or union.")
-        }
-    }
-}
-
 struct IndexedVariantField<'tcx> {
     index: usize,
     field_def: &'tcx ty::FieldDef,
-    hir_field_ty: Option<&'tcx hir::Ty<'tcx>>,
 }
 
 /// Given ADT bindings, iterates over the variants of that ADT and the fields of each variant.
 /// For each field, iteration always provides the middle FieldDef and it's index within it's variant.
 /// The hir type of the field will optionally be included if it is available.
 fn variant_fields_iter<'tcx>(
-    tcx: TyCtxt<'tcx>,
     core: &AdtCoreBindings<'tcx>,
 ) -> impl Iterator<Item = impl Iterator<Item = IndexedVariantField<'tcx>>> {
-    // If our underlying iterator is None, we produce an infinite stream of None.
-    // This exists to present one type with the desired behavior without boxing.
-    struct RepeatedNone<'tcx> {
-        underlying: Option<std::vec::IntoIter<&'tcx [hir::FieldDef<'tcx>]>>,
-    }
-    impl<'tcx> Iterator for RepeatedNone<'tcx> {
-        type Item = Option<&'tcx [hir::FieldDef<'tcx>]>;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            match self.underlying {
-                Some(ref mut variant_iter) => Some(variant_iter.next()),
-                // If we don't have a variant iterator, we just want to produce an infinite stream of None, so we don't limit our zip below.
-                None => Some(None),
-            }
-        }
-    }
-    let hir_fields = core
-        .def_id
-        .as_local()
-        .map(|local_def_id| hir_fields_per_variant(tcx, local_def_id).into_iter());
     core.self_ty
         .ty_adt_def()
         .expect("`core.def_id` needs to identify an ADT")
         .variants()
         .iter()
-        .zip(RepeatedNone { underlying: hir_fields })
-        .map(|(variant, hir_fields)| {
-            variant.fields.iter().enumerate().map(move |(index, field_def)| {
-                let hir_field_ty = hir_fields.map(|hir_fields| {
-                    let hir_field = hir_fields
-                        .get(index)
-                        .expect("HIR ADT had fewer fields than rustc_middle for this variant");
-                    assert!(field_def.did == hir_field.def_id.to_def_id());
-                    hir_field.ty
-                });
-                IndexedVariantField { index, field_def, hir_field_ty }
-            })
+        .map(|variant| {
+            variant
+                .fields
+                .iter()
+                .enumerate()
+                .map(move |(index, field_def)| IndexedVariantField { index, field_def })
         })
 }
 
@@ -898,7 +849,7 @@ fn generate_tuple_struct_ctor<'tcx>(
     let clone_trait_id = tcx.lang_items().copy_trait().expect("Copy trait not found");
     let unpin_trait_id = tcx.lang_items().unpin_trait().expect("Unpin trait not found");
 
-    let field_tys = variant_fields_iter(tcx, core.as_ref())
+    let field_tys = variant_fields_iter(core.as_ref())
         .next()
         .expect("Tuple structs must have one variant")
         .map(|IndexedVariantField { field_def, .. }| {
@@ -1063,10 +1014,10 @@ fn generate_fields<'tcx>(
 
         // Otherwise, get the fields and determine the memory layout.
         _ => {
-            let mut variants_fields = variant_fields_iter(tcx, core)
+            let mut variants_fields = variant_fields_iter(core)
                 .map(|field_iter| {
                     field_iter
-                        .map(|IndexedVariantField { index, field_def, .. }| {
+                        .map(|IndexedVariantField { index, field_def }| {
                             let ty = SugaredTy::missing_hir(field_def.ty(tcx, adt_generic_args));
                             let size =
                                 get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());

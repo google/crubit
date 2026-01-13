@@ -5,8 +5,6 @@
 extern crate rustc_hir;
 extern crate rustc_middle;
 
-use crate::db::BindingsGenerator;
-use rustc_hir::HirId;
 use rustc_middle::ty::{self, Ty};
 
 /// A Ty, optionally attached to its `hir::Ty` counterpart, if any.
@@ -20,9 +18,6 @@ use rustc_middle::ty::{self, Ty};
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SugaredTy<'tcx> {
     mid: Ty<'tcx>,
-    /// The HirId of the corresponding HirTy. We store it as a HirId so that
-    /// it's hashable.
-    hir_id: Option<HirId>,
 }
 
 impl<'tcx> std::fmt::Display for SugaredTy<'tcx> {
@@ -32,12 +27,8 @@ impl<'tcx> std::fmt::Display for SugaredTy<'tcx> {
 }
 
 impl<'tcx> SugaredTy<'tcx> {
-    pub fn new(mid: Ty<'tcx>, hir: Option<&rustc_hir::Ty<'tcx>>) -> Self {
-        Self { mid, hir_id: hir.map(|hir| hir.hir_id) }
-    }
-
     pub fn missing_hir(mid: Ty<'tcx>) -> Self {
-        Self { mid, hir_id: None }
+        Self { mid }
     }
 
     /// Returns the rustc_middle::Ty this represents.
@@ -45,44 +36,18 @@ impl<'tcx> SugaredTy<'tcx> {
         self.mid
     }
 
-    /// Returns the rustc_hir::Ty this represents, if any.
-    pub fn hir(&self, db: &dyn BindingsGenerator<'tcx>) -> Option<&'tcx rustc_hir::Ty<'tcx>> {
-        let hir_id = self.hir_id?;
-        let hir_ty = db.tcx().hir_node(hir_id).expect_ty();
-        debug_assert_eq!(hir_ty.hir_id, hir_id);
-        Some(hir_ty)
+    pub fn fn_inputs(sig_mid: &ty::FnSig<'tcx>) -> SugaredTyList<'tcx> {
+        SugaredTyList { tys: sig_mid.inputs() }
     }
 
-    pub fn fn_inputs(
-        sig_mid: &ty::FnSig<'tcx>,
-        sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
-    ) -> SugaredTyList<'tcx> {
-        let hir_tys = sig_hir.map(|sig_hir| sig_hir.inputs);
-        SugaredTyList { tys: sig_mid.inputs(), hir_tys }
-    }
-
-    pub fn fn_output(
-        sig_mid: &ty::FnSig<'tcx>,
-        sig_hir: Option<&rustc_hir::FnDecl<'tcx>>,
-    ) -> SugaredTy<'tcx> {
-        let hir_output = sig_hir.and_then(|sig_hir| match sig_hir.output {
-            rustc_hir::FnRetTy::Return(hir_ty) => Some(hir_ty),
-            _ => None,
-        });
-        SugaredTy::new(sig_mid.output(), hir_output)
+    pub fn fn_output(sig_mid: &ty::FnSig<'tcx>) -> SugaredTy<'tcx> {
+        SugaredTy::missing_hir(sig_mid.output())
     }
 
     /// If this is a tuple type, returns a SugaredTyList of the tuple elements.
-    pub fn as_tuple(&self, db: &dyn BindingsGenerator<'tcx>) -> Option<SugaredTyList<'tcx>> {
+    pub fn as_tuple(&self) -> Option<SugaredTyList<'tcx>> {
         let ty::TyKind::Tuple(tys) = self.mid.kind() else { return None };
-        let hir_tys = self.hir(db).and_then(|hir_ty| {
-            if let rustc_hir::TyKind::Tup(tys) = hir_ty.kind {
-                Some(tys)
-            } else {
-                None
-            }
-        });
-        Some(SugaredTyList { tys, hir_tys })
+        Some(SugaredTyList { tys })
     }
 
     // TODO(b/449759899): Expand this to support all uninhabited types. Rename to `is_uninhabited`.
@@ -98,7 +63,6 @@ impl<'tcx> SugaredTy<'tcx> {
 /// tuples or function signatures.
 pub struct SugaredTyList<'tcx> {
     pub tys: &'tcx [Ty<'tcx>],
-    pub hir_tys: Option<&'tcx [rustc_hir::Ty<'tcx>]>,
 }
 
 impl<'tcx> SugaredTyList<'tcx> {
@@ -112,7 +76,7 @@ impl<'tcx> SugaredTyList<'tcx> {
 
     // NOTE: This is not the `Index` trait because the `Index` trait must return a reference.
     pub fn index(&self, i: usize) -> SugaredTy<'tcx> {
-        SugaredTy::new(self.tys[i], self.hir_tys.map(|hir_tys| hir_tys[i]).as_ref())
+        SugaredTy::missing_hir(self.tys[i])
     }
 }
 
@@ -121,12 +85,7 @@ impl<'tcx> Iterator for SugaredTyList<'tcx> {
     fn next(&mut self) -> Option<SugaredTy<'tcx>> {
         let (ty, tys_rest) = self.tys.split_first()?;
         self.tys = tys_rest;
-        let hir_ty = self.hir_tys.and_then(|hir_tys| {
-            let (hir_ty, hir_tys_rest) = hir_tys.split_first()?;
-            self.hir_tys = Some(hir_tys_rest);
-            Some(hir_ty)
-        });
-        Some(SugaredTy::new(*ty, hir_ty))
+        Some(SugaredTy::missing_hir(*ty))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

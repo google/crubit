@@ -151,7 +151,7 @@ fn cc_param_to_c_abi<'tcx>(
         }
     } else if is_c_abi_compatible_by_value(tcx, ty.mid()) {
         quote! { #cc_ident }
-    } else if let Some(tuple_tys) = ty.as_tuple(db) {
+    } else if let Some(tuple_tys) = ty.as_tuple() {
         let n = tuple_tys.len();
         let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);
 
@@ -306,7 +306,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             storage_name: storage_name.clone(),
             unpack_expr: quote! { *#storage_name },
         })
-    } else if let Some(tuple_tys) = ty.as_tuple(db) {
+    } else if let Some(tuple_tys) = ty.as_tuple() {
         let n = tuple_tys.len();
         let mut storage_names = Vec::with_capacity(n);
         let mut unpack_exprs = Vec::with_capacity(n);
@@ -603,7 +603,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         "Generic functions are not supported yet (b/259749023)"
     );
 
-    let (sig_mid, sig_hir) = get_fn_sig(tcx, def_id);
+    let sig_mid = get_fn_sig(tcx, def_id);
     check_fn_sig(&sig_mid)?;
     let self_ty = self_ty_of_method(tcx, def_id);
     let function_kind = function_kind(tcx, def_id, self_ty, sig_mid.inputs())?;
@@ -634,7 +634,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         let cpp_types = format_param_types_for_cc(db, &sig_mid, function_kind.has_self_param())?;
         names
             .enumerate()
-            .zip(SugaredTy::fn_inputs(&sig_mid, None))
+            .zip(SugaredTy::fn_inputs(&sig_mid))
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
                 // TODO(jeanpierreda): deduplicate this with thunk_param_names.
@@ -725,7 +725,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
             quote! { #cpp_type #cc_name #annotation }
         })
         .collect_vec();
-    let rs_return_type = SugaredTy::fn_output(&sig_mid, None);
+    let rs_return_type = SugaredTy::fn_output(&sig_mid);
     let main_api = {
         let doc_comment = {
             let doc_comment = generate_doc_comment(db, def_id);
@@ -803,14 +803,9 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         };
 
         let mut prereqs = main_api_prereqs;
-        let thunk_decl = generate_thunk_decl(
-            db,
-            &sig_mid,
-            sig_hir,
-            &thunk_name,
-            function_kind.has_self_param(),
-        )?
-        .into_tokens(&mut prereqs);
+        let thunk_decl =
+            generate_thunk_decl(db, &sig_mid, &thunk_name, function_kind.has_self_param())?
+                .into_tokens(&mut prereqs);
 
         let impl_body = generate_thunk_call(
             db,
@@ -877,17 +872,10 @@ pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
 /// pointers and actual functions. This makes it a more useful vocabulary type.
 /// `FnDecl` does drop information, but that information is already on the
 /// rustc_middle `FnSig`, so there is no loss.
-pub fn get_fn_sig<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    def_id: DefId,
-) -> (ty::FnSig<'tcx>, Option<&'tcx rustc_hir::FnDecl<'tcx>>) {
-    let sig_mid = liberate_and_deanonymize_late_bound_regions(
+pub fn get_fn_sig<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> ty::FnSig<'tcx> {
+    liberate_and_deanonymize_late_bound_regions(
         tcx,
         tcx.fn_sig(def_id).instantiate_identity(),
         def_id,
-    );
-    let hir_decl = def_id
-        .as_local()
-        .map(|local_def_id| tcx.hir_node_by_def_id(local_def_id).fn_sig().unwrap().decl);
-    (sig_mid, hir_decl)
+    )
 }
