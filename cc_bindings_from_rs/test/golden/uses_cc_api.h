@@ -4,8 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // uses_rust_golden
-// Features: custom_ffi_types, experimental, non_unpin_ctor, std_unique_ptr,
-// std_vector, supported, wrapper
+// Features: assume_lifetimes, custom_ffi_types, experimental, non_unpin_ctor,
+// std_unique_ptr, std_vector, supported, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN
