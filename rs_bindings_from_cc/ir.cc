@@ -439,13 +439,23 @@ llvm::json::Value SizeAlign::ToJson() const {
   };
 }
 
-static llvm::json::Value toJSON(BridgeType::DynCallable::FnKind fn_kind) {
-  switch (fn_kind) {
-    case BridgeType::DynCallable::FnKind::kFn:
+static llvm::json::Value toJSON(
+    BridgeType::Callable::BackingType backing_type) {
+  switch (backing_type) {
+    case BridgeType::Callable::BackingType::kDynCallable:
+      return "DynCallable";
+    case BridgeType::Callable::BackingType::kAnyInvocable:
+      return "AnyInvocable";
+  }
+}
+
+static llvm::json::Value toJSON(BridgeType::Callable::FnTrait fn_trait) {
+  switch (fn_trait) {
+    case BridgeType::Callable::FnTrait::kFn:
       return "Fn";
-    case BridgeType::DynCallable::FnKind::kFnMut:
+    case BridgeType::Callable::FnTrait::kFnMut:
       return "FnMut";
-    case BridgeType::DynCallable::FnKind::kFnOnce:
+    case BridgeType::Callable::FnTrait::kFnOnce:
       return "FnOnce";
   }
 }
@@ -496,13 +506,14 @@ llvm::json::Value BridgeType::ToJson() const {
                 },
             }};
           },
-          [&](const BridgeType::DynCallable& dyn_callable) {
+          [&](const BridgeType::Callable& callable) {
             return llvm::json::Object{{
-                "DynCallable",
+                "Callable",
                 llvm::json::Object{
-                    {"fn_kind", dyn_callable.fn_kind},
-                    {"return_type", dyn_callable.return_type->ToJson()},
-                    {"param_types", dyn_callable.param_types},
+                    {"backing_type", callable.backing_type},
+                    {"fn_trait", callable.fn_trait},
+                    {"return_type", callable.return_type->ToJson()},
+                    {"param_types", callable.param_types},
                 },
             }};
           }},

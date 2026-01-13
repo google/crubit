@@ -21,6 +21,8 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
 
+pub use ir::BackingType;
+
 const SLICE_REF_NAME_RS: &str = "&[]";
 
 /// A struct with information associated with the formatted Rust code snippet.
@@ -493,7 +495,7 @@ fn new_c9_co_record(
 
 /// Information about how the owned function object may be called.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum FnKind {
+pub enum FnTrait {
     /// A function object that may be called in any context, any number of times.
     Fn,
 
@@ -505,12 +507,12 @@ pub enum FnKind {
     FnOnce,
 }
 
-impl ToTokens for FnKind {
+impl ToTokens for FnTrait {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            FnKind::Fn => quote! { ::core::ops::Fn },
-            FnKind::FnMut => quote! { ::core::ops::FnMut },
-            FnKind::FnOnce => quote! { ::core::ops::FnOnce },
+            FnTrait::Fn => quote! { ::core::ops::Fn },
+            FnTrait::FnMut => quote! { ::core::ops::FnMut },
+            FnTrait::FnOnce => quote! { ::core::ops::FnOnce },
         }
         .to_tokens(tokens);
     }
@@ -518,14 +520,15 @@ impl ToTokens for FnKind {
 
 /// Information about a dyn callable type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct DynCallable {
-    pub fn_kind: FnKind,
+pub struct Callable {
+    pub backing_type: BackingType,
+    pub fn_trait: FnTrait,
     pub return_type: Rc<RsTypeKind>,
     pub param_types: Rc<[RsTypeKind]>,
     pub thunk_ident: Ident,
 }
 
-impl DynCallable {
+impl Callable {
     /// Returns a `TokenStream` in the shape of `-> Output`, or None if the return type is void.
     pub fn rust_return_type_fragment(&self, db: &dyn BindingsGenerator) -> Option<TokenStream> {
         if self.return_type.is_void() {
@@ -541,9 +544,9 @@ impl DynCallable {
         let rust_return_type_fragment = self.rust_return_type_fragment(db);
         let param_type_tokens =
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
-        let fn_kind = self.fn_kind;
+        let fn_trait = self.fn_trait;
         quote! {
-            dyn #fn_kind(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send + ::core::marker::Sync + 'static
+            dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send + ::core::marker::Sync + 'static
         }
     }
 
@@ -578,7 +581,7 @@ pub enum BridgeRsTypeKind {
     StdString {
         in_cc_std: bool,
     },
-    DynCallable(Rc<DynCallable>),
+    DynCallable(Rc<Callable>),
 }
 
 impl BridgeRsTypeKind {
@@ -632,12 +635,13 @@ impl BridgeRsTypeKind {
 
                 BridgeRsTypeKind::StdString { in_cc_std }
             }
-            BridgeType::DynCallable { fn_kind, return_type, param_types } => {
-                BridgeRsTypeKind::DynCallable(Rc::new(DynCallable {
-                    fn_kind: match fn_kind {
-                        ir::FnKind::Fn => FnKind::Fn,
-                        ir::FnKind::FnMut => FnKind::FnMut,
-                        ir::FnKind::FnOnce => FnKind::FnOnce,
+            BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {
+                BridgeRsTypeKind::DynCallable(Rc::new(Callable {
+                    backing_type,
+                    fn_trait: match fn_trait {
+                        ir::FnTrait::Fn => FnTrait::Fn,
+                        ir::FnTrait::FnMut => FnTrait::FnMut,
+                        ir::FnTrait::FnOnce => FnTrait::FnOnce,
                     },
                     return_type: Rc::new(db.rs_type_kind(return_type.clone())?),
                     param_types: param_types
@@ -1849,9 +1853,9 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                             self.todo.push(t1);
                         }
                         BridgeRsTypeKind::StdString { .. } => {}
-                        BridgeRsTypeKind::DynCallable(dyn_callable) => {
-                            self.todo.push(&dyn_callable.return_type);
-                            self.todo.extend(dyn_callable.param_types.iter().rev());
+                        BridgeRsTypeKind::DynCallable(callable) => {
+                            self.todo.push(&callable.return_type);
+                            self.todo.extend(callable.param_types.iter().rev());
                         }
                     },
                     RsTypeKind::ExistingRustType(_) => {}

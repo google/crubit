@@ -643,8 +643,16 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   const clang::CXXRecordDecl* templated_decl =
       specialization_decl.getSpecializedTemplate()->getTemplatedDecl();
 
-  if (AsTopLevelNamespace(templated_decl->getDeclContext()) != "rs_std" ||
-      templated_decl->getName() != "DynCallable") {
+  auto top_level_namespace =
+      AsTopLevelNamespace(templated_decl->getDeclContext());
+  BridgeType::Callable::BackingType backing_type;
+  if (top_level_namespace == "rs_std" &&
+      templated_decl->getName() == "DynCallable") {
+    backing_type = BridgeType::Callable::BackingType::kDynCallable;
+  } else if (top_level_namespace == "absl" &&
+             templated_decl->getName() == "AnyInvocable") {
+    backing_type = BridgeType::Callable::BackingType::kAnyInvocable;
+  } else {
     return std::nullopt;
   }
 
@@ -666,14 +674,14 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   }
 
   // Extract the function kind based on the qualifiers.
-  BridgeType::DynCallable::FnKind fn_kind;
+  BridgeType::Callable::FnTrait fn_trait;
   if (sig_fn_type->getRefQualifier() == clang::RQ_RValue) {
     // Regardless of whether it's && or const &&, it's a FnOnce.
-    fn_kind = BridgeType::DynCallable::FnKind::kFnOnce;
+    fn_trait = BridgeType::Callable::FnTrait::kFnOnce;
   } else if (sig_fn_type->getMethodQuals().hasConst()) {
-    fn_kind = BridgeType::DynCallable::FnKind::kFn;
+    fn_trait = BridgeType::Callable::FnTrait::kFn;
   } else {
-    fn_kind = BridgeType::DynCallable::FnKind::kFnMut;
+    fn_trait = BridgeType::Callable::FnTrait::kFnMut;
   }
 
   // Convert the return type, ensuring that it is complete first.
@@ -711,8 +719,9 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
     param_types.push_back(std::move(param_cc_type));
   }
 
-  return BridgeType(BridgeType::DynCallable{
-      .fn_kind = fn_kind,
+  return BridgeType(BridgeType::Callable{
+      .backing_type = backing_type,
+      .fn_trait = fn_trait,
       .return_type = std::make_shared<CcType>(std::move(return_type)),
       .param_types = std::move(param_types),
   });

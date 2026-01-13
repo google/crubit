@@ -85,7 +85,7 @@ pub enum CrubitAbiType {
         /// cpp foo::Message
         cpp_proto_path: FullyQualifiedPath,
     },
-    DynCallable {
+    Callable {
         rust_type_tokens: TokenStream,
         rust_expr_tokens: TokenStream,
         cpp_type_tokens: TokenStream,
@@ -196,7 +196,7 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
             CrubitAbiType::ProtoMessage { proto_message_rust_bridge, rust_proto_path, .. } => {
                 quote! { #proto_message_rust_bridge<#rust_proto_path> }.to_tokens(tokens);
             }
-            CrubitAbiType::DynCallable { rust_type_tokens, .. } => {
+            CrubitAbiType::Callable { rust_type_tokens, .. } => {
                 rust_type_tokens.to_tokens(tokens);
             }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
@@ -268,7 +268,7 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                 quote! { #proto_message_rust_bridge(::core::marker::PhantomData) }
                     .to_tokens(tokens);
             }
-            CrubitAbiType::DynCallable { rust_expr_tokens, .. } => {
+            CrubitAbiType::Callable { rust_expr_tokens, .. } => {
                 rust_expr_tokens.to_tokens(tokens);
             }
             CrubitAbiType::Type { rust_abi_path, type_args, .. } => {
@@ -336,7 +336,7 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
             CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
                 quote! { ::crubit::BoxedAbi<#cpp_proto_path> }.to_tokens(tokens);
             }
-            CrubitAbiType::DynCallable { cpp_type_tokens, .. } => {
+            CrubitAbiType::Callable { cpp_type_tokens, .. } => {
                 cpp_type_tokens.to_tokens(tokens);
             }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {
@@ -408,7 +408,7 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
             CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
                 quote! { ::crubit::BoxedAbi<#cpp_proto_path>() }.to_tokens(tokens);
             }
-            CrubitAbiType::DynCallable { cpp_expr_tokens, .. } => {
+            CrubitAbiType::Callable { cpp_expr_tokens, .. } => {
                 cpp_expr_tokens.to_tokens(tokens);
             }
             CrubitAbiType::Type { cpp_abi_path, type_args, .. } => {

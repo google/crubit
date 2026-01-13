@@ -1041,9 +1041,16 @@ pub struct SizeAlign {
     pub alignment: usize,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub enum FnKind {
+pub enum BackingType {
+    DynCallable,
+    AnyInvocable,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub enum FnTrait {
     Fn,
     FnMut,
     FnOnce,
@@ -1069,8 +1076,9 @@ pub enum BridgeType {
     StdOptional(CcType),
     StdPair(CcType, CcType),
     StdString,
-    DynCallable {
-        fn_kind: FnKind,
+    Callable {
+        backing_type: BackingType,
+        fn_trait: FnTrait,
         return_type: CcType,
         param_types: Vec<CcType>,
     },

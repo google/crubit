@@ -12,7 +12,7 @@ use database::code_snippet::{
 };
 use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
 use database::rs_snippet::{
-    BridgeRsTypeKind, DynCallable, FnKind, Mutability, RsTypeKind, RustPtrKind,
+    BridgeRsTypeKind, Callable, FnTrait, Mutability, RsTypeKind, RustPtrKind,
 };
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
@@ -866,7 +866,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
 /// because it will be reported elsewhere.
 fn generate_dyn_callable_cpp_thunk(
     db: &dyn BindingsGenerator,
-    dyn_callable: &DynCallable,
+    dyn_callable: &Callable,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
     assert!(
@@ -947,7 +947,7 @@ fn generate_dyn_callable_cpp_thunk(
 /// reported because it will be reported elsewhere.
 fn generate_dyn_callable_rust_thunk_impl(
     db: &dyn BindingsGenerator,
-    dyn_callable: Rc<DynCallable>,
+    dyn_callable: Rc<Callable>,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
     assert!(
@@ -979,10 +979,10 @@ fn generate_dyn_callable_rust_thunk_impl(
         })
         .collect::<Option<Vec<TokenStream>>>()?;
 
-    let unwrapper = match dyn_callable.fn_kind {
-        FnKind::Fn => quote! { &*f },
-        FnKind::FnMut => quote! { &mut *f },
-        FnKind::FnOnce => quote! {
+    let unwrapper = match dyn_callable.fn_trait {
+        FnTrait::Fn => quote! { &*f },
+        FnTrait::FnMut => quote! { &mut *f },
+        FnTrait::FnOnce => quote! {
             // SAFETY: For FnOnce, DynCallable ensures that the invoker (where this read occurs) is
             // replaced after the first call, ensuring that this happens at most once.
             ::core::ptr::read(f)

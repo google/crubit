@@ -2,68 +2,85 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::Result;
+use arc_anyhow::{bail, Result};
 use crubit_abi_type::{CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::db::BindingsGenerator;
-use database::rs_snippet::{DynCallable, FnKind, RsTypeKind};
+use database::rs_snippet::{BackingType, Callable, FnTrait, RsTypeKind};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-/// Generates the `CrubitAbiType` for DynCallables.
+/// Generates the `CrubitAbiType` for callables.
 pub fn dyn_callable_crubit_abi_type(
     db: &dyn BindingsGenerator,
-    dyn_callable: &DynCallable,
+    callable: &Callable,
 ) -> Result<CrubitAbiType> {
-    let dyn_fn_spelling = dyn_callable.dyn_fn_spelling(db);
+    let dyn_fn_spelling = callable.dyn_fn_spelling(db);
 
-    let rust_type_tokens = quote! {
-        ::dyn_callable_rs::DynCallableAbi<#dyn_fn_spelling>
+    let rust_type_tokens = match callable.backing_type {
+        BackingType::DynCallable => quote! {
+            ::dyn_callable_rs::DynCallableAbi<#dyn_fn_spelling>
+        },
+        BackingType::AnyInvocable => quote! {
+            ::any_invocable::AnyInvocableAbi<#dyn_fn_spelling>
+        },
     };
 
-    let rust_expr_tokens = {
-        let rust_return_type_fragment = dyn_callable.rust_return_type_fragment(db);
+    let on_empty_tokens = {
+        let rust_return_type_fragment = callable.rust_return_type_fragment(db);
         let param_type_tokens =
-            dyn_callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
+            callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
 
-        // DynCallableAbi's constructor takes a "default" value to use in the case that
-        // C++ gives us a value in the moved-from state. The closure we pass in is a ZST
-        // (it has no state), so boxing it is a no-op. This gives us reasonable
-        // behavior: if C++ passes a Rust closure back to Rust, but it's in the
-        // moved-from state and we call it, we'll get a moved-from panic.
         quote! {
-            ::dyn_callable_rs::DynCallableAbi::<#dyn_fn_spelling>::new(
-                ::alloc::boxed::Box::new(|#(_: #param_type_tokens),*| #rust_return_type_fragment {
-                    ::dyn_callable_rs::moved_from_panic()
-                })
-            )
+            ::alloc::boxed::Box::new(|#(_: #param_type_tokens),*| #rust_return_type_fragment {
+                ::core::panic!("moved-from value")
+            })
         }
     };
 
-    let qualifier = match dyn_callable.fn_kind {
-        FnKind::Fn => quote! { const },
-        FnKind::FnMut => quote! {},
-        FnKind::FnOnce => quote! { && },
+    let rust_expr_tokens = match callable.backing_type {
+        BackingType::DynCallable => quote! {
+            ::dyn_callable_rs::DynCallableAbi::<#dyn_fn_spelling>::new(
+                #on_empty_tokens,
+            )
+        },
+        BackingType::AnyInvocable => {
+            let make_cpp_invoker_tokens = generate_make_cpp_invoker_tokens()?;
+            quote! {
+                ::any_invocable::AnyInvocableAbi::<#dyn_fn_spelling>::new(
+                    #on_empty_tokens,
+                    #make_cpp_invoker_tokens,
+                )
+            }
+        }
     };
 
-    let cpp_return_type = cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir())?;
-    let cpp_param_types = dyn_callable
+    let qualifier = match callable.fn_trait {
+        FnTrait::Fn => quote! { const },
+        FnTrait::FnMut => quote! {},
+        FnTrait::FnOnce => quote! { && },
+    };
+
+    let cpp_return_type = cpp_type_name::format_cpp_type(&callable.return_type, db.ir())?;
+    let cpp_param_types = callable
         .param_types
         .iter()
         .map(|param_ty| cpp_type_name::format_cpp_type(param_ty, db.ir()))
         .collect::<Result<Vec<_>>>()?;
-    let cpp_type_tokens = quote! {
-        ::rs_std::internal_dyn_callable::DynCallableAbi<
-            #cpp_return_type(#(#cpp_param_types),*) #qualifier
-        >
+    let cpp_fn_sig = quote! {
+        #cpp_return_type(#(#cpp_param_types),*) #qualifier
+    };
+    let cpp_type_tokens = match callable.backing_type {
+        BackingType::DynCallable => quote! {
+            ::rs_std::internal_dyn_callable::DynCallableAbi<#cpp_fn_sig>
+        },
+        BackingType::AnyInvocable => quote! {
+            ::crubit::AnyInvocableAbi<#cpp_fn_sig>
+        },
     };
 
     let cpp_expr_tokens = {
-        let invoker_function_pointer = generate_invoker_function_pointer(
-            db,
-            dyn_callable,
-            &cpp_param_types,
-            &cpp_return_type,
-        )?;
+        let invoker_function_pointer =
+            generate_invoker_function_pointer(db, callable, &cpp_param_types, &cpp_return_type)?;
 
         // Construct the DynCallableAbi value with a pointer to the invoker function.
         quote! {
@@ -71,7 +88,7 @@ pub fn dyn_callable_crubit_abi_type(
         }
     };
 
-    Ok(CrubitAbiType::DynCallable {
+    Ok(CrubitAbiType::Callable {
         rust_type_tokens,
         rust_expr_tokens,
         cpp_type_tokens,
@@ -99,23 +116,23 @@ pub fn dyn_callable_crubit_abi_type(
 /// a pointer to the thunk.
 fn generate_invoker_function_pointer(
     db: &dyn BindingsGenerator,
-    dyn_callable: &DynCallable,
+    callable: &Callable,
     cpp_param_types: &[TokenStream],
     cpp_return_type: &TokenStream,
 ) -> Result<TokenStream> {
-    let thunk_ident = &dyn_callable.thunk_ident;
-    if dyn_callable.is_c_abi_compatible() {
+    let thunk_ident = &callable.thunk_ident;
+    if callable.is_c_abi_compatible() {
         // The input and output types are all C-compatible, no wrapper lambda is
         // needed.
         return Ok(quote! { &#thunk_ident });
     }
 
     let param_idents =
-        (0..dyn_callable.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
+        (0..callable.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
 
     let mut arg_transforms = quote! {};
     let mut arg_exprs = Vec::with_capacity(param_idents.len());
-    for (i, param_ty) in dyn_callable.param_types.iter().enumerate() {
+    for (i, param_ty) in callable.param_types.iter().enumerate() {
         let param_ident = &param_idents[i];
 
         if param_ty.is_c_abi_compatible_by_value() {
@@ -140,37 +157,36 @@ fn generate_invoker_function_pointer(
         }
     }
 
-    let out_param_arg = if dyn_callable.return_type.is_void()
-        || dyn_callable.return_type.is_c_abi_compatible_by_value()
-    {
-        None
-    } else if dyn_callable.return_type.is_crubit_abi_bridge_type() {
-        let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&dyn_callable.return_type))?;
-        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-        arg_transforms.extend(quote! {
-            unsigned char out[#crubit_abi_type_tokens::kSize];
-        });
-        Some(quote! { , out })
-    } else {
-        arg_transforms.extend(quote! {
-            ::crubit::Slot<#cpp_return_type> out;
-        });
-        Some(quote! { , out.Get() })
-    };
+    let out_param_arg =
+        if callable.return_type.is_void() || callable.return_type.is_c_abi_compatible_by_value() {
+            None
+        } else if callable.return_type.is_crubit_abi_bridge_type() {
+            let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
+            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+            arg_transforms.extend(quote! {
+                unsigned char out[#crubit_abi_type_tokens::kSize];
+            });
+            Some(quote! { , out })
+        } else {
+            arg_transforms.extend(quote! {
+                ::crubit::Slot<#cpp_return_type> out;
+            });
+            Some(quote! { , out.Get() })
+        };
 
     let mut invoke_ffi_and_transform_to_cpp = quote! {
         #thunk_ident(state #(, #arg_exprs)* #out_param_arg);
     };
 
-    if dyn_callable.return_type.is_void() {
+    if callable.return_type.is_void() {
         // No need to return anything.
-    } else if dyn_callable.return_type.is_c_abi_compatible_by_value() {
+    } else if callable.return_type.is_c_abi_compatible_by_value() {
         // Return the result.
         invoke_ffi_and_transform_to_cpp = quote! {
             return #invoke_ffi_and_transform_to_cpp
         };
-    } else if dyn_callable.return_type.is_crubit_abi_bridge_type() {
-        let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&dyn_callable.return_type))?;
+    } else if callable.return_type.is_crubit_abi_bridge_type() {
+        let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
         let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
         let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
         invoke_ffi_and_transform_to_cpp.extend(quote! {
@@ -196,4 +212,9 @@ fn generate_invoker_function_pointer(
             #invoke_ffi_and_transform_to_cpp
         }
     })
+}
+
+/// Generates the `make_cpp_invoker` function for AnyInvocable.
+fn generate_make_cpp_invoker_tokens() -> Result<TokenStream> {
+    bail!("AnyInvocable is not yet supported")
 }
