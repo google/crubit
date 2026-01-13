@@ -121,6 +121,11 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/query_compiler.rs?q=function:repr_attrs
       fn repr_attrs(&self, did: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]>;
 
+      /// Returns the list of traits that should appear in the generated bindings.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:supported_traits
+      fn supported_traits(&self) -> Rc<[DefId]>;
+
       /// Computes the unqualified name of the symbol identified by `def_id`.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:symbol_unqualified_name

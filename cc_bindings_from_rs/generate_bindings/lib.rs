@@ -209,6 +209,7 @@ pub fn new_database<'db>(
         source_crate_num,
         support_header,
         repr_attrs_from_db,
+        supported_traits,
         symbol_unqualified_name,
         symbol_canonical_name,
         public_paths_by_def_id,
@@ -820,6 +821,63 @@ fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSn
     })
 }
 
+// Implementation of `BindingsGenerator::supported_traits`.
+fn supported_traits(db: &dyn BindingsGenerator<'_>) -> Rc<[DefId]> {
+    let tcx = db.tcx();
+    let traits = tcx
+        .visible_traits()
+        .filter(|trait_id| {
+            let crate_name = tcx.crate_name(trait_id.krate);
+            // TODO: b/269294366 - Support traits in stdlib once we can generate bindings for the
+            // stdlib that can be depended on.
+            let not_in_stdlib = crate_name.as_str() != "std" && crate_name.as_str() != "core";
+
+            let generics = tcx.generics_of(*trait_id);
+            // TODO: b/259749095 - Support generics in Traits.
+            // Traits will have a single parameter for the self type which is allowed.
+            let no_generic_args = (generics.has_self
+                && generics.own_params.iter().filter(|param| param.kind.is_ty_or_const()).count()
+                    == 1)
+                || !generics.requires_monomorphization(tcx);
+
+            let is_exposed_trait = db.symbol_canonical_name(*trait_id).is_some();
+            // We might want to explicitly omit certain marker traits here that are already handled by the bindings for structs/enums (Copy, Clone, Default, etc.).
+            // Unless, we think there's value in exposing them explicitly as traits.
+            not_in_stdlib && no_generic_args && is_exposed_trait
+        })
+        .collect::<Vec<DefId>>()
+        .into_boxed_slice();
+    Rc::from(traits)
+}
+
+fn generate_trait(
+    db: &dyn BindingsGenerator<'_>,
+    trait_id: DefId,
+) -> arc_anyhow::Result<ApiSnippets> {
+    if !db.supported_traits().contains(&trait_id) {
+        bail!("Trait is not yet supported")
+    }
+
+    let canonical_name = db
+        .symbol_canonical_name(trait_id)
+        .expect("generate_trait was unexpectedly called on an item without a canonical name");
+
+    let doc_comment = generate_doc_comment(db, trait_id);
+    let trait_name = format_cc_ident(db, canonical_name.unqualified.cpp_name.as_str())?;
+    let rs_type = canonical_name.format_for_rs().to_string();
+    let attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
+
+    let main_api = CcSnippet::new(quote! {
+        __NEWLINE__ #doc_comment
+        template <typename Type>
+        struct #(#attributes)* #trait_name {
+          __NEWLINE__ static constexpr bool is_implemented = false;
+        };
+        __NEWLINE__
+    });
+    Ok(ApiSnippets { main_api, ..Default::default() })
+}
+
 fn generate_type_alias(
     db: &dyn BindingsGenerator<'_>,
     def_id: DefId,
@@ -1297,6 +1355,7 @@ fn generate_item_impl(
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
         DefKind::Const => generate_const(db, def_id).map(Some),
+        DefKind::Trait => generate_trait(db, def_id).map(Some),
         DefKind::Impl { .. } => Ok(None), // Handled by `generate_adt`
         DefKind::Mod => Ok(None),         // Handled by `generate_crate`
         kind => bail!("Unsupported rustc_hir::hir::DefKind: {kind:?}"),
