@@ -634,14 +634,23 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
 
 // Returns the `DynCallable` information for the given `specialization_decl`.
 //
-// This should only be called on template specializations of
-// `rs_std::DynCallable`.
-absl::StatusOr<BridgeType::DynCallable> GetDynCallable(
+// If the given `specialization_decl` is not a `rs_std::DynCallable`, returns
+// `std::nullopt`. If it is a `rs_std::DynCallable` but has other errors,
+// returns an error.
+std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
     ImportContext& ictx,
     const clang::ClassTemplateSpecializationDecl& specialization_decl) {
+  const clang::CXXRecordDecl* templated_decl =
+      specialization_decl.getSpecializedTemplate()->getTemplatedDecl();
+
+  if (AsTopLevelNamespace(templated_decl->getDeclContext()) != "rs_std" ||
+      templated_decl->getName() != "DynCallable") {
+    return std::nullopt;
+  }
+
   if (specialization_decl.getTemplateArgs().size() != 1) {
     return absl::InvalidArgumentError(
-        "DynCallable template specialization must have exactly one template "
+        "Callable template specialization must have exactly one template "
         "argument");
   }
   const clang::FunctionProtoType* sig_fn_type =
@@ -669,12 +678,13 @@ absl::StatusOr<BridgeType::DynCallable> GetDynCallable(
 
   // Convert the return type, ensuring that it is complete first.
   if (sig_fn_type->getReturnType()->isIncompleteType()) {
-    bool is_complete = ictx.sema_.isCompleteType(
-        specialization_decl.getLocation(), sig_fn_type->getReturnType());
     // void is always considered incomplete, but is valid.
-    if (!is_complete && !sig_fn_type->getReturnType()->isVoidType()) {
+    bool ok = sig_fn_type->getReturnType()->isVoidType() ||
+              ictx.sema_.isCompleteType(specialization_decl.getLocation(),
+                                        sig_fn_type->getReturnType());
+    if (!ok) {
       return absl::InvalidArgumentError(
-          absl::StrCat("Return type of DynCallable is incomplete: ",
+          absl::StrCat("Return type of callable is incomplete: ",
                        sig_fn_type->getReturnType().getAsString()));
     }
   }
@@ -687,8 +697,13 @@ absl::StatusOr<BridgeType::DynCallable> GetDynCallable(
   param_types.reserve(sig_fn_type->getNumParams());
   for (clang::QualType param_type : sig_fn_type->getParamTypes()) {
     if (param_type->isIncompleteType()) {
-      (void)ictx.sema_.isCompleteType(specialization_decl.getLocation(),
-                                      param_type);
+      bool ok = ictx.sema_.isCompleteType(specialization_decl.getLocation(),
+                                          param_type);
+      if (!ok) {
+        return absl::InvalidArgumentError(
+            absl::StrCat("Parameter type of callable is incomplete: ",
+                         param_type.getAsString()));
+      }
     }
     CRUBIT_ASSIGN_OR_RETURN(
         CcType param_cc_type,
@@ -696,11 +711,11 @@ absl::StatusOr<BridgeType::DynCallable> GetDynCallable(
     param_types.push_back(std::move(param_cc_type));
   }
 
-  return BridgeType::DynCallable{
+  return BridgeType(BridgeType::DynCallable{
       .fn_kind = fn_kind,
       .return_type = std::make_shared<CcType>(std::move(return_type)),
       .param_types = std::move(param_types),
-  };
+  });
 }
 
 }  // namespace
@@ -891,22 +906,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       owning_target = ts.defining_target;
     }
 
-    const clang::CXXRecordDecl* templated_decl =
-        specialization_decl->getSpecializedTemplate()->getTemplatedDecl();
-    if (AsTopLevelNamespace(templated_decl->getDeclContext()) == "rs_std") {
-      if (templated_decl->getName() == "DynCallable") {
-        LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
-            << "rs_std::DynCallable should have one template arg";
-        absl::StatusOr<BridgeType::DynCallable> status_or_dyn_callable =
-            GetDynCallable(ictx_, *specialization_decl);
-        if (!status_or_dyn_callable.ok()) {
-          return ictx_.ImportUnsupportedItem(
-              *record_decl, std::nullopt,
-              FormattedError::FromStatus(
-                  std::move(status_or_dyn_callable).status()));
-        }
-        bridge_type.emplace().variant = *std::move(status_or_dyn_callable);
+    if (std::optional<absl::StatusOr<BridgeType>> extracted_callable =
+            ExtractCallable(ictx_, *specialization_decl)) {
+      if (!extracted_callable->ok()) {
+        return ictx_.ImportUnsupportedItem(
+            *record_decl, std::nullopt,
+            FormattedError::FromStatus(
+                (*std::move(extracted_callable)).status()));
       }
+      bridge_type = **std::move(extracted_callable);
     }
 
     if (!bridge_type.has_value()) {
