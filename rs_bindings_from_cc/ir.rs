@@ -24,6 +24,9 @@ use std::rc::Rc;
 pub trait GenericItem {
     fn id(&self) -> ItemId;
 
+    /// The unique name (probably the USR) of the item for log aggregation purposes.
+    fn unique_name(&self) -> Option<Rc<str>>;
+
     /// The Bazel target which owns the bindings for this item.
     fn owning_target(&self) -> Option<BazelLabel>;
 
@@ -56,6 +59,9 @@ where
 {
     fn id(&self) -> ItemId {
         (**self).id()
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        (**self).unique_name()
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         (**self).owning_target()
@@ -809,6 +815,7 @@ pub enum SafetyAnnotation {
 pub struct Func {
     pub cc_name: UnqualifiedIdentifier,
     pub rs_name: UnqualifiedIdentifier,
+    pub unique_name: Rc<str>,
     pub owning_target: BazelLabel,
     pub mangled_name: Rc<str>,
     pub doc_comment: Option<Rc<str>>,
@@ -863,6 +870,9 @@ pub struct Func {
 impl GenericItem for Func {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -968,6 +978,7 @@ pub struct BaseClass {
 pub struct IncompleteRecord {
     pub cc_name: Identifier,
     pub rs_name: Identifier,
+    pub unique_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     /// A human-readable list of attributes that Crubit doesn't understand.
@@ -984,6 +995,9 @@ pub struct IncompleteRecord {
 impl GenericItem for IncompleteRecord {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1139,6 +1153,7 @@ pub struct Record {
     /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
     /// parent modules for nested items which are disallowed for template specializations in Crubit.
     pub cc_name: Identifier,
+    pub unique_name: Rc<str>,
 
     /// Mangled record names are used to 1) provide valid Rust identifiers for
     /// C++ template specializations, and 2) help build unique names for virtual
@@ -1187,6 +1202,9 @@ pub struct Record {
 impl GenericItem for Record {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1322,6 +1340,7 @@ impl Record {
 pub struct GlobalVar {
     pub cc_name: Identifier,
     pub rs_name: Identifier,
+    pub unique_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub source_loc: Rc<str>,
@@ -1337,6 +1356,9 @@ pub struct GlobalVar {
 impl GenericItem for GlobalVar {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1364,6 +1386,7 @@ impl GenericItem for GlobalVar {
 pub struct Enum {
     pub cc_name: Identifier,
     pub rs_name: Identifier,
+    pub unique_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub source_loc: Rc<str>,
@@ -1383,6 +1406,9 @@ pub struct Enum {
 impl GenericItem for Enum {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1419,6 +1445,7 @@ pub struct Enumerator {
 pub struct TypeAlias {
     pub cc_name: Identifier,
     pub rs_name: Identifier,
+    pub unique_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub doc_comment: Option<Rc<str>>,
@@ -1433,6 +1460,9 @@ pub struct TypeAlias {
 impl GenericItem for TypeAlias {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1544,6 +1574,7 @@ pub struct UnsupportedItemPath {
 #[serde(deny_unknown_fields)]
 pub struct UnsupportedItem {
     pub name: Rc<str>,
+    pub unique_name: Option<Rc<str>>,
     pub kind: UnsupportedItemKind,
     pub path: Option<UnsupportedItemPath>,
     errors: Vec<Rc<FormattedError>>,
@@ -1560,6 +1591,9 @@ pub struct UnsupportedItem {
 impl GenericItem for UnsupportedItem {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        self.unique_name.clone()
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
@@ -1593,6 +1627,7 @@ impl UnsupportedItem {
     ) -> Self {
         Self {
             name: item.debug_name(ir),
+            unique_name: item.unique_name(),
             errors: error.into_iter().collect(),
             kind: item.unsupported_kind(),
             path,
@@ -1656,6 +1691,9 @@ impl GenericItem for Comment {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        None
+    }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
@@ -1681,6 +1719,7 @@ impl GenericItem for Comment {
 pub struct Namespace {
     pub cc_name: Identifier,
     pub rs_name: Identifier,
+    pub unique_name: Rc<str>,
     pub id: ItemId,
     pub canonical_namespace_id: ItemId,
     /// A human-readable list of attributes that Crubit doesn't understand.
@@ -1696,6 +1735,9 @@ pub struct Namespace {
 impl GenericItem for Namespace {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1731,6 +1773,9 @@ impl GenericItem for UseMod {
     fn id(&self) -> ItemId {
         self.id
     }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        None
+    }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
@@ -1756,6 +1801,7 @@ impl GenericItem for UseMod {
 pub struct ExistingRustType {
     pub rs_name: Rc<str>,
     pub cc_name: Rc<str>,
+    pub unique_name: Rc<str>,
     pub type_parameters: Vec<CcType>,
     pub owning_target: BazelLabel,
     pub size_align: Option<SizeAlign>,
@@ -1767,6 +1813,9 @@ pub struct ExistingRustType {
 impl GenericItem for ExistingRustType {
     fn id(&self) -> ItemId {
         self.id
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        Some(self.unique_name.clone())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1826,6 +1875,13 @@ impl GenericItem for Item {
         forward_item! {
             match self {
                 _(x) => x.id()
+            }
+        }
+    }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        forward_item! {
+            match self {
+                _(x) => x.unique_name()
             }
         }
     }
