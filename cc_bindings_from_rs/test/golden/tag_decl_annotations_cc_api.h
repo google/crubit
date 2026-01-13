@@ -15,8 +15,11 @@
 #pragma kythe_inline_metadata "This file contains Kythe metadata."
 #endif
 #include "support/annotations_internal.h"
+#include "support/internal/slot.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 namespace tag_decl_annotations_rust {
 
@@ -37,7 +40,51 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
   VARIANT_2 = INT32_C(2),
 };
 
+// Generated from:
+// cc_bindings_from_rs/test/golden/tag_decl_annotations.rs;l=14
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: tag_decl_annotations_rust_golden :: SomeStruct") alignas(4)
+    [[clang::trivial_abi]] SomeStruct final {
+ public:
+  // `tag_decl_annotations_rust_golden::SomeStruct` doesn't implement the
+  // `Default` trait
+  SomeStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~SomeStruct() = default;
+  SomeStruct(SomeStruct&&) = default;
+  SomeStruct& operator=(SomeStruct&&) = default;
+
+  // `tag_decl_annotations_rust_golden::SomeStruct` doesn't implement the
+  // `Clone` trait
+  SomeStruct(const SomeStruct&) = delete;
+  SomeStruct& operator=(const SomeStruct&) = delete;
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/golden/tag_decl_annotations.rs;l=15
+    std::int32_t f;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+static_assert(
+    sizeof(SomeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(SomeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<SomeStruct>);
+static_assert(std::is_trivially_move_constructible_v<SomeStruct>);
+static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
+inline void SomeStruct::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(SomeStruct, f));
+}
 }  // namespace tag_decl_annotations_rust
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TAG_DECL_ANNOTATIONS_RUST_GOLDEN
 
-// This file contains Kythe metadata. eyJ0eXBlIjoia3l0aGUwIiwibWV0YSI6W3sidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjI2NCwic291cmNlX2VuZCI6MjcyLCJ0YXJnZXRfYmVnaW4iOjg5NCwidGFyZ2V0X2VuZCI6OTAyLCJlZGdlIjoiL2t5dGhlL2VkZ2UvaW1wdXRlcyIsInNvdXJjZV92bmFtZSI6eyJjb3JwdXMiOiJjb3JwdXMiLCJwYXRoIjoidGhpcmRfcGFydHkvY3J1Yml0L2NjX2JpbmRpbmdzX2Zyb21fcnMvdGVzdC9nb2xkZW4vdGFnX2RlY2xfYW5ub3RhdGlvbnMucnMiLCJsYW5ndWFnZSI6InJ1c3QifX0seyJ0eXBlIjoiYW5jaG9yX2FuY2hvciIsInNvdXJjZV9iZWdpbiI6MzA5LCJzb3VyY2VfZW5kIjozMTgsInRhcmdldF9iZWdpbiI6MTAzNSwidGFyZ2V0X2VuZCI6MTA0NCwiZWRnZSI6Ii9reXRoZS9lZGdlL2ltcHV0ZXMiLCJzb3VyY2Vfdm5hbWUiOnsiY29ycHVzIjoiY29ycHVzIiwicGF0aCI6InRoaXJkX3BhcnR5L2NydWJpdC9jY19iaW5kaW5nc19mcm9tX3JzL3Rlc3QvZ29sZGVuL3RhZ19kZWNsX2Fubm90YXRpb25zLnJzIiwibGFuZ3VhZ2UiOiJydXN0In19LHsidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjM1OCwic291cmNlX2VuZCI6MzY3LCJ0YXJnZXRfYmVnaW4iOjExNzUsInRhcmdldF9lbmQiOjExODQsImVkZ2UiOiIva3l0aGUvZWRnZS9pbXB1dGVzIiwic291cmNlX3ZuYW1lIjp7ImNvcnB1cyI6ImNvcnB1cyIsInBhdGgiOiJ0aGlyZF9wYXJ0eS9jcnViaXQvY2NfYmluZGluZ3NfZnJvbV9ycy90ZXN0L2dvbGRlbi90YWdfZGVjbF9hbm5vdGF0aW9ucy5ycyIsImxhbmd1YWdlIjoicnVzdCJ9fSx7InR5cGUiOiJhbmNob3JfYW5jaG9yIiwic291cmNlX2JlZ2luIjo0MDcsInNvdXJjZV9lbmQiOjQxNiwidGFyZ2V0X2JlZ2luIjoxMzE1LCJ0YXJnZXRfZW5kIjoxMzI0LCJlZGdlIjoiL2t5dGhlL2VkZ2UvaW1wdXRlcyIsInNvdXJjZV92bmFtZSI6eyJjb3JwdXMiOiJjb3JwdXMiLCJwYXRoIjoidGhpcmRfcGFydHkvY3J1Yml0L2NjX2JpbmRpbmdzX2Zyb21fcnMvdGVzdC9nb2xkZW4vdGFnX2RlY2xfYW5ub3RhdGlvbnMucnMiLCJsYW5ndWFnZSI6InJ1c3QifX1dfQ==
+// This file contains Kythe metadata. eyJ0eXBlIjoia3l0aGUwIiwibWV0YSI6W3sidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjI2NCwic291cmNlX2VuZCI6MjcyLCJ0YXJnZXRfYmVnaW4iOjk3OCwidGFyZ2V0X2VuZCI6OTg2LCJlZGdlIjoiL2t5dGhlL2VkZ2UvaW1wdXRlcyIsInNvdXJjZV92bmFtZSI6eyJjb3JwdXMiOiJjb3JwdXMiLCJwYXRoIjoidGhpcmRfcGFydHkvY3J1Yml0L2NjX2JpbmRpbmdzX2Zyb21fcnMvdGVzdC9nb2xkZW4vdGFnX2RlY2xfYW5ub3RhdGlvbnMucnMiLCJsYW5ndWFnZSI6InJ1c3QifX0seyJ0eXBlIjoiYW5jaG9yX2FuY2hvciIsInNvdXJjZV9iZWdpbiI6MzA5LCJzb3VyY2VfZW5kIjozMTgsInRhcmdldF9iZWdpbiI6MTExOSwidGFyZ2V0X2VuZCI6MTEyOCwiZWRnZSI6Ii9reXRoZS9lZGdlL2ltcHV0ZXMiLCJzb3VyY2Vfdm5hbWUiOnsiY29ycHVzIjoiY29ycHVzIiwicGF0aCI6InRoaXJkX3BhcnR5L2NydWJpdC9jY19iaW5kaW5nc19mcm9tX3JzL3Rlc3QvZ29sZGVuL3RhZ19kZWNsX2Fubm90YXRpb25zLnJzIiwibGFuZ3VhZ2UiOiJydXN0In19LHsidHlwZSI6ImFuY2hvcl9hbmNob3IiLCJzb3VyY2VfYmVnaW4iOjM1OCwic291cmNlX2VuZCI6MzY3LCJ0YXJnZXRfYmVnaW4iOjEyNTksInRhcmdldF9lbmQiOjEyNjgsImVkZ2UiOiIva3l0aGUvZWRnZS9pbXB1dGVzIiwic291cmNlX3ZuYW1lIjp7ImNvcnB1cyI6ImNvcnB1cyIsInBhdGgiOiJ0aGlyZF9wYXJ0eS9jcnViaXQvY2NfYmluZGluZ3NfZnJvbV9ycy90ZXN0L2dvbGRlbi90YWdfZGVjbF9hbm5vdGF0aW9ucy5ycyIsImxhbmd1YWdlIjoicnVzdCJ9fSx7InR5cGUiOiJhbmNob3JfYW5jaG9yIiwic291cmNlX2JlZ2luIjo0MDcsInNvdXJjZV9lbmQiOjQxNiwidGFyZ2V0X2JlZ2luIjoxMzk5LCJ0YXJnZXRfZW5kIjoxNDA4LCJlZGdlIjoiL2t5dGhlL2VkZ2UvaW1wdXRlcyIsInNvdXJjZV92bmFtZSI6eyJjb3JwdXMiOiJjb3JwdXMiLCJwYXRoIjoidGhpcmRfcGFydHkvY3J1Yml0L2NjX2JpbmRpbmdzX2Zyb21fcnMvdGVzdC9nb2xkZW4vdGFnX2RlY2xfYW5ub3RhdGlvbnMucnMiLCJsYW5ndWFnZSI6InJ1c3QifX0seyJ0eXBlIjoiYW5jaG9yX2FuY2hvciIsInNvdXJjZV9iZWdpbiI6NDU2LCJzb3VyY2VfZW5kIjo0NjYsInRhcmdldF9iZWdpbiI6MTY2NiwidGFyZ2V0X2VuZCI6MTY3NiwiZWRnZSI6Ii9reXRoZS9lZGdlL2ltcHV0ZXMiLCJzb3VyY2Vfdm5hbWUiOnsiY29ycHVzIjoiY29ycHVzIiwicGF0aCI6InRoaXJkX3BhcnR5L2NydWJpdC9jY19iaW5kaW5nc19mcm9tX3JzL3Rlc3QvZ29sZGVuL3RhZ19kZWNsX2Fubm90YXRpb25zLnJzIiwibGFuZ3VhZ2UiOiJydXN0In19XX0=

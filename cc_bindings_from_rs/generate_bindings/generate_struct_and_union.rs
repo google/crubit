@@ -655,11 +655,17 @@ pub fn generate_adt<'tcx>(
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
         prereqs.fwd_decls.remove(&core.def_id);
 
+        let bracketed_adt_cc_name = if db.kythe_annotations() {
+            quote! { __CAPTURE_BEGIN__ #adt_cc_name __CAPTURE_END__ }
+        } else {
+            quote! { #adt_cc_name }
+        };
+
         CcSnippet {
             prereqs,
             tokens: quote! {
                 __NEWLINE__ #doc_comment
-                #keyword #(#attributes)* #adt_cc_name final {
+                #keyword #(#attributes)* #bracketed_adt_cc_name final {
                     public: __NEWLINE__
                         #public_functions_main_api
                     #fields_main_api

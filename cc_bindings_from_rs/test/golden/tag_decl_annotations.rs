@@ -10,3 +10,7 @@ impl SomeEnum {
     pub const VARIANT_1: SomeEnum = SomeEnum(1);
     pub const VARIANT_2: SomeEnum = SomeEnum(2);
 }
+
+pub struct SomeStruct {
+    pub f: i32,
+}

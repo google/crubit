@@ -127,6 +127,37 @@ fn test_format_struct_cpp_name() {
 }
 
 #[test]
+fn test_format_struct_cpp_name_with_kythe_annotations() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_name=Bar"]
+            pub struct Foo {
+                pub x: i32,
+            }
+        "#;
+    test_format_item_with_features(
+        test_src,
+        "Foo",
+        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,
+        /* with_kythe_annotations= */ true,
+        |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            let comment =
+                "CRUBIT_ANNOTATE: cpp_name=Bar\n\nGenerated from: <crubit_unittests.rs>;l=3";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "75" "78"
+                    __COMMENT__ #comment
+                    struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo") alignas(4)
+                    [[clang::trivial_abi]] __CAPTURE_BEGIN__ Bar __CAPTURE_END__ final
+                }
+            );
+        },
+    );
+}
+
+#[test]
 fn test_format_item_unsupported_type_generic_struct() {
     let test_src = r#"
             pub struct Point<T> {
