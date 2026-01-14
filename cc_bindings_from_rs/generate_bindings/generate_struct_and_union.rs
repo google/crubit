@@ -1369,6 +1369,11 @@ fn generate_fields<'tcx>(
                                 current_visibility: &mut CcFieldVisState|
          -> TokenStream {
             let cc_name = &field.cc_name;
+            let bracketed_cc_name = if db.kythe_annotations() {
+                quote! { __CAPTURE_BEGIN__ #cc_name __CAPTURE_END__ }
+            } else {
+                quote! { #cc_name }
+            };
             match field.type_info {
                 Err(ref err) => {
                     let size = field.size();
@@ -1437,7 +1442,7 @@ fn generate_fields<'tcx>(
                                     union {  __NEWLINE__
                                         #doc_comment
                                         #(#attributes)*
-                                        #cpp_type #cc_name;
+                                        #cpp_type #bracketed_cc_name;
                                     };
                                 #padding
                             }
@@ -1447,7 +1452,7 @@ fn generate_fields<'tcx>(
                                 quote! {
                                     #visibility __NEWLINE__
                                     #doc_comment
-                                    #cpp_type #cc_name;
+                                    #cpp_type #bracketed_cc_name;
                                 }
                             } else {
                                 let internal_padding = if field.offset == 0 {
@@ -1463,11 +1468,13 @@ fn generate_fields<'tcx>(
                                     struct {
                                         #internal_padding
                                         #cpp_type value;
-                                    } #cc_name;
+                                    } #bracketed_cc_name;
                                 }
                             }
                         }
                         ty::AdtKind::Enum => {
+                            // TODO(b/460420108) : Why is there no #doc_comment here? We need one
+                            // for __CAPTURE_BEGIN__ et al to work properly.
                             quote! {
                                 #visibility __NEWLINE__ #cpp_type #cc_name;
                             }

@@ -144,13 +144,22 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
             let main_api = &result.main_api;
             let comment =
                 "CRUBIT_ANNOTATE: cpp_name=Bar\n\nGenerated from: <crubit_unittests.rs>;l=3";
+            let field_comment = "Generated from: <crubit_unittests.rs>;l=4";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
                     __CAPTURE_TAG__ "<crubit_unittests.rs>" "75" "78"
                     __COMMENT__ #comment
                     struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo") alignas(4)
-                    [[clang::trivial_abi]] __CAPTURE_BEGIN__ Bar __CAPTURE_END__ final
+                    [[clang::trivial_abi]] __CAPTURE_BEGIN__ Bar __CAPTURE_END__ final {
+                      ...
+                      union {
+                        __CAPTURE_TAG__ "<crubit_unittests.rs>" "101" "102"
+                        __COMMENT__ #field_comment
+                        std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__;
+                      };
+                      ...
+                    };
                 }
             );
         },
