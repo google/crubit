@@ -32,8 +32,8 @@ use crate::format_type::{
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
-    cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt, generate_adt_core,
-    scalar_value_to_string,
+    adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
+    generate_adt_core, scalar_value_to_string,
 };
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
@@ -222,6 +222,7 @@ pub fn new_database<'db>(
         generate_move_ctor_and_assignment_operator,
         generate_item,
         generate_function,
+        adt_needs_bindings,
         generate_adt_core,
         crubit_abi_type_from_ty,
         from_trait_impls_by_argument,
@@ -1323,33 +1324,12 @@ fn generate_item_impl(
     def_id: DefId,
 ) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
-    let Some(canonical_name) = db.symbol_canonical_name(def_id) else {
+    if db.symbol_canonical_name(def_id).is_none() {
         return Ok(None);
     };
     let item = match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
-            let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
-
-            let has_composable_bridging_attrs = matches!(
-                attributes.get_bridging_attrs()?,
-                Some(crubit_attr::BridgingAttrs::Composable { .. })
-            );
-
-            if !has_composable_bridging_attrs
-                && BridgedBuiltin::new(db, tcx.adt_def(def_id)).is_none()
-                && query_compiler::has_non_lifetime_generics(tcx, def_id)
-            {
-                bail!("Generic types are not supported yet (b/259749095)");
-            }
-
-            if let Some(cpp_type) = canonical_name.unqualified.cpp_type {
-                let item_name = tcx.def_path_str(def_id);
-                bail!(
-                    "Type bindings for {item_name} suppressed due to being mapped to \
-                            an existing C++ type ({cpp_type})"
-                );
-            }
-            db.generate_adt_core(def_id).map(|core| Some(generate_adt(db, core)))
+            db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
         }
         DefKind::Fn => db.generate_function(def_id).map(Some),
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
@@ -1497,6 +1477,102 @@ struct FormattedItem {
     aliases: Vec<ExportedPath>,
 }
 
+/// Generate bindings to supported trait implementations. An implementation is supported if both
+/// its trait and implementing type receive bindings.
+fn generate_trait_impls<'a, 'b>(
+    db: &'a dyn BindingsGenerator<'b>,
+) -> impl Iterator<Item = ApiSnippets> + use<'a, 'b> {
+    let tcx = db.tcx();
+    let supported_traits: Vec<DefId> = db.supported_traits().iter().copied().collect();
+    // TyCtxt makes it easy to get all the implementations of a trait, but there isn't an easy way
+    // to say give me all the trait implementations for this type. This is by design. The compiler
+    // lazily determines conformance to traits as needed for types and never computes every trait
+    // for a type in a single data structure.
+    //
+    // We, however, want every implementation for a supported type, so we can emit bindings to them.
+    // We achieve this by walking every supported trait, walking every implementation of that trait,
+    // and paring down to the implementations that receive bindings.
+    //
+    // A serendipitous side effect of this approach is that our implementations are emitted as a
+    // single list containing just implementations. We want to emit all of our implementations in a
+    // separate portion of our header from the rest of our bindings. Our impls become template
+    // specializaitons, which are required to be in an enclosing namespace of the template they
+    // specialize. This prevents them from living in the same namespace as our other bindings, as
+    // they may implement a trait that is not enclosed by that namespace.
+    supported_traits
+        .into_iter()
+        .flat_map(move |trait_def_id| {
+            use rustc_middle::ty::fast_reject::SimplifiedType;
+            tcx.trait_impls_of(trait_def_id)
+                .non_blanket_impls()
+                .into_iter()
+                .filter_map(move |(simple_ty, impl_def_ids)| match simple_ty {
+                    SimplifiedType::Adt(did) => {
+                        // Only bind implementations for supported ADTs.
+                        if db.adt_needs_bindings(*did).is_err() {
+                            return None;
+                        }
+                        let adt_cc_name = db.symbol_canonical_name(*did)?.format_for_cc(db).ok()?;
+                        Some((adt_cc_name, trait_def_id, impl_def_ids))
+                    }
+                    // TODO: b/457803426 - Support trait implementations for non-adt types.
+                    _ => None,
+                })
+                .flat_map(move |(adt_cc_name, trait_def_id, impl_def_ids)| {
+                    impl_def_ids
+                        .iter()
+                        // TODO: b/458768435 - This is technically suboptimal. We could instead only
+                        // query for the impls from this crate, but the logic is complicated by
+                        // supporting LOCAL_CRATE. Revisit once we've migrated to rmetas.
+                        .filter(|impl_def_id| impl_def_id.krate == db.source_crate_num())
+                        .map(move |impl_def_id| (adt_cc_name.clone(), trait_def_id, impl_def_id))
+                })
+        })
+        .map(move |(adt_cc_name, trait_def_id, impl_def_id)| {
+            let canonical_name = db.symbol_canonical_name(trait_def_id).expect(
+                "symbol_canonical_name was unexpectedly called on a trait without a canonical name",
+            );
+            let trait_name = canonical_name.format_for_cc(db).map_err(|err| (impl_def_id, err))?;
+            let mut prereqs = CcPrerequisites::default();
+            if trait_def_id.krate == db.source_crate_num() {
+                prereqs.defs.insert(trait_def_id);
+            } else {
+                let other_crate_name = tcx.crate_name(trait_def_id.krate);
+                let crate_name_to_include_paths = db.crate_name_to_include_paths();
+                let includes = crate_name_to_include_paths
+                    .get(other_crate_name.as_str())
+                    .ok_or_else(|| {
+                        let trait_name = tcx.def_path_str(trait_def_id);
+                        (
+                            impl_def_id,
+                            anyhow!(
+                                "Trait `{trait_name}` comes from the `{other_crate_name}` crate, \
+                                but no `--crate-header` was specified for this crate"
+                            ),
+                        )
+                    })?;
+                prereqs.includes.extend(includes.iter().cloned());
+            }
+            Ok(CcSnippet {
+                tokens: quote! {
+                    __NEWLINE__
+                    template<>
+                    struct #trait_name<#adt_cc_name> {
+                        static constexpr bool is_implemented = true;
+                    };
+                    __NEWLINE__
+                },
+                prereqs,
+            }
+            .into_main_api())
+        })
+        .map(|results_snippets| {
+            results_snippets.unwrap_or_else(|(def_id, err)| {
+                generate_unsupported_def(db, *def_id, err).into_main_api()
+            })
+        })
+}
+
 fn formatted_items_in_crate(db: &dyn BindingsGenerator<'_>) -> impl Iterator<Item = FormattedItem> {
     let tcx = db.tcx();
     let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
@@ -1608,6 +1684,19 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         ordered_ids
     };
 
+    let impls = generate_trait_impls(db)
+        .map(|snippets| snippets.main_api.clone().into_tokens(&mut cc_details_prereqs))
+        .collect::<Vec<_>>();
+    let impls_tokens = if impls.is_empty() {
+        // Exclude leading newline for an empty impls list.
+        quote! {}
+    } else {
+        quote! {
+            __NEWLINE__
+            #(#impls)__NEWLINE__*
+        }
+    };
+
     // Destructure/rebuild `main_apis` (in the same order as `ordered_ids`) into
     // `includes`, and `ordered_cc` (mixing in `fwd_decls` and `cc_details`).
     let (includes, ordered_cc) = {
@@ -1679,6 +1768,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
                 #ordered_cc
                 __NEWLINE__
             }
+            #impls_tokens
             __NEWLINE__
         }
     };

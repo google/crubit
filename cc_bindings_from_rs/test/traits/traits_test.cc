@@ -7,5 +7,6 @@
 #include "gtest/gtest.h"
 
 TEST(TraitsTest, TraitBinding) {
-  EXPECT_EQ(traits::MyTrait<traits::MyStruct>::is_implemented, false);
+  EXPECT_EQ(traits::MyTrait<traits::MyStruct>::is_implemented, true);
+  EXPECT_EQ(traits::MyTrait<int>::is_implemented, false);
 }

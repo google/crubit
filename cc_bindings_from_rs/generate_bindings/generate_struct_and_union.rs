@@ -14,7 +14,8 @@ use crate::generate_function::{generate_thunk_call, Param};
 use crate::{
     crate_features, generate_const, generate_deprecated_tag, generate_must_use_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_bridged_type, is_copy, RsSnippet, SortedByDef, TraitThunks,
+    get_tag_size_with_padding, is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef,
+    TraitThunks,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
@@ -712,6 +713,40 @@ pub fn generate_adt<'tcx>(
         }
     };
     ApiSnippets { main_api, cc_details, rs_details }
+}
+
+/// Implementation of `BindingsGenerator::adt_needs_bindings`.
+pub fn adt_needs_bindings<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<Rc<AdtCoreBindings<'tcx>>> {
+    let tcx = db.tcx();
+    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
+
+    let has_composable_bridging_attrs = matches!(
+        attributes.get_bridging_attrs()?,
+        Some(crubit_attr::BridgingAttrs::Composable { .. })
+    );
+
+    if !has_composable_bridging_attrs
+        && BridgedBuiltin::new(db, tcx.adt_def(def_id)).is_none()
+        && query_compiler::has_non_lifetime_generics(tcx, def_id)
+    {
+        bail!("Generic types are not supported yet (b/259749095)");
+    }
+
+    let fully_qualified_name = db
+        .symbol_canonical_name(def_id)
+        .ok_or_else(|| anyhow!("No public path could be found for type {def_id:?}"))?;
+    if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
+        let item_name = tcx.def_path_str(def_id);
+        bail!(
+            "Type bindings for {item_name} suppressed due to being mapped to \
+                    an existing C++ type ({cpp_type})"
+        );
+    }
+
+    db.generate_adt_core(def_id)
 }
 
 /// Implementation of `BindingsGenerator::generate_adt_core`.

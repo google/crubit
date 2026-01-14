@@ -127,4 +127,15 @@ inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
 }
 }  // namespace traits
+
+template <>
+struct ::traits::MyTrait<::traits::MyStruct> {
+  static constexpr bool is_implemented = true;
+};
+
+template <>
+struct ::traits::LifetimeTrait<::traits::LifetimeStruct> {
+  static constexpr bool is_implemented = true;
+};
+
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_TRAITS_GOLDEN
