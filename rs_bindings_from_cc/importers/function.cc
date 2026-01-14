@@ -66,7 +66,7 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
   absl::StatusOr<std::optional<AnnotateArgs>> maybe_args =
       GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
   if (!maybe_args.ok()) {
-    errors.AddStatus(maybe_args.status());
+    errors.AddStatus(std::move(maybe_args).status());
     return SafetyAnnotation::kUnannotated;
   }
   if (!maybe_args->has_value()) {
@@ -81,10 +81,9 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
   absl::StatusOr<bool> is_unsafe =
       GetExprAsBool(*args[0], decl.getASTContext());
   if (!is_unsafe.ok()) {
-    errors.AddStatus(is_unsafe.status());
+    errors.AddStatus(std::move(is_unsafe).status());
     return SafetyAnnotation::kUnannotated;
-  }
-  if (*is_unsafe) {
+  } else if (*is_unsafe) {
     return SafetyAnnotation::kUnsafe;
   } else {
     return SafetyAnnotation::kDisableUnsafe;
@@ -201,7 +200,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        FormattedError::FromStatus(std::move(enclosing_item_id).status()));
   }
 
   // Reports an unsupported function with the given error.
@@ -213,7 +212,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                       function_decl](FormattedError error) {
     return ictx_.ImportUnsupportedItem(
         *function_decl,
-        UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
+        UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         error);
   };
@@ -432,13 +431,13 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     absl::StatusOr<std::optional<std::string>> unknown_attr =
         CollectUnknownAttrs(*param);
     if (!unknown_attr.ok()) {
-      errors.Add(FormattedError::FromStatus(std::move(unknown_attr.status())));
+      errors.Add(FormattedError::FromStatus(std::move(unknown_attr).status()));
       continue;
     }
 
     params.push_back({.type = *param_type,
                       .identifier = *std::move(param_name),
-                      .unknown_attr = std::move(*unknown_attr)});
+                      .unknown_attr = *std::move(unknown_attr)});
   }
 
   bool undeduced_return_type =
@@ -538,7 +537,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!errors.error_set.empty()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl,
-        UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
+        UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
         std::vector(errors.error_set.begin(), errors.error_set.end()));
   }
@@ -599,9 +598,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl,
-        UnsupportedItem::Path{.ident = (*translated_name).cc_identifier,
+        UnsupportedItem::Path{.ident = translated_name->cc_identifier,
                               .enclosing_item_id = *enclosing_item_id},
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
+        FormattedError::FromStatus(std::move(unknown_attr).status()));
   }
 
   // Silence ClangTidy, checked above: calling `errors.Add` if
@@ -609,12 +608,12 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   CHECK_OK(return_type);
 
   return Func{
-      .cc_name = (*translated_name).cc_identifier,
-      .rs_name = (*translated_name).rs_identifier(),
+      .cc_name = translated_name->cc_identifier,
+      .rs_name = translated_name->rs_identifier(),
       .owning_target = ictx_.GetOwningTarget(function_decl),
       .doc_comment = std::move(doc_comment),
       .mangled_name = ictx_.GetMangledName(function_decl),
-      .return_type = *return_type,
+      .return_type = *std::move(return_type),
       .params = std::move(params),
       .lifetime_params = std::move(lifetime_params),
       .is_inline = is_inline,
@@ -625,7 +624,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .is_consteval = function_decl->isConsteval(),
       .nodiscard = std::move(nodiscard),
       .deprecated = std::move(deprecated),
-      .unknown_attr = std::move(*unknown_attr),
+      .unknown_attr = *std::move(unknown_attr),
       .has_c_calling_convention = has_c_calling_convention,
       .is_member_or_descendant_of_class_template =
           is_member_or_descendant_of_class_template,

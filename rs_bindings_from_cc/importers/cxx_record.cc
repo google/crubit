@@ -816,7 +816,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(unknown_attr.status())));
+        FormattedError::FromStatus(std::move(unknown_attr).status()));
   }
   if (attr_error_item.has_value()) {
     return attr_error_item;
@@ -835,7 +835,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (!owned_ptr_type.ok()) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        FormattedError::FromStatus(owned_ptr_type.status()));
+        FormattedError::FromStatus(std::move(owned_ptr_type).status()));
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
@@ -921,7 +921,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         return ictx_.ImportUnsupportedItem(
             *record_decl, std::nullopt,
             FormattedError::FromStatus(
-                (*std::move(extracted_callable)).status()));
+                std::move(extracted_callable)->status()));
       }
       bridge_type = **std::move(extracted_callable);
     }
@@ -951,24 +951,23 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
     absl::StatusOr<TranslatedIdentifier> record_name =
         ictx_.GetTranslatedIdentifier(named_decl);
-    if (record_name.ok()) {
-      rs_name = (*record_name).rs_identifier().Ident();
-      cc_name = (*record_name).cc_identifier.Ident();
-      doc_comment = ictx_.GetComment(record_decl);
-      source_loc = record_decl->getBeginLoc();
-    } else {
+    if (!record_name.ok()) {
       return ictx_.ImportUnsupportedItem(
           *record_decl, std::nullopt,
           FormattedError::PrefixedStrCat("Record name is not supported",
                                          record_name.status().message()));
     }
+    rs_name = record_name->rs_identifier().Ident();
+    cc_name = record_name->cc_identifier.Ident();
+    doc_comment = ictx_.GetComment(record_decl);
+    source_loc = record_decl->getBeginLoc();
   }
 
   auto enclosing_item_id = ictx_.GetEnclosingItemId(record_decl);
   if (!enclosing_item_id.ok()) {
     return ictx_.ImportUnsupportedItem(
         *record_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(enclosing_item_id.status())));
+        FormattedError::FromStatus(std::move(enclosing_item_id).status()));
   }
 
   // Reports an unsupported type with the given error.
@@ -998,7 +997,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
   if (!record_type.ok()) {
     return unsupported(
-        FormattedError::FromStatus(std::move(record_type.status())));
+        FormattedError::FromStatus(std::move(record_type).status()));
   }
 
   if (record_decl->hasAttr<clang::PackedAttr>() ||
@@ -1015,9 +1014,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     return IncompleteRecord{.cc_name = Identifier(cc_name),
                             .rs_name = Identifier(rs_name),
                             .id = ictx_.GenerateItemId(record_decl),
-                            .owning_target = ictx_.GetOwningTarget(record_decl),
-                            .unknown_attr = std::move(*unknown_attr),
-                            .record_type = *record_type,
+                            .owning_target = std::move(owning_target),
+                            .unknown_attr = *std::move(unknown_attr),
+                            .record_type = *std::move(record_type),
                             .enclosing_item_id = *std::move(enclosing_item_id)};
   }
 
