@@ -1878,8 +1878,9 @@ mod tests {
 
     fn make_existing_rust_type(name: Rc<str>, is_same_abi: bool) -> RsTypeKind {
         RsTypeKind::ExistingRustType(Rc::new(ExistingRustType {
-            rs_name: name,
+            rs_name: name.clone(),
             cc_name: "".into(),
+            unique_name: name,
             type_parameters: Vec::new(),
             owning_target: BazelLabel("//new/for/testing".into()),
             size_align: None,
@@ -2038,6 +2039,7 @@ mod tests {
             enum_: Rc::new(Enum {
                 cc_name: Identifier { identifier: "MyEnum".into() },
                 rs_name: Identifier { identifier: "MyEnum".into() },
+                unique_name: "MyEnum".into(),
                 id: ItemId::new_for_testing(0),
                 owning_target: BazelLabel("//foo/bar".into()),
                 source_loc: "some_file.h:123".into(),
@@ -2063,6 +2065,7 @@ mod tests {
             incomplete_record: Rc::new(IncompleteRecord {
                 cc_name: Identifier { identifier: "MyStruct".into() },
                 rs_name: Identifier { identifier: "MyStruct".into() },
+                unique_name: "MyStruct".into(),
                 id: ItemId::new_for_testing(0),
                 owning_target: BazelLabel("//foo/bar".into()),
                 unknown_attr: None,
@@ -2087,6 +2090,7 @@ mod tests {
             type_alias: Rc::new(TypeAlias {
                 cc_name: Identifier { identifier: "MyAlias".into() },
                 rs_name: Identifier { identifier: "MyAlias".into() },
+                unique_name: "MyAlias".into(),
                 id: ItemId::new_for_testing(1),
                 owning_target: BazelLabel("//foo/bar".into()),
                 doc_comment: None,
