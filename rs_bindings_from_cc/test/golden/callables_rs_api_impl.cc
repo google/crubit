@@ -211,4 +211,12 @@ static_assert(
         class LayoutCompatible)) &
     ::map_layout_compatible);
 
+static_assert(
+    CRUBIT_SIZEOF(
+        class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
+    16);
+static_assert(
+    alignof(class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==
+    8);
+
 #pragma clang diagnostic pop

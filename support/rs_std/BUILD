@@ -162,6 +162,7 @@ cc_library(
         "//support:bridge_cpp",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/functional:any_invocable",
     ],
 )
 
