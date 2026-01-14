@@ -1,0 +1,29 @@
+/* Part of the Crubit project, under the Apache License v2.0 with LLVM
+ Exceptions. See /LICENSE for license information.
+ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception */
+.mdbook-tabs {
+    display: flex;
+}
+
+.mdbook-tab {
+    background-color: var(--table-alternate-bg);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 1.45em;
+}
+
+.mdbook-tab.active {
+    background-color: var(--table-header-bg);
+    font-weight: bold;
+}
+
+.mdbook-tab-content {
+    padding: 1rem 1rem;
+    border: 0.1rem solid var(--sidebar-bg);
+}
+
+.mdbook-tab-content table {
+    margin: unset;
+}

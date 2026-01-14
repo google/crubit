@@ -6,3 +6,9 @@ authors = ["Crubit Team"]
 language = "en"
 src = "docs"
 title = "Crubit Documentation"
+
+[preprocessor.tabs]
+
+[output.html]
+additional-css = ["docs/theme/tabs.css"]
+additional-js = ["docs/theme/tabs.js"]
