@@ -112,6 +112,11 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     }
   } else if (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
     clang::NamedDecl* target = using_decl->getTargetDecl();
+    if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(target)) {
+      return ictx_.ImportUnsupportedItem(
+          *decl, std::nullopt,
+          FormattedError::Static("Function aliases are not yet supported."));
+    }
     auto* target_type = clang::dyn_cast<clang::TypeDecl>(target);
     if (target_type == nullptr) {
       // Not a type.

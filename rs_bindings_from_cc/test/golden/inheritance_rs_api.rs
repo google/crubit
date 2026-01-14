@@ -521,6 +521,12 @@ impl Default for MethodDerived {
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MethodDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+// Error while generating bindings for item 'MethodDerived::Colliding1':
+// Function aliases are not yet supported.
+
+// Error while generating bindings for item 'MethodDerived::Protected1':
+// Function aliases are not yet supported.
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
