@@ -179,10 +179,13 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       case clang::AS_public:
         break;
       case clang::AS_protected:
+        // TODO(b/475825947): Support protected methods.
+        return ictx_.ImportUnsupportedItem(
+            *function_decl, std::nullopt,
+            FormattedError::Static("Protected methods are not yet supported."));
       case clang::AS_private:
       case clang::AS_none:
         // No need for IR to include Func representing private methods.
-        // TODO(b/475810473): Revisit this for protected methods.
         return std::nullopt;
     }
   }
