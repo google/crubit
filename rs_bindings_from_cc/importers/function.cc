@@ -182,7 +182,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       case clang::AS_private:
       case clang::AS_none:
         // No need for IR to include Func representing private methods.
-        // TODO(lukasza): Revisit this for protected methods.
+        // TODO(b/475810473): Revisit this for protected methods.
         return std::nullopt;
     }
   }
