@@ -1159,7 +1159,7 @@ static void checkNonnullPointerMemberDefaultInitializer(
   // converting constructors. `isNullPointerConstant` handles most wrapper nodes
   // but does not handle constructors (`CXXConstructExpr`), so we use
   // `getSubExprAsWritten()` for that case.
-  // TODO: b/376638797 - Warn on nullable expressions other than null pointer
+  // TODO: b/475944638 - Warn on nullable expressions other than null pointer
   // constants in default member initializers.
   if (const CastExpr* SubExpr = dyn_cast<CastExpr>(Initializer)) {
     Initializer = SubExpr->getSubExprAsWritten();
