@@ -39,7 +39,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::N
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=10
 impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
@@ -55,7 +55,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     }
 }
 impl ::ctor::CtorNew<(::ffi_11::c_int,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int,)) -> Self::CtorType {
@@ -111,7 +111,7 @@ impl ::ctor::PinnedDrop for Nontrivial {
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=16
 #[inline(always)]
-pub fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> {
+pub fn Create() -> ::ctor::Ctor![crate::Nontrivial] {
     unsafe {
         ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
             crate::detail::__rust_thunk___Z6Createv(dest as *mut ::core::ffi::c_void);
@@ -121,9 +121,7 @@ pub fn Create() -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor:
 
 /// Generated from: rs_bindings_from_cc/test/wrapper/impl_ctor/impl_ctor.h;l=18
 #[inline(always)]
-pub fn Read(
-    nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
-) -> ::ffi_11::c_int {
+pub fn Read(nontrivial: ::ctor::Ctor![crate::Nontrivial]) -> ::ffi_11::c_int {
     unsafe {
         crate::detail::__rust_thunk___Z4Read10Nontrivial(::core::pin::Pin::into_inner_unchecked(
             ::ctor::emplace!(nontrivial),

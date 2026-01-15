@@ -188,6 +188,9 @@ macro_rules! must_use_ctor_assign {
 
 /// In-place initialization of a value.
 ///
+/// This is commonly used as `impl Ctor<Output=T, Error=Infallible>`, in function parameters or
+/// return types, and can be spelled `Ctor![T]`.
+///
 /// # Safety
 ///
 /// Implementations must satisfy the postconditions of the `ctor` method.
@@ -215,7 +218,7 @@ pub unsafe trait Ctor: Sized {
     ///
     /// This is useful for chaining possibly-fallible operations (such as `ctor_then`) on top of
     /// an existing infallible `Ctor`.
-    fn ctor_make_fallible<E>(self) -> impl Ctor<Output = Self::Output, Error = E>
+    fn ctor_make_fallible<E>(self) -> Ctor![Self::Output, Error = E]
     where
         Self: Ctor<Error = Infallible>,
     {
@@ -223,7 +226,7 @@ pub unsafe trait Ctor: Sized {
     }
 
     /// Maps this `Ctor`'s error type into a new error type using the `Into` trait.
-    fn ctor_err_into<E>(self) -> impl Ctor<Output = Self::Output, Error = E>
+    fn ctor_err_into<E>(self) -> Ctor![Self::Output, Error = E]
     where
         Self::Error: Into<E>,
     {
@@ -248,7 +251,7 @@ pub unsafe trait Ctor: Sized {
     /// });
     /// let x = emplace!(new_ctor);
     /// ```
-    fn ctor_then<F>(self, f: F) -> impl Ctor<Output = Self::Output, Error = Self::Error>
+    fn ctor_then<F>(self, f: F) -> Ctor![Self::Output, Error = Self::Error]
     where
         F: FnOnce(Pin<&mut Self::Output>) -> Result<(), Self::Error>,
     {
@@ -296,7 +299,7 @@ pub unsafe trait Ctor: Sized {
     /// let new_ctor = y.ctor_map_err(|e| e.into_new_error());
     /// let x = try_emplace!(new_ctor);
     /// ```
-    fn ctor_map_err<F, E>(self, f: F) -> impl Ctor<Output = Self::Output, Error = E>
+    fn ctor_map_err<F, E>(self, f: F) -> Ctor![Self::Output, Error = E]
     where
         F: FnOnce(Self::Error) -> E,
     {
@@ -314,7 +317,7 @@ pub unsafe trait Ctor: Sized {
     /// let new_ctor = Y::first_attempt().ctor_or_else(|_| Y::fallback_attempt());
     /// let x = try_emplace!(new_ctor);
     /// ```
-    fn ctor_or_else<F, O>(self, f: F) -> impl Ctor<Output = Self::Output, Error = O::Error>
+    fn ctor_or_else<F, O>(self, f: F) -> Ctor![Self::Output, Error = O::Error]
     where
         F: FnOnce(Self::Error) -> O,
         O: Ctor<Output = Self::Output>,
@@ -374,7 +377,7 @@ pub unsafe trait Ctor: Sized {
     /// Returns a `Ctor` which will panic if the original construction fails.
     ///
     /// This functions similarly to `Result::unwrap`.
-    fn ctor_unwrap(self) -> impl Ctor<Output = Self::Output, Error = Infallible>
+    fn ctor_unwrap(self) -> Ctor![Self::Output, Error = Infallible]
     where
         Self::Error: Debug,
     {
@@ -393,12 +396,34 @@ pub unsafe trait Ctor: Sized {
     /// This functions similarly to `Result::unwrap_or_default`.
     fn ctor_unwrap_or_default(
         self,
-    ) -> impl Ctor<Output = Self::Output, Error = <Self::Output as CtorNew<()>>::Error>
+    ) -> Ctor![Self::Output, Error = <Self::Output as CtorNew<()>>::Error]
     where
         Self::Output: CtorNew<()>,
     {
         self.ctor_or_else(|_| Self::Output::ctor_new(()))
     }
+}
+
+/// The type macro for an `impl Ctor<...>`, used as a parameter or return type.
+///
+/// This exists for two reasons:
+///
+/// 1. To allow for changing the implementation over time.
+/// 2. To make the spelling less overly verbose. Instead of `impl Ctor<Output = T, Error = E>`,
+///    you can write `Ctor![T]`.
+///
+/// In codebases not yet migrated to the 2024 edition, if you need a `use<'a>` bound, you must
+/// write the full `impl` syntax: `impl Ctor<Output=T, Error=Infallible> + use<'a, 'b>`.
+///
+/// (It is surprisingly difficult to write a macro that would allow the `use` parameters!)
+#[macro_export]
+macro_rules! Ctor {
+    ( $T:ty $(,)? ) => {
+        impl $crate::Ctor<Output = $T, Error = $crate::macro_internal::Infallible>
+    };
+    ( $T:ty, Error = $E:ty $(,)? ) => {
+        impl $crate::Ctor<Output = $T, Error = $E>
+    };
 }
 
 /// Returns a `Ctor` with error type `E` which always fails with the given error.
@@ -1028,6 +1053,7 @@ impl<T> Slot<T> {
 #[doc(hidden)]
 pub mod macro_internal {
     use super::*;
+    pub use crate::Infallible;
     pub use core::mem::MaybeUninit;
     pub use core::pin::Pin;
 

@@ -40,7 +40,7 @@ unsafe impl ::cxx::ExternType for Derived2 {
 }
 
 impl ::ctor::CtorNew<()> for Derived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
@@ -85,7 +85,7 @@ unsafe impl ::cxx::ExternType for VirtualDerived2 {
 }
 
 impl ::ctor::CtorNew<()> for VirtualDerived2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {

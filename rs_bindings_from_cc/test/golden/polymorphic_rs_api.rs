@@ -34,7 +34,7 @@ unsafe impl ::cxx::ExternType for PolymorphicBase {
 }
 
 impl ::ctor::CtorNew<()> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
@@ -85,7 +85,7 @@ impl PolymorphicBase2 {
 }
 
 impl ::ctor::CtorNew<()> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
@@ -130,7 +130,7 @@ unsafe impl ::cxx::ExternType for PolymorphicDerived {
 }
 
 impl ::ctor::CtorNew<()> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {

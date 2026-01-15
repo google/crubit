@@ -861,7 +861,7 @@ fn api_func_shape_for_constructor(
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
 /// If the shape is a trait, this also mutates the parameter types to be
-/// trait-compatible. In particular, types which would be `impl Ctor<Output=T>`
+/// trait-compatible. In particular, types which would be `Ctor![T]`
 /// become a `RvalueReference<'_, T>`.
 ///
 /// Returns:
@@ -1842,8 +1842,8 @@ struct BindingsSignature {
     /// The return type fragment of the Rust function, as a token stream.
     ///
     /// This is the same as the actual return type, except that () is the empty
-    /// tokens, non-Unpin by-value types are `impl Ctor<Output=#return_type> +
-    /// ...`, and wherever the type is the type of `Self`, it gets replaced by
+    /// tokens, non-Unpin by-value types are `Ctor![#return_type] + ...`,
+    /// and wherever the type is the type of `Self`, it gets replaced by
     /// literal `Self`.
     return_type_fragment: TokenStream,
 
@@ -1930,7 +1930,7 @@ fn function_signature(
                 type_.to_token_stream_with_owned_ptr_type(db)
             };
             *features |= Feature::impl_trait_in_assoc_type;
-            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self, Error=::ctor::Infallible>});
+            api_params.push(quote! {#ident: ::ctor::Ctor![#quoted_type_or_self]});
             thunk_args
                 .push(quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
         } else {
@@ -2040,31 +2040,37 @@ fn function_signature(
         Some(TraitName::Other { .. }) | None => {}
     }
 
-    let return_type_fragment =
-        if matches!(return_type.unalias(), RsTypeKind::Primitive(Primitive::Void)) {
-            quote! {}
+    let return_type_fragment = if matches!(
+        return_type.unalias(),
+        RsTypeKind::Primitive(Primitive::Void)
+    ) {
+        quote! {}
+    } else {
+        let ty = quoted_return_type
+            .unwrap_or_else(|| return_type.to_token_stream_with_owned_ptr_type(db));
+        if return_type.is_unpin() {
+            ty
         } else {
-            let ty = quoted_return_type
-                .unwrap_or_else(|| return_type.to_token_stream_with_owned_ptr_type(db));
-            if return_type.is_unpin() {
-                ty
-            } else {
-                // TODO(jeanpierreda): use `-> impl Ctor` instead of `-> Self::X` where `X = impl
-                // Ctor`. The latter requires `impl_trait_in_assoc_type`, the former
-                // was stabilized in 1.75. Directly returning an unnameable `impl
-                // Ctor` is sufficient for us, and makes traits like `CtorNew` more
-                // similar to top-level functions.)
+            // TODO(jeanpierreda): use `-> impl Ctor` instead of `-> Self::X` where `X = impl
+            // Ctor`. The latter requires `impl_trait_in_assoc_type`, the former
+            // was stabilized in 1.75. Directly returning an unnameable `impl
+            // Ctor` is sufficient for us, and makes traits like `CtorNew` more
+            // similar to top-level functions.)
 
-                // The returned lazy FnCtor depends on all inputs.
-                let extra_lifetimes = if lifetimes.is_empty() {
-                    quote! {}
-                } else {
-                    quote! {+ use<#(#lifetimes),*> }
-                };
-                *features |= Feature::impl_trait_in_assoc_type;
+            // The returned lazy FnCtor depends on all inputs.
+            let extra_lifetimes = if lifetimes.is_empty() {
+                quote! {}
+            } else {
+                quote! {+ use<#(#lifetimes),*> }
+            };
+            *features |= Feature::impl_trait_in_assoc_type;
+            if extra_lifetimes.is_empty() {
+                quote! {::ctor::Ctor![#ty]}
+            } else {
                 quote! {impl ::ctor::Ctor<Output=#ty, Error=::ctor::Infallible> #extra_lifetimes }
             }
-        };
+        }
+    };
 
     // Change `__this: &'a SomeStruct` into `&'a self` if needed.
     if impl_kind.format_first_param_as_self() {

@@ -248,8 +248,8 @@ Instead, these objects support lazy construction, in the same style as
 results in, for example, the following API differences:
 
 `X` is rust-movable  | `X` is not rust-movable
--------------------- | ---------------------------------------
-`pub fn foo() -> X`  | `pub fn foo() -> impl Ctor<Output=X>`
+-------------------- | ------------------------------------------
+`pub fn foo() -> X`  | `pub fn foo() -> impl Ctor<Output=X, ...>`
 `impl Add<X> for &C` | `impl<T: Ctor<Output=X>> Add<T> for &C`
 
 The problem comes in with operator overloading: the following is valid:

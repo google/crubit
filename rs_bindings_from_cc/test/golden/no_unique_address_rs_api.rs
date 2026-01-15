@@ -179,7 +179,7 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
 }
 
 impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
@@ -264,7 +264,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
 // //rs_bindings_from_cc/test/golden:no_unique_address_cc needs [//features:experimental] for FieldInTailPadding::operator= (the type of __param_0 (parameter #1): references are not supported)
 
 impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_char, ::ffi_11::c_char)> for FieldInTailPadding {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_char, ::ffi_11::c_char)) -> Self::CtorType {

@@ -38,7 +38,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::N
 
 /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=11
 impl ::ctor::CtorNew<()> for Nonmovable {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>;
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
@@ -73,10 +73,8 @@ impl Base {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
-    pub fn no_bindings<'error, 'a>(
-        &'a self,
-        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
-    ) where
+    pub fn no_bindings<'error, 'a>(&'a self, __param_0: ::ctor::Ctor![crate::Nonmovable])
+    where
         &'error (): BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable,
     {
         #![allow(unused_variables)]
@@ -128,10 +126,8 @@ impl Derived {
     }
     /// Generated from: rs_bindings_from_cc/test/struct/inheritance/inherited_methods.h;l=19
     #[inline(always)]
-    pub fn no_bindings<'error, 'a>(
-        &'a self,
-        __param_0: impl ::ctor::Ctor<Output = crate::Nonmovable, Error = ::ctor::Infallible>,
-    ) where
+    pub fn no_bindings<'error, 'a>(&'a self, __param_0: ::ctor::Ctor![crate::Nonmovable])
+    where
         &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
     {
         #![allow(unused_variables)]
