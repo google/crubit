@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
+#include <utility>
 
 #include "cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.h"
 
@@ -41,6 +42,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=12
+  static ::trait_impl::MyStruct new_(std::int32_t x);
+
   union {
     // Generated from:
     // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=8
@@ -52,7 +58,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=17
+// cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=23
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: trait_impl_golden :: NotImplemented") alignas(8) [[clang::trivial_abi]]
 NotImplemented final {
@@ -94,6 +100,16 @@ static_assert(
 static_assert(std::is_trivially_destructible_v<MyStruct>);
 static_assert(std::is_trivially_move_constructible_v<MyStruct>);
 static_assert(std::is_trivially_move_assignable_v<MyStruct>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(std::int32_t,
+                                   ::trait_impl::MyStruct* __ret_ptr);
+}
+inline ::trait_impl::MyStruct MyStruct::new_(std::int32_t x) {
+  crubit::Slot<::trait_impl::MyStruct> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
+  return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, x));
 }
@@ -117,6 +133,23 @@ inline void NotImplemented::__crubit_field_offset_assertions() {
 template <>
 struct ::trait_definition::MyTrait<::trait_impl::MyStruct> {
   static constexpr bool is_implemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=18
+  static std::int32_t do_something(::trait_impl::MyStruct const& self);
 };
+
+namespace trait_impl {
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_MyTrait_udo_usomething(
+    ::trait_impl::MyStruct const&);
+}
+}  // namespace trait_impl
+inline std::int32_t(
+    ::trait_definition::MyTrait<::trait_impl::MyStruct>::do_something)(
+    ::trait_impl::MyStruct const& self) {
+  return trait_impl::__crubit_internal::__crubit_thunk_MyTrait_udo_usomething(
+      self);
+}
 
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_IMPL_GOLDEN

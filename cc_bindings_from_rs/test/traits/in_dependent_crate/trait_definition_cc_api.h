@@ -77,6 +77,23 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 template <>
 struct ::trait_definition::MyTrait<::trait_definition::MyStruct> {
   static constexpr bool is_implemented = true;
+
+  // Generated from:
+  // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=14
+  static std::int32_t do_something(::trait_definition::MyStruct const& self);
 };
+
+namespace trait_definition {
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_MyTrait_udo_usomething(
+    ::trait_definition::MyStruct const&);
+}
+}  // namespace trait_definition
+inline std::int32_t(
+    ::trait_definition::MyTrait<::trait_definition::MyStruct>::do_something)(
+    ::trait_definition::MyStruct const& self) {
+  return trait_definition::__crubit_internal::
+      __crubit_thunk_MyTrait_udo_usomething(self);
+}
 
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TRAITS_IN_DEPENDENT_CRATE_TRAIT_DEFINITION_GOLDEN

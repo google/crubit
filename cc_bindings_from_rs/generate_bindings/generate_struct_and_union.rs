@@ -10,7 +10,7 @@ extern crate rustc_span;
 use crate::format_cc_ident;
 use crate::format_type::CcParamTy;
 use crate::generate_doc_comment;
-use crate::generate_function::{generate_thunk_call, Param};
+use crate::generate_function::{generate_thunk_call, Param, ThunkSelfParameter};
 use crate::{
     crate_features, generate_const, generate_deprecated_tag, generate_must_use_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
@@ -285,7 +285,7 @@ fn is_supported_associated_item<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool 
         && tcx.lookup_stability(def_id).is_none_or(|stability| stability.is_stable())
 }
 
-fn generate_associated_item<'tcx>(
+pub(crate) fn generate_associated_item<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
@@ -307,7 +307,13 @@ fn generate_associated_item<'tcx>(
             }
             result
         }
-        ty::AssocKind::Const { .. } => generate_const(db, def_id),
+        ty::AssocKind::Const { .. } => {
+            if tcx.trait_impl_of_assoc(def_id).is_some() {
+                // Associated constants are not yet supported on traits
+                return None;
+            }
+            generate_const(db, def_id)
+        }
         // TODO: b/405132277 - Rust does not support inherent associated types, but should support
         // associated types when adding traits.
         ty::AssocKind::Type { .. } => Err(anyhow!(
@@ -474,8 +480,11 @@ fn generate_into_impls<'tcx>(
                 def_id,
                 thunk_name.clone(),
                 SugaredTy::missing_hir(middle_ty),
-                /*takes_self_by_copy=*/ is_copy(tcx, def_id, core.self_ty),
-                /*has_self_param=*/ true,
+                ThunkSelfParameter::new(
+                    /*has_self=*/ true,
+                    is_copy(tcx, def_id, core.self_ty),
+                    /*is_trait_method =*/ false,
+                ),
                 &[Param {
                     cc_name: format_ident!("self"),
                     cpp_type: CcParamTy {

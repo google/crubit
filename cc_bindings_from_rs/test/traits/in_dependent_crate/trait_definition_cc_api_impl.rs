@@ -12,3 +12,13 @@
 
 const _: () = assert!(::std::mem::size_of::<::trait_definition_golden::MyStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::trait_definition_golden::MyStruct>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething(
+    __self: &'static ::trait_definition_golden::MyStruct,
+) -> i32 {
+    unsafe {
+        <::trait_definition_golden::MyStruct as ::trait_definition_golden::MyTrait>::do_something(
+            __self,
+        )
+    }
+}

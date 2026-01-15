@@ -39,11 +39,15 @@ pub fn format_top_level_ns_for_crate(
     db: &dyn BindingsGenerator<'_>,
     krate: CrateNum,
 ) -> Rc<[Symbol]> {
-    let crate_name = if krate == db.source_crate_num() {
+    let mut crate_name = if krate == db.source_crate_num() {
         "self".to_string()
     } else {
         db.tcx().crate_name(krate).to_string()
     };
+    // TODO: b/475830072 - Replace with a less brittle solution.
+    if crate_name == "alloc" {
+        crate_name = "std".to_string();
+    }
     if let Some(namespaces) = db.crate_name_to_namespace().get(crate_name.as_str()) {
         namespaces.split("::").map(Symbol::intern).collect()
     } else {

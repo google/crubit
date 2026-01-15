@@ -9,8 +9,9 @@ use crate::generate_function_thunk::{
 };
 use crate::{
     format_param_types_for_cc, format_region_as_cc_lifetime, format_ret_ty_for_cc,
-    generate_deprecated_tag, is_bridged_type, is_c_abi_compatible_by_value,
-    liberate_and_deanonymize_late_bound_regions, BridgedType, CcType, RsSnippet,
+    format_top_level_ns_for_crate, generate_deprecated_tag, is_bridged_type,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType, CcType,
+    RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{
@@ -70,10 +71,24 @@ fn thunk_name(
         if let Some(export_name) = export_name {
             export_name.to_string()
         } else {
-            db.symbol_unqualified_name(def_id)
+            let def_name = db
+                .symbol_unqualified_name(def_id)
                 .map(|name| name.rs_name)
                 .unwrap_or_else(|| panic!("Functions are assumed to always have a name {def_id:?}"))
-                .to_string()
+                .to_string();
+            tcx.trait_impl_of_assoc(def_id)
+                .map(|impl_id| {
+                    let trait_id = tcx.impl_trait_ref(impl_id).instantiate_identity().def_id;
+                    let trait_name = db
+                        .symbol_unqualified_name(trait_id)
+                        .map(|name| name.rs_name)
+                        .unwrap_or_else(|| {
+                            panic!("Traits are assumed to always have a name {trait_id:?}")
+                        })
+                        .to_string();
+                    format!("{}_{}", trait_name, def_name)
+                })
+                .unwrap_or(def_name)
         }
     } else {
         // Call to `mono` is ok - `generics_of` have been checked above.
@@ -393,10 +408,6 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<Ty<'tcx>>
     #[rustversion::since(2025-07-29)]
     let impl_id = tcx.impl_of_assoc(def_id)?;
 
-    #[rustversion::since(2025-10-17)]
-    assert!(!tcx.impl_is_of_trait(impl_id), "Trait methods should be filtered by caller");
-    #[rustversion::before(2025-10-17)]
-    assert!(tcx.impl_trait_ref(impl_id).is_none(), "Trait methods should be filtered by caller");
     Some(tcx.type_of(impl_id).instantiate_identity())
 }
 
@@ -491,6 +502,44 @@ fn refs_to_check_for_aliasing<'tcx, 'a>(
     Some(refs)
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Receiver {
+    SelfByCopy,
+    SelfByRef,
+}
+
+/// Information about our self parameter from our function signature that we need when generating a
+/// thunk for that function.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ThunkSelfParameter {
+    pub is_trait_method: bool,
+    receiver: Option<Receiver>,
+}
+impl ThunkSelfParameter {
+    pub fn new(has_self: bool, by_copy: bool, is_trait_method: bool) -> Self {
+        Self {
+            is_trait_method,
+            receiver: has_self.then_some({
+                if by_copy {
+                    Receiver::SelfByCopy
+                } else {
+                    Receiver::SelfByRef
+                }
+            }),
+        }
+    }
+
+    // Inherent methods become methods on a class with access to `this` (unlike trait methods), so
+    // we handle them specially.
+    pub fn is_inherent_self_method(&self) -> bool {
+        self.receiver.is_some() && !self.is_trait_method
+    }
+
+    pub fn takes_self_by_copy(&self) -> bool {
+        self.receiver.is_some_and(|receiver| receiver == Receiver::SelfByCopy)
+    }
+}
+
 /// Generates the wrapping code to call a thunk and return its result.
 /// This can be checking parameter invariants or creating a slot to pass as an output pointer.
 pub(crate) fn generate_thunk_call<'tcx>(
@@ -498,8 +547,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     def_id: DefId,
     thunk_name: Ident,
     rs_return_type: SugaredTy<'tcx>,
-    takes_self_by_copy: bool,
-    has_self_param: bool,
+    self_param: ThunkSelfParameter,
     params: &[Param<'tcx>],
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
@@ -510,8 +558,8 @@ pub(crate) fn generate_thunk_call<'tcx>(
         .iter()
         .enumerate()
         .map(|(i, Param { cc_name, ty, .. })| {
-            if i == 0 && has_self_param {
-                if takes_self_by_copy {
+            if i == 0 && self_param.is_inherent_self_method() {
+                if self_param.takes_self_by_copy() {
                     // Self-by-copy methods are `const` qualified. The Rust thunk does not
                     // accept a const pointer, but we can just const_cast since underlying C++
                     // object is not modified: Rust copies the object before passing it into
@@ -560,6 +608,18 @@ pub(crate) fn generate_thunk_call<'tcx>(
         });
     }
 
+    let qualifier = if self_param.is_trait_method {
+        // Trait implementations don't live alongside their callsite so we have to be more specific
+        // about namespaces when we invoke them.
+        let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num())
+            .iter()
+            .map(|ns| db.format_cc_ident(*ns))
+            .collect::<Result<Vec<_>>>()?;
+        quote! { #(#cpp_top_level_ns)::* :: __crubit_internal }
+    } else {
+        quote! { __crubit_internal }
+    };
+
     let return_body = if is_bridged_type(db, rs_return_type.mid())?.is_none()
         && is_c_abi_compatible_by_value(tcx, rs_return_type.mid())
     {
@@ -571,7 +631,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
             quote! {return}
         };
         quote! {
-            #return_expr __crubit_internal::#thunk_name(#( #thunk_args ),*);
+            #return_expr #qualifier::#thunk_name(#( #thunk_args ),*);
         }
     } else {
         let ReturnConversion { storage_name, unpack_expr } = cc_return_value_from_c_abi(
@@ -586,7 +646,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
         // We don't have to worry about the [[noreturn]] situation described above because all
         // [[noreturn]] functions will take that branch.
         quote! {
-            __crubit_internal::#thunk_name(#( #thunk_args ),*);
+            #qualifier::#thunk_name(#( #thunk_args ),*);
             return #unpack_expr;
         }
     };
@@ -599,12 +659,17 @@ pub(crate) fn generate_thunk_call<'tcx>(
 pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     ensure!(
-        !query_compiler::has_non_lifetime_generics(tcx, def_id),
+        !tcx.generics_of(def_id).requires_monomorphization(tcx),
         "Generic functions are not supported yet (b/259749023)"
     );
 
     let sig_mid = get_fn_sig(tcx, def_id);
     check_fn_sig(&sig_mid)?;
+
+    let trait_ref = tcx
+        .impl_of_assoc(def_id)
+        .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
+        .map(|trait_ref| trait_ref.instantiate_identity());
     let self_ty = self_ty_of_method(tcx, def_id);
     let function_kind = function_kind(tcx, def_id, self_ty, sig_mid.inputs())?;
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
@@ -656,45 +721,55 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
             .collect_vec()
     };
 
-    let mut takes_self_by_copy = false;
-    let method_qualifiers = match function_kind {
-        FunctionKind::Free | FunctionKind::AssociatedFn => quote! {},
-        FunctionKind::MethodTakingSelfByValue => {
-            let self_ty = params[0].ty.mid();
-            if is_copy(tcx, def_id, self_ty) {
-                takes_self_by_copy = true;
-                quote! { const }
-            } else {
-                quote! { && }
-            }
-        }
-        FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
-            ty::TyKind::Ref(region, _, mutability) => {
-                let tcx = db.tcx();
-                // Ref-qualify if the lifetime of `&self` is a named lifetime or if the elided
-                // lifetime appears in the return type.
-                // See crubit.rs-special-lifetimes for more details on the motivation.
-                let ref_qualifier = if !region_is_elided(tcx, *region) {
-                    let lifetime_annotation =
-                        format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
-                    quote! { & #lifetime_annotation }
-                } else if has_elided_region(tcx, sig_mid.output()) {
-                    let lifetime_annotation =
-                        format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
-                    main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
-                    quote! { & #lifetime_annotation CRUBIT_LIFETIME_BOUND }
+    let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue if is_copy(tcx, def_id, params[0].ty.mid()));
+    let mut method_qualifiers = quote! {};
+    if trait_ref.is_none() {
+        match function_kind {
+            FunctionKind::Free | FunctionKind::AssociatedFn => {}
+            FunctionKind::MethodTakingSelfByValue => {
+                let self_ty = params[0].ty.mid();
+                method_qualifiers = if is_copy(tcx, def_id, self_ty) {
+                    quote! { const }
                 } else {
-                    quote! {}
+                    quote! { && }
                 };
-                let mutability = match mutability {
-                    Mutability::Mut => quote! {},
-                    Mutability::Not => quote! { const },
-                };
-                quote! { #mutability #ref_qualifier }
             }
-            _ => panic!("Expecting TyKind::Ref for MethodKind...Self...Ref"),
-        },
-    };
+            FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
+                ty::TyKind::Ref(region, _, mutability) => {
+                    let tcx = db.tcx();
+                    // Ref-qualify if the lifetime of `&self` is a named lifetime or if the elided
+                    // lifetime appears in the return type.
+                    // See crubit.rs-special-lifetimes for more details on the motivation.
+                    let ref_qualifier = if !region_is_elided(tcx, *region) {
+                        let lifetime_annotation =
+                            format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
+                        quote! { & #lifetime_annotation }
+                    } else if has_elided_region(tcx, sig_mid.output()) {
+                        let lifetime_annotation =
+                            format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
+                        main_api_prereqs
+                            .includes
+                            .insert(db.support_header("annotations_internal.h"));
+                        quote! { & #lifetime_annotation CRUBIT_LIFETIME_BOUND }
+                    } else {
+                        quote! {}
+                    };
+                    let mutability = match mutability {
+                        Mutability::Mut => quote! {},
+                        Mutability::Not => quote! { const },
+                    };
+                    method_qualifiers = quote! { #mutability #ref_qualifier }
+                }
+                _ => panic!("Expecting TyKind::Ref for MethodKind...Self...Ref"),
+            },
+        }
+    }
+
+    let thunk_self = ThunkSelfParameter::new(
+        function_kind.has_self_param(),
+        takes_self_by_copy,
+        trait_ref.is_some(),
+    );
 
     fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
         substs.iter().any(|subst| subst.as_region().is_none())
@@ -713,7 +788,8 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let needs_definition = unqualified_rust_fn_name.as_str() != thunk_name;
     let main_api_params = params
         .iter()
-        .skip(if function_kind.has_self_param() { 1 } else { 0 })
+        // Include self param for a trait method.
+        .skip(if thunk_self.is_inherent_self_method() { 1 } else { 0 })
         .map(|Param { cc_name, cpp_type, .. }| {
             let annotation = if cpp_type.is_lifetime_bound {
                 main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
@@ -726,6 +802,51 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         })
         .collect_vec();
     let rs_return_type = SugaredTy::fn_output(&sig_mid);
+    let thunk_name_cc = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
+    let impl_body = generate_thunk_call(
+        db,
+        def_id,
+        thunk_name_cc.clone(),
+        rs_return_type,
+        thunk_self,
+        &params,
+    )?
+    .into_tokens(&mut main_api_prereqs);
+
+    /*
+    let (decl_body, defn_item) = if thunk_self.is_trait_method() {
+        (
+            quote! { {
+                #impl_body
+            } },
+            quote! {},
+        )
+    } else {
+        let decl_name = struct_name
+            .as_ref()
+            .map(|fully_qualified_name| {
+                let name = fully_qualified_name.unqualified.cpp_name;
+                let name = format_cc_ident(db, name.as_str()).expect(
+                    "Caller of generate_function should verify struct via generate_adt_core",
+                );
+                quote! { #name :: }
+            })
+            .unwrap_or_default();
+        (
+            quote! { ; },
+            // Trait methods are declared in their struct and don't need a free floating definition in the
+            // details. Other functions do.
+            quote! {
+                __NEWLINE__
+                inline #main_api_ret_type #decl_name #bracketed_decl_name (
+                        #( #main_api_params ),* ) #method_qualifiers {
+                    #impl_body
+                }
+                __NEWLINE__
+            },
+        )
+    };*/
+
     let main_api = {
         let doc_comment = {
             let doc_comment = generate_doc_comment(db, def_id);
@@ -735,7 +856,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
         let mut prereqs = main_api_prereqs.clone();
         prereqs.move_defs_to_fwd_decls();
 
-        let static_ = if function_kind == FunctionKind::AssociatedFn {
+        let static_ = if function_kind == FunctionKind::AssociatedFn || thunk_self.is_trait_method {
             quote! { static }
         } else {
             quote! {}
@@ -782,7 +903,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                 #extern_c #(#attributes)* #static_
                     #main_api_ret_type #bracketed_decl_name (
                         #( #main_api_params ),*
-                    ) #method_qualifiers;
+                    ) #method_qualifiers ;
                 __NEWLINE__
             },
         }
@@ -790,66 +911,89 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     let cc_details = if !needs_definition {
         CcSnippet::default()
     } else {
-        let thunk_name = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
-        let struct_name = match struct_name.as_ref() {
-            None => quote! {},
-            Some(fully_qualified_name) => {
-                let name = fully_qualified_name.unqualified.cpp_name;
-                let name = format_cc_ident(db, name.as_str()).expect(
-                    "Caller of generate_function should verify struct via generate_adt_core",
-                );
-                quote! { #name :: }
+        let mut prereqs = main_api_prereqs;
+        let mut thunk_decl =
+            generate_thunk_decl(db, &sig_mid, &thunk_name_cc, function_kind.has_self_param())?
+                .into_tokens(&mut prereqs);
+        if trait_ref.is_some() {
+            let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num())
+                .iter()
+                .map(|ns| db.format_cc_ident(*ns))
+                .collect::<Result<Vec<_>>>()?;
+            thunk_decl = quote! {
+                namespace #(#cpp_top_level_ns)::* {
+                  #thunk_decl
+                }
+            };
+        }
+
+        let decl_name = trait_ref
+            .as_ref()
+            .map(|trait_ref| {
+                let trait_name = db
+                    .symbol_canonical_name(trait_ref.def_id)
+                    .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
+                    .expect("Generated trait method for a trait with an invalid rust name");
+                let struct_name = struct_name
+                    .as_ref()
+                    .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
+                    .expect("Generated trait method for an ADT with an invalid rust name");
+                quote! { (#trait_name<#struct_name> :: #bracketed_decl_name) }
+            })
+            .or_else(|| {
+                struct_name.as_ref().map(|fully_qualified_name| {
+                    let name = fully_qualified_name.unqualified.cpp_name;
+                    let name = format_cc_ident(db, name.as_str()).expect(
+                        "Caller of generate_function should verify struct via generate_adt_core",
+                    );
+                    quote! { #name :: #bracketed_decl_name }
+                })
+            })
+            .unwrap_or_else(|| quote! { #bracketed_decl_name });
+        let tokens = quote! {
+            __NEWLINE__
+            #thunk_decl
+
+            __NEWLINE__
+            inline #main_api_ret_type #decl_name (
+                    #( #main_api_params ),* ) #method_qualifiers {
+                #impl_body
             }
+            __NEWLINE__
         };
 
-        let mut prereqs = main_api_prereqs;
-        let thunk_decl =
-            generate_thunk_decl(db, &sig_mid, &thunk_name, function_kind.has_self_param())?
-                .into_tokens(&mut prereqs);
-
-        let impl_body = generate_thunk_call(
-            db,
-            def_id,
-            thunk_name,
-            rs_return_type,
-            takes_self_by_copy,
-            function_kind.has_self_param(),
-            &params,
-        )?
-        .into_tokens(&mut prereqs);
-
-        CcSnippet {
-            prereqs,
-            tokens: quote! {
-                __NEWLINE__
-                #thunk_decl
-                inline #main_api_ret_type #struct_name #bracketed_decl_name (
-                        #( #main_api_params ),* ) #method_qualifiers {
-                    #impl_body
-                }
-                __NEWLINE__
-            },
-        }
+        CcSnippet { prereqs, tokens }
     };
 
     let rs_details = if !needs_thunk {
         RsSnippet::default()
     } else {
-        let fully_qualified_fn_name = match struct_name.as_ref() {
-            None => db
-                .symbol_canonical_name(def_id)
-                .unwrap_or_else(|| {
-                    panic!(
-                        "`generate_function` called on unreachable top-level function {def_id:?}"
-                    )
-                })
-                .format_for_rs(),
-            Some(struct_name) => {
+        // Trait method
+        let fully_qualified_fn_name = trait_ref.as_ref().map(|trait_ref| {
+                let trait_name = db.symbol_canonical_name(trait_ref.def_id)
+                    .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
+                    .expect("Generated trait method for a trait with an invalid rust name");
+                let struct_name = struct_name.as_ref()
+                    .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
+                    .expect("Generated trait method for an ADT with an invalid rust name");
                 let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
-                let struct_name = struct_name.format_for_rs();
-                quote! { #struct_name :: #fn_name }
-            }
-        };
+                quote! { <#struct_name as #trait_name>::#fn_name }
+        })
+        // Inherent method
+        .or_else(|| struct_name.as_ref().map(|struct_name| {
+            let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
+            let struct_name = struct_name.format_for_rs();
+            quote! { #struct_name :: #fn_name }
+        }))
+        // Free function
+        .unwrap_or_else(|| db
+                    .symbol_canonical_name(def_id)
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "`generate_function` called on unreachable top-level function {def_id:?}"
+                        )
+                    })
+                    .format_for_rs());
         generate_thunk_impl(db, def_id, &sig_mid, &thunk_name, fully_qualified_fn_name)?
     };
 

@@ -8,6 +8,12 @@ pub struct MyStruct {
     pub x: i32,
 }
 
+impl MyStruct {
+    pub fn new(x: i32) -> Self {
+        Self { x }
+    }
+}
+
 impl MyTrait for MyStruct {
     fn do_something(&self) -> i32 {
         self.x

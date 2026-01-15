@@ -33,7 +33,7 @@ use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, scalar_value_to_string,
+    generate_adt_core, generate_associated_item, scalar_value_to_string,
 };
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
@@ -581,12 +581,16 @@ fn symbol_canonical_name(
     // to include the `_rust_proto` suffix, but the rmeta file contains the unsuffixed crate name.
     // If we're naming a symbol from our source crate, use the source crate name as the krate name
     // to resolve any renaming issues.
-    let krate = (def_id.krate == db.source_crate_num())
+    let mut krate = (def_id.krate == db.source_crate_num())
         .then_some(())
         .and_then(|_| db.source_crate_name())
         .map(|source_crate_name| Symbol::intern(source_crate_name.as_ref()))
         .unwrap_or_else(|| tcx.crate_name(def_id.krate));
-    //let krate = tcx.crate_name(def_id.krate);
+
+    // TODO: b/475830072 - Replace with a less brittle solution.
+    if krate.as_str() == "alloc" {
+        krate = Symbol::intern("std");
+    }
     if krate.as_str() == "polars_plan"
         && matches!(unqualified.rs_name.as_str(), "date_range" | "time_range")
     {
@@ -1553,18 +1557,35 @@ fn generate_trait_impls<'a, 'b>(
                     })?;
                 prereqs.includes.extend(includes.iter().cloned());
             }
-            Ok(CcSnippet {
-                tokens: quote! {
-                    __NEWLINE__
-                    template<>
-                    struct #trait_name<#adt_cc_name> {
-                        static constexpr bool is_implemented = true;
-                    };
-                    __NEWLINE__
+
+            let mut member_function_names = HashSet::new();
+            let assoc_items: ApiSnippets = tcx
+                .associated_items(impl_def_id)
+                .in_definition_order()
+                .flat_map(|assoc_item| {
+                    generate_associated_item(db, assoc_item, &mut member_function_names)
+                })
+                .collect();
+
+            let main_api = assoc_items.main_api.into_tokens(&mut prereqs);
+
+            Ok(ApiSnippets {
+                main_api: CcSnippet {
+                    tokens: quote! {
+                        __NEWLINE__
+                        template<>
+                        struct #trait_name<#adt_cc_name> {
+                            static constexpr bool is_implemented = true;
+
+                            #main_api
+                        };
+                        __NEWLINE__
+                    },
+                    prereqs,
                 },
-                prereqs,
-            }
-            .into_main_api())
+                cc_details: assoc_items.cc_details,
+                rs_details: assoc_items.rs_details,
+            })
         })
         .map(|results_snippets| {
             results_snippets.unwrap_or_else(|(def_id, err)| {
@@ -1657,6 +1678,28 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         cc_api_impl.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
     }
 
+    // Because trait implementations are template specialization, they can't live in the top-level
+    // namespace generated for our other definitions. Template specializations must live in an
+    // enclosing namespace of the template they specialize. For this reason, we put our specializations in the top level namespace. The remainder of our implementation code, should be handled like normal.
+    // We append our cc_details and rs_details here, so that they get processed like normal, but save our main_api to be specially placed in the top level namespace.
+    let mut impls_cc_details = vec![];
+    let impls = generate_trait_impls(db)
+        .map(|snippets| {
+            impls_cc_details.push(snippets.cc_details.clone().into_tokens(&mut cc_details_prereqs));
+            cc_api_impl.extend(snippets.rs_details.clone().into_tokens(&mut extern_c_decls));
+            snippets.main_api.clone().into_tokens(&mut cc_details_prereqs)
+        })
+        .collect::<Vec<_>>();
+    let impls_tokens = if impls.is_empty() {
+        // Exclude leading newline for an empty impls list.
+        quote! {}
+    } else {
+        quote! {
+            __NEWLINE__
+            #(#impls)__NEWLINE__*
+        }
+    };
+
     // Find the order of `main_apis` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
     // `main_apis` in the same order as the source order of the Rust APIs.
@@ -1682,19 +1725,6 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
             failed_ids.into_iter().map(|id| format!("{:?}", id)).join(",")
         );
         ordered_ids
-    };
-
-    let impls = generate_trait_impls(db)
-        .map(|snippets| snippets.main_api.clone().into_tokens(&mut cc_details_prereqs))
-        .collect::<Vec<_>>();
-    let impls_tokens = if impls.is_empty() {
-        // Exclude leading newline for an empty impls list.
-        quote! {}
-    } else {
-        quote! {
-            __NEWLINE__
-            #(#impls)__NEWLINE__*
-        }
     };
 
     // Destructure/rebuild `main_apis` (in the same order as `ordered_ids`) into
@@ -1769,6 +1799,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
                 __NEWLINE__
             }
             #impls_tokens
+            #(#impls_cc_details)__NEWLINE__*
             __NEWLINE__
         }
     };
