@@ -23,6 +23,7 @@ rust_library(
         "generate_struct_and_union.rs",
         "lib.rs",
     ],
+    edition = "2021",
     proc_macro_deps = [
         "@crate_index//:rustversion",  # v1
     ],

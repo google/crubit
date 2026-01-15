@@ -21,6 +21,7 @@ rust_library(
     aspect_hints = [
         ":cc_type_hint",
     ],
+    edition = "2021",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -42,6 +43,7 @@ rust_library(
     aspect_hints = [
         ":cc_type_hint",
     ],
+    edition = "2021",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
