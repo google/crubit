@@ -1317,8 +1317,20 @@ macro_rules! unsafe_ctor_impl {
     (   #[fields = $($fields_ty:tt)*]
         #[unsafe_assert = $($unsafe_assert:tt)*]
         $Type:ident $(< $($gp:tt),+ >)? {$( $name:tt: $sub_ctor:expr ),* $(,)?}
-    ) => {
-        $crate::FnCtor::new(|x: *mut $Type $(< $( $gp ),+ >)?| {
+    ) => {{
+        // We need to capture all the sub_ctor values in advance (in case they are Copy and thus
+        // borrowed by reference).
+        //
+        // Note that we can't just do `move ||` without pre-binding them, in case
+        // they want to borrow something. Consider: `ctor!(Foo(f(&x))`. A move closure
+        // will capture `x` by value, but in fact we only want to capture `&x` by value.
+        //
+        // Ordinarily, we'd do something like `$(let $name = $sub_ctor;)*`, but `$name`
+        // can be an integer for tuple-structs. So, instead, we build everything up into a tuple
+        // that we can progressively unpack.
+        let capture = $crate::internal_hlist!($($sub_ctor,)*);
+        let _ = &capture;  // silence unused_variables warning if Type is fieldless.
+        $crate::FnCtor::new(move |x: *mut $Type $(< $( $gp ),+ >)?| {
             struct DropGuard;
             let drop_guard = DropGuard;
             let _ = &x; // silence unused_variables warning if Type is fieldless.
@@ -1346,7 +1358,7 @@ macro_rules! unsafe_ctor_impl {
             $($unsafe_assert)*
 
             $(
-                let sub_ctor = $sub_ctor;
+                let (sub_ctor, capture) = capture;
                 let field_drop = unsafe {
                     // SAFETY: the place is in bounds, just uninitialized. See e.g. second
                     // example: https://doc.rust-lang.org/nightly/std/ptr/macro.addr_of_mut.html
@@ -1359,6 +1371,18 @@ macro_rules! unsafe_ctor_impl {
             #[allow(clippy::forget_non_drop)] // if fieldless
             ::core::mem::forget(drop_guard);
         })
+    }};
+}
+
+/// Creates a linked list. `internal_hlist!(a, b, c)` -> `(a, (b, (c, ()))`
+#[doc(hidden)]
+#[macro_export]
+macro_rules! internal_hlist {
+    ($(,)?) => {
+        ()
+    };
+    ($a:expr, $($rest:tt)*) => {
+        ($a, $crate::internal_hlist!($($rest)*))
     };
 }
 

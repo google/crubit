@@ -7,8 +7,9 @@
 //! Unit tests for the `ctor` crate.
 
 use ctor::{
-    copy, ctor, emplace, mov, raw_ctor, try_emplace, Assign, Ctor, CtorNew, Emplace, FnCtor,
-    ManuallyDropCtor, Reconstruct, RecursivelyPinned, RvalueReference, Slot, UnreachableCtor,
+    copy, ctor, emplace, mov, raw_ctor, recursively_pinned, try_emplace, Assign, Ctor, CtorNew,
+    Emplace, FnCtor, ManuallyDropCtor, Reconstruct, RecursivelyPinned, RvalueReference, Slot,
+    UnreachableCtor,
 };
 use googletest::gtest;
 use std::cell::RefCell;
@@ -659,4 +660,24 @@ fn test_raw_ctor_partial_init() {
     })
     .x;
     assert_eq!(x, 42);
+}
+
+#[gtest]
+fn test_move_params() {
+    // If MyRustStruct is Copy, then a closure using it by value will only borrow it
+    // by reference, unless it is a `move` closure. This test checks that it does
+    // in fact capture it by value.
+    #[derive(Copy, Clone)]
+    struct MyRustStruct(i32);
+
+    #[recursively_pinned]
+    struct Composite(MyRustStruct);
+
+    // fn returns_ctor(rust: MyRustStruct) -> Ctor![Composite] {
+    fn returns_ctor(rust: MyRustStruct) -> impl Ctor<Output = Composite, Error = Infallible> {
+        ctor!(Composite(rust))
+    }
+
+    let composite = emplace!(returns_ctor(MyRustStruct(42)));
+    assert_eq!(composite.0 .0, 42);
 }
