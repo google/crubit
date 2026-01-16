@@ -835,7 +835,9 @@ fn supported_traits(db: &dyn BindingsGenerator<'_>) -> Rc<[DefId]> {
             let crate_name = tcx.crate_name(trait_id.krate);
             // TODO: b/269294366 - Support traits in stdlib once we can generate bindings for the
             // stdlib that can be depended on.
-            let not_in_stdlib = crate_name.as_str() != "std" && crate_name.as_str() != "core";
+            let not_in_stdlib = crate_name.as_str() != "std"
+                && crate_name.as_str() != "core"
+                && crate_name.as_str() != "alloc";
 
             let generics = tcx.generics_of(*trait_id);
             // TODO: b/259749095 - Support generics in Traits.
@@ -1539,6 +1541,12 @@ fn generate_trait_impls<'a, 'b>(
                     SimplifiedType::Adt(did) => {
                         // Only bind implementations for supported ADTs.
                         if db.adt_needs_bindings(*did).is_err() {
+                            return None;
+                        }
+                        let crate_name = tcx.crate_name(did.krate);
+                        // TODO: b/391443811 - Add support for implementations of stdlib types once
+                        // we have headers that can be included for those types.
+                        if ["std", "core", "alloc"].contains(&crate_name.as_str()) {
                             return None;
                         }
                         let adt_cc_name = db.symbol_canonical_name(*did)?.format_for_cc(db).ok()?;
