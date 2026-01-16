@@ -228,6 +228,17 @@ fn test_recursively_pinned_generic() {
 }
 
 #[gtest]
+fn test_recursively_pinned_dst() {
+    #[allow(unused)]
+    #[::ctor::recursively_pinned]
+    struct Foo {
+        _x: i32,
+        _y: [i32],
+    }
+    // that's it, that's the test. Can't really initialize it with ctor.
+}
+
+#[gtest]
 fn test_recursively_pinned_struct_derive_default() {
     #[::ctor::recursively_pinned]
     #[derive(::ctor::CtorFrom_Default)]

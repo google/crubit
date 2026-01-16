@@ -467,14 +467,18 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
                     s.attrs.insert(0, non_exhaustive_attr);
                 }
                 syn::Fields::Named(fields) => {
-                    fields.named.push(syn::Field {
-                        attrs: vec![],
-                        vis: syn::Visibility::Inherited,
-                        // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
-                        ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
-                        colon_token: Some(<syn::Token![:]>::default()),
-                        ty: syn::parse_quote!([u8; 0]),
-                    });
+                    // insert at the front in case the last field is !Sized.
+                    fields.named.insert(
+                        0,
+                        syn::Field {
+                            attrs: vec![],
+                            vis: syn::Visibility::Inherited,
+                            // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
+                            ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
+                            colon_token: Some(<syn::Token![:]>::default()),
+                            ty: syn::parse_quote!([u8; 0]),
+                        },
+                    );
                 }
             }
         }
