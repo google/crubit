@@ -117,6 +117,8 @@ class Importer final : public ImportContext {
   bool IsFromCurrentTarget(const clang::Decl* decl) const override;
   bool IsFromProtoTarget(const clang::Decl& decl) const override;
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
+  bool AreAssumedLifetimesEnabledForTarget(
+      const BazelLabel& label) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
@@ -125,8 +127,8 @@ class Importer final : public ImportContext {
   std::string ConvertSourceLocation(clang::SourceLocation loc) const override;
   absl::StatusOr<CcType> ConvertQualType(
       clang::QualType qual_type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-      bool nullable = true) override;
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
+      bool assume_lifetimes) override;
 
   void MarkAsSuccessfullyImported(const clang::NamedDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
@@ -169,11 +171,13 @@ class Importer final : public ImportContext {
   // Converts a type to a CcType.
   absl::StatusOr<CcType> ConvertType(
       const clang::Type* type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable);
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
+      bool assume_lifetimes);
   // Converts a type, without processing attributes.
   absl::StatusOr<CcType> ConvertUnattributedType(
       const clang::Type* type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable);
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
+      bool assume_lifetimes);
   absl::StatusOr<CcType> ConvertTypeDecl(clang::NamedDecl* decl);
 
   // Converts `type` into a CcType, after first importing the Record behind

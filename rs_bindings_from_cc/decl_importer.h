@@ -167,6 +167,11 @@ class ImportContext {
   // Returns true iff `label` has opted in to crubit support.
   virtual bool IsCrubitEnabledForTarget(const BazelLabel& label) const = 0;
 
+  // Returns true iff lifetime annotations in `label` should be recorded as
+  // raw in the IR for later processing.
+  virtual bool AreAssumedLifetimesEnabledForTarget(
+      const BazelLabel& label) const = 0;
+
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //
   // If the decl's name is an identifier, this returns that identifier as-is.
@@ -204,10 +209,12 @@ class ImportContext {
   // nullability annotations. Today, the only caller that passes in
   // `nullable=false` is the code that handles the `this` parameter type for
   // methods, which is always a pointer that cannot be null.
+  // If `assume_lifetimes` is true, then any explicit lifetime variables
+  // (as arguments or parameters) will be recorded.
   virtual absl::StatusOr<CcType> ConvertQualType(
       clang::QualType qual_type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes,
-      bool nullable = true) = 0;
+      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
+      bool assume_lifetimes) = 0;
 
   // Marks `decl` as successfully imported.  Other pieces of code can check
   // HasBeenAlreadySuccessfullyImported to avoid introducing dangling ItemIds

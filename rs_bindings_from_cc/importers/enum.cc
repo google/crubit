@@ -72,7 +72,10 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
                                "specifiers are not supported"));
   }
   const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
-  absl::StatusOr<CcType> type = ictx_.ConvertQualType(cpp_type, no_lifetimes);
+  absl::StatusOr<CcType> type =
+      ictx_.ConvertQualType(cpp_type, no_lifetimes, /*nullable=*/true,
+                            ictx_.AreAssumedLifetimesEnabledForTarget(
+                                ictx_.GetOwningTarget(enum_decl)));
   if (!type.ok()) {
     return unsupported(FormattedError::FromStatus(std::move(type.status())));
   }

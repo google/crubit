@@ -307,9 +307,13 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
       for (const clang::TemplateArgument& template_arg :
            specialization_decl->getTemplateArgs().asArray()) {
         if (template_arg.getKind() == clang::TemplateArgument::ArgKind::Type) {
-          template_args.emplace_back(
-              TemplateArg{ictx.ConvertQualType(template_arg.getAsType(),
-                                               /*lifetimes=*/nullptr)});
+          // TODO(b/454627672): is record_decl the right decl to check for
+          // assumed_lifetimes?
+          template_args.emplace_back(TemplateArg{
+              ictx.ConvertQualType(template_arg.getAsType(),
+                                   /*lifetimes=*/nullptr, /*nullable=*/true,
+                                   ictx.AreAssumedLifetimesEnabledForTarget(
+                                       ictx.GetOwningTarget(&record_decl)))});
         }
       }
     }
@@ -602,30 +606,47 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
                               ParameterizedByTAndStdTraitT(
                                   ictx, specialization_decl, "default_delete"));
       return TemplateSpecialization::StdUniquePtr(
-          TemplateArg(ictx.ConvertQualType(t, /*lifetimes=*/nullptr)));
+          // TODO(b/454627672): is specialization_decl the right decl to check
+          // for assumed_lifetimes?
+          TemplateArg(ictx.ConvertQualType(
+              t, /*lifetimes=*/nullptr, /*nullable=*/true,
+              ictx.AreAssumedLifetimesEnabledForTarget(
+                  ictx.GetOwningTarget(specialization_decl)))));
     } else if (templated_decl->getName() == "vector") {
       CRUBIT_ASSIGN_OR_RETURN(
           clang::QualType t,
           ParameterizedByTAndStdTraitT(ictx, specialization_decl, "allocator"));
-      return TemplateSpecialization::StdVector(
-          TemplateArg(ictx.ConvertQualType(t, /*lifetimes=*/nullptr)));
+      // TODO(b/454627672): is specialization_decl the right decl to check for
+      // assumed_lifetimes?
+      return TemplateSpecialization::StdVector(TemplateArg(ictx.ConvertQualType(
+          t, /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(specialization_decl)))));
     }
   } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
           << "absl::Span should have one template arg";
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
-      return TemplateSpecialization::AbslSpan(
-          TemplateArg(ictx.ConvertQualType(t,
-                                           /*lifetimes=*/nullptr)));
+      // TODO(b/454627672): is specialization_decl the right decl to check for
+      // assumed_lifetimes?
+      return TemplateSpecialization::AbslSpan(TemplateArg(ictx.ConvertQualType(
+          t,
+          /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(specialization_decl)))));
     }
   } else if (top_level_namespace == "c9") {
     if (templated_decl->getName() == "Co") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
           << "c9::Co should have one template arg";
+      // TODO(b/454627672): is specialization_decl the right decl to check for
+      // assumed_lifetimes?
       return TemplateSpecialization::C9Co(TemplateArg(ictx.ConvertQualType(
           specialization_decl->getTemplateArgs()[0].getAsType(),
-          /*lifetimes=*/nullptr)));
+          /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(specialization_decl)))));
     }
   }
 
@@ -696,9 +717,15 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
                        sig_fn_type->getReturnType().getAsString()));
     }
   }
-  CRUBIT_ASSIGN_OR_RETURN(CcType return_type,
-                          ictx.ConvertQualType(sig_fn_type->getReturnType(),
-                                               /*lifetimes=*/nullptr));
+  // TODO(b/454627672): is templated_decl the right decl to check for
+  // assumed_lifetimes?
+  CRUBIT_ASSIGN_OR_RETURN(
+      CcType return_type,
+      ictx.ConvertQualType(sig_fn_type->getReturnType(),
+                           /*lifetimes=*/nullptr,
+                           /*nullable=*/true,
+                           ictx.AreAssumedLifetimesEnabledForTarget(
+                               ictx.GetOwningTarget(templated_decl))));
 
   std::vector<CcType> param_types;
   // Convert the parameter types, ensuring that they are complete first.
@@ -713,9 +740,14 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
                          param_type.getAsString()));
       }
     }
+    // TODO(b/454627672): is specialization_decl the right decl to check for
+    // assumed_lifetimes?
     CRUBIT_ASSIGN_OR_RETURN(
         CcType param_cc_type,
-        ictx.ConvertQualType(param_type, /*lifetimes=*/nullptr));
+        ictx.ConvertQualType(param_type, /*lifetimes=*/nullptr,
+                             /*nullable=*/true,
+                             ictx.AreAssumedLifetimesEnabledForTarget(
+                                 ictx.GetOwningTarget(&specialization_decl))));
     param_types.push_back(std::move(param_cc_type));
   }
 
@@ -1151,7 +1183,12 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
       case clang::AS_public:
         // TODO(mboehme): Once lifetime_annotations supports retrieving
         // lifetimes in field types, pass these to ConvertQualType().
-        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes);
+        // TODO(b/454627672): is record_decl the right decl to check for
+        // assumed_lifetimes?
+        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes,
+                                     /*nullable=*/true,
+                                     ictx_.AreAssumedLifetimesEnabledForTarget(
+                                         ictx_.GetOwningTarget(record_decl)));
         break;
       case clang::AS_protected:
       case clang::AS_private:
@@ -1303,10 +1340,14 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   }
 
   clang::StringRef name = cxx_record_decl->getName();
+  // TODO(b/454627672): is cxx_record_decl the right decl to check for
+  // assumed_lifetimes?
   auto cc_type_of_arg = [&](int index) {
     return ictx_.ConvertQualType(
         /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
-        /*lifetimes=*/nullptr);
+        /*lifetimes=*/nullptr, /*nullable=*/true,
+        ictx_.AreAssumedLifetimesEnabledForTarget(
+            ictx_.GetOwningTarget(cxx_record_decl)));
   };
 
   if (name == "optional") {

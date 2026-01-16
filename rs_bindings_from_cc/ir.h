@@ -204,6 +204,9 @@ struct CcType {
   Variant variant;
   bool is_const = false;
   std::string unknown_attr = "";
+  // An ordered list of lifetime variable names. It is valid for the same name
+  // to appear multiple times.
+  std::vector<std::string> explicit_lifetimes;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const CcType& type) {

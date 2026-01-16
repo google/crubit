@@ -42,6 +42,12 @@ std::optional<std::string> CollectUnknownTypeAttrs(
     const clang::Type& t, absl::FunctionRef<bool(clang::attr::Kind)> is_known =
                               [](clang::attr::Kind attr) { return false; });
 
+// Collects all lifetime names annotated on `t` under `ast_context`, returning
+// an error if any were invalid. Any returned string_views belong to
+// `ast_context`.
+absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
+    const clang::ASTContext& ast_context, const clang::Type& t);
+
 // Returns true if `decl` is non-null and refers to a (code-generated) proto2
 // message.
 bool IsProto2Message(const clang::Decl& decl);

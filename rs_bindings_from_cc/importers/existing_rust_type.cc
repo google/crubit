@@ -74,8 +74,12 @@ absl::StatusOr<std::optional<std::vector<CcType>>> GetTemplateParameters(
 
   std::vector<CcType> result;
   for (const auto& arg : specialization_decl->getTemplateArgs().asArray()) {
-    auto cpp_type =
-        ictx.ConvertQualType(arg.getAsType(), /*lifetimes=*/nullptr);
+    // TODO(b/454627672): is specialization_decl the right decl to check for
+    // assumed_lifetimes?
+    auto cpp_type = ictx.ConvertQualType(
+        arg.getAsType(), /*lifetimes=*/nullptr, /*nullable=*/true,
+        ictx.AreAssumedLifetimesEnabledForTarget(
+            ictx.GetOwningTarget(specialization_decl)));
     if (!cpp_type.ok()) return cpp_type.status();
 
     result.push_back(*cpp_type);

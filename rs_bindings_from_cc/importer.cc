@@ -18,6 +18,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/base/no_destructor.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -891,6 +892,15 @@ bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
   return filename.has_value() && filename->ends_with(".proto.h");
 }
 
+bool Importer::AreAssumedLifetimesEnabledForTarget(
+    const BazelLabel& label) const {
+  if (auto i = invocation_.ir_.crubit_features.find(label);
+      i != invocation_.ir_.crubit_features.end()) {
+    return i->second.contains("assume_lifetimes");
+  }
+  return false;
+}
+
 bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
   if (auto i = invocation_.ir_.crubit_features.find(label);
       i != invocation_.ir_.crubit_features.end()) {
@@ -1165,9 +1175,10 @@ static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
 
 absl::StatusOr<CcType> Importer::ConvertType(
     const clang::Type* type,
-    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
+    bool assume_lifetimes) {
   absl::StatusOr<CcType> cpp_type =
-      ConvertUnattributedType(type, lifetimes, nullable);
+      ConvertUnattributedType(type, lifetimes, nullable, assume_lifetimes);
   if (cpp_type.ok()) {
     std::optional<std::string> unknown_attr =
         CollectUnknownTypeAttrs(*type, [](clang::attr::Kind kind) {
@@ -1192,13 +1203,25 @@ absl::StatusOr<CcType> Importer::ConvertType(
     if (unknown_attr.has_value()) {
       cpp_type->unknown_attr = *unknown_attr;
     }
+    if (assume_lifetimes) {
+      CRUBIT_ASSIGN_OR_RETURN(
+          std::vector<absl::string_view> explicit_lifetime_views,
+          CollectExplicitLifetimes(ctx_, *type));
+      cpp_type->explicit_lifetimes.reserve(explicit_lifetime_views.size());
+      absl::c_transform(explicit_lifetime_views,
+                        std::back_inserter(cpp_type->explicit_lifetimes),
+                        [](absl::string_view lifetime_view) {
+                          return std::string(lifetime_view);
+                        });
+    }
   }
   return cpp_type;
 }
 
 absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     const clang::Type* type,
-    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
+    bool assume_lifetimes) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
@@ -1250,7 +1273,8 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         }
         CRUBIT_ASSIGN_OR_RETURN(
             CcType cpp_param_type,
-            ConvertQualType(func_type->getParamType(i), param_lifetimes));
+            ConvertQualType(func_type->getParamType(i), param_lifetimes,
+                            /*nullable=*/true, assume_lifetimes));
         param_and_return_types.push_back(std::move(cpp_param_type));
       }
 
@@ -1261,7 +1285,8 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
       }
       CRUBIT_ASSIGN_OR_RETURN(
           CcType cpp_return_type,
-          ConvertQualType(func_type->getReturnType(), return_lifetimes));
+          ConvertQualType(func_type->getReturnType(), return_lifetimes,
+                          /*nullable=*/true, assume_lifetimes));
       param_and_return_types.push_back(std::move(cpp_return_type));
 
       CHECK(type->isPointerType() || type->isLValueReferenceType());
@@ -1271,9 +1296,10 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
           .param_and_return_types = std::move(param_and_return_types),
       });
     }
-
-    CRUBIT_ASSIGN_OR_RETURN(CcType cpp_pointee_type,
-                            ConvertQualType(pointee_type, pointee_lifetimes));
+    CRUBIT_ASSIGN_OR_RETURN(
+        CcType cpp_pointee_type,
+        ConvertQualType(pointee_type, pointee_lifetimes, /*nullable=*/true,
+                        assume_lifetimes));
     // Note: we don't check for a lifetime here and prefer to defer to the
     // IR consumer to error if a lifetime is required. This allows the IR
     // consumer to infer a lifetime where-appropriate (e.g. constructors).
@@ -1357,12 +1383,14 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     return ConvertTemplateSpecializationType(tst_type);
   } else if (const auto* subst_type =
                  type->getAs<clang::SubstTemplateTypeParmType>()) {
-    return ConvertQualType(subst_type->getReplacementType(), lifetimes);
+    return ConvertQualType(subst_type->getReplacementType(), lifetimes,
+                           /*nullable=*/true, assume_lifetimes);
   } else if (const auto* deduced_type = type->getAs<clang::DeducedType>()) {
     // Deduction should have taken place earlier (e.g. via DeduceReturnType
     // called from FunctionDeclImporter::Import).
     CHECK(deduced_type->isDeduced());
-    return ConvertQualType(deduced_type->getDeducedType(), lifetimes);
+    return ConvertQualType(deduced_type->getDeducedType(), lifetimes,
+                           /*nullable=*/true, assume_lifetimes);
   }
 
   return absl::UnimplementedError(absl::StrCat(
@@ -1371,13 +1399,14 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
 
 absl::StatusOr<CcType> Importer::ConvertQualType(
     clang::QualType qual_type,
-    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable) {
+    const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
+    bool assume_lifetimes) {
   clang::PrintingPolicy printing_policy = ctx_.getPrintingPolicy();
   printing_policy.FullyQualifiedName = true;
   std::string type_string = qual_type.getAsString(printing_policy);
 
-  absl::StatusOr<CcType> type =
-      ConvertType(qual_type.getTypePtr(), lifetimes, nullable);
+  absl::StatusOr<CcType> type = ConvertType(qual_type.getTypePtr(), lifetimes,
+                                            nullable, assume_lifetimes);
   if (!type.ok()) {
     absl::Status error = absl::UnimplementedError(absl::Substitute(
         "Unsupported type '$0': $1", type_string, type.status().message()));

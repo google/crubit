@@ -9,6 +9,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/functional/overload.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
@@ -25,6 +26,7 @@ using ::testing::Contains;
 using ::testing::Each;
 using ::testing::ElementsAre;
 using ::testing::Eq;
+using ::testing::ExplainMatchResult;
 using ::testing::Field;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
@@ -112,6 +114,26 @@ auto ReturnType(const Matcher& matcher) {
   return testing::Field("return_type", &Func::return_type, matcher);
 }
 
+// Matches a Func that has lifetime parameters matching `matcher`.
+template <typename... Args>
+auto LifetimeParamsAre(const Args&... matchers) {
+  return testing::Field("lifetime_params", &Func::lifetime_params,
+                        ElementsAre(matchers...));
+}
+
+MATCHER_P(UnknownAttributesAre, val, "") {
+  if (arg.unknown_attr == val) return true;
+
+  *result_listener << "actual unknown attributes: '" << arg.unknown_attr << "'";
+  return false;
+}
+
+template <typename... Args>
+auto ExplicitLifetimesAre(const Args&... matchers) {
+  return testing::Field("explicit_lifetimes", &CcType::explicit_lifetimes,
+                        ElementsAre(matchers...));
+}
+
 // Matches a Func that has parameters matching `matchers`.
 template <typename... Args>
 auto ParamsAre(const Args&... matchers) {
@@ -195,6 +217,30 @@ auto CcReferenceTo(const Matcher& matcher) {
 
 // Matches a CcType that is void.
 MATCHER(IsVoid, "") { return arg.IsVoid(); }
+
+// Recursively tests the provided CcType to check if any lifetimes are set.
+MATCHER(HasLifetimes, "") {
+  return std::visit(
+      absl::Overload{
+          [](const CcType::Primitive& primitive) { return false; },
+          [&](const CcType::PointerType& pointer) {
+            if (pointer.lifetime.has_value()) {
+              return true;
+            }
+            return ExplainMatchResult(HasLifetimes(), *pointer.pointee_type,
+                                      result_listener);
+          },
+          [&](const CcType::FuncPointer& func_pointer) {
+            return ExplainMatchResult(Contains(HasLifetimes()),
+                                      func_pointer.param_and_return_types,
+                                      result_listener);
+          },
+          // There doesn't appear to be a way to record lifetimes as applied
+          // to records accepting lifetime arguments.
+          [&](const ItemId& id) { return false; },
+      },
+      arg.variant);
+}
 
 // Matches a CcType that is a pointer to integer.
 auto IsIntPtr() { return CcPointsTo(IsCcPrimitive("int")); }
@@ -969,5 +1015,75 @@ TEST(ImporterTest, CrashRepro_AutoInvolvingTemplate) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 }
 
+absl::StatusOr<IR> IrFromCcWithAssumedLifetimes(absl::string_view program) {
+  auto full_program = absl::StrCat(R"cc(
+#define $(l) [[clang::annotate_type("lifetime", #l)]]
+#define $a $(a)
+#define $b $(b)
+#define LIFETIME_PARAMS(...) [[clang::annotate("lifetime_params", __VA_ARGS__)]]
+                                   )cc",
+                                   program);
+  BazelLabel test_target{"//test:testing_target"};
+  return IrFromCc(IrFromCcOptions{
+      .extra_source_code_for_testing = full_program,
+      .crubit_features = {{test_target, {"assume_lifetimes"}}}});
+}
+
+TEST(ImporterTest, AssumedLifetimesCapturesRawFunctionParameterLifetime) {
+  absl::string_view file = R"cc(
+    void f(int& $a x);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              UnorderedElementsAre(VariantWith<Func>(AllOf(
+                  LifetimeParamsAre(), IdentifierIs("f"), ReturnType(IsVoid()),
+                  ParamsAre(ParamType(
+                      AllOf(ExplicitLifetimesAre("a"), UnknownAttributesAre(""),
+                            Not(HasLifetimes()), IsIntRef())))))));
+}
+
+TEST(ImporterTest, AssumedLifetimesCapturesRawFunctionParameterLifetimes) {
+  absl::string_view file = R"cc(
+    void f(int& $a $b x);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              UnorderedElementsAre(VariantWith<Func>(AllOf(
+                  LifetimeParamsAre(), IdentifierIs("f"), ReturnType(IsVoid()),
+                  ParamsAre(ParamType(AllOf(
+                      ExplicitLifetimesAre("a", "b"), UnknownAttributesAre(""),
+                      Not(HasLifetimes()), IsIntRef())))))));
+}
+
+TEST(ImporterTest,
+     AssumedLifetimesCapturesRawFunctionParameterLifetimesSingleAnnotation) {
+  absl::string_view file = R"cc(
+    void f(int& [[clang::annotate_type("lifetime", "aa", "bb", "cc")]] x);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      UnorderedElementsAre(VariantWith<Func>(AllOf(
+          LifetimeParamsAre(), IdentifierIs("f"), ReturnType(IsVoid()),
+          ParamsAre(ParamType(AllOf(ExplicitLifetimesAre("aa", "bb", "cc"),
+                                    UnknownAttributesAre(""),
+                                    Not(HasLifetimes()), IsIntRef())))))));
+}
+
+TEST(ImporterTest,
+     AssumedLifetimesCapturesRawFunctionParameterLifetimesMultipleAnnotations) {
+  absl::string_view file = R"cc(
+    void f(int& [[clang::annotate_type("lifetime", "a", "b")]]
+           [[clang::annotate_type("lifetime", "c", "d")]] x);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      UnorderedElementsAre(VariantWith<Func>(AllOf(
+          LifetimeParamsAre(), IdentifierIs("f"), ReturnType(IsVoid()),
+          ParamsAre(ParamType(AllOf(ExplicitLifetimesAre("a", "b", "c", "d"),
+                                    UnknownAttributesAre(""),
+                                    Not(HasLifetimes()), IsIntRef())))))));
+}
 }  // namespace
 }  // namespace crubit

@@ -353,36 +353,39 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
   std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes;
-  llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes_or_err =
-      clang::tidy::lifetimes::GetLifetimeAnnotations(
-          function_decl, *ictx_.invocation_.lifetime_context_,
-          &lifetime_symbol_table);
-  if (lifetimes_or_err) {
-    lifetimes = std::move(*lifetimes_or_err);
-  } else {
-    using clang::tidy::lifetimes::LifetimeError;
-    llvm::Error remaining_err = llvm::handleErrors(
-        lifetimes_or_err.takeError(),
-        [](std::unique_ptr<LifetimeError> lifetime_err) -> llvm::Error {
-          switch (lifetime_err->type()) {
-            case LifetimeError::Type::ElisionNotEnabled:
-            case LifetimeError::Type::CannotElideOutputLifetimes:
-              // If elision is not enabled or output lifetimes cannot be
-              // elided, we want to import the function with raw lifetime-less
-              // pointers. Just return success here; this will leave the
-              // `lifetimes` optional empty, and we will then handle this
-              // accordingly below.
-              return llvm::Error::success();
-              break;
-            default:
-              return llvm::Error(std::move(lifetime_err));
-              break;
-          }
-        });
-    if (remaining_err) {
-      return unsupported(FormattedError::PrefixedStrCat(
-          "Unable to get lifetime annotations",
-          llvm::toString(std::move(remaining_err))));
+  if (!ictx_.AreAssumedLifetimesEnabledForTarget(
+          ictx_.GetOwningTarget(function_decl))) {
+    llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes_or_err =
+        clang::tidy::lifetimes::GetLifetimeAnnotations(
+            function_decl, *ictx_.invocation_.lifetime_context_,
+            &lifetime_symbol_table);
+    if (lifetimes_or_err) {
+      lifetimes = std::move(*lifetimes_or_err);
+    } else {
+      using clang::tidy::lifetimes::LifetimeError;
+      llvm::Error remaining_err = llvm::handleErrors(
+          lifetimes_or_err.takeError(),
+          [](std::unique_ptr<LifetimeError> lifetime_err) -> llvm::Error {
+            switch (lifetime_err->type()) {
+              case LifetimeError::Type::ElisionNotEnabled:
+              case LifetimeError::Type::CannotElideOutputLifetimes:
+                // If elision is not enabled or output lifetimes cannot be
+                // elided, we want to import the function with raw lifetime-less
+                // pointers. Just return success here; this will leave the
+                // `lifetimes` optional empty, and we will then handle this
+                // accordingly below.
+                return llvm::Error::success();
+                break;
+              default:
+                return llvm::Error(std::move(lifetime_err));
+                break;
+            }
+          });
+      if (remaining_err) {
+        return unsupported(FormattedError::PrefixedStrCat(
+            "Unable to get lifetime annotations",
+            llvm::toString(std::move(remaining_err))));
+      }
     }
   }
 
@@ -400,9 +403,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       if (lifetimes) {
         this_lifetimes = &lifetimes->GetThisLifetimes();
       }
-      absl::StatusOr<CcType> this_param_type =
-          ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
-                                /*nullable=*/false);
+      absl::StatusOr<CcType> this_param_type = ictx_.ConvertQualType(
+          method_decl->getThisType(), this_lifetimes, /*nullable=*/false,
+          ictx_.AreAssumedLifetimesEnabledForTarget(
+              ictx_.GetOwningTarget(method_decl)));
       if (!this_param_type.ok()) {
         errors.Add(
             FormattedError::PrefixedStrCat("`this` parameter is not supported",
@@ -430,7 +434,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       param_lifetimes = &lifetimes->GetParamLifetimes(i);
     }
-    auto param_type = ictx_.ConvertQualType(param->getType(), param_lifetimes);
+    auto param_type = ictx_.ConvertQualType(
+        param->getType(), param_lifetimes, /*nullable=*/true,
+        ictx_.AreAssumedLifetimesEnabledForTarget(
+            ictx_.GetOwningTarget(function_decl)));
     if (!param_type.ok()) {
       errors.Add(
           FormattedError::Substitute("Parameter #$0 is not supported: $1", i,
@@ -477,8 +484,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       return_lifetimes = &lifetimes->GetReturnLifetimes();
     }
-    return_type =
-        ictx_.ConvertQualType(function_decl->getReturnType(), return_lifetimes);
+    return_type = ictx_.ConvertQualType(
+        function_decl->getReturnType(), return_lifetimes, /*nullable=*/true,
+        ictx_.AreAssumedLifetimesEnabledForTarget(
+            ictx_.GetOwningTarget(function_decl)));
     if (!return_type.ok()) {
       errors.Add(FormattedError::PrefixedStrCat(
           "Return type is not supported", return_type.status().message()));

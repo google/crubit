@@ -4,13 +4,17 @@
 
 #include "rs_bindings_from_cc/ast_util.h"
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "absl/algorithm/container.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/functional/function_ref.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -20,6 +24,7 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/Expr.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
@@ -132,6 +137,59 @@ std::optional<std::string> CollectUnknownTypeAttrs(
     type = attributed_type->getEquivalentType().getTypePtr();
   }
   return unknown_attr;
+}
+
+// Attempts to evaluate and return the value of `expr` as a string literal under
+// `ast_context`. The returned `string_view` is owned by the `ast_context`.
+absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
+    const clang::ASTContext& ast_context, const clang::Expr* expr) {
+  clang::Expr::EvalResult eval_result;
+  if (!expr->EvaluateAsConstantExpr(eval_result, ast_context) ||
+      !eval_result.Val.isLValue()) {
+    return absl::InvalidArgumentError("expression is not a string literal");
+  }
+
+  const auto* eval_result_expr =
+      eval_result.Val.getLValueBase().dyn_cast<const clang::Expr*>();
+  if (!eval_result_expr) {
+    return absl::InvalidArgumentError("expression is not a string literal");
+  }
+
+  const auto* strlit = clang::dyn_cast<clang::StringLiteral>(eval_result_expr);
+  if (!strlit) {
+    return absl::InvalidArgumentError("expression is not a string literal");
+  }
+
+  return strlit->getString();
+}
+
+absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
+    const clang::ASTContext& ast_context, const clang::Type& t) {
+  std::vector<absl::string_view> lifetimes;
+  const clang::Type* type = &t;
+  // We're looking at ((t ($a, $b)) ($c, $d)) and want to get a flattened list
+  // of [a; b; c; d].
+  while (const auto* attributed_type = type->getAs<clang::AttributedType>()) {
+    if (attributed_type->getAttr() == nullptr) continue;
+    auto annotate_type_attr =
+        clang::dyn_cast<clang::AnnotateTypeAttr>(attributed_type->getAttr());
+    if (annotate_type_attr == nullptr ||
+        annotate_type_attr->getAnnotation() != "lifetime")
+      continue;
+    if (size_t n_args = annotate_type_attr->args_size(); n_args != 0) {
+      lifetimes.resize(lifetimes.size() + n_args);
+      size_t arg_index = 0;
+      for (const clang::Expr* arg : annotate_type_attr->args()) {
+        CRUBIT_ASSIGN_OR_RETURN(absl::string_view lifetime,
+                                EvaluateAsStringLiteral(ast_context, arg));
+        lifetimes[lifetimes.size() - arg_index - 1] = lifetime;
+        ++arg_index;
+      }
+    }
+    type = attributed_type->getEquivalentType().getTypePtr();
+  }
+  std::reverse(lifetimes.begin(), lifetimes.end());
+  return lifetimes;
 }
 
 bool IsProto2Message(const clang::Decl& decl) {

@@ -149,8 +149,9 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
   // TODO(mboehme): Once lifetime_annotations supports retrieving lifetimes in
   // type aliases, pass these to ConvertQualType().
-  absl::StatusOr<CcType> underlying_type =
-      ictx_.ConvertQualType(underlying_qualtype, no_lifetimes);
+  absl::StatusOr<CcType> underlying_type = ictx_.ConvertQualType(
+      underlying_qualtype, no_lifetimes, /*nullable=*/true,
+      ictx_.AreAssumedLifetimesEnabledForTarget(ictx_.GetOwningTarget(decl)));
 
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(

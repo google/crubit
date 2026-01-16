@@ -81,7 +81,10 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
-  auto type = ictx_.ConvertQualType(var_decl->getType(), nullptr);
+  auto type =
+      ictx_.ConvertQualType(var_decl->getType(), nullptr, /*nullable=*/true,
+                            ictx_.AreAssumedLifetimesEnabledForTarget(
+                                ictx_.GetOwningTarget(var_decl)));
   if (!type.ok()) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,

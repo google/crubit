@@ -136,10 +136,23 @@ llvm::json::Value CcType::ToJson() const {
           [&](ItemId id) { return llvm::json::Object{{"Decl", id}}; }},
       variant);
 
+  if (explicit_lifetimes.empty()) {
+    return llvm::json::Object{
+        {"variant", std::move(variant_object)},
+        {"is_const", is_const},
+        {"unknown_attr", unknown_attr},
+    };
+  }
+  std::vector<llvm::json::Value> explicit_lifetimes_values;
+  explicit_lifetimes_values.reserve(explicit_lifetimes.size());
+  for (const std::string& lifetime : explicit_lifetimes) {
+    explicit_lifetimes_values.push_back(llvm::json::Value(lifetime));
+  }
   return llvm::json::Object{
       {"variant", std::move(variant_object)},
       {"is_const", is_const},
       {"unknown_attr", unknown_attr},
+      {"explicit_lifetimes", std::move(explicit_lifetimes_values)},
   };
 }
 
