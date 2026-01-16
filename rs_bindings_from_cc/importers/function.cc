@@ -90,19 +90,32 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
   }
 }
 
-SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
-  SafetyAnnotation crubit = GetCrubitSafetyAnnotation(decl, errors);
-  if (!decl.specific_attrs<clang::UnsafeBufferUsageAttr>().empty()) {
-    if (crubit == SafetyAnnotation::kUnannotated ||
-        crubit == SafetyAnnotation::kUnsafe) {
-      return SafetyAnnotation::kUnsafe;
-    } else {
-      errors.Add(FormattedError::Static(
-          "Function is annotated with both `[[clang::unsafe_buffer_usage]]` "
-          "and `CRUBIT_UNSAFE`"));
-    }
+template <typename Attr>
+void CollectUnsafeAttr(const clang::Decl& decl, Errors& errors, bool is_safe,
+                       SafetyAnnotation& safety) {
+  auto attrs = decl.specific_attrs<Attr>();
+  if (attrs.empty()) {
+    return;
   }
-  return crubit;
+  if (is_safe) {
+    errors.Add(
+        FormattedError::Substitute("Function is annotated with both `$0` and "
+                                   "`CRUBIT_OVERRIDE_UNSAFE(false)`",
+                                   attrs.begin()->getSpelling()));
+    return;
+  }
+  safety = SafetyAnnotation::kUnsafe;
+}
+
+SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
+  SafetyAnnotation safety = GetCrubitSafetyAnnotation(decl, errors);
+  bool is_safe = safety == SafetyAnnotation::kDisableUnsafe;
+  CollectUnsafeAttr<clang::UnsafeBufferUsageAttr>(decl, errors, is_safe,
+                                                  safety);
+
+  CollectUnsafeAttr<clang::RequiresCapabilityAttr>(decl, errors, is_safe,
+                                                   safety);
+  return safety;
 }
 
 // Applies the ref qualifier to the `this` pointer.
@@ -577,7 +590,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           return true;
         } else if (clang::isa<clang::NoReturnAttr>(attr)) {
           return true;  // we call isNoReturn below, instead
-        } else if (clang::isa<clang::UnsafeBufferUsageAttr>(attr)) {
+        } else if (clang::isa<clang::UnsafeBufferUsageAttr>(attr) ||
+                   clang::isa<clang::RequiresCapabilityAttr>(attr)) {
           return true;  // Handled in `GetSafetyAnnotation()`
         } else if (clang::isa<clang::AsmLabelAttr>(attr) ||
                    clang::isa<clang::ConstAttr>(attr) ||
@@ -589,7 +603,14 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::PureAttr>(attr) ||
                    clang::isa<clang::ReinitializesAttr>(attr) ||
                    clang::isa<clang::UnusedAttr>(attr) ||
-                   clang::isa<clang::AlwaysInlineAttr>(attr)) {
+                   clang::isa<clang::AlwaysInlineAttr>(attr) ||
+                   clang::isa<clang::AssertCapabilityAttr>(attr) ||
+                   clang::isa<clang::AcquireCapabilityAttr>(attr) ||
+                   clang::isa<clang::TryAcquireCapabilityAttr>(attr) ||
+                   clang::isa<clang::ReleaseCapabilityAttr>(attr) ||
+                   clang::isa<clang::NoThreadSafetyAnalysisAttr>(attr) ||
+                   clang::isa<clang::LockReturnedAttr>(attr) ||
+                   clang::isa<clang::LocksExcludedAttr>(attr)) {
           // These attributes don't affect Rust.
           return true;
         }

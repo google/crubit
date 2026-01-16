@@ -761,7 +761,10 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::PreferredNameAttr>(attr) ||
          clang::isa<clang::TrivialABIAttr>(attr) ||
          clang::isa<clang::WarnUnusedResultAttr>(attr) ||
-         clang::isa<clang::TypeNullableAttr>(attr);
+         clang::isa<clang::TypeNullableAttr>(attr) ||
+         clang::isa<clang::ScopedLockableAttr>(attr) ||
+         clang::isa<clang::CapabilityAttr>(attr) ||
+         clang::isa<clang::ReentrantCapabilityAttr>(attr);
 }
 
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
