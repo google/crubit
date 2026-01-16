@@ -188,6 +188,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
 
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> {
+    let _scope = item.error_scope(db.ir(), db.errors());
     let err = match generate_item_impl(db, &item) {
         Ok(generated) => return Ok(generated),
         Err(err) => err,

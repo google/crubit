@@ -295,6 +295,7 @@ pub(crate) fn generate_associated_item<'tcx>(
     if !is_supported_associated_item(tcx, def_id) {
         return None;
     }
+    crate::error_scope!(db, def_id);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
             let result = db.generate_function(def_id);

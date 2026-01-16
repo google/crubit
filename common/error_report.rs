@@ -5,11 +5,12 @@
 use regex::Regex;
 use std::borrow::Cow;
 use std::cell::RefCell;
+use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::fmt::{self, Arguments, Display, Formatter};
 use std::rc::Rc;
 
-use serde::Serialize;
+use serde::{ser::SerializeSeq, Serialize, Serializer};
 
 #[doc(hidden)]
 pub mod macro_internal {
@@ -48,38 +49,52 @@ impl Display for ErrorList {
 impl std::error::Error for ErrorList {}
 
 /// An error that stores its format string as well as the formatted message.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FormattedError {
-    pub fmt: Cow<'static, str>,
-    pub message: Cow<'static, str>,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    fmt: Cow<'static, str>,
+    /// The full error message.
+    ///
+    /// If this is identical to the `fmt` value, this will be empty.
+    #[serde(skip_serializing_if = "str::is_empty")]
+    full_error: Cow<'static, str>,
 }
 
 impl FormattedError {
+    pub fn new(fmt: Cow<'static, str>, mut full_error: Cow<'static, str>) -> Self {
+        if full_error == fmt {
+            full_error = Cow::Borrowed("")
+        }
+        Self { fmt, full_error }
+    }
+
     pub fn new_static(fmt: &'static str, args: Arguments) -> arc_anyhow::Error {
         arc_anyhow::Error::from(anyhow::Error::from(match args.as_str() {
-            // This format string has no parameters to format at runtime.
-            // Note: The compiler can perform optimizations to return `Some`, when even when
-            // `fmt` contains placeholders, so we store `fmt` instead of `s` for `fmt` field.
-            Some(s) => Self { fmt: Cow::Borrowed(fmt), message: Cow::Borrowed(s) },
+            // Either the format string has no parameters, or it has parameters which were elided
+            // at compile-time. We may still need to store the full_error.
+            Some(s) => Self::new(Cow::Borrowed(fmt), Cow::Borrowed(s)),
             // This format string has parameters and must be formatted.
-            None => Self { fmt: Cow::Borrowed(fmt), message: Cow::Owned(fmt::format(args)) },
+            None => Self::new(Cow::Borrowed(fmt), Cow::Owned(fmt::format(args))),
         }))
     }
 
     pub fn new_dynamic(err: impl Display) -> arc_anyhow::Error {
         // Use the whole error as the format string. This is preferable to
         // grouping all dynamic errors under the "{}" format string.
-        let message = format!("{}", err);
-        arc_anyhow::Error::from(anyhow::Error::from(Self {
-            fmt: Cow::Owned(message.clone()),
-            message: Cow::Owned(message),
-        }))
+        arc_anyhow::Error::from(anyhow::Error::from(Self::new(
+            Cow::Owned(err.to_string()),
+            Cow::Borrowed(""),
+        )))
     }
 }
 
 impl Display for FormattedError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
+        if self.full_error.is_empty() {
+            write!(f, "{}", self.fmt)
+        } else {
+            write!(f, "{}", self.full_error)
+        }
     }
 }
 
@@ -144,12 +159,52 @@ macro_rules! ensure {
 /// report.
 pub trait ErrorReporting {
     fn report(&self, error: &arc_anyhow::Error);
+
+    /// Enter `item`, and return the item to replace with upon exiting.
+    fn enter_item(&self, item: ItemName) -> Option<ItemName>;
+    /// Assert that we are currently in `item`.
+    fn assert_in_item(&self, item: ItemName);
+    /// Exit `item`, and restore the scope to `replace_with`.
+    fn exit_item(&self, item: ItemName, replace_with: Option<ItemName>);
+}
+
+/// A named unique identifier for an item.
+#[derive(Clone, PartialEq, Debug)]
+pub struct ItemName {
+    /// The human-readable qualified name of the item.
+    pub name: Rc<str>,
+    /// Unique ID per target. (E.g. the address of the AST node.)
+    pub id: u64,
+}
+
+pub struct ItemScope<'a> {
+    report: &'a dyn ErrorReporting,
+    item: ItemName,
+    old_item: Option<ItemName>,
+}
+
+impl<'a> ItemScope<'a> {
+    pub fn new(report: &'a dyn ErrorReporting, item: ItemName) -> Self {
+        let old_item = report.enter_item(item.clone());
+        Self { report, item, old_item }
+    }
+}
+
+impl Drop for ItemScope<'_> {
+    fn drop(&mut self) {
+        self.report.exit_item(self.item.clone(), std::mem::take(&mut self.old_item));
+    }
 }
 
 pub struct IgnoreErrors;
 
 impl ErrorReporting for IgnoreErrors {
     fn report(&self, _: &arc_anyhow::Error) {}
+    fn enter_item(&self, _: ItemName) -> Option<ItemName> {
+        None
+    }
+    fn assert_in_item(&self, _: ItemName) {}
+    fn exit_item(&self, _: ItemName, _: Option<ItemName>) {}
 }
 
 fn hide_unstable_details(input: &str) -> String {
@@ -162,12 +217,31 @@ fn hide_unstable_details(input: &str) -> String {
     regex.replace_all(res.as_str(), "").to_string()
 }
 
-/// An aggregate of zero or more errors.
+/// Errors per-item.
 #[derive(Default, Debug)]
 pub struct ErrorReport {
     // The interior mutability / borrow_mut will never panic: it is never borrowed for longer than
     // a method call, and the methods do not call each other.
-    map: RefCell<BTreeMap<Cow<'static, str>, ErrorReportEntry>>,
+    map: RefCell<BTreeMap<u64, ErrorReportEntry>>,
+    // TODO(jeanpierreda): This should really be passed around rather than mutated in the
+    // BindingsGenerator. For example, if we used a totally separate `dyn BindingsGenerator`
+    // which is the same as the old one except that it has a different input.
+    current_item: RefCell<Option<ItemName>>,
+}
+
+struct SerializeIterator<It: Clone + Iterator>(It);
+
+impl<It: Clone + Iterator> Serialize for SerializeIterator<It>
+where
+    It::Item: Serialize,
+{
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut seq = serializer.serialize_seq(None)?;
+        for e in self.0.clone() {
+            seq.serialize_element(&e)?;
+        }
+        seq.end()
+    }
 }
 
 impl ErrorReport {
@@ -190,49 +264,92 @@ impl ErrorReport {
     }
 
     pub fn to_json_string(&self) -> String {
-        serde_json::to_string_pretty(&*self.map.borrow())
+        serde_json::to_string_pretty(&SerializeIterator(self.map.borrow().values()))
             .expect("ErrorReporting serialization to JSON failed unexpectedly")
     }
+
+    fn current_item(&self) -> ItemName {
+        self.current_item.borrow().clone().unwrap_or_else(|| DEFAULT_ITEM.with(|item| item.clone()))
+    }
+}
+
+thread_local! {
+    static DEFAULT_ITEM: ItemName = ItemName {name: Rc::from(""), id: 0};
 }
 
 impl ErrorReporting for ErrorReport {
     fn report(&self, error: &arc_anyhow::Error) {
         let root_cause = error.root_cause();
+        let reported_error;
         if let Some(error) = root_cause.downcast_ref::<FormattedError>() {
-            let sample_message = if error.message != error.fmt { &*error.message } else { "" };
-            self.map
-                .borrow_mut()
-                .entry(error.fmt.clone())
-                .or_default()
-                .add(Cow::Owned(hide_unstable_details(sample_message)));
+            reported_error = Some(FormattedError::new(
+                error.fmt.clone(),
+                Cow::Owned(hide_unstable_details(&error.full_error)),
+            ));
         } else if let Some(error) = root_cause.downcast_ref::<ErrorList>() {
             for error in &error.errors {
                 self.report(error);
             }
+            reported_error = None;
         } else {
+            reported_error = Some(FormattedError::new(
+                Cow::Borrowed("{}"),
+                Cow::Owned(hide_unstable_details(&format!("{error}"))),
+            ));
+        }
+        if let Some(reported_error) = reported_error {
             self.map
                 .borrow_mut()
-                .entry(Cow::Borrowed("{}"))
+                .entry(self.current_item().id)
                 .or_default()
-                .add(Cow::Owned(hide_unstable_details(&format!("{error}"))));
+                .errors
+                .push(reported_error);
         }
+    }
+
+    fn enter_item(&self, item: ItemName) -> Option<ItemName> {
+        // At least populate with an empty ErrorReportEntry, so that we can detect error-free items
+        // after the fact.
+        let mut map = self.map.borrow_mut();
+        match map.entry(item.id) {
+            Entry::Vacant(e) => {
+                e.insert(ErrorReportEntry { name: item.name.clone(), errors: vec![] });
+            }
+            Entry::Occupied(e) => {
+                assert_eq!(
+                    e.get().name,
+                    item.name,
+                    "distinct items with the same unique ID: {}",
+                    item.id
+                );
+            }
+        }
+        self.current_item.borrow_mut().replace(item)
+    }
+
+    fn assert_in_item(&self, item: ItemName) {
+        assert_eq!(
+            self.current_item(),
+            item,
+            "error report failure: not in item scope: {}",
+            item.name,
+        );
+    }
+
+    fn exit_item(&self, item: ItemName, replace_with: Option<ItemName>) {
+        let old_item = std::mem::replace(&mut *self.current_item.borrow_mut(), replace_with);
+        assert_eq!(
+            old_item,
+            Some(item),
+            "bad scoping: stopped handling an item, but we were processing a different item."
+        );
     }
 }
 
 #[derive(Default, Debug, Serialize)]
 struct ErrorReportEntry {
-    count: u64,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    sample_message: String,
-}
-
-impl ErrorReportEntry {
-    fn add(&mut self, message: Cow<str>) {
-        if self.count == 0 {
-            self.sample_message = message.into_owned();
-        }
-        self.count += 1;
-    }
+    name: Rc<str>,
+    errors: Vec<FormattedError>,
 }
 
 /// Reporter for fatal errors that will cause bindings generation to fail.
@@ -290,8 +407,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc");
-        assert!(matches!(err.message, Cow::Borrowed(_)));
-        assert_eq!(err.message, "abc");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "");
     }
 
     #[gtest]
@@ -301,8 +418,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{some_var}");
-        assert!(matches!(err.message, Cow::Owned(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Owned(_)));
+        assert_eq!(err.full_error, "abcdef");
     }
 
     #[gtest]
@@ -311,8 +428,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Owned(_)));
         assert_eq!(err.fmt, "abcdef");
-        assert!(matches!(err.message, Cow::Owned(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "");
     }
 
     #[gtest]
@@ -321,8 +438,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
-        assert!(matches!(err.message, Cow::Borrowed(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "abcdef");
     }
 
     #[gtest]
@@ -331,8 +448,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc");
-        assert!(matches!(err.message, Cow::Borrowed(_)));
-        assert_eq!(err.message, "abc");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "");
     }
 
     #[gtest]
@@ -342,8 +459,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{some_var}");
-        assert!(matches!(err.message, Cow::Owned(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Owned(_)));
+        assert_eq!(err.full_error, "abcdef");
     }
 
     #[gtest]
@@ -353,8 +470,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Owned(_)));
         assert_eq!(err.fmt, "abcdef");
-        assert!(matches!(err.message, Cow::Owned(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "");
     }
 
     #[gtest]
@@ -363,8 +480,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
-        assert!(matches!(err.message, Cow::Borrowed(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "abcdef");
     }
 
     #[gtest]
@@ -386,8 +503,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc");
-        assert!(matches!(err.message, Cow::Borrowed(_)));
-        assert_eq!(err.message, "abc");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "");
     }
 
     #[gtest]
@@ -401,8 +518,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{some_var}");
-        assert!(matches!(err.message, Cow::Owned(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Owned(_)));
+        assert_eq!(err.full_error, "abcdef");
     }
 
     #[gtest]
@@ -415,8 +532,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Owned(_)));
         assert_eq!(err.fmt, "abcdef");
-        assert!(matches!(err.message, Cow::Owned(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "");
     }
 
     #[gtest]
@@ -429,8 +546,8 @@ mod tests {
         let err: &FormattedError = arc_err.downcast_ref().unwrap();
         assert!(matches!(err.fmt, Cow::Borrowed(_)));
         assert_eq!(err.fmt, "abc{}");
-        assert!(matches!(err.message, Cow::Borrowed(_)));
-        assert_eq!(err.message, "abcdef");
+        assert!(matches!(err.full_error, Cow::Borrowed(_)));
+        assert_eq!(err.full_error, "abcdef");
     }
 
     #[gtest]
@@ -469,35 +586,87 @@ mod tests {
 
         expect_eq!(
             serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
-            serde_json::json!({
-              "abc{}": {
-                "count": 2,
-                "sample_message": "abcdef"
-              },
-              "error code: {}": {
-                "count": 1,
-                "sample_message": "error code: 65535"
-              },
-              "has context from arc_anyhow::Context::context()": {
-                "count": 1
-              },
-              "has context from arc_anyhow::Context::with_context()": {
-                "count": 1
-              },
-              "has context from arc_anyhow::context()": {
-                "count": 1
-              },
-              "has three layers of context": {
-                "count": 1
-              },
-              "no parameters": {
-                "count": 3
-              },
-              "{}": {
-                "count": 1,
-                "sample_message": "not attributed"
-              }
-            }),
+            serde_json::json!([
+                {
+                    "name": "",
+                    "errors": [
+                        {
+                            "fmt": "abc{}",
+                            "full_error": "abcdef",
+                        },
+                        {
+                            "fmt": "abc{}",
+                            "full_error": "abc123",
+                        },
+                        {
+                            "fmt": "error code: {}",
+                            "full_error": "error code: 65535",
+                        },
+                        {
+                            "fmt": "no parameters",
+                        },
+                        {
+                            "fmt": "no parameters",
+                        },
+                        {
+                            "fmt": "no parameters",
+                        },
+                        {
+                            "fmt": "{}",
+                            "full_error": "not attributed",
+                        },
+                        {
+                            "fmt": "has context from arc_anyhow::context()",
+                        },
+                        {
+                            "fmt": "has context from arc_anyhow::Context::context()",
+                        },
+                        {
+                            "fmt": "has context from arc_anyhow::Context::with_context()",
+                        },
+                        {
+                            "fmt": "has three layers of context",
+                        },
+                    ],
+                },
+            ]),
+        );
+    }
+
+    #[gtest]
+    fn error_report_item_name() {
+        let report = ErrorReport::new();
+        {
+            let _scope = ItemScope::new(&report, ItemName { name: "foo".into(), id: 1 });
+            report.report(&anyhow!("error in {}", "item 1"));
+        }
+        {
+            let _scope = ItemScope::new(&report, ItemName { name: "bar".into(), id: 2 });
+            report.report(&anyhow!("error in {}", "item 2"));
+        }
+
+        expect_eq!(
+            serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
+            serde_json::json!([
+                {
+                    "name": "foo",
+                    "errors": [
+                        {
+                            "fmt": "error in {}",
+                            "full_error": "error in item 1",
+                        },
+                    ],
+                },
+                {
+                    "name": "bar",
+                    "errors": [
+                        {
+                            "fmt": "error in {}",
+                            "full_error": "error in item 2",
+                        },
+                    ],
+                },
+            ]),
         );
     }
 
@@ -510,15 +679,20 @@ mod tests {
         ])));
         expect_eq!(
             serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
-            serde_json::json!({
-              "abc{}": {
-                "count": 1,
-                "sample_message": "abcdef"
-              },
-              "hijk": {
-                "count": 1
-              }
-            }),
+            serde_json::json!([
+                {
+                    "name": "",
+                    "errors": [
+                        {
+                            "fmt": "abc{}",
+                            "full_error": "abcdef"
+                        },
+                        {
+                            "fmt": "hijk"
+                        },
+                    ]
+                },
+            ]),
         );
     }
 }

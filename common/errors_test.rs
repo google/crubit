@@ -26,10 +26,15 @@ fn test_errors_consolidate_on_nonempty_list_returns_reportable_error() -> google
     report.report(&error.into());
     expect_eq!(
         serde_json::from_str::<serde_json::Value>(&report.to_json_string()).unwrap(),
-        serde_json::json!({
-            "abc": { "count": 1 },
-            "def": { "count": 1 },
-        }),
+        serde_json::json!([
+            {
+                "name": "",
+                "errors": [
+                    { "fmt": "abc" },
+                    { "fmt": "def" },
+                ],
+            },
+        ]),
     );
     Ok(())
 }

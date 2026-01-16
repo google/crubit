@@ -565,6 +565,9 @@ impl Debug for ItemId {
 }
 
 impl ItemId {
+    pub fn as_u64(self) -> u64 {
+        self.0 as u64
+    }
     pub const fn new_for_testing(value: usize) -> Self {
         Self(value)
     }
@@ -1641,10 +1644,10 @@ impl UnsupportedItem {
             self.errors
                 .iter()
                 .map(|e| {
-                    error_report::FormattedError {
-                        fmt: e.fmt.to_string().into(),
-                        message: e.message.to_string().into(),
-                    }
+                    error_report::FormattedError::new(
+                        e.fmt.to_string().into(),
+                        e.message.to_string().into(),
+                    )
                     .into()
                 })
                 .collect()
@@ -1965,6 +1968,27 @@ impl Item {
             Item::Func(_) | Item::UnsupportedItem(_) | Item::Comment(_) => false,
             Item::Namespace(_) => unreachable!("Found a namespace that's opened inside of a record. This is not valid C++, so this is a bug."),
         }
+    }
+
+    fn error_item_name(&self, ir: &IR) -> error_report::ItemName {
+        let name = self.debug_name(ir);
+        error_report::ItemName { name, id: self.id().as_u64() }
+    }
+
+    pub fn error_scope<'a>(
+        &self,
+        ir: &IR,
+        errors: &'a dyn error_report::ErrorReporting,
+    ) -> Option<error_report::ItemScope<'a>> {
+        if matches!(self, Item::Comment(_) | Item::UseMod(_)) {
+            None
+        } else {
+            Some(error_report::ItemScope::new(errors, self.error_item_name(ir)))
+        }
+    }
+
+    pub fn assert_in_error_scope(&self, ir: &IR, errors: &dyn error_report::ErrorReporting) {
+        errors.assert_in_item(self.error_item_name(ir));
     }
 }
 

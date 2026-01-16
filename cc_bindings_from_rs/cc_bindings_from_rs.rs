@@ -570,11 +570,16 @@ mod tests {
         let error_report_out_path = test_result.error_report_out_path.as_ref().unwrap();
         assert!(error_report_out_path.exists());
         let error_report = std::fs::read_to_string(&error_report_out_path)?;
-        let expected_error_report = r#"{
-  "Generic types are not supported yet (b/259749095)": {
-    "count": 1
+        let expected_error_report = r#"[
+  {
+    "name": "test_crate::Unsupported",
+    "errors": [
+      {
+        "fmt": "Generic types are not supported yet (b/259749095)"
+      }
+    ]
   }
-}"#;
+]"#;
         assert_eq!(expected_error_report, error_report);
         Ok(())
     }

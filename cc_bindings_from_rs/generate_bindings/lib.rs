@@ -1301,6 +1301,20 @@ fn item_name(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Symbol {
     db.tcx().opt_item_name(def_id).unwrap_or_else(|| Symbol::intern("<unknown>"))
 }
 
+fn item_name_for_error_report(
+    db: &dyn BindingsGenerator<'_>,
+    def_id: DefId,
+) -> error_report::ItemName {
+    let name = format!(
+        "{}::{}",
+        db.tcx().crate_name(db.source_crate_num()),
+        db.tcx().def_path_str(def_id)
+    )
+    .into();
+    let id = ((def_id.index.as_u32() as u64) << 32) | def_id.krate.as_u32() as u64;
+    error_report::ItemName { name, id }
+}
+
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<Option<ApiSnippets>> {
     let tcx = db.tcx();
@@ -1319,6 +1333,16 @@ fn generate_item(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<Option
         }
     }
     generated
+}
+
+#[macro_export]
+macro_rules! error_scope {
+    ($db:expr, $def_id:expr) => {
+        let db = $db;
+        let errors = db.errors();
+        let _error_scope =
+            error_report::ItemScope::new(&*errors, $crate::item_name_for_error_report(db, $def_id));
+    };
 }
 
 // A helper for `generate_item`.
@@ -1360,6 +1384,7 @@ fn generate_unsupported_def(
     err: Error,
 ) -> CcSnippet {
     let tcx = db.tcx();
+    db.errors().assert_in_item(item_name_for_error_report(db, def_id));
     db.errors().report(&err);
     let source_loc = generate_source_location(db, def_id);
     let name = tcx.def_path_str(def_id);
@@ -1605,6 +1630,7 @@ fn formatted_items_in_crate(db: &dyn BindingsGenerator<'_>) -> impl Iterator<Ite
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
                 // want to regenerate those definitions.
+                error_scope!(db, def_id);
                 let api_snippets = db.generate_item(def_id).transpose()?;
                 let (api_snippets, aliases) = api_snippets.map_or_else(
                     |err| (generate_unsupported_def(db, def_id, err).into_main_api(), vec![]),
@@ -1643,6 +1669,7 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
     let mut main_apis = HashMap::<DefId, CcSnippet>::new();
     for item in formatted_items_in_crate(db) {
         let def_id = item.def_id;
+        error_scope!(db, def_id);
         // We delay handling aliases until after sorting by def id to ensure they are emitted in a
         // deterministic order, same as the main api definitions. This is important for caching and
         // testing.

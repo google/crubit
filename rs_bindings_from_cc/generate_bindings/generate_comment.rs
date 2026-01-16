@@ -7,7 +7,7 @@
 use database::code_snippet::{ApiSnippets, DocCommentAttr, GeneratedItem};
 use database::BindingsGenerator;
 use ffi_types::Environment;
-use ir::{Comment, GenericItem, UnsupportedItem, IR};
+use ir::{Comment, GenericItem, Item, UnsupportedItem, IR};
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::rc::Rc;
@@ -85,6 +85,7 @@ pub fn generate_doc_comment(
 
 /// Generates Rust source code for a given `UnsupportedItem`.
 pub fn generate_unsupported(db: &dyn BindingsGenerator, item: Rc<UnsupportedItem>) -> ApiSnippets {
+    Item::UnsupportedItem(item.clone()).assert_in_error_scope(db.ir(), db.errors());
     for error in item.errors() {
         db.errors().report(error);
     }

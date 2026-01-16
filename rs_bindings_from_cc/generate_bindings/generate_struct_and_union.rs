@@ -553,6 +553,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     .iter()
     .filter_map(|unambiguous_base_class_member_function| -> Option<ApiSnippets> {
         let item = ir.find_untyped_decl(unambiguous_base_class_member_function.id);
+        let _scope = item.error_scope(db.ir(), db.errors());
         let Item::Func(ir_func) = item else { panic!("Unexpected item type: {:?}", item) };
         let generated_func =
             db.generate_function(ir_func.clone(), Some(record.clone())).ok().flatten()?;
