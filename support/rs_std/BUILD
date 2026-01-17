@@ -176,3 +176,14 @@ crubit_cc_test(
         "@googletest//:gmock",
     ],
 )
+
+cc_library(
+    name = "traits",
+    hdrs = ["traits.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [],
+)
