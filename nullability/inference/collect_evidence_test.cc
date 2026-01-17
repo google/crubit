@@ -361,80 +361,59 @@ TEST(SummarizeDefinitionTest, NullableArgPassed) {
   EXPECT_THAT(Summary, EqualsProto(Proto));
 }
 
-class CollectEvidenceFromDefinitionTest
-    : public testing::TestWithParam<DefinitionCollectionMode> {
- protected:
-  DefinitionCollectionMode getMode() const { return GetParam(); }
-};
-
-INSTANTIATE_TEST_SUITE_P(
-    CollectEvidenceFromDefinitionTests, CollectEvidenceFromDefinitionTest,
-    testing::Values(DefinitionCollectionMode::kTestWithSummaries,
-                    DefinitionCollectionMode::kTestDirectly),
-    [](const testing::TestParamInfo<DefinitionCollectionMode>& Info) {
-      return printToString(Info.param);
-    });
+using CollectEvidenceFromDefinitionTest = testing::Test;
 
 using SmartPointerCollectEvidenceFromDefinitionTest =
     CollectEvidenceFromDefinitionTest;
 
-INSTANTIATE_TEST_SUITE_P(
-    SmartPointerCollectEvidenceFromDefinitionTests,
-    SmartPointerCollectEvidenceFromDefinitionTest,
-    testing::Values(DefinitionCollectionMode::kTestWithSummaries,
-                    DefinitionCollectionMode::kTestDirectly),
-    [](const testing::TestParamInfo<DefinitionCollectionMode>& Info) {
-      return printToString(Info.param);
-    });
-
-TEST_P(CollectEvidenceFromDefinitionTest, Location) {
+TEST_F(CollectEvidenceFromDefinitionTest, Location) {
   llvm::StringRef Code = "void target(int *P) { *P; }";
   //                      12345678901234567890123456
   //                      0        1         2
 
-  auto Evidence = collectFromTargetFuncDefinition(Code, getMode());
+  auto Evidence = collectFromTargetFuncDefinition(Code);
   ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
                                              Evidence::UNCHECKED_DEREFERENCE)));
   EXPECT_EQ("input.cc:1:23", Evidence.front().location());
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, Location) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, Location) {
   llvm::StringRef Code =
       "#include <memory>\nvoid target(std::unique_ptr<int> P) { *P; }";
   //                      123456789012345678901234567890123456789012
   //                      0        1         2         3         4
 
-  auto Evidence = collectFromTargetFuncDefinition(Code, getMode());
+  auto Evidence = collectFromTargetFuncDefinition(Code);
   ASSERT_THAT(Evidence, ElementsAre(evidence(paramSlot(0),
                                              Evidence::UNCHECKED_DEREFERENCE)));
   EXPECT_EQ("input.cc:2:39", Evidence.front().location());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NoParams) {
+TEST_F(CollectEvidenceFromDefinitionTest, NoParams) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() {}
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, OneParamUnused) {
+TEST_F(CollectEvidenceFromDefinitionTest, OneParamUnused) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {}
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, OneParamUsedWithoutRestriction) {
+TEST_F(CollectEvidenceFromDefinitionTest, OneParamUsedWithoutRestriction) {
   static constexpr llvm::StringRef Src = R"cc(
     void takesUnknown(int *Unknown) {}
 
     void target(int *P) { takesUnknown(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, Deref) {
+TEST_F(CollectEvidenceFromDefinitionTest, Deref) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P0, int *P1) {
       int A = *P0;
@@ -443,12 +422,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, Deref) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DerefArrow) {
+TEST_F(CollectEvidenceFromDefinitionTest, DerefArrow) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       int X;
@@ -459,13 +438,13 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefArrow) {
       B->y();
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, Deref) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, Deref) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     struct S {
@@ -478,23 +457,23 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, Deref) {
       P->y();
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DerefOfNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, DerefOfNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(Nonnull<int *> P) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
+TEST_F(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {
       *P;
@@ -503,11 +482,11 @@ TEST_P(CollectEvidenceFromDefinitionTest, DereferenceBeforeAssignment) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignment) {
+TEST_F(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {
       int I = 1;
@@ -515,11 +494,11 @@ TEST_P(CollectEvidenceFromDefinitionTest, DereferenceAfterAssignment) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, Evidence::UNCHECKED_DEREFERENCE))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        DereferenceAfterAssignmentFromReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int& getIntRef();
@@ -531,12 +510,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DerefOfPtrRef) {
+TEST_F(CollectEvidenceFromDefinitionTest, DerefOfPtrRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *&P0, int *&P1) {
       int A = *P0;
@@ -545,12 +524,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefOfPtrRef) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, UnrelatedCondition) {
+TEST_F(CollectEvidenceFromDefinitionTest, UnrelatedCondition) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P0, int *P1, int *P2, bool B) {
       if (B) {
@@ -562,7 +541,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnrelatedCondition) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE),
@@ -571,7 +550,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnrelatedCondition) {
                   evidence(paramSlot(2), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, LaterDeref) {
+TEST_F(CollectEvidenceFromDefinitionTest, LaterDeref) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {
       if (P == nullptr) {
@@ -582,12 +561,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, LaterDeref) {
       int A = *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DerefBeforeGuardedDeref) {
+TEST_F(CollectEvidenceFromDefinitionTest, DerefBeforeGuardedDeref) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {
       int A = *P;
@@ -596,12 +575,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefBeforeGuardedDeref) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DerefAndOrCheckOfCopiedPtr) {
+TEST_F(CollectEvidenceFromDefinitionTest, DerefAndOrCheckOfCopiedPtr) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q) {
       int* A = P;
@@ -615,7 +594,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefAndOrCheckOfCopiedPtr) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
@@ -624,7 +603,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, DerefAndOrCheckOfCopiedPtr) {
                            localVarNamed("B"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
+TEST_F(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q) {
       // Marking either of P or Q Nonnull is sufficient to avoid dereferencing
@@ -640,7 +619,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
       *A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
@@ -649,7 +628,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FirstSufficientSlotOnly) {
                            localVarNamed("A"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FirstSufficientSlotNotContradictingFlowConditions) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q) {
@@ -660,12 +639,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(1), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FirstSufficientSlotForFunctionsIsTheLaterReferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     int* primaryProvider();
@@ -691,7 +670,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *local;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("fallback")),
@@ -701,7 +680,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            localVarNamed("local"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, EarlyReturn) {
+TEST_F(CollectEvidenceFromDefinitionTest, EarlyReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P) {
       if (!P) {
@@ -710,10 +689,10 @@ TEST_P(CollectEvidenceFromDefinitionTest, EarlyReturn) {
       int A = *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, UnreachableCode) {
+TEST_F(CollectEvidenceFromDefinitionTest, UnreachableCode) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int *P0, int *P1, int *P2, int *P3) {
       if (true) {
@@ -730,12 +709,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnreachableCode) {
       int A = *P3;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberField) {
+TEST_F(CollectEvidenceFromDefinitionTest, PointerToMemberField) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {};
 
@@ -748,10 +727,10 @@ TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberField) {
   // Pointers to members are not supported pointer types, so no evidence is
   // collected. If they become a supported pointer type, this test should start
   // failing.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
+TEST_F(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {};
 
@@ -765,10 +744,10 @@ TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethod) {
   // Pointers to members are not supported pointer types, so no evidence is
   // collected. If they become a supported pointer type, this test should start
   // failing.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
+TEST_F(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {};
 
@@ -784,10 +763,10 @@ TEST_P(CollectEvidenceFromDefinitionTest, PointerToMemberMethodArgs) {
   // test should start failing.
   // TODO(b/309625642) We should still collect evidence for the use of `Q` as an
   // argument for param `I`.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, CheckMacro) {
+TEST_F(CollectEvidenceFromDefinitionTest, CheckMacro) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
     void target(int* P, int* Q, int* R, int* S, int* T, int* U, int* V) {
       // should collect evidence for params from these calls
@@ -813,8 +792,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CheckMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      getMode()),
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -824,7 +802,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CheckMacro) {
                                     localVarNamed("A"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include <memory>
     void target(std::unique_ptr<int> P, std::unique_ptr<int> Q,
@@ -835,15 +813,14 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, CheckMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      getMode()),
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL)));
 }
 
 // This is a crash repro; see b/370737278.
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        CheckMacroSmartPointerToPointer) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include <memory>
@@ -854,16 +831,16 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
       Target(int* Raw) : Shared(std::make_shared<int*>(Raw)) { CHECK(*Shared); }
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  functionDecl(hasName("Target")),
-                  (CheckMacroDefinitions + BaseSrc).str(), getMode()),
-              IsSupersetOf({(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                                      fieldNamed("Target::Shared")),
-                             evidence(paramSlot(0), Evidence::ABORT_IF_NULL,
-                                      functionNamed("Target")))}));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(functionDecl(hasName("Target")),
+                                    (CheckMacroDefinitions + BaseSrc).str()),
+      IsSupersetOf({(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                              fieldNamed("Target::Shared")),
+                     evidence(paramSlot(0), Evidence::ABORT_IF_NULL,
+                              functionNamed("Target")))}));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
+TEST_F(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
     void target(int* P, int* Q, int* R, int* S) {
       // should collect evidence for params from these calls
@@ -886,8 +863,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      getMode()),
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(2), Evidence::ABORT_IF_NULL),
@@ -896,7 +872,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CheckNEMacro) {
                                     localVarNamed("A"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include <memory>
     void target(std::unique_ptr<int> P, std::unique_ptr<int> Q,
@@ -909,44 +885,43 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, CheckNEMacro) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      getMode()),
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(1), Evidence::ABORT_IF_NULL),
                            evidence(paramSlot(3), Evidence::ABORT_IF_NULL)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NullableArgPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, NullableArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *Q);
     void target(Nullable<int *> P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("callee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NonnullArgPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, NonnullArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *Q);
     void target(Nonnull<int *> P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                 functionNamed("callee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, UnknownArgPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, UnknownArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *Q);
     void target(int *P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                 functionNamed("callee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullArgPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *Q);
     void target(int *P) {
@@ -955,24 +930,24 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullArgPassed) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("callee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, CheckedArgPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, CheckedArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int *Q);
     void target(int *P) {
       if (P) callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                 functionNamed("callee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NullptrPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, NullptrPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int* Q);
     void target() {
@@ -982,7 +957,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, NullptrPassed) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("callee")),
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
@@ -991,15 +966,15 @@ TEST_P(CollectEvidenceFromDefinitionTest, NullptrPassed) {
                                     localVarNamed("P"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, NonPtrArgPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int Q);
     void target(int P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, LValueReferenceArgsPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, LValueReferenceArgsPassed) {
   static constexpr llvm::StringRef Src = R"cc(
     void constCallee(int* const& A, int* const& B, int* const& C);
     void mutableCallee(int*& A, int*& B, int*& C);
@@ -1009,7 +984,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LValueReferenceArgsPassed) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::NULLABLE_REFERENCE_ARGUMENT,
                    functionNamed("constCallee")),
@@ -1025,7 +1000,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, LValueReferenceArgsPassed) {
                    functionNamed("mutableCallee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
+TEST_F(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <utility>
 
@@ -1039,7 +1014,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
       universalRef(std::move(q));  // Nonnull
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   // RValue references don't have the same invariance as lvalue
                   // references, because accesses through the reference and
@@ -1051,7 +1026,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, RValueUniversalReferenceArgsPassed) {
                            functionNamed("universalRef"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        NoEvidenceForFullyAnnotatedFunctions) {
   static constexpr llvm::StringRef Src = R"cc(
     Nonnull<int *> callee(Nullable<int *> A, Nonnull<int *> B,
@@ -1060,10 +1035,10 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       return callee(P, Q, R);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
 #include <utility>
@@ -1076,7 +1051,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       AllOf(IsSupersetOf(
                 {evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
                           functionNamed("target")),
@@ -1093,7 +1068,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArgsAndParams) {
                          functionNamed("target"))))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        DefaultArgumentsProduceNoEvidenceFromDefinition) {
   static constexpr llvm::StringRef Src = R"cc(
     int* getDefault();
@@ -1108,19 +1083,19 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       hasDefaultExpressionOfVariable();
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NullableReturn) {
+TEST_F(CollectEvidenceFromDefinitionTest, NullableReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target() { return nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NullableButCheckedReturn) {
+TEST_F(CollectEvidenceFromDefinitionTest, NullableButCheckedReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(Nullable<int*> P) {
       if (P) return P;
@@ -1129,32 +1104,32 @@ TEST_P(CollectEvidenceFromDefinitionTest, NullableButCheckedReturn) {
       // compiles, as the lack of return in a path is only a warning.
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NonnullReturn) {
+TEST_F(CollectEvidenceFromDefinitionTest, NonnullReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(Nonnull<int*> P) {
       return P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, UnknownReturn) {
+TEST_F(CollectEvidenceFromDefinitionTest, UnknownReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* P) { return P; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullReturn) {
+TEST_F(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* P) {
       if (P == nullptr) {
@@ -1164,12 +1139,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnknownButProvablyNullReturn) {
       // compiles, as the lack of return in a path is only a warning.
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, MultipleReturns) {
+TEST_F(CollectEvidenceFromDefinitionTest, MultipleReturns) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(Nonnull<int*> P, Nullable<int*> Q, bool B, bool C) {
       if (B) return Q;
@@ -1177,14 +1152,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, MultipleReturns) {
       return P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
                   evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, MutableReferenceReturns) {
+TEST_F(CollectEvidenceFromDefinitionTest, MutableReferenceReturns) {
   static constexpr llvm::StringRef Src = R"cc(
     int*& target(Nonnull<int*>& P, Nullable<int*>& Q, int*& R, bool A, bool B) {
       if (A) return P;
@@ -1193,14 +1168,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, MutableReferenceReturns) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_REFERENCE_RETURN),
           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_REFERENCE_RETURN),
           evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_REFERENCE_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ConstReferenceReturns) {
+TEST_F(CollectEvidenceFromDefinitionTest, ConstReferenceReturns) {
   static constexpr llvm::StringRef Src = R"cc(
     int* const& target(Nonnull<int*>& P, Nullable<int*>& Q, int*& R, bool A,
                        bool B) {
@@ -1210,7 +1185,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstReferenceReturns) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_REFERENCE_RETURN),
           evidence(SLOT_RETURN_TYPE,
@@ -1218,28 +1193,27 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstReferenceReturns) {
           evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_REFERENCE_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
   static constexpr llvm::StringRef Src = R"cc(
     Nonnull<int*> target(int* A) {
       return A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
-     FromPreviouslyInferredReturnAnnotation) {
+TEST_F(CollectEvidenceFromDefinitionTest,
+       FromPreviouslyInferredReturnAnnotation) {
   static constexpr llvm::StringRef Src = R"cc(
     int* target(int* A) { return A; }
   )cc";
   EXPECT_THAT(
       collectFromTargetFuncDefinition(
-          Src, getMode(),
-          {.Nonnull = std::make_shared<SortedFingerprintVector>(
-               std::vector<SlotFingerprint>{
-                   fingerprint("c:@F@target#*I#", 0)})}),
+          Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                    std::vector<SlotFingerprint>{
+                        fingerprint("c:@F@target#*I#", 0)})}),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
           // We still collect evidence for the return type in case iteration
@@ -1248,7 +1222,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
           evidence(SLOT_RETURN_TYPE, Evidence::UNKNOWN_RETURN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromAutoReturnAnnotationByPragma) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromAutoReturnAnnotationByPragma) {
   static constexpr llvm::StringRef Src = R"cc(
 #pragma nullability file_default nonnull
     int* getNonnull();
@@ -1261,25 +1235,25 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromAutoReturnAnnotationByPragma) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
 
 // This is a crash repro related to functions with AttributedTypeLocs.
-TEST_P(CollectEvidenceFromDefinitionTest, FromReturnInAttributedFunction) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromReturnInAttributedFunction) {
   static constexpr llvm::StringRef Src = R"cc(
     struct AStruct {
       const char* target() [[clang::lifetimebound]] { return nullptr; }
     };
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("target"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     std::unique_ptr<int> target(Nonnull<std::unique_ptr<int>> P,
@@ -1293,7 +1267,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN),
           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN),
@@ -1305,7 +1279,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, MultipleReturns) {
           evidence(_, _, functionNamed("unique_ptr"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     Nonnull<std::unique_ptr<int>> target(std::unique_ptr<int> A) {
@@ -1313,25 +1287,25 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, FromReturnAnnotation) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
           // evidence for the move constructor, which we don't care much about.
           evidence(_, _, functionNamed("unique_ptr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallDereferenced) {
+TEST_F(CollectEvidenceFromDefinitionTest, FunctionCallDereferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makePtr();
     void target() { *makePtr(); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FunctionCallResultDereferencedAfterAssignedLocally) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makePtr();
@@ -1341,12 +1315,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FunctionCallResultDereferencedAfterAssignedLocallyAndChecked) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makePtr();
@@ -1356,12 +1330,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       Not(Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                             functionNamed("makePtr")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FunctionCallResultDereferencedAfterUnrelatedConditionChecked) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makePtr();
@@ -1371,12 +1345,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallDereferencedWithArrow) {
+TEST_F(CollectEvidenceFromDefinitionTest, FunctionCallDereferencedWithArrow) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       void member();
@@ -1386,31 +1360,31 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallDereferencedWithArrow) {
     void target() { makePtr()->member(); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("makePtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        AlreadyNonnullFunctionCallDereferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     Nonnull<int*> makeNonnullPtr();
     void target() { *makeNonnullPtr(); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FunctionPointerCall) {
+TEST_F(CollectEvidenceFromDefinitionTest, FunctionPointerCall) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(void (*F)()) { F(); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE)));
 }
 
 // This is a crash repro; see b/352043668.
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FunctionPointerCallThroughBindingDecl) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename A, typename B>
@@ -1430,10 +1404,10 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // Ideally, we would see the Nonnull from `P`'s template parameter and collect
   // ASSIGNED_TO_NONNULL evidence for `I`, but the sugar doesn't carry through
   // the BindingDecl's `auto` type.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
+TEST_F(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       int* accessor() const { return I; }
@@ -1446,10 +1420,10 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstAccessorDereferencedAfterCheck) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        ReferenceConstAccessorDereferencedAfterCheck) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -1463,10 +1437,10 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        ConstAccessorOnTwoDifferentObjectsDereferencedAfterCheck) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -1482,13 +1456,13 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("accessor"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        MemberCallOperatorReturnDereferenced) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -1500,46 +1474,46 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       Contains(evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                         functionNamed("operator()"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, MemberOperatorCall) {
+TEST_F(CollectEvidenceFromDefinitionTest, MemberOperatorCall) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       bool operator+(int*);
     };
     void target() { S{} + nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("operator+"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, NonMemberOperatorCall) {
+TEST_F(CollectEvidenceFromDefinitionTest, NonMemberOperatorCall) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {};
     bool operator+(const S&, int*);
     void target() { S{} + nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("operator+"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, VarArgs) {
+TEST_F(CollectEvidenceFromDefinitionTest, VarArgs) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(int*...);
     void target() { callee(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("callee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, MemberOperatorCallVarArgs) {
+TEST_F(CollectEvidenceFromDefinitionTest, MemberOperatorCallVarArgs) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       bool operator()(int*...);
@@ -1547,12 +1521,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, MemberOperatorCallVarArgs) {
     void target() { S{}(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("operator()"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ConstructorCall) {
+TEST_F(CollectEvidenceFromDefinitionTest, ConstructorCall) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       S(Nonnull<int*> A, int* B);
@@ -1560,14 +1534,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstructorCall) {
     void target(int* P) { S AnS(P, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("S"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ConstructorCallThroughMakeUnique) {
+TEST_F(CollectEvidenceFromDefinitionTest, ConstructorCallThroughMakeUnique) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     struct S {
@@ -1576,14 +1550,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstructorCallThroughMakeUnique) {
     void target(int* P) { std::make_unique<S>(P, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(paramSlot(1), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("S"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
+TEST_F(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
   static constexpr llvm::StringRef Src = R"cc(
     struct TakeNonnull {
       explicit TakeNonnull(Nonnull<int *>);
@@ -1592,12 +1566,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConstructorWithBaseInitializer) {
       Target(int *I) : TakeNonnull(I) {}
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src),
               Contains(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                 functionNamed("Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        ConstructorWithDelegatingConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
@@ -1606,14 +1580,13 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     };
   )cc";
 
-  EXPECT_THAT(
-      collectFromDefinitionMatching(
-          functionDecl(hasName("Target"), parameterCountIs(0)), Src, getMode()),
-      Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
-                        functionNamed("Target"))));
+  EXPECT_THAT(collectFromDefinitionMatching(
+                  functionDecl(hasName("Target"), parameterCountIs(0)), Src),
+              Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
+                                functionNamed("Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
+TEST_F(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       S(Nonnull<int*> I, ...);
@@ -1621,12 +1594,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, VariadicConstructorCall) {
     void target(int* P, int* Q) { S AnS(P, Q); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        VariadicConstructorCallThroughMakeUnique) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1636,12 +1609,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* P, int* Q) { std::make_unique<S>(P, Q); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        ConstructorCallWithConversionOperator) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -1654,7 +1627,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     };
     void target(int* P) { S AnS(ConvertibleToIntPtr{P}); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("operator int *")),
@@ -1662,7 +1635,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("ConvertibleToIntPtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        ConstructorCallThroughMakeUniqueWithConversionOperator) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1682,12 +1655,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // evidence. However, we collect the evidence from the make_unique
   // instantiation and will do inference from that.
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("ConvertibleToIntPtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        MakeUniqueImplicitCastNothingToForward) {
   static constexpr llvm::StringRef Src =
       R"cc(
@@ -1706,10 +1679,10 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(Bar b) { std::make_unique<Foo>(b); }
       )cc";
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FieldInitializerFromAssignmentToType) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
@@ -1718,12 +1691,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullptr) {
+TEST_F(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullptr) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
       Target() {};
@@ -1731,13 +1704,13 @@ TEST_P(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullptr) {
     };
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(isDefaultConstructor()), Src, getMode()),
+                  cxxConstructorDecl(isDefaultConstructor()), Src),
               UnorderedElementsAre(evidence(
                   Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
                   fieldNamed("Target::I"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     Nullable<int*> G;
     struct Target {
@@ -1747,12 +1720,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, DefaultFieldInitializerNullable) {
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(cxxConstructorDecl(isDefaultConstructor()),
-                                    Src, getMode()),
+                                    Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Target::I"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        IndirectFieldInitializerFromAssignmentToType) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
@@ -1763,12 +1736,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        IndirectFieldDefaultFieldInitializer) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
@@ -1782,15 +1755,15 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     // generated.
     Target T;
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(isDefaultConstructor(), hasName("Target")),
-                  Src, getMode()),
-              UnorderedElementsAre(evidence(
-                  Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
-                  fieldNamed("Target@Sa::I"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
+                   fieldNamed("Target@Sa::I"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
       Target(Nullable<int *> Input) : I(Input) {}
@@ -1798,12 +1771,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, FieldInitializedWithNullable) {
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Target::I"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, UnionFieldInitializedWithNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, UnionFieldInitializedWithNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Target {
       Target() : Field{nullptr} {};
@@ -1816,12 +1789,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, UnionFieldInitializedWithNullable) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("UnionType::I"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
+TEST_F(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
   static constexpr llvm::StringRef Src = R"cc(
     int* getIntPtr(int*);
     struct Target {
@@ -1829,7 +1802,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
       Nonnull<int*> I;
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("getIntPtr")),
@@ -1837,7 +1810,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FieldInitializerCallsFunction) {
                            functionNamed("getIntPtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        DefaultFieldInitializerCallsFunction) {
   static constexpr llvm::StringRef Src = R"cc(
     int* getIntPtr(int*);
@@ -1851,7 +1824,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     Target T;
   )cc";
   EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(isDefaultConstructor()), Src, getMode()),
+                  cxxConstructorDecl(isDefaultConstructor()), Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("getIntPtr")),
@@ -1859,7 +1832,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("getIntPtr"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        FieldInitializerFromAssignmentToType) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1871,8 +1844,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          getMode()),
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                    functionNamed("Target")),
@@ -1880,7 +1852,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
           evidence(_, _, functionNamed("unique_ptr"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        FieldInitializedFromNullable) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1892,8 +1864,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          getMode()),
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       UnorderedElementsAre(
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    fieldNamed("Target::I")),
@@ -1901,7 +1872,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
           evidence(_, _, functionNamed("unique_ptr"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        DefaultFieldInitializerNullptr) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1913,15 +1884,15 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
     // generated.
     Target T;
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(isDefaultConstructor(), hasName("Target")),
-                  Src, getMode()),
-              UnorderedElementsAre(evidence(
-                  Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
-                  fieldNamed("Target::I"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
+      UnorderedElementsAre(
+          evidence(Slot(0), Evidence::NULLPTR_DEFAULT_MEMBER_INITIALIZER,
+                   fieldNamed("Target::I"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        DefaultFieldInitializerAbsentOnlyImplicitConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1933,17 +1904,17 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
     // generated.
     Target T;
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(isDefaultConstructor(), hasName("Target")),
-                  Src, getMode()),
-              // By the end of the constructor body, the field is still only
-              // default-initialized, which for smart pointers means it is null.
-              UnorderedElementsAre(
-                  evidence(Slot(0), Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
-                           fieldNamed("Target::I"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(isDefaultConstructor(), hasName("Target")), Src),
+      // By the end of the constructor body, the field is still only
+      // default-initialized, which for smart pointers means it is null.
+      UnorderedElementsAre(evidence(Slot(0),
+                                    Evidence::LEFT_NULLABLE_BY_CONSTRUCTOR,
+                                    fieldNamed("Target::I"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        DefaultFieldInitializerAbsentInitializedInConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1954,8 +1925,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          getMode()),
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       // Evidence collected from constructor body, which assigns a Nonnull
       // value, but no evidence collected from *implicit* member initializer
       // which default constructs to null.
@@ -1966,7 +1936,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
                            evidence(_, _, functionNamed("operator="))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        DefaultFieldInitializerAbsentConditionalAssignmentInConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -1981,8 +1951,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          getMode()),
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       // By the end of the constructor body, the field is still potentially
       // default-initialized, which for smart pointers means it may be null.
       // We also collect from the Nonnull value assignment in the body, though
@@ -1997,7 +1966,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
           evidence(_, _, functionNamed("operator="))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        DefaultFieldInitializerAbsentUnknownAssignmentInConstructor) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -2011,8 +1980,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
 
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src,
-          getMode()),
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
       // By the end of the constructor body, the field is no longer default
       // initialized to null, but is assigned from an unknown.
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
@@ -2023,7 +1991,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
 }
 
 // This is a crash repro.
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        CopyConstructorExitingWithUnmodeledField) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -2036,14 +2004,14 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
       std::unique_ptr<int> Field;
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(unless(isImplicit()), hasName("Target")),
-                  Src, getMode()),
-              IsEmpty());
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      IsEmpty());
 }
 
 // This is a crash repro; see b/369863079.
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        CustomConstructorExitingWithUnmodeledField) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -2056,13 +2024,13 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
       std::unique_ptr<int> Field;
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxConstructorDecl(unless(isImplicit()), hasName("Target")),
-                  Src, getMode()),
-              IsEmpty());
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxConstructorDecl(unless(isImplicit()), hasName("Target")), Src),
+      IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, LateInitializerDirectlyForTest) {
+TEST_F(CollectEvidenceFromDefinitionTest, LateInitializerDirectlyForTest) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     namespace testing {
@@ -2082,15 +2050,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, LateInitializerDirectlyForTest) {
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))), Src,
-          getMode()),
+          cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))), Src),
       AllOf(Contains(evidence(Slot(0),
                               Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
                               fieldNamed("Target::FieldInitializedInSetUp"))),
             Not(Contains(evidence(_, _, fieldNamed("Target::NotInit"))))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, LateInitializerThroughAliasForTest) {
+TEST_F(CollectEvidenceFromDefinitionTest, LateInitializerThroughAliasForTest) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
 
@@ -2113,34 +2080,34 @@ TEST_P(CollectEvidenceFromDefinitionTest, LateInitializerThroughAliasForTest) {
       std::unique_ptr<int> FieldInitializedInSetUp;
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionMatching(
-                  cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))),
-                  Src, getMode()),
-              Contains(evidence(
-                  Slot(0), Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
-                  fieldNamed("Target::FieldInitializedInSetUp"))));
+  EXPECT_THAT(
+      collectFromDefinitionMatching(
+          cxxMethodDecl(hasName("SetUp"), ofClass(hasName("Target"))), Src),
+      Contains(evidence(Slot(0),
+                        Evidence::LEFT_NOT_NULLABLE_BY_LATE_INITIALIZER,
+                        fieldNamed("Target::FieldInitializedInSetUp"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassedToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*> I);
 
     void target(int* P) { callee(P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnullRef) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassedToNonnullRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*>& I, Nonnull<int*> const& J);
 
     void target(int* P, int* Q) { callee(P, Q); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL_REFERENCE,
                    functionNamed("target")),
@@ -2148,7 +2115,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnullRef) {
                    functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnullInMemberFunction) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassedToNonnullInMemberFunction) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       void callee(Nonnull<int*> I);
@@ -2160,19 +2127,19 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToNonnullInMemberFunction) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        PassedToNonnullInFunctionPointerParam) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, void (*Callee)(Nonnull<int*> I)) {
       Callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("target")),
@@ -2180,7 +2147,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("target"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        PassedToNonnullInFunctionPointerParam) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -2191,7 +2158,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                    functionNamed("target")),
@@ -2201,7 +2168,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
           evidence(_, _, functionNamed("unique_ptr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        PassedToNonnullInFunctionPointerField) {
   static constexpr llvm::StringRef Src = R"cc(
     struct MyStruct {
@@ -2211,14 +2178,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* P) { MyStruct().Callee(P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     fieldNamed("MyStruct::Callee"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        PassedToNonnullInFunctionPointerFromAddressOfFunctionDecl) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*> I);
@@ -2226,12 +2193,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* P) { (&callee)(P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        PassedToNonnullInFunctionReferenceParam) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, void (&Callee)(Nonnull<int*> I)) {
@@ -2239,19 +2206,19 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        PassedToNonnullInFunctionPointerReferenceParam) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, void (*&Callee)(Nonnull<int*> I)) {
       Callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("target")),
@@ -2259,27 +2226,27 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallPassedToNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, FunctionCallPassedToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nonnull<int*> I);
     int* makeIntPtr();
 
     void target() { callee(makeIntPtr()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::ASSIGNED_TO_NONNULL,
                                             functionNamed("makeIntPtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FunctionCallPassedToNonnullFunctionPointer) {
   static constexpr llvm::StringRef Src = R"cc(
     int* makeIntPtr();
 
     void target(void (*Callee)(Nonnull<int*> I)) { Callee(makeIntPtr()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("makeIntPtr")),
@@ -2287,29 +2254,29 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassedToNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassedToNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nullable<int*> I);
 
     void target(int* P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassedToNullableRef) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassedToNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nullable<int*>& I);
 
     void target(int* P) { callee(P); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                            functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        PassedToNullableRefFromStoredFunctionCall) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nullable<int*>& I);
@@ -2320,7 +2287,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       callee(P);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   // The object taken by reference (P) needs to be nullable, not
                   // necessarily the source of its value (producer).
@@ -2330,26 +2297,26 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            localVarNamed("P", "target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassedToNullableRefFromFunctionCall) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nullable<int*>& I);
     int*& producer();
 
     void target() { callee(producer()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(
                   SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                   functionNamed("producer"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassedToPtrToNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassedToPtrToNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     void callee(Nullable<int*>* I);
     void target(int* P) { callee(&P); }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       AllOf(UnorderedElementsAre(evidence(paramSlot(0),
                                           Evidence::NONNULL_ARGUMENT,
                                           functionNamed("callee"))),
@@ -2360,7 +2327,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassedToPtrToNullable) {
                          functionNamed("target"))))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        InitializationOfAndAssignmentToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q, int* R) {
@@ -2368,14 +2335,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       A = R;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        InitializationOfAndAssignmentToNonnullFromTernary) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(bool B, int* P, int* Q, int* R, int* S) {
@@ -2383,7 +2350,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       A = B ? R : S;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
   // TODO(b/293609145) When value nullability for conditional operators is
   // carried through for glvalues, this should collect the following:
   // UnorderedElementsAre(evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL),
@@ -2393,7 +2360,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   //                      Evidence::ASSIGNED_TO_NONNULL)));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        InitializationOfAndAssignmentToNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -2413,7 +2380,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
       Nonnull<std::unique_ptr<int>> nonnull = std::move(T);
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
                   evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL),
@@ -2427,7 +2394,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
                   evidence(_, _, functionNamed("operator="))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        InitializationOfAndAssignmentToNonnullRefFromRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int*& P, int*& Q, int*& R) {
@@ -2437,7 +2404,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL_REFERENCE),
           // `A = Q;` copies Q into P; it doesn't make a reference to Q,
@@ -2446,7 +2413,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
           evidence(paramSlot(2), Evidence::ASSIGNED_TO_NONNULL_REFERENCE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        InitializationOfAndAssignmentToNullableOrUnknown) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q, int* R) {
@@ -2456,7 +2423,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       Q = R;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(1), Evidence::ASSIGNED_FROM_UNKNOWN),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
@@ -2465,7 +2432,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            localVarNamed("C"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        InitializationOfAndAssignmentToNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int*& Q) {
@@ -2473,7 +2440,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       A = Q;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)
                   // `A = Q;` copies Q into P; it doesn't make a reference to Q,
@@ -2481,7 +2448,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                   ));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest,
        InitializationOfNullableRef) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -2489,19 +2456,19 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest,
       Nullable<std::unique_ptr<int>>& A = P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE,
                            functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, InitializationOfNullableRefFromRef) {
+TEST_F(CollectEvidenceFromDefinitionTest, InitializationOfNullableRefFromRef) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int*& P) {
       Nullable<int*>& A = P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(
                   paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
 }
@@ -2510,7 +2477,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, InitializationOfNullableRefFromRef) {
 // are necessary to test the case of multiple connected decls.
 //
 // DISABLED until ternary expressions are handle.
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        DISABLED_InitializationOfNullableRefAllConnectedDecls) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q, bool B) {
@@ -2518,70 +2485,70 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE),
           evidence(paramSlot(1), Evidence::ASSIGNED_TO_MUTABLE_NULLABLE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullptr) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromNullptr) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) {
       P = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullptrIndirect) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromNullptrIndirect) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) {
       int* A = nullptr;
       P = A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE),
                   evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                            localVarNamed("A"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromZero) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromZero) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) { P = 0; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     Nullable<int*> getNullable();
     void target(int* P) { P = getNullable(); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromLocalNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromLocalNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) {
       Nullable<int*> A;
       P = A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
       int*& getPtrRef();
@@ -2589,20 +2556,20 @@ TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNullableMemberCallExpr) {
 
     void target(S AnS) { AnS.getPtrRef() = nullptr; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("getPtrRef"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        AssignedFromNullptrMultipleOperators) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) {
       *&P = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE)));
 }
@@ -2611,7 +2578,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 // evidence for the return type of `foo`, because the LHS type of the assignment
 // was already nullable, and so any formula does imply that the LHS type of the
 // assignment is nullable.
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        AnnotatedLocalAssignedFromNullableAfterFunctionCallAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
     int* foo();
@@ -2620,33 +2587,33 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       P = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) {
       int A = 0;
       P = &A;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NONNULL)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AssignedFromUnknown) {
+TEST_F(CollectEvidenceFromDefinitionTest, AssignedFromUnknown) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q) {
       P = Q;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_FROM_UNKNOWN)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        IrrelevantAssignmentsAndInitializations) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -2662,7 +2629,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       // From the constructor call constructing an S; no evidence from
       // assignments or initializations.
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
@@ -2670,7 +2637,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 }
 
 // This is a crash repro; see b/370031684 and b/293609145.
-TEST_P(CollectEvidenceFromDefinitionTest, ConditionalOperatorAssignment) {
+TEST_F(CollectEvidenceFromDefinitionTest, ConditionalOperatorAssignment) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* A, int* B, bool C) {
       (C ? A : B) = nullptr;
@@ -2679,10 +2646,10 @@ TEST_P(CollectEvidenceFromDefinitionTest, ConditionalOperatorAssignment) {
   // Could in theory collect evidence for both A and B as nullable, but we don't
   // track null state through the conditional operator, so we don't collect
   // evidence for either.
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, Arithmetic) {
+TEST_F(CollectEvidenceFromDefinitionTest, Arithmetic) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* A, int* B, int* C, int* D, int* E, int* F, int* G,
                 int* H) {
@@ -2697,7 +2664,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Arithmetic) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARITHMETIC),
                            evidence(paramSlot(1), Evidence::ARITHMETIC),
                            evidence(paramSlot(2), Evidence::ARITHMETIC),
@@ -2708,7 +2675,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Arithmetic) {
                            evidence(paramSlot(7), Evidence::ARITHMETIC)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, Fields) {
+TEST_F(CollectEvidenceFromDefinitionTest, Fields) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include <memory>
     void takesNonnull(Nonnull<int*>);
@@ -2737,8 +2704,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Fields) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      getMode()),
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       IsSupersetOf(
           {evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                     fieldNamed("S::Deref")),
@@ -2759,7 +2725,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Fields) {
                     fieldNamed("S::SmartDeref"))}));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
+TEST_F(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include <memory>
     void takesNonnull(Nonnull<int*>);
@@ -2788,8 +2754,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      getMode()),
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       IsSupersetOf(
           {evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                     staticFieldNamed("MyStruct::Deref")),
@@ -2811,7 +2776,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, StaticMemberVariables) {
                     staticFieldNamed("MyStruct::SmartDeref"))}));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, Globals) {
+TEST_F(CollectEvidenceFromDefinitionTest, Globals) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include <memory>
     void takesNonnull(Nonnull<int*>);
@@ -2838,8 +2803,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, Globals) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str(),
-                                      getMode()),
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
       IsSupersetOf({evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                              globalVarNamed("Deref")),
                     evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
@@ -2860,14 +2824,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, Globals) {
                              globalVarNamed("SmartDeref"))}));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalInit) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalInit) {
   static constexpr llvm::StringRef Src = R"cc(
     int* getPtr();
     Nullable<int*> getNullableFromNonnull(Nonnull<int*>);
     int* Target = static_cast<int*>(getNullableFromNonnull(getPtr()));
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("getPtr")),
@@ -2875,41 +2839,41 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalInit) {
                            globalVarNamed("Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitFromGlobalAnnotation) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalInitFromGlobalAnnotation) {
   static constexpr llvm::StringRef Src = R"cc(
     int* foo();
     Nonnull<int*> Target = foo();
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Target", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Target", Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::ASSIGNED_TO_NONNULL,
                                             functionNamed("foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartImplicitInit) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalSmartImplicitInit) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     // This has an implicit init because of default construction.
     std::unique_ptr<int> Target;
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartExplicitInit) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalSmartExplicitInit) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     std::unique_ptr<int> Target = nullptr;
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitWithCtor) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalInitWithCtor) {
   llvm::StringLiteral Src = R"cc(
 #include <memory>
     struct S {
@@ -2922,14 +2886,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitWithCtor) {
     S Target(&GInt, AssignedToNonnull);
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                     functionNamed("S")),
                            evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     globalVarNamed("AssignedToNonnull"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartInitWithMakeUniqueCtor) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalSmartInitWithMakeUniqueCtor) {
   llvm::StringLiteral Src = R"cc(
 #include <memory>
     struct S {
@@ -2942,7 +2906,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartInitWithMakeUniqueCtor) {
     std::unique_ptr<S> Target = std::make_unique<S>(&GInt, AssignedToNonnull);
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                     globalVarNamed("Target")),
                            evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
@@ -2951,7 +2915,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalSmartInitWithMakeUniqueCtor) {
                                     globalVarNamed("AssignedToNonnull"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitArrayOfAggregates) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalInitArrayOfAggregates) {
   llvm::StringLiteral Src = R"cc(
     struct S {
       int* P;
@@ -2966,7 +2930,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitArrayOfAggregates) {
                   {nullptr, AssignedToNonnull, nullptr}};
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                     fieldNamed("S::P")),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
@@ -2981,7 +2945,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalInitArrayOfAggregates) {
                                     fieldNamed("S::R"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        GlobalInitArrayOfSmartPtrsWithMakeUniqueAggregate) {
   llvm::StringLiteral Src = R"cc(
 #include <memory>
@@ -2999,7 +2963,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
         std::make_unique<S>(nullptr, AssignedToNonnull, nullptr)};
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                     fieldNamed("S::P")),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
@@ -3014,21 +2978,21 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                                     fieldNamed("S::R"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, StaticInitInClass) {
+TEST_F(CollectEvidenceFromDefinitionTest, StaticInitInClass) {
   static constexpr llvm::StringRef Src = R"cc(
     struct MyStruct {
       inline static int* Target = nullptr;
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Target", Src, getMode()),
+      collectFromDefinitionNamed("Target", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     staticFieldNamed("MyStruct::Target"))));
 }
 
 AST_MATCHER(VarDecl, hasInit) { return Node.hasInit(); }
 
-TEST_P(CollectEvidenceFromDefinitionTest, StaticInitOutOfClass) {
+TEST_F(CollectEvidenceFromDefinitionTest, StaticInitOutOfClass) {
   static constexpr llvm::StringRef Src = R"cc(
     struct MyStruct {
       static int* Target;
@@ -3036,24 +3000,24 @@ TEST_P(CollectEvidenceFromDefinitionTest, StaticInitOutOfClass) {
     int* MyStruct::Target = nullptr;
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionMatching(varDecl(hasInit()), Src, getMode()),
+      collectFromDefinitionMatching(varDecl(hasInit()), Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     staticFieldNamed("MyStruct::Target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, LocalVariable) {
+TEST_F(CollectEvidenceFromDefinitionTest, LocalVariable) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() {
       int* P = nullptr;
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     localVarNamed("P"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
+TEST_F(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) {
       for (int I = 0; I < 3; ++I) {
@@ -3068,13 +3032,13 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionCallInLoop) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT),
                            evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT),
                            evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, OutputParameterPointerToPointer) {
+TEST_F(CollectEvidenceFromDefinitionTest, OutputParameterPointerToPointer) {
   static constexpr llvm::StringRef Src = R"cc(
     void maybeModifyPtr(int** A);
     void target(int* P) {
@@ -3082,11 +3046,11 @@ TEST_P(CollectEvidenceFromDefinitionTest, OutputParameterPointerToPointer) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, OutputParameterReferenceToPointer) {
+TEST_F(CollectEvidenceFromDefinitionTest, OutputParameterReferenceToPointer) {
   static constexpr llvm::StringRef Src = R"cc(
     void maybeModifyPtr(int*& A);
     void target(int* P) {
@@ -3094,11 +3058,11 @@ TEST_P(CollectEvidenceFromDefinitionTest, OutputParameterReferenceToPointer) {
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        OutputParameterReferenceToConstPointer) {
   static constexpr llvm::StringRef Src = R"cc(
     void dontModifyPtr(int* const& A);
@@ -3107,12 +3071,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        OutputParameterReferenceToPointerToPointer) {
   static constexpr llvm::StringRef Src = R"cc(
     void maybeModifyPtr(int**& A);
@@ -3122,11 +3086,11 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       **P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        OutputParameterPointerToConstPointer) {
   static constexpr llvm::StringRef Src = R"cc(
     void dontModifyPtr(int* const* A);
@@ -3135,12 +3099,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        OutputParameterConstPointerToPointerToConst) {
   static constexpr llvm::StringRef Src = R"cc(
     // Outer pointer and int are const, but inner pointer can still be modified.
@@ -3150,11 +3114,11 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       *P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PassAsOutputParameterOrDereference) {
+TEST_F(CollectEvidenceFromDefinitionTest, PassAsOutputParameterOrDereference) {
   static constexpr llvm::StringRef Src = R"cc(
     void maybeModifyPtr(int** A);
     void target(int* P, bool B) {
@@ -3165,12 +3129,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, PassAsOutputParameterOrDereference) {
       }
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                                 functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        ConditionallyPassAsOutputParameterAlwaysDereference) {
   static constexpr llvm::StringRef Src = R"cc(
     void maybeModifyPtr(int** A);
@@ -3181,23 +3145,23 @@ TEST_P(CollectEvidenceFromDefinitionTest,
            // dereference safe, so we do not collect evidence for P.
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Not(Contains(evidence(_, _, functionNamed("target")))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromGlobalLabmdaBodyForGlobal) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromGlobalLabmdaBodyForGlobal) {
   static constexpr llvm::StringRef Src = R"cc(
     int* P;
     auto Lambda = []() { *P; };
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, getMode()),
+      collectFromDefinitionNamed("operator()", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     globalVarNamed("P"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FromLocalLambdaBodyForCapturedRefLocal) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo() {
@@ -3207,12 +3171,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, getMode()),
+      collectFromDefinitionNamed("operator()", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("P", "foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FromLocalLambdaBodyForCapturedValueLocal) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo() {
@@ -3222,12 +3186,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, getMode()),
+      collectFromDefinitionNamed("operator()", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("P", "foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FromLocalLambdaBodyForRefCapturedParam) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo(int* P, Nonnull<int*> Q) {
@@ -3239,7 +3203,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("foo")),
@@ -3247,7 +3211,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FromLocalLambdaBodyForValueCapturedParam) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo(int* P, Nonnull<int*> Q) {
@@ -3276,7 +3240,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("foo")),
@@ -3284,7 +3248,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForField) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForField) {
   static constexpr llvm::StringRef Src = R"cc(
     struct A {
       int* P;
@@ -3307,7 +3271,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForField) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, getMode()),
+      collectFromDefinitionNamed("operator()", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     fieldNamed("A::P")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
@@ -3316,7 +3280,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromLocalLambdaBodyForField) {
                                     fieldNamed("C::R"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FromLocalLambdaBodyForCalledFunction) {
   static constexpr llvm::StringRef Src = R"cc(
     int* bar(bool* B);
@@ -3325,7 +3289,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     }
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                            functionNamed("bar")),
@@ -3333,7 +3297,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("bar"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FromLocalLambdaBodyForDefaultRefCaptures) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -3349,7 +3313,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
               UnorderedElementsAre(
                   evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                            fieldNamed("S::F")),
@@ -3359,7 +3323,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("method"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FromLocalLambdaBodyForDefaultValueCaptures) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -3375,7 +3339,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
       }
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
               UnorderedElementsAre(
                   evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                            fieldNamed("S::F")),
@@ -3385,11 +3349,11 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("method"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromNestedLambdaBody) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromNestedLambdaBody) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo() {
-      int *A;
-      int *B;
+      int* A;
+      int* B;
       auto OuterLambda = [&A, &B]() {
         auto InnerLambda = [&A, &B]() {
           *A;
@@ -3403,14 +3367,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromNestedLambdaBody) {
       collectFromDefinitionMatching(
           cxxMethodDecl(hasName("operator()"),
                         hasAncestor(lambdaExpr(hasAncestor(lambdaExpr())))),
-          Src, getMode()),
+          Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("A", "foo")),
                            evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("B", "foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaInitCapture) {
+TEST_F(CollectEvidenceFromDefinitionTest, ForLambdaInitCapture) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo() {
       int* P;
@@ -3419,12 +3383,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaInitCapture) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("operator()", Src, getMode()),
+      collectFromDefinitionNamed("operator()", Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
                                     localVarNamed("Q", "operator()"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaInitCaptureFromInit) {
+TEST_F(CollectEvidenceFromDefinitionTest, ForLambdaInitCaptureFromInit) {
   static constexpr llvm::StringRef Src = R"cc(
     void foo() {
       auto Lambda = [Q = static_cast<int*>(nullptr)]() {};
@@ -3432,12 +3396,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaInitCaptureFromInit) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionMatching(varDecl(hasName("Q")), Src, getMode()),
+      collectFromDefinitionMatching(varDecl(hasName("Q")), Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     localVarNamed("Q", "operator()"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
+TEST_F(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
   static constexpr llvm::StringRef Src = R"cc(
     auto Lambda = [](int* P) -> int* {
       *P;
@@ -3445,7 +3409,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
     };
   )cc";
 
-  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("operator()", Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                            functionNamed("operator()")),
@@ -3453,7 +3417,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ForLambdaParamOrReturn) {
                            functionNamed("operator()"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
+TEST_F(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
   static constexpr llvm::StringRef Header = R"cc(
     struct Base {
       int BaseNonPtr;
@@ -3492,13 +3456,13 @@ TEST_P(CollectEvidenceFromDefinitionTest, AggregateInitialization) {
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("MyStruct::B")));
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(BracesAggInit, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(BracesAggInit),
               ExpectedEvidenceMatcher);
-  EXPECT_THAT(collectFromTargetFuncDefinition(ParensAggInit, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(ParensAggInit),
               ExpectedEvidenceMatcher);
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        AggregateInitializationThroughMakeUnique) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -3520,7 +3484,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
 
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     fieldNamed("Base::BaseB")),
                            evidence(paramSlot(1), Evidence::ASSIGNED_TO_NONNULL,
@@ -3531,7 +3495,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                                     fieldNamed("MyStruct::B"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        AggregateInitializationWithConversionOperator) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -3546,7 +3510,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void target(int* Int) { S AnS(ConvertibleToIntPtr{Int}); }
   )cc";
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::ASSIGNED_TO_NONNULL,
                            functionNamed("operator int *")),
@@ -3554,7 +3518,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                            functionNamed("ConvertibleToIntPtr"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        AggregateInitializationThroughMakeUniqueWithConversionOperator) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -3574,12 +3538,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // evidence. However, we collect the evidence from the make_unique
   // instantiation and will do inference from that.
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::UNKNOWN_ARGUMENT,
                                     functionNamed("ConvertibleToIntPtr"))));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
 #include <utility>
@@ -3594,7 +3558,7 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    fieldNamed("MyStruct::P")),
@@ -3608,14 +3572,14 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, AggregateInitialization) {
 }
 
 // This is a crash repro related to aggregate initialization.
-TEST_P(CollectEvidenceFromDefinitionTest, NonRecordInitListExpr) {
+TEST_F(CollectEvidenceFromDefinitionTest, NonRecordInitListExpr) {
   static constexpr llvm::StringRef Src = R"cc(
     void target() { int A[3] = {}; }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        SmartPointerAnalysisProvidesEvidenceForRawPointer) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
@@ -3623,14 +3587,14 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void foo(int*);
     void target(Nullable<std::unique_ptr<int>> P) { foo(P.get()); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               Contains(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                 functionNamed("foo"))));
 }
 
 // This is a crash repro related to non-aggregate initialization using an
 // InitListExpr.
-TEST_P(CollectEvidenceFromDefinitionTest, TransparentInitListExpr) {
+TEST_F(CollectEvidenceFromDefinitionTest, TransparentInitListExpr) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {};
     void foo(S P) {}
@@ -3638,19 +3602,19 @@ TEST_P(CollectEvidenceFromDefinitionTest, TransparentInitListExpr) {
 
     void target() { foo({get()}); }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()), IsEmpty());
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src), IsEmpty());
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ArraySubscript) {
+TEST_F(CollectEvidenceFromDefinitionTest, ArraySubscript) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P) { P[0]; }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARRAY_SUBSCRIPT)));
 }
 
-TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArraySubscript) {
+TEST_F(SmartPointerCollectEvidenceFromDefinitionTest, ArraySubscript) {
   static constexpr llvm::StringRef Src = R"cc(
 #include <memory>
     void target(std::unique_ptr<int[]> P) {
@@ -3658,13 +3622,13 @@ TEST_P(SmartPointerCollectEvidenceFromDefinitionTest, ArraySubscript) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::ARRAY_SUBSCRIPT)));
 }
 
 // Evidence for return type nonnull-ness should flow only from base to derived,
 // so we collect evidence for the derived but not the base.
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual int* foo();
@@ -3683,17 +3647,17 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Derived::foo", Src, getMode()),
+      collectFromDefinitionNamed("Derived::foo", Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
                                     functionNamed("Derived@F@foo"))));
 
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(evidence(SLOT_RETURN_TYPE,
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("Derived@F@foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual int* foo();
@@ -3703,7 +3667,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNullable) {
       int* foo() override { return nullptr; }
     };
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src),
               UnorderedElementsAre(
                   evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                            functionNamed("Derived@F@foo")),
@@ -3716,7 +3680,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForReturnNullable) {
   // expectation.
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual void foo(int* P);
@@ -3733,7 +3697,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                    functionNamed("Derived@F@foo")),
@@ -3742,7 +3706,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
                                  functionNamed("Base@F@foo"))));
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Derived::foo", Src, getMode()),
+      collectFromDefinitionNamed("Derived::foo", Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                    functionNamed("Derived@F@foo")),
@@ -3753,7 +3717,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNonnull) {
 
 // Evidence for parameter nullable-ness should flow only from base to derived,
 // so we collect evidence for the derived but not the base.
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual void foo(int* P);
@@ -3769,17 +3733,17 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedForParamNullable) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("Derived@F@foo"))));
 
-  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Derived::foo", Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::ASSIGNED_FROM_NULLABLE,
                                             functionNamed("Derived@F@foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual int* foo() {
@@ -3798,7 +3762,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, getMode()),
+      collectFromDefinitionNamed("Base::foo", Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NONNULL_RETURN,
                    functionNamed("Base@F@foo")),
@@ -3807,7 +3771,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
                                  functionNamed("Derived@F@foo"))));
 
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::UNCHECKED_DEREFERENCE,
                    functionNamed("Base@F@foo")),
@@ -3818,7 +3782,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNonnull) {
 
 // Evidence for return type nullable-ness should flow only from derived to base,
 // so we collect evidence for the base but not the derived.
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual int* foo() { return nullptr; }
@@ -3829,7 +3793,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNullable) {
     };
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, getMode()),
+      collectFromDefinitionNamed("Base::foo", Src),
       UnorderedElementsAre(evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                                     functionNamed("Base@F@foo"))));
 
@@ -3840,7 +3804,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForReturnNullable) {
 
 // Evidence for parameter nonnull-ness should flow only from derived to base, so
 // we collect evidence for the base but not the derived.
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNonnull) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNonnull) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual void foo(int* P) { *P; }
@@ -3857,17 +3821,17 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNonnull) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NONNULL_ARGUMENT,
                                     functionNamed("Base@F@foo"))));
 
-  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("Base::foo", Src),
               UnorderedElementsAre(evidence(paramSlot(0),
                                             Evidence::UNCHECKED_DEREFERENCE,
                                             functionNamed("Base@F@foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual void foo(int* P) { P = nullptr; }
@@ -3883,7 +3847,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromTargetFuncDefinition(Src, getMode()),
+      collectFromTargetFuncDefinition(Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                    functionNamed("Base@F@foo")),
@@ -3892,7 +3856,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
                                  functionNamed("Derived@F@foo"))));
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, getMode()),
+      collectFromDefinitionNamed("Base::foo", Src),
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                    functionNamed("Base@F@foo")),
@@ -3901,7 +3865,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseForParamNullable) {
                                  functionNamed("Derived@F@foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual int* foo();
@@ -3917,7 +3881,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("DerivedDerived::foo", Src, getMode()),
+      collectFromDefinitionNamed("DerivedDerived::foo", Src),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                    functionNamed("DerivedDerived@F@foo")),
@@ -3929,7 +3893,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualDerivedMultipleLayers) {
                                  functionNamed("Base@F@foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
+TEST_F(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
   static constexpr llvm::StringRef Src = R"cc(
     struct Base {
       virtual void foo(int* P) { P = nullptr; }
@@ -3945,7 +3909,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
   )cc";
 
   EXPECT_THAT(
-      collectFromDefinitionNamed("Base::foo", Src, getMode()),
+      collectFromDefinitionNamed("Base::foo", Src),
       UnorderedElementsAre(
           evidencePropagatedFrom(functionNamed("Base@F@foo"), paramSlot(0),
                                  Evidence::ASSIGNED_FROM_NULLABLE,
@@ -3957,7 +3921,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FromVirtualBaseMultipleLayers) {
                    functionNamed("Base@F@foo"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
+TEST_F(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
     void tmpl(T* P, T Q) {
@@ -3971,7 +3935,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
     }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("usage", Src, getMode()),
+      collectFromDefinitionNamed("usage", Src),
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("tmpl<#I>")),
                            evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
@@ -3982,27 +3946,27 @@ TEST_P(CollectEvidenceFromDefinitionTest, FunctionTemplate) {
   EXPECT_THAT(
       collectFromDefinitionMatching(
           functionDecl(hasTemplateArgument(0, refersToType(asString("int")))),
-          Src, getMode()),
+          Src),
       UnorderedElementsAre(evidence(paramSlot(0),
                                     Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("tmpl<#I>"))));
   EXPECT_THAT(
       collectFromDefinitionMatching(
           functionDecl(hasTemplateArgument(0, refersToType(booleanType()))),
-          Src, getMode()),
+          Src),
       UnorderedElementsAre(evidence(paramSlot(0),
                                     Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("tmpl<#b>"))));
   EXPECT_THAT(
       collectFromDefinitionMatching(functionDecl(hasTemplateArgument(
                                         0, refersToType(asString("char *")))),
-                                    Src, getMode()),
+                                    Src),
       UnorderedElementsAre(evidence(paramSlot(0),
                                     Evidence::UNCHECKED_DEREFERENCE,
                                     functionNamed("tmpl<#*C>"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        FunctionTemplateExplicitSpecialization) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
@@ -4019,7 +3983,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
     void usage() { tmpl<int*>(nullptr, nullptr); }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionNamed("usage", Src, getMode()),
+      collectFromDefinitionNamed("usage", Src),
       // Evidence is emitted for the explicit specialization, not the template.
       UnorderedElementsAre(evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                                     functionNamed("tmpl<#*I>")),
@@ -4028,7 +3992,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   EXPECT_THAT(
       collectFromDefinitionMatching(
           functionDecl(hasTemplateArgument(0, refersToType(asString("int *")))),
-          Src, getMode()),
+          Src),
       // Evidence is emitted for the explicit specialization, not the template.
       UnorderedElementsAre(
           evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
@@ -4037,7 +4001,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                    functionNamed("tmpl<#*I>"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, LocalVariableInFunctionTemplate) {
+TEST_F(CollectEvidenceFromDefinitionTest, LocalVariableInFunctionTemplate) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
     void tmpl() {
@@ -4049,14 +4013,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, LocalVariableInFunctionTemplate) {
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(functionDecl(isTemplateInstantiation()),
-                                    Src, getMode()),
+                                    Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     localVarNamed("A", "tmpl<#I>")),
                            evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     localVarNamed("B", "tmpl<#I>"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplate) {
+TEST_F(CollectEvidenceFromDefinitionTest, ClassTemplate) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
     class C {
@@ -4077,7 +4041,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplate) {
       CCharPtr.method(nullptr);
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4095,7 +4059,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplate) {
   EXPECT_THAT(collectFromDefinitionMatching(
                   functionDecl(isTemplateInstantiation(),
                                hasParameter(0, hasType(asString("int *")))),
-                  Src, getMode()),
+                  Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            AllOf(functionNamed("method"),
@@ -4105,7 +4069,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplate) {
                            fieldNamed("C>#I::Field"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
+TEST_F(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
     class Tmpl {
@@ -4129,7 +4093,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
       CBoolPtr.method(nullptr);
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4151,7 +4115,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
   EXPECT_THAT(collectFromDefinitionMatching(
                   functionDecl(isTemplateInstantiation(),
                                hasParameter(0, hasType(asString("int *")))),
-                  Src, getMode()),
+                  Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::UNCHECKED_DEREFERENCE,
                            AllOf(functionNamed("method"),
@@ -4163,7 +4127,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, InClassInsideClassTemplate) {
                                           HasSubstr("@S@Tmpl>#I@S@"))))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplateExplicitSpecialization) {
+TEST_F(CollectEvidenceFromDefinitionTest, ClassTemplateExplicitSpecialization) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
     class C {
@@ -4188,7 +4152,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplateExplicitSpecialization) {
       CInt.Field = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4198,7 +4162,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplateExplicitSpecialization) {
                            fieldNamed("C>#I::Field"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplatePartialSpecialization) {
+TEST_F(CollectEvidenceFromDefinitionTest, ClassTemplatePartialSpecialization) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T, typename U>
     class C {
@@ -4223,7 +4187,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplatePartialSpecialization) {
       CIntBool.Field = nullptr;
     }
   )cc";
-  EXPECT_THAT(collectFromDefinitionNamed("usage", Src, getMode()),
+  EXPECT_THAT(collectFromDefinitionNamed("usage", Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::NULLABLE_ARGUMENT,
                            AllOf(functionNamed("method"),
@@ -4233,7 +4197,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, ClassTemplatePartialSpecialization) {
                            fieldNamed("C>#I#b::Field"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, GlobalVariableTemplate) {
+TEST_F(CollectEvidenceFromDefinitionTest, GlobalVariableTemplate) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
     T* Global = nullptr;
@@ -4241,8 +4205,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, GlobalVariableTemplate) {
     void usage() { Global<int>; }
   )cc";
   EXPECT_THAT(
-      collectFromDefinitionMatching(varDecl(isTemplateInstantiation()), Src,
-                                    getMode()),
+      collectFromDefinitionMatching(varDecl(isTemplateInstantiation()), Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Global>#I"))));
 }
@@ -4252,7 +4215,7 @@ AST_MATCHER(VarDecl, isVarTemplateCompleteSpecializationDecl) {
          !isa<VarTemplatePartialSpecializationDecl>(Node);
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        GlobalVariableTemplateExplicitSpecialization) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
@@ -4263,12 +4226,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          varDecl(isVarTemplateCompleteSpecializationDecl()), Src, getMode()),
+          varDecl(isVarTemplateCompleteSpecializationDecl()), Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Global>#I"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        GlobalVariableTemplatePartialSpecialization) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T, typename U>
@@ -4281,12 +4244,12 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   )cc";
   EXPECT_THAT(
       collectFromDefinitionMatching(
-          varDecl(isVarTemplateCompleteSpecializationDecl()), Src, getMode()),
+          varDecl(isVarTemplateCompleteSpecializationDecl()), Src),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
                                     globalVarNamed("Global>#I#b"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PropagatesPreviousInferences) {
+TEST_F(CollectEvidenceFromDefinitionTest, PropagatesPreviousInferences) {
   static constexpr llvm::StringRef Src = R"cc(
     void calledWithToBeNullable(int* X);
     void calledWithToBeNonnull(int* A);
@@ -4317,25 +4280,24 @@ TEST_P(CollectEvidenceFromDefinitionTest, PropagatesPreviousInferences) {
   // results contain the evidence needed to produce our expected inferences and
   // do not contain the evidence only found from propagating inferences from the
   // first round.
-  auto FirstRoundResults = collectFromTargetFuncDefinition(Src, getMode());
+  auto FirstRoundResults = collectFromTargetFuncDefinition(Src);
   ASSERT_THAT(FirstRoundResults, IsSupersetOf(ExpectedBothRoundResults));
   for (const auto& E : ExpectedSecondRoundResults) {
     ASSERT_THAT(FirstRoundResults, Not(Contains(E)));
   }
 
   EXPECT_THAT(collectFromTargetFuncDefinition(
-                  Src, getMode(),
-                  {.Nullable = std::make_shared<SortedFingerprintVector>(
-                       std::vector<SlotFingerprint>{
-                           fingerprint(TargetUsr, paramSlot(0))}),
-                   .Nonnull = std::make_shared<SortedFingerprintVector>(
-                       std::vector<SlotFingerprint>{
-                           fingerprint(TargetUsr, paramSlot(1))})}),
+                  Src, {.Nullable = std::make_shared<SortedFingerprintVector>(
+                            std::vector<SlotFingerprint>{
+                                fingerprint(TargetUsr, paramSlot(0))}),
+                        .Nonnull = std::make_shared<SortedFingerprintVector>(
+                            std::vector<SlotFingerprint>{
+                                fingerprint(TargetUsr, paramSlot(1))})}),
               AllOf(IsSupersetOf(ExpectedBothRoundResults),
                     IsSupersetOf(ExpectedSecondRoundResults)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        AnalysisUsesPreviousInferencesForSlotsOutsideTargetDefinition) {
   static constexpr llvm::StringRef Src = R"cc(
     int* returnsToBeNonnull(int* A) {
@@ -4378,7 +4340,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 
   // Assert first round results because they don't rely on previous inference
   // propagation at all and in this case are test setup and preconditions.
-  auto FirstRoundResults = collectFromTargetFuncDefinition(Src, getMode());
+  auto FirstRoundResults = collectFromTargetFuncDefinition(Src);
   ASSERT_THAT(FirstRoundResults,
               IsSupersetOf(ExpectedNewResultsPerRound.at(0)));
   for (const auto& E : ExpectedNewResultsPerRound.at(1)) {
@@ -4386,10 +4348,9 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   }
 
   auto SecondRoundResults = collectFromTargetFuncDefinition(
-      Src, getMode(),
-      {.Nonnull = std::make_shared<SortedFingerprintVector>(
-           std::vector<SlotFingerprint>{
-               fingerprint(TargetUsr, paramSlot(0))})});
+      Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                std::vector<SlotFingerprint>{
+                    fingerprint(TargetUsr, paramSlot(0))})});
   EXPECT_THAT(SecondRoundResults,
               AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
                     IsSupersetOf(ExpectedNewResultsPerRound.at(1))));
@@ -4398,11 +4359,10 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   }
 
   auto ThirdRoundResults = collectFromTargetFuncDefinition(
-      Src, getMode(),
-      {.Nonnull = std::make_shared<SortedFingerprintVector>(
-           std::vector<SlotFingerprint>{
-               fingerprint(TargetUsr, paramSlot(0)),
-               fingerprint(ReturnsToBeNonnullUsr, paramSlot(0))})});
+      Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                std::vector<SlotFingerprint>{
+                    fingerprint(TargetUsr, paramSlot(0)),
+                    fingerprint(ReturnsToBeNonnullUsr, paramSlot(0))})});
   EXPECT_THAT(ThirdRoundResults,
               AllOf(IsSupersetOf(ExpectedNewResultsPerRound.at(0)),
                     IsSupersetOf(ExpectedNewResultsPerRound.at(1)),
@@ -4412,7 +4372,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   }
 
   auto FourthRoundResults = collectFromTargetFuncDefinition(
-      Src, getMode(),
+      Src,
       {.Nonnull = std::make_shared<SortedFingerprintVector>(
            std::vector<SlotFingerprint>{
                fingerprint(TargetUsr, paramSlot(0)),
@@ -4429,8 +4389,8 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                     IsSupersetOf(ExpectedNewResultsPerRound.at(3))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
-     PreviousInferencesOfNonFocusParameterNullabilitiesPropagate) {
+TEST_F(CollectEvidenceFromDefinitionTest,
+       PreviousInferencesOfNonFocusParameterNullabilitiesPropagate) {
   static constexpr llvm::StringRef Src = R"cc(
     void takesToBeNonnull(int* A);
     void target(int* Q) { takesToBeNonnull(Q); }
@@ -4442,40 +4402,39 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   // This test confirms that we use that information when collecting from
   // target's definition.
   EXPECT_THAT(collectFromTargetFuncDefinition(
-                  Src, getMode(),
-                  {.Nonnull = std::make_shared<SortedFingerprintVector>(
-                       std::vector<SlotFingerprint>{
-                           fingerprint(TakesToBeNonnullUsr, paramSlot(0))})}),
+                  Src, {.Nonnull = std::make_shared<SortedFingerprintVector>(
+                            std::vector<SlotFingerprint>{fingerprint(
+                                TakesToBeNonnullUsr, paramSlot(0))})}),
               Contains(evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL,
                                 functionNamed("target"))));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, Pragma) {
+TEST_F(CollectEvidenceFromDefinitionTest, Pragma) {
   static constexpr llvm::StringRef Src = R"cc(
 #pragma nullability file_default nonnull
     int* target(NullabilityUnknown<int*> P) {
       return P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, PragmaLocalTopLevelPointer) {
+TEST_F(CollectEvidenceFromDefinitionTest, PragmaLocalTopLevelPointer) {
   static constexpr llvm::StringRef Src = R"cc(
 #pragma nullability file_default nonnull
     void target(NullabilityUnknown<int*> P) {
       int* local_top_level_pointer = P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(Src, getMode()),
+  EXPECT_THAT(collectFromTargetFuncDefinition(Src),
               UnorderedElementsAre(
                   evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL)));
 }
 
 // Just confirming that the test setup to run both FrontendActions is working.
-TEST_P(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
+TEST_F(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #pragma nullability file_default nonnull
     int* target(NullabilityUnknown<int*> P) {
@@ -4483,14 +4442,14 @@ TEST_P(CollectEvidenceFromDefinitionTest, PragmaAndMacroReplace) {
       return P;
     }
   )cc";
-  EXPECT_THAT(collectFromTargetFuncDefinition(
-                  (CheckMacroDefinitions + BaseSrc).str(), getMode()),
-              UnorderedElementsAre(
-                  evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
-                  evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
+  EXPECT_THAT(
+      collectFromTargetFuncDefinition((CheckMacroDefinitions + BaseSrc).str()),
+      UnorderedElementsAre(
+          evidence(paramSlot(0), Evidence::ASSIGNED_TO_NONNULL),
+          evidence(paramSlot(0), Evidence::ABORT_IF_NULL)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        UnsupportedVarTemplateSpecializationWithInitListExpr) {
   static constexpr llvm::StringRef Src = R"cc(
     struct S {
@@ -4514,31 +4473,15 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   auto& Decl = *selectFirst<VarTemplateSpecializationDecl>(
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
 
-  switch (getMode()) {
-    case DefinitionCollectionMode::kTestWithSummaries:
-      EXPECT_THAT_EXPECTED(
-          summarizeDefinition(Decl, UsrCache, Pragmas,
-                              getVirtualMethodIndex(AST.context(), UsrCache)),
-          llvm::FailedWithMessage(
-              "Variable template specializations with InitListExprs in their "
-              "initializers are currently unsupported."));
-      break;
-    case DefinitionCollectionMode::kTestDirectly: {
-      std::vector<Evidence> Results;
-      EXPECT_THAT_ERROR(
-          collectEvidenceFromDefinition(
-              Decl, [&Results](Evidence E) { Results.push_back(std::move(E)); },
-              UsrCache, Pragmas),
-          llvm::FailedWithMessage(
-              "Variable template specializations with InitListExprs in their "
-              "initializers are currently unsupported."));
-      EXPECT_THAT(Results, IsEmpty());
-      break;
-    }
-  }
+  EXPECT_THAT_EXPECTED(
+      summarizeDefinition(Decl, UsrCache, Pragmas,
+                          getVirtualMethodIndex(AST.context(), UsrCache)),
+      llvm::FailedWithMessage(
+          "Variable template specializations with InitListExprs in their "
+          "initializers are currently unsupported."));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        UnsupportedVarTemplateSpecializationContainingInitListExpr) {
   static constexpr llvm::StringRef Src = R"cc(
     template <typename T>
@@ -4565,30 +4508,15 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   auto& Decl = *selectFirst<VarTemplateSpecializationDecl>(
       "d", match(varDecl(isTemplateInstantiation()).bind("d"), AST.context()));
 
-  switch (getMode()) {
-    case DefinitionCollectionMode::kTestWithSummaries:
-      EXPECT_THAT_EXPECTED(
-          summarizeDefinition(Decl, UsrCache, Pragmas,
-                              getVirtualMethodIndex(AST.context(), UsrCache)),
-          llvm::FailedWithMessage(
-              "Variable template specializations with InitListExprs in their "
-              "initializers are currently unsupported."));
-      break;
-    case DefinitionCollectionMode::kTestDirectly: {
-      std::vector<Evidence> Results;
-      EXPECT_THAT_ERROR(
-          collectEvidenceFromDefinition(
-              Decl, [&Results](Evidence E) { Results.push_back(std::move(E)); },
-              UsrCache, Pragmas),
-          llvm::FailedWithMessage(
-              "Variable template specializations with InitListExprs in their "
-              "initializers are currently unsupported."));
-      EXPECT_THAT(Results, IsEmpty());
-    }
-  }
+  EXPECT_THAT_EXPECTED(
+      summarizeDefinition(Decl, UsrCache, Pragmas,
+                          getVirtualMethodIndex(AST.context(), UsrCache)),
+      llvm::FailedWithMessage(
+          "Variable template specializations with InitListExprs in their "
+          "initializers are currently unsupported."));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, CallFromTestToNontestCode) {
+TEST_F(CollectEvidenceFromDefinitionTest, CallFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
     int* testCallee(int* P);
@@ -4638,7 +4566,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CallFromTestToNontestCode) {
   // The non-test caller should produce evidence that does not cross the test
   // boundary, for nontestCallee's return slot and parameter slot.
   EXPECT_THAT(
-      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas),
       UnorderedElementsAre(evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
                                     functionNamed("nontestCallee"),
                                     /*CrossesFromTestToNontest=*/false),
@@ -4651,31 +4579,29 @@ TEST_P(CollectEvidenceFromDefinitionTest, CallFromTestToNontestCode) {
   // However, the test caller will produce evidence that does cross the test
   // boundary, for nontestCallee's return slot and parameter slot.
   // Evidence for testCallee does not cross the test boundary.
-  EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
-      UnorderedElementsAre(
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   localVarNamed("P", "UserInTestFile_WithNull")),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
-                   localVarNamed("Q", "UserInTestFile_WithNull")),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
-                   localVarNamed("Q", "UserInTestFile_WithNull")),
-          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
-                   functionNamed("testCallee"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   functionNamed("testCallee"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
-                   functionNamed("nontestCallee"),
-                   /*CrossesFromTestToNontest=*/true),
-          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   functionNamed("nontestCallee"),
-                   /*CrossesFromTestToNontest=*/true)));
+  EXPECT_THAT(collectFromDefinition(AST.context(), TestDecl, Pragmas),
+              UnorderedElementsAre(
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           localVarNamed("P", "UserInTestFile_WithNull")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("Q", "UserInTestFile_WithNull")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_UNKNOWN,
+                           localVarNamed("Q", "UserInTestFile_WithNull")),
+                  evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("testCallee"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("testCallee"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("nontestCallee"),
+                           /*CrossesFromTestToNontest=*/true),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           functionNamed("nontestCallee"),
+                           /*CrossesFromTestToNontest=*/true)));
 
   EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestInitWithTestCalleeDecl, Pragmas,
-                            getMode()),
+      collectFromDefinition(AST.context(), TestInitWithTestCalleeDecl, Pragmas),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("testCallee"),
                                     /*CrossesFromTestToNontest=*/false),
@@ -4685,7 +4611,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CallFromTestToNontestCode) {
 
   EXPECT_THAT(
       collectFromDefinition(AST.context(), TestInitWithNonTestCalleeDecl,
-                            Pragmas, getMode()),
+                            Pragmas),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_TO_NONNULL,
                                     functionNamed("nontestCallee"),
                                     /*CrossesFromTestToNontest=*/true),
@@ -4694,7 +4620,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CallFromTestToNontestCode) {
                                     /*CrossesFromTestToNontest=*/true)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, CtorFromTestToNontestCode) {
+TEST_F(CollectEvidenceFromDefinitionTest, CtorFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
 
@@ -4739,7 +4665,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, CtorFromTestToNontestCode) {
   // The non-test caller should produce evidence for NontestClass's ctor param
   // that does not cross the test boundary.
   EXPECT_THAT(
-      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas),
       UnorderedElementsAre(evidence(Slot(1), Evidence::NONNULL_ARGUMENT,
                                     functionNamed("NontestClass"),
                                     /*CrossesFromTestToNontest=*/false)));
@@ -4747,20 +4673,19 @@ TEST_P(CollectEvidenceFromDefinitionTest, CtorFromTestToNontestCode) {
   // However, the test caller should produce evidence for NontestClass's
   // ctor param that does cross the test boundary.
   // The evidence for TestClass does not cross the test boundary.
-  EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
-      UnorderedElementsAre(
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   localVarNamed("P", "UserInTestFile_WithNull")),
-          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
-                   functionNamed("TestClass"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
-                   functionNamed("NontestClass"),
-                   /*CrossesFromTestToNontest=*/true)));
+  EXPECT_THAT(collectFromDefinition(AST.context(), TestDecl, Pragmas),
+              UnorderedElementsAre(
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           localVarNamed("P", "UserInTestFile_WithNull")),
+                  evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("TestClass"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(1), Evidence::NULLABLE_ARGUMENT,
+                           functionNamed("NontestClass"),
+                           /*CrossesFromTestToNontest=*/true)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, MemberVarFromTestToNontestCode) {
+TEST_F(CollectEvidenceFromDefinitionTest, MemberVarFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
 
@@ -4815,7 +4740,7 @@ TEST_P(CollectEvidenceFromDefinitionTest, MemberVarFromTestToNontestCode) {
       *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
 
   EXPECT_THAT(
-      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
+      collectFromDefinition(AST.context(), NontestDecl, Pragmas),
       UnorderedElementsAre(evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
                                     fieldNamed("NontestClass::P"),
                                     /*CrossesFromTestToNontest=*/false),
@@ -4826,32 +4751,31 @@ TEST_P(CollectEvidenceFromDefinitionTest, MemberVarFromTestToNontestCode) {
                                     fieldNamed("NontestClass::P"),
                                     /*CrossesFromTestToNontest=*/false)));
 
-  EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestDecl, Pragmas, getMode()),
-      UnorderedElementsAre(
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   localVarNamed("P", "UserInTestFile_WithNull")),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   fieldNamed("TestClass::P"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   fieldNamed("TestClass::P"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   fieldNamed("TestClass::P"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   fieldNamed("NontestClass::P"),
-                   /*CrossesFromTestToNontest=*/true),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   fieldNamed("NontestClass::P"),
-                   /*CrossesFromTestToNontest=*/true),
-          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   fieldNamed("NontestClass::P"),
-                   /*CrossesFromTestToNontest=*/true)));
+  EXPECT_THAT(collectFromDefinition(AST.context(), TestDecl, Pragmas),
+              UnorderedElementsAre(
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           localVarNamed("P", "UserInTestFile_WithNull")),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("TestClass::P"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("TestClass::P"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           fieldNamed("TestClass::P"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("NontestClass::P"),
+                           /*CrossesFromTestToNontest=*/true),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           fieldNamed("NontestClass::P"),
+                           /*CrossesFromTestToNontest=*/true),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           fieldNamed("NontestClass::P"),
+                           /*CrossesFromTestToNontest=*/true)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        GlobalOrStaticMemberVarFromTestToNontestCode) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
@@ -4905,45 +4829,43 @@ TEST_P(CollectEvidenceFromDefinitionTest,
   const Decl& NontestDecl =
       *dataflow::test::findValueDecl(AST.context(), "nontestCaller");
 
-  EXPECT_THAT(
-      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
-      UnorderedElementsAre(
-          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   globalVarNamed("NontestGlobal"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                   globalVarNamed("NontestGlobal"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
-                   staticFieldNamed("NontestClass::TestStatic"),
-                   /*CrossesFromTestToNontest=*/false)));
+  EXPECT_THAT(collectFromDefinition(AST.context(), NontestDecl, Pragmas),
+              UnorderedElementsAre(
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           globalVarNamed("NontestGlobal"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                           globalVarNamed("NontestGlobal"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NONNULL,
+                           staticFieldNamed("NontestClass::TestStatic"),
+                           /*CrossesFromTestToNontest=*/false)));
 
-  EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestTargetDecl, Pragmas, getMode()),
-      UnorderedElementsAre(
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   localVarNamed("P", "UserInTestFile_WithNull")),
-          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   globalVarNamed("TestGlobal"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   globalVarNamed("TestGlobal"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   staticFieldNamed("TestClass::TestStatic"),
-                   /*CrossesFromTestToNontest=*/false),
-          evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
-                   globalVarNamed("NontestGlobal"),
-                   /*CrossesFromTestToNontest=*/true),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   globalVarNamed("NontestGlobal"),
-                   /*CrossesFromTestToNontest=*/true),
-          evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
-                   staticFieldNamed("NontestClass::TestStatic"),
-                   /*CrossesFromTestToNontest=*/true)));
+  EXPECT_THAT(collectFromDefinition(AST.context(), TestTargetDecl, Pragmas),
+              UnorderedElementsAre(
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           localVarNamed("P", "UserInTestFile_WithNull")),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           globalVarNamed("TestGlobal"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           globalVarNamed("TestGlobal"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           staticFieldNamed("TestClass::TestStatic"),
+                           /*CrossesFromTestToNontest=*/false),
+                  evidence(Slot(0), Evidence::UNCHECKED_DEREFERENCE,
+                           globalVarNamed("NontestGlobal"),
+                           /*CrossesFromTestToNontest=*/true),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           globalVarNamed("NontestGlobal"),
+                           /*CrossesFromTestToNontest=*/true),
+                  evidence(Slot(0), Evidence::ASSIGNED_FROM_NULLABLE,
+                           staticFieldNamed("NontestClass::TestStatic"),
+                           /*CrossesFromTestToNontest=*/true)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest,
+TEST_F(CollectEvidenceFromDefinitionTest,
        TestToNontestFromVirtualDerivedForReturn) {
   static constexpr llvm::StringRef BaseSrc = R"cc(
 #include "input.h"
@@ -4999,23 +4921,21 @@ TEST_P(CollectEvidenceFromDefinitionTest,
 
   // In the non-test case, we propagate from Derived::foo to Base::foo
   // and do not consider that crossing from test to non-test.
-  EXPECT_THAT(
-      collectFromDefinition(AST.context(), NontestDecl, Pragmas, getMode()),
-      UnorderedElementsAre(
-          evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                   functionNamed("Derived@F@foo")),
-          evidencePropagatedFrom(functionNamed("Derived@F@foo"),
-                                 SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
-                                 functionNamed("Base@F@foo"),
-                                 /*CrossesFromTestToNontest=*/false)));
+  EXPECT_THAT(collectFromDefinition(AST.context(), NontestDecl, Pragmas),
+              UnorderedElementsAre(
+                  evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
+                           functionNamed("Derived@F@foo")),
+                  evidencePropagatedFrom(
+                      functionNamed("Derived@F@foo"), SLOT_RETURN_TYPE,
+                      Evidence::NULLABLE_RETURN, functionNamed("Base@F@foo"),
+                      /*CrossesFromTestToNontest=*/false)));
 
   // When we propagate from TestToNontestDerived::foo to Base::foo, or
   // TestToTestNotRootDerived::foo to Base::foo, make sure we track that this
   // involved crossing a test boundary.
   // Other cases (from test to test) don't cross a test boundary.
   EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestToNontestDecl, Pragmas,
-                            getMode()),
+      collectFromDefinition(AST.context(), TestToNontestDecl, Pragmas),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                    functionNamed("TestToNontestDerived@F@foo")),
@@ -5024,8 +4944,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                                  functionNamed("Base@F@foo"),
                                  /*CrossesFromTestToNontest=*/true)));
   EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestToTestRootDecl, Pragmas,
-                            getMode()),
+      collectFromDefinition(AST.context(), TestToTestRootDecl, Pragmas),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                    functionNamed("TestToTestRootDerived@F@foo")),
@@ -5034,8 +4953,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
                                  functionNamed("TestBaseRoot@F@foo"),
                                  /*CrossesFromTestToNontest=*/false)));
   EXPECT_THAT(
-      collectFromDefinition(AST.context(), TestToTestNotRootDecl, Pragmas,
-                            getMode()),
+      collectFromDefinition(AST.context(), TestToTestNotRootDecl, Pragmas),
       UnorderedElementsAre(
           evidence(SLOT_RETURN_TYPE, Evidence::NULLABLE_RETURN,
                    functionNamed("TestToTestNotRootDerived@F@foo")),
@@ -5049,7 +4967,7 @@ TEST_P(CollectEvidenceFromDefinitionTest,
               /*CrossesFromTestToNontest=*/true)));
 }
 
-TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
+TEST_F(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
   static constexpr llvm::StringRef Src = R"cc(
     void target(int* P, int* Q) {
       *P;
@@ -5066,29 +4984,12 @@ TEST_P(CollectEvidenceFromDefinitionTest, SolverLimitReached) {
     return std::make_unique<dataflow::WatchedLiteralsSolver>(
         /*MaxSATIterations=*/100);
   };
-  switch (getMode()) {
-    case DefinitionCollectionMode::kTestWithSummaries: {
-      auto [Err, Results] = collectFromDefinitionViaSummaryWithErrors(
-          AST.context(), Decl, Pragmas,
-          /*InputInferences=*/{}, std::move(MakeSolver));
-      EXPECT_THAT_ERROR(
-          std::move(Err),
-          llvm::FailedWithMessage("SAT solver reached iteration limit"));
-      EXPECT_THAT(Results, SizeIs(1));
-      break;
-    }
-    case DefinitionCollectionMode::kTestDirectly: {
-      std::vector<Evidence> Results;
-      USRCache UsrCache;
-      EXPECT_THAT_ERROR(
-          collectEvidenceFromDefinition(
-              Decl, [&Results](Evidence E) { Results.push_back(std::move(E)); },
-              UsrCache, Pragmas, /*PreviousInferences=*/{},
-              std::move(MakeSolver)),
-          llvm::FailedWithMessage("SAT solver reached iteration limit"));
-      EXPECT_THAT(Results, SizeIs(1));
-    }
-  }
+  auto [Err, Results] = collectFromDefinitionViaSummaryWithErrors(
+      AST.context(), Decl, Pragmas,
+      /*InputInferences=*/{}, std::move(MakeSolver));
+  EXPECT_THAT_ERROR(std::move(Err), llvm::FailedWithMessage(
+                                        "SAT solver reached iteration limit"));
+  EXPECT_THAT(Results, SizeIs(1));
 }
 
 TEST(CollectEvidenceFromDeclarationTest, GlobalVariable) {
