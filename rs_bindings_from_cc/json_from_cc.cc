@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "common/ffi_types.h"
@@ -25,7 +26,11 @@ static constexpr absl::string_view kDependencyHeaderName =
 // This is intended to be called from Rust tests.
 extern "C" FfiU8SliceBox json_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
-    FfiU8Slice dependency_header_source) {
+    FfiU8Slice dependency_header_source, FfiU8Slice extra_feature) {
+  absl::flat_hash_set<std::string> features = {"supported"};
+  if (extra_feature.size > 0) {
+    features.insert(std::string(StringViewFromFfiU8Slice(extra_feature)));
+  }
   absl::StatusOr<IR> ir = IrFromCc({
       .extra_source_code_for_testing = StringViewFromFfiU8Slice(header_source),
       .current_target = BazelLabel{"//test:testing_target"},
@@ -43,8 +48,8 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
               StringViewFromFfiU8Slice(target_triple),
           },
       .crubit_features = {{BazelLabel{std::string(kDependencyTarget)},
-                           {"supported"}},
-                          {BazelLabel{"//test:testing_target"}, {"supported"}}},
+                           features},
+                          {BazelLabel{"//test:testing_target"}, features}},
   });
 
   // TODO(forster): For now it is good enough to just exit: We are just

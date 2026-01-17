@@ -13,7 +13,7 @@ use ir::{self, make_ir_from_parts, Func, Identifier, Item, LifetimeId, LifetimeN
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str) -> Result<IR> {
-    ir_from_cc_dependency(platform, header_source, "// empty header")
+    ir_from_cc_dependency(platform, header_source, "// empty header", None)
 }
 
 /// Prepends definitions for lifetime annotation macros to the code.
@@ -96,6 +96,7 @@ pub fn ir_from_cc_dependency(
     platform: multiplatform_testing::Platform,
     header_source: &str,
     dependency_header_source: &str,
+    extra_feature: Option<&str>,
 ) -> Result<IR> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
@@ -104,6 +105,7 @@ pub fn ir_from_cc_dependency(
             target_triple: FfiU8Slice,
             header_source: FfiU8Slice,
             dependency_header_source: FfiU8Slice,
+            extra_feature: FfiU8Slice,
         ) -> FfiU8SliceBox;
     }
 
@@ -116,6 +118,9 @@ pub fn ir_from_cc_dependency(
             FfiU8Slice::from_slice(platform.target_triple().as_ref()),
             FfiU8Slice::from_slice(header_source_with_include_u8),
             FfiU8Slice::from_slice(dependency_header_source_u8),
+            extra_feature
+                .map(|s| FfiU8Slice::from_slice(s.as_bytes()))
+                .unwrap_or(FfiU8Slice::from_slice(&[])),
         )
         .into_boxed_slice()
     };

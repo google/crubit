@@ -213,6 +213,10 @@ pub struct CcType {
     pub variant: CcTypeVariant,
     pub is_const: bool,
     pub unknown_attr: Rc<str>,
+    // An ordered list of lifetime variable names applied to this type. It is valid for the same
+    // name to appear multiple times.
+    #[serde(default)]
+    pub explicit_lifetimes: Vec<Rc<str>>,
 }
 
 impl CcType {
@@ -227,6 +231,7 @@ impl From<&Record> for CcType {
             variant: CcTypeVariant::Decl(record.id),
             is_const: false,
             unknown_attr: Rc::default(),
+            explicit_lifetimes: Vec::default(),
         }
     }
 }
@@ -237,6 +242,7 @@ impl From<&TypeAlias> for CcType {
             variant: CcTypeVariant::Decl(alias.id),
             is_const: false,
             unknown_attr: Rc::default(),
+            explicit_lifetimes: Vec::default(),
         }
     }
 }
@@ -247,6 +253,7 @@ impl From<&ExistingRustType> for CcType {
             variant: CcTypeVariant::Decl(existing_rust_type.id),
             is_const: false,
             unknown_attr: Rc::default(),
+            explicit_lifetimes: Vec::default(),
         }
     }
 }

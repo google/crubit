@@ -476,6 +476,7 @@ cc_library(
         ":cc_ir",
         ":ir_from_cc",
         "//common:cc_ffi_types",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//llvm:Support",

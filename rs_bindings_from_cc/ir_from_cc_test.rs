@@ -7,7 +7,10 @@ use arc_anyhow::Result;
 use googletest::prelude::*;
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
-use ir_testing::{ir_id, retrieve_func, retrieve_record, DEPENDENCY_TARGET, TESTING_TARGET};
+use ir_testing::{
+    ir_id, retrieve_func, retrieve_record, with_full_lifetime_macros, DEPENDENCY_TARGET,
+    TESTING_TARGET,
+};
 use itertools::Itertools;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
@@ -19,7 +22,23 @@ fn ir_from_cc(header: &str) -> Result<IR> {
 }
 
 fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
-    ir_testing::ir_from_cc_dependency(multiplatform_testing::test_platform(), header, dep_header)
+    ir_testing::ir_from_cc_dependency(
+        multiplatform_testing::test_platform(),
+        header,
+        dep_header,
+        None,
+    )
+}
+
+fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
+    let mut full_program = with_full_lifetime_macros();
+    full_program.push_str(program);
+    ir_testing::ir_from_cc_dependency(
+        multiplatform_testing::test_platform(),
+        &full_program,
+        "// empty header",
+        Some("assume_lifetimes"),
+    )
 }
 
 #[gtest]
@@ -4086,6 +4105,44 @@ fn test_top_level_item_ids_from_multiple_targets() {
             BazelLabel(#TESTING_TARGET): [...]
             ...
           }
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_function() {
+    let ir = ir_from_assumed_lifetimes_cc("void f(int& $a x);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: LValueRef,
+                                lifetime: None,
+                                pointee_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false,
+                                    unknown_attr: "",
+                                    explicit_lifetimes: [],
+                                },
+                            }),
+                            is_const: false,
+                            unknown_attr: "",
+                            explicit_lifetimes: ["a"],
+                        },
+                        identifier: "x",
+                        unknown_attr: None,
+                    }
+                ],
+                ...
+                lifetime_params: [],
+                ...
+            }
         }
     );
 }

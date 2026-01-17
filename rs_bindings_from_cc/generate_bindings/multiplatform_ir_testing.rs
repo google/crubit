@@ -13,7 +13,7 @@ pub fn ir_from_cc(header: &str) -> Result<IR> {
 }
 
 pub fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
-    ir_testing::ir_from_cc_dependency(test_platform(), header, dep_header)
+    ir_testing::ir_from_cc_dependency(test_platform(), header, dep_header, None)
 }
 
 pub fn ir_record(name: &str) -> Record {
