@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-//! A Rust wrapper around a type-erased `Future` designed for use from C++.
+//! A Rust wrapper around a type-erased `Future` designed for use from C++. foo
 
 #![deny(missing_docs)]
 
