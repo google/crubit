@@ -34,7 +34,7 @@ rust_proc_macro(
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
+        "@crate_index//:syn",  # v2
     ],
 )
 
@@ -82,7 +82,7 @@ rust_proc_macro(
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
+        "@crate_index//:syn",  # v2
     ],
 )
 
@@ -175,7 +175,7 @@ rust_proc_macro(
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-        "@crate_index//:syn",  # v1
+        "@crate_index//:syn",  # v2
     ],
 )
 
