@@ -30,7 +30,7 @@ impl Parse for CrateRename {
 fn derive_crate_name(input: &syn::DeriveInput) -> syn::Result<Ident> {
     let mut result = Ident::new("ctor", Span::call_site());
     for attr in &input.attrs {
-        if !attr.path.is_ident("ctor") {
+        if !attr.path().is_ident("ctor") {
             continue;
         }
         CrateRename(result) = attr.parse_args()?;
@@ -374,7 +374,7 @@ fn add_lifetime(generics: &mut syn::Generics, prefix: &str) -> proc_macro2::Toke
         name = Cow::Owned(format!("{prefix}_{i}"));
     };
     let quoted_lifetime = quote! {#lifetime};
-    generics.params.push(syn::GenericParam::Lifetime(syn::LifetimeDef::new(lifetime)));
+    generics.params.push(syn::GenericParam::Lifetime(syn::LifetimeParam::new(lifetime)));
     quoted_lifetime
 }
 
@@ -470,6 +470,7 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
                     fields.named.push(syn::Field {
                         attrs: vec![],
                         vis: syn::Visibility::Inherited,
+                        mutability: syn::FieldMutability::None,
                         // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
                         ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
                         colon_token: Some(<syn::Token![:]>::default()),
