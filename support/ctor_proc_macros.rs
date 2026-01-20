@@ -467,15 +467,19 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
                     s.attrs.insert(0, non_exhaustive_attr);
                 }
                 syn::Fields::Named(fields) => {
-                    fields.named.push(syn::Field {
-                        attrs: vec![],
-                        vis: syn::Visibility::Inherited,
-                        mutability: syn::FieldMutability::None,
-                        // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
-                        ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
-                        colon_token: Some(<syn::Token![:]>::default()),
-                        ty: syn::parse_quote!([u8; 0]),
-                    });
+                    // insert at the front in case the last field is !Sized.
+                    fields.named.insert(
+                        0,
+                        syn::Field {
+                            attrs: vec![],
+                            vis: syn::Visibility::Inherited,
+                            mutability: syn::FieldMutability::None,
+                            // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
+                            ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
+                            colon_token: Some(<syn::Token![:]>::default()),
+                            ty: syn::parse_quote!([u8; 0]),
+                        },
+                    );
                 }
             }
         }
@@ -715,8 +719,8 @@ mod test {
             quote! {
                 #[repr(C)]
                 struct S {
-                    x: i32,
-                    __must_use_ctor_to_initialize: [u8; 0]
+                    __must_use_ctor_to_initialize: [u8; 0],
+                    x: i32
                 }
             }
         );

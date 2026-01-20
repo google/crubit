@@ -1176,7 +1176,7 @@ pub unsafe trait RecursivelyPinned {
     /// initialization. Any fields left out of the `CtorInitializedFields` type
     /// will not be initialized, so they must permit uninitialized memory.
     /// (For example, ZST or MaybeUninit.)
-    type CtorInitializedFields;
+    type CtorInitializedFields: ?Sized;
 }
 
 /// The drop trait for `#[recursively_pinned(PinnedDrop)]` types.

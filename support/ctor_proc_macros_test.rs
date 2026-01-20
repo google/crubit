@@ -228,6 +228,19 @@ fn test_recursively_pinned_generic() {
 }
 
 #[gtest]
+fn test_recursively_pinned_dst() {
+    #[::ctor::recursively_pinned]
+    struct Foo<T: ?Sized> {
+        x: i32,
+        y: T,
+    }
+    let x: ::std::pin::Pin<&mut Foo<[u8]>> =
+        ::ctor::emplace!(::ctor::ctor!(Foo<[u8; 1]> { x: 4, y: [2]}));
+    assert_eq!(x.x, 4);
+    assert_eq!(x.y, [2]);
+}
+
+#[gtest]
 fn test_recursively_pinned_struct_derive_default() {
     #[::ctor::recursively_pinned]
     #[derive(::ctor::CtorFrom_Default)]
