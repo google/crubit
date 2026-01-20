@@ -58,6 +58,14 @@ impl<'a> DynFuture<'a> {
     }
 }
 
+/// A `DynFuture` can be turned into a boxed reference to the underlying future, or `None` if it has
+/// already been discarged.
+impl<'a> From<DynFuture<'a>> for Option<Pin<Box<dyn Future<Output = ()> + Send + 'a>>> {
+    fn from(df: DynFuture<'a>) -> Self {
+        df.0
+    }
+}
+
 // A type-erased pointer to a `CppWaker`.
 // This is necessary in order to match the signatures required by `RawWakerVTable`.
 type UnitPtr = *const ();
