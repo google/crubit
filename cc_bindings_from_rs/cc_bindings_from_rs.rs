@@ -164,6 +164,26 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     Ok(())
 }
 
+#[rustversion::before(2026-01-19)]
+fn handle_options(
+    early_dcx: &EarlyDiagCtxt,
+    at_args: &Vec<String>,
+) -> Option<rustc_session::getopts::Matches> {
+    rustc_driver::handle_options(early_dcx, at_args)
+}
+
+#[rustversion::since(2026-01-19)]
+fn handle_options(
+    early_dcx: &EarlyDiagCtxt,
+    at_args: &Vec<String>,
+) -> Option<rustc_session::getopts::Matches> {
+    match rustc_driver::handle_options(early_dcx, at_args) {
+        rustc_driver::HandledOptions::None => None,
+        rustc_driver::HandledOptions::Normal(matches) => Some(matches),
+        rustc_driver::HandledOptions::HelpOnly(matches) => Some(matches),
+    }
+}
+
 /// Generates bindings using rmeta input files rather than source files and rustc args.
 /// This function exists so we can guard it behind a feature flag and should be cleaned up once
 /// we've migrated to rmetas entirely.
@@ -190,7 +210,7 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         at_args.push(format!("-L{}", library_path));
     }
 
-    let Some(matches) = rustc_driver::handle_options(&early_dcx, &at_args) else {
+    let Some(matches) = handle_options(&early_dcx, &at_args) else {
         bail!("rustc failed to parse provided arguments")
     };
 

@@ -22,6 +22,9 @@ crubit_rust_binary(
     srcs = ["cc_bindings_from_rs.rs"],
     # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
     crubit_dep = False,
+    proc_macro_deps = [
+        "@crate_index//:rustversion",  # v1
+    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
