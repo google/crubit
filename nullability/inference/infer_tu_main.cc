@@ -75,13 +75,6 @@ llvm::cl::opt<bool> IncludeTrivial{
     llvm::cl::desc("Include trivial inferences (annotated, no conflicts)"),
     llvm::cl::init(false),
 };
-// TODO: b/417692223 remove this flag once summaries are the default.
-llvm::cl::opt<bool> UseSummaries{
-    "use-summaries",
-    llvm::cl::desc("Generate the AST only once to produce a Summary and then "
-                   "use that Summary for iteration"),
-    llvm::cl::init(false),
-};
 llvm::cl::opt<std::string> FileFilter{
     "file-filter",
     llvm::cl::desc("Regular expression filenames must match to be analyzed. "
@@ -239,7 +232,7 @@ class Action : public SyntaxOnlyAction {
         llvm::errs() << "Running inference...\n";
 
         InferenceResults Results =
-            inferTU(Ctx, Pragmas, UseSummaries, Iterations, DeclFilter());
+            inferTU(Ctx, Pragmas, Iterations, DeclFilter());
         if (PrintProtos) {
           for (const auto &[USR, InferencesBySlot] : Results) {
             llvm::outs() << "USR: " << absl::StrCat(USR) << "\n";
