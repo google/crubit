@@ -813,40 +813,6 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
     )?
     .into_tokens(&mut main_api_prereqs);
 
-    /*
-    let (decl_body, defn_item) = if thunk_self.is_trait_method() {
-        (
-            quote! { {
-                #impl_body
-            } },
-            quote! {},
-        )
-    } else {
-        let decl_name = struct_name
-            .as_ref()
-            .map(|fully_qualified_name| {
-                let name = fully_qualified_name.unqualified.cpp_name;
-                let name = format_cc_ident(db, name.as_str()).expect(
-                    "Caller of generate_function should verify struct via generate_adt_core",
-                );
-                quote! { #name :: }
-            })
-            .unwrap_or_default();
-        (
-            quote! { ; },
-            // Trait methods are declared in their struct and don't need a free floating definition in the
-            // details. Other functions do.
-            quote! {
-                __NEWLINE__
-                inline #main_api_ret_type #decl_name #bracketed_decl_name (
-                        #( #main_api_params ),* ) #method_qualifiers {
-                    #impl_body
-                }
-                __NEWLINE__
-            },
-        )
-    };*/
-
     let main_api = {
         let doc_comment = {
             let doc_comment = generate_doc_comment(db, def_id);
@@ -938,7 +904,7 @@ pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Resul
                     .as_ref()
                     .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
                     .expect("Generated trait method for an ADT with an invalid rust name");
-                quote! { (#trait_name<#struct_name> :: #bracketed_decl_name) }
+                quote! { rs_std :: impl <#struct_name, #trait_name> :: #bracketed_decl_name }
             })
             .or_else(|| {
                 struct_name.as_ref().map(|fully_qualified_name| {

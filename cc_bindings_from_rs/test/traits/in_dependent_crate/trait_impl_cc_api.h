@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -133,8 +134,8 @@ inline void NotImplemented::__crubit_field_offset_assertions() {
 }  // namespace trait_impl
 
 template <>
-struct ::trait_definition::MyTrait<::trait_impl::MyStruct> {
-  static constexpr bool is_implemented = true;
+struct rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
+  static constexpr bool kIsImplemented = true;
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_impl.rs;l=18
@@ -147,8 +148,8 @@ extern "C" std::int32_t __crubit_thunk_MyTrait_udo_usomething(
     ::trait_impl::MyStruct const&);
 }
 }  // namespace trait_impl
-inline std::int32_t(
-    ::trait_definition::MyTrait<::trait_impl::MyStruct>::do_something)(
+inline std::int32_t
+rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait>::do_something(
     ::trait_impl::MyStruct const& self) {
   return trait_impl::__crubit_internal::__crubit_thunk_MyTrait_udo_usomething(
       self);
