@@ -6,7 +6,6 @@
 #define THIRD_PARTY_CRUBIT_NULLABILITY_INFERENCE_COLLECT_EVIDENCE_TEST_UTILITIES_H_
 
 #include <optional>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -94,22 +93,13 @@ testing::Matcher<const Evidence&> evidencePropagatedFrom(
     testing::Matcher<const Symbol&> SymbolMatcher = functionNamed("target"),
     testing::Matcher<bool> CrossesFromTestToNontest = false);
 
-/// Used to parameterize tests over the implementation pattern of evidence
-/// collection, to easily cover both implementations.
-enum class DefinitionCollectionMode {
-  kTestWithSummaries,
-  kTestDirectly,
-};
-
-/// Returns a string representation of the CollectionMode for test names.
-std::string printToString(DefinitionCollectionMode Mode);
-
 /// Summarizes the definition in `Source` with the name "target" (a generic name
 /// using the LLVM-style capitalization for function names).
 llvm::Expected<std::optional<CFGSummary>> summarizeTargetFuncDefinition(
     llvm::StringRef Source);
 
-//// Returns both an error and a vector to represent partial computations --
+/// Try to collect evidence from the given `Definition`.
+/// Returns both an error and a vector to represent partial computations --
 /// those that fail after producing some results.
 std::pair<llvm::Error, std::vector<Evidence>>
 collectFromDefinitionViaSummaryWithErrors(
@@ -118,36 +108,34 @@ collectFromDefinitionViaSummaryWithErrors(
     const PreviousInferences& InputInferences,
     const SolverFactory& MakeSolver = makeDefaultSolverForInference);
 
-/// Dispatcher to collect evidence based on the CollectionMode.
+/// Collects evidence from the given `Definition`.
 std::vector<Evidence> collectFromDefinition(
     ASTContext& ASTCtx, const Decl& Definition,
-    const NullabilityPragmas& Pragmas, DefinitionCollectionMode Mode,
-    PreviousInferences InputInferences = {});
+    const NullabilityPragmas& Pragmas, PreviousInferences InputInferences = {});
 
 /// Constructs an AST from `Source` and the necessary matcher to retrieve the
 /// definition named `TargetName`, then collects evidence from that definition.
 std::vector<Evidence> collectFromDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source,
-    DefinitionCollectionMode Mode, PreviousInferences InputInferences = {});
+    PreviousInferences InputInferences = {});
 
 /// Provides a default LLVM-style function-name-cased value ("target") for
 /// TargetName in `collectFromDefinitionNamed`, which puts `TargetName` first
 /// for readability.
 std::vector<Evidence> collectFromTargetFuncDefinition(
-    llvm::StringRef Source, DefinitionCollectionMode Mode,
-    PreviousInferences InputInferences = {});
+    llvm::StringRef Source, PreviousInferences InputInferences = {});
 
 /// Constructs an AST from `Source` and collects evidence from the definition
 /// retrieved using `Matcher`.
 template <typename MatcherT>
 std::vector<Evidence> collectFromDefinitionMatching(
-    MatcherT Matcher, llvm::StringRef Source, DefinitionCollectionMode Mode,
+    MatcherT Matcher, llvm::StringRef Source,
     PreviousInferences InputInferences = {}) {
   NullabilityPragmas Pragmas;
   TestAST AST(getAugmentedTestInputs(Source, Pragmas));
   const Decl& Definition = *selectFirst<Decl>(
       "d", ::clang::ast_matchers::match(Matcher.bind("d"), AST.context()));
-  return collectFromDefinition(AST.context(), Definition, Pragmas, Mode,
+  return collectFromDefinition(AST.context(), Definition, Pragmas,
                                InputInferences);
 }
 

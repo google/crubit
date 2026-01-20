@@ -8,7 +8,6 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <utility>
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
@@ -29,7 +28,6 @@
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/FunctionExtras.h"
 
 namespace clang {
 namespace tidy {
@@ -87,13 +85,6 @@ class PointerNullabilityAnalysis
   // The returned nullability is guaranteed to be symbolic.
   PointerTypeNullability assignNullabilityVariable(
       const ValueDecl *absl_nonnull D, dataflow::Arena &);
-
-  void assignNullabilityOverride(
-      llvm::unique_function<
-          std::optional<const PointerTypeNullability *>(const Decl &) const>
-          Override) {
-    NFS.ConcreteNullabilityOverride = std::move(Override);
-  }
 
   void transfer(const CFGElement &Elt, PointerNullabilityLattice &Lattice,
                 dataflow::Environment &Env);
