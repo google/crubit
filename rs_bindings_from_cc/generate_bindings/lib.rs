@@ -384,9 +384,11 @@ pub fn generate_bindings_tokens(
             })
             .unzip();
 
+    let has_callables = !dyn_callable_rust_impls.is_empty();
+
     // Callables use `Box<dyn F>`.
-    let extern_crate_alloc = (!dyn_callable_rust_impls.is_empty())
-        .then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  });
+    let extern_crate_alloc =
+        has_callables.then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  });
 
     // when we go through the main_api, we want to go through one at a time.
     // if the parent is none, we're responsible.
@@ -406,7 +408,7 @@ pub fn generate_bindings_tokens(
     );
 
     let cc_details = CppDetails {
-        includes: generate_rs_api_impl_includes(&db, crubit_support_path_format),
+        includes: generate_rs_api_impl_includes(&db, crubit_support_path_format, has_callables),
         dyn_callable_cpp_decls,
         thunks: cc_details,
     };
@@ -577,6 +579,7 @@ fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
 fn generate_rs_api_impl_includes(
     db: &Database,
     crubit_support_path_format: Format<1>,
+    has_callables: bool,
 ) -> CppIncludes {
     let ir = db.ir();
 
@@ -589,6 +592,13 @@ fn generate_rs_api_impl_includes(
             "internal/sizeof.h".into(),
         ));
     };
+
+    if has_callables {
+        internal_includes.insert(CcInclude::SupportLibHeader(
+            crubit_support_path_format.clone(),
+            "rs_std/dyn_callable.h".into(),
+        ));
+    }
 
     for record in ir.records() {
         // Err means that this bridge type has some issues. For the purpose of generating includes,
