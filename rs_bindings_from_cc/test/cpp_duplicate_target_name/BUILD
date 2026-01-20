@@ -28,4 +28,7 @@ crubit_rust_test(
         "notap",
         "nobuilder",
     ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
 )
