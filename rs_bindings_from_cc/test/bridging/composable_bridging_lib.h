@@ -103,4 +103,8 @@ inline std::optional<rust_library::MyStruct> ReturnOptionalMyStruct() {
   return rust_library::MyStruct();
 };
 
+enum class MyEnum { kFoo, kBar };
+
+std::optional<MyEnum> ValidateMyEnum(MyEnum value);
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

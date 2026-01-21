@@ -135,8 +135,12 @@ impl From<DefaultEnum> for ::ffi_11::c_int {
     }
 }
 
-// Error while generating bindings for function 'ReturnsDefaultEnumInComposableBridgeType':
-// RsTypeKind::Enum is not supported yet
+#[inline(always)]
+pub fn ReturnsDefaultEnumInComposableBridgeType() -> crate::MyOption<crate::DefaultEnum> {
+    unsafe {
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<DefaultEnum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<DefaultEnum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(__return_abi_buffer,); })
+    }
+}
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
@@ -158,8 +162,12 @@ impl From<I64Enum> for ::ffi_11::c_long {
     }
 }
 
-// Error while generating bindings for function 'ReturnsI64EnumInComposableBridgeType':
-// RsTypeKind::Enum is not supported yet
+#[inline(always)]
+pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum> {
+    unsafe {
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<I64Enum>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<I64Enum>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(__return_abi_buffer,); })
+    }
+}
 
 // Error while generating bindings for struct 'std::integral_constant<bool, false>':
 // Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (crubit.rs-features):
@@ -1000,6 +1008,12 @@ mod detail {
             slice: *const [::ffi_11::c_int],
         );
         pub(crate) unsafe fn __rust_thunk___Z16ReturnsCStrArrayv(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
     }

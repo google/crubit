@@ -126,3 +126,10 @@ fn test_optional_my_struct() {
     let x = ReturnOptionalMyStruct();
     assert_eq!(x.unwrap().x, 42);
 }
+
+#[gtest]
+fn test_composable_bridge_with_enum_inside() {
+    assert_eq!(ValidateMyEnum(MyEnum::kFoo), Some(MyEnum::kFoo));
+    assert_eq!(ValidateMyEnum(MyEnum::kBar), Some(MyEnum::kBar));
+    assert_eq!(ValidateMyEnum(MyEnum::from(42)), None);
+}

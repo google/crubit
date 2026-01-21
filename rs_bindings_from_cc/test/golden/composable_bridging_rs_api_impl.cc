@@ -130,6 +130,30 @@ extern "C" void __rust_thunk___Z16ReturnsCStrArrayv(
 
 static_assert((struct MyOption<const char**> (*)()) & ::ReturnsCStrArray);
 
+extern "C" void __rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::internal::Encode<
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::DefaultEnum>>>(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::DefaultEnum>>(
+          ::crubit::TransmuteAbi<::DefaultEnum>()),
+      __return_abi_buffer, ReturnsDefaultEnumInComposableBridgeType());
+}
+
+static_assert((struct MyOption<DefaultEnum> (*)()) &
+              ::ReturnsDefaultEnumInComposableBridgeType);
+
+extern "C" void __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::internal::Encode<
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::I64Enum>>>(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::I64Enum>>(
+          ::crubit::TransmuteAbi<::I64Enum>()),
+      __return_abi_buffer, ReturnsI64EnumInComposableBridgeType());
+}
+
+static_assert((struct MyOption<I64Enum> (*)()) &
+              ::ReturnsI64EnumInComposableBridgeType);
+
 static_assert(
     CRUBIT_SIZEOF(
         class std::basic_string_view<wchar_t, std::char_traits<wchar_t>>) ==

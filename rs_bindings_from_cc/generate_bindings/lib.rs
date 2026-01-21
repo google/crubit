@@ -680,6 +680,41 @@ fn generate_rs_api_impl_includes(
     CppIncludes { internal_includes, ir_includes }
 }
 
+fn make_transmute_abi_type_from_item(
+    item: &impl GenericItem,
+    rs_name: &str,
+    cc_name: &str,
+    db: &dyn BindingsGenerator,
+) -> Result<CrubitAbiType> {
+    // Rust names are of the form ":: tuples_golden :: NontrivialDrop"
+    let mut rust_path = rs_name;
+    let mut start_with_colon2 = false;
+    if let Some(strip_universal_qualifier) = rust_path.strip_prefix(":: ") {
+        start_with_colon2 = true;
+        rust_path = strip_universal_qualifier;
+    }
+    let rust_type = FullyQualifiedPath {
+        start_with_colon2,
+        parts: rust_path
+            .split("::")
+            .map(|ident| {
+                syn::parse_str::<Ident>(ident.trim()).map_err(|_| {
+                    anyhow!(
+                        "The type `{ident}` does not parse as an identifier. \
+                        This may be because it contains template parameters, and \
+                        bridging such types by value is not yet supported."
+                    )
+                })
+            })
+            .collect::<Result<Rc<[Ident]>>>()?,
+    };
+
+    let cpp_type = make_cpp_type_from_item(item, &cc_name.split("::").collect::<Vec<&str>>(), db)?
+        .to_token_stream();
+
+    Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+}
+
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
 fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
@@ -701,40 +736,18 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 cpp_type: cpp_tokens,
             })
         }
-        RsTypeKind::Enum { .. } => bail!("RsTypeKind::Enum is not supported yet"),
-        RsTypeKind::ExistingRustType(existing_rust_type) => {
-            // Rust names are of the form ":: tuples_golden :: NontrivialDrop"
-            let mut rust_path = existing_rust_type.rs_name.as_ref();
-            let mut start_with_colon2 = false;
-            if let Some(strip_universal_qualifier) = rust_path.strip_prefix(":: ") {
-                start_with_colon2 = true;
-                rust_path = strip_universal_qualifier;
-            }
-            let rust_type = FullyQualifiedPath {
-                start_with_colon2,
-                parts: rust_path
-                    .split("::")
-                    .map(|ident| {
-                        syn::parse_str::<Ident>(ident.trim()).map_err(|_| {
-                            anyhow!(
-                                "The type `{ident}` does not parse as an identifier. \
-                        This may be because it contains template parameters, and \
-                        bridging such types by value is not yet supported."
-                            )
-                        })
-                    })
-                    .collect::<Result<Rc<[Ident]>>>()?,
-            };
-
-            let cpp_type = make_cpp_type_from_item(
-                existing_rust_type.as_ref(),
-                &existing_rust_type.cc_name.split("::").collect::<Vec<&str>>(),
-                db,
-            )?
-            .to_token_stream();
-
-            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
-        }
+        RsTypeKind::Enum { enum_, .. } => make_transmute_abi_type_from_item(
+            enum_.as_ref(),
+            enum_.rs_name.identifier.as_ref(),
+            enum_.cc_name.identifier.as_ref(),
+            db,
+        ),
+        RsTypeKind::ExistingRustType(existing_rust_type) => make_transmute_abi_type_from_item(
+            existing_rust_type.as_ref(),
+            existing_rust_type.rs_name.as_ref(),
+            existing_rust_type.cc_name.as_ref(),
+            db,
+        ),
         RsTypeKind::Primitive(primitive) => Ok(match primitive {
             Primitive::Bool => CrubitAbiType::transmute("bool", "bool"),
             Primitive::Void => bail!("values of type `void` cannot be bridged by value"),

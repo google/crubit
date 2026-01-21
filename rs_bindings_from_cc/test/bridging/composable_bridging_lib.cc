@@ -91,3 +91,13 @@ AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice) {
   }
   return slice;
 }
+
+std::optional<MyEnum> ValidateMyEnum(MyEnum value) {
+  switch (value) {
+    case MyEnum::kFoo:
+    case MyEnum::kBar:
+      return value;
+    default:
+      return std::nullopt;
+  }
+}
