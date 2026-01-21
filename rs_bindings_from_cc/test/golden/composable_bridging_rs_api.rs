@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc
 
 #![rustfmt::skip]
-#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls)]
+#![feature(allocator_api, cfg_sanitize, custom_inner_attributes, negative_impls, register_tool)]
 #![allow(stable_features)]
 #![no_std]
 #![allow(improper_ctypes)]
@@ -114,6 +114,52 @@ pub fn ReturnsCStrArray() -> crate::MyOption<*mut *const ::ffi_11::c_char> {
         ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<*mut*const::ffi_11::c_char>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<*mut*const::ffi_11::c_char>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z16ReturnsCStrArrayv(__return_abi_buffer,); })
     }
 }
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+///CRUBIT_ANNOTATE: cpp_type=DefaultEnum
+pub struct DefaultEnum(::ffi_11::c_int);
+impl DefaultEnum {
+    pub const kZero: DefaultEnum = DefaultEnum(0);
+    pub const kOne: DefaultEnum = DefaultEnum(1);
+    pub const kTwo: DefaultEnum = DefaultEnum(2);
+}
+impl From<::ffi_11::c_int> for DefaultEnum {
+    fn from(value: ::ffi_11::c_int) -> DefaultEnum {
+        DefaultEnum(value)
+    }
+}
+impl From<DefaultEnum> for ::ffi_11::c_int {
+    fn from(value: DefaultEnum) -> ::ffi_11::c_int {
+        value.0
+    }
+}
+
+// Error while generating bindings for function 'ReturnsDefaultEnumInComposableBridgeType':
+// RsTypeKind::Enum is not supported yet
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+///CRUBIT_ANNOTATE: cpp_type=I64Enum
+pub struct I64Enum(::ffi_11::c_long);
+impl I64Enum {
+    pub const kNegOne: I64Enum = I64Enum(-1);
+    pub const kZero: I64Enum = I64Enum(0);
+    pub const kOne: I64Enum = I64Enum(1);
+}
+impl From<::ffi_11::c_long> for I64Enum {
+    fn from(value: ::ffi_11::c_long) -> I64Enum {
+        I64Enum(value)
+    }
+}
+impl From<I64Enum> for ::ffi_11::c_long {
+    fn from(value: I64Enum) -> ::ffi_11::c_long {
+        value.0
+    }
+}
+
+// Error while generating bindings for function 'ReturnsI64EnumInComposableBridgeType':
+// RsTypeKind::Enum is not supported yet
 
 // Error while generating bindings for struct 'std::integral_constant<bool, false>':
 // Can't generate bindings for std::integral_constant<bool, false>, because of missing required features (crubit.rs-features):
