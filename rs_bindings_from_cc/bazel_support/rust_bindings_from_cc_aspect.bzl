@@ -232,7 +232,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # 1. We don't need Crubit bindings for `_cc_lib` for protobuf interop, we use protoc for that.
     # 2. We know that transitive deps of `_cc_lib` will get Crubit bindings through the "3 aspects"
     #    path if they are needed.
-    if "@protobuf//bazel/private:google_cc_proto_library.bzl%cc_proto_aspect" not in ctx.aspect_ids:
+    if not _has_cc_proto_aspect(ctx):
         return []
 
     # We use a fake generator only when we are building the real one, in order to avoid
