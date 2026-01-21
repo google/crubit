@@ -8,8 +8,7 @@
 
 use ctor::{
     copy, ctor, emplace, mov, raw_ctor, recursively_pinned, try_emplace, Assign, Ctor, CtorNew,
-    Emplace, FnCtor, ManuallyDropCtor, Reconstruct, RecursivelyPinned, RvalueReference, Slot,
-    UnreachableCtor,
+    Emplace, FnCtor, ManuallyDropCtor, RecursivelyPinned, RvalueReference, Slot, UnreachableCtor,
 };
 use googletest::gtest;
 use std::cell::RefCell;
@@ -18,6 +17,12 @@ use std::mem::ManuallyDrop;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
+
+#[gtest]
+fn test_construct() {
+    let x = ctor::construct(u32::ctor_new(()));
+    assert_eq!(x, 0);
+}
 
 /// Only really need one test for the new super-let syntax, as it uses the same
 /// building blocks as the old syntax.
@@ -260,7 +265,9 @@ fn test_ctor_macro_union() {
     // First, should drop myunion.x.
     unsafe { ManuallyDrop::drop(&mut Pin::into_inner_unchecked(my_union.as_mut()).x) }
     // Second, we can overwrite.
-    my_union.as_mut().reconstruct(ctor!(MyUnion { y: 24 }));
+    unsafe {
+        ctor::reconstruct(my_union.as_mut(), ctor!(MyUnion { y: 24 }));
+    }
     assert_eq!(unsafe { my_union.y }, 24);
 }
 

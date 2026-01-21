@@ -211,7 +211,10 @@ pub unsafe trait Ctor: Sized {
     ///
     /// # Safety
     ///
-    /// `dest` is valid for writes, pinned, and uninitialized.
+    /// `dest` is valid for writes and uninitialized.
+    ///
+    /// This function pins `dest`, so unless `Output: Unpin`, `*dest` must not be moved or otherwise
+    /// invalidated.
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error>;
 
     /// Converts a `Ctor` with error type `Infallible` to one with the provided error type `E`.
@@ -445,6 +448,21 @@ pub fn ctor_error<T: ?Sized, E>(e: E) -> impl Ctor<Output = T, Error = E> {
     impl<T: ?Sized, E> !Unpin for CtorError<T, E> {}
 
     CtorError { e, marker: PhantomData }
+}
+
+/// Construct and return a Rust-movable value from a `Ctor`.
+///
+/// This is a safe, "by value" version of `Ctor::ctor`.
+// TODO(jeanpierreda): Should this be a method on `Ctor`? Should it return `Result`?
+pub fn construct<T: Unpin>(ctor: impl Ctor<Output = T, Error = Infallible>) -> T {
+    let mut value = MaybeUninit::uninit();
+    // SAFETY: `value` is valid for writes and uninitialized, and `T` is `Unpin`.
+    unsafe {
+        ctor.ctor(value.as_mut_ptr()).unwrap();
+    }
+
+    // SAFETY: `ctor.ctor()` initialized `value`.
+    unsafe { value.assume_init() }
 }
 
 /// Trait for smart pointer types which support initialization via `Ctor`.
@@ -1395,6 +1413,8 @@ macro_rules! internal_hlist {
 /// Destroy-then-reconstruct. Sidesteps `operator=`, instead reconstructing
 /// in-place.
 ///
+/// For Rust-movable types, this is equivalent to `*p.as_mut().into_inner() = construct(ctor)`.
+///
 /// If the object cannot be destroyed/reconstructed in place (e.g. it is a base
 /// class subobject), the behavior is undefined.
 ///
@@ -1406,75 +1426,29 @@ macro_rules! internal_hlist {
 /// assignment.
 ///
 /// That means that e.g. instead of calling `x.assign(&*emplace!(foo))`, you can
-/// directly call `x.reconstruct_unchecked(foo)` -- provided you are OK with the
+/// directly call `reconstruct(x, foo)` -- provided you are OK with the
 /// differing constructor/destructor ordering, and satisfy safety criteria.
 ///
 /// # Safety
 ///
-/// Dividing sources of UB by language ruleset:
+/// The behavior is only undefined if `p` refers to C++ object storage, and is a
+/// base class subobject or `[[no_unique_address]]` member.
+/// See: http://eel.is/c++draft/basic.life#8.
 ///
-/// **C++**: The behavior is undefined if `self` is a base class subobject
-/// or `[[no_unique_address]]` member.
+/// If `p` refers to an object stored anywhere else, such as a (non-`no_unique_address`)
+/// field of a struct, or a local variable, then this is safe. In particular, if the caller is
+/// pure Rust code, and uses ordinary Rust storage, then this is safe.
 ///
-/// See: http://eel.is/c++draft/basic.life#8
-///
-/// And see https://chat.google.com/room/AAAAl3r59xQ/auNOifgQa1c for discussion.
-///
-/// **Rust**: This is safe. Note that since this calls `drop()` on
-/// the pinned pointer, it satisfies the pin guarantee, and is allowed to then
-/// re-init it with something else. In effect, this is just the in-place Ctor
-/// version of the existing method `Pin<T>::set(T)`.
-pub trait ReconstructUnchecked: Sized {
-    /// # Safety
-    /// See trait documentation.
-    unsafe fn reconstruct_unchecked(
-        self: Pin<&mut Self>,
-        ctor: impl Ctor<Output = Self, Error = Infallible>,
-    ) {
-        let self_ptr = Pin::into_inner_unchecked(self) as *mut _;
-        core::ptr::drop_in_place(self_ptr);
-        abort_on_unwind(move || {
-            ctor.ctor(self_ptr).unwrap();
-        });
-    }
+/// (Note that since this calls `drop()` on the pinned pointer, it satisfies the pin
+/// guarantee, and is allowed to then re-init it with something else. In effect, this
+/// is just the in-place Ctor version of the existing method `Pin<T>::set(T)`.)
+pub unsafe fn reconstruct<T>(p: Pin<&mut T>, ctor: impl Ctor<Output = T, Error = Infallible>) {
+    let raw_ptr = Pin::into_inner_unchecked(p) as *mut _;
+    core::ptr::drop_in_place(raw_ptr);
+    abort_on_unwind(move || {
+        ctor.ctor(raw_ptr).unwrap();
+    });
 }
-
-impl<T> ReconstructUnchecked for T {}
-
-/// Destroy-then-reconstruct. Sidesteps `operator=`, instead reconstructing
-/// in-place.
-///
-/// If `ctor` unwinds, the process will crash.
-///
-/// This is a bit more fragile than, and a lot less common than, `operator=`,
-/// but allows for taking advantage of copy/move elision more aggressively,
-/// rather than requiring materialization into a temporary before triggering
-/// assignment.
-///
-/// That means that e.g. instead of calling `x.assign(&*emplace!(foo))`, you can
-/// directly call `x.reconstruct(foo)` -- provided you are OK with the differing
-/// constructor/destructor ordering.
-///
-/// # Implementation safety
-///
-/// Implementors must ensure that it is safe to destroy and reconstruct the
-/// object. Most notably, if `Self` is a C++ class, it must not be a base class.
-/// See http://eel.is/c++draft/basic.life#8
-///
-/// # Safety
-///
-/// Note that this is not safe to call on `[[no_unique_address]]` member
-/// variables, but the interface is marked safe, because those can only be
-/// produced via unsafe means.
-pub unsafe trait Reconstruct: ReconstructUnchecked {
-    fn reconstruct(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self, Error = Infallible>) {
-        unsafe { self.reconstruct_unchecked(ctor) };
-    }
-}
-
-/// Safety: anything implementing `Unpin` is Rust-assignable, and
-/// Rust-assignment is inherently destroy+reconstruct.
-unsafe impl<T: Unpin> Reconstruct for T {}
 
 /// Run f, aborting if it unwinds.
 ///
@@ -1544,15 +1518,7 @@ where
     T: Unpin + CtorNew<&'a T, Error = Infallible>,
 {
     fn assign(mut self: Pin<&mut Self>, src: &'a Self) {
-        if core::mem::needs_drop::<Self>() {
-            let mut constructed = MaybeUninit::uninit();
-            unsafe {
-                T::ctor_new(src).ctor(constructed.as_mut_ptr()).unwrap();
-                *self = constructed.assume_init();
-            }
-        } else {
-            self.reconstruct(T::ctor_new(src));
-        }
+        *self = construct(T::ctor_new(src));
     }
 }
 
@@ -1561,15 +1527,7 @@ where
     T: Unpin + CtorNew<RvalueReference<'a, T>, Error = Infallible>,
 {
     fn assign(mut self: Pin<&mut Self>, src: RvalueReference<'a, Self>) {
-        if core::mem::needs_drop::<Self>() {
-            let mut constructed = MaybeUninit::uninit();
-            unsafe {
-                T::ctor_new(src).ctor(constructed.as_mut_ptr()).unwrap();
-                *self = constructed.assume_init();
-            }
-        } else {
-            self.reconstruct(T::ctor_new(src));
-        }
+        *self = construct(T::ctor_new(src));
     }
 }
 
@@ -1578,15 +1536,7 @@ where
     T: Unpin + CtorNew<ConstRvalueReference<'a, T>, Error = Infallible>,
 {
     fn assign(mut self: Pin<&mut Self>, src: ConstRvalueReference<'a, Self>) {
-        if core::mem::needs_drop::<Self>() {
-            let mut constructed = MaybeUninit::uninit();
-            unsafe {
-                T::ctor_new(src).ctor(constructed.as_mut_ptr()).unwrap();
-                *self = constructed.assume_init();
-            }
-        } else {
-            self.reconstruct(T::ctor_new(src));
-        }
+        *self = construct(T::ctor_new(src));
     }
 }
 

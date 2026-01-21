@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(negative_impls)]
 
-use ctor::{ctor, emplace, CtorNew, ReconstructUnchecked};
+use ctor::{ctor, emplace, CtorNew};
 use googletest::prelude::*;
 use nonunpin::{Nonmovable, Nonunpin, NonunpinStruct, ReturnsNonmovable};
 use std::pin::Pin;
@@ -92,7 +92,7 @@ fn test_union_field() {
         }));
         assert_eq!(my_union.cxx_class.value(), 4);
         std::mem::ManuallyDrop::drop(&mut Pin::into_inner_unchecked(my_union.as_mut()).cxx_class);
-        my_union.as_mut().reconstruct_unchecked(ctor!(MyUnion { int: 2 }));
+        ctor::reconstruct(my_union.as_mut(), ctor!(MyUnion { int: 2 }));
         assert_eq!(my_union.int, 2);
     }
 }
