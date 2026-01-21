@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <optional>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -23,7 +22,6 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Testing/Support/Error.h"
 #include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
 #include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
@@ -64,16 +62,6 @@ testing::Matcher<const Evidence&> evidencePropagatedFrom(
       propagatedFrom(PropagatedFromMatcher));
 }
 
-std::string printToString(DefinitionCollectionMode Mode) {
-  switch (Mode) {
-    case DefinitionCollectionMode::kTestWithSummaries:
-      return "WithSummaries";
-    case DefinitionCollectionMode::kTestDirectly:
-      return "Directly";
-  }
-  llvm_unreachable("Unknown CollectionMode");
-}
-
 static llvm::Expected<std::optional<CFGSummary>> summarizeDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source) {
   USRCache UsrCache;
@@ -90,8 +78,7 @@ llvm::Expected<std::optional<CFGSummary>> summarizeTargetFuncDefinition(
   return summarizeDefinitionNamed("target", Source);
 }
 
-std::pair<llvm::Error, std::vector<Evidence>>
-collectFromDefinitionViaSummaryWithErrors(
+std::pair<llvm::Error, std::vector<Evidence>> collectFromDefinitionWithErrors(
     clang::ASTContext& ASTCtx, const Decl& Definition,
     const NullabilityPragmas& Pragmas,
     const PreviousInferences& InputInferences,
@@ -120,10 +107,10 @@ collectFromDefinitionViaSummaryWithErrors(
           Results};
 }
 
-static std::vector<Evidence> collectFromDefinitionViaSummary(
+std::vector<Evidence> collectFromDefinition(
     clang::ASTContext& ASTCtx, const Decl& Definition,
     const NullabilityPragmas& Pragmas, PreviousInferences InputInferences) {
-  auto [Err, Results] = collectFromDefinitionViaSummaryWithErrors(
+  auto [Err, Results] = collectFromDefinitionWithErrors(
       ASTCtx, Definition, Pragmas, InputInferences);
   if (Err) {
     // Can't assert from within a non-void helper function, so only ADD_FAILURE.
@@ -133,55 +120,22 @@ static std::vector<Evidence> collectFromDefinitionViaSummary(
   return Results;
 }
 
-static std::vector<Evidence> collectFromDefinitionDirectly(
-    clang::ASTContext& ASTCtx, const Decl& Definition,
-    const NullabilityPragmas& Pragmas,
-    PreviousInferences InputInferences = {}) {
-  std::vector<Evidence> Results;
-  USRCache UsrCache;
-  // Can't assert from within a non-void helper function, so only EXPECT.
-  EXPECT_THAT_ERROR(
-      collectEvidenceFromDefinition(
-          Definition,
-          evidenceEmitterWithPropagation(
-              [&Results](Evidence E) { Results.push_back(std::move(E)); },
-              UsrCache, ASTCtx),
-          UsrCache, Pragmas, InputInferences),
-      llvm::Succeeded());
-  return Results;
-}
-
-std::vector<Evidence> collectFromDefinition(
-    clang::ASTContext& ASTCtx, const Decl& Definition,
-    const NullabilityPragmas& Pragmas, DefinitionCollectionMode Mode,
-    PreviousInferences InputInferences) {
-  switch (Mode) {
-    case DefinitionCollectionMode::kTestWithSummaries:
-      return collectFromDefinitionViaSummary(ASTCtx, Definition, Pragmas,
-                                             InputInferences);
-    case DefinitionCollectionMode::kTestDirectly:
-      return collectFromDefinitionDirectly(ASTCtx, Definition, Pragmas,
-                                           InputInferences);
-  }
-  llvm_unreachable("Unexpected collection mode");
-}
-
 std::vector<Evidence> collectFromDefinitionNamed(
     llvm::StringRef TargetName, llvm::StringRef Source,
-    DefinitionCollectionMode Mode, PreviousInferences InputInferences) {
+    PreviousInferences InputInferences) {
   NullabilityPragmas Pragmas;
   clang::TestAST AST(getAugmentedTestInputs(Source, Pragmas));
   const Decl& Definition =
       *dataflow::test::findValueDecl(AST.context(), TargetName);
-  return collectFromDefinition(AST.context(), Definition, Pragmas, Mode,
+  return collectFromDefinition(AST.context(), Definition, Pragmas,
                                InputInferences);
 }
 
 std::vector<Evidence> collectFromTargetFuncDefinition(
-    llvm::StringRef Source, DefinitionCollectionMode Mode,
-    PreviousInferences InputInferences) {
-  return collectFromDefinitionNamed("target", Source, Mode, InputInferences);
+    llvm::StringRef Source, PreviousInferences InputInferences) {
+  return collectFromDefinitionNamed("target", Source, InputInferences);
 }
+
 std::vector<Evidence> collectFromDecl(llvm::StringRef Source,
                                       llvm::StringRef DeclName) {
   std::vector<Evidence> Results;
