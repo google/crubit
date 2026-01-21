@@ -12,7 +12,10 @@
     *   [Pointer Types](/docs/types/pointer.md)
     *   [`absl::Status`](/docs/types/absl_status.md)
     *   [Protobuf](/docs/types/protobuf.md)
-    *   [Non-Trivially-Relocatable C++ Objects in Rust](/docs/types/non_trivially_relocatable_types.md)
+    *   Non-Rust-Movable Types
+        *   [Quick Introduction](/docs/types/non_rust_movable/intro_short.md)
+        *   [Advanced Introduction](/docs/types/non_rust_movable/intro_advanced.md)
+        *   [Cheat Sheet](/docs/types/non_rust_movable/cheat_sheet.md)
 
 *   [Errors](/docs/errors/)
 

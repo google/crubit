@@ -1,9 +1,10 @@
 <!-- <internal link> -->
 
-# Non-Rust-Movable Types
+# Quick guide: Non-Rust-Movable Types
 
-WARNING: This is early documentation for an unreleased feature, only currently
-available in `:wrapper` mode. The documentation is a WIP.
+This is a short introduction to Crubit's handling of non-Rust-movable types, and
+how to use them in Rust. For a more thorough introduction, see
+crubit.rs/types/non_rust_movable/intro_advanced.
 
 Many, if not most, types in C++ are not Rust-movable. That is, you cannot
 initialize them using `let x = y`, you cannot assign them using `x = y`, and you
@@ -70,6 +71,5 @@ accepts(returns());
 ```
 
 If you want to avoid heap allocations in general, you will need to use the more
-advanced features of `ctor.rs`.
-
-<!-- TODO(b/432107690): Move advanced docs to a sibling file. -->
+advanced features of `ctor.rs`. These are described in more detail in the doc
+comments, and in crubit.rs/types/non_rust_movable/intro_advanced.
