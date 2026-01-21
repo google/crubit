@@ -150,7 +150,6 @@ mod tests {
     use super::*;
     use run_compiler_test_support::setup_rustc_target_for_testing;
     use run_compiler_test_support::sysroot_path;
-    use std::path::PathBuf;
     use tempfile::tempdir;
 
     const DEFAULT_RUST_SOURCE_FOR_TESTING: &'static str = r#" pub mod public_module {
