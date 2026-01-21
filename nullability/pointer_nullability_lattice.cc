@@ -24,8 +24,7 @@ namespace {
 using dataflow::LatticeJoinEffect;
 
 // Returns overridden nullability information associated with a declaration.
-// For now we only track top-level decl nullability symbolically and check for
-// concrete nullability override results.
+// For now we only track top-level decl nullability symbolically.
 const PointerTypeNullability *absl_nullable getDeclNullability(
     const Decl *absl_nullable D,
     const PointerNullabilityLattice::NonFlowSensitiveState &NFS) {
@@ -34,9 +33,6 @@ const PointerTypeNullability *absl_nullable getDeclNullability(
     auto It = NFS.DeclTopLevelNullability.find(VD);
     if (It != NFS.DeclTopLevelNullability.end()) return &It->second;
   }
-  if (const std::optional<const PointerTypeNullability *> N =
-          NFS.ConcreteNullabilityOverride(*D->getCanonicalDecl()))
-    return *N;
   return nullptr;
 }
 

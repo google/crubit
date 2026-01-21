@@ -158,8 +158,7 @@ struct PreviousInferences {
       std::make_shared<const SortedFingerprintVector>();
 };
 
-/// Creates a solver with default parameters that is suitable for passing to
-/// `collectEvidenceFromDefinition()`.
+/// Creates a solver with default parameters that is suitable for inference.
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference();
 
 /// Callback used to report collected nullability evidence.
@@ -178,30 +177,22 @@ llvm::unique_function<EvidenceEmitter> evidenceEmitterWithPropagation(
     llvm::unique_function<EvidenceEmitter> Emit,
     absl_nonnull std::shared_ptr<const VirtualMethodIndex> Index);
 
-/// Analyze code (such as a function body or variable initializer) to infer
-/// nullability.
-///
-/// Produces Evidence constraining the nullability slots of the symbols that
-/// the code interacts with, such as the function's own parameters.
-/// This is based on the code's behavior and our definition of null-safety.
-///
-/// It is up to the caller to ensure the definition is eligible for inference
-/// (function has a body, is not dependent, etc).
-llvm::Error collectEvidenceFromDefinition(
-    const Decl &, llvm::function_ref<EvidenceEmitter>, USRCache &USRCache,
-    const NullabilityPragmas &Pragmas,
-    const PreviousInferences &PreviousInferences = {},
-    const SolverFactory &MakeSolver = makeDefaultSolverForInference);
-
-// Summarizes Nullability-relevant behaviors in and context for `Definition`.
-// If std::nullopt is returned, the analysis succeeded, but there's no relevant
-// content.
+/// Summarizes Nullability-relevant behaviors in and context for `Definition`
+/// (which can be a function body or variable with initializer). An example
+/// Nullability-relevant behavior is: a function parameter is dereferenced
+/// (with or without a null check). The summary can later be used to collect
+/// evidence and infer nullability, based on our definition of null-safety. If
+/// std::nullopt is returned, the analysis succeeded, but there's no relevant
+/// content. It is up to the caller to ensure the definition is eligible for
+/// inference (function has a body, is not dependent, etc).
 llvm::Expected<std::optional<CFGSummary>> summarizeDefinition(
     const Decl& Definition, USRCache& USRCache,
     const NullabilityPragmas& Pragmas,
     const VirtualMethodIndex& VirtualMethodsInTU,
     const SolverFactory& MakeSolver = makeDefaultSolverForInference);
 
+/// Produces Evidence constraining the nullability slots based on the provided
+/// summary and previous inferences.
 llvm::Error collectEvidenceFromSummary(
     const CFGSummary& Summary, llvm::function_ref<EvidenceEmitter> Emit,
     const PreviousInferences& PreviousInferences,
@@ -209,10 +200,9 @@ llvm::Error collectEvidenceFromSummary(
 
 /// Gathers evidence of a symbol's nullability from a declaration of it.
 ///
-/// These are trivial "inferences" of what's already written in the code. e.g:
-///   void foo(Nullable<int*>);
-/// The first parameter of foo must be nullable.
-///
+/// In some cases, these are trivial "inferences" (annotations already written
+/// in the code), and in other cases they are not (e.g., evidence from the RHS
+/// of a parameter's default argument).
 /// It is the caller's responsibility to ensure that the symbol is inferable.
 void collectEvidenceFromTargetDeclaration(const clang::Decl &,
                                           llvm::function_ref<EvidenceEmitter>,
@@ -227,7 +217,7 @@ struct EvidenceSites {
   /// Definitions (e.g. function body, variable initializer) that can be
   /// analyzed.
   /// This will always be concrete code, not a template pattern. These may be
-  /// passed to collectEvidenceFromDefinition().
+  /// passed to summarizeDefinition().
   llvm::DenseSet<const Decl *absl_nonnull> Definitions;
 
   /// Find the evidence sites within the provided AST. If
