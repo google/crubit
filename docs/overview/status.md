@@ -68,27 +68,25 @@ The following types are **not** yet supported, among many others:
 For C++ libraries, used from Rust, we have support for the following **language
 features**, used in public interfaces:
 
-*   rust-movable structs. (Either trivially copyable, or
+*   rust-movable structs and unions. (Either trivially copyable, or
     `[[clang::trivial_abi]]`)
-*   rust-movable unions.
+*   **Non**-Rust-movable structs, via Crubit's `ctor` crate, including
+    nontrivial types.
 *   enums
 *   type aliases
-*   non-overloaded functions (which are **not** member functions)
+*   non-overloaded functions
     *   inline or non-inline
     *   extern "C" or non-extern "C"
+*   non-overloaded member functions, (overloaded) constructors and assignment
+    operators
 
 We have *experimental* unreleased support for the following language features:
 
-*   forward declarations
-*   non-trivial types
-*   b/356224404: non-overloaded member functions, (overloaded) constructors and
-    assignment operators
+*   forward declarations 
 *   templated types, bridged to a non-generic concrete type.
     *   e.g. `vector<int>` becomes `struct __crubit_mangled_vector_i`, not
         `struct vector<T>(...)`
     *   specialization
-*   operator overloading
-*   nullability annotations
 *   lifetime annotations, mapped unsafely to references
 *   Some object-orientation:
     *   types with **non-virtual** base classes
@@ -98,7 +96,7 @@ We have *experimental* unreleased support for the following language features:
 
 The following features are **not** supported yet, among many others:
 
-*   b/213280424: overloading
+*   b/213280424: Overloading in general
 *   b/313733992: Object-Oriented Programming more generally
     *   e.g., cannot derive from a C++ class and override its virtual methods
 *   *safe* support for references
@@ -120,13 +118,14 @@ features, used in public interfaces:
     *   enums
     *   non-repr(C) unions
 *   aliases (via `use`, `type`)
-*   functions and methods
+*   functions and methods, including trait methods
 *   references
 *   specific known traits with equivalents in C++:
     *   `Clone`
     *   `Default`
     *   `Drop`
     *   `From`
+    *   `Into`
 *   simple `const` constants
 *   Defining a C++ enum from Rust
 
@@ -137,7 +136,7 @@ We have *experimental* unreleased support for the following language features:
 
 The following features are **not** supported yet, among others:
 
-*   traits and trait methods in general
+*   associated trait types and constants 
 *   defining C++ abstractions from Rust
     *   inheriting from a C++ class
     *   defining a C++ base class
@@ -187,7 +186,7 @@ This can be resolved by using rmeta files as inputs, instead of source code.
 
 > TODO:
 >
-> *   Crubit accepts pull requests and regularly reviews GitHub issues and PRs.
+> *   Crubit regularly reviews GitHub issues and PRs.
 > *   A C++ stdlib crate exists in crates.io
 > *   The Crubit `ctor` crate is either replaced with `pin-init`, the equivalent
 >     standard library module, or else has a crate in crates.io with
@@ -197,16 +196,16 @@ This can be resolved by using rmeta files as inputs, instead of source code.
 
 ### Build System
 
-We currently only support Bazel.
+We currently only support Bazel, though the `cc_bindings_from_rs` binary itself
+can be built with Cargo.
 
 > TODO:
 >
-> *   cc_bindings_from_rs builds using Cargo
 > *   rs_bindings_from_cc builds using Cargo
 > *   idl_bindings_from_cc, rs_bindings_from_idl build using Cargo
 > *   Crubit is usable as a Bazel dependency
 > *   Crubit is usable as a Bazel dependency
 > *   Crubit builds against public Rust and Clang releases
 > *   Crubit binary releases
+> *   CMake
 > *   (not planned) Buck2
-> *   (not planned) CMake
