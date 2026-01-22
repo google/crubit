@@ -845,8 +845,8 @@ unsafe impl<T: ?Sized, E> Ctor for UnreachableCtor<T, E> {
     }
 }
 
-/// All Rust types are C++-default-constructible if safe (i.e. Unpin + Default).
-impl<T: Unpin + Default> CtorNew<()> for T {
+/// All Rust types that implement `Default` are C++-default-constructible.
+impl<T: Default> CtorNew<()> for T {
     type CtorType = RustMoveCtor<Self>;
     type Error = Infallible;
     fn ctor_new(_: ()) -> Self::CtorType {
@@ -854,11 +854,8 @@ impl<T: Unpin + Default> CtorNew<()> for T {
     }
 }
 
-/// All Unpin Rust types are C++-copyable if they are Rust-cloneable.
-///
-/// (Unpin is required for safety; otherwise, this would violate the Pin
-/// guarantee.)
-impl<T: Unpin + Clone> CtorNew<&T> for T {
+/// All Rust types are C++-copyable if they are Rust-cloneable.
+impl<T: Clone> CtorNew<&T> for T {
     type CtorType = RustMoveCtor<Self>;
     type Error = Infallible;
     fn ctor_new(src: &Self) -> Self::CtorType {
