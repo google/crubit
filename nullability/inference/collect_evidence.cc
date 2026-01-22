@@ -756,13 +756,8 @@ class EvidenceCollector {
   /// * `RHSValueNullability` is the value nullability of the RHS expression.
   ///
   /// * `RHSLoc` is the beginning source location of the RHS expression.
-  ///
-  /// The (unused) fingerprint argument is only included in the signature
-  /// because this method implements the abstract interface required by
-  /// `NullabilityBehaviorVisitor`.
   void collectAssignmentToType(
       bool IsLHSTypeConst, const PointerTypeNullability &LHSTopLevel,
-      std::optional<SlotFingerprint> /* UNUSED */,
       const std::optional<PointerTypeNullability> &RHSTypeNullability,
       const PointerNullState &RHSValueNullability,
       const SerializedSrcLoc &RHSLoc) {
@@ -844,7 +839,6 @@ class EvidenceCollector {
   void collectMustHaveInvariantTypeNullability(
       const PointerTypeNullability& TargetNullability,
       const PointerTypeNullability& NullabilityToMatch,
-      std::optional<SlotFingerprint> /*UNUSED*/,
       const SerializedSrcLoc& CollectionLoc) {
     dataflow::Arena& A = Env.arena();
     if (NullabilityToMatch.concrete() == NullabilityKind::NonNull ||
@@ -2487,12 +2481,9 @@ class SummaryEvidenceCollector {
         loadPointerNullState(Summary.rhs_value_nullability(), Arena, AtomMap);
     if (!RHSValueNullability) return RHSValueNullability.takeError();
 
-    // Callee doesn't use the `LHSFingerprint` argument -- it is only included
-    // because the signature is required by `SummaryCollector`.
     Collector.collectAssignmentToType(
         Summary.lhs_is_non_reference_const(), *LHSTypeNullability,
-        /*LHSFingerprint*/ std::nullopt, RHSTypeNullability,
-        *RHSValueNullability, {Summary.rhs_loc()});
+        RHSTypeNullability, *RHSValueNullability, {Summary.rhs_loc()});
     return llvm::Error::success();
   }
 
@@ -2528,8 +2519,7 @@ class SummaryEvidenceCollector {
 
       if (!TargetNullability) return TargetNullability.takeError();
       Collector.collectMustHaveInvariantTypeNullability(
-          *TargetNullability, *NullabilityToMatch, std::nullopt,
-          {Summary.location()});
+          *TargetNullability, *NullabilityToMatch, {Summary.location()});
     } else {
       Collector.collectMustHaveInvariantTypeNullability(
           Summary.target_symbol().usr(),
@@ -2687,10 +2677,6 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForInference() {
   constexpr std::int64_t MaxSATIterations = 2'000'000;
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
 }
-
-using EBInitHandler =
-    llvm::function_ref<void(std::string_view USR, PointerNullState NullState,
-                            const SerializedSrcLoc &Loc)>;
 
 // If D is a constructor definition, summarizes the exit block.
 // From the summary, we can later potentially produce
