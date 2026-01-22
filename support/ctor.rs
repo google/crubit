@@ -1268,7 +1268,8 @@ pub trait PinnedDrop {
 #[macro_export]
 macro_rules! ctor {
     // Struct {} ctor.
-    ( $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$($body:tt)*} ) => {
+    // TODO(b/469183617): Make the `::` required.
+    ( $t:ident $(:: $ts:ident)* $($(::)? < $($gp:tt),+ >)? {$($body:tt)*} ) => {
         {
             use $t $(:: $ts)* as Type;
 
@@ -1276,7 +1277,7 @@ macro_rules! ctor {
                 #[fields =
                     <Type $(< $( $gp ),+ >)? as $crate::RecursivelyPinned>::CtorInitializedFields]
                 #[unsafe_assert = $crate::macro_internal::require_recursively_pinned::<Type $(< $( $gp ),+ >)?>();]
-                Type $(< $($gp),+ >)? {$($body)*}
+                Type $(:: < $($gp),+ >)? {$($body)*}
             )
         }
     };
@@ -1320,25 +1321,25 @@ macro_rules! ctor {
 /// NOTE: `raw_ctor` only supports `struct {}` syntax.
 #[macro_export]
 macro_rules! raw_ctor {
-    ( $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$($body:tt)*} ) => {
+    ( $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? {$($body:tt)*} ) => {
         {
             use $t $(:: $ts)* as Type;
 
             $crate::unsafe_ctor_impl!(
                 #[fields = Type $(< $( $gp ),+ >)?]
                 #[unsafe_assert = $crate::macro_internal::raw_ctor();]
-                Type $(< $($gp),+ >)? {$($body)*}
+                Type $(:: < $($gp),+ >)? {$($body)*}
             )
         }
     };
-    ( #[fields = $($fields_ty:tt)*] $t:ident $(:: $ts:ident)* $(< $($gp:tt),+ >)? {$($body:tt)*} ) => {
+    ( #[fields = $($fields_ty:tt)*] $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? {$($body:tt)*} ) => {
         {
             use $t $(:: $ts)* as Type;
 
             $crate::unsafe_ctor_impl!(
                 #[fields = $($fields_ty)*]
                 #[unsafe_assert = $crate::macro_internal::raw_ctor();]
-                Type $(< $($gp),+ >)? {$($body)*}
+                Type $(:: < $($gp),+ >)? {$($body)*}
             )
         }
     };
@@ -1359,7 +1360,7 @@ macro_rules! raw_ctor {
 macro_rules! unsafe_ctor_impl {
     (   #[fields = $($fields_ty:tt)*]
         #[unsafe_assert = $($unsafe_assert:tt)*]
-        $Type:ident $(< $($gp:tt),+ >)? {$( $name:tt: $sub_ctor:expr ),* $(,)?}
+        $Type:ident $(:: < $($gp:tt),+ >)? {$( $name:tt: $sub_ctor:expr ),* $(,)?}
     ) => {{
         // We need to capture all the sub_ctor values in advance (in case they are Copy and thus
         // borrowed by reference).

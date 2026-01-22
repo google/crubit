@@ -235,7 +235,7 @@ fn test_recursively_pinned_dst() {
         y: T,
     }
     let x: ::std::pin::Pin<&mut Foo<[u8]>> =
-        ::ctor::emplace!(::ctor::ctor!(Foo<[u8; 1]> { x: 4, y: [2]}));
+        ::ctor::emplace!(::ctor::ctor!(Foo::<[u8; 1]> { x: 4, y: [2] }));
     assert_eq!(x.x, 4);
     assert_eq!(x.y, [2]);
 }
