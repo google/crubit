@@ -260,10 +260,13 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   operator absl::AnyInvocable<Sig>() && {
-    return absl::AnyInvocable<Sig>(
-        reinterpret_cast<void*>(&this->storage_),
-        reinterpret_cast<void (*)()>(this->manager_),
-        reinterpret_cast<void (*)()>(this->invoker_));
+    auto* manager = this->manager_;
+    auto* invoker = this->invoker_;
+    this->manager_ = internal_dyn_callable::EmptyManager;
+    this->invoker_ = nullptr;
+    return absl::AnyInvocable<Sig>(reinterpret_cast<void*>(&this->storage_),
+                                   reinterpret_cast<void (*)()>(manager),
+                                   reinterpret_cast<void (*)()>(invoker));
   }
 
   // Returns `true` if `f` is empty.
