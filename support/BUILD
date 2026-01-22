@@ -100,6 +100,7 @@ crubit_rust_test(
     deps = [
         "//common:token_stream_matchers",
         "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
     ],
 )
 
@@ -139,6 +140,7 @@ rust_test(
     deps = [
         ":ctor",
         "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
     ],
 )
 

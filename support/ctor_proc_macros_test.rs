@@ -239,6 +239,24 @@ fn test_recursively_pinned_dst() {
     assert_eq!(x.x, 4);
     assert_eq!(x.y, [2]);
 }
+#[gtest]
+fn test_recursively_pinned_generic_maybe_unpin() {
+    #[::ctor::recursively_pinned(?Unpin)]
+    struct S<T, U> {
+        x: T,
+        y: U,
+    }
+
+    use ::std::marker::PhantomPinned; // TODO(b/477396909): make this workaround unnecessary.
+    static_assertions::assert_impl_all!(S<i32, i32>: Unpin);
+    static_assertions::assert_not_impl_any!(S<i32, ::std::marker::PhantomPinned>: Unpin);
+
+    // And it can actually be constructed either way.
+    let _ = ::ctor::emplace!(::ctor::ctor!(S<i32, i32> { x: 42, y: 43 }));
+    let _ = ::ctor::emplace!(
+        ::ctor::ctor!(S<i32, PhantomPinned> { x: 42, y: ::ctor::PhantomPinnedCtor })
+    );
+}
 
 #[gtest]
 fn test_recursively_pinned_struct_derive_default() {
@@ -314,4 +332,17 @@ fn test_pinned_drop() {
     let called_drop = Rc::new(Cell::new(false));
     let _ = DropStruct(called_drop.clone());
     assert!(called_drop.get(), "PinnedDrop::pinned_drop was not called");
+}
+
+#[gtest]
+fn test_maybe_unpin() {
+    #[::ctor::recursively_pinned(?Unpin)]
+    struct S {
+        x: i32,
+    }
+
+    static_assertions::assert_impl_all!(S: Unpin);
+
+    // And it can actually be constructed.
+    let _ = ::ctor::emplace!(::ctor::ctor!(S { x: 42 }));
 }

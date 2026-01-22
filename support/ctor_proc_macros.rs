@@ -380,6 +380,7 @@ fn add_lifetime(generics: &mut syn::Generics, prefix: &str) -> proc_macro2::Toke
 
 enum RecursivelyPinnedArg {
     PinnedDrop,
+    MaybeUnpin,
     RenamedCrate(Ident),
 }
 
@@ -387,21 +388,27 @@ impl Parse for RecursivelyPinnedArg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         if input.peek(Token![crate]) {
             let CrateRename(new_crate) = input.parse()?;
-            Ok(RecursivelyPinnedArg::RenamedCrate(new_crate))
+            return Ok(RecursivelyPinnedArg::RenamedCrate(new_crate));
+        } else if input.peek(Token![?]) {
+            let _: Token![?] = input.parse().unwrap();
+            let ident: Ident = input.parse()?;
+            if ident == "Unpin" {
+                return Ok(RecursivelyPinnedArg::MaybeUnpin);
+            }
         } else if input.parse::<Ident>()? == "PinnedDrop" {
-            Ok(RecursivelyPinnedArg::PinnedDrop)
-        } else {
-            Err(syn::Error::new(
-                input.span(),
-                format!("unexpected argument: expected PinnedDrop or crate=..., but got: {input}"),
-            ))
+            return Ok(RecursivelyPinnedArg::PinnedDrop);
         }
+        Err(syn::Error::new(
+            input.span(),
+            format!("unexpected argument: expected PinnedDrop, `?Unpin`, or crate=..., but got: {input}"),
+        ))
     }
 }
 
 #[derive(Default)]
 struct RecursivelyPinnedArgs {
     is_pinned_drop: bool,
+    is_maybe_unpin: bool,
     renamed_crate: Option<Ident>,
 }
 
@@ -416,6 +423,9 @@ impl Parse for RecursivelyPinnedArgs {
             match arg {
                 RecursivelyPinnedArg::PinnedDrop => {
                     result.is_pinned_drop = true;
+                }
+                RecursivelyPinnedArg::MaybeUnpin => {
+                    result.is_maybe_unpin = true;
                 }
                 RecursivelyPinnedArg::RenamedCrate(ident) => {
                     result.renamed_crate = Some(ident);
@@ -544,6 +554,46 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
 /// ```
 ///
 /// (This is analogous to `#[pin_project(PinnedDrop)]`.)
+///
+/// ## `?Unpin`
+///
+/// `?Unpin` removes the default `!Unpin` impl, instead inheriting pinnedness from the fields
+/// of the struct.
+///
+/// `#[recursively_pinned]`, unlike `#[pin_project]`, by default marks the struct
+/// as `!Unpin`, even if all of the fields are `Unpin`. This is typically desirable,
+/// because `Unpin` is used as a discriminator trait throughout `ctor` to make certain trait
+/// impls available: in particular the `Ctor` trait itself, which is implemented as a Rust move
+/// for all `Unpin` Rust types, but also `Assign` and `CtorNew`.
+///
+/// In the context of a _generic_ struct such as `Foo<T>`, you might want the struct to be
+/// have the default struct behavior, and implement `Unpin` if and only if its fields do.
+/// However, without negative trait bounds or specialization in the Rust language, this makes it
+/// impossible to implement some of the traits within `ctor`, such as `CtorNew` and `Assign`,
+/// which are meant to be near-universal across all types. To implement that universality, they
+/// have a blanket impl for `Unpin` types, which would collide with any implementation for
+/// `Foo<T>` if `Foo<T>` is only conditionally `!Unpin`.
+///
+/// (This problem is unique to generic types: for a generic type, the blanket impl would apply for
+/// some type parameters, while you might want to hand-write an implementation for other type
+/// parameters. Rust offers no way to do this. For a concrete type, you only need one impl and
+/// can decide on it in advance.)
+///
+/// See also the Blanket impls section in the main ctor documentation.
+///
+/// If you do not need your type to work with interfaces that might blanket impl for `Unpin` types,
+/// you can disable the default `!Unpin` impl by passing `?Unpin` to `#[recursively_pinned]`:
+///
+/// ```
+/// #[recursively_pinned(?Unpin)]
+/// struct S<T> {
+///   field: T,
+/// }
+/// ```
+///
+/// `S` will implement `Unpin` if and only if all its fields do. It will never implement `!Unpin`.
+///
+/// TODO(b/477393585): Reconsider this design!
 ///
 /// ### `crate=<ident>`
 ///
@@ -674,13 +724,21 @@ fn recursively_pinned_impl(
         }
     };
 
+    let unpin_impl = if args.is_maybe_unpin {
+        quote! {}
+    } else {
+        quote! {
+            impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
+        }
+    };
+
     Ok(quote! {
         #input
         #project_pin_impl
         #project_ref_impl
 
         #drop_impl
-        impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
+        #unpin_impl
 
         // Introduce a new scope to limit the blast radius of the CtorInitializedFields type.
         // This lets us use relatively readable names: while the impl is visible outside the scope,
