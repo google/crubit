@@ -193,6 +193,18 @@ MATCHER_P(CcDeclIdIs, decl_id, "") {
 // Matches an CcType that is const .
 MATCHER(IsConst, "") { return arg.is_const; }
 
+// Matches a CcType pointer with kind `kind`.
+MATCHER_P(IsPointerWithKind, kind, "") {
+  const auto* pointer = std::get_if<CcType::PointerType>(&arg.variant);
+  if (pointer == nullptr) {
+    *result_listener << "was not a pointer";
+    return false;
+  }
+  if (pointer->kind == kind) return true;
+  *result_listener << "wrong pointer kind";
+  return false;
+}
+
 // Matches a CcType that is a pointer to a type matching `matcher`.
 template <typename Matcher>
 auto CcPointsTo(const Matcher& matcher) {
@@ -1084,6 +1096,41 @@ TEST(ImporterTest,
           ParamsAre(ParamType(AllOf(ExplicitLifetimesAre("a", "b", "c", "d"),
                                     UnknownAttributesAre(""),
                                     Not(HasLifetimes()), IsIntRef())))))));
+}
+
+TEST(ImporterTest, AssumedLifetimesCapturesImplicitThisLifetime) {
+  absl::string_view file = R"cc(
+    struct S {
+      int* $b f() $a;
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(AllOf(
+                  IdentifierIs("f"), ReturnType(ExplicitLifetimesAre("b")),
+                  ParamsAre(AllOf(
+                      IdentifierIs("__this"),
+                      ParamType(AllOf(
+                          ExplicitLifetimesAre("a"), Not(HasLifetimes()),
+                          IsPointerWithKind(PointerTypeKind::kNonNull)))))))));
+}
+
+TEST(ImporterTest, AssumedLifetimesCapturesImplicitThisLifetimeRvalueRef) {
+  absl::string_view file = R"cc(
+    struct S {
+      int* $b f() && $a;
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(
+          AllOf(IdentifierIs("f"), ReturnType(ExplicitLifetimesAre("b")),
+                ParamsAre(AllOf(
+                    IdentifierIs("__this"),
+                    ParamType(AllOf(
+                        ExplicitLifetimesAre("a"), Not(HasLifetimes()),
+                        IsPointerWithKind(PointerTypeKind::kRValueRef)))))))));
 }
 }  // namespace
 }  // namespace crubit

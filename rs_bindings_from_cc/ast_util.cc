@@ -170,12 +170,19 @@ absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
   // We're looking at ((t ($a, $b)) ($c, $d)) and want to get a flattened list
   // of [a; b; c; d].
   while (const auto* attributed_type = type->getAs<clang::AttributedType>()) {
-    if (attributed_type->getAttr() == nullptr) continue;
+    if (attributed_type->getAttr() == nullptr) {
+      type = attributed_type->getEquivalentType().getTypePtr();
+      if (type == nullptr) break;
+      continue;
+    }
     auto annotate_type_attr =
         clang::dyn_cast<clang::AnnotateTypeAttr>(attributed_type->getAttr());
     if (annotate_type_attr == nullptr ||
-        annotate_type_attr->getAnnotation() != "lifetime")
+        annotate_type_attr->getAnnotation() != "lifetime") {
+      type = attributed_type->getEquivalentType().getTypePtr();
+      if (type == nullptr) break;
       continue;
+    }
     if (size_t n_args = annotate_type_attr->args_size(); n_args != 0) {
       lifetimes.resize(lifetimes.size() + n_args);
       size_t arg_index = 0;
@@ -187,6 +194,7 @@ absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
       }
     }
     type = attributed_type->getEquivalentType().getTypePtr();
+    if (type == nullptr) break;
   }
   std::reverse(lifetimes.begin(), lifetimes.end());
   return lifetimes;

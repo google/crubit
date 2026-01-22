@@ -96,7 +96,6 @@ cc_library(
     hdrs = ["function.h"],
     deps = [
         "//common:annotation_reader",
-        "//common:status_macros",
         "//lifetime_annotations",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:lifetime_error",
@@ -106,6 +105,7 @@ cc_library(
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
         "//rs_bindings_from_cc:recording_diagnostic_consumer",
+        "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/container:btree",
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status",

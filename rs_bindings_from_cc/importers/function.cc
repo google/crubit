@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/function.h"
 
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
@@ -12,11 +13,13 @@
 #include <variant>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/container/btree_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 #include "common/annotation_reader.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_annotations.h"
@@ -124,15 +127,16 @@ SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
 // type of `f` will result in a pointer type, even though the method is rvalue
 // ref qualified and has a lifetime. This function will update the `this`
 // parameter type to be an rvalue reference instead.
-void ApplyRefQualifierToThisPointer(
-    CcType& this_param_type, clang::RefQualifierKind ref_qualifier_kind) {
+void ApplyRefQualifierToThisPointer(CcType& this_param_type,
+                                    clang::RefQualifierKind ref_qualifier_kind,
+                                    bool assumed_lifetimes_enabled) {
   auto* pointer = std::get_if<CcType::PointerType>(&this_param_type.variant);
   // The CcType of `this` should always be a pointer.
   CHECK(pointer != nullptr);
 
   // Now we go back and fix the `this` parameter type to be a reference
   // if it was a rvalue ref qualified and had a lifetime.
-  if (pointer->lifetime.has_value() &&
+  if ((assumed_lifetimes_enabled || pointer->lifetime.has_value()) &&
       ref_qualifier_kind == clang::RefQualifierKind::RQ_RValue) {
     // It was just a non null pointer, but because of the rvalue ref
     // qualification, it should be an rvalue reference.
@@ -403,18 +407,55 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       if (lifetimes) {
         this_lifetimes = &lifetimes->GetThisLifetimes();
       }
-      absl::StatusOr<CcType> this_param_type = ictx_.ConvertQualType(
-          method_decl->getThisType(), this_lifetimes, /*nullable=*/false,
+      bool assumed_lifetimes_enabled =
           ictx_.AreAssumedLifetimesEnabledForTarget(
-              ictx_.GetOwningTarget(method_decl)));
+              ictx_.GetOwningTarget(method_decl));
+      absl::StatusOr<CcType> this_param_type =
+          ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
+                                /*nullable=*/false, assumed_lifetimes_enabled);
       if (!this_param_type.ok()) {
         errors.Add(
             FormattedError::PrefixedStrCat("`this` parameter is not supported",
                                            this_param_type.status().message()));
       } else {
+        if (assumed_lifetimes_enabled) {
+          if (auto qual_type = method_decl->getType(); !qual_type.isNull()) {
+            // Since getThisType desugars `this` (among other nontrivial
+            // transformations), we need to post-hoc crawl through annotations
+            // on the CXXMethodDecl to collect lifetimes. For example, for a
+            // function like `int* $b f() && $a [[clang::lifetimebound]]`, we'll
+            // see a type like:
+            //
+            // (AttributedType (AttributedType (FunctionProtoType
+            //     (AttributedType (PointerType ...)))))
+            //
+            // where the first two AttributedTypes are meant to bind to `this`.
+            auto this_lifetime_views = CollectExplicitLifetimes(
+                ictx_.sema_.getASTContext(), *qual_type.getTypePtr());
+            if (!this_lifetime_views.ok()) {
+              errors.Add(FormattedError::PrefixedStrCat(
+                  "Can't collect lifetimes for `this`",
+                  this_lifetime_views.status().message()));
+            } else if (!this_lifetime_views->empty() &&
+                       !this_param_type->explicit_lifetimes.empty()) {
+              errors.Add(FormattedError::PrefixedStrCat(
+                  "Extra explicit lifetimes on `this`",
+                  absl::StrJoin(*this_lifetime_views, ", ")));
+            } else {
+              this_param_type->explicit_lifetimes.reserve(
+                  this_lifetime_views->size());
+              absl::c_transform(
+                  *this_lifetime_views,
+                  std::back_inserter(this_param_type->explicit_lifetimes),
+                  [](absl::string_view lifetime_view) {
+                    return std::string(lifetime_view);
+                  });
+            }
+          }
+        }
         ApplyRefQualifierToThisPointer(*this_param_type,
-                                       method_decl->getRefQualifier());
-
+                                       method_decl->getRefQualifier(),
+                                       assumed_lifetimes_enabled);
         params.push_back(
             {.type = *std::move(this_param_type),
              .identifier = Identifier("__this"),
