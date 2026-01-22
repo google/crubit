@@ -264,3 +264,20 @@ filegroup(
         "//visibility:public",
     ],
 )
+
+rust_library(
+    name = "utf8_lossy",
+    srcs = ["utf8_lossy.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_test(
+    name = "utf8_lossy_test",
+    srcs = ["utf8_lossy.rs"],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
