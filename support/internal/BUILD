@@ -16,6 +16,7 @@ cc_library(
         "slot.h",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
+    copts = ["-Wshadow"],
     visibility = [
         "//visibility:public",
     ],

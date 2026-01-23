@@ -146,7 +146,7 @@ class Slot<std::array<UT, S>> {
   using T = std::array<UT, S>;
   Slot() {}
   explicit constexpr Slot(T&& x) {
-    if constexpr (requires(UT x) { UT(UnsafeRelocateTag{}, std::move(x)); }) {
+    if constexpr (requires(UT t) { UT(UnsafeRelocateTag{}, std::move(t)); }) {
       memcpy(value_.data(), x.data(), sizeof(UT) * S);
     } else {
       value_ = std::move(x);
