@@ -12,14 +12,14 @@ use std::pin::Pin;
 /// address.
 #[gtest]
 fn test_onearg_ctor() {
-    let mut x = emplace!(Nonunpin::ctor_new(42));
+    let x = emplace!(Nonunpin::ctor_new(42));
     assert_eq!(x.value(), 42);
     assert_eq!(x.addr(), &*x as *const _ as usize);
 }
 
 #[gtest]
 fn test_default_ctor() {
-    let mut x = emplace!(Nonunpin::ctor_new(()));
+    let x = emplace!(Nonunpin::ctor_new(()));
     assert_eq!(x.value(), 0);
     assert_eq!(x.addr(), &*x as *const _ as usize);
 }

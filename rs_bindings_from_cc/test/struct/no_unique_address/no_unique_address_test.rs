@@ -32,7 +32,7 @@ fn test_field_in_tail_padding() {
 
 #[gtest]
 fn test_struct_with_fields_written_before_empty_no_unique_address_field() {
-    let mut s = emplace!(StructWithFieldsWrittenBeforeEmptyNoUniqueAddressField::Make(1));
+    let s = emplace!(StructWithFieldsWrittenBeforeEmptyNoUniqueAddressField::Make(1));
     assert_eq!(s.field1, 1);
     assert_eq!(s.no_unique_address_empty_field().method(), 12345);
 }
