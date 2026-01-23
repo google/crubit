@@ -12,7 +12,7 @@ rust_library(
     crate_features = [],
     proc_macro_deps = ["//support:forward_declare_proc_macros"],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=extern_types,negative_impls,vec_into_raw_parts"],
+    rustc_flags = ["-Zallow-features=extern_types,negative_impls"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
 )
 

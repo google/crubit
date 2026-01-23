@@ -30,14 +30,6 @@ For each feature we use, we document the following:
     fields, this is a compatibility break, and we'd need to add a PhantomData
     field to all C++ types to mark them as `!Send`, `!Unpin`, etc.
 
-### `vec_into_raw_parts`
-
-*   **Crubit feature:** `experimental`
-*   **Use case:** Used for conversions of vectors of forward-declared objects,
-    which is not yet released.
-*   **Exit strategy:** We could delete this if we had to. Hopefully low-risk,
-    people love raw parts.
-
 ### `extern_types`
 
 *   **Crubit feature:** `experimental`

@@ -1,7 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#![feature(negative_impls, vec_into_raw_parts, extern_types)]
+#![feature(negative_impls, extern_types)]
 #![cfg_attr(
     feature = "unstable",
     allow(incomplete_features),
