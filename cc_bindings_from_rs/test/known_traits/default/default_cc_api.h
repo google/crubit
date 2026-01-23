@@ -31,6 +31,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   SomeStruct();
 
+  // Synthesized tuple constructor
+  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
@@ -48,7 +51,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=31
   static std::int32_t extract_int(::rs_default::derived_impl::SomeStruct s);
 
- private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=28
@@ -72,6 +74,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   SomeStruct();
 
+  // Synthesized tuple constructor
+  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
@@ -89,7 +94,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=19
   static std::int32_t extract_int(::rs_default::explicit_impl::SomeStruct s);
 
- private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=10
@@ -175,7 +179,6 @@ StructWithFieldWithNoDefault final {
   static std::int32_t extract_int(
       ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s);
 
- private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=41
@@ -200,6 +203,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   SomeStruct() = delete;
 
+  // Synthesized tuple constructor
+  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
@@ -212,8 +218,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
     memcpy(this, &value, sizeof(value));
   }
-
- private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=64
@@ -237,6 +241,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Default::default
   SomeStruct();
 
+  // Synthesized tuple constructor
+  explicit SomeStruct(std::int32_t __field0) : __field0(std::move(__field0)) {}
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
   SomeStruct(SomeStruct&&) = default;
@@ -254,7 +261,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // cc_bindings_from_rs/test/known_traits/default/default.rs;l=73
   std::int32_t extract_int() const;
 
- private:
   union {
     // Generated from:
     // cc_bindings_from_rs/test/known_traits/default/default.rs;l=70

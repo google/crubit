@@ -9,7 +9,7 @@
 /// refer back to the struct).
 pub mod basic_static_method {
     /// No-op `i32` placeholder is used, because ZSTs are not supported.
-    pub struct Math(i32);
+    pub struct Math(pub i32);
 
     impl Math {
         pub fn add_i32(x: i32, y: i32) -> i32 {
@@ -20,7 +20,7 @@ pub mod basic_static_method {
 
 /// Test coverage of methods taking `&self`, `&mut self`, and `self`.
 pub mod instance_methods {
-    pub struct Number(i32);
+    pub struct Number(pub i32);
 
     impl Number {
         pub fn create(i: i32) -> Self {
@@ -39,7 +39,7 @@ pub mod instance_methods {
 }
 
 pub mod static_method_taking_same_struct_by_value {
-    pub struct Number(i32);
+    pub struct Number(pub i32);
 
     impl Number {
         pub fn create(i: i32) -> Self {
@@ -64,8 +64,8 @@ pub mod static_method_taking_same_struct_by_value {
 /// return multiple snippets - this means that method declarations and method
 /// definitions can be reordered independently.
 pub mod non_contiguous_method_decls_and_defs {
-    pub struct S1(i32);
-    pub struct S2(i32);
+    pub struct S1(pub i32);
+    pub struct S2(pub i32);
 
     impl S1 {
         pub fn create(i: i32) -> Self {

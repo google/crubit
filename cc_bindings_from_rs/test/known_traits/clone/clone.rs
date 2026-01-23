@@ -8,7 +8,7 @@
 /// Test of an explicit impl of a trait: `impl Clone for SomeStruct`.
 /// Only `clone` is provided, `clone_from` uses the default implementation.
 pub mod explicit_impl_of_mandatory_method {
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl Clone for SomeStruct {
         fn clone(&self) -> Self {
@@ -31,7 +31,7 @@ pub mod explicit_impl_of_mandatory_method {
 /// Test of an explicit impl of a trait: `impl Clone for SomeStruct`.
 /// Both `clone` and `clone_from` are implemented.
 pub mod explicit_impl_of_all_methods {
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl Clone for SomeStruct {
         fn clone(&self) -> Self {
@@ -61,7 +61,7 @@ pub mod explicit_impl_of_all_methods {
 /// Test of a derived impl of a trait: `#[derive(Clone)]`.
 pub mod derived_impl {
     #[derive(Clone)]
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl SomeStruct {
         pub fn create_struct(i: i32) -> Self {
@@ -82,10 +82,10 @@ pub mod derived_impl_with_non_default_field {
     /// is typed correctly in the C++ bindings and not replaced with a blob
     /// of bytes.
     #[derive(Clone)]
-    pub struct InnerStruct(i32);
+    pub struct InnerStruct(pub i32);
 
     #[derive(Clone)]
-    pub struct SomeStruct(InnerStruct);
+    pub struct SomeStruct(pub InnerStruct);
 
     impl SomeStruct {
         pub fn create_struct(i: i32) -> Self {
@@ -93,12 +93,12 @@ pub mod derived_impl_with_non_default_field {
         }
 
         pub fn extract_int(s: Self) -> i32 {
-            s.0.0
+            s.0 .0
         }
     }
 }
 
 /// Test of a missing impl of a trait.
 pub mod no_impl {
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 }

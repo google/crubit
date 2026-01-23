@@ -7,7 +7,7 @@
 
 /// Test of an explicit impl of a trait: `impl Default for SomeStruct`.
 pub mod explicit_impl {
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl Default for SomeStruct {
         fn default() -> Self {
@@ -25,7 +25,7 @@ pub mod explicit_impl {
 /// Test of a derived impl of a trait: `#[derive(Default)]`.
 pub mod derived_impl {
     #[derive(Default)]
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl SomeStruct {
         pub fn extract_int(s: Self) -> i32 {
@@ -38,7 +38,7 @@ pub mod derived_impl {
 /// `impl Default`.  This is a regression test for b/288138612.
 pub mod field_with_no_default {
     pub struct StructWithFieldWithNoDefault {
-        field: StructWithoutDefault,
+        pub field: StructWithoutDefault,
     }
 
     impl Default for StructWithFieldWithNoDefault {
@@ -61,13 +61,13 @@ pub mod field_with_no_default {
 
 /// Test of a missing impl of a trait.
 pub mod no_impl {
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 }
 
 pub mod transparent_struct {
     #[repr(transparent)]
     #[derive(Default)]
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl SomeStruct {
         pub fn extract_int(&self) -> i32 {

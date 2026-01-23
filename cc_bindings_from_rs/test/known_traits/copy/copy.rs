@@ -7,7 +7,7 @@
 
 /// Test of an explicit impl of a trait: `impl Clone for SomeStruct`.
 pub mod explicit_impl {
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl Clone for SomeStruct {
         fn clone(&self) -> Self {
@@ -31,7 +31,7 @@ pub mod explicit_impl {
 /// Test of a derived impl of a trait: `#[derive(..., Copy)]`.
 pub mod derived_impl {
     #[derive(Clone, Copy)]
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 
     impl SomeStruct {
         pub fn create_struct(i: i32) -> Self {
@@ -46,5 +46,5 @@ pub mod derived_impl {
 
 /// Test of a missing impl of a trait.
 pub mod no_impl {
-    pub struct SomeStruct(i32);
+    pub struct SomeStruct(pub i32);
 }

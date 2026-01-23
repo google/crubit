@@ -119,11 +119,15 @@ fn test_conversions() {
 /// the same scope.
 #[gtest]
 fn test_hygiene() {
+    #[allow(dead_code)]
     struct MyType1;
+    #[allow(dead_code)]
     type MyTypeSymbol1 = ::forward_declare::symbol!("X1");
     ::forward_declare::unsafe_define!(MyTypeSymbol1, MyType1);
 
+    #[allow(dead_code)]
     struct MyType2;
+    #[allow(dead_code)]
     type MyTypeSymbol2 = ::forward_declare::symbol!("X2");
     ::forward_declare::unsafe_define!(MyTypeSymbol2, MyType2);
 }
