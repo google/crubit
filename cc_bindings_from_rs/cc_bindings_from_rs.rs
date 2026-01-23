@@ -16,7 +16,10 @@ extern crate rustc_target;
 
 use rustc_errors::registry;
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{self as config, ErrorOutputType, Sysroot, UnstableOptions};
+use rustc_session::config::{
+    self as config, CodegenOptions, ErrorOutputType, OptionsTargetModifiers, Sysroot,
+    UnstableOptions,
+};
 use rustc_session::search_paths::SearchPath;
 use rustc_session::EarlyDiagCtxt;
 
@@ -218,6 +221,17 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     // We just need an instance of this struct so we can reuse the logic in rustc rather than
     // duplicate it.
     let unstable_opts = UnstableOptions::default();
+    // Ignore target modifiers.
+    // These will cause a compilation error when we load our metadata if the crate under compilation
+    // set them and we did not. But we don't care about setting them because we aren't actually
+    // going to do codegen, so we mark them all as ignored via `unsafe_allow_abi_mismatch`.
+    let mut cg = CodegenOptions::default();
+    rustc_session::config::CG_OPTIONS
+        .iter()
+        .map(|opt| opt.name())
+        .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
+        .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
+        .for_each(|name| cg.unsafe_allow_abi_mismatch.push(name.to_string()));
 
     let externs = config::parse_externs(&early_dcx, &matches, &unstable_opts);
 
@@ -267,9 +281,9 @@ fn main() {{}}
         // Command line options
         opts: config::Options {
             externs,
-            // Fix this up
             search_paths,
             target_triple,
+            cg,
             ..config::Options::default()
         },
         // cfg! configuration in addition to the default ones
