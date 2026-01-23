@@ -123,6 +123,88 @@ impl c_char {
     }
 }
 
+mod private {
+    use super::*;
+
+    pub trait Sealed {}
+    impl Sealed for c_char {}
+    impl Sealed for core::ffi::c_char {}
+    impl Sealed for core::ffi::CStr {}
+    impl Sealed for *const c_char {}
+    impl Sealed for *const core::ffi::c_char {}
+}
+
+use private::Sealed;
+
+/// Mirrors behavior of `as_ptr` on various APIs in `std::ffi` but producing their `ffi_11` pointer
+/// types, rather than the `std::ffi` pointer types. Implementations of this trait document
+/// conversions that are well behaved for the given type.
+pub trait AsFfi11Ptr: Sealed {
+    type Ptr;
+    fn as_ffi_11_ptr(&self) -> Self::Ptr;
+}
+
+/// Mirrors behavior of `from_ptr` on various APIs in `std::ffi` but producing their `ffi_11` pointer
+/// types, rather than the `std::ffi` pointer types. Implementations of this trait document
+/// conversions that are well behaved for the given types.
+pub unsafe trait FromFfi11Ptr: Sealed {
+    type Ptr;
+    /// # Safety
+    ///
+    /// Callers are responsible for ensuring that `ptr` is valid for their conversion.
+    unsafe fn from_ffi_11_ptr<'a>(ptr: Self::Ptr) -> &'a Self;
+}
+
+impl AsFfi11Ptr for core::ffi::CStr {
+    type Ptr = *const c_char;
+    fn as_ffi_11_ptr(&self) -> Self::Ptr {
+        self.as_ptr().cast()
+    }
+}
+
+unsafe impl FromFfi11Ptr for core::ffi::CStr {
+    type Ptr = *const c_char;
+
+    /// # Safety
+    ///
+    /// * The memory pointed to by `ptr` must contain a valid nul terminator at the
+    ///   end of the string.
+    ///
+    /// * `ptr` must be [valid] for reads of bytes up to and including the nul terminator.
+    ///   This means in particular:
+    ///
+    ///     * The entire memory range of this `CStr` must be contained within a single allocation!
+    ///     * `ptr` must be non-null even for a zero-length cstr.
+    ///
+    /// * The memory referenced by the returned `CStr` must not be mutated for
+    ///   the duration of lifetime `'a`.
+    ///
+    /// * The nul terminator must be within `isize::MAX` from `ptr`
+    unsafe fn from_ffi_11_ptr<'a>(ptr: Self::Ptr) -> &'a Self {
+        unsafe { core::ffi::CStr::from_ptr(ptr.cast()) }
+    }
+}
+
+/// Casts between `ffi_11` pointers and their `std::ffi` equivalents. Equivalent to a `pointer::cast`
+/// call, but the trait implementation documents that this is an intended and well-behaved cast.
+pub trait CastFfi11: Sealed {
+    type Target;
+    fn cast_ffi_11(self) -> Self::Target;
+}
+impl CastFfi11 for *const c_char {
+    type Target = *const core::ffi::c_char;
+    fn cast_ffi_11(self) -> Self::Target {
+        self.cast()
+    }
+}
+
+impl CastFfi11 for *const core::ffi::c_char {
+    type Target = *const c_char;
+    fn cast_ffi_11(self) -> Self::Target {
+        self.cast()
+    }
+}
+
 // Unlike the other new_integer! types, char converts to/from any type with the same bit width.
 
 impl From<c_char> for i8 {

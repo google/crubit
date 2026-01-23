@@ -41,3 +41,14 @@ const _: () = {
     assert_impl_all!(c_longlong: From<i8>, From<u8>, From<i16>, From<i32>, From<i64>, From<c_schar>, From<c_short>, From<c_int>, From<c_long>);
     assert_impl_all!(c_ulonglong: From<u8>, From<u16>, From<u32>, From<u64>, From<c_uchar>, From<c_ushort>, From<c_uint>, From<c_ulong>);
 };
+
+#[test] //allow_core_test
+fn test_cast() {
+    let string = c"Hello, world!";
+    let ffi_11_str_ptr = string.as_ffi_11_ptr();
+
+    assert_eq!(ffi_11_str_ptr.cast_ffi_11(), string.as_ptr());
+    unsafe {
+        assert_eq!(core::ffi::CStr::from_ffi_11_ptr(ffi_11_str_ptr), string);
+    }
+}
