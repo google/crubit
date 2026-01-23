@@ -7,6 +7,7 @@
 #include <optional>
 #include <utility>
 
+#include "absl/functional/any_invocable.h"
 #include "support/rs_std/dyn_callable.h"
 
 void invoke_once(rs_std::DynCallable<void() &&> f) { std::move(f)(); }
@@ -38,4 +39,9 @@ LayoutCompatible map_layout_compatible(
 rs_std::DynCallable<void() &&> bridge_to_and_from_cpp(
     rs_std::DynCallable<void() &&> f) {
   return f;
+}
+
+void invoke_as_absl_anyinvocable(rs_std::DynCallable<void()> f) {
+  absl::AnyInvocable<void()> any_invocable = std::move(f);
+  any_invocable();
 }

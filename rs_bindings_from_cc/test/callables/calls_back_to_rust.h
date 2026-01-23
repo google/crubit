@@ -51,4 +51,6 @@ LayoutCompatible map_layout_compatible(
 rs_std::DynCallable<void() &&> bridge_to_and_from_cpp(
     rs_std::DynCallable<void() &&> f);
 
+void invoke_as_absl_anyinvocable(rs_std::DynCallable<void()> f);
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CALLABLES_CALLS_BACK_TO_RUST_H_

@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use calls_back_to_rust::{
-    bridge_to_and_from_cpp, invoke, invoke_const, invoke_once, map_abi_compatible, map_int,
-    map_layout_compatible, map_optional_int, ABICompatible, LayoutCompatible,
+    bridge_to_and_from_cpp, invoke, invoke_as_absl_anyinvocable, invoke_const, invoke_once,
+    map_abi_compatible, map_int, map_layout_compatible, map_optional_int, ABICompatible,
+    LayoutCompatible,
 };
 use googletest::{expect_eq, gtest};
 use std::sync::{Arc, Mutex};
@@ -100,4 +101,22 @@ fn test_bridge_to_and_from_cpp() {
 
     expect_eq!(*state.lock().unwrap(), 42);
     expect_eq!(Arc::strong_count(&state), 1, "The function has been invoked");
+}
+
+#[gtest]
+fn test_invoke_as_absl_anyinvocable() {
+    let state = Arc::new(Mutex::new(0));
+    {
+        let state = Arc::clone(&state);
+        invoke_as_absl_anyinvocable(Box::new(move || {
+            *state.lock().unwrap() = 42;
+        }));
+    }
+
+    expect_eq!(*state.lock().unwrap(), 42);
+    expect_eq!(
+        Arc::strong_count(&state),
+        1,
+        "invoke_as_absl_anyinvocable should have dropped the cloned state"
+    );
 }

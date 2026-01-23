@@ -11,6 +11,7 @@ crubit_test_cc_library(
     deps = [
         "//support:annotations",
         "//support/rs_std:dyn_callable",
+        "@abseil-cpp//absl/functional:any_invocable",
     ],
 )
 
