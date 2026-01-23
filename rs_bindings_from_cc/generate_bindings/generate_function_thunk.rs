@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::Result;
-use code_gen_utils::{expect_format_cc_ident, expect_format_cc_type_name, make_rs_ident};
+use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
