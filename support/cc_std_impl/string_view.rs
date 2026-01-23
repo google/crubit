@@ -85,6 +85,10 @@ impl<'a> string_view<'a> {
         unsafe { self.raw.len() }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Perform UTF-8 validation and returns a &str view of the underlying C++ string if validation
     /// succeeds. Returns an Utf8Error otherwise.
     ///
@@ -108,6 +112,11 @@ impl<'a> string_view<'a> {
         // SAFETY: The memory is valid and will not be mutated during this short borrow, as
         // we do not call into any C++ code that might mutably alias the string.
         unsafe { self.raw.to_str().map(|s| (*s).into()) }
+    }
+
+    pub fn contains(&self, x: &u8) -> bool {
+        // SAFETY: The viewed memory is not mutated during this call.
+        unsafe { self.as_bytes() }.contains(x)
     }
 }
 

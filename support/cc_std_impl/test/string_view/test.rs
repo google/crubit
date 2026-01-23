@@ -19,6 +19,28 @@ unsafe fn to_str(sv: raw_string_view) -> &'static str {
     core::str::from_utf8(bytes).unwrap()
 }
 
+#[gtest]
+fn test_len_and_empty() {
+    let original: &'static str = "";
+    let sv: string_view = original.into();
+    assert_eq!(sv.len(), 0);
+    assert!(sv.is_empty());
+
+    let original: &'static str = "12345";
+    let sv: string_view = original.into();
+    assert_eq!(sv.len(), 5);
+    assert_eq!(sv.is_empty(), false);
+}
+
+#[gtest]
+fn test_contains() {
+    let original: &'static str = "12345";
+    let sv: string_view = original.into();
+    assert!(sv.contains(&b'1'));
+    assert!(sv.contains(&b'5'));
+    assert_eq!(sv.contains(&b'0'), false);
+}
+
 /// An empty slice round trips, but the pointer value may change.
 #[gtest]
 fn test_round_trip_empty_slice() {
