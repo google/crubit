@@ -21,37 +21,76 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvEEE(
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvEEE_invoker(
     ::rs_std::internal_dyn_callable::TypeErasedState* state);
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvEEE_manager(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to);
 
-extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvOEEE(
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvOEEE_invoker(
     ::rs_std::internal_dyn_callable::TypeErasedState* state);
-
-extern "C" void __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE(
-    ::rs_std::internal_dyn_callable::TypeErasedState* state,
-    struct ABICompatible* param_0, struct ABICompatible* out);
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIFvvOEEE_manager(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to);
 
 extern "C" void
-__CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE(
+__CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE_invoker(
+    ::rs_std::internal_dyn_callable::TypeErasedState* state,
+    struct ABICompatible* param_0, struct ABICompatible* out);
+extern "C" void
+__CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE_manager(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to);
+
+extern "C" void
+__CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE_invoker(
     ::rs_std::internal_dyn_callable::TypeErasedState* state,
     class LayoutCompatible* param_0, class LayoutCompatible* out);
+extern "C" void
+__CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE_manager(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to);
 
-extern "C" void __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE(
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE_invoker(
     ::rs_std::internal_dyn_callable::TypeErasedState* state,
     unsigned char* param_0, unsigned char* out);
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE_manager(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to);
 
-extern "C" int __CcTemplateInstN6rs_std11DynCallableIKFiiEEE(
+extern "C" int __CcTemplateInstN6rs_std11DynCallableIKFiiEEE_invoker(
     ::rs_std::internal_dyn_callable::TypeErasedState* state, int param_0);
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIKFiiEEE_manager(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to);
 
-extern "C" void __CcTemplateInstN6rs_std11DynCallableIKFvvEEE(
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIKFvvEEE_invoker(
     ::rs_std::internal_dyn_callable::TypeErasedState* state);
+extern "C" void __CcTemplateInstN6rs_std11DynCallableIKFvvEEE_manager(
+    ::absl::internal_any_invocable::FunctionToCall operation,
+    ::absl::internal_any_invocable::TypeErasedState* from,
+    ::absl::internal_any_invocable::TypeErasedState* to);
 
 extern "C" void __rust_thunk___Z11invoke_onceN6rs_std11DynCallableIFvvOEEE(
     const unsigned char* f) {
   invoke_once(::crubit::internal::Decode<
               ::rs_std::internal_dyn_callable::DynCallableAbi<void() &&>>(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void() &&>(
-          &__CcTemplateInstN6rs_std11DynCallableIFvvOEEE),
+          [](absl::internal_any_invocable::FunctionToCall operation,
+             absl::internal_any_invocable::TypeErasedState* from,
+             absl::internal_any_invocable::TypeErasedState* to) noexcept {
+            __CcTemplateInstN6rs_std11DynCallableIFvvOEEE_manager(operation,
+                                                                  from, to);
+          },
+          [](::rs_std::internal_dyn_callable::TypeErasedState* state) -> void {
+            __CcTemplateInstN6rs_std11DynCallableIFvvOEEE_invoker(state);
+          }),
       f));
 }
 
@@ -62,7 +101,15 @@ extern "C" void __rust_thunk___Z6invokeN6rs_std11DynCallableIFvvEEE(
   invoke(::crubit::internal::Decode<
          ::rs_std::internal_dyn_callable::DynCallableAbi<void()>>(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void()>(
-          &__CcTemplateInstN6rs_std11DynCallableIFvvEEE),
+          [](absl::internal_any_invocable::FunctionToCall operation,
+             absl::internal_any_invocable::TypeErasedState* from,
+             absl::internal_any_invocable::TypeErasedState* to) noexcept {
+            __CcTemplateInstN6rs_std11DynCallableIFvvEEE_manager(operation,
+                                                                 from, to);
+          },
+          [](::rs_std::internal_dyn_callable::TypeErasedState* state) -> void {
+            __CcTemplateInstN6rs_std11DynCallableIFvvEEE_invoker(state);
+          }),
       f));
 }
 
@@ -73,7 +120,15 @@ extern "C" void __rust_thunk___Z12invoke_constN6rs_std11DynCallableIKFvvEEE(
   invoke_const(::crubit::internal::Decode<
                ::rs_std::internal_dyn_callable::DynCallableAbi<void() const>>(
       ::rs_std::internal_dyn_callable::DynCallableAbi<void() const>(
-          &__CcTemplateInstN6rs_std11DynCallableIKFvvEEE),
+          [](absl::internal_any_invocable::FunctionToCall operation,
+             absl::internal_any_invocable::TypeErasedState* from,
+             absl::internal_any_invocable::TypeErasedState* to) noexcept {
+            __CcTemplateInstN6rs_std11DynCallableIKFvvEEE_manager(operation,
+                                                                  from, to);
+          },
+          [](::rs_std::internal_dyn_callable::TypeErasedState* state) -> void {
+            __CcTemplateInstN6rs_std11DynCallableIKFvvEEE_invoker(state);
+          }),
       f));
 }
 
@@ -86,7 +141,17 @@ extern "C" int __rust_thunk___Z7map_intN6rs_std11DynCallableIKFiiEEEi(
       ::crubit::internal::Decode<
           ::rs_std::internal_dyn_callable::DynCallableAbi<int(int) const>>(
           ::rs_std::internal_dyn_callable::DynCallableAbi<int(int) const>(
-              &__CcTemplateInstN6rs_std11DynCallableIKFiiEEE),
+              [](absl::internal_any_invocable::FunctionToCall operation,
+                 absl::internal_any_invocable::TypeErasedState* from,
+                 absl::internal_any_invocable::TypeErasedState* to) noexcept {
+                __CcTemplateInstN6rs_std11DynCallableIKFiiEEE_manager(operation,
+                                                                      from, to);
+              },
+              [](::rs_std::internal_dyn_callable::TypeErasedState* state,
+                 int param_0) -> int {
+                return __CcTemplateInstN6rs_std11DynCallableIKFiiEEE_invoker(
+                    state, param_0);
+              }),
           f),
       arg);
 }
@@ -106,13 +171,20 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
                   struct Bridged) const>>(
               ::rs_std::internal_dyn_callable::DynCallableAbi<struct Bridged(
                   struct Bridged) const>(
+                  [](absl::internal_any_invocable::FunctionToCall operation,
+                     absl::internal_any_invocable::TypeErasedState* from,
+                     absl::internal_any_invocable::TypeErasedState*
+                         to) noexcept {
+                    __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE_manager(
+                        operation, from, to);
+                  },
                   [](::rs_std::internal_dyn_callable::TypeErasedState* state,
                      struct Bridged param_0) -> struct Bridged {
                     unsigned char bridge_param_0[::crubit::BridgedAbi::kSize];
                     ::crubit::internal::Encode(::crubit::BridgedAbi(),
                                                bridge_param_0, param_0);
                     unsigned char out[::crubit::BridgedAbi::kSize];
-                    __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE(
+                    __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE_invoker(
                         state, bridge_param_0, out);
                     return ::crubit::internal::Decode<::crubit::BridgedAbi>(
                         ::crubit::BridgedAbi(), out);
@@ -146,12 +218,18 @@ __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EE
               struct ABICompatible) const>>(
           ::rs_std::internal_dyn_callable::DynCallableAbi<struct ABICompatible(
               struct ABICompatible) const>(
+              [](absl::internal_any_invocable::FunctionToCall operation,
+                 absl::internal_any_invocable::TypeErasedState* from,
+                 absl::internal_any_invocable::TypeErasedState* to) noexcept {
+                __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE_manager(
+                    operation, from, to);
+              },
               [](::rs_std::internal_dyn_callable::TypeErasedState* state,
                  struct ABICompatible param_0) -> struct ABICompatible {
                 ::crubit::Slot<struct ABICompatible> stack_param_0(
                     std::move(param_0));
                 ::crubit::Slot<struct ABICompatible> out;
-                __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE(
+                __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE_invoker(
                     state, stack_param_0.Get(), out.Get());
                 return std::move(out).AssumeInitAndTakeValue();
               }),
@@ -190,18 +268,22 @@ __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibl
           ::rs_std::internal_dyn_callable::DynCallableAbi<
               class LayoutCompatible(class LayoutCompatible) const>>(
           ::rs_std::internal_dyn_callable::DynCallableAbi<
-              class LayoutCompatible(class LayoutCompatible)
-                  const>([](::rs_std::internal_dyn_callable::TypeErasedState*
-                                state,
-                            class LayoutCompatible param_0)
-                             -> class LayoutCompatible {
-            ::crubit::Slot<class LayoutCompatible> stack_param_0(
-                std::move(param_0));
-            ::crubit::Slot<class LayoutCompatible> out;
-            __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE(
-                state, stack_param_0.Get(), out.Get());
-            return std::move(out).AssumeInitAndTakeValue();
-          }),
+              class LayoutCompatible(class LayoutCompatible) const>(
+              [](absl::internal_any_invocable::FunctionToCall operation,
+                 absl::internal_any_invocable::TypeErasedState* from,
+                 absl::internal_any_invocable::TypeErasedState* to) noexcept {
+                __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE_manager(
+                    operation, from, to);
+              },
+              [](::rs_std::internal_dyn_callable::TypeErasedState* state,
+                 class LayoutCompatible param_0) -> class LayoutCompatible {
+                ::crubit::Slot<class LayoutCompatible> stack_param_0(
+                    std::move(param_0));
+                ::crubit::Slot<class LayoutCompatible> out;
+                __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE_invoker(
+                    state, stack_param_0.Get(), out.Get());
+                return std::move(out).AssumeInitAndTakeValue();
+              }),
           f),
       std::move(*arg)));
 }

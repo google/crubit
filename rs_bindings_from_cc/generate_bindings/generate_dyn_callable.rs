@@ -81,10 +81,20 @@ pub fn dyn_callable_crubit_abi_type(
     let cpp_expr_tokens = {
         let invoker_function_pointer =
             generate_invoker_function_pointer(db, callable, &cpp_param_types, &cpp_return_type)?;
+        let manager_ident = &callable.manager_ident;
 
         // Construct the DynCallableAbi value with a pointer to the invoker function.
         quote! {
-            #cpp_type_tokens(#invoker_function_pointer)
+            #cpp_type_tokens(
+                [](
+                    absl::internal_any_invocable::FunctionToCall operation,
+                    absl::internal_any_invocable::TypeErasedState* from,
+                    absl::internal_any_invocable::TypeErasedState* to
+                ) noexcept {
+                    #manager_ident(operation, from, to);
+                },
+                #invoker_function_pointer
+            )
         }
     };
 
@@ -120,13 +130,9 @@ fn generate_invoker_function_pointer(
     cpp_param_types: &[TokenStream],
     cpp_return_type: &TokenStream,
 ) -> Result<TokenStream> {
-    let thunk_ident = &callable.thunk_ident;
-    if callable.is_c_abi_compatible() {
-        // The input and output types are all C-compatible, no wrapper lambda is
-        // needed.
-        return Ok(quote! { &#thunk_ident });
-    }
-
+    let invoker_ident = &callable.invoker_ident;
+    // Even if the callable has all C ABI compatible inputs and outputs, we cannot pass the function
+    // pointer directly because cfi doesn't recognize Rust function pointers as safe.
     let param_idents =
         (0..callable.param_types.len()).map(|i| format_ident!("param_{i}")).collect::<Vec<_>>();
 
@@ -175,7 +181,7 @@ fn generate_invoker_function_pointer(
         };
 
     let mut invoke_ffi_and_transform_to_cpp = quote! {
-        #thunk_ident(state #(, #arg_exprs)* #out_param_arg);
+        #invoker_ident(state #(, #arg_exprs)* #out_param_arg);
     };
 
     if callable.return_type.is_void() {

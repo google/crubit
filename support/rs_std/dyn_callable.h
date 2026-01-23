@@ -142,8 +142,7 @@ CRUBIT_INTERNAL_RUST_ANY_CALLABLE_IMPL(&&)
 // The ABI contract for `DynCallableAbi<F>` varies between Rust -> C++, and C++
 // -> Rust.
 //
-// When sending from Rust to C++, the value is encoded as `Box<dyn F>`, followed
-// by a pointer to the manager function.
+// When sending from Rust to C++, the value is encoded as `Box<dyn F>`.
 //
 // When sending from C++ to Rust, the value is encoded as a bool indicating
 // whether the value is present. If present, the bool is followed by the
@@ -168,14 +167,14 @@ struct DynCallableAbi {
 
   Value Decode(crubit::Decoder& decoder) && {
     auto state = crubit::TransmuteAbi<TypeErasedState>().Decode(decoder);
-    auto manager =
-        crubit::TransmuteAbi<ManagerType* absl_nonnull>().Decode(decoder);
     return DynCallable<Sig>(state, manager, invoker);
   }
 
-  explicit DynCallableAbi(Value::Impl::InvokerType* invoker)
-      : invoker(invoker) {}
+  explicit DynCallableAbi(ManagerType* absl_nonnull manager,
+                          Value::Impl::InvokerType* invoker)
+      : manager(manager), invoker(invoker) {}
 
+  ManagerType* absl_nonnull manager;
   Value::Impl::InvokerType* invoker;
 };
 

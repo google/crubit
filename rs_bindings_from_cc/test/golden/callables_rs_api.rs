@@ -997,7 +997,7 @@ mod detail {
         );
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvEEE(
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvEEE_invoker(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
@@ -1005,7 +1005,19 @@ mod detail {
         (unsafe { &mut *f })();
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvOEEE(
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvEEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnMut() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvOEEE_invoker(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
@@ -1013,7 +1025,19 @@ mod detail {
         (unsafe { ::core::ptr::read(f) })();
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE(
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvOEEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE_invoker(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(crate::ABICompatible) -> crate::ABICompatible
                 + ::core::marker::Send
@@ -1031,7 +1055,25 @@ mod detail {
         }
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE(
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF13ABICompatibleS1_EEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::ABICompatible) -> crate::ABICompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::ABICompatible) -> crate::ABICompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE_invoker(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(crate::LayoutCompatible) -> crate::LayoutCompatible
                 + ::core::marker::Send
@@ -1049,7 +1091,25 @@ mod detail {
         }
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE(
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::LayoutCompatible) -> crate::LayoutCompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::LayoutCompatible) -> crate::LayoutCompatible
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE_invoker(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(crate::RustBridged) -> crate::RustBridged
                 + ::core::marker::Send
@@ -1067,7 +1127,25 @@ mod detail {
         );
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFiiEEE(
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKF7BridgedS1_EEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::RustBridged) -> crate::RustBridged
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(crate::RustBridged) -> crate::RustBridged
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFiiEEE_invoker(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
                 + ::core::marker::Send
@@ -1079,12 +1157,42 @@ mod detail {
         (unsafe { &*f })(param_0)
     }
     #[unsafe(no_mangle)]
-    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFvvEEE(
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFiiEEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+                + ::core::marker::Send
+                + ::core::marker::Sync
+                + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFvvEEE_invoker(
         f: *mut ::alloc::boxed::Box<
             dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
         (unsafe { &*f })();
+    }
+    #[unsafe(no_mangle)]
+    unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIKFvvEEE_manager(
+        operation: ::dyn_callable_rs::FunctionToCall,
+        from: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+        to: *mut ::alloc::boxed::Box<
+            dyn ::core::ops::Fn() + ::core::marker::Send + ::core::marker::Sync + 'static,
+        >,
+    ) {
+        ::dyn_callable_rs::manager(operation, from, to);
     }
 }
 

@@ -940,14 +940,20 @@ fn generate_dyn_callable_cpp_thunk(
 
     let param_idents = param_idents.iter().chain(out_param_ident.as_ref());
     let param_types = param_types.iter().chain(out_param_type.as_ref());
-    let thunk_ident = &dyn_callable.thunk_ident;
+    let invoker_ident = &dyn_callable.invoker_ident;
+    let manager_ident = &dyn_callable.manager_ident;
 
     Some(quote! {
-        extern "C" #decl_return_type_tokens #thunk_ident(
+        extern "C" #decl_return_type_tokens #invoker_ident(
             ::rs_std::internal_dyn_callable::TypeErasedState* state
             #(
                 , #param_types #param_idents
             )*
+        );
+        extern "C" void #manager_ident(
+            ::absl::internal_any_invocable::FunctionToCall operation,
+            ::absl::internal_any_invocable::TypeErasedState* from,
+            ::absl::internal_any_invocable::TypeErasedState* to
         );
     })
 }
@@ -1067,11 +1073,12 @@ fn generate_dyn_callable_rust_thunk_impl(
     let param_idents = param_idents.iter().chain(out_param_ident.as_ref());
     let param_types_tokens = param_types_tokens.iter().chain(out_param_type.as_ref());
     let dyn_fn_spelling = dyn_callable.dyn_fn_spelling(db);
-    let thunk_ident = &dyn_callable.thunk_ident;
+    let invoker_ident = &dyn_callable.invoker_ident;
+    let manager_ident = &dyn_callable.manager_ident;
 
     Some(quote! {
         #[unsafe(no_mangle)]
-        unsafe extern "C" fn #thunk_ident(
+        unsafe extern "C" fn #invoker_ident(
             f: *mut ::alloc::boxed::Box<#dyn_fn_spelling>,
             #(
                 #param_idents: #param_types_tokens,
@@ -1080,6 +1087,14 @@ fn generate_dyn_callable_rust_thunk_impl(
             #ffi_to_rust_transforms
 
             #invoke_rust_and_return_to_ffi
+        }
+        #[unsafe(no_mangle)]
+        unsafe extern "C" fn #manager_ident(
+            operation: ::dyn_callable_rs::FunctionToCall,
+            from: *mut ::alloc::boxed::Box<#dyn_fn_spelling>,
+            to: *mut ::alloc::boxed::Box<#dyn_fn_spelling>
+        ) {
+            ::dyn_callable_rs::manager(operation, from, to);
         }
     })
 }

@@ -16,7 +16,7 @@ use flagset::FlagSet;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use quote::{quote, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use std::collections::HashSet;
 use std::rc::Rc;
 use token_stream_printer::write_unformatted_tokens;
@@ -525,7 +525,8 @@ pub struct Callable {
     pub fn_trait: FnTrait,
     pub return_type: Rc<RsTypeKind>,
     pub param_types: Rc<[RsTypeKind]>,
-    pub thunk_ident: Ident,
+    pub invoker_ident: Ident,
+    pub manager_ident: Ident,
 }
 
 impl Callable {
@@ -650,8 +651,8 @@ impl BridgeRsTypeKind {
                         .collect::<Result<_>>()?,
                     // TODO(okabayashi): use something more sophisticated than the mangled name
                     // of the class template specialization.
-                    thunk_ident: syn::parse_str(record.rs_name.identifier.as_ref())
-                        .expect("should be a valid identifier"),
+                    invoker_ident: format_ident!("{}_invoker", record.rs_name.identifier.as_ref()),
+                    manager_ident: format_ident!("{}_manager", record.rs_name.identifier.as_ref()),
                 }))
             }
         };
