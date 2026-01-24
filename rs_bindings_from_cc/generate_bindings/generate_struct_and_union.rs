@@ -12,7 +12,6 @@ use database::code_snippet::{
     NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk, ThunkImpl,
     UpcastImpl, UpcastImplBody, Visibility,
 };
-use database::db;
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::BindingsGenerator;
 use error_report::{bail, ensure};
@@ -54,7 +53,7 @@ fn needs_manually_drop(ty: &RsTypeKind) -> bool {
 
 /// Generates Rust source code for a given incomplete record declaration.
 pub fn generate_incomplete_record(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     incomplete_record: Rc<IncompleteRecord>,
 ) -> Result<ApiSnippets> {
     // If the record won't have bindings, we default to `public` to keep going anyway.
@@ -99,7 +98,7 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
 ///
 /// See docs/struct_layout
 fn get_field_rs_type_kind_for_layout(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     record: &Record,
     field: &Field,
 ) -> Result<RsTypeKind> {
@@ -164,7 +163,7 @@ fn get_field_rs_type_kind_for_layout(
 }
 
 fn collect_unqualified_member_functions_from_all_bases(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     record: &Record,
 ) -> Rc<[Rc<Func>]> {
     let ir = db.ir();
@@ -188,7 +187,7 @@ fn collect_unqualified_member_functions_from_all_bases(
 
 /// Implementation of `BindingsGenerator::collect_unqualified_member_functions`.
 pub fn collect_unqualified_member_functions(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     record: Rc<Record>,
 ) -> Rc<[Rc<Func>]> {
     let ir = db.ir();
@@ -216,7 +215,7 @@ pub fn collect_unqualified_member_functions(
 /// Ambiguous functions are functions that have the same name as a function in
 /// the base class.
 fn filter_out_ambiguous_member_functions(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     derived_record: Rc<Record>,
     inherited_functions: Rc<[Rc<Func>]>,
 ) -> Rc<[Rc<Func>]> {
@@ -249,7 +248,7 @@ fn filter_out_ambiguous_member_functions(
 
 #[allow(clippy::too_many_arguments)]
 fn field_definition(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     record: &Record,
     field: Option<&ir::Field>,
     field_index: usize,
@@ -315,7 +314,7 @@ fn field_definition(
         }
     };
     let visibility = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
-        db::type_visibility(db, &record.owning_target, field_rs_type_kind.clone().unwrap())
+        db.type_visibility(&record.owning_target, field_rs_type_kind.clone().unwrap())
             .unwrap_or_default()
     } else {
         Visibility::PubCrate
@@ -350,7 +349,7 @@ fn field_definition(
 }
 
 /// Implementation of `BindingsGenerator::generate_record`.
-pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
+pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
     let record_rs_type_kind = db.rs_type_kind(record.as_ref().into())?;
     if matches!(
         &record_rs_type_kind,
@@ -710,7 +709,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
 /// whether each child item should be nested in a module.
 pub fn child_items<'a, 'db>(
     record: &'a Record,
-    db: &'a dyn BindingsGenerator<'db>,
+    db: &'a BindingsGenerator<'db>,
 ) -> impl Iterator<Item = ChildItem<'db>> + use<'a, 'db> {
     record.child_item_ids.iter().map(|&child_item_id| {
         let item = db.ir().find_untyped_decl(child_item_id);
@@ -751,7 +750,7 @@ pub fn generate_derives(record: &Record) -> DeriveAttr {
     DeriveAttr(derives)
 }
 
-fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Result<ThunkImpl> {
+fn cc_struct_layout_assertion(db: &BindingsGenerator, record: &Record) -> Result<ThunkImpl> {
     let namespace_qualifier = db.ir().namespace_qualifier(record).format_for_cc()?;
     let fields_and_expected_offsets: Vec<(TokenStream, usize)> = record
         .fields
@@ -801,7 +800,7 @@ fn cc_struct_layout_assertion(db: &dyn BindingsGenerator, record: &Record) -> Re
 
 /// Returns the accessor functions for no_unique_address member variables.
 fn cc_struct_no_unique_address_impl(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     record: &Record,
 ) -> Result<Vec<NoUniqueAddressAccessor>> {
     let mut no_unique_address_accessors = vec![];
@@ -851,7 +850,7 @@ type UpcastImplResult = Result<UpcastImpl, String>;
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
 fn cc_struct_upcast_impl(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     record: &Rc<Record>,
     ir: &IR,
 ) -> Result<(Vec<UpcastImplResult>, Vec<Thunk>, Vec<ThunkImpl>)> {

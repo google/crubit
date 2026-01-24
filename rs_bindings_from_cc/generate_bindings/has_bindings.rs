@@ -7,7 +7,6 @@ use database::code_snippet::{
     required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature,
     ResolvedTypeName, Visibility,
 };
-use database::db;
 use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
 use error_report::{anyhow, bail};
@@ -17,10 +16,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::has_bindings`.
-pub fn has_bindings(
-    db: &dyn BindingsGenerator,
-    item: Item,
-) -> Result<BindingsInfo, NoBindingsReason> {
+pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, NoBindingsReason> {
     let ir = db.ir();
 
     if let Some(name) = item.cc_name_as_str() {
@@ -176,7 +172,7 @@ pub fn has_bindings(
 
 /// Returns function-specific `has_bindings` information.
 fn func_has_bindings(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: Rc<Func>,
 ) -> Result<BindingsInfo, NoBindingsReason> {
     if func.is_consteval {
@@ -258,7 +254,7 @@ fn func_has_bindings(
 //
 // YMMV: feel free to unify the two functions later.
 pub fn type_target_restriction(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     rs_type_kind: RsTypeKind,
 ) -> Result<Option<BazelLabel>> {
     // We visit `self` twice, but it doesn't matter, we just need a starting value.
@@ -292,7 +288,7 @@ struct TargetRestriction {
 /// Returns an error if both are `pub(crate)`, and the two types are owned by different crates.
 /// The error contains just a list of the types it found that are incompatible.
 fn intersect_target_restrictions(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     old_restriction: &mut TargetRestriction,
     new_restriction: TargetRestriction,
 ) -> Result<()> {
@@ -320,7 +316,7 @@ fn intersect_target_restrictions(
 /// For example, the top level visibility restriction of `*mut T` is `None` for all `T`, because
 /// pointers are never `pub(crate)`, only their pointees can be.
 fn type_target_restriction_shallow(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     rs_type_kind: RsTypeKind,
 ) -> TargetRestriction {
     let mut target = match rs_type_kind.unalias() {
@@ -351,14 +347,14 @@ fn type_target_restriction_shallow(
 }
 
 fn type_visibility(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     item: &dyn GenericItem,
     rs_type_kind: RsTypeKind,
 ) -> Result<Visibility, NoBindingsReason> {
     let Some(target) = item.owning_target() else {
         return Ok(Visibility::Public);
     };
-    match db::type_visibility(db, &target, rs_type_kind.clone()) {
+    match db.type_visibility(&target, rs_type_kind.clone()) {
         Ok(vis) => Ok(vis),
         Err(error) => {
             let missing_features = vec![RequiredCrubitFeature {
@@ -387,7 +383,7 @@ fn type_visibility(
 /// In the future, we may want to extend this to check the value namespace for functions and
 /// global variables as well.
 pub fn resolve_type_names(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     parent: Rc<Record>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedTypeName>>> {
     let child_item_ids: &[ItemId] =

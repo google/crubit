@@ -74,7 +74,7 @@ pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
 
 /// Returns the C++ underlying type of the `cpp_enum` struct specified by the given def id.
 pub(crate) fn cpp_enum_cpp_underlying_type(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     def_id: DefId,
 ) -> Result<CcSnippet> {
     let tcx = db.tcx();
@@ -183,7 +183,7 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
 /// };
 /// ```
 fn generate_cpp_enum<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
@@ -286,7 +286,7 @@ fn is_supported_associated_item<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool 
 }
 
 pub(crate) fn generate_associated_item<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
 ) -> Option<ApiSnippets> {
@@ -352,7 +352,7 @@ fn erase_regions<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
 }
 
 pub fn from_trait_impls_by_argument<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
 ) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>> {
     let tcx = db.tcx();
@@ -391,7 +391,7 @@ pub fn from_trait_impls_by_argument<'tcx>(
 }
 
 fn generate_into_impls<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
@@ -527,7 +527,7 @@ fn generate_into_impls<'tcx>(
 /// `generate_adt_core` returns success we have committed to emitting C++
 /// bindings for the ADT.
 pub fn generate_adt<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
@@ -727,7 +727,7 @@ pub fn generate_adt<'tcx>(
 
 /// Implementation of `BindingsGenerator::adt_needs_bindings`.
 pub fn adt_needs_bindings<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<Rc<AdtCoreBindings<'tcx>>> {
     let tcx = db.tcx();
@@ -761,7 +761,7 @@ pub fn adt_needs_bindings<'tcx>(
 
 /// Implementation of `BindingsGenerator::generate_adt_core`.
 pub fn generate_adt_core<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<Rc<AdtCoreBindings<'tcx>>> {
     let tcx = db.tcx();
@@ -873,7 +873,7 @@ fn anonymous_field_ident(index: usize) -> Ident {
 }
 
 fn generate_tuple_struct_ctor<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Option<ApiSnippets> {
     let tcx = db.tcx();
@@ -970,7 +970,7 @@ fn generate_tuple_struct_ctor<'tcx>(
 
 /// Returns the body of the C++ struct that represents the given ADT.
 fn generate_fields<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
     member_function_names: &HashSet<String>,
 ) -> ApiSnippets {
@@ -1693,7 +1693,7 @@ fn generate_fields<'tcx>(
 
 /// Generates the `(UnsafeRelocateTag, T&&)` constructor for the given ADT.
 fn generate_relocating_ctor<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets {
     let adt_cc_name = &core.cc_short_name;

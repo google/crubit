@@ -23,7 +23,7 @@ use unicode_ident::is_xid_continue;
 /// If we know the original C++ function is codegenned and already compatible
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
 /// since we can call the original C++ directly.
-pub fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
+pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     // ## Inline functions
     //
     // Inline functions may not be codegenned in the C++ library since Clang doesn't
@@ -117,7 +117,7 @@ pub fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
 }
 
 pub fn generate_function_thunk(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     param_idents: &[Ident],
     param_types: &[RsTypeKind],
@@ -251,7 +251,7 @@ pub fn thunk_ident(func: &Func) -> Ident {
 }
 
 fn generate_function_assertation_for_identifier(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     id: &Identifier,
 ) -> Result<ThunkImpl> {
@@ -325,7 +325,7 @@ fn generate_function_assertation_for_identifier(
 }
 
 pub fn generate_function_assertation(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
 ) -> Result<Option<ThunkImpl>> {
     if func.adl_enclosing_record.is_some() {
@@ -365,7 +365,7 @@ fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
 }
 
 pub fn generate_function_thunk_impl(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
 ) -> Result<Option<ThunkImpl>> {
     if can_skip_cc_thunk(db, func) {

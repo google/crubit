@@ -10,7 +10,7 @@ use crubit_abi_type::{CrubitAbiType, CrubitAbiTypeToRustExprTokens, FullyQualifi
 use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
-use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
+use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
     BridgeRsTypeKind, Callable, FnTrait, Mutability, RsTypeKind, RustPtrKind,
 };
@@ -101,10 +101,7 @@ pub fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias(
-    db: &dyn BindingsGenerator,
-    type_alias: Rc<TypeAlias>,
-) -> Result<ApiSnippets> {
+fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<ApiSnippets> {
     // Skip the type alias if it maps to a bridge type.
     let rs_type_kind = db.rs_type_kind((&*type_alias).into())?;
     let generated_item = if rs_type_kind.unalias().is_bridge_type() {
@@ -138,7 +135,8 @@ fn generate_type_alias(
                 Some(&type_alias.source_loc),
                 db.environment(),
             ),
-            visibility: db::type_visibility(db, &type_alias.owning_target, rs_type_kind)
+            visibility: db
+                .type_visibility(&type_alias.owning_target, rs_type_kind)
                 .unwrap_or_default(),
             ident: make_rs_ident(&type_alias.rs_name.identifier),
             underlying_type: underlying_type.to_token_stream(db),
@@ -151,7 +149,7 @@ fn generate_type_alias(
     })
 }
 
-fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
+fn generate_global_var(db: &BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
     Ok(ApiSnippets {
@@ -162,14 +160,14 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result
                 is_mut: !var.type_.is_const,
                 ident: make_rs_ident(&var.rs_name.identifier),
                 type_tokens: type_.to_token_stream(db),
-                visibility: db::type_visibility(db, &var.owning_target, type_).unwrap_or_default(),
+                visibility: db.type_visibility(&var.owning_target, type_).unwrap_or_default(),
             },
         )]),
         ..Default::default()
     })
 }
 
-fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
+fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
     let ir = db.ir();
     let mut api_snippets = ApiSnippets::default();
 
@@ -187,7 +185,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
-fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> {
+fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
     let _scope = item.error_scope(db.ir(), db.errors());
     let err = match generate_item_impl(db, &item) {
         Ok(generated) => return Ok(generated),
@@ -211,7 +209,7 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
 /// The implementation of generate_item, without the error recovery logic.
 ///
 /// Returns Err if bindings could not be generated for this item.
-fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
+fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
     let ir = db.ir();
     if let Some(owning_target) = item.owning_target() {
         if !ir.is_current_target(&owning_target) {
@@ -301,8 +299,8 @@ pub fn new_database<'db>(
     errors: &'db dyn ErrorReporting,
     fatal_errors: &'db dyn ReportFatalError,
     environment: Environment,
-) -> Database<'db> {
-    Database::new(
+) -> BindingsGenerator<'db> {
+    BindingsGenerator::new(
         ir,
         errors,
         fatal_errors,
@@ -494,7 +492,7 @@ pub fn generate_bindings_tokens(
 }
 
 /// Implementation of `BindingsGenerator::is_rs_type_kind_unsafe`.
-fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> bool {
+fn is_rs_type_kind_unsafe(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> bool {
     match rs_type_kind {
         RsTypeKind::Error { .. } => true,
         RsTypeKind::Pointer { .. } => true,
@@ -549,7 +547,7 @@ fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) 
 /// Helper function for `is_rs_type_kind_unsafe`.
 /// Returns true if the record is unsafe, or if it transitively contains a public field of
 /// an unsafe type.
-fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
+fn is_record_unsafe(db: &BindingsGenerator, record: &Record) -> bool {
     if record.is_unsafe_type {
         return true;
     }
@@ -577,7 +575,7 @@ fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
 }
 
 fn generate_rs_api_impl_includes(
-    db: &Database,
+    db: &BindingsGenerator,
     crubit_support_path_format: Format<1>,
     has_callables: bool,
 ) -> CppIncludes {
@@ -684,7 +682,7 @@ fn make_transmute_abi_type_from_item(
     item: &impl GenericItem,
     rs_name: &str,
     cc_name: &str,
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
 ) -> Result<CrubitAbiType> {
     // Rust names are of the form ":: tuples_golden :: NontrivialDrop"
     let mut rust_path = rs_name;
@@ -716,7 +714,7 @@ fn make_transmute_abi_type_from_item(
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
-fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
+fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
         RsTypeKind::Error { error, .. } => {
             bail!("Type has an error and cannot be bridged: {error}")
@@ -889,7 +887,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
 /// `None` is returned if there is issue generating the thunk. The specific error is not reported
 /// because it will be reported elsewhere.
 fn generate_dyn_callable_cpp_thunk(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     dyn_callable: &Callable,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
@@ -976,7 +974,7 @@ fn generate_dyn_callable_cpp_thunk(
 /// `None` is returned if there is issue generating the definition. The specific error is not
 /// reported because it will be reported elsewhere.
 fn generate_dyn_callable_rust_thunk_impl(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     dyn_callable: Rc<Callable>,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
@@ -1166,7 +1164,7 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
 fn make_cpp_type_from_item(
     item: &impl GenericItem,
     cc_name_parts: &[&str],
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
 ) -> Result<FullyQualifiedPath> {
     let namespace_qualifier = db.ir().namespace_qualifier(item);
     let parts = namespace_qualifier

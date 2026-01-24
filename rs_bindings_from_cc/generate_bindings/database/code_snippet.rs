@@ -140,7 +140,7 @@ impl Display for RequiredCrubitFeature {
 /// If the item does have a defining target, and it doesn't enable the specified
 /// features, then bindings are suppressed for this item.
 pub fn required_crubit_features(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     item: &Item,
 ) -> Result<Vec<RequiredCrubitFeature>> {
     let mut missing_features = vec![];
