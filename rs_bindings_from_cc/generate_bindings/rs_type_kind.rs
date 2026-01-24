@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::rs_type_kind`.
 pub fn rs_type_kind_with_lifetime_elision(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     ty: CcType,
     lifetime_options: LifetimeOptions,
 ) -> Result<RsTypeKind> {

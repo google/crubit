@@ -23,6 +23,8 @@ use token_stream_printer::write_unformatted_tokens;
 
 pub use ir::BackingType;
 
+use std::ops::Deref;
+
 const SLICE_REF_NAME_RS: &str = "&[]";
 
 /// A struct with information associated with the formatted Rust code snippet.
@@ -201,8 +203,8 @@ pub fn format_generic_params<'a, T: ToTokens>(
     }
 }
 
-pub fn format_generic_params_replacing_by_self<'a>(
-    db: &dyn BindingsGenerator,
+pub fn format_generic_params_replacing_by_self<'db, 'a>(
+    db: impl Deref<Target = BindingsGenerator<'db>> + Copy,
     types: impl IntoIterator<Item = &'a RsTypeKind>,
     trait_record: Option<&Record>,
 ) -> TokenStream {
@@ -282,7 +284,7 @@ impl UniformReprTemplateType {
     /// Returns none if the template specialization is not for a known type corresponding with
     /// one of `UniformReprTemplateType`s variants.
     fn new(
-        db: &dyn BindingsGenerator,
+        db: &BindingsGenerator,
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         is_return_type: bool,
     ) -> Result<Option<Rc<Self>>> {
@@ -356,7 +358,7 @@ impl UniformReprTemplateType {
         }
     }
 
-    fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
+    fn to_token_stream(&self, db: &BindingsGenerator) -> TokenStream {
         match self {
             Self::StdVector { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
@@ -468,7 +470,7 @@ pub enum RsTypeKind {
 fn new_c9_co_record(
     have_reference_param: bool,
     record: Rc<Record>,
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
 ) -> Result<Option<RsTypeKind>> {
     let Some(TemplateSpecialization {
         kind: TemplateSpecializationKind::C9Co { element_type },
@@ -531,7 +533,7 @@ pub struct Callable {
 
 impl Callable {
     /// Returns a `TokenStream` in the shape of `-> Output`, or None if the return type is void.
-    pub fn rust_return_type_fragment(&self, db: &dyn BindingsGenerator) -> Option<TokenStream> {
+    pub fn rust_return_type_fragment(&self, db: &BindingsGenerator) -> Option<TokenStream> {
         if self.return_type.is_void() {
             None
         } else {
@@ -541,7 +543,7 @@ impl Callable {
     }
 
     /// Returns a `TokenStream` in the shape of `dyn Trait(Inputs) -> Output`.
-    pub fn dyn_fn_spelling(&self, db: &dyn BindingsGenerator) -> TokenStream {
+    pub fn dyn_fn_spelling(&self, db: &BindingsGenerator) -> TokenStream {
         let rust_return_type_fragment = self.rust_return_type_fragment(db);
         let param_type_tokens =
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
@@ -589,7 +591,7 @@ impl BridgeRsTypeKind {
     /// If the record is a bridge type, returns the corresponding BridgeRsTypeKind.
     /// Otherwise, returns None. This may also return an error if db.rs_type_kind fails, or if the
     /// record has template parameters that cannot be translated.
-    pub fn new(record: &Record, db: &dyn BindingsGenerator) -> Result<Option<BridgeRsTypeKind>> {
+    pub fn new(record: &Record, db: &BindingsGenerator) -> Result<Option<BridgeRsTypeKind>> {
         let Some(bridge_type) = &record.bridge_type else {
             return Ok(None);
         };
@@ -677,7 +679,7 @@ impl RsTypeKind {
     /// or if the `RsTypeKind` cannot be created (e.g. a type alias which points to a type that
     /// cannot receive an `RsTypeKind`).
     pub fn from_item_raw(
-        db: &dyn BindingsGenerator,
+        db: &BindingsGenerator,
         item: Item,
         have_reference_param: bool,
         is_return_type: bool,
@@ -698,7 +700,7 @@ impl RsTypeKind {
         }
     }
 
-    fn new_type_alias(db: &dyn BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
+    fn new_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<Self> {
         let ir = db.ir();
         let underlying_type = db.rs_type_kind(type_alias.underlying_type.clone())?;
         // Note: we don't need to call `.unalias()` for these checks, because we already checked
@@ -733,7 +735,7 @@ impl RsTypeKind {
     }
 
     fn new_record(
-        db: &dyn BindingsGenerator,
+        db: &BindingsGenerator,
         record: Rc<Record>,
         have_reference_param: bool,
         is_return_type: bool,
@@ -765,7 +767,7 @@ impl RsTypeKind {
     }
 
     fn new_incomplete_record(
-        db: &dyn BindingsGenerator,
+        db: &BindingsGenerator,
         incomplete_record: Rc<IncompleteRecord>,
     ) -> Result<Self> {
         let ir = db.ir();
@@ -777,7 +779,7 @@ impl RsTypeKind {
         Ok(RsTypeKind::IncompleteRecord { incomplete_record, crate_path })
     }
 
-    fn new_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<Self> {
+    fn new_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<Self> {
         let ir = db.ir();
         let crate_path = Rc::new(CratePath::new(
             ir,
@@ -788,7 +790,7 @@ impl RsTypeKind {
     }
 
     fn new_existing_rust_type(
-        db: &dyn BindingsGenerator,
+        db: &BindingsGenerator,
         existing_rust_type: Rc<ExistingRustType>,
     ) -> Result<Self> {
         if existing_rust_type.rs_name.as_ref() == SLICE_REF_NAME_RS {
@@ -891,9 +893,9 @@ impl RsTypeKind {
     /// for both the template definition and its instantiation, and so both
     /// would need to be passed in to rs_type_kind() in order to be able to
     /// merge these two functions.
-    pub fn required_crubit_features(
+    pub fn required_crubit_features<'a>(
         &self,
-        db: &dyn BindingsGenerator,
+        db: impl Deref<Target = BindingsGenerator<'a>>,
         enabled_features: flagset::FlagSet<CrubitFeature>,
     ) -> (flagset::FlagSet<CrubitFeature>, String) {
         let mut missing_features = <flagset::FlagSet<CrubitFeature>>::default();
@@ -943,7 +945,7 @@ impl RsTypeKind {
                 RsTypeKind::IncompleteRecord { .. } => require_feature(
                     CrubitFeature::Wrapper,
                     Some(&|| {
-                        format!("{} is not a complete type)", rs_type_kind.display(db)).into()
+                        format!("{} is not a complete type)", rs_type_kind.display(&db)).into()
                     }),
                 ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
@@ -967,7 +969,7 @@ impl RsTypeKind {
                         require_feature(
                             CrubitFeature::Wrapper,
                             Some(&|| {
-                                format!("{} is a template instantiation", rs_type_kind.display(db),)
+                                format!("{} is a template instantiation", rs_type_kind.display(&db),)
                                     .into()
                             }),
                         )
@@ -988,7 +990,7 @@ impl RsTypeKind {
                             Some(&|| {
                                 format!(
                                     "{} is a bridged template instantiation",
-                                    rs_type_kind.display(db),
+                                    rs_type_kind.display(&db),
                                 )
                                 .into()
                             }),
@@ -1129,9 +1131,9 @@ impl RsTypeKind {
         }
     }
 
-    pub fn format_as_return_type_fragment(
+    pub fn format_as_return_type_fragment<'a>(
         &self,
-        db: &dyn BindingsGenerator,
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
         self_record: Option<&Record>,
     ) -> Option<TokenStream> {
         match self.unalias() {
@@ -1330,7 +1332,7 @@ impl RsTypeKind {
     /// `RsTypeKind::Pointer` with kind
     /// `RustPtrKind::CcPtr(PointerTypeKind::Owned)` will emit the corresponding
     /// owning Rust type rather than a raw pointer.
-    pub fn to_token_stream_with_owned_ptr_type(&self, db: &dyn BindingsGenerator) -> TokenStream {
+    pub fn to_token_stream_with_owned_ptr_type(&self, db: &BindingsGenerator) -> TokenStream {
         // If it's not an owned pointer, just use the default implementation.
         let Some(pointee) = self.as_owned_ptr() else {
             return self.to_token_stream(db);
@@ -1352,9 +1354,9 @@ impl RsTypeKind {
 
     /// Similar to to_token_stream, but replacing RsTypeKind:Record with Self
     /// when the underlying Record matches the given one.
-    pub fn to_token_stream_replacing_by_self(
+    pub fn to_token_stream_replacing_by_self<'a>(
         &self,
-        db: &dyn BindingsGenerator,
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
         self_record: Option<&Record>,
     ) -> TokenStream {
         match self {
@@ -1425,7 +1427,7 @@ impl RsTypeKind {
     /// Returns a `Display`able type for this `RsTypeKind`.
     pub fn display<'a, 'db>(
         &'a self,
-        db: &'a dyn BindingsGenerator<'db>,
+        db: &'a BindingsGenerator<'db>,
     ) -> impl std::fmt::Display + use<'a, 'db> {
         DisplayRsTypeKind { rs_type_kind: self, db }
     }
@@ -1446,7 +1448,7 @@ impl RsTypeKind {
 /// requires a [`BindingsGenerator`] to be able to format the type.
 pub struct DisplayRsTypeKind<'a, 'db> {
     rs_type_kind: &'a RsTypeKind,
-    db: &'a dyn BindingsGenerator<'db>,
+    db: &'a BindingsGenerator<'db>,
 }
 
 impl std::fmt::Display for DisplayRsTypeKind<'_, '_> {
@@ -1465,7 +1467,10 @@ impl std::fmt::Display for DisplayRsTypeKind<'_, '_> {
 }
 
 impl RsTypeKind {
-    pub fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
+    pub fn to_token_stream<'a>(
+        &self,
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    ) -> TokenStream {
         match self {
             // errors become opaque blobs
             RsTypeKind::Error { symbol, .. } => {
@@ -1531,7 +1536,7 @@ impl RsTypeKind {
                 owned_ptr_type: _,
             } => {
                 if let Some(generic_monomorphization) = uniform_repr_template_type {
-                    return generic_monomorphization.to_token_stream(db);
+                    return generic_monomorphization.to_token_stream(&db);
                 }
                 let ident = make_rs_ident(record.rs_name.identifier.as_ref());
                 quote! { #crate_path #ident }
@@ -1697,7 +1702,7 @@ impl RsTypeKind {
                         }
                     }
                     BridgeRsTypeKind::DynCallable(dyn_callable) => {
-                        let dyn_callable_spelling = dyn_callable.dyn_fn_spelling(db);
+                        let dyn_callable_spelling = dyn_callable.dyn_fn_spelling(&db);
                         quote! { ::alloc::boxed::Box<#dyn_callable_spelling> }
                     }
                 }
@@ -1731,8 +1736,8 @@ impl RsTypeKind {
 ///
 /// This has _very_ limited support for other type expressions, like `&T`,
 /// and special-cases well known builtin types like `char`.
-fn fully_qualify_type(
-    db: &dyn BindingsGenerator,
+fn fully_qualify_type<'a>(
+    db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
     item: ir::Item,
     type_expression: &str,
 ) -> TokenStream {
@@ -1917,8 +1922,14 @@ mod tests {
         assert_eq!(vec!["fn", "::A", "::B", "::C"], dfs_names);
     }
 
+    #[derive(Copy, Clone)]
     struct EmptyDatabase;
-    impl<'db> BindingsGenerator<'db> for EmptyDatabase {}
+    impl Deref for EmptyDatabase {
+        type Target = BindingsGenerator<'static>;
+        fn deref(&self) -> &Self::Target {
+            panic!("Tried to use the empty bindings generator query group.")
+        }
+    }
 
     #[gtest]
     fn test_lifetime_elision_for_references() {
@@ -1928,7 +1939,7 @@ mod tests {
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
         };
-        assert_rs_matches!(reference.to_token_stream(&EmptyDatabase), quote! {&::T});
+        assert_rs_matches!(reference.to_token_stream(EmptyDatabase), quote! {&::T});
     }
 
     #[gtest]
@@ -1940,7 +1951,7 @@ mod tests {
             lifetime: Lifetime::new("_"),
         };
         assert_rs_matches!(
-            reference.to_token_stream(&EmptyDatabase),
+            reference.to_token_stream(EmptyDatabase),
             quote! {RvalueReference<'_, ::T>}
         );
     }
@@ -2001,7 +2012,7 @@ mod tests {
             },
         ] {
             let (all_required_features, reason) = func_ptr.required_crubit_features(
-                &EmptyDatabase,
+                EmptyDatabase,
                 <flagset::FlagSet<CrubitFeature>>::default(),
             );
             assert_eq!(
