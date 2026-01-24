@@ -183,10 +183,7 @@ fn test_ctor_macro_generic_struct() {
         type CtorInitializedFields = Self;
     }
 
-    let my_struct = emplace!(ctor!(MyStruct<u32> {
-        x: 4,
-        y: 2,
-    }));
+    let my_struct = emplace!(ctor!(MyStruct::<u32> { x: 4, y: 2 }));
 
     assert_eq!(my_struct.x, 4);
     assert_eq!(my_struct.y, 2);

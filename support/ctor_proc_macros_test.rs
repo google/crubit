@@ -252,10 +252,11 @@ fn test_recursively_pinned_generic_maybe_unpin() {
     static_assertions::assert_not_impl_any!(S<i32, ::std::marker::PhantomPinned>: Unpin);
 
     // And it can actually be constructed either way.
-    let _ = ::ctor::emplace!(::ctor::ctor!(S<i32, i32> { x: 42, y: 43 }));
-    let _ = ::ctor::emplace!(
-        ::ctor::ctor!(S<i32, PhantomPinned> { x: 42, y: ::ctor::PhantomPinnedCtor })
-    );
+    let _ = ::ctor::emplace!(::ctor::ctor!(S::<i32, i32> { x: 42, y: 43 }));
+    let _ = ::ctor::emplace!(::ctor::ctor!(S::<i32, PhantomPinned> {
+        x: 42,
+        y: ::ctor::PhantomPinnedCtor
+    }));
 }
 
 #[gtest]
