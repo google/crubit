@@ -98,7 +98,7 @@ pub fn generate_doc_comment(
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-pub fn generate_unsupported(db: &dyn BindingsGenerator, item: Rc<UnsupportedItem>) -> ApiSnippets {
+pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -> ApiSnippets {
     Item::UnsupportedItem(item.clone()).assert_in_error_scope(db.ir(), db.errors());
     for error in item.errors() {
         db.errors().report(error);

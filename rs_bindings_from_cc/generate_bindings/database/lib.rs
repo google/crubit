@@ -8,4 +8,4 @@ pub mod code_snippet;
 pub mod db;
 pub mod function_types;
 pub mod rs_snippet;
-pub use db::{BindingsGenerator, Database};
+pub use db::BindingsGenerator;

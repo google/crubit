@@ -14,7 +14,7 @@ use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
-use database::db::{BindingsGenerator, CodegenFunctions, Database};
+use database::db::{BindingsGenerator, CodegenFunctions};
 use database::rs_snippet::{
     BridgeRsTypeKind, Callable, FnTrait, Mutability, PassingConvention, RsTypeKind, RustPtrKind,
     Safety,
@@ -107,10 +107,7 @@ pub fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias(
-    db: &dyn BindingsGenerator,
-    type_alias: Rc<TypeAlias>,
-) -> Result<ApiSnippets> {
+fn generate_type_alias(db: &BindingsGenerator, type_alias: Rc<TypeAlias>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Alias);
     // Skip the type alias if it maps to a bridge type.
     // NOTE: rs_type_kind() gives a poor error message ("no bindings for <Alias>") if the underlying
@@ -165,7 +162,7 @@ fn generate_type_alias(
     })
 }
 
-fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
+fn generate_global_var(db: &BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Variable);
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
@@ -184,7 +181,7 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result
     })
 }
 
-fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
+fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Namespace);
     let ir = db.ir();
     let mut api_snippets = ApiSnippets::default();
@@ -203,7 +200,7 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
-fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> {
+fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
     if let Some(owning_target) = item.owning_target() {
         if !db.ir().is_current_target(&owning_target) {
             return Ok(ApiSnippets::default());
@@ -232,7 +229,7 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
 /// The implementation of generate_item, without the error recovery logic.
 ///
 /// Returns Err if bindings could not be generated for this item.
-fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
+fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
     let generated_item = match item {
         Item::Func(func) => match db.generate_function(func.clone(), None)? {
             None => ApiSnippets::default(),
@@ -338,8 +335,8 @@ pub fn new_database<'db>(
     errors: &'db dyn ErrorReporting,
     fatal_errors: &'db dyn ReportFatalError,
     environment: Environment,
-) -> Database<'db> {
-    Database::new(
+) -> BindingsGenerator<'db> {
+    BindingsGenerator::new(
         ir,
         errors,
         fatal_errors,
@@ -543,7 +540,7 @@ pub fn generate_bindings_tokens(
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind_safety`.
-fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Safety {
+fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Safety {
     match rs_type_kind {
         RsTypeKind::Error { error, .. } => {
             Safety::unsafe_because(format!("Crubit cannot assume unknown types are safe: {error}"))
@@ -627,7 +624,7 @@ fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> 
 /// Helper function for `rs_type_kind_safety`.
 /// Returns whether a callable is unsafe due to its parameters or return type.
 fn callable_safety(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     param_types: &[RsTypeKind],
     return_type: &RsTypeKind,
 ) -> Safety {
@@ -666,7 +663,7 @@ fn callable_safety(
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
-fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
+fn record_field_safety(db: &BindingsGenerator, field: Field) -> Safety {
     if field.access != AccessSpecifier::Public {
         return Safety::Safe;
     }
@@ -683,7 +680,7 @@ fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
 }
 
 /// Implementation of `BindingsGenerator::record_safety`.
-fn record_safety(db: &dyn BindingsGenerator, record: Rc<Record>) -> Safety {
+fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Safety {
     let mut doc = String::new();
 
     match record.safety_annotation {
@@ -742,7 +739,7 @@ fn record_safety(db: &dyn BindingsGenerator, record: Rc<Record>) -> Safety {
 }
 
 fn generate_rs_api_impl_includes(
-    db: &Database,
+    db: &BindingsGenerator,
     crubit_support_path_format: Format<1>,
     has_callables: bool,
 ) -> CppIncludes {
@@ -879,7 +876,7 @@ fn make_transmute_abi_type_from_item(
     item: &impl GenericItem,
     rs_name: &str,
     cc_name: &str,
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
 ) -> Result<CrubitAbiType> {
     let rust_type = rs_name
         .parse()
@@ -891,7 +888,7 @@ fn make_transmute_abi_type_from_item(
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
-fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
+fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
     match rs_type_kind {
         RsTypeKind::Error { error, .. } => {
             bail!("Type has an error and cannot be bridged: {error}")
@@ -1145,7 +1142,7 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
 /// `None` is returned if there is issue generating the thunk. The specific error is not reported
 /// because it will be reported elsewhere.
 fn generate_dyn_callable_cpp_thunk(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     dyn_callable: &Callable,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
@@ -1247,7 +1244,7 @@ fn generate_dyn_callable_cpp_thunk(
 /// `None` is returned if there is issue generating the definition. The specific error is not
 /// reported because it will be reported elsewhere.
 fn generate_dyn_callable_rust_thunk_impl(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     dyn_callable: Rc<Callable>,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
@@ -1468,7 +1465,7 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
 fn make_cpp_type_from_item(
     item: &impl GenericItem,
     cc_name: &str,
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
 ) -> Result<TokenStream> {
     let namespace_qualifier = db.ir().namespace_qualifier(item);
     let namespace_parts = namespace_qualifier.parts().map(|part| make_rs_ident(part));

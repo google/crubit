@@ -9,7 +9,7 @@ extern crate rustc_middle;
 
 use arc_anyhow::Result;
 use database::code_snippet::ApiSnippets;
-use database::{BindingsGenerator as _, Database, IncludeGuard};
+use database::{BindingsGenerator, IncludeGuard};
 use error_report::{FatalErrors, IgnoreErrors};
 use generate_bindings::{generate_bindings, new_database, BindingsTokens};
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
@@ -72,7 +72,7 @@ fn bindings_db_for_tests_with_features(
     tcx: TyCtxt,
     features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     with_kythe_annotations: bool,
-) -> Database {
+) -> BindingsGenerator {
     new_database(
         tcx,
         /* source_crate_name= */ None,
@@ -96,7 +96,7 @@ fn bindings_db_for_tests_with_features(
     )
 }
 
-pub fn bindings_db_for_tests(tcx: TyCtxt) -> Database {
+pub fn bindings_db_for_tests(tcx: TyCtxt) -> BindingsGenerator {
     bindings_db_for_tests_with_features(
         tcx,
         crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported,

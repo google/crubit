@@ -12,7 +12,7 @@ mod adt_core_bindings;
 pub use adt_core_bindings::{AdtCoreBindings, NoMoveOrAssign};
 pub mod cpp_type;
 mod db;
-pub use db::{BindingsGenerator, Database};
+pub use db::BindingsGenerator;
 mod fine_grained_feature;
 pub use fine_grained_feature::FineGrainedFeature;
 mod fully_qualified_name;

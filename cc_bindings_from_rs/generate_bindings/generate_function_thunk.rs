@@ -80,7 +80,7 @@ fn array_c_abi_c_type<'tcx>(tcx: ty::TyCtxt<'tcx>, inner_ty: ty::Ty<'tcx>) -> Re
 
 /// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.
 pub fn generate_thunk_decl<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     thunk_name: &Ident,
     has_self_param: bool,
@@ -180,7 +180,7 @@ pub fn generate_thunk_decl<'tcx>(
 /// Expects an exising local of type `cpp_type` named `local_name` and shadows it
 /// with a local of type `ty` named `local_name`.
 fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
     bridged_type: &BridgedType<'tcx>,
     local_name: &Ident,
@@ -234,7 +234,7 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
 /// Converts a local named `local_name` from its C ABI-compatible type
 /// `*const [*const core::ffi::c_void; <tuple_tys.len()>]` to a tuple of Rust types.
 fn convert_tuple_from_c_abi_to_rust<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     tuple_tys: &[ty::Ty<'tcx>],
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
@@ -263,7 +263,7 @@ fn convert_tuple_from_c_abi_to_rust<'tcx>(
 /// Returns code to convert a local named `local_name` from its C ABI-compatible type to its Rust
 /// type.
 fn convert_value_from_c_abi_to_rust<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
@@ -290,7 +290,7 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
 }
 
 fn c_abi_for_param_type<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
@@ -378,7 +378,7 @@ fn add_extern_c_decl(
 
 /// Writes a Rust value out into the memory pointed to a `*mut c_void` pointed to by `c_ptr`.
 fn write_rs_value_to_c_abi_ptr<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     rs_value: &Ident,
     c_ptr: &Ident,
     rs_type: ty::Ty<'tcx>,
@@ -496,7 +496,7 @@ where
 /// - `<::crate_name::some_module::SomeStruct as
 ///   ::core::default::Default>::default`
 pub fn generate_thunk_impl<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     fn_def_id: DefId,
     sig: &ty::FnSig<'tcx>,
     thunk_name: &str,
@@ -628,7 +628,7 @@ pub struct TraitThunks<'tcx> {
 }
 
 pub fn generate_trait_thunks<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     trait_id: DefId,
     // We do not support other generic args, yet.
     type_args: &[Ty<'tcx>],
