@@ -61,7 +61,7 @@ impl FunctionKind {
 }
 
 fn thunk_name(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     def_id: DefId,
     export_name: Option<Symbol>,
     needs_thunk: bool,
@@ -129,7 +129,7 @@ fn ident_for_each(prefix: &str, n: usize) -> Vec<Ident> {
 /// Returns a `TokenStream` containing an expression that evaluates to the
 /// C-ABI-compatible version of the type.
 fn cc_param_to_c_abi<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     cc_ident: Ident,
     ty: SugaredTy<'tcx>,
     post_analysis_typing_env: ty::TypingEnv<'tcx>,
@@ -243,7 +243,7 @@ struct ReturnConversion {
 }
 
 fn format_ty_for_cc_amending_prereqs<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: SugaredTy<'tcx>,
     prereqs: &mut CcPrerequisites,
 ) -> Result<TokenStream> {
@@ -254,7 +254,7 @@ fn format_ty_for_cc_amending_prereqs<'tcx>(
 }
 
 fn cc_return_value_from_c_abi<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ident: Ident,
     ty: SugaredTy<'tcx>,
     prereqs: &mut CcPrerequisites,
@@ -477,7 +477,7 @@ struct RefsToCheckForAliasing<'a, 'tcx> {
 /// C++ does not have this requirement, so we insert checks in the generated bindings to ensure that
 /// this requirement is not violated.
 fn refs_to_check_for_aliasing<'tcx, 'a>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     params: &'a [Param<'tcx>],
 ) -> Option<RefsToCheckForAliasing<'a, 'tcx>> {
     let tcx = db.tcx();
@@ -543,7 +543,7 @@ impl ThunkSelfParameter {
 /// Generates the wrapping code to call a thunk and return its result.
 /// This can be checking parameter invariants or creating a slot to pass as an output pointer.
 pub(crate) fn generate_thunk_call<'tcx>(
-    db: &dyn BindingsGenerator<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     thunk_name: Ident,
     rs_return_type: SugaredTy<'tcx>,
@@ -656,7 +656,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
 }
 
 /// Implementation of `BindingsGenerator::generate_function`.
-pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
+pub fn generate_function(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
     let tcx = db.tcx();
     ensure!(
         !tcx.generics_of(def_id).requires_monomorphization(tcx),

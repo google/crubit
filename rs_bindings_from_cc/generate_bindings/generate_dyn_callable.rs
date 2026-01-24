@@ -11,7 +11,7 @@ use quote::{format_ident, quote};
 
 /// Generates the `CrubitAbiType` for callables.
 pub fn dyn_callable_crubit_abi_type(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     callable: &Callable,
 ) -> Result<CrubitAbiType> {
     let dyn_fn_spelling = callable.dyn_fn_spelling(db);
@@ -125,7 +125,7 @@ pub fn dyn_callable_crubit_abi_type(
 /// value. In the case that all inputs and outputs are C-compatible by value, this lambda is simply
 /// a pointer to the thunk.
 fn generate_invoker_function_pointer(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     callable: &Callable,
     cpp_param_types: &[TokenStream],
     cpp_return_type: &TokenStream,

@@ -5,7 +5,6 @@
 use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{Mutability, RsTypeKind};
-use database::BindingsGenerator;
 use googletest::{expect_eq, gtest};
 use ir_testing::{retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
