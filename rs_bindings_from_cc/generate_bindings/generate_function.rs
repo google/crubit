@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// This is used to remove the record whose trait implementation is being
 /// generated.
 fn trait_name_to_token_stream_removing_trait_record(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     trait_name: &TraitName,
     trait_record: Option<&Record>,
 ) -> TokenStream {
@@ -83,7 +83,7 @@ fn trait_name_to_token_stream_removing_trait_record(
     }
 }
 
-fn trait_name_to_token_stream(db: &dyn BindingsGenerator, trait_name: &TraitName) -> TokenStream {
+fn trait_name_to_token_stream(db: &BindingsGenerator, trait_name: &TraitName) -> TokenStream {
     trait_name_to_token_stream_removing_trait_record(db, trait_name, None)
 }
 
@@ -191,7 +191,7 @@ static OPERATOR_METADATA: LazyLock<OperatorMetadata> = LazyLock::new(|| {
 ///
 /// This is necessary because ADL is needed in order to find friend functions.
 fn is_friend_of_record_not_visible_by_adl(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     param_types: &[RsTypeKind],
 ) -> bool {
@@ -208,7 +208,7 @@ fn is_friend_of_record_not_visible_by_adl(
 ///
 /// Returns the `RsTypeKind` and `Record` of the underlying record type.
 fn type_by_value_or_under_const_ref<'a>(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     kind: &'a mut RsTypeKind,
     value_desc: &str,
     errors: &Errors,
@@ -239,7 +239,7 @@ fn type_by_value_or_under_const_ref<'a>(
 }
 
 fn api_func_shape_for_operator_ne(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
@@ -272,7 +272,7 @@ fn api_func_shape_for_operator_ne(
 }
 
 fn api_func_shape_for_operator_eq(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
@@ -297,7 +297,7 @@ fn api_func_shape_for_operator_eq(
 }
 
 fn api_func_shape_for_operator_lt(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
@@ -399,7 +399,7 @@ fn api_func_shape_for_operator_assign(
 }
 
 fn api_func_shape_for_operator_unary_plus(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     param_type: &RsTypeKind,
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind)> {
@@ -416,7 +416,7 @@ fn api_func_shape_for_operator_unary_plus(
 }
 
 fn extract_first_operator_parameter(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     param_types: &RsTypeKind,
     errors: &Errors,
 ) -> ErrorsOr<(Rc<Record>, ImplFor)> {
@@ -448,7 +448,7 @@ fn extract_first_operator_parameter(
 }
 
 fn expect_possibly_incomplete_record<'a>(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     type_kind: &'a RsTypeKind,
     value_desc: &str,
     errors: &Errors,
@@ -469,7 +469,7 @@ fn expect_possibly_incomplete_record<'a>(
 }
 
 fn record_type_of_compound_assignment<'a>(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     lhs_type: &'a mut RsTypeKind,
     errors: &Errors,
 ) -> ErrorsOr<&'a Rc<Record>> {
@@ -520,12 +520,12 @@ fn record_type_of_compound_assignment<'a>(
 
 /// Reports a fatal error generating bindings for a function.
 /// Fatal errors should only be reported
-fn report_fatal_func_error(db: &dyn BindingsGenerator, func: &Func, msg: &str) {
+fn report_fatal_func_error(db: &BindingsGenerator, func: &Func, msg: &str) {
     db.fatal_errors().report(&format!("{}: {}", func.source_loc, msg));
 }
 
 fn api_func_shape_for_operator(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
@@ -606,7 +606,7 @@ fn api_func_shape_for_operator(
 }
 
 fn api_func_shape_for_identifier(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
@@ -652,7 +652,7 @@ fn api_func_shape_for_identifier(
 }
 
 fn api_func_shape_for_destructor(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
@@ -712,7 +712,7 @@ fn api_func_shape_for_destructor(
 
 /// Issue any errors related to unsafe constructors being unsupported.
 fn issue_unsafe_constructor_errors(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     record: &Record,
     param_types: &[RsTypeKind],
@@ -755,7 +755,7 @@ fn issue_unsafe_constructor_errors(
 }
 
 fn api_func_shape_for_constructor(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     maybe_record: Option<&Rc<Record>>,
     param_types: &mut [RsTypeKind],
@@ -869,7 +869,7 @@ fn api_func_shape_for_constructor(
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `(func_name, impl_kind)`: The function name and ImplKind.
 fn api_func_shape(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
@@ -910,7 +910,7 @@ fn api_func_shape(
 /// Returns the shape of the generated Rust API for a given function definition
 /// or `None` if no function will be generated.
 fn api_func_shape_if_some(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     param_types: &mut [RsTypeKind],
 ) -> Option<(Ident, ImplKind)> {
@@ -925,7 +925,7 @@ fn api_func_shape_if_some(
 
 /// Implementation of `BindingsGenerator::get_binding`.
 pub fn get_binding(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     expected_function_name: UnqualifiedIdentifier,
     expected_param_types: Vec<RsTypeKind>,
 ) -> Option<(Ident, ImplKind)> {
@@ -946,7 +946,7 @@ pub fn get_binding(
 }
 
 /// Implementation of `BindingsGenerator::is_record_clonable`.
-pub fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> bool {
+pub fn is_record_clonable(db: &BindingsGenerator, record: Rc<Record>) -> bool {
     if !record.is_unpin() {
         return false;
     }
@@ -1022,7 +1022,7 @@ struct ParamValueAdjustments {
 /// `param_types`-length list containing any necessary adjustments to the
 /// parameter values.
 fn adjust_param_types_for_trait_impl(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     impl_kind: &ImplKind,
     param_types: &mut [RsTypeKind],
     errors: &Errors,
@@ -1060,7 +1060,7 @@ fn adjust_param_types_for_trait_impl(
 
 #[allow(clippy::too_many_arguments)]
 fn generate_func_body(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     impl_kind: &ImplKind,
     crate_root_path: TokenStream,
     return_type: &RsTypeKind,
@@ -1326,7 +1326,7 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
 }
 
 fn rs_type_kinds_for_func(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
 ) -> Result<(Vec<RsTypeKind>, RsTypeKind)> {
 
@@ -1399,7 +1399,7 @@ fn rs_type_kinds_for_func(
 
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: Rc<Func>,
     derived_record: Option<Rc<Record>>,
 ) -> Result<Option<GeneratedFunction>> {
@@ -1869,7 +1869,7 @@ struct BindingsSignature {
 /// * serialize a `()` as the empty string.
 #[allow(clippy::too_many_arguments)]
 fn function_signature(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     features: &mut FlagSet<Feature>,
     func: &Func,
     impl_kind: &ImplKind,
@@ -2148,7 +2148,7 @@ fn function_signature(
 }
 
 fn move_self_from_out_param_to_return_value(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     func: &Func,
     return_type: &mut RsTypeKind,
     api_params: &mut Vec<TokenStream>,
@@ -2225,7 +2225,7 @@ fn format_tuple_except_singleton(iter: impl IntoIterator<Item = TokenStream>) ->
 }
 
 fn format_tuple_except_singleton_replacing_by_self(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     items: &[RsTypeKind],
     trait_record: Option<&Record>,
 ) -> TokenStream {
@@ -2252,7 +2252,7 @@ fn format_tuple_except_singleton_replacing_by_self(
 ///
 /// where `SameType` is the same type as the class this function is declared in.
 fn has_copy_assignment_operator_from_const_reference(
-    db: &dyn BindingsGenerator,
+    db: &BindingsGenerator,
     copy_constructor: &Func,
 ) -> bool {
     let [_self, first_param] = &copy_constructor.params[..] else {
@@ -2282,9 +2282,7 @@ fn has_copy_assignment_operator_from_const_reference(
 }
 
 /// Implementation of `BindingsGenerator::overload_sets`.
-pub fn overload_sets(
-    db: &dyn BindingsGenerator,
-) -> Rc<HashMap<Rc<FunctionId>, Option<ir::ItemId>>> {
+pub fn overload_sets(db: &BindingsGenerator) -> Rc<HashMap<Rc<FunctionId>, Option<ir::ItemId>>> {
     #[derive(Copy, Clone)]
     struct CandidateFunction {
         item_id: ir::ItemId,
