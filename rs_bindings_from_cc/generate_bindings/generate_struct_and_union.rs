@@ -12,7 +12,6 @@ use database::code_snippet::{
     NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk, ThunkImpl,
     UpcastImpl, UpcastImplBody, Visibility,
 };
-use database::db;
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::BindingsGenerator;
 use error_report::{bail, ensure};
@@ -315,7 +314,7 @@ fn field_definition(
         }
     };
     let visibility = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
-        db::type_visibility(db, &record.owning_target, field_rs_type_kind.clone().unwrap())
+        db.type_visibility(&record.owning_target, field_rs_type_kind.clone().unwrap())
             .unwrap_or_default()
     } else {
         Visibility::PubCrate

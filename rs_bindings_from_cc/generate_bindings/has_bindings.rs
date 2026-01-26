@@ -7,7 +7,6 @@ use database::code_snippet::{
     required_crubit_features, BindingsInfo, NoBindingsReason, RequiredCrubitFeature,
     ResolvedTypeName, Visibility,
 };
-use database::db;
 use database::rs_snippet::RsTypeKind;
 use database::BindingsGenerator;
 use error_report::{anyhow, bail};
@@ -358,7 +357,7 @@ fn type_visibility(
     let Some(target) = item.owning_target() else {
         return Ok(Visibility::Public);
     };
-    match db::type_visibility(db, &target, rs_type_kind.clone()) {
+    match db.type_visibility(&target, rs_type_kind.clone()) {
         Ok(vis) => Ok(vis),
         Err(error) => {
             let missing_features = vec![RequiredCrubitFeature {

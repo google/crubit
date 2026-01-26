@@ -62,7 +62,7 @@ memoized::query_group! {
         /// reference lifetimes with the elided lifetime (`'_`).
         ///
         /// An `Ok()` return value does not necessarily imply that the resulting `RsTypeKind` is
-        /// usable in APIs: callers must also check the result of `db::type_visibility()` for
+        /// usable in APIs: callers must also check the result of `type_visibility()` for
         /// the type, to see if it is usable within a specific crate. Eventually, all types will
         /// have a successful non-error return value, even if the type is not generally usable.
         /// Instead, restrictions will always be done via `type_visibility`.
@@ -132,7 +132,7 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:crubit_abi_type
         fn crubit_abi_type(&self, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType>;
 
-        // You should probably use db::type_visibility instead of this function.
+        // You should probably use `type_visibility()` instead of this function.
         fn type_target_restriction(&self, rs_type_kind: RsTypeKind) -> Result<Option<BazelLabel>>;
 
         /// Resolves type names to a map from name to ResolvedTypeName.
@@ -190,34 +190,26 @@ memoized::query_group! {
                 Some(id) => *id != Some(item_id),
             }
         }
-    }
-    pub struct Database;
-}
 
-/// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
-// TODO(jeanpierreda): it would be nice if this was a `#[provided]` function,
-// but because it calls `display`, it would need to convert to a
-// `dyn BindingsGenerator`, which is not reasonably possible.
-//
-// See e.g. https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=10f937bb0f13d2ea05f20f676c37439a
-pub fn type_visibility(
-    db: &dyn BindingsGenerator,
-    library: &BazelLabel,
-    rs_type_kind: RsTypeKind,
-) -> Result<Visibility> {
-    match db.type_target_restriction(rs_type_kind.clone())? {
-        Some(label) if &label != library => {
-            let rs_type_kind = rs_type_kind.display(db);
-            Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
-        }
-        Some(_) => Ok(Visibility::PubCrate),
-        None => {
-            for subtype in rs_type_kind.dfs_iter() {
-                if let RsTypeKind::Error { visibility_override, .. } = subtype {
-                    return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
+        #[provided]
+        /// Returns the `Visibility` of the `rs_type_kind` in the given `library`.
+        fn type_visibility(&self, library: &BazelLabel, rs_type_kind: RsTypeKind) -> Result<Visibility> {
+            match self.type_target_restriction(rs_type_kind.clone())? {
+                Some(label) if &label != library => {
+                    let rs_type_kind = rs_type_kind.display(self);
+                    Err(anyhow!("{rs_type_kind} is `pub(crate)` in {label}"))
+                }
+                Some(_) => Ok(Visibility::PubCrate),
+                None => {
+                    for subtype in rs_type_kind.dfs_iter() {
+                        if let RsTypeKind::Error { visibility_override, .. } = subtype {
+                            return Ok(visibility_override.unwrap_or(Visibility::PubCrate));
+                        }
+                    }
+                    Ok(Visibility::Public)
                 }
             }
-            Ok(Visibility::Public)
         }
     }
+    pub struct Database;
 }

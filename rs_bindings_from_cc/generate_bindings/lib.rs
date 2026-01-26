@@ -10,7 +10,7 @@ use crubit_abi_type::{CrubitAbiType, CrubitAbiTypeToRustExprTokens, FullyQualifi
 use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
-use database::db::{self, BindingsGenerator, CodegenFunctions, Database};
+use database::db::{BindingsGenerator, CodegenFunctions, Database};
 use database::rs_snippet::{
     BridgeRsTypeKind, Callable, FnTrait, Mutability, RsTypeKind, RustPtrKind,
 };
@@ -138,7 +138,8 @@ fn generate_type_alias(
                 Some(&type_alias.source_loc),
                 db.environment(),
             ),
-            visibility: db::type_visibility(db, &type_alias.owning_target, rs_type_kind)
+            visibility: db
+                .type_visibility(&type_alias.owning_target, rs_type_kind)
                 .unwrap_or_default(),
             ident: make_rs_ident(&type_alias.rs_name.identifier),
             underlying_type: underlying_type.to_token_stream(db),
@@ -162,7 +163,7 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result
                 is_mut: !var.type_.is_const,
                 ident: make_rs_ident(&var.rs_name.identifier),
                 type_tokens: type_.to_token_stream(db),
-                visibility: db::type_visibility(db, &var.owning_target, type_).unwrap_or_default(),
+                visibility: db.type_visibility(&var.owning_target, type_).unwrap_or_default(),
             },
         )]),
         ..Default::default()
