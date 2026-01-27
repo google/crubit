@@ -424,25 +424,32 @@ pub fn generate_function_thunk_impl(
             let arg_type = db.rs_type_kind(p.type_.clone())?;
             let cpp_type = cpp_type_name::format_cpp_type(&arg_type, ir)?;
             if let RsTypeKind::BridgeType { bridge_type, .. } = arg_type.unalias() {
-                let BridgeRsTypeKind::BridgeVoidConverters { rust_to_cpp_converter, .. } =
-                    bridge_type
-                else {
-                    return Ok(quote! { const unsigned char* });
-                };
-
-                let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
                 let ident = expect_format_cc_ident(&p.identifier.identifier);
-                let cpp_ident = convert_ident(&ident);
-                conversion_externs.extend(quote! {
-                    extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
-                });
-                conversion_stmts.extend(quote! {
-                    ::crubit::LazyInit<#cpp_type> #cpp_ident;
-                });
-                conversion_stmts.extend(quote! {
-                    #convert_function(#ident, &#cpp_ident.val);
-                });
-                Ok(quote! { void* })
+                match bridge_type {
+                    BridgeRsTypeKind::BridgeVoidConverters { rust_to_cpp_converter, .. } => {
+                        let convert_function = expect_format_cc_ident(rust_to_cpp_converter);
+                        let cpp_ident = convert_ident(&ident);
+                        conversion_externs.extend(quote! {
+                            extern "C" void #convert_function(void* rust_struct, void* cpp_struct);
+                        });
+                        conversion_stmts.extend(quote! {
+                            ::crubit::LazyInit<#cpp_type> #cpp_ident;
+                        });
+                        conversion_stmts.extend(quote! {
+                            #convert_function(#ident, &#cpp_ident.val);
+                        });
+                        Ok(quote! { void* })
+                    }
+                    _ => {
+                        let crubit_abi_type = db.crubit_abi_type(arg_type)?;
+                        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                        let decoder = format_ident!("__{ident}_decoder");
+                        conversion_stmts.extend(quote! {
+                            ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
+                        });
+                        Ok(quote! { const unsigned char* })
+                    }
+                }
             } else if !arg_type.is_c_abi_compatible_by_value() {
                 // non-Unpin types are wrapped by a pointer in the thunk.
                 Ok(quote! {#cpp_type *})
@@ -486,11 +493,9 @@ pub fn generate_function_thunk_impl(
                         let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
                         let crubit_abi_type_expr_tokens =
                             CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                        let decoder = format_ident!("__{ident}_decoder");
                         Ok(quote! {
-                            ::crubit::internal::Decode<#crubit_abi_type_tokens>(
-                                #crubit_abi_type_expr_tokens,
-                                #ident
-                            )
+                            #crubit_abi_type_expr_tokens.Decode(#decoder)
                         })
                     } else if !rs_type_kind.is_c_abi_compatible_by_value() {
                         Ok(quote! { std::move(* #ident) })
@@ -594,9 +599,11 @@ pub fn generate_function_thunk_impl(
         let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
         let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
         quote! {
-            ::crubit::internal::Encode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens,
-                                                                #out_param,
-                                                                #return_expr)
+            ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
+            #crubit_abi_type_expr_tokens.Encode(
+                #return_expr,
+                __return_encoder
+            )
         }
     } else if !is_return_value_c_abi_compatible {
         let out_param = &param_idents[0];

@@ -22,16 +22,18 @@
 
 extern "C" void __rust_thunk___Z15ReturnCppStructv(
     unsigned char* __return_abi_buffer) {
-  ::crubit::internal::Encode<::crubit::CppStructAbi>(
-      ::crubit::CppStructAbi(), __return_abi_buffer, ReturnCppStruct());
+  ::crubit::Encoder __return_encoder(::crubit::CppStructAbi::kSize,
+                                     __return_abi_buffer);
+  ::crubit::CppStructAbi().Encode(ReturnCppStruct(), __return_encoder);
 }
 
 static_assert((struct CppStruct (*)()) & ::ReturnCppStruct);
 
 extern "C" void __rust_thunk___Z13TakeCppStruct9CppStruct(
     const unsigned char* __param_0) {
-  TakeCppStruct(::crubit::internal::Decode<::crubit::CppStructAbi>(
-      ::crubit::CppStructAbi(), __param_0));
+  ::crubit::Decoder ____param_0_decoder(::crubit::CppStructAbi::kSize,
+                                        __param_0);
+  TakeCppStruct(::crubit::CppStructAbi().Decode(____param_0_decoder));
 }
 
 static_assert((void (*)(struct CppStruct)) & ::TakeCppStruct);
@@ -49,11 +51,12 @@ extern "C" void __rust_thunk___ZN4Vec3C1Ev(struct Vec3* __this) {
 extern "C" void __rust_thunk___Z16MakeOptionalVec3fffb(
     unsigned char* __return_abi_buffer, float x, float y, float z,
     bool is_present) {
-  ::crubit::internal::Encode<
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
-          ::crubit::TransmuteAbi<::Vec3>()),
-      __return_abi_buffer, MakeOptionalVec3(x, y, z, is_present));
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
+      ::crubit::TransmuteAbi<::Vec3>())
+      .Encode(MakeOptionalVec3(x, y, z, is_present), __return_encoder);
 }
 
 static_assert((struct MyOption<Vec3> (*)(float, float, float, bool)) &
@@ -61,17 +64,18 @@ static_assert((struct MyOption<Vec3> (*)(float, float, float, bool)) &
 
 extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
     unsigned char* __return_abi_buffer, const unsigned char* v, float factor) {
-  ::crubit::internal::Encode<
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
-          ::crubit::TransmuteAbi<::Vec3>()),
-      __return_abi_buffer,
-      MapMultiply(::crubit::internal::Decode<
-                      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>>(
-                      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
-                          ::crubit::TransmuteAbi<::Vec3>()),
-                      v),
-                  factor));
+  ::crubit::Decoder __v_decoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>::kSize, v);
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
+      ::crubit::TransmuteAbi<::Vec3>())
+      .Encode(MapMultiply(::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Vec3>>(
+                              ::crubit::TransmuteAbi<::Vec3>())
+                              .Decode(__v_decoder),
+                          factor),
+              __return_encoder);
 }
 
 static_assert((struct MyOption<Vec3> (*)(struct MyOption<Vec3>, float)) &
@@ -79,11 +83,12 @@ static_assert((struct MyOption<Vec3> (*)(struct MyOption<Vec3>, float)) &
 
 extern "C" void __rust_thunk___Z14MakeMyI8Structv(
     unsigned char* __return_abi_buffer) {
-  ::crubit::internal::Encode<
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>>(
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>(
-          ::crubit::TransmuteAbi<::MyI8Struct>()),
-      __return_abi_buffer, MakeMyI8Struct());
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::MyI8Struct>>(
+      ::crubit::TransmuteAbi<::MyI8Struct>())
+      .Encode(MakeMyI8Struct(), __return_encoder);
 }
 
 static_assert((struct MyOption<MyI8Struct> (*)()) & ::MakeMyI8Struct);
@@ -95,11 +100,12 @@ static_assert(
 
 extern "C" void __rust_thunk___Z12MaybeVoidPtrv(
     unsigned char* __return_abi_buffer) {
-  ::crubit::internal::Encode<
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<void*>>>(
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<void*>>(
-          ::crubit::TransmuteAbi<void*>()),
-      __return_abi_buffer, MaybeVoidPtr());
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<void*>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<void*>>(
+      ::crubit::TransmuteAbi<void*>())
+      .Encode(MaybeVoidPtr(), __return_encoder);
 }
 
 static_assert((struct MyOption<void*> (*)()) & ::MaybeVoidPtr);
@@ -107,12 +113,14 @@ static_assert((struct MyOption<void*> (*)()) & ::MaybeVoidPtr);
 extern "C" void
 __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE(
     unsigned char* __return_abi_buffer, ::rs_std::SliceRef<const int> slice) {
-  ::crubit::internal::Encode<::crubit::MyOptionAbi<
-      ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>>(
+  ::crubit::Encoder __return_encoder(
       ::crubit::MyOptionAbi<
-          ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>(
-          ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>()),
-      __return_abi_buffer, AcceptsSliceAndReturnsStatusErrorIfEmpty(slice));
+          ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>>(
+      ::crubit::TransmuteAbi<::rs_std::SliceRef<const int>>())
+      .Encode(AcceptsSliceAndReturnsStatusErrorIfEmpty(slice),
+              __return_encoder);
 }
 
 static_assert((struct MyOption<rs_std::SliceRef<const int>> (*)(
@@ -121,22 +129,24 @@ static_assert((struct MyOption<rs_std::SliceRef<const int>> (*)(
 
 extern "C" void __rust_thunk___Z16ReturnsCStrArrayv(
     unsigned char* __return_abi_buffer) {
-  ::crubit::internal::Encode<
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<char const**>>>(
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<char const**>>(
-          ::crubit::TransmuteAbi<char const**>()),
-      __return_abi_buffer, ReturnsCStrArray());
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<char const**>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<char const**>>(
+      ::crubit::TransmuteAbi<char const**>())
+      .Encode(ReturnsCStrArray(), __return_encoder);
 }
 
 static_assert((struct MyOption<const char**> (*)()) & ::ReturnsCStrArray);
 
 extern "C" void __rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(
     unsigned char* __return_abi_buffer) {
-  ::crubit::internal::Encode<
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::DefaultEnum>>>(
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::DefaultEnum>>(
-          ::crubit::TransmuteAbi<::DefaultEnum>()),
-      __return_abi_buffer, ReturnsDefaultEnumInComposableBridgeType());
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::DefaultEnum>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::DefaultEnum>>(
+      ::crubit::TransmuteAbi<::DefaultEnum>())
+      .Encode(ReturnsDefaultEnumInComposableBridgeType(), __return_encoder);
 }
 
 static_assert((struct MyOption<DefaultEnum> (*)()) &
@@ -144,11 +154,12 @@ static_assert((struct MyOption<DefaultEnum> (*)()) &
 
 extern "C" void __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
     unsigned char* __return_abi_buffer) {
-  ::crubit::internal::Encode<
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::I64Enum>>>(
-      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::I64Enum>>(
-          ::crubit::TransmuteAbi<::I64Enum>()),
-      __return_abi_buffer, ReturnsI64EnumInComposableBridgeType());
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::I64Enum>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::I64Enum>>(
+      ::crubit::TransmuteAbi<::I64Enum>())
+      .Encode(ReturnsI64EnumInComposableBridgeType(), __return_encoder);
 }
 
 static_assert((struct MyOption<I64Enum> (*)()) &

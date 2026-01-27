@@ -191,10 +191,10 @@ typename Abi::Value Decode(Abi&& abi, const unsigned char* buf);
 // A wrapper around a buffer that tracks which parts of a buffer have already
 // been written to.
 class Encoder {
+ public:
   explicit Encoder(size_t remaining_bytes, unsigned char* buf)
       : remaining_bytes_(remaining_bytes), buf_(buf) {}
 
- public:
   void* Next(size_t size) & {
     remaining_bytes_ -= size;
     return buf_ + remaining_bytes_;
@@ -213,10 +213,10 @@ class Encoder {
 // A wrapper around a buffer that tracks which parts of a buffer have already
 // been read from.
 class Decoder {
+ public:
   explicit Decoder(size_t remaining_bytes, const unsigned char* buf)
       : remaining_bytes_(remaining_bytes), buf_(buf) {}
 
- public:
   const void* Next(size_t size) & {
     remaining_bytes_ -= size;
     return buf_ + remaining_bytes_;
