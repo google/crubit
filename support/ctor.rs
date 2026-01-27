@@ -1265,7 +1265,6 @@ pub trait PinnedDrop {
 #[macro_export]
 macro_rules! ctor {
     // Struct {} ctor.
-    // TODO(b/469183617): Make the `::` required.
     ( $t:ident $(:: $ts:ident)* $(:: < $($gp:tt),+ >)? {$($body:tt)*} ) => {
         {
             use $t $(:: $ts)* as Type;
