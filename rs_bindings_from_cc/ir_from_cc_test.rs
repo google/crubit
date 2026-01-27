@@ -93,6 +93,7 @@ fn test_function() {
                 enclosing_item_id: None,
                 adl_enclosing_record: None,
                 must_bind: false,
+                lifetime_inputs: [],
             }
         }
     );

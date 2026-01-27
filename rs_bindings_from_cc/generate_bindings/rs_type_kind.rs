@@ -91,7 +91,12 @@ pub fn rs_type_kind_with_lifetime_elision(
                 }
             })
         }
-        CcTypeVariant::FuncPointer { non_null, call_conv, param_and_return_types } => {
+        CcTypeVariant::FuncPointer {
+            non_null,
+            call_conv,
+            param_and_return_types,
+            lifetime_inputs: _,
+        } => {
             let (return_type, param_types) = param_and_return_types
                 .split_last()
                 .expect("In well-formed IR function pointers include at least the return type");

@@ -331,6 +331,7 @@ rust_library(
         ":generate_comment",
         ":generate_function_thunk",
         ":has_bindings",
+        ":lifetime_defaults_transform",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
@@ -428,6 +429,7 @@ multiplatform_rust_test(
         "not_run:arm",
         "not_run:mac",
     ],
+    visibility = ["//cargo:__subpackages__"],
     deps = [
         ":lifetime_defaults_transform",
         ":multiplatform_ir_testing",

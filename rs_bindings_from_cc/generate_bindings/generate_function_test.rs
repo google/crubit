@@ -10,7 +10,7 @@ use generate_function_thunk::thunk_ident;
 use googletest::prelude::{assert_that, contains_substring, gtest, OrFail as _};
 use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{retrieve_func, with_lifetime_macros};
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency};
+use multiplatform_ir_testing::{ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_dependency};
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
 use token_stream_matchers::{
@@ -1100,7 +1100,8 @@ fn test_impl_eq_non_const_member_function() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
         struct SomeStruct final {
-            bool operator==(const SomeStruct& other) /* no `const` here */;
+            bool operator==(const SomeStruct& other) /* no `const` here */
+;
         };"#,
     )?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -1139,7 +1140,8 @@ fn test_impl_lt_non_const_member_function() -> Result<()> {
                 return i == other.i;
             }
             int i;
-            bool operator<(const SomeStruct& other) /* no `const` here */;
+bool operator<(const SomeStruct& other) /* no `const` here */
+;
         };"#,
     )?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -1437,7 +1439,7 @@ fn test_nonunpin_drop() -> Result<()> {
 fn test_nonunpin_0_arg_constructor() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct HasConstructor {
             explicit HasConstructor() {}
             ~HasConstructor();
@@ -1471,7 +1473,7 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
 fn test_nonunpin_1_arg_constructor() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct HasConstructor {
             explicit HasConstructor(unsigned char input) {}
             ~HasConstructor();
@@ -1505,7 +1507,7 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
 fn test_nonunpin_2_arg_constructor() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct HasConstructor {
             explicit HasConstructor(unsigned char input1, signed char input2) {}
             ~HasConstructor();
@@ -1542,13 +1544,13 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
 fn test_nonunpin_by_value_params() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct HasConstructor {
-            // int& x is here to create a 'b lifetime, which collides with a synthesized
-            // lifetime name. But that's OK! We handle collisions!
-            // (`a` would also work, but that's just because the left hand doesn't know what
-            // the right is doing: the `a` lifetime is present in some places, but eventually
-            // removed from the public interface.)
+// int& x is here to create a 'b lifetime, which collides with a synthesized
+// lifetime name. But that's OK! We handle collisions!
+// (`a` would also work, but that's just because the left hand doesn't know what
+// the right is doing: the `a` lifetime is present in some places, but eventually
+// removed from the public interface.)
             explicit HasConstructor(const int& x, HasConstructor y, HasConstructor b) {}
             ~HasConstructor();
         };"#,
@@ -1591,7 +1593,7 @@ fn test_nonunpin_by_value_params() -> Result<()> {
 fn test_nonunpin_return() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct Nontrivial {~Nontrivial();};
 
         Nontrivial ReturnsByValue(const int& x, const int& y);
@@ -1629,7 +1631,7 @@ fn test_nonunpin_return() -> Result<()> {
 fn test_nonunpin_const_return() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct Nontrivial {~Nontrivial();};
 
         const Nontrivial ReturnsByValue(const int& x, const int& y);
@@ -1815,7 +1817,7 @@ fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
 fn test_nonunpin_return_assign() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct Nontrivial {
             ~Nontrivial();
             Nontrivial operator=(const Nontrivial& other);
@@ -1863,7 +1865,7 @@ fn test_nonunpin_return_assign() -> Result<()> {
 fn test_nonunpin_param() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct Nontrivial {
             Nontrivial(Nontrivial&&);
             ~Nontrivial();
@@ -1899,7 +1901,7 @@ fn test_nonunpin_param() -> Result<()> {
 fn test_nonunpin_trait_param() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin`.
+// This type must be `!Unpin`.
         struct Nontrivial {
             Nontrivial(Nontrivial&&);
             Nontrivial& operator=(Nontrivial) {}
@@ -1907,7 +1909,8 @@ fn test_nonunpin_trait_param() -> Result<()> {
         };
 
         struct Trivial final {
-            /*implicit*/ Trivial(Nontrivial) {}
+/*implicit*/
+ Trivial(Nontrivial) {}
         };
         "#,
     )?;
@@ -1937,7 +1940,7 @@ fn test_nonunpin_trait_param() -> Result<()> {
 fn test_nonmovable_param() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
-        // This type must be `!Unpin` and non-move constructible.
+// This type must be `!Unpin` and non-move constructible.
         struct Nonmovable {
             Nonmovable(Nonmovable&&) = delete;
         };
@@ -1976,7 +1979,7 @@ fn test_function_returning_rvalue_reference() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
         struct SomeStruct final {
-            // Inline to force generation (and test coverage) of C++ thunks.
+// Inline to force generation (and test coverage) of C++ thunks.
             inline SomeStruct&& GetRValueReference() {
               return static_cast<SomeStruct&&>(*this);
             }
@@ -2055,5 +2058,38 @@ fn test_c_abi_compatible_type_by_value_with_move() -> Result<()> {
             }
         }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_simple_explicit_lifetime() -> Result<()> {
+    // TODO(b/454627672): Right now this just checks that generating code from the result of
+    // ir_from_assumed_lifetimes_cc isn't immediately broken.
+    let ir = ir_from_assumed_lifetimes_cc("int& $a Add(int& $a x);")?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub unsafe fn Add(x: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int {
+                crate::detail::__rust_thunk___Z3AddRi(x)
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            mod detail {
+                #[allow(unused_imports)]
+                use super::*;
+                unsafe extern "C" {
+                    #[link_name = "_Z3AddRi"]
+                    pub(crate) unsafe fn __rust_thunk___Z3AddRi(x: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int;
+                }
+            }
+        }
+    );
+
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3AddRi});
     Ok(())
 }

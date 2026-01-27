@@ -62,9 +62,14 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
 ///
 /// This provides one place to update the IR that affects both
 /// `make_ir_from_items` and `ir_from_cc_dependency`.
-fn update_test_ir(ir: &mut IR) {
+fn update_test_ir(ir: &mut IR, extra_feature: Option<&str>) {
     *ir.target_crubit_features_mut(&ir.current_target().clone()) = *TESTING_FEATURES;
     *ir.target_crubit_features_mut(&ir::BazelLabel(DEPENDENCY_TARGET.into())) = *TESTING_FEATURES;
+    if let Some(s) = extra_feature {
+        let feature = crubit_feature::named_features(s.as_bytes()).unwrap();
+        *ir.target_crubit_features_mut(&ir.current_target().clone()) |= feature;
+        *ir.target_crubit_features_mut(&ir::BazelLabel(DEPENDENCY_TARGET.into())) |= feature;
+    }
 }
 
 /// Create a testing `IR` instance from given items, using mock values for other
@@ -79,7 +84,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
         /* crubit_features= */
         <BTreeMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
     );
-    update_test_ir(&mut ir);
+    update_test_ir(&mut ir, None);
     ir
 }
 
@@ -125,7 +130,7 @@ pub fn ir_from_cc_dependency(
         .into_boxed_slice()
     };
     let mut ir = ir::deserialize_ir(&*json_utf8)?;
-    update_test_ir(&mut ir);
+    update_test_ir(&mut ir, extra_feature);
     Ok(ir)
 }
 

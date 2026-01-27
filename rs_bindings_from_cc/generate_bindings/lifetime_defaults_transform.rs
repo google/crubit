@@ -6,19 +6,105 @@
 
 //! Adds default lifetimes to (partially-) unannotated IR.
 
+use database::BindingsGenerator;
 use ir::{
     make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, LifetimeId, LifetimeName, PointerType,
     PointerTypeKind, IR,
 };
 use std::cmp::max;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
+/// A binding for one (possibly renamed) variable.
+pub struct VariableBinding {
+    /// A stack of renamings for this variable.
+    pub renamed: Vec<Rc<str>>,
+}
+
+/// Keeps track of bound variables.
+pub struct BindingContext {
+    /// Maps user variable names to bindings.
+    pub bindings: HashMap<Rc<str>, VariableBinding>,
+    /// All variable names we've seen.
+    pub names: HashSet<Rc<str>>,
+}
+
+/// Manages bindings for lifetime names. We expect to start with a `new` `BindingContext` for each
+/// item I being imported. This `BindingContext` should contain bindings for all parent items of I.
+/// The `BindingContext` will rename bindings that are shadowed and will never use the same renaming
+/// twice.
+impl BindingContext {
+    /// Binds the variable `id`, returning a unique name for it.
+    pub fn push_new_binding(&mut self, id: &Rc<str>) -> Rc<str> {
+        let mut binding =
+            self.bindings.remove(id).unwrap_or_else(|| VariableBinding { renamed: vec![] });
+        let fresh_name = self.fresh_name_for(id);
+        binding.renamed.push(fresh_name.clone());
+        self.bindings.insert(id.clone(), binding);
+        self.names.insert(fresh_name.clone());
+        fresh_name
+    }
+
+    /// Returns a fresh variable name.
+    pub fn push_fresh_binding(&mut self, hint: Option<&Rc<str>>) -> Rc<str> {
+        let fresh_name = match hint {
+            Some(id) => self.fresh_name_for(id),
+            None => self.fresh_name_for(&Rc::from("lt")),
+        };
+        self.push_new_binding(&fresh_name)
+    }
+
+    /// If `id` is already bound, returns its renaming; otherwise, creates a new binding for it,
+    /// and calls the provided function with the renaming.
+    pub fn get_or_push_new_binding<F: FnOnce(&Rc<str>)>(&mut self, id: &Rc<str>, f: F) -> Rc<str> {
+        if let Some(binding) = self.bindings.get(id) {
+            return binding.renamed.last().unwrap().clone();
+        }
+        let new_binding = self.push_new_binding(id);
+        f(&new_binding);
+        new_binding
+    }
+
+    /// Returns a fresh variable name based on `id`.
+    fn fresh_name_for(&self, id: &Rc<str>) -> Rc<str> {
+        if !self.names.contains(id) {
+            return id.clone();
+        }
+        let mut ix = 0;
+        loop {
+            let name = format!("{}_{}", id, ix);
+            if !self.names.contains(name.as_str()) {
+                return Rc::from(name);
+            }
+            ix += 1;
+        }
+    }
+
+    /// Removes the last binding for `id`.
+    pub fn pop_binding(&mut self, id: &Rc<str>) {
+        let mut last_binding = self.bindings.remove(id).unwrap();
+        last_binding.renamed.pop();
+        if !last_binding.renamed.is_empty() {
+            self.bindings.insert(id.clone(), last_binding);
+        }
+    }
+
+    /// Creates a binding context with builtin lifetimes configured.
+    pub fn new() -> Self {
+        let mut ctx = BindingContext { bindings: HashMap::new(), names: HashSet::new() };
+        ctx.push_new_binding(&Rc::from("static"));
+        ctx
+    }
+}
+
+impl Default for BindingContext {
+    fn default() -> Self {
+        BindingContext::new()
+    }
+}
+
 struct LifetimeDefaults {
-    /// Used to generate unique lifetime ids. This field is always set to one more than the highest
-    /// lifetime id in the IR.
-    lifetime_gensym: i32,
-    /// The name of the static lifetime (if used).
-    static_lifetime: Option<LifetimeName>,
+    bindings: BindingContext,
 }
 
 // TODO: b/454627672 - It appears that `int& f(int& $a i1)` drops `$a` entirely (before we even get
@@ -31,9 +117,7 @@ enum LifetimeState {
     /// No lifetimes have been seen.
     Unseen,
     /// A single lifetime has been seen.
-    Single(LifetimeId),
-    /// The `static` lifetime should be used.
-    Static,
+    Single(Rc<str>),
     /// We can't ascribe a lifetime.
     Unknown,
 }
@@ -44,7 +128,6 @@ impl LifetimeState {
             (LifetimeState::Unseen, n) => *self = n.clone(),
             (_, LifetimeState::Unseen) => (),
             (LifetimeState::Single(a), LifetimeState::Single(b)) if a == b => (),
-            (LifetimeState::Static, LifetimeState::Static) => (),
             _ => *self = LifetimeState::Unknown,
         }
     }
@@ -56,67 +139,35 @@ struct LifetimeResult {
     ty: CcType,
     /// Output state for default lifetime assignment.
     state: LifetimeState,
-    /// New bindings that were made.
-    bindings: Vec<LifetimeName>,
 }
 
 impl LifetimeDefaults {
     fn new(ir: &IR) -> Self {
-        let mut static_lifetime = None;
-        let mut lifetime_gensym = 0;
-        // nb: this is wrong in make_ir if other items can bind lifetime names.
-        for (id, name) in ir.lifetimes() {
-            lifetime_gensym = max(lifetime_gensym, id.0 + 1);
-            if *(name.name) == *"static" {
-                static_lifetime = Some(name)
-            }
-        }
-        LifetimeDefaults { lifetime_gensym, static_lifetime: static_lifetime.cloned() }
-    }
-
-    /// Returns or creates the global static lifetime.
-    fn static_lifetime(&mut self) -> LifetimeName {
-        if let Some(static_lifetime) = &self.static_lifetime {
-            return static_lifetime.clone();
-        }
-        let new_lifetime = self.make_lifetime(Some(Rc::from("static")));
-        self.static_lifetime = Some(new_lifetime.clone());
-        new_lifetime
+        LifetimeDefaults { bindings: BindingContext::new() }
     }
 
     /// Returns a state representing the given `lifetime`.
-    fn get_state_for_annotated_lifetime(&mut self, lifetime: Option<&LifetimeId>) -> LifetimeState {
+    fn get_state_for_annotated_lifetime(
+        &mut self,
+        lifetime: &[Rc<str>],
+        new_bindings: &mut Vec<Rc<str>>,
+    ) -> LifetimeState {
         match lifetime {
-            None => LifetimeState::Unseen,
-            Some(id) => {
-                if let Some(static_lifetime) = &self.static_lifetime {
-                    if *id == static_lifetime.id {
-                        return LifetimeState::Static;
-                    }
-                }
-                LifetimeState::Single(*id)
-            }
+            [] => LifetimeState::Unseen,
+            [id] => LifetimeState::Single(
+                self.bindings.get_or_push_new_binding(id, |name| new_bindings.push(name.clone())),
+            ),
+            // TODO(b/454627672): multiple variables.
+            _ => LifetimeState::Unknown,
         }
     }
 
     /// Returns a lifetime (suitable for use as an annotation) from `state` if `state`
     /// unambiguously refers to a lifetime.
-    fn get_lifetime_for_state(&mut self, state: &LifetimeState) -> Option<LifetimeId> {
+    fn get_lifetime_for_state(&mut self, state: &LifetimeState) -> Vec<Rc<str>> {
         match state {
-            LifetimeState::Single(lifetime) => Some(*lifetime),
-            LifetimeState::Static => Some(self.static_lifetime().id),
-            _ => None,
-        }
-    }
-
-    /// Generates a new lifetime variable using `name` to name it. The id is guaranteed to be
-    /// fresh.
-    fn make_lifetime(&mut self, name: Option<Rc<str>>) -> LifetimeName {
-        let id = LifetimeId(self.lifetime_gensym);
-        self.lifetime_gensym += 1;
-        LifetimeName {
-            name: name.unwrap_or_else(|| format!("lt_{0}", id.0).to_string().into()),
-            id,
+            LifetimeState::Single(lifetime) => vec![lifetime.clone()],
+            _ => vec![],
         }
     }
 
@@ -125,83 +176,109 @@ impl LifetimeDefaults {
     /// `name_hint` is used to name the lifetime parameter when we need to make one.
     fn add_lifetime_to_input_type(
         &mut self,
-        name_hint: Option<Rc<str>>,
+        name_hint: Option<&Rc<str>>,
+        new_bindings: &mut Vec<Rc<str>>,
         ty: &CcType,
     ) -> LifetimeResult {
         match &ty.variant {
             CcTypeVariant::Pointer(pty) if pty.kind == PointerTypeKind::LValueRef => {
-                let LifetimeResult { ty: pointee_type, state: _, mut bindings } =
-                    self.add_lifetime_to_input_type(name_hint.clone(), &pty.pointee_type);
-                let mut state = self.get_state_for_annotated_lifetime(pty.lifetime.as_ref());
+                let LifetimeResult { ty: pointee_type, state: _ } =
+                    self.add_lifetime_to_input_type(name_hint, new_bindings, &pty.pointee_type);
+                let mut state =
+                    self.get_state_for_annotated_lifetime(&ty.explicit_lifetimes, new_bindings);
                 if state == LifetimeState::Unseen {
-                    let lifetime = self.make_lifetime(name_hint.clone());
-                    bindings.push(lifetime.clone());
-                    state = LifetimeState::Single(lifetime.id);
+                    let lifetime = self.bindings.push_fresh_binding(name_hint);
+                    new_bindings.push(lifetime.clone());
+                    state = LifetimeState::Single(lifetime);
                 }
                 let mut new_ty = ty.clone();
                 new_ty.variant = CcTypeVariant::Pointer(PointerType {
-                    lifetime: self.get_lifetime_for_state(&state),
                     pointee_type: pointee_type.into(),
                     ..pty.clone()
                 });
-                LifetimeResult { ty: new_ty, state, bindings }
+                new_ty.explicit_lifetimes = self.get_lifetime_for_state(&state);
+                LifetimeResult { ty: new_ty, state }
             }
-            _ => LifetimeResult { ty: ty.clone(), state: LifetimeState::Unseen, bindings: vec![] },
+            _ => LifetimeResult { ty: ty.clone(), state: LifetimeState::Unseen },
         }
     }
 
     /// Adds lifetimes to a type in output position. `lifetime_hint` is used to assign a lifetime
-    /// when one is not otherwise available. If `lifetime_hint` is None, no new lifetimes will be
+    /// when one is not otherwise available. If `lifetime_hint` is empty, no new lifetimes will be
     /// assigned.
     fn add_lifetime_to_output_type(
         &mut self,
-        lifetime_hint: Option<LifetimeId>,
+        lifetime_hint: &Vec<Rc<str>>,
+        new_bindings: &mut Vec<Rc<str>>,
         ty: &CcType,
     ) -> CcType {
         match &ty.variant {
             CcTypeVariant::Pointer(pty) if pty.kind == PointerTypeKind::LValueRef => {
                 let mut new_ty = ty.clone();
-                // Stop changing annotations if we see a previously-annotated lifetime.
-                if pty.lifetime.is_some() || lifetime_hint.is_none() {
+                // If there's a previously-annotated lifetime, use that.
+                if !ty.explicit_lifetimes.is_empty() {
+                    new_ty.explicit_lifetimes = ty
+                        .explicit_lifetimes
+                        .iter()
+                        .map(|l| {
+                            self.bindings
+                                .get_or_push_new_binding(l, |name| new_bindings.push(name.clone()))
+                        })
+                        .collect();
                     return new_ty;
                 }
-                let pointee_type =
-                    self.add_lifetime_to_output_type(lifetime_hint, &pty.pointee_type);
+                // If there is no viable inferred lifetime, there is nothing to do.
+                if lifetime_hint.is_empty() {
+                    return new_ty;
+                }
+                let pointee_type = self.add_lifetime_to_output_type(
+                    lifetime_hint,
+                    new_bindings,
+                    &pty.pointee_type,
+                );
                 new_ty.variant = CcTypeVariant::Pointer(PointerType {
-                    lifetime: lifetime_hint,
                     pointee_type: pointee_type.into(),
                     ..pty.clone()
                 });
+                new_ty.explicit_lifetimes = lifetime_hint.clone();
                 new_ty
             }
             _ => ty.clone(),
         }
     }
 
-    /// Transforms a function to use default lifetime rules. Every lifetime variable has a globally
-    /// unique id, so we don't need to worry about avoiding captures, and the incoming IR should
-    /// already have lifetime_params annotated where bindings need to be made.
+    /// Transforms a function to use default lifetime rules.
     fn add_lifetime_to_func(&mut self, func: &Func) -> Func {
         let mut new_func = func.clone();
         let mut state = LifetimeState::Unseen;
+        let mut ctx = BindingContext::new();
+        new_func.lifetime_inputs.clear();
+        // TODO(b/454627672): add bindings for parent item lifetimes.
+        func.lifetime_inputs
+            .iter()
+            .for_each(|name| new_func.lifetime_inputs.push(ctx.push_new_binding(name)));
         new_func.params = func
             .params
             .iter()
             .map(|param| {
                 let mut new_param = param.clone();
-                let LifetimeResult { ty: new_type, state: new_state, bindings: mut new_bindings } =
-                    self.add_lifetime_to_input_type(
-                        Some(new_param.identifier.identifier.clone()),
+                let LifetimeResult { ty: new_type, state: new_state } = self
+                    .add_lifetime_to_input_type(
+                        Some(&new_param.identifier.identifier),
+                        &mut new_func.lifetime_inputs,
                         &new_param.type_,
                     );
-                new_func.lifetime_params.append(&mut new_bindings);
                 state.update(&new_state);
                 new_param.type_ = new_type;
                 new_param
             })
             .collect();
         let lifetime = self.get_lifetime_for_state(&state);
-        new_func.return_type = self.add_lifetime_to_output_type(lifetime, &new_func.return_type);
+        new_func.return_type = self.add_lifetime_to_output_type(
+            &lifetime,
+            &mut new_func.lifetime_inputs,
+            &new_func.return_type,
+        );
         new_func
     }
 
@@ -216,10 +293,16 @@ impl LifetimeDefaults {
     }
 }
 
-/// Creates a copy of `ir` with default lifetimes filled in.
+/// Creates a copy of `func` with default lifetimes filled in.
+pub fn lifetime_defaults_transform_func(db: &dyn BindingsGenerator, func: &Func) -> Func {
+    LifetimeDefaults::new(db.ir()).add_lifetime_to_func(func)
+}
+
+/// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
+/// prefer to transform items on demand.
 pub fn lifetime_defaults_transform(ir: &IR) -> IR {
-    let mut ctx = LifetimeDefaults::new(ir);
-    let new_items = ir.items().map(|item| ctx.add_lifetime_to_item(item)).collect();
+    let new_items =
+        ir.items().map(|item| LifetimeDefaults::new(ir).add_lifetime_to_item(item)).collect();
     make_ir(FlatIR {
         public_headers: ir.flat_ir().public_headers.clone(),
         current_target: ir.flat_ir().current_target.clone(),

@@ -461,6 +461,10 @@ pub enum CcTypeVariant {
 
         /// The parameter types, followed by the return type.
         param_and_return_types: Rc<[CcType]>,
+
+        // Lifetime variable names bound by this function pointer.
+        #[serde(default)]
+        lifetime_inputs: Vec<Rc<str>>,
     },
     Decl(ItemId),
 }
@@ -868,6 +872,10 @@ pub struct Func {
     /// invoke this function.
     pub adl_enclosing_record: Option<ItemId>,
     pub must_bind: bool,
+
+    // Lifetime variable names bound by this function.
+    #[serde(default)]
+    pub lifetime_inputs: Vec<Rc<str>>,
 }
 
 impl GenericItem for Func {
@@ -1200,6 +1208,9 @@ pub struct Record {
     pub must_bind: bool,
     /// Whether this type has an overload of `operator delete`.
     pub overloads_operator_delete: bool,
+    // Lifetime variable names bound by this record.
+    #[serde(default)]
+    pub lifetime_inputs: Vec<Rc<str>>,
 }
 
 impl GenericItem for Record {
