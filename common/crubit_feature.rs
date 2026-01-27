@@ -36,9 +36,6 @@ flagset::flags! {
 
         /// Use ergonomic lifetime defaults when interpreting lifetime annotations.
         AssumeLifetimes,
-
-        /// Unhardcode the C9 coroutine ABI, treating it as a normal composable bridge type instead.
-        UnhardcodeC9Co,
     }
 }
 
@@ -58,7 +55,6 @@ impl CrubitFeature {
             Self::Experimental => "experimental",
             Self::CustomFfiTypes => "custom_ffi_types",
             Self::AssumeLifetimes => "assume_lifetimes",
-            Self::UnhardcodeC9Co => "unhardcode_c9_co",
         }
     }
 
@@ -75,7 +71,6 @@ impl CrubitFeature {
             Self::Experimental => "//features:experimental",
             Self::CustomFfiTypes => "//features:custom_ffi_types",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
-            Self::UnhardcodeC9Co => "//features:unhardcode_c9_co",
         }
     }
 }
@@ -92,7 +87,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"experimental" => CrubitFeature::Experimental.into(),
         b"custom_ffi_types" => CrubitFeature::CustomFfiTypes.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
-        b"unhardcode_c9_co" => CrubitFeature::UnhardcodeC9Co.into(),
         _ => return None,
     };
     Some(features)
@@ -201,7 +195,6 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::AssumeLifetimes
-                | CrubitFeature::UnhardcodeC9Co
         );
     }
 
@@ -231,7 +224,6 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::AssumeLifetimes
-                | CrubitFeature::UnhardcodeC9Co
         );
     }
 
@@ -249,7 +241,6 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::AssumeLifetimes
-                | CrubitFeature::UnhardcodeC9Co
         );
     }
 }

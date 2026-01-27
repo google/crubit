@@ -5,7 +5,7 @@
 // Automatically @generated C++ bindings for the following Rust crate:
 // enums_golden
 // Features: assume_lifetimes, custom_ffi_types, experimental, non_unpin_ctor,
-// std_unique_ptr, std_vector, supported, unhardcode_c9_co, wrapper
+// std_unique_ptr, std_vector, supported, wrapper
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN
