@@ -229,10 +229,10 @@ https://github.com/rust-lang/rust/issues/20400.
 Not every C++ type supports the Rust move operation. For more on this, see
 [Classes and Structs](../cpp/classes_and_structs.md#rust_movable).
 
-Crubit (in `experimental` mode) supports passing and returning these
-non-Rust-movable C++ objects by value. But since they are not Rust-movable, they
-cannot literally be returned in Rust by value: `pub fn foo() -> X` performs a
-Rust move of its return type by definition.
+Crubit supports passing and returning these non-Rust-movable C++ objects by
+value. But since they are not Rust-movable, they cannot literally be returned in
+Rust by value: `pub fn foo() -> X` performs a Rust move of its return type by
+definition.
 
 Instead, these objects support lazy construction, in the same style as
 [`moveit`](https://mcyoung.xyz/2021/04/26/move-ctors/). See

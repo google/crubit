@@ -18,8 +18,8 @@ the recommended practices to evolve over time, as Crubit's capabilities expand!
 
 ## Making types Rust-movable {#rust_movable}
 
-As described in crubit.rs/cpp/classes_and_structs#rust_movable, types cannot be
-passed by value in Rust unless they are Rust-movable.
+As described in crubit.rs/cpp/classes_and_structs#rust_movable, types have a
+more pleasant API when they are Rust-movable.
 
 This can happen for a couple of easily fixable reasons, described in
 subsections:
@@ -43,7 +43,7 @@ crubit.rs/cpp/cookbook#trivial_abi
 One of the ways a type can become non-Rust-movable is if it has a copy/move
 constructor / assignment operator, or a destructor. In that case, Clang will
 assume that it cannot be trivially relocated, **unless** it is annotated with
-`ABSL_ATTRIBUTE_TRIVIAL_ABI`.
+[`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI).
 
 ```c++ {.bad}
 struct LogWhenDestroyed {
@@ -120,8 +120,8 @@ ABI. If you aren't sure about whether you are using the unstable ABI, it is like
 
 If you tightly control your dependencies, you might be using
 libc++'s unstable ABI. The unstable ABI, among other things, makes
-`unique_ptr<T>` Rust-movable. In fact, it is Rust-movable even if `T` itself is
-not.
+`unique_ptr<T>` (and `shared_ptr<T>`) Rust-movable. In fact, it is Rust-movable
+even if `T` itself is not.
 
 This means that if a particular field is making its parent type
 non-Rust-movable, one fix is to wrap it in a `unique_ptr`:

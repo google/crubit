@@ -5,9 +5,6 @@ any subobject of the class cannot be represented in Rust, the class itself will
 still have bindings, but
 [the relevant subobject will be private](#opaque_fields).
 
-To have bindings, the class must be ["Rust-movable"](#rust_movable). For
-example, any trivial or "POD" class is Rust-movable.
-
 ## Example
 
 Given the following C++ header:
@@ -68,83 +65,28 @@ be used as normal.
 
 ## Rust-movable classes {#rust_movable}
 
-For a type to be passed or returned by value in Rust, it must be "Rust-movable":
-the class must be able to be "teleported" in memory during its lifetime, as if
-by using `memcpy` and then discarding the old location without running any
-destruction logic. This means that it can be present in Rust using normal
-objects and pointers and references, without using `Pin`.
+The easiest C++ classes to work with are "Rust-movable", meaning they support
+being relocated in memory using `memcpy` without running the move constructor.
+When passed and returned by value, Rust-movable classes will use the direct
+type. For example, `T Identity(T)` becomes `pub fn Identity(_: T) -> T`.
 
-For example, a `string_view` is Rust-movable. In fact, every trivially copyable
-type is Rust-movable
+If it is non-Rust-movable, then Crubit will instead use in-place initialization
+types, `Ctor`, and requires a bit of syntactic overhead when moving objects
+around. The same function might instead become `pub fn Foo(_: Ctor![T]) ->
+Ctor![T]`.
 
-However, unlike Rust, many types in C++ are **not** Rust-movable. For example, a
-`std::string` might be implemented using the "short string optimization", in a
-fashion similar to this:
+(For an introduction to `Ctor![T]`, see
+crubit.rs/types/non_rust_movable/intro_short.)
 
-```c++
-class String {
-    union {
-        size_t length;
-        char inline_data[sizeof(length)];
-    };
-    char* data; // either points to `inline_data`, or the heap.
-  public:
-    size_t size() {
-        if (data == (char*)this) {
-            return strlen(data);
-        } else {
-            return length;
-        }
-    }
-    // ...
-};
-```
-
-This class is self-referential: the `data` pointer may point to `inline_data`,
-which is inside the object itself. If we bitwise copy the object to a new
-location, as in a "Rust move" or as with `memcpy`, then the `data` pointer will
-remain bitwise identical, and point into the **old** object. It becomes a
-dangling pointer!
-
-C++ allows self-referential types. In C++, fields can and often do point at
-other fields, because assignment is overloadable: the assignment operator can be
-modified to, when copying or moving the string, also "fix up" the `data` pointer
-so that it points to the *new* location in the new object, instead of dangling.
-
-Rust does not do this. In Rust, assignment is always a "trivial relocation" --
-assignment runs *no* code when copying or moving an object, and copies the bytes
-as they are. This would break on the `String` type defined above, or any other
-self-referential type.
-
-Unfortunately, any class with a user-defined copy/move operation or destructor
-*might* be self-referential, and so by default they are not Rust-movable. If a
-class has a user-defined destructor or copy/move constructor/assignment
-operator, and "should be" Rust-movable, it must explicitly declare that it is
-safe to perform a Rust move, using the attribute
+Types are considered Rust-movable by default, meaning they can be relocated
+using `memcpy`. If the type defines a destructor or copy/move constructor, then
+it requires a special annotation to be considered Rust-movable:
 [`ABSL_ATTRIBUTE_TRIVIAL_ABI`](https://github.com/abseil/abseil-cpp/blob/master/absl/base/attributes.h#:~:text=ABSL_ATTRIBUTE_TRIVIAL_ABI).
-This attribute allows a class to be trivially relocated, even though it defines
-an operation that would ordinarily disable trivial relocation.
+If it has a non-Rust-movable field or base class, then it is not Rust-movable.
 
-For example, in the unstable libc++ ABI we use within Google, a `unique_ptr<T>`
-is Rust-movable, because it applies `ABSL_ATTRIBUTE_TRIVIAL_ABI`. This is safe
-to do, for `unique_ptr`, because its exact location in memory does not matter,
-and paired move/destroy operations can be replaced with Rust move operations.
-
-### Requirements
-
-The exact requirements for a class to be Rust-movable are subject to change,
-because they are still being defined within Clang and within the C++ standard.
-But at the least:
-
-*   Any
-    [trivially copyable](https://en.cppreference.com/w/cpp/language/classes#Trivially_copyable_clas)
-    type is also Rust-movable.
-*   Any `class` or `struct` type with only Rust-movable fields and base classes
-    is Rust-movable, unless:
-    *   it is not `ABSL_ATTRIBUTE_TRIVIAL_ABI` and defines a copy/move
-        constructor, copy/move assignment operator, or destructor, or,
-    *   it is otherwise nontrivial, e.g., from defining a `virtual` member
-        function.
+It can be worth putting some effort into designing the type to be Rust-movable.
+crubit.rs/cpp/cookbook#rust_movable describes, in more detail, how to go about
+this.
 
 Some examples of Rust-movable types:
 
@@ -153,7 +95,7 @@ Some examples of Rust-movable types:
 *   `string_view`
 *   [`struct tm`](https://en.cppreference.com/w/cpp/chrono/c/tm), or any other
     type in the C standard library
-*   `unique_ptr`, in the Clang unstable ABI.
+*   `unique_ptr` and `shared_ptr`, in the Clang unstable ABI.
 *   `absl::Status`
 
 Some examples of types that are **not** Rust-movable:

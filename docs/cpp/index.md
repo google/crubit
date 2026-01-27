@@ -13,8 +13,7 @@ prefer just copy-pasting something, start there.
 ## How to use Crubit {#introduction}
 
 Crubit allows you to call some C++ interfaces from Rust. It supports
-[functions](functions.md),
-[rust-movable classes and structs](classes_and_structs.md), and
+[functions](functions.md), [classes and structs](classes_and_structs.md), and
 [enums](enums.md). Crubit does **not** support advanced features like templates
 or virtual inheritance.
 
@@ -182,8 +181,7 @@ the problematic interface behind an interface Crubit can handle:
 *   Move nontrivial types behind a `unique_ptr<T>`. A `std::string` field is not
     rust-movable, but a `unique_ptr<std::string>` field is.
 *   Hide unsupported types, in general, behind a wrapper. For example, a
-    `std::vector<T>` is not supported, but a struct which wraps a
-    `unique_ptr<std::vector<int32_t>>` is.
+    `std::set<T>` is not supported, but a struct which wraps a `set::set<T>` is.
 *   Wrap unsupported functions behind wrappers. For example, methods are not yet
     supported, but top-level functions are, and can invoke methods.
 
