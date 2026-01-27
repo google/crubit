@@ -422,13 +422,14 @@ pub unsafe trait Ctor: Sized {
     /// Returns a `Ctor` which will return a default value if the original construction fails.
     ///
     /// This functions similarly to `Result::unwrap_or_default`.
-    fn ctor_unwrap_or_default(
+    fn ctor_unwrap_or_default<Args>(
         self,
-    ) -> Ctor![Self::Output, Error = <Self::Output as CtorNew<()>>::Error]
+    ) -> Ctor![Self::Output, Error = <Self::Output as CtorNew<Args>>::Error]
     where
-        Self::Output: CtorNew<()>,
+        Args: Default,
+        Self::Output: CtorNew<Args>,
     {
-        self.ctor_or_else(|_| Self::Output::ctor_new(()))
+        self.ctor_or_else(|_| Self::Output::ctor_new(Default::default()))
     }
 }
 
