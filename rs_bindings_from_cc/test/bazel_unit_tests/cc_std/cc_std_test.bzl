@@ -101,7 +101,7 @@ cc_std_test = rule(
             default = "//third_party/stl:stl_headers",
         ),
         "_llvm_builtin_headers": attr.label(
-            default = "@llvm-project//clang:builtin_headers_filegroup",
+            default = "@llvm-project//clang:builtin_headers_files",
         ),
         # TODO: b/421934470 - Fix uses of exec groups and re-enable AEG
         "_use_auto_exec_groups": attr.bool(default = False),
