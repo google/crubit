@@ -68,6 +68,13 @@ pub enum CrubitAbiType {
         rust_type: FullyQualifiedPath,
         cpp_type: TokenStream,
     },
+    /// A type that is not trivially relocatable, so it cannot be passed by value in the ABI.
+    /// It is represented as `impl ::ctor::Ctor<Output=T, Error=::core::convert::Infallible>` in
+    /// Rust.
+    Immovable {
+        rust_type: FullyQualifiedPath,
+        cpp_type: TokenStream,
+    },
     /// A proto message type. This is a special case of CrubitAbiType::Type, where the Rust type is
     /// a ::foo_proto::ProtoMessageRustBridge<M>, and the C++ type is a
     /// ::crubit::BoxedAbi<::foo_proto::Message>.
@@ -193,6 +200,10 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
             CrubitAbiType::Transmute { rust_type, .. } => {
                 quote! { ::bridge_rust::TransmuteAbi<#rust_type> }.to_tokens(tokens);
             }
+            CrubitAbiType::Immovable { rust_type, .. } => {
+                quote! { impl ::ctor::Ctor<Output=#rust_type, Error=::core::convert::Infallible> }
+                    .to_tokens(tokens);
+            }
             CrubitAbiType::ProtoMessage { proto_message_rust_bridge, rust_proto_path, .. } => {
                 quote! { #proto_message_rust_bridge<#rust_proto_path> }.to_tokens(tokens);
             }
@@ -264,6 +275,9 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
             CrubitAbiType::Transmute { rust_type, .. } => {
                 quote! { ::bridge_rust::transmute_abi::<#rust_type>() }.to_tokens(tokens);
             }
+            CrubitAbiType::Immovable { .. } => {
+                quote! { ::core::marker::PhantomData }.to_tokens(tokens);
+            }
             CrubitAbiType::ProtoMessage { proto_message_rust_bridge, .. } => {
                 quote! { #proto_message_rust_bridge(::core::marker::PhantomData) }
                     .to_tokens(tokens);
@@ -332,6 +346,9 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
             }
             CrubitAbiType::Transmute { cpp_type, .. } => {
                 quote! { ::crubit::TransmuteAbi<#cpp_type> }.to_tokens(tokens);
+            }
+            CrubitAbiType::Immovable { cpp_type, .. } => {
+                quote! { ::crubit::BoxedAbi<#cpp_type> }.to_tokens(tokens);
             }
             CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
                 quote! { ::crubit::BoxedAbi<#cpp_proto_path> }.to_tokens(tokens);
@@ -404,6 +421,9 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
             }
             CrubitAbiType::Transmute { cpp_type, .. } => {
                 quote! { ::crubit::TransmuteAbi<#cpp_type>() }.to_tokens(tokens);
+            }
+            CrubitAbiType::Immovable { cpp_type, .. } => {
+                quote! { ::crubit::BoxedAbi<#cpp_type>() }.to_tokens(tokens);
             }
             CrubitAbiType::ProtoMessage { cpp_proto_path, .. } => {
                 quote! { ::crubit::BoxedAbi<#cpp_proto_path>() }.to_tokens(tokens);
@@ -485,5 +505,30 @@ mod tests {
             }
             .to_string()
         );
+    }
+
+    #[gtest]
+    fn immovable_test() {
+        let rust_type = FullyQualifiedPath::new("crate::Nontrivial");
+        let cpp_type = quote! { Nontrivial };
+
+        let abi =
+            CrubitAbiType::Immovable { rust_type: rust_type.clone(), cpp_type: cpp_type.clone() };
+
+        let rust_tokens = CrubitAbiTypeToRustTokens(&abi).to_token_stream().to_string();
+        expect_eq!(
+            rust_tokens,
+            quote! { impl ::ctor::Ctor<Output=#rust_type, Error=::core::convert::Infallible> }
+                .to_string()
+        );
+
+        let cpp_tokens = CrubitAbiTypeToCppTokens(&abi).to_token_stream().to_string();
+        expect_eq!(cpp_tokens, quote! { ::crubit::BoxedAbi<#cpp_type> }.to_string());
+
+        let rust_expr_tokens = CrubitAbiTypeToRustExprTokens(&abi).to_token_stream().to_string();
+        expect_eq!(rust_expr_tokens, quote! { ::core::marker::PhantomData }.to_string());
+
+        let cpp_expr_tokens = CrubitAbiTypeToCppExprTokens(&abi).to_token_stream().to_string();
+        expect_eq!(cpp_expr_tokens, quote! { ::crubit::BoxedAbi<#cpp_type>() }.to_string());
     }
 }

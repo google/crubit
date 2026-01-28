@@ -1372,3 +1372,30 @@ fn test_existing_rust_type_assert_incomplete() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_nontrivial_in_bridge_type_generates_ok() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        namespace ns {
+          template<typename T1, typename T2>
+          struct pair {
+            T1 first;
+            T2 second;
+          };
+        }
+        struct Nontrivial {
+            ~Nontrivial() {}
+        };
+        ns::pair<Nontrivial, int> Func();
+    "#,
+    )?;
+    let bindings = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        bindings.rs_api,
+        quote! {
+            pub fn Func() -> ::ctor::Ctor![crate::__CcTemplateInstN2ns4pairI10NontrivialiEE] {...}
+        }
+    );
+    Ok(())
+}
