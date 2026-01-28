@@ -1440,6 +1440,73 @@ impl RsTypeKind {
             _ => false,
         }
     }
+
+    /// Returns the passing convention for this `RsTypeKind`.
+    ///
+    /// This is used to determine how the type should be passed across the FFI boundary.
+    pub fn passing_convention(&self) -> PassingConvention {
+        if self.is_c_abi_compatible_by_value() {
+            PassingConvention::AbiCompatible
+        } else if self.is_crubit_abi_bridge_type() {
+            PassingConvention::ComposablyBridged
+        } else if !self.is_unpin() {
+            PassingConvention::Ctor
+        } else if self.is_owned_ptr() {
+            PassingConvention::OwnedPtr
+        } else if self.is_void() {
+            PassingConvention::Void
+        } else {
+            PassingConvention::LayoutCompatible
+        }
+    }
+}
+
+/// The classification of how a type should cross the FFI boundary.
+///
+/// Code that generates functions thunks and impls should match on this type instead of manually
+/// checking properties of the RsTypeKind, which are subject to change or evolve over time.
+pub enum PassingConvention {
+    /// ABI compatible types may be passed by value across the C boundary.
+    AbiCompatible,
+
+    /// Layout compatible types have the same layout, but may have different ABIs.
+    /// Notably, a pointer to a Rust instance of this type may be reinterpreted as
+    /// a pointer to a C++ instance of this type, and vice versa.
+    ///
+    /// As input: caller passes a pointer to value, callee does std::move/mem::take.
+    /// As output: caller passes an outptr, callee moves value into it.
+    LayoutCompatible,
+
+    /// The type can engage in composable bridging, meaning it gets encoded/decoded into a bridge
+    /// buffer when it crosses the boundary.
+    ///
+    /// As input: caller allocates a stack buffer, encodes the value, and passes
+    ///           a pointer to the buffer, callee decodes from the buffer.
+    /// As output: caller passes an outptr to a stack buffer, callee encodes the value,
+    ///            caller decodes the result.
+    ComposablyBridged,
+
+    /// The type is not Rust movable, and instead must be moved using the `ctor` crate.
+    ///
+    /// As input: caller provides an `impl Ctor`, and we use
+    ///           `Pin::into_inner_unchecked(ctor::emplace!(value))` to give C++ a pointer that it
+    ///           can move the value out of.
+    /// As output: The function is not actually called; instead, Rust immediately returns an
+    ///            `FnCtor` which, when is a lazily invoked thunk that will call the function when
+    ///            it is emplaced somewhere and has a pointer where it can store the result.
+    Ctor,
+
+    /// The type in Rust is represented as a heap allocated ptr to the C++ object.
+    /// As input: the caller just passes the inner pointer, which can be done by just transmuting
+    ///           the repr(transparent) Rust wrapper to the pointer.
+    /// As output: the caller just receives the pointer and transmutes it to the owned ptr type.
+    OwnedPtr,
+
+    /// The `void` type.
+    ///
+    /// As input: this case is unreachable.
+    /// As output: do nothing.
+    Void,
 }
 
 /// A type that implements [`std::fmt::Display`] for [`RsTypeKind`], which
