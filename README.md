@@ -5,7 +5,7 @@
 NOTE: Crubit currently expects deep integration with the build system, and is
 difficult to deploy to environments dissimilar to Google's monorepo. External
 contributions are accepted, but may in some cases be difficult to integrate
-for tooling reasons. See [CONTRIBUTING](https://github.com/google/crubit/blob/main/CONTRIBUTING).
+for tooling reasons. See [CONTRIBUTING.md](https://github.com/google/crubit/blob/main/CONTRIBUTING.md).
 Both of these are being worked on, see [Usage outside of Google](https://crubit.rs/overview/status#usage-outside-of-google).
 
 Crubit is a bidirectional bindings generator for C++ and Rust, with the goal of
