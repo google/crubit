@@ -144,27 +144,8 @@ pub trait AsFfi11Ptr: Sealed {
     fn as_ffi_11_ptr(&self) -> Self::Ptr;
 }
 
-/// Mirrors behavior of `from_ptr` on various APIs in `std::ffi` but producing their `ffi_11` pointer
-/// types, rather than the `std::ffi` pointer types. Implementations of this trait document
-/// conversions that are well behaved for the given types.
-pub unsafe trait FromFfi11Ptr: Sealed {
-    type Ptr;
-    /// # Safety
-    ///
-    /// Callers are responsible for ensuring that `ptr` is valid for their conversion.
-    unsafe fn from_ffi_11_ptr<'a>(ptr: Self::Ptr) -> &'a Self;
-}
-
-impl AsFfi11Ptr for core::ffi::CStr {
-    type Ptr = *const c_char;
-    fn as_ffi_11_ptr(&self) -> Self::Ptr {
-        self.as_ptr().cast()
-    }
-}
-
-unsafe impl FromFfi11Ptr for core::ffi::CStr {
-    type Ptr = *const c_char;
-
+/// Extension of `CStr` to provide conversion methods for `ffi_11` pointer types.
+pub trait CStrExt: Sealed {
     /// # Safety
     ///
     /// * The memory pointed to by `ptr` must contain a valid nul terminator at the
@@ -180,7 +161,18 @@ unsafe impl FromFfi11Ptr for core::ffi::CStr {
     ///   the duration of lifetime `'a`.
     ///
     /// * The nul terminator must be within `isize::MAX` from `ptr`
-    unsafe fn from_ffi_11_ptr<'a>(ptr: Self::Ptr) -> &'a Self {
+    unsafe fn from_ffi_11_ptr<'a>(ptr: *const c_char) -> &'a Self;
+}
+
+impl AsFfi11Ptr for core::ffi::CStr {
+    type Ptr = *const c_char;
+    fn as_ffi_11_ptr(&self) -> Self::Ptr {
+        self.as_ptr().cast()
+    }
+}
+
+impl CStrExt for core::ffi::CStr {
+    unsafe fn from_ffi_11_ptr<'a>(ptr: *const c_char) -> &'a Self {
         unsafe { core::ffi::CStr::from_ptr(ptr.cast()) }
     }
 }
