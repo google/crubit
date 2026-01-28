@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 
 #include <cstdint>
@@ -100,4 +102,5 @@ inline ::cpp_enums::forward_declared_enum::B AFunction() {
 }  // namespace forward_declared_enum
 
 }  // namespace cpp_enums
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_CPP_ENUMS_GOLDEN

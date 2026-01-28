@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
@@ -475,4 +477,5 @@ inline void DropMe::__crubit_field_offset_assertions() {
 }  // namespace repr_c_drop
 
 }  // namespace enums
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN

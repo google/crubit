@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN
 #define THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include <cstdint>
 
 #include "support/ffi_11/ffi_11.h"
@@ -210,4 +212,5 @@ inline std::uint16_t c_ushort() {
 }
 
 }  // namespace rust_api
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN

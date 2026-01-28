@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
@@ -144,4 +146,5 @@ inline void take_by_value(
 }
 
 }  // namespace non_trivially_destructible_rust
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN

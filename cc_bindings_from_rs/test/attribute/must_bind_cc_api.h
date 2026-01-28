@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_MUST_BIND_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_MUST_BIND_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
@@ -92,4 +94,5 @@ extern "C" void __crubit_thunk_bar();
 inline void bar() { return __crubit_internal::__crubit_thunk_bar(); }
 
 }  // namespace must_bind
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ATTRIBUTE_MUST_BIND_GOLDEN

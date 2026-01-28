@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
@@ -318,4 +320,5 @@ inline void function_with_trivial_unnamed_lifetime_param(
 }
 
 }  // namespace lifetimes
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN

@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 
 #include <cstdint>
@@ -51,4 +53,5 @@ inline std::int32_t func_using_alias() {
 }  // namespace test_type_aliases
 
 }  // namespace type_aliases_rust
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TYPE_ALIASES_RUST_GOLDEN

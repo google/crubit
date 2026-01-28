@@ -260,6 +260,14 @@ pub fn generate_bindings(db: &Database) -> Result<BindingsTokens> {
         let src = quote! { __COMMENT__ #txt };
         BindingsTokens { cc_api: src.clone(), cc_api_impl: src }
     });
+    let cc_api = quote! {
+        __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
+        __HASH_TOKEN__ pragma clang diagnostic ignored "-Wreturn-type-c-linkage" __NEWLINE__
+
+        #cc_api
+
+        __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__
+    };
     let cc_api = add_include_guard(db, cc_api)?;
     let cc_api = quote! {
         #top_comment

@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 
 #include <cstdint>
@@ -19,4 +21,5 @@ namespace example_crate {
 using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: example_crate_golden :: TypeAlias") = std::int32_t;
 }
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_TYPE_ALIAS_EXAMPLE_CRATE_GOLDEN

@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_COMPOSABLE_BRIDGING_RUST_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_COMPOSABLE_BRIDGING_RUST_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/bridge.h"
 #include "support/rs_std/slice_ref.h"
 
@@ -149,4 +151,5 @@ inline std::int32_t unwrap_or_zero(std::optional<std::int32_t> x) {
 }
 
 }  // namespace composable_bridging_rust
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_COMPOSABLE_BRIDGING_RUST_GOLDEN

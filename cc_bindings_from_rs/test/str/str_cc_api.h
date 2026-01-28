@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/check_no_mutable_aliasing.h"
 #include "support/internal/slot.h"
@@ -173,4 +175,5 @@ inline void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
 }
 
 }  // namespace str
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN

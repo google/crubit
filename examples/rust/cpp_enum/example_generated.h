@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_EXAMPLES_RUST_CPP_ENUM_EXAMPLE_CRATE_GOLDEN
 #define THIRD_PARTY_CRUBIT_EXAMPLES_RUST_CPP_ENUM_EXAMPLE_CRATE_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 
 #include <cstdint>
@@ -31,4 +33,5 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 }  // namespace example_crate
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_CPP_ENUM_EXAMPLE_CRATE_GOLDEN

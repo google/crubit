@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
@@ -158,4 +160,5 @@ inline void FooService::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(FooService, stats));
 }
 }  // namespace rust_lib
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN

@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN
 #define THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
@@ -172,4 +174,5 @@ inline ::leaf_rs_lib::LeafRsEnum wrap_enum(std::uint8_t x) {
 }
 
 }  // namespace leaf_rs_lib
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN

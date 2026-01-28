@@ -640,6 +640,9 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 #ifndef CRUBIT_GENERATED_HEADER_FOR_test_crate_
 #define CRUBIT_GENERATED_HEADER_FOR_test_crate_
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+
 namespace test_crate {
 
 namespace public_module {
@@ -659,6 +662,7 @@ inline void public_function() {
 }  // namespace public_module
 
 }  // namespace test_crate
+#pragma clang diagnostic pop
 #endif  // CRUBIT_GENERATED_HEADER_FOR_test_crate_
 "#
             ),
@@ -686,6 +690,9 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 // clang-format off
 #pragma once
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+
 namespace test_crate {
 
 namespace public_module {
@@ -705,6 +712,7 @@ inline void public_function() {
 }  // namespace public_module
 
 }  // namespace test_crate
+#pragma clang diagnostic pop
 "#
             ),
         );

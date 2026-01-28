@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTION_POINTERS_FUNCTION_POINTERS_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTION_POINTERS_FUNCTION_POINTERS_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/slot.h"
@@ -227,4 +229,5 @@ inline std::int32_t call_fn_ptr_with_repr_c_struct_ptr_containing_seven(
 }
 
 }  // namespace function_pointers
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTION_POINTERS_FUNCTION_POINTERS_GOLDEN

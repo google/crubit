@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_TUPLE_STRUCTS_TUPLE_STRUCTS_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_TUPLE_STRUCTS_TUPLE_STRUCTS_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
@@ -1466,4 +1468,5 @@ TupleStructWithNonExhaustiveCtor::__crubit_field_offset_assertions() {
   static_assert(4 == offsetof(TupleStructWithNonExhaustiveCtor, __field1));
 }
 }  // namespace tuple_structs
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_TUPLE_STRUCTS_TUPLE_STRUCTS_GOLDEN

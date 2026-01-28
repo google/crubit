@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/str_ref.h"
@@ -290,4 +292,5 @@ inline void OpaqueRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OpaqueRef, __field0));
 }
 }  // namespace from
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN

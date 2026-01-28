@@ -11,6 +11,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
@@ -105,4 +107,5 @@ inline void X::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(X, c));
 }
 }  // namespace struct_with_conflicting_fields_and_member_functions_rust
+#pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_STRUCT_WITH_CONFLICTING_FIELDS_AND_MEMBER_FUNCTIONS_RUST_GOLDEN
