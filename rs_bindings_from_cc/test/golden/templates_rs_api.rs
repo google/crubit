@@ -242,6 +242,9 @@ pub mod private_classes {
     // Can't generate bindings for private_classes::HasPrivateType::operator=, because of missing required features (crubit.rs-features):
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::operator= (return type: references are not supported)
     // //rs_bindings_from_cc/test/golden:templates_cc needs [//features:experimental] for private_classes::HasPrivateType::operator= (the type of __param_0 (parameter #1): references are not supported)
+
+    // Error while generating bindings for constructor 'private_classes::HasPrivateType::HasPrivateType':
+    // Protected methods are not yet supported.
 }
 
 // namespace private_classes

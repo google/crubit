@@ -178,6 +178,10 @@ pub fn map_layout_compatible(
 // Can't generate bindings for std::integral_constant<bool, true>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for std::integral_constant<bool, true> (crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE is a template instantiation)
 
+// Error while generating bindings for struct 'std::integral_constant<unsigned long, 9223372036854775808UL>':
+// Can't generate bindings for std::integral_constant<unsigned long, 9223372036854775808UL>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for std::integral_constant<unsigned long, 9223372036854775808UL> (crate::__CcTemplateInstNSt3__u17integral_constantImLm9223372036854775808EEE is a template instantiation)
+
 // Error while generating bindings for class 'std::initializer_list<char32_t>':
 // Can't generate bindings for std::initializer_list<char32_t>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for std::initializer_list<char32_t> (crate::__CcTemplateInstSt16initializer_listIDiE is a template instantiation)
@@ -954,6 +958,34 @@ forward_declare::unsafe_define!(
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t>::ends_with':
 // Parameter #0 is not supported: Unsupported type 'const std::basic_string_view<wchar_t>::value_type * _Nonnull': Unsupported type 'const std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+
+// Error while generating bindings for class 'rs_std::internal_dyn_callable::Impl<ABICompatible (ABICompatible) const>':
+// Can't generate bindings for rs_std::internal_dyn_callable::Impl<ABICompatible (ABICompatible) const>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for rs_std::internal_dyn_callable::Impl<ABICompatible (ABICompatible) const> (crate::__CcTemplateInstN6rs_std21internal_dyn_callable4ImplIKF13ABICompatibleS2_EEE is a template instantiation)
+
+// Error while generating bindings for class 'rs_std::internal_dyn_callable::Impl<LayoutCompatible (LayoutCompatible) const>':
+// Can't generate bindings for rs_std::internal_dyn_callable::Impl<LayoutCompatible (LayoutCompatible) const>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for rs_std::internal_dyn_callable::Impl<LayoutCompatible (LayoutCompatible) const> (crate::__CcTemplateInstN6rs_std21internal_dyn_callable4ImplIKF16LayoutCompatibleS2_EEE is a template instantiation)
+
+// Error while generating bindings for class 'rs_std::internal_dyn_callable::Impl<Bridged (Bridged) const>':
+// Can't generate bindings for rs_std::internal_dyn_callable::Impl<Bridged (Bridged) const>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for rs_std::internal_dyn_callable::Impl<Bridged (Bridged) const> (crate::__CcTemplateInstN6rs_std21internal_dyn_callable4ImplIKF7BridgedS2_EEE is a template instantiation)
+
+// Error while generating bindings for class 'rs_std::internal_dyn_callable::Impl<int (int) const>':
+// Can't generate bindings for rs_std::internal_dyn_callable::Impl<int (int) const>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for rs_std::internal_dyn_callable::Impl<int (int) const> (crate::__CcTemplateInstN6rs_std21internal_dyn_callable4ImplIKFiiEEE is a template instantiation)
+
+// Error while generating bindings for class 'rs_std::internal_dyn_callable::Impl<void () const>':
+// Can't generate bindings for rs_std::internal_dyn_callable::Impl<void () const>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for rs_std::internal_dyn_callable::Impl<void () const> (crate::__CcTemplateInstN6rs_std21internal_dyn_callable4ImplIKFvvEEE is a template instantiation)
+
+// Error while generating bindings for class 'rs_std::internal_dyn_callable::Impl<void ()>':
+// Can't generate bindings for rs_std::internal_dyn_callable::Impl<void ()>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for rs_std::internal_dyn_callable::Impl<void ()> (crate::__CcTemplateInstN6rs_std21internal_dyn_callable4ImplIFvvEEE is a template instantiation)
+
+// Error while generating bindings for class 'rs_std::internal_dyn_callable::Impl<void () &&>':
+// Can't generate bindings for rs_std::internal_dyn_callable::Impl<void () &&>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_cc needs [//features:wrapper] for rs_std::internal_dyn_callable::Impl<void () &&> (crate::__CcTemplateInstN6rs_std21internal_dyn_callable4ImplIFvvOEEE is a template instantiation)
 
 mod detail {
     #[allow(unused_imports)]
