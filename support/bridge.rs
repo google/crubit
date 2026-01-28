@@ -150,7 +150,7 @@ pub unsafe trait CrubitAbi {
     /// # Safety
     ///
     /// The caller guarantees that the buffer's current position contains a `Value` that was
-    /// encoded with this ABI (either from Rust or C++).
+    /// encoded with this ABI from C++.
     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value;
 }
 

@@ -170,7 +170,7 @@ constexpr bool is_crubit_abi = requires {
   // # Safety
   //
   // The caller guarantees that the buffer's current position contains a
-  // `Value` that was encoded with this ABI (either from Rust or C++).
+  // `Value` that was encoded with this ABI from Rust.
   {
     std::declval<Abi&&>().Decode(std::declval<Decoder&>())
   } -> std::same_as<typename Abi::Value>;
