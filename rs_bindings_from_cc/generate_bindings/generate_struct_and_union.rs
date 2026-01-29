@@ -357,9 +357,6 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     ) {
         return Ok(ApiSnippets::default());
     }
-    if record_rs_type_kind.as_c9_co().is_some() {
-        return Ok(ApiSnippets::default());
-    }
     if record_rs_type_kind.is_bridge_type() {
         return Ok(ApiSnippets::default());
     }
