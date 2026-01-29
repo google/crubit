@@ -69,6 +69,20 @@ impl Mutability {
     }
 }
 
+/// Whether a type or function is safe.
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum Safety {
+    Safe,
+    // TODO(nicholasbishop): add unsafe reason.
+    Unsafe,
+}
+
+impl Safety {
+    pub fn is_unsafe(&self) -> bool {
+        matches!(self, Self::Unsafe)
+    }
+}
+
 /// Either a named lifetime, or the magic `'_` elided lifetime.
 ///
 /// Warning: elided lifetimes are not always valid, and sometimes named
@@ -1401,7 +1415,7 @@ impl RsTypeKind {
                 {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
                 }
-                if param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone())) {
+                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe()) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {
@@ -1579,7 +1593,7 @@ impl RsTypeKind {
                 if let Some(return_frag) = return_type.format_as_return_type_fragment(db, None) {
                     quote! { -> #return_frag }.to_tokens(&mut tokens);
                 }
-                if param_types.iter().any(|p| db.is_rs_type_kind_unsafe(p.clone())) {
+                if param_types.iter().any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe()) {
                     tokens = quote! { unsafe #tokens }
                 }
                 if *option {

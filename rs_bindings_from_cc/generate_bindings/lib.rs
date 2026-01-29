@@ -12,7 +12,7 @@ use database::code_snippet::{
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Database};
 use database::rs_snippet::{
-    BridgeRsTypeKind, Callable, FnTrait, Mutability, RsTypeKind, RustPtrKind,
+    BridgeRsTypeKind, Callable, FnTrait, Mutability, RsTypeKind, RustPtrKind, Safety,
 };
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
@@ -314,7 +314,7 @@ pub fn new_database<'db>(
             generate_item,
             generate_record: generate_struct_and_union::generate_record,
         },
-        is_rs_type_kind_unsafe,
+        rs_type_kind_safety,
         has_bindings::has_bindings,
         rs_type_kind_with_lifetime_elision,
         generate_function::generate_function,
@@ -495,69 +495,84 @@ pub fn generate_bindings_tokens(
     })
 }
 
-/// Implementation of `BindingsGenerator::is_rs_type_kind_unsafe`.
-fn is_rs_type_kind_unsafe(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> bool {
+/// Implementation of `BindingsGenerator::rs_type_kind_safety`.
+fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Safety {
     match rs_type_kind {
-        RsTypeKind::Error { .. } => true,
-        RsTypeKind::Pointer { .. } => true,
+        RsTypeKind::Error { .. } => Safety::Unsafe,
+        RsTypeKind::Pointer { .. } => Safety::Unsafe,
         RsTypeKind::Reference { referent: t, .. }
         | RsTypeKind::RvalueReference { referent: t, .. }
         | RsTypeKind::TypeAlias { underlying_type: t, .. } => {
-            db.is_rs_type_kind_unsafe(t.as_ref().clone())
+            db.rs_type_kind_safety(t.as_ref().clone())
         }
         RsTypeKind::FuncPtr { return_type, param_types, .. } => {
-            db.is_rs_type_kind_unsafe(return_type.as_ref().clone())
+            if db.rs_type_kind_safety(return_type.as_ref().clone()).is_unsafe()
                 || param_types
                     .iter()
                     .cloned()
-                    .any(|param_type| db.is_rs_type_kind_unsafe(param_type))
+                    .any(|param_type| db.rs_type_kind_safety(param_type).is_unsafe())
+            {
+                Safety::Unsafe
+            } else {
+                Safety::Safe
+            }
         }
         RsTypeKind::IncompleteRecord { .. } => {
             // TODO(b/390474240): Add a way to mark a forward declaration as being an unsafe
             // type.
-            false
+            Safety::Safe
         }
         RsTypeKind::Enum { .. }
         | RsTypeKind::Primitive(..)
-        | RsTypeKind::ExistingRustType { .. } => false,
+        | RsTypeKind::ExistingRustType { .. } => Safety::Safe,
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
             BridgeRsTypeKind::BridgeVoidConverters { .. }
             | BridgeRsTypeKind::Bridge { .. }
-            | BridgeRsTypeKind::ProtoMessageBridge { .. } => is_record_unsafe(db, &original_type),
-            BridgeRsTypeKind::StdOptional(t) => db.is_rs_type_kind_unsafe(t.as_ref().clone()),
+            | BridgeRsTypeKind::ProtoMessageBridge { .. } => record_safety(db, &original_type),
+            BridgeRsTypeKind::StdOptional(t) => db.rs_type_kind_safety(t.as_ref().clone()),
             BridgeRsTypeKind::StdPair(t1, t2) => {
-                db.is_rs_type_kind_unsafe(t1.as_ref().clone())
-                    || db.is_rs_type_kind_unsafe(t2.as_ref().clone())
+                if db.rs_type_kind_safety(t1.as_ref().clone()).is_unsafe()
+                    || db.rs_type_kind_safety(t2.as_ref().clone()).is_unsafe()
+                {
+                    Safety::Unsafe
+                } else {
+                    Safety::Safe
+                }
             }
-            BridgeRsTypeKind::StdString { .. } => false,
+            BridgeRsTypeKind::StdString { .. } => Safety::Safe,
             BridgeRsTypeKind::DynCallable(dyn_callable) => {
-                db.is_rs_type_kind_unsafe(dyn_callable.return_type.as_ref().clone())
+                if db.rs_type_kind_safety(dyn_callable.return_type.as_ref().clone()).is_unsafe()
                     || dyn_callable
                         .param_types
                         .iter()
                         .cloned()
-                        .any(|param_type| db.is_rs_type_kind_unsafe(param_type))
+                        .any(|param_type| db.rs_type_kind_safety(param_type).is_unsafe())
+                {
+                    Safety::Unsafe
+                } else {
+                    Safety::Safe
+                }
             }
         },
-        RsTypeKind::Record { record, .. } => is_record_unsafe(db, &record),
+        RsTypeKind::Record { record, .. } => record_safety(db, &record),
         RsTypeKind::C9Co { result_type, .. } => {
             // A Co<T> logically produces a T, so it is unsafe iff T is unsafe.
-            db.is_rs_type_kind_unsafe(result_type.as_ref().clone())
+            db.rs_type_kind_safety(result_type.as_ref().clone())
         }
     }
 }
 
-/// Helper function for `is_rs_type_kind_unsafe`.
-/// Returns true if the record is unsafe, or if it transitively contains a public field of
+/// Helper function for `rs_type_kind_safety`.
+/// Returns whether the record is unsafe, or if it transitively contains a public field of
 /// an unsafe type.
-fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
+fn record_safety(db: &dyn BindingsGenerator, record: &Record) -> Safety {
     if record.is_unsafe_type {
-        return true;
+        return Safety::Unsafe;
     }
 
     if record.record_type == RecordType::Union {
-        return true;
+        return Safety::Unsafe;
     }
     for field in &record.fields {
         if field.access != AccessSpecifier::Public {
@@ -565,17 +580,17 @@ fn is_record_unsafe(db: &dyn BindingsGenerator, record: &Record) -> bool {
         }
         let Ok(cpp_type) = &field.type_ else {
             // If we can't get the CcType for a public field, we assume it's unsafe.
-            return true;
+            return Safety::Unsafe;
         };
         let Ok(field_rs_type_kind) = db.rs_type_kind(cpp_type.clone()) else {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
-            return true;
+            return Safety::Unsafe;
         };
-        if db.is_rs_type_kind_unsafe(field_rs_type_kind) {
-            return true;
+        if db.rs_type_kind_safety(field_rs_type_kind).is_unsafe() {
+            return Safety::Unsafe;
         }
     }
-    false
+    Safety::Safe
 }
 
 fn generate_rs_api_impl_includes(

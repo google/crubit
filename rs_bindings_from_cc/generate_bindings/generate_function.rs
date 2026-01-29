@@ -624,7 +624,7 @@ fn api_func_shape_for_identifier(
                 // an unsafe type is safe, but using one is not.
                 let _ = param_type_iter.next();
             }
-            param_type_iter.any(|p| db.is_rs_type_kind_unsafe(p.clone()))
+            param_type_iter.any(|p| db.rs_type_kind_safety(p.clone()).is_unsafe())
         }
         SafetyAnnotation::Unsafe => true,
         SafetyAnnotation::DisableUnsafe => false,
@@ -740,7 +740,7 @@ fn issue_unsafe_constructor_errors(
             let unsafe_params = param_names
                 .zip(param_types)
                 .skip(1)
-                .filter(|(_name, p_type)| db.is_rs_type_kind_unsafe((*p_type).clone()))
+                .filter(|(_name, p_type)| db.rs_type_kind_safety((*p_type).clone()).is_unsafe())
                 .map(|(param_name, param_type)| {
                     format!("\n    `{param_name}` of unsafe type `{}`", param_type.display(db))
                 })

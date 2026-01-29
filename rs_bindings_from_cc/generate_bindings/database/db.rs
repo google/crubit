@@ -6,7 +6,7 @@ use crate::code_snippet::{
     ApiSnippets, BindingsInfo, NoBindingsReason, ResolvedTypeName, Visibility,
 };
 use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
-use crate::rs_snippet::{LifetimeOptions, RsTypeKind};
+use crate::rs_snippet::{LifetimeOptions, RsTypeKind, Safety};
 use arc_anyhow::{anyhow, Result};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
@@ -47,11 +47,11 @@ memoized::query_group! {
         #[input]
         fn codegen_functions(&self) -> CodegenFunctions;
 
-        #[break_cycles_with = false]
-        /// Returns true if the given Rust type is an unsafe type, such as a raw pointer.
+        #[break_cycles_with = Safety::Safe]
+        /// Returns whether the given Rust type is an unsafe type, such as a raw pointer.
         ///
-        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:is_rs_type_kind_unsafe
-        fn is_rs_type_kind_unsafe(&self, rs_type_kind: RsTypeKind) -> bool;
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:rs_type_kind_safety
+        fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Safety;
 
         /// Returns the bindings info for the given item, or an error if the item is not supported.
         ///
