@@ -65,6 +65,7 @@ pub fn generate_top_level_comment(ir: &IR, environment: Environment) -> String {
 
 pub fn generate_doc_comment(
     comment: Option<&str>,
+    safety: Option<&str>,
     source_loc: Option<&str>,
     environment: Environment,
 ) -> Option<DocCommentAttr> {
@@ -72,9 +73,22 @@ pub fn generate_doc_comment(
         Environment::Production => source_loc,
         Environment::GoldenTest => None,
     };
+
+    // If a safety doc is provided, append a "# Safety" section to `comment`.
+    let comment = if let Some(safety) = safety {
+        let safety_comment = format!("# Safety\n\n{}", safety.trim());
+        if let Some(comment) = comment {
+            Some(format!("{comment}\n\n{safety_comment}"))
+        } else {
+            Some(safety_comment)
+        }
+    } else {
+        comment.map(|s| s.to_owned())
+    };
+
     let (comment, sep, source_loc) = match (comment, source_loc) {
         (None, None) => return None,
-        (None, Some(source_loc)) => ("", "", source_loc),
+        (None, Some(source_loc)) => (String::new(), "", source_loc),
         (Some(comment), Some(source_loc)) => (comment, "\n\n", source_loc),
         (Some(comment), None) => (comment, "", ""),
     };

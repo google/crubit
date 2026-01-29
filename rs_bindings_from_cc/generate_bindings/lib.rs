@@ -135,6 +135,7 @@ fn generate_type_alias(
         GeneratedItem::TypeAlias {
             doc_comment: generate_doc_comment(
                 type_alias.doc_comment.as_deref(),
+                None,
                 Some(&type_alias.source_loc),
                 db.environment(),
             ),

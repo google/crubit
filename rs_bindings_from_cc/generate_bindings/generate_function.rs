@@ -1618,8 +1618,12 @@ pub fn generate_function(
         }
     };
 
-    let doc_comment =
-        generate_doc_comment(func.doc_comment.as_deref(), Some(&func.source_loc), db.environment());
+    let doc_comment = generate_doc_comment(
+        func.doc_comment.as_deref(),
+        None,
+        Some(&func.source_loc),
+        db.environment(),
+    );
     let api_func: TokenStream;
     let function_id: FunctionId;
     let mut member_functions_map = HashMap::new();

@@ -297,7 +297,7 @@ fn field_definition(
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
     let doc_comment = match &field_rs_type_kind {
-        Ok(_) => generate_doc_comment(field.doc_comment.as_deref(), None, db.environment()),
+        Ok(_) => generate_doc_comment(field.doc_comment.as_deref(), None, None, db.environment()),
         Err(msg) => {
             use std::fmt::Write;
 
@@ -310,7 +310,7 @@ fn field_definition(
                 &mut new_text,
                 "Reason for representing this field as a blob of bytes:\n{msg:#}"
             );
-            generate_doc_comment(Some(new_text.as_str()), None, db.environment())
+            generate_doc_comment(Some(new_text.as_str()), None, None, db.environment())
         }
     };
     let visibility = if field.access == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
@@ -624,6 +624,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
             record.doc_comment.as_deref(),
+            None,
             Some(&record.source_loc),
             db.environment(),
         ),
@@ -826,7 +827,7 @@ fn cc_struct_no_unique_address_impl(
         no_unique_address_accessors.push(NoUniqueAddressAccessor {
             doc_comment: if field.size == 0 {
                 // These fields are not generated at all, so they need to be documented here.
-                generate_doc_comment(field.doc_comment.as_deref(), None, db.environment())
+                generate_doc_comment(field.doc_comment.as_deref(), None, None, db.environment())
             } else {
                 // all other fields already have a doc-comment at the point they were defined.
                 None
