@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::fmt::{self, Arguments, Display, Formatter};
 use std::rc::Rc;
 
-use serde::{ser::SerializeSeq, Serialize, Serializer};
+use serde::{ser::SerializeSeq, Deserialize, Serialize, Serializer};
 
 #[doc(hidden)]
 pub mod macro_internal {
@@ -49,14 +49,14 @@ impl Display for ErrorList {
 impl std::error::Error for ErrorList {}
 
 /// An error that stores its format string as well as the formatted message.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FormattedError {
-    #[serde(skip_serializing_if = "str::is_empty")]
+    #[serde(default, skip_serializing_if = "str::is_empty")]
     fmt: Cow<'static, str>,
     /// The full error message.
     ///
     /// If this is identical to the `fmt` value, this will be empty.
-    #[serde(skip_serializing_if = "str::is_empty")]
+    #[serde(default, skip_serializing_if = "str::is_empty")]
     full_error: Cow<'static, str>,
 }
 
@@ -85,6 +85,14 @@ impl FormattedError {
             Cow::Owned(err.to_string()),
             Cow::Borrowed(""),
         )))
+    }
+
+    pub fn fmt(&self) -> &str {
+        &self.fmt
+    }
+
+    pub fn full_error(&self) -> &str {
+        &self.full_error
     }
 }
 
@@ -346,10 +354,15 @@ impl ErrorReporting for ErrorReport {
     }
 }
 
-#[derive(Default, Debug, Serialize)]
-struct ErrorReportEntry {
-    name: Rc<str>,
-    errors: Vec<FormattedError>,
+/// An entry in an error report.
+///
+/// The serialized JSON error report is a sequence of these, so format changes should be kept
+/// backwards-compatible.
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct ErrorReportEntry {
+    pub name: Rc<str>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub errors: Vec<FormattedError>,
 }
 
 /// Reporter for fatal errors that will cause bindings generation to fail.
