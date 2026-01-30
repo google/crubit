@@ -190,6 +190,11 @@ fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> R
 
 /// Implementation of `BindingsGenerator::generate_item`.
 fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> {
+    if let Some(owning_target) = item.owning_target() {
+        if !db.ir().is_current_target(&owning_target) {
+            return Ok(ApiSnippets::default());
+        }
+    }
     let _scope = item.error_scope(db.ir(), db.errors());
     let err = match generate_item_impl(db, &item) {
         Ok(generated) => return Ok(generated),
@@ -214,12 +219,6 @@ fn generate_item(db: &dyn BindingsGenerator, item: Item) -> Result<ApiSnippets> 
 ///
 /// Returns Err if bindings could not be generated for this item.
 fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
-    let ir = db.ir();
-    if let Some(owning_target) = item.owning_target() {
-        if !ir.is_current_target(&owning_target) {
-            return Ok(ApiSnippets::default());
-        }
-    }
     let generated_item = match item {
         Item::Func(func) => match db.generate_function(func.clone(), None)? {
             None => ApiSnippets::default(),
@@ -265,7 +264,7 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
             let disable_comment = format!(
                 "Type bindings for {cpp_type} suppressed due to being mapped to \
                     an existing Rust type ({rs_type_kind})",
-                cpp_type = existing_rust_type.debug_name(&ir),
+                cpp_type = existing_rust_type.debug_name(db.ir()),
                 rs_type_kind = rs_type_kind.display(db),
             );
             let assertions = existing_rust_type
