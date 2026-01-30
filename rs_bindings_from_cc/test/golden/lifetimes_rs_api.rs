@@ -38,6 +38,10 @@ pub fn AddAnotherHookWithTypedef(hook: extern "C" fn()) {
     unsafe { crate::detail::__rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(hook) }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `pair`: raw pointer
 #[inline(always)]
 pub unsafe fn ConsumeArray(pair: *mut ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z12ConsumeArrayPi(pair)
@@ -46,6 +50,10 @@ pub unsafe fn ConsumeArray(pair: *mut ::ffi_11::c_int) {
 // Error while generating bindings for type alias 'Arr':
 // Unsupported type 'int[2]': Unsupported clang::Type class 'ConstantArray'
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__param_0`: raw pointer
 #[inline(always)]
 pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0)

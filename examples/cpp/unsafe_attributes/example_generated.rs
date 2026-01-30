@@ -21,12 +21,21 @@ pub fn SafeSignatureWithoutAnnotation() {
     unsafe { crate::detail::__rust_thunk___Z30SafeSignatureWithoutAnnotationv() }
 }
 
+/// # Safety
+///
+/// The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.
+///
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=11
 #[inline(always)]
 pub unsafe fn SafeSignatureButAnnotatedUnsafe() {
     crate::detail::__rust_thunk___Z31SafeSignatureButAnnotatedUnsafev()
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__param_0`: raw pointer
+///
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=13
 #[inline(always)]
 pub unsafe fn UnsafeSignatureWithoutAnnotation(__param_0: *mut ::ffi_11::c_void) {
@@ -49,6 +58,10 @@ pub fn SafeBasedOnBoolean() {
 
 // is_unsafe=
 
+/// # Safety
+///
+/// The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.
+///
 /// Generated from: examples/cpp/unsafe_attributes/example.h;l=17
 #[inline(always)]
 pub unsafe fn UnsafeBasedOnBoolean() {

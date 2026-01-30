@@ -31,14 +31,26 @@ impl SomeClass {
     pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {
         unsafe { crate::detail::__rust_thunk___ZN9SomeClass6createEic(i, c) }
     }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_member(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN9SomeClass16no_except_memberEv(__this)
     }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_true_member(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN9SomeClass21no_except_true_memberEv(__this)
     }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn no_except_false_member(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN9SomeClass22no_except_false_memberEv(__this)

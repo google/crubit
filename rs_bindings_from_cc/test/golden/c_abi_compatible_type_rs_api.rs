@@ -47,6 +47,10 @@ pub fn ffi(a: i8, mut b: crate::X) -> i8 {
 
 pub type MyTypedefDecl = ::ffi_11::c_int;
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `b`: raw pointer
 #[inline(always)]
 pub unsafe fn f(a: crate::MyTypedefDecl, b: *mut ::ffi_11::c_void, c: ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z1fiPvi(a, b, c)

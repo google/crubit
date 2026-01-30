@@ -30,12 +30,22 @@ pub fn MakeThing(value: ::ffi_11::c_int) -> *mut ::owned_ptr::RawThing {
     unsafe { crate::detail::__rust_thunk___Z9MakeThingi(value) }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `thingptr`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=18
 #[inline(always)]
 pub unsafe fn ThingToValue(thingptr: ::owned_ptr::OwnedThing) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z12ThingToValueP5Thing(::core::mem::transmute(thingptr))
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `thingptr`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr_user.h;l=20
 #[inline(always)]
 pub unsafe fn GetThingValue(thingptr: *mut ::owned_ptr::RawThing) -> ::ffi_11::c_int {

@@ -29,11 +29,18 @@ pub fn TotallySafe() {
     unsafe { crate::detail::__rust_thunk___Z11TotallySafev() }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__param_0`: raw pointer
 #[inline(always)]
 pub unsafe fn TotallyUnsafe(__param_0: *mut ::ffi_11::c_void) {
     crate::detail::__rust_thunk___Z13TotallyUnsafePv(__param_0)
 }
 
+/// # Safety
+///
+/// The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.
 #[inline(always)]
 pub unsafe fn SafeSignatureButAnnotatedUnsafe() {
     crate::detail::__rust_thunk___Z31SafeSignatureButAnnotatedUnsafev()
@@ -44,6 +51,12 @@ pub fn SafeSignatureButAnnotatedSafe() {
     unsafe { crate::detail::__rust_thunk___Z29SafeSignatureButAnnotatedSafev() }
 }
 
+/// # Safety
+///
+/// The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__param_0`: raw pointer
 #[inline(always)]
 pub unsafe fn UnsafeSignatureButAnnotatedUnsafe(__param_0: *mut ::ffi_11::c_void) {
     crate::detail::__rust_thunk___Z33UnsafeSignatureButAnnotatedUnsafePv(__param_0)

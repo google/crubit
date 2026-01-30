@@ -384,6 +384,10 @@ impl MethodBase1 {
     pub fn Public<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
     }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__param_0`: raw pointer
     #[inline(always)]
     pub unsafe fn Equals<'a>(&'a mut self, __param_0: *const Self) {
         crate::detail::__rust_thunk___ZN11MethodBase16EqualsEPKS_(self, __param_0)

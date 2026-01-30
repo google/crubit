@@ -22,6 +22,11 @@ pub(crate) fn GetGlobalUnsupportedType(
     unsafe { crate::detail::__rust_thunk___Z24GetGlobalUnsupportedTypev() }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `x`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/wrapper/fallback_types/wrapper_library.h;l=15
 #[inline(always)]
 pub(crate) unsafe fn SetValue(
@@ -31,6 +36,11 @@ pub(crate) unsafe fn SetValue(
     crate::detail::__rust_thunk___Z8SetValueR15UnsupportedTypei(x, value)
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `x`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/wrapper/fallback_types/wrapper_library.h;l=17
 #[inline(always)]
 pub(crate) unsafe fn GetValue(

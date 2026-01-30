@@ -171,6 +171,11 @@ pub fn FunctionPointerReturningFunction() -> Option<
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__param_0`: raw pointer
+/// * `__param_1`: raw pointer
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
     __param_0: *mut ::ffi_11::c_void,

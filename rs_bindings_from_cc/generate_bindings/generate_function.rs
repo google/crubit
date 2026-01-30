@@ -1406,6 +1406,51 @@ fn rs_type_kinds_for_func(
     Ok((param_types, return_type.unwrap()))
 }
 
+/// Generate the safety documentation for an unsafe function.
+///
+/// Returns `None` if the function is not unsafe.
+fn generate_func_safety_doc(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+    impl_kind: &ImplKind,
+    mut param_idents: &[Ident],
+    param_types: &[RsTypeKind],
+) -> Option<String> {
+    // The first param may have been removed from `param_types` due to
+    // being a `this` pointer. Update `param_idents` to match.
+    if param_idents.len() == param_types.len() + 1 {
+        param_idents = &param_idents[1..];
+    }
+    assert_eq!(param_idents.len(), param_types.len());
+
+    let mut param_unsafe_reasons = String::new();
+    for (ident, param_type) in param_idents.iter().zip(param_types.iter()) {
+        if let Some(reason) = db.rs_type_kind_safety(param_type.clone()).unsafe_reason() {
+            writeln!(&mut param_unsafe_reasons, "* `{ident}`: {reason}").unwrap();
+        }
+    }
+
+    if impl_kind.is_unsafe() &&
+        // Skip safety doc for trait impls, since the trait itself
+        // should document its safety requirements.
+        !matches!(impl_kind, ImplKind::Trait { .. })
+    {
+        let mut doc = String::new();
+        if let SafetyAnnotation::Unsafe = func.safety_annotation {
+            // TODO(nicholasbishop): allow C++ annotations to provide a specific reason.
+            doc += "The C++ function is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.\n\n";
+        }
+        if !param_unsafe_reasons.is_empty() {
+            write!(doc, "The caller must ensure that the following unsafe arguments are not misused by the function:\n{param_unsafe_reasons}").unwrap();
+        }
+        // Verify that we didn't generate an empty safety doc.
+        assert!(!doc.is_empty());
+        Some(doc)
+    } else {
+        None
+    }
+}
+
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function(
     db: &dyn BindingsGenerator,
@@ -1625,7 +1670,7 @@ pub fn generate_function(
 
     let doc_comment = generate_doc_comment(
         func.doc_comment.as_deref(),
-        None,
+        generate_func_safety_doc(db, &func, &impl_kind, &param_idents, &param_types).as_deref(),
         Some(&func.source_loc),
         db.environment(),
     );

@@ -33,12 +33,22 @@ pub fn return_reference() -> *mut ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z16return_referencev() }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `i`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=13
 #[inline(always)]
 pub unsafe fn take_pointer(i: *mut ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z12take_pointerPi(i)
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `i`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=14
 #[inline(always)]
 pub unsafe fn take_reference(i: *mut ::ffi_11::c_int) {
@@ -51,6 +61,11 @@ pub fn forward_pointer(i: *const ::ffi_11::c_int) -> *const ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z15forward_pointerPKi(i) }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `i`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/function/simple/simple.h;l=17
 #[inline(always)]
 pub unsafe fn forward_reference(i: *const ::ffi_11::c_int) -> *const ::ffi_11::c_int {

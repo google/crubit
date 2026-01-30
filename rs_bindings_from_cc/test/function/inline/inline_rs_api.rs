@@ -50,6 +50,11 @@ impl Default for SomeStruct {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `s`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/function/inline/inline.h;l=15
 #[inline(always)]
 pub unsafe fn take_struct_by_const_ptr(s: *const crate::SomeStruct) -> ::ffi_11::c_int {

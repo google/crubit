@@ -27,10 +27,18 @@ unsafe impl ::cxx::ExternType for Struct {
     type Kind = ::cxx::kind::Trivial;
 }
 impl Struct {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessNone(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN6Struct10AccessNoneEv(__this)
     }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN6Struct12AccessPublicEv(__this)
@@ -61,6 +69,10 @@ unsafe impl ::cxx::ExternType for Class {
     type Kind = ::cxx::kind::Trivial;
 }
 impl Class {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn AccessPublic(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN5Class12AccessPublicEv(__this)

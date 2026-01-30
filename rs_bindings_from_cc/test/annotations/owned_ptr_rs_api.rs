@@ -36,6 +36,11 @@ unsafe impl ::cxx::ExternType for RawThing {
     type Kind = ::cxx::kind::Trivial;
 }
 impl RawThing {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    ///
     /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=21
     #[inline(always)]
     pub unsafe fn Close(__this: *mut Self) {

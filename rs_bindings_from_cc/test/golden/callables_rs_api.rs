@@ -147,6 +147,10 @@ impl LayoutCompatible {
             __return.assume_init()
         }
     }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn get(__this: *const Self) -> ::ffi_11::c_int {
         crate::detail::__rust_thunk___ZNK16LayoutCompatible3getEv(__this)

@@ -65,6 +65,10 @@ unsafe impl ::cxx::ExternType for Foo {
     type Kind = ::cxx::kind::Trivial;
 }
 impl Foo {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
     #[inline(always)]
     pub unsafe fn Bar(__this: *mut Self, __param_0: ::ffi_11::c_int) {
         crate::detail::__rust_thunk___ZN3Foo3BarEi(__this, __param_0)

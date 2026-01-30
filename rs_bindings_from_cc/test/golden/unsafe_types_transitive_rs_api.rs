@@ -134,16 +134,28 @@ impl Default for Union {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `p`: raw pointer
 #[inline(always)]
 pub unsafe fn DerefPointer(p: *mut ::ffi_11::c_int) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z12DerefPointerPi(p)
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `p`: unsafe struct or union
 #[inline(always)]
 pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p)
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `p`: unsafe struct or union
 #[inline(always)]
 pub unsafe fn DerefTransitivePublicPointer(
     mut p: crate::TransitivePublicPointer,
@@ -151,6 +163,10 @@ pub unsafe fn DerefTransitivePublicPointer(
     crate::detail::__rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(&mut p)
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `u`: unsafe struct or union
 #[inline(always)]
 pub unsafe fn ReadUnion(mut u: crate::Union) -> ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z9ReadUnion5Union(&mut u)

@@ -20,6 +20,10 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `p1`: raw pointer
 #[inline(always)]
 pub unsafe fn free_function(p1: *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
     crate::detail::__rust_thunk___Z13free_functionRi(p1)
@@ -38,6 +42,12 @@ unsafe impl ::cxx::ExternType for S {
     type Kind = ::cxx::kind::Trivial;
 }
 impl S {
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    /// * `p1`: raw pointer
+    /// * `p2`: raw pointer
     #[inline(always)]
     pub unsafe fn const_method(
         __this: *const Self,
@@ -46,6 +56,12 @@ impl S {
     ) -> *mut ::ffi_11::c_int {
         crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `__this`: raw pointer
+    /// * `p1`: raw pointer
+    /// * `p2`: raw pointer
     #[inline(always)]
     pub unsafe fn method(
         __this: *mut Self,
@@ -125,6 +141,10 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `p`: raw pointer
 #[inline(always)]
 pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)

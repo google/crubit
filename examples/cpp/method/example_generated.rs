@@ -30,6 +30,11 @@ pub mod foo {
         type Kind = ::cxx::kind::Trivial;
     }
     impl Bar {
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `__this`: raw pointer
+        ///
         /// Generated from: examples/cpp/method/example.h;l=14
         #[inline(always)]
         pub unsafe fn MyMethod(__this: *mut Self) {

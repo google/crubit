@@ -135,6 +135,11 @@ pub mod crubit {
             type Kind = ::cxx::kind::Trivial;
         }
         impl StructWithDoNotBindMethod {
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            ///
             /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=36
             #[inline(always)]
             pub unsafe fn DoNotBindMethod(

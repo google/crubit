@@ -87,6 +87,10 @@ pub fn MakeMyI8Struct() -> crate::MyOption<i8> {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `slice`: raw pointer
 #[inline(always)]
 pub unsafe fn InspectStringViews(
     slice: *mut [::cc_std::__CcTemplateInstNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE],
@@ -101,6 +105,10 @@ pub fn MaybeVoidPtr() -> crate::MyOption<*mut ::ffi_11::c_void> {
     }
 }
 
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `slice`: raw pointer
 #[inline(always)]
 pub unsafe fn AcceptsSliceAndReturnsStatusErrorIfEmpty(
     slice: *const [::ffi_11::c_int],

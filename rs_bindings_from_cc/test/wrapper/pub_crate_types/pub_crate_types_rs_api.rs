@@ -82,6 +82,11 @@ forward_declare::forward_declare!(pub ForwardDeclared = forward_declare::symbol!
 /// Forward declared types are not pub(crate) so that they can work across
 /// module boundaries like this.
 ///
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `__param_0`: raw pointer
+///
 /// Generated from: rs_bindings_from_cc/test/wrapper/pub_crate_types/pub_crate_types.h;l=42
 #[inline(always)]
 pub unsafe fn OtherPubCrateTypes(__param_0: *mut ::other_pub_crate_types::ForwardDeclared2) {

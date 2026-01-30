@@ -85,6 +85,11 @@ pub mod crubit {
                     tmp.assume_init()
                 }
             }
+            /// # Safety
+            ///
+            /// The caller must ensure that the following unsafe arguments are not misused by the function:
+            /// * `__this`: raw pointer
+            ///
             /// Generated from: support/annotations_internal.h;l=14
             /// Expanded at: rs_bindings_from_cc/test/annotations/rust_name.h;l=21
             #[inline(always)]
