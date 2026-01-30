@@ -1378,6 +1378,7 @@ fn rs_type_kinds_for_func(
 
                         // Only interesting for the return type.
                         have_reference_param: false,
+                        assume_lifetimes,
                     },
                 )
                 .map_err(|err| anyhow!("Failed to format type of parameter {i}: {err}")),
@@ -1395,6 +1396,7 @@ fn rs_type_kinds_for_func(
                 have_reference_param: param_types.iter().any(|pt| {
                     matches!(pt, RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. })
                 }),
+                assume_lifetimes,
             },
         )
         .map_err(|err| anyhow!("Failed to format return type: {err}")),
@@ -1447,6 +1449,9 @@ pub fn generate_function(
 
     let param_value_adjustments =
         adjust_param_types_for_trait_impl(db, &impl_kind, &mut param_types, &errors);
+
+    // TODO(b/454627672): Possibly amend the logic around lifetime binding here for
+    // assume_lifetimes.
 
     let BindingsSignature {
         mut lifetimes,

@@ -269,6 +269,10 @@ pub struct LifetimeOptions {
     pub have_reference_param: bool,
 
     pub is_return_type: bool,
+
+    /// If true, assumed lifetimes are used. The item in question is expected to have undergone
+    /// lifetime_defaults_transform.
+    pub assume_lifetimes: bool,
 }
 
 /// A type with template type arguments that has a uniform representation regardless of `T` and

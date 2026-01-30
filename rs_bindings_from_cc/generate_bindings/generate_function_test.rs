@@ -2063,16 +2063,14 @@ fn test_c_abi_compatible_type_by_value_with_move() -> Result<()> {
 
 #[gtest]
 fn test_simple_explicit_lifetime() -> Result<()> {
-    // TODO(b/454627672): Right now this just checks that generating code from the result of
-    // ir_from_assumed_lifetimes_cc isn't immediately broken.
     let ir = ir_from_assumed_lifetimes_cc("int& $a Add(int& $a x);")?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
         quote! {
             #[inline(always)]
-            pub unsafe fn Add(x: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int {
-                crate::detail::__rust_thunk___Z3AddRi(x)
+            pub fn Add<'a>(x: &'a mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int {
+                unsafe { crate::detail::__rust_thunk___Z3AddRi(x) }
             }
         }
     );
@@ -2084,7 +2082,7 @@ fn test_simple_explicit_lifetime() -> Result<()> {
                 use super::*;
                 unsafe extern "C" {
                     #[link_name = "_Z3AddRi"]
-                    pub(crate) unsafe fn __rust_thunk___Z3AddRi(x: *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int;
+                    pub(crate) unsafe fn __rust_thunk___Z3AddRi<'a>(x: &'a mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int;
                 }
             }
         }

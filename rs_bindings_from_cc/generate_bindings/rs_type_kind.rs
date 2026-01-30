@@ -56,19 +56,27 @@ pub fn rs_type_kind_with_lifetime_elision(
             }
             let pointee = Rc::new(pointee);
 
-            let lifetime = match pointer.lifetime {
-                Some(lifetime_id) => db
-                    .ir()
-                    .get_lifetime(lifetime_id)
-                    .map(Lifetime::from)
-                    .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
-                None if lifetime_options.infer_lifetimes => Lifetime::elided(),
-                None => {
-                    return Ok(RsTypeKind::Pointer {
-                        pointee,
-                        kind: RustPtrKind::CcPtr(pointer.kind),
-                        mutability,
-                    })
+            let lifetime = if lifetime_options.assume_lifetimes {
+                match &ty.explicit_lifetimes[..] {
+                    [] => Lifetime::elided(),
+                    [name] => Lifetime::new(name),
+                    _ => return Err(anyhow!("pointers may only have one lifetime")),
+                }
+            } else {
+                match pointer.lifetime {
+                    Some(lifetime_id) => db
+                        .ir()
+                        .get_lifetime(lifetime_id)
+                        .map(Lifetime::from)
+                        .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
+                    None if lifetime_options.infer_lifetimes => Lifetime::elided(),
+                    None => {
+                        return Ok(RsTypeKind::Pointer {
+                            pointee,
+                            kind: RustPtrKind::CcPtr(pointer.kind),
+                            mutability,
+                        })
+                    }
                 }
             };
             Ok(match pointer.kind {
@@ -102,14 +110,20 @@ pub fn rs_type_kind_with_lifetime_elision(
                 .expect("In well-formed IR function pointers include at least the return type");
             let return_type = Rc::new(db.rs_type_kind_with_lifetime_elision(
                 return_type.clone(),
-                LifetimeOptions::default(),
+                LifetimeOptions {
+                    assume_lifetimes: lifetime_options.assume_lifetimes,
+                    ..LifetimeOptions::default()
+                },
             )?);
             let param_types = param_types
                 .iter()
                 .map(|param_type| {
                     db.rs_type_kind_with_lifetime_elision(
                         param_type.clone(),
-                        LifetimeOptions::default(),
+                        LifetimeOptions {
+                            assume_lifetimes: lifetime_options.assume_lifetimes,
+                            ..LifetimeOptions::default()
+                        },
                     )
                 })
                 .collect::<Result<Rc<[_]>>>()?;
