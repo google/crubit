@@ -61,6 +61,15 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_field_safety
         fn record_field_safety(&self, field: Field) -> Safety;
 
+        #[break_cycles_with = Safety::Safe]
+        /// Returns whether the given record is unsafe.
+        ///
+        /// A record may be unsafe due to an explicitly annotation, or by being a union,
+        /// or by having an unsafe public field (see `record_field_safety`).
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_safety
+        fn record_safety(&self, record: Rc<Record>) -> Safety;
+
         /// Returns the bindings info for the given item, or an error if the item is not supported.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:has_bindings

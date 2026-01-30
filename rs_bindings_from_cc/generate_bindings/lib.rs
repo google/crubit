@@ -315,6 +315,7 @@ pub fn new_database<'db>(
         },
         rs_type_kind_safety,
         record_field_safety,
+        record_safety,
         has_bindings::has_bindings,
         rs_type_kind_with_lifetime_elision,
         generate_function::generate_function,
@@ -521,7 +522,7 @@ fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> 
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
             // TODO(b/390621592): Should bridge types just delegate to the underlying type?
             BridgeRsTypeKind::BridgeVoidConverters { .. } | BridgeRsTypeKind::Bridge { .. } => {
-                if record_safety(db, &original_type).is_safe() {
+                if record_safety(db, original_type.clone()).is_safe() {
                     Safety::Safe
                 } else {
                     // Full unsafe reason is not shown here, it's documented on the type instead.
@@ -529,7 +530,7 @@ fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> 
                 }
             }
             BridgeRsTypeKind::ProtoMessageBridge { .. } => {
-                if record_safety(db, &original_type).is_safe() {
+                if record_safety(db, original_type.clone()).is_safe() {
                     Safety::Safe
                 } else {
                     // Full unsafe reason is not shown here, it's documented on the type instead.
@@ -563,7 +564,7 @@ fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> 
             }
         },
         RsTypeKind::Record { record, .. } => {
-            if record_safety(db, &record).is_safe() {
+            if record_safety(db, record.clone()).is_safe() {
                 Safety::Safe
             } else {
                 // Full unsafe reason is not shown here, it's documented on the type instead.
@@ -644,10 +645,8 @@ fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
     db.rs_type_kind_safety(field_rs_type_kind)
 }
 
-/// Helper function for `rs_type_kind_safety`.
-/// Returns whether the record is unsafe, or if it transitively contains a public field of
-/// an unsafe type.
-fn record_safety(db: &dyn BindingsGenerator, record: &Record) -> Safety {
+/// Implementation of `BindingsGenerator::record_safety`.
+fn record_safety(db: &dyn BindingsGenerator, record: Rc<Record>) -> Safety {
     if record.is_unsafe_type {
         return Safety::unsafe_because("explicitly annotated as unsafe");
     }
