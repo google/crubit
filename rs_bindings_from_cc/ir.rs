@@ -2095,6 +2095,23 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
     }
 }
 
+impl From<ExistingRustType> for Item {
+    fn from(existing_rust_type: ExistingRustType) -> Item {
+        Item::ExistingRustType(Rc::new(existing_rust_type))
+    }
+}
+
+impl<'a> TryFrom<&'a Item> for &'a Rc<ExistingRustType> {
+    type Error = Error;
+    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+        if let Item::ExistingRustType(r) = value {
+            Ok(r)
+        } else {
+            bail!("Not an ExistingRustType: {:#?}", value)
+        }
+    }
+}
+
 // There's no reason to hide FlatIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
 // and transforming the json is strictly worse than transforming the ir itself.
 
