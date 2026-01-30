@@ -490,7 +490,6 @@ pub fn generate_function_thunk_impl(
                     // non-Unpin types are wrapped by a pointer in the thunk.
                     if rs_type_kind.is_crubit_abi_bridge_type() {
                         let crubit_abi_type = db.crubit_abi_type(rs_type_kind)?;
-                        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
                         let crubit_abi_type_expr_tokens =
                             CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
                         let decoder = format_ident!("__{ident}_decoder");

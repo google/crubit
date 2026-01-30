@@ -7,11 +7,7 @@
 //! Adds default lifetimes to (partially-) unannotated IR.
 
 use database::BindingsGenerator;
-use ir::{
-    make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, LifetimeId, LifetimeName, PointerType,
-    PointerTypeKind, IR,
-};
-use std::cmp::max;
+use ir::{make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, PointerType, PointerTypeKind, IR};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
@@ -142,7 +138,7 @@ struct LifetimeResult {
 }
 
 impl LifetimeDefaults {
-    fn new(ir: &IR) -> Self {
+    fn new(_ir: &IR) -> Self {
         LifetimeDefaults { bindings: BindingContext::new() }
     }
 
