@@ -11,7 +11,7 @@ use arc_anyhow::{anyhow, Result};
 use crubit_abi_type::CrubitAbiType;
 use error_report::{ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
-use ir::{BazelLabel, CcType, Enum, Func, Record, UnqualifiedIdentifier, IR};
+use ir::{BazelLabel, CcType, Enum, Field, Func, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -54,6 +54,12 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:rs_type_kind_safety
         fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Safety;
+
+        #[break_cycles_with = Safety::Safe]
+        /// Returns whether the given field is unsafe to access.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_field_safety
+        fn record_field_safety(&self, field: Field) -> Safety;
 
         /// Returns the bindings info for the given item, or an error if the item is not supported.
         ///

@@ -314,6 +314,7 @@ pub fn new_database<'db>(
             generate_record: generate_struct_and_union::generate_record,
         },
         rs_type_kind_safety,
+        record_field_safety,
         has_bindings::has_bindings,
         rs_type_kind_with_lifetime_elision,
         generate_function::generate_function,
@@ -617,6 +618,32 @@ fn callable_safety(
     Safety::unsafe_because(reasons)
 }
 
+/// Implementation of `BindingsGenerator::record_field_safety`.
+fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
+    if field.access != AccessSpecifier::Public {
+        return Safety::Safe;
+    }
+    let cpp_type = match &field.type_ {
+        Ok(cpp_type) => cpp_type,
+        Err(err) => {
+            // If we can't get the CcType for a public field, we assume it's unsafe.
+            return Safety::unsafe_because(format!(
+                "C++ type is unknown; safety requirements cannot be automatically generated: {err}"
+            ));
+        }
+    };
+    let field_rs_type_kind = match db.rs_type_kind(cpp_type.clone()) {
+        Ok(field_rs_type_kind) => field_rs_type_kind,
+        Err(err) => {
+            // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
+            return Safety::unsafe_because(
+                format!("Rust type is unknown; safety requirements cannot be automatically generated: {err}"),
+            );
+        }
+    };
+    db.rs_type_kind_safety(field_rs_type_kind)
+}
+
 /// Helper function for `rs_type_kind_safety`.
 /// Returns whether the record is unsafe, or if it transitively contains a public field of
 /// an unsafe type.
@@ -629,23 +656,9 @@ fn record_safety(db: &dyn BindingsGenerator, record: &Record) -> Safety {
         return Safety::unsafe_because("raw union");
     }
     for field in &record.fields {
-        if field.access != AccessSpecifier::Public {
-            continue;
-        }
-        let Ok(cpp_type) = &field.type_ else {
-            // If we can't get the CcType for a public field, we assume it's unsafe.
-            return Safety::unsafe_because(
-                "C++ type is unknown; safety requirements cannot be automatically generated",
-            );
-        };
-        let Ok(field_rs_type_kind) = db.rs_type_kind(cpp_type.clone()) else {
-            // If we can't get the RsTypeKind for a public field, we assume it's unsafe.
-            return Safety::unsafe_because(
-                "Rust type is unknown; safety requirements cannot be automatically generated",
-            );
-        };
-        if db.rs_type_kind_safety(field_rs_type_kind).is_unsafe() {
-            return Safety::unsafe_because("unsafe public field");
+        let safety = db.record_field_safety(field.clone());
+        if safety.is_unsafe() {
+            return safety;
         }
     }
     Safety::Safe
