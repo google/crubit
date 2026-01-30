@@ -73,13 +73,31 @@ impl Mutability {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Safety {
     Safe,
-    // TODO(nicholasbishop): add unsafe reason.
-    Unsafe,
+    Unsafe(
+        /// Reason why it's unsafe.
+        Rc<str>,
+    ),
 }
 
 impl Safety {
+    pub fn is_safe(&self) -> bool {
+        matches!(self, Self::Safe)
+    }
+
     pub fn is_unsafe(&self) -> bool {
-        matches!(self, Self::Unsafe)
+        matches!(self, Self::Unsafe(_))
+    }
+
+    pub fn unsafe_because(s: impl Into<Rc<str>>) -> Self {
+        Self::Unsafe(s.into())
+    }
+
+    pub fn unsafe_reason(&self) -> Option<Rc<str>> {
+        if let Self::Unsafe(reason) = self {
+            Some(reason.clone())
+        } else {
+            None
+        }
     }
 }
 

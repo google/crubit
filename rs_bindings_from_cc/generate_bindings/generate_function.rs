@@ -740,9 +740,9 @@ fn issue_unsafe_constructor_errors(
             let unsafe_params = param_names
                 .zip(param_types)
                 .skip(1)
-                .filter(|(_name, p_type)| db.rs_type_kind_safety((*p_type).clone()).is_unsafe())
-                .map(|(param_name, param_type)| {
-                    format!("\n    `{param_name}` of unsafe type `{}`", param_type.display(db))
+                .filter_map(|(param_name, param_type)| {
+                    let reason = db.rs_type_kind_safety((*param_type).clone()).unsafe_reason()?;
+                    Some(format!("\n    `{param_name}`: {reason}"))
                 })
                 .collect::<Vec<String>>()
                 .join("");

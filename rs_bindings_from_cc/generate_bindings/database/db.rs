@@ -50,6 +50,8 @@ memoized::query_group! {
         #[break_cycles_with = Safety::Safe]
         /// Returns whether the given Rust type is an unsafe type, such as a raw pointer.
         ///
+        /// Returns `None` if the type is safe.
+        ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:rs_type_kind_safety
         fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Safety;
 
