@@ -106,6 +106,7 @@ fn generate_type_alias(
     db: &dyn BindingsGenerator,
     type_alias: Rc<TypeAlias>,
 ) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::Alias);
     // Skip the type alias if it maps to a bridge type.
     let rs_type_kind = db.rs_type_kind((&*type_alias).into())?;
     let generated_item = if rs_type_kind.unalias().is_bridge_type() {
@@ -155,6 +156,7 @@ fn generate_type_alias(
 }
 
 fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::Variable);
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
     Ok(ApiSnippets {
@@ -625,16 +627,7 @@ fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
     if field.access != AccessSpecifier::Public {
         return Safety::Safe;
     }
-    let cpp_type = match &field.type_ {
-        Ok(cpp_type) => cpp_type,
-        Err(err) => {
-            // If we can't get the CcType for a public field, we assume it's unsafe.
-            return Safety::unsafe_because(format!(
-                "C++ type is unknown; safety requirements cannot be automatically generated: {err}"
-            ));
-        }
-    };
-    let field_rs_type_kind = match db.rs_type_kind(cpp_type.clone()) {
+    let field_rs_type_kind = match db.rs_type_kind(field.type_.clone()) {
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.

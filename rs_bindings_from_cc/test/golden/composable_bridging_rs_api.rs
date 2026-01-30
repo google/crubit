@@ -607,26 +607,26 @@ forward_declare::unsafe_define!(
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::traits_type (error: Can't generate bindings for std::char_traits<wchar_t>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::char_traits<wchar_t> (crate::__CcTemplateInstNSt3__u11char_traitsIwEE is a template instantiation))
 
-// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::value_type':
-// Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::value_type':
+// Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::pointer':
-// Unsupported type 'wchar_t *': Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::pointer':
+// Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::const_pointer':
-// Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_pointer':
+// Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::reference':
-// Unsupported type 'wchar_t &': Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::reference':
+// Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::const_reference':
-// Unsupported type 'const wchar_t &': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reference':
+// Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::const_iterator':
-// Unsupported type 'std::basic_string_view<wchar_t>::const_pointer': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_iterator':
+// Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for type alias 'std::basic_string_view<wchar_t>::iterator':
-// Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::iterator':
+// Unsupported type 'wchar_t': Unsupported builtin type
 
 // Error while generating bindings for type alias 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
@@ -660,28 +660,27 @@ forward_declare::unsafe_define!(
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
 
-// Error while generating bindings for constructor 'std::basic_string_view<wchar_t>::basic_string_view':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for constructor 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>>':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t>::basic_string_view':
 // Function templates are not supported yet
 
-// Error while generating bindings for constructor 'std::basic_string_view<wchar_t>::basic_string_view':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for constructor 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::std::basic_string_view<wchar_t, std::char_traits<wchar_t>>':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::begin':
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::begin':
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::end':
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::end':
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::cbegin':
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::cbegin':
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::cend':
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_iterator': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::cend':
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rbegin':
 // Cannot use an error type by value: Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator, because of missing required features (crubit.rs-features):
@@ -703,236 +702,198 @@ forward_declare::unsafe_define!(
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::const_reverse_iterator (error: Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation))
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::size':
-// Return type is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::size':
+// Return type is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::length':
-// Return type is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::length':
+// Return type is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::max_size':
-// Return type is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::max_size':
+// Return type is not supported: No generated bindings found for 'size_type'
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::empty':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::empty, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::empty ([[nodiscard]] attribute)
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::operator[]':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::operator[]':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::at':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::at':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::front':
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::front':
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::back':
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_reference': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::back':
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::data':
-// Return type is not supported: Unsupported type 'std::basic_string_view<wchar_t>::const_pointer': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::data':
+// Return type is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::remove_prefix':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::remove_prefix':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::remove_suffix':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::remove_suffix':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::swap':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::swap, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::swap (b/248542210: template instantiation of member function cannot reliably get bindings)
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::copy':
-// Parameter #0 is not supported: Unsupported type 'wchar_t *': Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::copy':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::substr':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::substr':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare ([[nodiscard]] attribute)
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #3 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #4 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #4 is not supported: No generated bindings found for 'size_type'
+// Parameter #5 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::compare':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #3 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::compare':
+// Parameter #1 is not supported: No generated bindings found for 'size_type'
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #4 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find':
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
-// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rfind':
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
-// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rfind':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rfind':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::rfind':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::rfind':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_of':
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
-// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_of':
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
-// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_not_of':
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
-// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_not_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_not_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_first_not_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_first_not_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_not_of':
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
-// Parameter #0 is not supported: Unsupported type 'wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_not_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t *': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
-//
-// Parameter #2 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_not_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
+// Parameter #3 is not supported: No generated bindings found for 'size_type'
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::find_last_not_of':
-// Parameter #0 is not supported: Unsupported type 'const wchar_t * _Nonnull': Unsupported type 'const wchar_t': Unsupported type 'wchar_t': Unsupported builtin type
-//
-// Parameter #1 is not supported: Unsupported type 'std::basic_string_view::size_type': No generated bindings found for 'size_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::find_last_not_of':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
+// Parameter #2 is not supported: No generated bindings found for 'size_type'
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with ([[nodiscard]] attribute)
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::starts_with':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::starts_with':
-// Parameter #0 is not supported: Unsupported type 'const std::basic_string_view<wchar_t>::value_type * _Nonnull': Unsupported type 'const std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::starts_with':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
 // Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with':
 // Can't generate bindings for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:experimental] for std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with ([[nodiscard]] attribute)
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::ends_with':
-// Parameter #0 is not supported: Unsupported type 'std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
-// Error while generating bindings for function 'std::basic_string_view<wchar_t>::ends_with':
-// Parameter #0 is not supported: Unsupported type 'const std::basic_string_view<wchar_t>::value_type * _Nonnull': Unsupported type 'const std::basic_string_view<wchar_t>::value_type': No generated bindings found for 'value_type'
+// Error while generating bindings for function 'std::basic_string_view<wchar_t, std::char_traits<wchar_t>>::ends_with':
+// Parameter #1 is not supported: Unsupported type 'wchar_t': Unsupported builtin type
 
 // Error while generating bindings for struct 'std::placeholders::__ph<10>':
 // Can't generate bindings for std::placeholders::__ph<10>, because of missing required features (crubit.rs-features):

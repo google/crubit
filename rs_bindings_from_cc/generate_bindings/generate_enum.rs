@@ -17,6 +17,7 @@ use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::generate_enum`.
 pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::Type);
     let ident = expect_format_cc_ident(&enum_.cc_name.identifier);
     let namespace_qualifier = db.ir().namespace_qualifier(&enum_).format_for_cc()?;
     let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
