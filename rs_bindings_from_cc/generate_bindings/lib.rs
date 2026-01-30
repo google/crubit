@@ -863,12 +863,6 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             }
         },
         RsTypeKind::Record { record, crate_path, .. } => {
-            ensure!(
-                record.is_unpin(),
-                "Type `{}` must be Rust-movable in order to memcpy through a bridge buffer. See crubit.rs/cpp/classes_and_structs#rust_movable",
-                record.cc_name
-            );
-
             let rust_type = crate_path
                 .to_fully_qualified_path(make_rs_ident(record.rs_name.identifier.as_ref()));
 
@@ -894,7 +888,11 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             let cpp_type =
                 make_cpp_type_from_item(record.as_ref(), cc_name_parts, db)?.to_token_stream();
 
-            Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+            if record.is_unpin() {
+                Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
+            } else {
+                Ok(CrubitAbiType::Immovable { rust_type, cpp_type })
+            }
         }
         _ => bail!("Unsupported RsTypeKind: {}", rs_type_kind.display(db)),
     }
