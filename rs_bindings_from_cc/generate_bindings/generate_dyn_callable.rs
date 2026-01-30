@@ -5,7 +5,7 @@
 use arc_anyhow::{bail, Result};
 use crubit_abi_type::{CrubitAbiType, CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::db::BindingsGenerator;
-use database::rs_snippet::{BackingType, Callable, FnTrait, RsTypeKind};
+use database::rs_snippet::{BackingType, Callable, FnTrait, PassingConvention, RsTypeKind};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -141,71 +141,101 @@ fn generate_invoker_function_pointer(
     for (i, param_ty) in callable.param_types.iter().enumerate() {
         let param_ident = &param_idents[i];
 
-        if param_ty.is_c_abi_compatible_by_value() {
-            arg_exprs.push(quote! { #param_ident });
-        } else if param_ty.is_crubit_abi_bridge_type() {
-            let crubit_abi_type = db.crubit_abi_type(param_ty.clone())?;
-            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-            let arg_ident = format_ident!("bridge_param_{i}");
-            arg_transforms.extend(quote! {
+        match param_ty.passing_convention() {
+            PassingConvention::AbiCompatible => {
+                arg_exprs.push(quote! { #param_ident });
+            }
+            PassingConvention::LayoutCompatible => {
+                let arg_ident = format_ident!("stack_param_{i}");
+                let cpp_param_type = &cpp_param_types[i];
+                arg_transforms.extend(quote! {
+                    ::crubit::Slot<#cpp_param_type> #arg_ident(std::move(#param_ident));
+                });
+                arg_exprs.push(quote! { #arg_ident.Get() });
+            }
+            PassingConvention::ComposablyBridged => {
+                let crubit_abi_type = db.crubit_abi_type(param_ty.clone())?;
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                let arg_ident = format_ident!("bridge_param_{i}");
+                arg_transforms.extend(quote! {
                 unsigned char #arg_ident[#crubit_abi_type_tokens::kSize];
                 ::crubit::internal::Encode(#crubit_abi_type_expr_tokens, #arg_ident, #param_ident);
             });
-            arg_exprs.push(quote! { #arg_ident });
-        } else {
-            let arg_ident = format_ident!("stack_param_{i}");
-            let cpp_param_type = &cpp_param_types[i];
-            arg_transforms.extend(quote! {
-                ::crubit::Slot<#cpp_param_type> #arg_ident(std::move(#param_ident));
-            });
-            arg_exprs.push(quote! { #arg_ident.Get() });
+                arg_exprs.push(quote! { #arg_ident });
+            }
+            PassingConvention::Ctor => {
+                panic!("Ctor not supported");
+            }
+            PassingConvention::OwnedPtr => {
+                panic!("OwnedPtr not supported");
+            }
+            PassingConvention::Void => unreachable!("parameter types cannot be void"),
         }
     }
 
-    let out_param_arg =
-        if callable.return_type.is_void() || callable.return_type.is_c_abi_compatible_by_value() {
-            None
-        } else if callable.return_type.is_crubit_abi_bridge_type() {
+    let out_param_arg = match callable.return_type.passing_convention() {
+        PassingConvention::AbiCompatible | PassingConvention::Void => None,
+        PassingConvention::LayoutCompatible => {
+            arg_transforms.extend(quote! {
+                ::crubit::Slot<#cpp_return_type> out;
+            });
+            Some(quote! { , out.Get() })
+        }
+        PassingConvention::ComposablyBridged => {
             let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
             let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
             arg_transforms.extend(quote! {
                 unsigned char out[#crubit_abi_type_tokens::kSize];
             });
             Some(quote! { , out })
-        } else {
-            arg_transforms.extend(quote! {
-                ::crubit::Slot<#cpp_return_type> out;
-            });
-            Some(quote! { , out.Get() })
-        };
+        }
+        PassingConvention::Ctor => {
+            panic!("Ctor not supported");
+        }
+        PassingConvention::OwnedPtr => {
+            panic!("OwnedPtr not supported");
+        }
+    };
 
     let mut invoke_ffi_and_transform_to_cpp = quote! {
         #invoker_ident(state #(, #arg_exprs)* #out_param_arg);
     };
 
-    if callable.return_type.is_void() {
-        // No need to return anything.
-    } else if callable.return_type.is_c_abi_compatible_by_value() {
-        // Return the result.
-        invoke_ffi_and_transform_to_cpp = quote! {
-            return #invoke_ffi_and_transform_to_cpp
-        };
-    } else if callable.return_type.is_crubit_abi_bridge_type() {
-        let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
-        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-        let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-        invoke_ffi_and_transform_to_cpp.extend(quote! {
+    match callable.return_type.passing_convention() {
+        PassingConvention::AbiCompatible => {
+            // Return the result.
+            invoke_ffi_and_transform_to_cpp = quote! {
+                return #invoke_ffi_and_transform_to_cpp
+            };
+        }
+        PassingConvention::LayoutCompatible => {
+            // The caller has finished initializing the return value, so we just
+            // need to take ownership of it.
+            invoke_ffi_and_transform_to_cpp.extend(quote! {
+                return std::move(out).AssumeInitAndTakeValue();
+            });
+        }
+        PassingConvention::ComposablyBridged => {
+            let crubit_abi_type = db.crubit_abi_type(RsTypeKind::clone(&callable.return_type))?;
+            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+            invoke_ffi_and_transform_to_cpp.extend(quote! {
             // Because our bridge buffer is named `out`
             return ::crubit::internal::Decode<#crubit_abi_type_tokens>(#crubit_abi_type_expr_tokens, out);
         });
-    } else {
-        // The caller has finished initializing the return value, so we just
-        // need to take ownership of it.
-        invoke_ffi_and_transform_to_cpp.extend(quote! {
-            return std::move(out).AssumeInitAndTakeValue();
-        });
+        }
+        PassingConvention::Ctor => {
+            panic!("Ctor not supported");
+        }
+        PassingConvention::OwnedPtr => {
+            panic!("OwnedPtr not supported");
+        }
+        PassingConvention::Void => {
+            // No need to return anything.
+        }
     }
+
     Ok(quote! {
         [](
             ::rs_std::internal_dyn_callable::TypeErasedState* state

@@ -475,40 +475,6 @@ pub enum RsTypeKind {
     /// which is used on types like `SliceRef`, `StrRef`, and C++ types generated from Rust
     /// types by cc_bindings_from_rs.
     ExistingRustType(Rc<ExistingRustType>),
-    /// c9::Co<T>
-    C9Co {
-        have_reference_param: bool,
-        result_type: Rc<RsTypeKind>,
-        original_type: Rc<Record>,
-    },
-}
-
-fn new_c9_co_record(
-    have_reference_param: bool,
-    record: Rc<Record>,
-    db: &dyn BindingsGenerator,
-) -> Result<Option<RsTypeKind>> {
-    let Some(TemplateSpecialization {
-        kind: TemplateSpecializationKind::C9Co { element_type },
-        ..
-    }) = record.template_specialization.as_ref()
-    else {
-        return Ok(None);
-    };
-    let arg_type = element_type
-        .type_
-        .as_ref()
-        .map_err(|e: &String| anyhow!("c9::Co T argument is not Crubit compatible: {e}"))?
-        .clone();
-    let arg_type_kind = db.rs_type_kind(arg_type)?;
-    if let RsTypeKind::Error { error, .. } = arg_type_kind {
-        return Err(error);
-    };
-    Ok(Some(RsTypeKind::C9Co {
-        have_reference_param,
-        result_type: Rc::new(arg_type_kind),
-        original_type: record,
-    }))
 }
 
 /// Information about how the owned function object may be called.
@@ -601,13 +567,26 @@ pub enum BridgeRsTypeKind {
         in_cc_std: bool,
     },
     DynCallable(Rc<Callable>),
+    /// c9::Co<T>
+    C9Co {
+        has_reference_param: bool,
+        result_type: Rc<RsTypeKind>,
+    },
 }
 
 impl BridgeRsTypeKind {
     /// If the record is a bridge type, returns the corresponding BridgeRsTypeKind.
     /// Otherwise, returns None. This may also return an error if db.rs_type_kind fails, or if the
     /// record has template parameters that cannot be translated.
-    pub fn new(record: &Record, db: &dyn BindingsGenerator) -> Result<Option<BridgeRsTypeKind>> {
+    pub fn new(
+        record: &Record,
+        has_reference_param: bool,
+        db: &dyn BindingsGenerator,
+    ) -> Result<Option<BridgeRsTypeKind>> {
+        if let Some(c9_co) = new_c9_co_record(has_reference_param, record, db)? {
+            return Ok(Some(c9_co));
+        }
+
         let Some(bridge_type) = &record.bridge_type else {
             return Ok(None);
         };
@@ -683,6 +662,30 @@ impl BridgeRsTypeKind {
     }
 }
 
+fn new_c9_co_record(
+    has_reference_param: bool,
+    record: &Record,
+    db: &dyn BindingsGenerator,
+) -> Result<Option<BridgeRsTypeKind>> {
+    let Some(TemplateSpecialization {
+        kind: TemplateSpecializationKind::C9Co { element_type },
+        ..
+    }) = record.template_specialization.as_ref()
+    else {
+        return Ok(None);
+    };
+    let arg_type = element_type
+        .type_
+        .as_ref()
+        .map_err(|e: &String| anyhow!("c9::Co T argument is not Crubit compatible: {e}"))?
+        .clone();
+    let arg_type_kind = db.rs_type_kind(arg_type)?;
+    if let RsTypeKind::Error { error, .. } = arg_type_kind {
+        return Err(error);
+    };
+    Ok(Some(BridgeRsTypeKind::C9Co { has_reference_param, result_type: Rc::new(arg_type_kind) }))
+}
+
 impl RsTypeKind {
     /// Directly creates an `RsTypeKind` from an `Item` that defines a type.
     ///
@@ -697,7 +700,7 @@ impl RsTypeKind {
     pub fn from_item_raw(
         db: &dyn BindingsGenerator,
         item: Item,
-        have_reference_param: bool,
+        has_reference_param: bool,
         is_return_type: bool,
     ) -> Result<Self> {
         match item {
@@ -705,7 +708,7 @@ impl RsTypeKind {
                 RsTypeKind::new_incomplete_record(db, incomplete_record)
             }
             Item::Record(record) => {
-                RsTypeKind::new_record(db, record, have_reference_param, is_return_type)
+                RsTypeKind::new_record(db, record, has_reference_param, is_return_type)
             }
             Item::Enum(enum_) => RsTypeKind::new_enum(db, enum_),
             Item::TypeAlias(type_alias) => RsTypeKind::new_type_alias(db, type_alias),
@@ -753,16 +756,12 @@ impl RsTypeKind {
     fn new_record(
         db: &dyn BindingsGenerator,
         record: Rc<Record>,
-        have_reference_param: bool,
+        has_reference_param: bool,
         is_return_type: bool,
     ) -> Result<Self> {
         let ir = db.ir();
-        if let Some(bridge_type) = BridgeRsTypeKind::new(&record, db)? {
+        if let Some(bridge_type) = BridgeRsTypeKind::new(&record, has_reference_param, db)? {
             return Ok(RsTypeKind::BridgeType { bridge_type, original_type: record });
-        }
-
-        if let Some(c9_co) = new_c9_co_record(have_reference_param, Rc::clone(&record), db)? {
-            return Ok(c9_co);
         }
 
         let crate_path = Rc::new(CratePath::new(
@@ -861,13 +860,6 @@ impl RsTypeKind {
 
     pub fn is_bridge_type(&self) -> bool {
         matches!(self.unalias(), RsTypeKind::BridgeType { .. })
-    }
-
-    pub fn as_c9_co(&self) -> Option<&RsTypeKind> {
-        match self.unalias() {
-            RsTypeKind::C9Co { result_type, .. } => Some(result_type),
-            _ => None,
-        }
     }
 
     pub fn is_pointer_bridge_type(&self) -> bool {
@@ -1016,7 +1008,6 @@ impl RsTypeKind {
                     }
                 }
                 RsTypeKind::ExistingRustType(_) => require_feature(CrubitFeature::Supported, None),
-                RsTypeKind::C9Co { .. } => require_feature(CrubitFeature::Supported, None),
             }
         }
         (missing_features, reasons.into_iter().join(", "))
@@ -1070,7 +1061,6 @@ impl RsTypeKind {
             RsTypeKind::Primitive(_) => true,
             RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::ExistingRustType(existing_rust_type) => existing_rust_type.is_same_abi,
-            RsTypeKind::C9Co { .. } => false,
         }
     }
 
@@ -1126,7 +1116,6 @@ impl RsTypeKind {
             RsTypeKind::Primitive(_) => true,
             RsTypeKind::BridgeType { .. } => false,
             RsTypeKind::ExistingRustType(_) => true,
-            RsTypeKind::C9Co { .. } => false,
         }
     }
 
@@ -1235,9 +1224,9 @@ impl RsTypeKind {
                     // DynCallable represents an owned function object, so it is not copyable.
                     false
                 }
+                BridgeRsTypeKind::C9Co { .. } => false,
             },
             RsTypeKind::ExistingRustType(_) => true,
-            RsTypeKind::C9Co { .. } => false,
         }
     }
 
@@ -1463,16 +1452,18 @@ impl RsTypeKind {
     ///
     /// This is used to determine how the type should be passed across the FFI boundary.
     pub fn passing_convention(&self) -> PassingConvention {
-        if self.is_c_abi_compatible_by_value() {
-            PassingConvention::AbiCompatible
+        if self.is_owned_ptr() {
+            // owned_ptr is a subset of is_c_abi_compatible_by_value, so must be checked before.
+            PassingConvention::OwnedPtr
+        } else if self.is_void() {
+            // void is a subset of is_c_abi_compatible_by_value, so must be checked before.
+            PassingConvention::Void
         } else if self.is_crubit_abi_bridge_type() {
             PassingConvention::ComposablyBridged
         } else if !self.is_unpin() {
             PassingConvention::Ctor
-        } else if self.is_owned_ptr() {
-            PassingConvention::OwnedPtr
-        } else if self.is_void() {
-            PassingConvention::Void
+        } else if self.is_c_abi_compatible_by_value() {
+            PassingConvention::AbiCompatible
         } else {
             PassingConvention::LayoutCompatible
         }
@@ -1785,6 +1776,19 @@ impl RsTypeKind {
                         let dyn_callable_spelling = dyn_callable.dyn_fn_spelling(db);
                         quote! { ::alloc::boxed::Box<#dyn_callable_spelling> }
                     }
+                    BridgeRsTypeKind::C9Co { has_reference_param, result_type, .. } => {
+                        let result_type_tokens = if result_type.is_void() {
+                            quote! { () }
+                        } else {
+                            result_type.to_token_stream(db)
+                        };
+                        // When there are reference parameters, the coroutine must finish before they are
+                        // invalidated (http://shortn/_XPma06AwZh).
+                        match has_reference_param {
+                            false => quote! { ::co::Co<'static, #result_type_tokens> },
+                            true => quote! { ::co::Co<'_, #result_type_tokens> },
+                        }
+                    }
                 }
             }
             RsTypeKind::ExistingRustType(existing_rust_type) => fully_qualify_type(
@@ -1792,19 +1796,6 @@ impl RsTypeKind {
                 ir::Item::ExistingRustType(existing_rust_type.clone()),
                 &existing_rust_type.rs_name,
             ),
-            RsTypeKind::C9Co { have_reference_param, result_type, .. } => {
-                let result_type_tokens = if result_type.is_void() {
-                    quote! { () }
-                } else {
-                    result_type.to_token_stream(db)
-                };
-                // When there are reference parameters, the coroutine must finish before they are
-                // invalidated (http://shortn/_XPma06AwZh).
-                match have_reference_param {
-                    false => quote! { ::co::Co<'static, #result_type_tokens> },
-                    true => quote! { ::co::Co<'_, #result_type_tokens> },
-                }
-            }
         }
     }
 }
@@ -1943,11 +1934,11 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
                             self.todo.push(&callable.return_type);
                             self.todo.extend(callable.param_types.iter().rev());
                         }
+                        BridgeRsTypeKind::C9Co { result_type, .. } => {
+                            self.todo.push(result_type);
+                        }
                     },
                     RsTypeKind::ExistingRustType(_) => {}
-                    RsTypeKind::C9Co { result_type, .. } => {
-                        self.todo.push(result_type);
-                    }
                 };
                 Some(curr)
             }
