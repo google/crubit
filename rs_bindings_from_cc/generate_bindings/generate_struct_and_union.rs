@@ -624,7 +624,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
             record.doc_comment.as_deref(),
-            None,
+            db.record_safety(record.clone()).unsafe_reason().as_deref(),
             Some(&record.source_loc),
             db.environment(),
         ),

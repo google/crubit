@@ -27,6 +27,7 @@ use quote::{format_ident, quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
+use std::fmt::Write;
 use std::path::Path;
 use std::rc::Rc;
 use token_stream_printer::{
@@ -647,20 +648,52 @@ fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
 
 /// Implementation of `BindingsGenerator::record_safety`.
 fn record_safety(db: &dyn BindingsGenerator, record: Rc<Record>) -> Safety {
+    let mut doc = String::new();
+
     if record.is_unsafe_type {
-        return Safety::unsafe_because("explicitly annotated as unsafe");
+        // TODO(b/480191443): allow C++ annotations to provide a specific reason.
+        doc += "* The C++ type is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.";
     }
 
-    if record.record_type == RecordType::Union {
-        return Safety::unsafe_because("raw union");
+    if record.is_union() {
+        doc += "* The callee does not read an incorrect field out of the union.\n";
     }
-    for field in &record.fields {
-        let safety = db.record_field_safety(field.clone());
-        if safety.is_unsafe() {
-            return safety;
+
+    let reasons: Vec<_> = record
+        .fields
+        .iter()
+        .filter_map(|field| {
+            let reason = db.record_field_safety(field.clone()).unsafe_reason()?;
+
+            // TODO(nicholasbishop): handle unnamed better.
+            let mut name = field
+                .rust_identifier
+                .as_ref()
+                .map(|i| format!("`{}`", i.as_str()))
+                .unwrap_or("unnamed field".to_owned());
+            write!(name, ": {reason}").unwrap();
+            Some(name)
+        })
+        .collect();
+
+    if !record.is_unsafe_type && !record.is_union() && reasons.is_empty() {
+        return Safety::Safe;
+    }
+
+    if !reasons.is_empty() {
+        doc += "* Document why the following public unsafe fields of this type cannot be misused by callee:\n";
+
+        for reason in reasons {
+            writeln!(doc, "  * {reason}").unwrap();
         }
     }
-    Safety::Safe
+
+    // Verify that we didn't generate an empty safety doc.
+    assert!(!doc.is_empty());
+
+    Safety::unsafe_because(format!(
+        "To call a function that accepts this type, you must uphold these requirements:\n{doc}"
+    ))
 }
 
 fn generate_rs_api_impl_includes(

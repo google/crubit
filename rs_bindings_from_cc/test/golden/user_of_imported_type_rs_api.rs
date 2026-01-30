@@ -26,6 +26,11 @@ pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type
     }
 }
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `trivial`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UserOfImportedType

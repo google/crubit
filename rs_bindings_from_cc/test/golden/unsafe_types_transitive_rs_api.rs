@@ -14,6 +14,11 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `p`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PublicPointer
@@ -70,6 +75,11 @@ pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
     unsafe { crate::detail::__rust_thunk___Z19DerefPrivatePointer14PrivatePointer(&mut p) }
 }
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `pub`: unsafe struct or union
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TransitivePublicPointer
@@ -95,6 +105,10 @@ impl Default for TransitivePublicPointer {
     }
 }
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Union

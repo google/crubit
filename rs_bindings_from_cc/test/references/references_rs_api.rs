@@ -30,7 +30,7 @@ unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr` of unsafe type `*mut::ffi_11::c_int`"
+    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr`: raw pointer"
 )]
 pub trait BindingFailedFor_ZN22TypeWithPtrConstructorC1EPi {}
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=10
@@ -63,7 +63,7 @@ unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
 }
 
 #[diagnostic::on_unimplemented(
-    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr` of unsafe type `*mut::ffi_11::c_int`"
+    message = "binding generation for function failed\nConstructors cannot be `unsafe`, but this constructor accepts:\n    `ptr`: raw pointer"
 )]
 pub trait BindingFailedFor_ZN29TypeWithNonNullPtrConstructorC1EPi {}
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=15

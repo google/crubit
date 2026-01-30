@@ -66,6 +66,23 @@ impl Default for SomeStruct {
 // Can't generate bindings for ForwardDeclaredStruct, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:types_cc needs [//features:wrapper] for ForwardDeclaredStruct (incomplete type)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `wchar_t_field`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'wchar_t': Unsupported builtin type
+///   * `ptrdiff_t_field`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'PtrDiff': No generated bindings found for 'PtrDiff'
+///   * `size_t_field`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'Size': No generated bindings found for 'Size'
+///   * `ptr_field`: raw pointer
+///   * `void_ptr_field`: raw pointer
+///   * `const_void_ptr_field`: raw pointer
+///   * `void_double_ptr_field`: raw pointer
+///   * `struct_ptr_field`: raw pointer
+///   * `const_struct_ptr_field`: raw pointer
+///   * `struct_ref_field`: raw pointer
+///   * `const_struct_ref_field`: raw pointer
+///   * `forward_declared_ptr_field`: raw pointer
+///   * `cyclic_ptr_field`: raw pointer
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct

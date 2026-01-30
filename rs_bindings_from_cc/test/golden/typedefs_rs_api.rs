@@ -108,6 +108,10 @@ impl Default for SomeOtherStruct {
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:typedefs_cc needs [//features:experimental] for SomeOtherStruct::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeUnion
@@ -153,6 +157,10 @@ impl Default for SomeUnion {
 // Error while generating bindings for type alias 'SomeUnion':
 // Typedef only used to introduce a name in C. Not importing.
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeOtherUnion

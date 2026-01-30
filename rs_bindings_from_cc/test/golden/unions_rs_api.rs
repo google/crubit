@@ -20,6 +20,10 @@
 #![allow(dead_code, unused_mut)]
 #![deny(warnings)]
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
@@ -94,6 +98,10 @@ impl ::ctor::CtorNew<()> for Nontrivial {
 // Can't generate bindings for Nontrivial::Nontrivial, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for Nontrivial::Nontrivial (the type of __param_0 (parameter #1): references are not supported)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionToRename
@@ -165,6 +173,10 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     }
 }
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion
@@ -210,6 +222,10 @@ impl Default for NonEmptyUnion {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonEmptyUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[::ctor::recursively_pinned]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion
@@ -224,6 +240,10 @@ unsafe impl ::cxx::ExternType for NonCopyUnion {
     type Kind = ::cxx::kind::Opaque;
 }
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion2
 pub union NonCopyUnion2 {
@@ -256,6 +276,12 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for NonCopyUnion2::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
+/// * Document why the following public unsafe fields of this type cannot be misused by callee:
+///   * `constant_array_field_not_yet_supported`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField
@@ -342,6 +368,10 @@ impl Default for TrivialButInheritable {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TrivialButInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable
@@ -384,6 +414,10 @@ impl Default for UnionWithInheritable {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for UnionWithInheritable::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnion
@@ -426,6 +460,10 @@ impl Default for TypedefUnion {
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:unions_cc needs [//features:experimental] for TypedefUnion::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+/// # Safety
+///
+/// To call a function that accepts this type, you must uphold these requirements:
+/// * The callee does not read an incorrect field out of the union.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable
