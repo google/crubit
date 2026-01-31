@@ -255,7 +255,7 @@ fn test_recursively_pinned_generic_maybe_unpin() {
     let _ = ::ctor::emplace!(::ctor::ctor!(S::<i32, i32> { x: 42, y: 43 }));
     let _ = ::ctor::emplace!(::ctor::ctor!(S::<i32, PhantomPinned> {
         x: 42,
-        y: ::ctor::PhantomPinnedCtor
+        y: ::std::marker::PhantomPinned,
     }));
 }
 
@@ -299,7 +299,7 @@ fn test_recursively_pinned_actually_pinned() {
     }
 
     let p =
-        ::ctor::emplace!(::ctor::ctor!(Struct { x: 0, y: 0.0, pin: ::ctor::PhantomPinnedCtor }));
+        ::ctor::emplace!(::ctor::ctor!(Struct { x: 0, y: 0.0, pin: ::std::marker::PhantomPinned }));
     assert_eq!(p.x, 0);
     assert_eq!(p.y, 0.0);
     // TODO(jeanpierreda): negative compilation test for e.g. `p.x = 1;`
