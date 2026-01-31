@@ -4,43 +4,73 @@
 
 # TODO: this needs to be paired with a refreshed patch
 # (see WORKSPACE.bzlmod)
-bazel_dep(name = "rules_rust", version = "0.63.0")
-
-bazel_dep(name = "rules_cc", version = "0.2.0")
-bazel_dep(name = "rules_shell", version = "0.5.1")
-
+bazel_dep(name = "rules_rust", version = "0.68.1")
+bazel_dep(name = "rules_cc", version = "0.2.8")
+bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "abseil-cpp", version = "20250127.1")
-git_override(  # with nullability support
+git_override(
+    # with nullability support
     module_name = "abseil-cpp",
     commit = "e3a2008867c5dc5c0f4c7a4e64fb568df70f23be",
     remote = "https://github.com/abseil/abseil-cpp",
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "fuzztest", version = "20250214.0")
 bazel_dep(name = "google_benchmark", version = "1.9.1")
 bazel_dep(name = "googletest", version = "1.17.0")
-bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "protobuf", version = "31.1")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "protobuf", version = "33.1")
 bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
-bazel_dep(name = "rules_python", version = "1.5.3")
+bazel_dep(name = "rules_python", version = "1.6.0")
+
+# TODO: Update this to 1.6.0 once bug in bazel 8.5.0rc1 is fixed.
+bazel_dep(name = "toolchains_llvm", version = "1.5.0")
+
 # We don't directly use rules_foreign_cc, but *something* does, and depends on an
 # out of date version that doesn't work with newer Bazel releases. So here we force
 # it to be a newer version.
 bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
 
-crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
-
-crate.from_cargo(
-  name = "crate_index",
-  manifests = [
-   "//:Cargo.toml",
-   "//:cargo/cc_bindings_from_rs/cc_bindings_from_rs/Cargo.toml",
-   "//:cargo/rs_bindings_from_cc/rs_bindings_from_cc/Cargo.toml",
-   "//support/ffi_11:Cargo.toml",
-  ],
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    allocator_library = "@rules_rust//ffi/rs:empty",
+    dev_components = True,
+    edition = "2021",
+    versions = ["nightly/2025-11-20"],
 )
 
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crate_index",
+    manifests = [
+        "//:Cargo.toml",
+    ],
+)
 use_repo(crate, "crate_index")
+
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+
+# We install this toolchain to provide access to clang-format, but it also becomes our cc_toolchain.
+# Being our cc_toolchain means we need this to be a version of LLVM that's compatible with our Rust
+# toolchain, so we pin to a specific version from github (rather than rely on the versions provided
+# by default in the rules).
+llvm.toolchain(
+    extra_llvm_distributions = {
+        "clang+llvm-21.1.8-x86_64-pc-windows-msvc.tar.xz": "749d22f565fcd5718dbed06512572d0e5353b502c03fe1f7f17ee8b8aca21a47",
+        "LLVM-21.1.8-Linux-ARM64.tar.xz": "65ce0b329514e5643407db2d02a5bd34bf33d159055dafa82825c8385bd01993",
+        "LLVM-21.1.8-Linux-X64.tar.xz": "b3b7f2801d15d50736acea3c73982994d025b01c2f035b91ae3b49d1b575732b",
+        "LLVM-21.1.8-macOS-ARM64.tar.xz": "b95bdd32a33a81ee4d40363aaeb26728a26783fcef26a4d80f65457433ea4669",
+    },
+    llvm_version = "21.1.8",
+)
+use_repo(llvm, "llvm_toolchain")
+
+register_toolchains(
+    "@llvm_toolchain//:all",
+    "//common/bazel_support/toolchains:cc_bindings_from_rs_on_demand_linux",
+    "//common/bazel_support/toolchains:cc_bindings_from_rs_on_demand_macos",
+    "//common/bazel_support/toolchains:cc_bindings_from_rs_on_demand_ios",
+)
