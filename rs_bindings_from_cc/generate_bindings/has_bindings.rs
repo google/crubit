@@ -126,6 +126,18 @@ pub fn has_bindings(
                 ),
             });
         }
+        // Require that the underlying type exists. Otherwise, the enum can't.
+        //
+        // NOTE: this cannot form a cycle: while rs_type_kind may call has_bindings, the
+        // underlying type is never going to be or refer to this type, because the current
+        // enum is not defined at the time that the underlying type is evaluated.
+        // Not even forward declarations help. You just can't do `enum Foo: Something<Foo>;`.
+        if let Err(error) = db.rs_type_kind(enum_.underlying_type.clone()) {
+            return Err(NoBindingsReason::DependencyFailed {
+                context: enum_.debug_name(ir),
+                error,
+            });
+        }
     }
 
     // TODO(b/392882224): Records might not generated if an error occurs in generation.

@@ -450,6 +450,7 @@ rust_library(
     deps = [
         ":arc_anyhow",
         "@crate_index//:anyhow",  # v1
+        "@crate_index//:flagset",  # v0_4
         "@crate_index//:regex",  # v1
         "@crate_index//:serde",  # v1
         "@crate_index//:serde_json",  # v1

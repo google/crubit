@@ -181,5 +181,12 @@ pub fn rs_type_kind_with_lifetime_elision(
                 lifetime_options.is_return_type,
             )
         }
+        CcTypeVariant::Error(e) => {
+            let e = error_report::FormattedError::new(
+                e.fmt.to_string().into(),
+                e.message.to_string().into(),
+            );
+            Err(e.into())
+        }
     }
 }

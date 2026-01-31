@@ -1381,7 +1381,7 @@ fn rs_type_kinds_for_func(
                         assume_lifetimes,
                     },
                 )
-                .map_err(|err| anyhow!("Failed to format type of parameter {i}: {err}")),
+                .map_err(|err| anyhow!("Parameter #{i} is not supported: {err}")),
             )
         })
         .collect();
@@ -1399,7 +1399,7 @@ fn rs_type_kinds_for_func(
                 assume_lifetimes,
             },
         )
-        .map_err(|err| anyhow!("Failed to format return type: {err}")),
+        .map_err(|err| anyhow!("Return type is not supported: {err}")),
     );
 
     errors.consolidate()?;
@@ -1457,6 +1457,8 @@ pub fn generate_function(
     func: Rc<Func>,
     derived_record: Option<Rc<Record>>,
 ) -> Result<Option<GeneratedFunction>> {
+    let _scope = ir::Item::Func(func.clone()).error_scope(db.ir(), db.errors());
+    db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
     let mut features = FlagSet::empty();

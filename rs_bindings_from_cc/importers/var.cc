@@ -81,15 +81,10 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
         FormattedError::FromStatus(std::move(enclosing_item_id.status())));
   }
 
-  auto type =
+  CcType type =
       ictx_.ConvertQualType(var_decl->getType(), nullptr, /*nullable=*/true,
                             ictx_.AreAssumedLifetimesEnabledForTarget(
                                 ictx_.GetOwningTarget(var_decl)));
-  if (!type.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        FormattedError::FromStatus(std::move(type.status())));
-  }
 
   // Global variables without extern "C" have different linkage, but in practice
   // all this means is that the name is mangled, not that the ABI is different.
@@ -119,7 +114,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
       .owning_target = ictx_.GetOwningTarget(var_decl),
       .source_loc = ictx_.ConvertSourceLocation(var_decl->getBeginLoc()),
       .mangled_name = mangled_name,
-      .type = *std::move(type),
+      .type = std::move(type),
       .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),
   };

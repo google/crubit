@@ -211,7 +211,7 @@ class ImportContext {
   // methods, which is always a pointer that cannot be null.
   // If `assume_lifetimes` is true, then any explicit lifetime variables
   // (as arguments or parameters) will be recorded.
-  virtual absl::StatusOr<CcType> ConvertQualType(
+  virtual CcType ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
       bool assume_lifetimes) = 0;
