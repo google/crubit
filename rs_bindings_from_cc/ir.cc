@@ -239,11 +239,18 @@ llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier) {
 }
 
 llvm::json::Value FuncParam::ToJson() const {
-  return llvm::json::Object{
+  auto object = llvm::json::Object{
       {"type", type},
       {"identifier", identifier},
       {"unknown_attr", unknown_attr},
   };
+  if (!clang_lifetime_capture_by.empty()) {
+    object.insert({"clang_lifetime_capture_by", clang_lifetime_capture_by});
+  }
+  if (clang_lifetimebound) {
+    object.insert({"clang_lifetimebound", clang_lifetimebound});
+  }
+  return object;
 }
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {

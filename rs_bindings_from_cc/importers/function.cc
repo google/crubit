@@ -355,10 +355,11 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
+  bool assumed_lifetimes_enabled = ictx_.AreAssumedLifetimesEnabledForTarget(
+      ictx_.GetOwningTarget(function_decl));
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
   std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes;
-  if (!ictx_.AreAssumedLifetimesEnabledForTarget(
-          ictx_.GetOwningTarget(function_decl))) {
+  if (!assumed_lifetimes_enabled) {
     llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes_or_err =
         clang::tidy::lifetimes::GetLifetimeAnnotations(
             function_decl, *ictx_.invocation_.lifetime_context_,
@@ -407,9 +408,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       if (lifetimes) {
         this_lifetimes = &lifetimes->GetThisLifetimes();
       }
-      bool assumed_lifetimes_enabled =
-          ictx_.AreAssumedLifetimesEnabledForTarget(
-              ictx_.GetOwningTarget(method_decl));
       absl::StatusOr<CcType> this_param_type =
           ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
                                 /*nullable=*/false, assumed_lifetimes_enabled);
@@ -461,6 +459,25 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
              .identifier = Identifier("__this"),
              // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
              .unknown_attr = {}});
+        if (assumed_lifetimes_enabled && !method_decl->getType().isNull()) {
+          auto clang_annotations =
+              CollectClangLifetimeAnnotationsForMemberFunctionType(
+                  ictx_.sema_.getASTContext(),
+                  *method_decl->getType().getTypePtr());
+          if (!clang_annotations.ok()) {
+            errors.Add(FormattedError::PrefixedStrCat(
+                "Can't collect clang lifetime annotations for `this`",
+                clang_annotations.status().message()));
+          } else {
+            if (clang_annotations->lifetimebound) {
+              params.back().clang_lifetimebound = true;
+            }
+            if (!clang_annotations->lifetime_capture_by.empty()) {
+              params.back().clang_lifetime_capture_by =
+                  std::move(clang_annotations->lifetime_capture_by);
+            }
+          }
+        }
       }
     }
   }
@@ -475,10 +492,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       param_lifetimes = &lifetimes->GetParamLifetimes(i);
     }
-    auto param_type = ictx_.ConvertQualType(
-        param->getType(), param_lifetimes, /*nullable=*/true,
-        ictx_.AreAssumedLifetimesEnabledForTarget(
-            ictx_.GetOwningTarget(function_decl)));
+    auto param_type =
+        ictx_.ConvertQualType(param->getType(), param_lifetimes,
+                              /*nullable=*/true, assumed_lifetimes_enabled);
     if (!param_type.ok()) {
       errors.Add(
           FormattedError::Substitute("Parameter #$0 is not supported: $1", i,
@@ -490,15 +506,33 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     CHECK(param_name.has_value());  // No known failure cases.
 
     absl::StatusOr<std::optional<std::string>> unknown_attr =
-        CollectUnknownAttrs(*param);
+        CollectUnknownAttrs(
+            *param, assumed_lifetimes_enabled
+                        ? IsClangLifetimeAnnotation
+                        : [](const clang::Attr& attr) { return false; });
     if (!unknown_attr.ok()) {
       errors.Add(FormattedError::FromStatus(std::move(unknown_attr).status()));
       continue;
     }
-
     params.push_back({.type = *param_type,
                       .identifier = *std::move(param_name),
                       .unknown_attr = *std::move(unknown_attr)});
+
+    if (assumed_lifetimes_enabled) {
+      auto lifetimebound = param->specific_attrs<clang::LifetimeBoundAttr>();
+      if (!lifetimebound.empty()) {
+        params.back().clang_lifetimebound = true;
+      }
+      auto lifetime_capture_by =
+          param->specific_attrs<clang::LifetimeCaptureByAttr>();
+      if (!lifetime_capture_by.empty()) {
+        for (const clang::LifetimeCaptureByAttr* attr : lifetime_capture_by) {
+          for (const auto& param : attr->params()) {
+            params.back().clang_lifetime_capture_by.push_back(param);
+          }
+        }
+      }
+    }
   }
 
   bool undeduced_return_type =

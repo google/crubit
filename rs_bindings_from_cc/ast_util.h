@@ -23,6 +23,9 @@ namespace crubit {
 // function decl) nested inside a ClassTemplateSpecializationDecl.
 bool IsFullClassTemplateSpecializationOrChild(const clang::Decl* decl);
 
+// Returns true if `attr` is clang::lifetimebound or clang::lifetime_capture_by.
+bool IsClangLifetimeAnnotation(const clang::Attr& attr);
+
 // Returns a human-readable string containing the list of unknown attrs.
 //
 // is_known is called exactly once on every attribute, and returns true if the
@@ -41,6 +44,17 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
 std::optional<std::string> CollectUnknownTypeAttrs(
     const clang::Type& t, absl::FunctionRef<bool(clang::attr::Kind)> is_known =
                               [](clang::attr::Kind attr) { return false; });
+
+struct ClangLifetimeAnnotations {
+  bool lifetimebound = false;
+  std::vector<int> lifetime_capture_by;
+};
+
+// Collects the Clang lifetimebound and lifetime_capture_by attributes from
+// `t`, assuming that `t` is the type of a member function.
+absl::StatusOr<ClangLifetimeAnnotations>
+CollectClangLifetimeAnnotationsForMemberFunctionType(
+    const clang::ASTContext& ast_context, const clang::Type& t);
 
 // Collects all lifetime names annotated on `t` under `ast_context`, returning
 // an error if any were invalid. Any returned string_views belong to

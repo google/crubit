@@ -47,6 +47,11 @@ bool IsFullClassTemplateSpecializationOrChild(const clang::Decl* decl) {
   return false;
 }
 
+bool IsClangLifetimeAnnotation(const clang::Attr& attr) {
+  return clang::isa<clang::LifetimeBoundAttr>(attr) ||
+         clang::isa<clang::LifetimeCaptureByAttr>(attr);
+}
+
 absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
     const clang::Decl& decl,
     absl::FunctionRef<bool(const clang::Attr&)> is_known) {
@@ -161,6 +166,31 @@ absl::StatusOr<absl::string_view> EvaluateAsStringLiteral(
   }
 
   return strlit->getString();
+}
+
+absl::StatusOr<ClangLifetimeAnnotations>
+CollectClangLifetimeAnnotationsForMemberFunctionType(
+    const clang::ASTContext& ast_context, const clang::Type& t) {
+  ClangLifetimeAnnotations annotations;
+  const clang::Type* type = &t;
+  while (const auto* attributed_type = type->getAs<clang::AttributedType>()) {
+    if (auto lifetimebound_attr =
+            clang::dyn_cast_or_null<clang::LifetimeBoundAttr>(
+                attributed_type->getAttr());
+        lifetimebound_attr != nullptr) {
+      annotations.lifetimebound = true;
+    } else if (auto lifetime_capture_by_attr =
+                   clang::dyn_cast_or_null<clang::LifetimeCaptureByAttr>(
+                       attributed_type->getAttr());
+               lifetime_capture_by_attr != nullptr) {
+      for (auto& param : lifetime_capture_by_attr->params()) {
+        annotations.lifetime_capture_by.push_back(param);
+      }
+    }
+    type = attributed_type->getEquivalentType().getTypePtr();
+    if (type == nullptr) break;
+  }
+  return annotations;
 }
 
 absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(

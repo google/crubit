@@ -313,6 +313,8 @@ struct FuncParam {
 
   CcType type;
   Identifier identifier;
+  std::vector<int> clang_lifetime_capture_by;
+  bool clang_lifetimebound = false;
   std::optional<std::string> unknown_attr;
 };
 

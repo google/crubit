@@ -799,6 +799,14 @@ pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
     pub type_: CcType,
     pub identifier: Identifier,
+    /// A list of parameter indexes attached to this parameter by Clang's lifetime_capture_by.
+    /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
+    /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
+    #[serde(default)]
+    pub clang_lifetime_capture_by: Vec<i32>,
+    /// True if this parameter was annotated with Clang's lifetimebound.
+    #[serde(default)]
+    pub clang_lifetimebound: bool,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
     /// Because attributes can change the behavior or semantics of function

@@ -64,6 +64,7 @@ fn test_function() {
                             is_const: false, ...
                         },
                         identifier: "a",
+                        ...
                         unknown_attr: None,
                     },
                     FuncParam {
@@ -72,6 +73,7 @@ fn test_function() {
                             is_const: false, ...
                         },
                         identifier: "b",
+                        ...
                         unknown_attr: None,
                     },
                 ],
@@ -1596,11 +1598,13 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
                     FuncParam {
                         type_: CcType { variant: Primitive(Int), ... },
                         identifier: "__my_args_0",
+                        ...
                         unknown_attr: None,
                     },
                     FuncParam {
                         type_: CcType { variant: Primitive(Int), ... },
                         identifier: "__my_args_1",
+                        ...
                         unknown_attr: None,
                     },
                 ], ...
@@ -1696,6 +1700,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
                     is_const: false, ...
                 },
                 identifier: "my_param",
+                ...
                 unknown_attr: None,
             }], ...
             is_inline: false, ...
@@ -2190,6 +2195,7 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
              FuncParam {
               type_: CcType { variant: Decl(...), ... },
               identifier: "i",
+              ...
               unknown_attr: None,
              }], ...
           }
@@ -2382,7 +2388,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
 #[gtest]
 fn test_record_with_unsupported_base() -> Result<()> {
     let ir = ir_from_cc(
-        r#" 
+        r#"
             struct __attribute__((packed)) IllegalBaseClass {
               // Having a field here avoids empty base class optimization
               // and forces `derived_field` to be at a non-zero offset.
@@ -2510,6 +2516,7 @@ fn test_integer_typedef_usage() -> Result<()> {
            FuncParam {
             type_: CcType { variant: Decl(...), ... },
             identifier: "my_typedef",
+            ...
             unknown_attr: None,
            }], ...
         } }
@@ -4137,6 +4144,8 @@ fn test_assumed_lifetimes_function() {
                             explicit_lifetimes: ["a"],
                         },
                         identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
                         unknown_attr: None,
                     }
                 ],
@@ -4144,6 +4153,354 @@ fn test_assumed_lifetimes_function() {
                 lifetime_params: [],
                 ...
             }
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetimebound_free_function() {
+    let ir =
+        ir_from_assumed_lifetimes_cc("int& f(int& x [[clang::lifetimebound]], int& y);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: LValueRef,
+                                lifetime: None,
+                                pointee_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false,
+                                    unknown_attr: "",
+                                    explicit_lifetimes: [],
+                                },
+                            }),
+                            is_const: false,
+                            unknown_attr: "",
+                            explicit_lifetimes: [],
+                        },
+                        identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: true,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: LValueRef,
+                                lifetime: None,
+                                pointee_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false,
+                                    unknown_attr: "",
+                                    explicit_lifetimes: [],
+                                },
+                            }),
+                            is_const: false,
+                            unknown_attr: "",
+                            explicit_lifetimes: [],
+                        },
+                        identifier: "y",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                ],
+                ...
+                lifetime_params: [],
+                ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetime_capture_by_free_function() {
+    let ir =
+        ir_from_assumed_lifetimes_cc("int& f(int& x [[clang::lifetime_capture_by(y)]], int& y);")
+            .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: LValueRef,
+                                lifetime: None,
+                                pointee_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false,
+                                    unknown_attr: "",
+                                    explicit_lifetimes: [],
+                                },
+                            }),
+                            is_const: false,
+                            unknown_attr: "",
+                            explicit_lifetimes: [],
+                        },
+                        identifier: "x",
+                        clang_lifetime_capture_by: [1],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: LValueRef,
+                                lifetime: None,
+                                pointee_type: CcType {
+                                    variant: Primitive(Int),
+                                    is_const: false,
+                                    unknown_attr: "",
+                                    explicit_lifetimes: [],
+                                },
+                            }),
+                            is_const: false,
+                            unknown_attr: "",
+                            explicit_lifetimes: [],
+                        },
+                        identifier: "y",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                ],
+                ...
+                lifetime_params: [],
+                ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetimebound_member_function() {
+    let ir =
+        ir_from_assumed_lifetimes_cc("struct S { int& f() [[clang::lifetimebound]]; }; ").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        ...
+                        identifier: "__this",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: true,
+                        unknown_attr: None,
+                    }
+                ],
+                ...
+            }
+            ...
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetimebound_internal_param_member_function() {
+    let ir =
+        ir_from_assumed_lifetimes_cc("struct S { int& f(int& x [[clang::lifetimebound]]); }; ")
+            .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        ...
+                        identifier: "__this",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: true,
+                        unknown_attr: None,
+                    },
+                ],
+                ...
+            }
+            ...
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetimebound_member_function_with_param() {
+    let ir = ir_from_assumed_lifetimes_cc("struct S { int& f(int x) [[clang::lifetimebound]]; }; ")
+        .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        ...
+                        identifier: "__this",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: true,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                ],
+                ...
+            }
+            ...
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetime_capture_by_member_function() {
+    let ir = ir_from_assumed_lifetimes_cc(
+        "struct S { void f(int& x, int& y) [[clang::lifetime_capture_by(y)]]; }; ",
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        ...
+                        identifier: "__this",
+                        clang_lifetime_capture_by: [2],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "y",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                ],
+                ...
+            }
+            ...
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetime_capture_by_member_function_this() {
+    let ir =
+        ir_from_assumed_lifetimes_cc("struct S { int& f(int& x [[clang::lifetime_capture_by(this)]], int& y) [[clang::lifetimebound]]; }; ").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        ...
+                        identifier: "__this",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: true,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "x",
+                        clang_lifetime_capture_by: [0],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "y",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                ],
+                ...
+            }
+            ...
+        }
+    );
+}
+
+#[gtest]
+fn test_assumed_lifetimes_lifetime_capture_by_multiple_params() {
+    let ir = ir_from_assumed_lifetimes_cc(
+        "void f(int& x, int& y [[clang::lifetime_capture_by(x, z)]], int& z);",
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        ...
+                        identifier: "x",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "y",
+                        clang_lifetime_capture_by: [0, 2],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                    FuncParam {
+                        ...
+                        identifier: "z",
+                        clang_lifetime_capture_by: [],
+                        clang_lifetimebound: false,
+                        unknown_attr: None,
+                    },
+                ],
+                ...
+            }
+            ...
         }
     );
 }
