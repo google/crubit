@@ -896,8 +896,16 @@ impl GenericItem for Func {
     fn debug_name(&self, ir: &IR) -> Rc<str> {
         let mut name = ir.namespace_qualifier(self).format_for_cc_debug();
         let record_name = || -> Option<Rc<str>> {
-            let record = ir.find_decl::<Rc<Record>>(self.enclosing_item_id?).ok()?;
-            Some(record.cc_name.identifier.clone())
+            match ir.find_untyped_decl(self.enclosing_item_id?) {
+                Item::ExistingRustType(existing_rust_type) => {
+                    Some(existing_rust_type.cc_name.clone())
+                }
+                Item::Record(record) => Some(record.cc_name.identifier.clone()),
+                // "should never happen", but if we ever attributed made-up methods to an
+                // incomplete type, we would want this to work.
+                Item::IncompleteRecord(record) => Some(record.cc_name.identifier.clone()),
+                _ => None,
+            }
         };
 
         match &self.cc_name {
@@ -2405,7 +2413,18 @@ impl IR {
                     ));
                     enclosing_item_id = parent_record.enclosing_item_id;
                 }
-                _ => panic!("Expected namespace or parent record, found enclosing item {item:?}"),
+                Item::ExistingRustType(rust_type) => {
+                    assert!(
+                        namespaces.is_empty(),
+                        "An existing rust type was listed as the enclosing item for a namespace, this is a bug."
+                    );
+                    nested_records.push((rust_type.rs_name.clone(), rust_type.cc_name.clone()));
+                    // The cc_name and rs_name are fully qualified already.
+                    enclosing_item_id = None;
+                }
+                item => {
+                    panic!("Expected namespace or parent record, found enclosing item {item:?}: {item:#?}");
+                }
             }
         }
         namespaces.reverse();
