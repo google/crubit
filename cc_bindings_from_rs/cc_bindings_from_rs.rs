@@ -441,7 +441,7 @@ mod tests {
             self
         }
 
-        /// Replaces the default `--codegen=panic=abort` with the specified
+        /// Overrides `--codegen=panic=abort` with the specified
         /// `panic_mechanism`.
         fn with_panic_mechanism(mut self, panic_mechanism: &str) -> Self {
             self.panic_mechanism = panic_mechanism.to_string();

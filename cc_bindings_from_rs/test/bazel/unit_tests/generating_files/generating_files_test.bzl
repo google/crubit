@@ -187,22 +187,13 @@ def _cmdline_flags_test_impl(ctx):
 
     asserts.true(
         env,
-        _has_arg_with_suffix(cmdline, "rusty_lib.rs"),
-        "Expected to find `rusty_lib.rs` on the command line, got {}.".format(cmdline),
+        _has_arg_with_suffix(cmdline, "rusty_lib"),
+        "Expected to find `--source-crate-name=rusty_lib` on the command line, got {}.".format(cmdline),
     )
     asserts.true(
         env,
-        "--crate-type=rlib" in cmdline,
-        "Expected to find `--crate-type=rlib` on the command line, got {}.".format(cmdline),
-    )
-
-    # ":emptylib" is a dependency of the crate for which we are generating bindings.
-    # Similarly to how we pass `--extern=emptylib` to the command line for the `Rustc`
-    # compile action, we should also pass it to the `CcBindingsFromRust` bindings generating action.
-    asserts.true(
-        env,
-        _has_arg_with_prefix(cmdline, "--extern=emptylib"),
-        "Expected to find `--extern=emptylib` on the command line, got {}.".format(cmdline),
+        _has_arg_with_prefix(cmdline, "--extern=rusty_lib"),
+        "Expected to find `--extern=rusty_lib` on the command line, got {}.".format(cmdline),
     )
 
     return analysistest.end(env)

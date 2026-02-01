@@ -4,8 +4,8 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // composable_bridging_rust_golden
-// Features: custom_ffi_types, experimental, non_unpin_ctor, std_unique_ptr,
-// std_vector, supported, wrapper
+// Features: custom_ffi_types, non_unpin_ctor, std_unique_ptr, std_vector,
+// supported
 
 // clang-format off
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_COMPOSABLE_BRIDGING_RUST_GOLDEN
@@ -21,12 +21,14 @@
 
 namespace composable_bridging_rust {
 
-// Error generating bindings for `MyOptionRust` defined at
+// Error generating bindings for `composable_bridging_rust_golden::MyOptionRust`
+// defined at
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=27:
-// Type bindings for MyOptionRust suppressed due to being mapped to an existing
-// C++ type (std::optional)
+// Type bindings for composable_bridging_rust_golden::MyOptionRust suppressed
+// due to being mapped to an existing C++ type (std::optional)
 
-// Error generating bindings for `MyOptionRustAbi` defined at
+// Error generating bindings for
+// `composable_bridging_rust_golden::MyOptionRustAbi` defined at
 // cc_bindings_from_rs/test/golden/composable_bridging.rs;l=38:
 // Generic types are not supported yet (b/259749095)
 
