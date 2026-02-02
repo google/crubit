@@ -20,3 +20,4 @@ doctest = false
 [dependencies]
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../../cargo/common/error_report"}
+rustversion.workspace = true

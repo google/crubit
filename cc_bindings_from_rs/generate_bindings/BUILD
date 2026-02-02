@@ -136,6 +136,9 @@ rust_library(
     srcs = [
         "query_compiler.rs",
     ],
+    proc_macro_deps = [
+        "//third_party/rust/rustversion/v1:rustversion",
+    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)

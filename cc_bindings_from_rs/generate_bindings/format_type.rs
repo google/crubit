@@ -641,16 +641,44 @@ fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
     substs.iter().any(|subst| subst.as_region().is_none())
 }
 
+#[rustversion::before(2026-01-29)]
 fn format_fn_ptr_for_rs<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     binder_with_fn_sig_tys: ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>,
     fn_header: ty::FnHeader<TyCtxt<'tcx>>,
 ) -> Result<TokenStream> {
-    let tcx = db.tcx();
     let ty::FnHeader { c_variadic, safety, abi } = fn_header;
     if c_variadic {
         bail!("Variadic functions are not yet supported.");
     }
+    check_bound_vars(db, &binder_with_fn_sig_tys)?;
+    let fn_sig_tys = binder_with_fn_sig_tys.skip_binder();
+    format_fn_ptr_for_rs_tail(db, safety, abi, fn_sig_tys)
+}
+
+#[rustversion::since(2026-01-29)]
+fn format_fn_ptr_for_rs<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    binder_with_fn_sig_tys: ty::Binder<'tcx, ty::FnSigTys<TyCtxt<'tcx>>>,
+    fn_header: ty::FnHeader<TyCtxt<'tcx>>,
+) -> Result<TokenStream> {
+    let ty::FnHeader { c_variadic, safety, abi } = fn_header;
+    if c_variadic {
+        bail!("Variadic functions are not yet supported.");
+    }
+    check_bound_vars(db, &binder_with_fn_sig_tys)?;
+    let fn_sig_tys = binder_with_fn_sig_tys.skip_binder();
+    format_fn_ptr_for_rs_tail(db, safety, abi, fn_sig_tys)
+}
+
+// This exists so we don't have to repeat our body for the two versions of format_fn_ptr_for_rs we
+// support.
+fn format_fn_ptr_for_rs_tail<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    safety: rustc_hir::Safety,
+    abi: rustc_abi::ExternAbi,
+    fn_sig_tys: ty::FnSigTys<TyCtxt<'tcx>>,
+) -> Result<TokenStream> {
     let maybe_unsafe = if safety.is_unsafe() {
         quote! { unsafe }
     } else {
@@ -662,19 +690,6 @@ fn format_fn_ptr_for_rs<'tcx>(
         let abi_string = abi.as_str();
         quote! { extern #abi_string }
     };
-    let fn_sig_tys = binder_with_fn_sig_tys.skip_binder();
-    let bound_vars = binder_with_fn_sig_tys.bound_vars();
-    for bound_var in bound_vars {
-        let bound_region_kind = match bound_var {
-            ty::BoundVariableKind::Ty(_) | ty::BoundVariableKind::Const => {
-                bail!("Expected fn pointer bound variable to be a region, but was: {bound_var:?}")
-            }
-            ty::BoundVariableKind::Region(bound_region_kind) => bound_region_kind,
-        };
-        if let Some(name) = bound_region_kind.get_name(tcx) {
-            bail!("Function pointers with explicit HRTBs are not yet supported, found bound var: {name}")
-        }
-    }
     let inputs = fn_sig_tys
         .inputs()
         .iter()
@@ -690,6 +705,49 @@ fn format_fn_ptr_for_rs<'tcx>(
         #maybe_unsafe #maybe_extern fn(#(#inputs),*) #maybe_output
     })
 }
+
+#[rustversion::since(2026-01-29)]
+fn check_bound_vars<'tcx>(
+  db: &dyn BindingsGenerator<'tcx>,
+  binder_with_fn_sig_tys: &ty::Binder<'tcx, ty::FnSigTys<TyCtxt<'tcx>>>,
+) -> Result<()> {
+  let tcx = db.tcx();
+  let bound_vars = binder_with_fn_sig_tys.bound_vars();
+  for bound_var in bound_vars {
+      let bound_region_kind = match bound_var {
+          ty::BoundVariableKind::Ty(_) | ty::BoundVariableKind::Const => {
+              bail!("Expected fn pointer bound variable to be a region, but was: {bound_var:?}")
+          }
+          ty::BoundVariableKind::Region(bound_region_kind) => bound_region_kind,
+      };
+      if let Some(name) = bound_region_kind.get_name(tcx) {
+          bail!("Function pointers with explicit HRTBs are not yet supported, found bound var: {name}")
+      }
+  }
+  Ok(())
+}
+
+#[rustversion::before(2026-01-29)]
+fn check_bound_vars<'tcx>(
+  db: &dyn BindingsGenerator<'tcx>,
+  binder_with_fn_sig_tys: &ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>,
+) -> Result<()> {
+  let tcx = db.tcx();
+  let bound_vars = binder_with_fn_sig_tys.bound_vars();
+  for bound_var in bound_vars {
+      let bound_region_kind = match bound_var {
+          ty::BoundVariableKind::Ty(_) | ty::BoundVariableKind::Const => {
+              bail!("Expected fn pointer bound variable to be a region, but was: {bound_var:?}")
+          }
+          ty::BoundVariableKind::Region(bound_region_kind) => bound_region_kind,
+      };
+      if let Some(name) = bound_region_kind.get_name(tcx) {
+          bail!("Function pointers with explicit HRTBs are not yet supported, found bound var: {name}")
+      }
+  }
+  Ok(())
+}
+
 
 /// Formats `ty` for Rust - to be used in `..._cc_api_impl.rs` (e.g. as a type
 /// of a parameter in a Rust thunk).  Because `..._cc_api_impl.rs` is a
