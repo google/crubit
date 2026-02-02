@@ -6,7 +6,10 @@
 use arc_anyhow::{anyhow, ensure, Context, Result};
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use cpp_type_name::format_cpp_type_with_references;
-use crubit_abi_type::{CrubitAbiType, CrubitAbiTypeToRustExprTokens, FullyQualifiedPath};
+use crubit_abi_type::{
+    CrubitAbiType, CrubitAbiTypeToCppTokens, CrubitAbiTypeToRustExprTokens,
+    CrubitAbiTypeToRustTokens, FullyQualifiedPath,
+};
 use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
@@ -360,9 +363,12 @@ pub fn generate_bindings_tokens(
     let (dyn_callable_cpp_decls, dyn_callable_rust_impls): (Vec<TokenStream>, Vec<TokenStream>) =
         ir.records()
             .filter_map(|record| {
+                // It doesn't matter since we're just checking for presence of DynCallable.
+                let has_reference_param = false;
+
                 // Find records that are template instantiations of `rs_std::DynCallable`.
                 let Ok(Some(BridgeRsTypeKind::DynCallable(dyn_callable))) =
-                    BridgeRsTypeKind::new(record, &db)
+                    BridgeRsTypeKind::new(record, has_reference_param, &db)
                 else {
                     return None;
                 };
@@ -563,6 +569,10 @@ fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> 
             BridgeRsTypeKind::DynCallable(dyn_callable) => {
                 callable_safety(db, &dyn_callable.param_types, &dyn_callable.return_type)
             }
+            BridgeRsTypeKind::C9Co { result_type, .. } => {
+                // A Co<T> logically produces a T, so it is unsafe iff T is unsafe.
+                db.rs_type_kind_safety(result_type.as_ref().clone())
+            }
         },
         RsTypeKind::Record { record, .. } => {
             if record_safety(db, record.clone()).is_safe() {
@@ -571,10 +581,6 @@ fn rs_type_kind_safety(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> 
                 // Full unsafe reason is not shown here, it's documented on the type instead.
                 Safety::unsafe_because("unsafe struct or union")
             }
-        }
-        RsTypeKind::C9Co { result_type, .. } => {
-            // A Co<T> logically produces a T, so it is unsafe iff T is unsafe.
-            db.rs_type_kind_safety(result_type.as_ref().clone())
         }
     }
 }
@@ -721,40 +727,40 @@ fn generate_rs_api_impl_includes(
     }
 
     for record in ir.records() {
+        // We don't actually use the possible c9::Co, but need to pass in something to `new`.
+        let has_reference_param = false;
+
         // Err means that this bridge type has some issues. For the purpose of generating includes,
         // we can ignore it.
-        if let Ok(Some(bridge_type)) = BridgeRsTypeKind::new(record, db) {
-            if bridge_type.is_void_converters_bridge_type() {
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    "internal/lazy_init.h".into(),
-                ));
-            } else {
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    "bridge.h".into(),
-                ));
-                internal_includes.insert(CcInclude::SupportLibHeader(
-                    crubit_support_path_format.clone(),
-                    "internal/slot.h".into(),
-                ));
-            }
-        }
-
-        if let Ok(rs_type_kind) = db.rs_type_kind((&**record).into()) {
-            if rs_type_kind.as_c9_co().is_some() {
-                let includes = [
-                    "util/c9/internal/rust/co_vtable.h",
-                    "util/c9/internal/rust/destroy_coroutine_frame_from_rust.h",
-                    "util/c9/internal/rust/start_coroutine_from_rust.h",
-                    "util/c9/internal/pass_key.h",
-                ];
-
-                for file in includes {
-                    internal_includes.insert(CcInclude::user_header(file.into()));
+        if let Ok(Some(bridge_type)) = BridgeRsTypeKind::new(record, has_reference_param, db) {
+            match bridge_type {
+                BridgeRsTypeKind::BridgeVoidConverters { .. } => {
+                    internal_includes.insert(CcInclude::SupportLibHeader(
+                        crubit_support_path_format.clone(),
+                        "internal/lazy_init.h".into(),
+                    ));
+                }
+                BridgeRsTypeKind::C9Co { .. } => {
+                    internal_includes.insert(CcInclude::SupportLibHeader(
+                        crubit_support_path_format.clone(),
+                        "bridge.h".into(),
+                    ));
+                    internal_includes.insert(CcInclude::user_header(
+                        "util/c9/internal/rust/co_crubit_abi.h".into(),
+                    ));
+                }
+                _ => {
+                    internal_includes.insert(CcInclude::SupportLibHeader(
+                        crubit_support_path_format.clone(),
+                        "bridge.h".into(),
+                    ));
+                    internal_includes.insert(CcInclude::SupportLibHeader(
+                        crubit_support_path_format.clone(),
+                        "internal/slot.h".into(),
+                    ));
                 }
             }
-        };
+        }
     }
 
     for type_alias in ir.type_aliases() {
@@ -964,6 +970,93 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
             BridgeRsTypeKind::DynCallable(dyn_callable) => {
                 generate_dyn_callable::dyn_callable_crubit_abi_type(db, &dyn_callable)
+            }
+            BridgeRsTypeKind::C9Co { result_type, .. } => {
+                let result_type_tokens = if result_type.is_void() {
+                    quote! { () }
+                } else {
+                    result_type.to_token_stream(db)
+                };
+                let rust_type_tokens = quote! {
+                    ::co::internal_crubit::CoCrubitAbi<#result_type_tokens>
+                };
+
+                let result_type_crubit_abi_type = if result_type.is_void() {
+                    None
+                } else {
+                    Some(db.crubit_abi_type(result_type.as_ref().clone())?)
+                };
+
+                let rust_expr_tokens = {
+                    let consume_result_fn = match &result_type_crubit_abi_type {
+                        None => quote! { ::co::internal_crubit::consume_void_result },
+                        Some(result_type_crubit_abi_type) => {
+                            let result_type_crubit_abi_type_tokens =
+                                CrubitAbiTypeToRustTokens(result_type_crubit_abi_type);
+                            let result_type_crubit_abi_expr_tokens =
+                                CrubitAbiTypeToRustExprTokens(result_type_crubit_abi_type);
+
+                            // This closure takes a function pointer and a context pointer, where
+                            // function pointer takes the context and a Crubit ABI bridge buffer
+                            // out pointer. This closure uses unstable_return!() to allocate a stack
+                            // buffer for the encoded result, call the function pointer with context
+                            // and a pointer to the buffer, and then decode the stack buffer into
+                            // the native Rust value.
+                            quote! {
+                                |consume_result_into_buffer: ::co::internal_crubit::ConsumeResultIntoBufferFn,
+                                 context: *mut ::core::ffi::c_void| -> #result_type_tokens {
+                                    ::bridge_rust::unstable_return!(@
+                                        // Crubit ABI details
+                                        #result_type_crubit_abi_expr_tokens,
+                                        #result_type_crubit_abi_type_tokens,
+
+                                        // Make C++ encode the C++ result into the buffer.
+                                        |buffer: *mut u8| {
+                                            (consume_result_into_buffer.unwrap())(
+                                                context,
+                                                buffer,
+                                                <#result_type_crubit_abi_type_tokens as ::bridge_rust::CrubitAbi>::SIZE,
+                                            );
+                                        }
+                                        // unstable_return! handles decoding the result into Rust
+                                    )
+                                 }
+                            }
+                        }
+                    };
+                    quote! {
+                        ::co::internal_crubit::CoCrubitAbi::new(#consume_result_fn)
+                    }
+                };
+
+                let cpp_type_tokens = {
+                    let result_type_crubit_abi_type_tokens = match &result_type_crubit_abi_type {
+                        None => {
+                            // For coroutines that return void, there is no CrubitAbi type. To avoid
+                            // needing many C++ types, we'll use `void` as the placeholder since
+                            // it's never used on as the CrubitAbi type in this context anyways.
+                            quote! { void }
+                        }
+                        Some(result_type_crubit_abi_type) => {
+                            let cpp_tokens = CrubitAbiTypeToCppTokens(result_type_crubit_abi_type);
+                            quote! { #cpp_tokens }
+                        }
+                    };
+                    quote! {
+                        ::c9::internal::rust::CoCrubitAbi<#result_type_crubit_abi_type_tokens>
+                    }
+                };
+
+                // The default constructor knows what `start_coroutine` and `destroy_at_initial_suspend`
+                // functions to use.
+                let cpp_expr_tokens = quote! { #cpp_type_tokens() };
+
+                Ok(CrubitAbiType::C9Co {
+                    rust_type_tokens,
+                    rust_expr_tokens,
+                    cpp_type_tokens,
+                    cpp_expr_tokens,
+                })
             }
         },
         RsTypeKind::Record { record, crate_path, .. } => {

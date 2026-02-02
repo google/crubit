@@ -96,6 +96,12 @@ pub enum CrubitAbiType {
         cpp_abi_path: FullyQualifiedPath,
         type_args: Rc<[CrubitAbiType]>,
     },
+    C9Co {
+        rust_type_tokens: TokenStream,
+        rust_expr_tokens: TokenStream,
+        cpp_type_tokens: TokenStream,
+        cpp_expr_tokens: TokenStream,
+    },
 }
 
 impl CrubitAbiType {
@@ -206,6 +212,9 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                     quote! { < #(#type_args_tokens),* > }.to_tokens(tokens);
                 }
             }
+            CrubitAbiType::C9Co { rust_type_tokens, .. } => {
+                rust_type_tokens.to_tokens(tokens);
+            }
         }
     }
 }
@@ -279,6 +288,9 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                     quote! { ( #(#type_args_tokens),* ) }.to_tokens(tokens);
                 }
             }
+            CrubitAbiType::C9Co { rust_expr_tokens, .. } => {
+                rust_expr_tokens.to_tokens(tokens);
+            }
         }
     }
 }
@@ -345,6 +357,9 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
                     let type_args_tokens = type_args.iter().map(Self);
                     quote! { < #(#type_args_tokens),* > }.to_tokens(tokens);
                 }
+            }
+            CrubitAbiType::C9Co { cpp_type_tokens, .. } => {
+                cpp_type_tokens.to_tokens(tokens);
             }
         }
     }
@@ -425,6 +440,9 @@ impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
                     }
                     .to_tokens(tokens);
                 }
+            }
+            CrubitAbiType::C9Co { cpp_expr_tokens, .. } => {
+                cpp_expr_tokens.to_tokens(tokens);
             }
         }
     }

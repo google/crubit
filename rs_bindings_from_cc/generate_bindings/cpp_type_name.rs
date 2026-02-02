@@ -128,7 +128,6 @@ pub fn format_cpp_type_inner(
             &Item::ExistingRustType(Rc::clone(existing_rust_type)),
             ir,
         ),
-        RsTypeKind::C9Co { original_type, .. } => cpp_type_name_for_record(original_type, ir),
     }
 }
 
