@@ -173,22 +173,6 @@ impl CratePath {
         let crate_root_path = NamespaceQualifier::new(ir.crate_root_path());
         CratePath { crate_ident, crate_root_path, namespace_qualifier }
     }
-
-    pub fn to_fully_qualified_path(&self, item: Ident) -> FullyQualifiedPath {
-        let crate_ident = self
-            .crate_ident
-            .as_ref()
-            .cloned()
-            .unwrap_or_else(|| Ident::new("crate", proc_macro2::Span::call_site()));
-        FullyQualifiedPath {
-            start_with_colon2: self.crate_ident.is_some(),
-            parts: std::iter::once(crate_ident)
-                .chain(self.crate_root_path.parts_with_snake_case_record_names())
-                .chain(self.namespace_qualifier.parts_with_snake_case_record_names())
-                .chain(std::iter::once(item))
-                .collect(),
-        }
-    }
 }
 
 impl ToTokens for CratePath {

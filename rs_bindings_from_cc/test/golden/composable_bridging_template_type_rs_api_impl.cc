@@ -20,6 +20,18 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
+extern "C" void __rust_thunk___Z12ReturnsValuev(
+    unsigned char* __return_abi_buffer) {
+  ::crubit::Encoder __return_encoder(
+      ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Value<int>>>::kSize,
+      __return_abi_buffer);
+  ::crubit::MyOptionAbi<::crubit::TransmuteAbi<::Value<int>>>(
+      ::crubit::TransmuteAbi<::Value<int>>())
+      .Encode(ReturnsValue(), __return_encoder);
+}
+
+static_assert((struct MyOption<Value<int>> (*)()) & ::ReturnsValue);
+
 static_assert(CRUBIT_SIZEOF(struct Value<int>) == 4);
 static_assert(alignof(struct Value<int>) == 4);
 static_assert(CRUBIT_OFFSET_OF(value, struct Value<int>) == 0);

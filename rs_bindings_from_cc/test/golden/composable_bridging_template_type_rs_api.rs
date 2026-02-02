@@ -20,8 +20,12 @@
 // Error while generating bindings for class 'Value':
 // Class templates are not supported yet
 
-// Error while generating bindings for function 'ReturnsValue':
-// The type `Value<int>` does not parse as an identifier. This may be because it contains template parameters, and bridging such types by value is not yet supported.
+#[inline(always)]
+pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
+    unsafe {
+        ::bridge_rust::unstable_return!(@crate::MyOptionAbi(::bridge_rust::transmute_abi::<crate::__CcTemplateInst5ValueIiE>()),crate::MyOptionAbi<::bridge_rust::TransmuteAbi<crate::__CcTemplateInst5ValueIiE>>,|__return_abi_buffer|{ crate::detail::__rust_thunk___Z12ReturnsValuev(__return_abi_buffer,); })
+    }
+}
 
 /// A basic templated type that does nothing fancy.
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -56,6 +60,16 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for function 'Value<int>::operator=':
 // Can't generate bindings for Value<int>::operator=, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_template_type_cc needs [//features:experimental] for Value<int>::operator= (b/248542210: template instantiation of member function cannot reliably get bindings)
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    unsafe extern "C" {
+        pub(crate) unsafe fn __rust_thunk___Z12ReturnsValuev(
+            __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
+    }
+}
 
 const _: () = {
     assert!(::core::mem::size_of::<crate::__CcTemplateInst5ValueIiE>() == 4);
