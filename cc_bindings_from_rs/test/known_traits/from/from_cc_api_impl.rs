@@ -67,7 +67,7 @@ unsafe extern "C" fn __crubit_thunk_into_ui16(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_uOpaqueRef_x0000003c_x00000027static_x0000003e(
+unsafe extern "C" fn __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
     __self: &'static mut ::core::mem::MaybeUninit<::from_golden::Opaque>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {

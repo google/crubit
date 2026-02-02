@@ -130,7 +130,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `TUPLE_CONSTANT` defined at
+// Error generating bindings for `tuples_golden::TUPLE_CONSTANT` defined at
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=106:
 // Unsupported constant type: (i32,)
 
@@ -154,7 +154,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
     memcpy(this, &value, sizeof(value));
   }
 
-  // Error generating bindings for `TupleStruct::tuple_not_by_value` defined at
+  // Error generating bindings for
+  // `tuples_golden::TupleStruct::tuple_not_by_value` defined at
   // cc_bindings_from_rs/test/tuples/tuples.rs;l=101:
   // Error formatting function return type `*const ()`: Failed to format the
   // pointee of the pointer type `*const ()`: Tuple types cannot be used inside
@@ -220,8 +221,9 @@ std::tuple<std::int8_t> return_ffi_alias_in_tuple();
 std::tuple<std::tuple<std::int32_t, std::int32_t>, std::int32_t>
 return_nested_tuples();
 
-// Error generating bindings for `return_new_non_cpp_movable_in_tuple` defined
-// at cc_bindings_from_rs/test/tuples/tuples.rs;l=66:
+// Error generating bindings for
+// `tuples_golden::return_new_non_cpp_movable_in_tuple` defined at
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=66:
 // Can't return a type by value inside a compound data type without a move
 // constructor
 

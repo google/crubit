@@ -310,15 +310,16 @@ inline ConvertRef::operator rs_std::StrRef() {
       __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(&self);
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_into_uConvert(::into::ConvertRef*,
-                                             ::into::Convert* __ret_ptr);
+extern "C" void __crubit_thunk_into_uinto_ugolden_x0000003a_x0000003aConvert(
+    ::into::ConvertRef*, ::into::Convert* __ret_ptr);
 }
 inline ConvertRef::operator ::into::Convert() {
   auto&& self = *this;
   crubit::Slot<::into::Convert> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_into_uConvert(&self,
-                                                  __return_value_storage);
+  __crubit_internal::
+      __crubit_thunk_into_uinto_ugolden_x0000003a_x0000003aConvert(
+          &self, __return_value_storage);
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ConvertRef::__crubit_field_offset_assertions() {

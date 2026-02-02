@@ -24,35 +24,6 @@
 namespace uses_rust {
 
 // Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=67
-struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
-    [[clang::trivial_abi]] InnerX final {
- public:
-  // `uses_rust_golden::InnerX` doesn't implement the `Default` trait
-  InnerX() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~InnerX() = default;
-  InnerX(InnerX&&) = default;
-  InnerX& operator=(InnerX&&) = default;
-
-  // `uses_rust_golden::InnerX` doesn't implement the `Clone` trait
-  InnerX(const InnerX&) = delete;
-  InnerX& operator=(const InnerX&) = delete;
-  InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
-    memcpy(this, &value, sizeof(value));
-  }
-  union {
-    // Generated from:
-    // cc_bindings_from_rs/test/golden/uses.rs;l=68
-    std::int32_t field;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-// Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=32
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Bar") alignas(4)
     [[clang::trivial_abi]] Bar final {
@@ -130,14 +101,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
 };
 
 // Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=54
-std::int32_t g1();
-
-// Generated from:
-// cc_bindings_from_rs/test/golden/uses.rs;l=58
-std::int32_t g2();
-
-// Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=77
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
     [[clang::trivial_abi]] G final {
@@ -159,6 +122,35 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
   union {
     // Generated from:
     // cc_bindings_from_rs/test/golden/uses.rs;l=78
+    std::int32_t field;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Generated from:
+// cc_bindings_from_rs/test/golden/uses.rs;l=67
+struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
+    [[clang::trivial_abi]] InnerX final {
+ public:
+  // `uses_rust_golden::InnerX` doesn't implement the `Default` trait
+  InnerX() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~InnerX() = default;
+  InnerX(InnerX&&) = default;
+  InnerX& operator=(InnerX&&) = default;
+
+  // `uses_rust_golden::InnerX` doesn't implement the `Clone` trait
+  InnerX(const InnerX&) = delete;
+  InnerX& operator=(const InnerX&) = delete;
+  InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
+    memcpy(this, &value, sizeof(value));
+  }
+  union {
+    // Generated from:
+    // cc_bindings_from_rs/test/golden/uses.rs;l=68
     std::int32_t field;
   };
 
@@ -205,18 +197,13 @@ std::int32_t f1();
 // cc_bindings_from_rs/test/golden/uses.rs;l=12
 std::int32_t f2();
 
-static_assert(
-    sizeof(InnerX) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(InnerX) == 4,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(std::is_trivially_destructible_v<InnerX>);
-static_assert(std::is_trivially_move_constructible_v<InnerX>);
-static_assert(std::is_trivially_move_assignable_v<InnerX>);
-inline void InnerX::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(InnerX, field));
-}
+// Generated from:
+// cc_bindings_from_rs/test/golden/uses.rs;l=54
+std::int32_t g1();
+
+// Generated from:
+// cc_bindings_from_rs/test/golden/uses.rs;l=58
+std::int32_t g2();
 
 static_assert(
     sizeof(Bar) == 4,
@@ -262,15 +249,6 @@ inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, i));
   static_assert(4 == offsetof(Foo, bar_));
 }
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_g1();
-}
-inline std::int32_t g1() { return __crubit_internal::__crubit_thunk_g1(); }
-
-namespace __crubit_internal {
-extern "C" std::int32_t __crubit_thunk_g2();
-}
-inline std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
 namespace test_mod {
 using S CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") = ::uses_rust::G;
@@ -287,6 +265,19 @@ static_assert(std::is_trivially_move_constructible_v<G>);
 static_assert(std::is_trivially_move_assignable_v<G>);
 inline void G::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(G, field));
+}
+
+static_assert(
+    sizeof(InnerX) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(InnerX) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(std::is_trivially_destructible_v<InnerX>);
+static_assert(std::is_trivially_move_constructible_v<InnerX>);
+static_assert(std::is_trivially_move_assignable_v<InnerX>);
+inline void InnerX::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(InnerX, field));
 }
 
 namespace test_use_glob {
@@ -324,6 +315,16 @@ namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_f2();
 }
 inline std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
+
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_g1();
+}
+inline std::int32_t g1() { return __crubit_internal::__crubit_thunk_g1(); }
+
+namespace __crubit_internal {
+extern "C" std::int32_t __crubit_thunk_g2();
+}
+inline std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
 }  // namespace uses_rust
 #pragma clang diagnostic pop

@@ -237,7 +237,7 @@ inline Opaque::operator std::int16_t() {
 }
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_into_uOpaqueRef_x0000003c_x00000027static_x0000003e(
+__crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
     ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
 }
 inline Opaque::operator ::from::OpaqueRef() {
@@ -245,7 +245,7 @@ inline Opaque::operator ::from::OpaqueRef() {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_into_uOpaqueRef_x0000003c_x00000027static_x0000003e(
+      __crubit_thunk_into_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
           &self, __return_value_storage);
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

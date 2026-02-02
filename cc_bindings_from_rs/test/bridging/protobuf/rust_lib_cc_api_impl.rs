@@ -91,12 +91,12 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
     }
 }
 extern "C" {
-    fn proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_cpp_to_rust_converter(
-        cpp_in: *const core::ffi::c_void,
-        rs_out: *mut core::ffi::c_void,
-    );
     fn proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_rust_to_cpp_converter(
         rs_in: *const core::ffi::c_void,
         cpp_out: *mut core::ffi::c_void,
+    );
+    fn proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_cpp_to_rust_converter(
+        cpp_in: *const core::ffi::c_void,
+        rs_out: *mut core::ffi::c_void,
     );
 }

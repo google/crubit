@@ -10,9 +10,6 @@
 #![allow(improper_ctypes_definitions)]
 #![deny(warnings)]
 
-const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::InnerX>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::InnerX>() == 4);
-const _: () = assert!(::core::mem::offset_of!(::uses_rust_golden::InnerX, field) == 0);
 const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::Bar>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::Bar>() == 4);
 const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::Foo>() == 8);
@@ -32,17 +29,12 @@ unsafe extern "C" fn __crubit_thunk_bar(__ret_ptr: *mut core::ffi::c_void) -> ()
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_rust_golden::Foo, bar) == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_g1() -> i32 {
-    unsafe { ::uses_rust_golden::g1() }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_g2() -> i32 {
-    unsafe { ::uses_rust_golden::g2() }
-}
 const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::G>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::G>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_rust_golden::G, field) == 0);
+const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::InnerX>() == 4);
+const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::InnerX>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::uses_rust_golden::InnerX, field) == 0);
 const _: () = assert!(::std::mem::size_of::<::uses_rust_golden::X1>() == 4);
 const _: () = assert!(::std::mem::align_of::<::uses_rust_golden::X1>() == 4);
 #[unsafe(no_mangle)]
@@ -52,4 +44,12 @@ unsafe extern "C" fn __crubit_thunk_f1() -> i32 {
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_f2() -> i32 {
     unsafe { ::uses_rust_golden::f2() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_g1() -> i32 {
+    unsafe { ::uses_rust_golden::g1() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_g2() -> i32 {
+    unsafe { ::uses_rust_golden::g2() }
 }

@@ -313,7 +313,7 @@ fn crate_features(
     krate: CrateNum,
 ) -> flagset::FlagSet<crubit_feature::CrubitFeature> {
     let crate_features = db.crate_name_to_features();
-    let features = if krate == LOCAL_CRATE {
+    let features = if krate == db.source_crate_num() {
         crate_features.get("self")
     } else {
         crate_features.get(db.tcx().crate_name(krate).as_str())

@@ -68,7 +68,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-// Error generating bindings for `GenericTrait` defined at
+// Error generating bindings for `traits_golden::GenericTrait` defined at
 // cc_bindings_from_rs/test/traits/traits.rs;l=39:
 // Trait is not yet supported
 

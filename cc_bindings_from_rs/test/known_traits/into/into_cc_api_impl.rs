@@ -103,7 +103,7 @@ unsafe extern "C" fn __crubit_thunk_into_u_x00000026_x00000027a_x00000020str(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_uConvert(
+unsafe extern "C" fn __crubit_thunk_into_uinto_ugolden_x0000003a_x0000003aConvert(
     __self: &'static mut ::core::mem::MaybeUninit<::into_golden::ConvertRef<'static>>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
