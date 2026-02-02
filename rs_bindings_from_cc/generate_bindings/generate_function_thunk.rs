@@ -524,7 +524,6 @@ pub fn generate_function_thunk_impl(
     // computation, so that it's only in the parameter list, not the argument
     // list.)
     let return_type_kind = db.rs_type_kind(func.return_type.clone())?;
-    let is_return_value_c_abi_compatible = return_type_kind.is_c_abi_compatible_by_value();
     let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&return_type_kind, ir)?;
 
     let return_type_name = match return_type_kind.passing_convention() {
