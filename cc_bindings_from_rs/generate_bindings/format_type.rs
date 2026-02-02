@@ -641,9 +641,15 @@ fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
     substs.iter().any(|subst| subst.as_region().is_none())
 }
 
+#[rustversion::before(2026-01-19)]
+type BinderWithFnSigTys<'tcx> = ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>;
+
+#[rustversion::since(2026-01-19)]
+type BinderWithFnSigTys<'tcx> = ty::Binder<'tcx, ty::FnSigTys<TyCtxt<'tcx>>>;
+
 fn format_fn_ptr_for_rs<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    binder_with_fn_sig_tys: ty::Binder<ty::FnSigTys<TyCtxt<'tcx>>>,
+    binder_with_fn_sig_tys: BinderWithFnSigTys<'tcx>,
     fn_header: ty::FnHeader<TyCtxt<'tcx>>,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();

@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
+#![feature(stmt_expr_attributes)]
+#![feature(proc_macro_hygiene)]
 
 //! Query the rust compiler.
 
@@ -125,6 +127,7 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
 ) -> ty::FnSig<'tcx> {
     let mut anon_count: u32 = 0;
     let mut translated_kinds: HashMap<ty::BoundVar, ty::BoundRegionKind> = HashMap::new();
+    #[rustversion::before(2026-01-29)]
     let region_f = |br: ty::BoundRegion| {
         let new_kind: &ty::BoundRegionKind = translated_kinds.entry(br.var).or_insert_with(|| {
             if br.kind.is_named(tcx) {
@@ -134,6 +137,24 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
                 anon_count += 1;
                 let name = Symbol::intern(&format!("{ANON_REGION_PREFIX}{anon_count}"));
                 ty::BoundRegionKind::NamedAnon(name)
+            }
+        });
+        ty::Region::new_late_param(
+            tcx,
+            fn_def_id,
+            ty::LateParamRegionKind::from_bound(br.var, *new_kind),
+        )
+    };
+    #[rustversion::since(2026-01-29)]
+    let region_f = |br: ty::BoundRegion<'tcx>| {
+        let new_kind: &ty::BoundRegionKind = translated_kinds.entry(br.var).or_insert_with(|| {
+            if br.kind.is_named(tcx) {
+                let id = br.kind.get_id().unwrap_or(fn_def_id);
+                ty::BoundRegionKind::Named(id)
+            } else {
+                anon_count += 1;
+                let name = Symbol::intern(&format!("{ANON_REGION_PREFIX}{anon_count}"));
+                ty::BoundRegionKind::NamedForPrinting(name)
             }
         });
         ty::Region::new_late_param(
