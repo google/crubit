@@ -65,7 +65,7 @@ pub enum CrubitAbiType {
         in_cc_std: bool,
     },
     Transmute {
-        rust_type: FullyQualifiedPath,
+        rust_type: TokenStream,
         cpp_type: TokenStream,
     },
     /// A proto message type. This is a special case of CrubitAbiType::Type, where the Rust type is
@@ -123,7 +123,9 @@ impl CrubitAbiType {
 
     pub fn transmute(rust_type: &str, cpp_type: &str) -> Self {
         CrubitAbiType::Transmute {
-            rust_type: FullyQualifiedPath::new(rust_type),
+            rust_type: rust_type.parse().unwrap_or_else(|e| {
+                panic!("Failed to parse Rust type `{rust_type}` as a TokenStream: {e}")
+            }),
             cpp_type: cpp_type.parse().unwrap_or_else(|e| {
                 panic!("Failed to parse C++ type `{cpp_type}` as a TokenStream: {e}")
             }),

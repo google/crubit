@@ -961,9 +961,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                         }
                         return Ok(CrubitAbiTypeWithCcPrereqs {
                             crubit_abi_type: CrubitAbiType::Transmute {
-                                rust_type: FullyQualifiedPath {
-                                    start_with_colon2: true,
-                                    parts: fully_qualified_name.rs_name_parts().collect::<Rc<[Ident]>>(),
+                                rust_type: {
+                                    let parts = fully_qualified_name.rs_name_parts();
+                                    quote! { #(::#parts)* }
                                 },
                                 cpp_type: cpp_type.as_str().parse().expect("Malformed cpp_type annotation"),
                             },
@@ -986,9 +986,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 // Question: do we need to check that it doesn't have any generics?
 
                 CrubitAbiType::Transmute {
-                    rust_type: FullyQualifiedPath {
-                        start_with_colon2: true,
-                        parts: fully_qualified_name.rs_name_parts().collect::<Rc<[Ident]>>(),
+                    rust_type: {
+                        let parts = fully_qualified_name.rs_name_parts();
+                        quote! { #(::#parts)* }
                     },
                     cpp_type: fully_qualified_name.format_for_cc(db)?,
                 }

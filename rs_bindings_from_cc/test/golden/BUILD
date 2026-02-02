@@ -60,6 +60,15 @@ DEPS = {
 
 TAGS = {}
 
+ASPECT_HINTS = {
+    "composable_bridging_template_type": [
+        "//features:wrapper",
+    ],
+    "template_inst": [
+        "//features:wrapper",
+    ],
+}
+
 rust_bindings_from_cc_cli_flag(
     name = "disable_source_location_in_doc_comment",
     flags = "--generate_source_location_in_doc_comment=False",
@@ -71,7 +80,7 @@ rust_bindings_from_cc_cli_flag(
     aspect_hints = [
         "//features:supported",
         ":disable_source_location_in_doc_comment",
-    ] + (["//features:wrapper"] if name == "template_inst" else []),
+    ] + (ASPECT_HINTS[name] if name in ASPECT_HINTS else []),
     deps = [
         ((d + "_cc") if d in TESTS else d)
         for d in (DEPS[name] if name in DEPS else [])
@@ -94,6 +103,7 @@ NON_BUILDABLE_TEST = [
 
     # We can't support additional Rust srcs so we can't run the test.
     "composable_bridging",
+    "composable_bridging_template_type",
 ]
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]

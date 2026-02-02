@@ -813,31 +813,11 @@ fn make_transmute_abi_type_from_item(
     cc_name: &str,
     db: &dyn BindingsGenerator,
 ) -> Result<CrubitAbiType> {
-    // Rust names are of the form ":: tuples_golden :: NontrivialDrop"
-    let mut rust_path = rs_name;
-    let mut start_with_colon2 = false;
-    if let Some(strip_universal_qualifier) = rust_path.strip_prefix(":: ") {
-        start_with_colon2 = true;
-        rust_path = strip_universal_qualifier;
-    }
-    let rust_type = FullyQualifiedPath {
-        start_with_colon2,
-        parts: rust_path
-            .split("::")
-            .map(|ident| {
-                syn::parse_str::<Ident>(ident.trim()).map_err(|_| {
-                    anyhow!(
-                        "The type `{ident}` does not parse as an identifier. \
-                        This may be because it contains template parameters, and \
-                        bridging such types by value is not yet supported."
-                    )
-                })
-            })
-            .collect::<Result<Rc<[Ident]>>>()?,
-    };
+    let rust_type = rs_name
+        .parse()
+        .map_err(|e| anyhow!("Failed to parse Rust type `{rs_name}` as a TokenStream: {e}"))?;
 
-    let cpp_type = make_cpp_type_from_item(item, &cc_name.split("::").collect::<Vec<&str>>(), db)?
-        .to_token_stream();
+    let cpp_type = make_cpp_type_from_item(item, cc_name, db)?;
 
     Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
 }
@@ -1067,30 +1047,16 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 record.cc_name
             );
 
-            let rust_type = crate_path
-                .to_fully_qualified_path(make_rs_ident(record.rs_name.identifier.as_ref()));
+            let rs_name = make_rs_ident(record.rs_name.identifier.as_ref());
+            let rust_type = quote! { #crate_path #rs_name };
 
             // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
             // except that it creates an Ident instead of a TokenStream.
             code_gen_utils::check_valid_cc_name(&record.cc_name.identifier)
                 .expect("IR should only contain valid C++ types");
 
-            // TODO(okabayashi): File a bug for generalizing "canonical insts".
-            let cc_name = record.cc_name.identifier.as_ref();
-            let cc_name_parts = if cc_name == "std::basic_string_view<char, std::char_traits<char>>"
-            {
-                // In the C++ TransmuteAbi, we spell string_view as `std::string_view`.
-                // In theory we should let Crubit spell the C++ type as
-                // `std::basic_string_view<char, std::char_traits<char>>`, but `FullyQualifiedPath`
-                // does not support template arguments right now. It's also the case that since
-                // Crubit doesn't support templates in general right now, it doesn't make sense to
-                // support template arguments in `FullyQualifiedPath` yet.
-                &["std", "string_view"][..]
-            } else {
-                &[cc_name][..]
-            };
             let cpp_type =
-                make_cpp_type_from_item(record.as_ref(), cc_name_parts, db)?.to_token_stream();
+                make_cpp_type_from_item(record.as_ref(), record.cc_name.identifier.as_ref(), db)?;
 
             Ok(CrubitAbiType::Transmute { rust_type, cpp_type })
         }
@@ -1421,24 +1387,13 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
 /// Only to be used in a `CrubitAbiType::Transmute` context.
 fn make_cpp_type_from_item(
     item: &impl GenericItem,
-    cc_name_parts: &[&str],
+    cc_name: &str,
     db: &dyn BindingsGenerator,
-) -> Result<FullyQualifiedPath> {
+) -> Result<TokenStream> {
     let namespace_qualifier = db.ir().namespace_qualifier(item);
-    let parts = namespace_qualifier
-        .parts()
-        .map(AsRef::as_ref)
-        .chain(cc_name_parts.iter().copied())
-        .map(|ident| {
-            syn::parse_str::<Ident>(ident).map_err(|_| {
-                anyhow!(
-                    "The type `{ident}` does not parse as an identifier. \
-            This may be because it contains template parameters, and \
-            bridging such types by value is not yet supported."
-                )
-            })
-        })
-        .collect::<Result<Rc<[Ident]>>>()?;
-
-    Ok(FullyQualifiedPath { start_with_colon2: true, parts })
+    let mut namespace_parts = namespace_qualifier.parts().map(|part| make_rs_ident(part));
+    let cpp_type = cc_name
+        .parse::<TokenStream>()
+        .map_err(|e| anyhow!("Failed to parse C++ name: {cc_name}"))?;
+    Ok(quote! { :: #(#namespace_parts::)* #cpp_type })
 }
