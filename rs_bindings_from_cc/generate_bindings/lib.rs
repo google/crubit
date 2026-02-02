@@ -15,7 +15,8 @@ use database::code_snippet::{
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Database};
 use database::rs_snippet::{
-    BridgeRsTypeKind, Callable, FnTrait, Mutability, RsTypeKind, RustPtrKind, Safety,
+    BridgeRsTypeKind, Callable, FnTrait, Mutability, PassingConvention, RsTypeKind, RustPtrKind,
+    Safety,
 };
 use error_report::{bail, ErrorReporting, ReportFatalError};
 use ffi_types::Environment;
@@ -1114,15 +1115,23 @@ fn generate_dyn_callable_cpp_thunk(
         .param_types
         .iter()
         .map(|param_type| -> Option<TokenStream> {
-            if param_type.is_c_abi_compatible_by_value() {
-                cpp_type_name::format_cpp_type(param_type, db.ir()).ok()
-            } else if param_type.is_crubit_abi_bridge_type() {
-                Some(quote! { unsigned char* })
-            } else {
-                // For the layout compatible types, we take a pointer and then ptr::read the
-                // contents into Rust.
-                let param_type_tokens = cpp_type_name::format_cpp_type(param_type, db.ir()).ok()?;
-                Some(quote! { #param_type_tokens* })
+            match param_type.passing_convention() {
+                PassingConvention::AbiCompatible => {
+                    cpp_type_name::format_cpp_type(param_type, db.ir()).ok()
+                }
+                PassingConvention::LayoutCompatible => {
+                    let param_type_tokens =
+                        cpp_type_name::format_cpp_type(param_type, db.ir()).ok()?;
+                    Some(quote! { #param_type_tokens* })
+                }
+                PassingConvention::ComposablyBridged => Some(quote! { unsigned char* }),
+                PassingConvention::Ctor => {
+                    panic!("Ctor not supported");
+                }
+                PassingConvention::OwnedPtr => {
+                    panic!("OwnedPtr not supported");
+                }
+                PassingConvention::Void => unreachable!("parameter types cannot be void"),
             }
         })
         .collect::<Option<Vec<TokenStream>>>()?;
@@ -1130,26 +1139,37 @@ fn generate_dyn_callable_cpp_thunk(
     let out_param_ident;
     let out_param_type;
     let decl_return_type_tokens;
-    if dyn_callable.return_type.is_void() {
-        out_param_ident = None;
-        out_param_type = None;
-        decl_return_type_tokens = quote! { void };
-    } else if dyn_callable.return_type.is_c_abi_compatible_by_value() {
-        out_param_ident = None;
-        out_param_type = None;
-        decl_return_type_tokens =
-            cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
-    } else if dyn_callable.return_type.is_crubit_abi_bridge_type() {
-        out_param_ident = Some(format_ident!("out"));
-        out_param_type = Some(quote! { unsigned char* });
-        decl_return_type_tokens = quote! { void };
-    } else {
-        let return_type_tokens =
-            cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
-        out_param_ident = Some(format_ident!("out"));
-        out_param_type = Some(quote! { #return_type_tokens* });
-        decl_return_type_tokens = quote! { void };
-    };
+    match dyn_callable.return_type.passing_convention() {
+        PassingConvention::AbiCompatible => {
+            out_param_ident = None;
+            out_param_type = None;
+            decl_return_type_tokens =
+                cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
+        }
+        PassingConvention::LayoutCompatible => {
+            let return_type_tokens =
+                cpp_type_name::format_cpp_type(&dyn_callable.return_type, db.ir()).ok()?;
+            out_param_ident = Some(format_ident!("out"));
+            out_param_type = Some(quote! { #return_type_tokens* });
+            decl_return_type_tokens = quote! { void };
+        }
+        PassingConvention::ComposablyBridged => {
+            out_param_ident = Some(format_ident!("out"));
+            out_param_type = Some(quote! { unsigned char* });
+            decl_return_type_tokens = quote! { void };
+        }
+        PassingConvention::Ctor => {
+            panic!("Ctor not supported");
+        }
+        PassingConvention::OwnedPtr => {
+            panic!("OwnedPtr not supported");
+        }
+        PassingConvention::Void => {
+            out_param_ident = None;
+            out_param_type = None;
+            decl_return_type_tokens = quote! { void };
+        }
+    }
 
     let param_idents = param_idents.iter().chain(out_param_ident.as_ref());
     let param_types = param_types.iter().chain(out_param_type.as_ref());
@@ -1203,21 +1223,32 @@ fn generate_dyn_callable_rust_thunk_impl(
         .iter()
         .zip(dyn_callable.param_types.iter())
         .map(|(ident, ty)| -> Option<TokenStream> {
-            if ty.is_crubit_abi_bridge_type() {
-                let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
-                let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
-                ffi_to_rust_transforms.extend(quote! {
-                    let #ident = ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident);
-                });
-                Some(quote! { *mut ::core::ffi::c_uchar })
-            } else if ty.is_c_abi_compatible_by_value() {
-                Some(ty.to_token_stream(db))
-            } else {
-                ffi_to_rust_transforms.extend(quote! {
-                    let #ident = ::core::ptr::read(#ident);
-                });
-                let ty_tokens = ty.to_token_stream(db);
-                Some(quote! { *mut #ty_tokens })
+            match ty.passing_convention() {
+                PassingConvention::AbiCompatible => {
+                    Some(ty.to_token_stream(db))
+                }
+                PassingConvention::LayoutCompatible => {
+                    ffi_to_rust_transforms.extend(quote! {
+                        let #ident = ::core::ptr::read(#ident);
+                    });
+                    let ty_tokens = ty.to_token_stream(db);
+                    Some(quote! { *mut #ty_tokens })
+                }
+                PassingConvention::ComposablyBridged => {
+                    let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
+                    let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+                    ffi_to_rust_transforms.extend(quote! {
+                        let #ident = ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident);
+                    });
+                    Some(quote! { *mut ::core::ffi::c_uchar })
+                }
+                PassingConvention::Ctor => {
+                    panic!("Ctor not supported");
+                }
+                PassingConvention::OwnedPtr => {
+                    panic!("OwnedPtr not supported");
+                }
+                PassingConvention::Void => unreachable!("parameter types cannot be void"),
             }
         })
         .collect::<Option<Vec<TokenStream>>>()?;
@@ -1238,49 +1269,61 @@ fn generate_dyn_callable_rust_thunk_impl(
     let return_type_fragment;
     let out_param_ident;
     let out_param_type;
-    if dyn_callable.return_type.is_void() {
-        // Put a semicolon at the end to clarify that we do not return anything.
-        invoke_rust_and_return_to_ffi = quote! {
-            #invoke_rust_and_return_to_ffi;
-        };
-
-        return_type_fragment = None;
-        out_param_ident = None;
-        out_param_type = None;
-    } else if dyn_callable.return_type.is_c_abi_compatible_by_value() {
-        let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
-        return_type_fragment = Some(quote! { -> #ffi_return_type });
-        out_param_ident = None;
-        out_param_type = None;
-    } else if dyn_callable.return_type.is_crubit_abi_bridge_type() {
-        let crubit_abi_type = db.crubit_abi_type(dyn_callable.return_type.as_ref().clone()).ok()?;
-        let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
-        let bridge_buffer_ident = format_ident!("bridge_buffer");
-        invoke_rust_and_return_to_ffi = quote! {
-            ::bridge_rust::internal::encode(
-                #crubit_abi_type_expr_tokens,
-                #bridge_buffer_ident,
-                #invoke_rust_and_return_to_ffi
-            );
-        };
-
-        return_type_fragment = None;
-        out_param_ident = Some(bridge_buffer_ident);
-        out_param_type = Some(quote! { *mut ::core::ffi::c_uchar });
-    } else {
-        let out_ident = format_ident!("out");
-        invoke_rust_and_return_to_ffi = quote! {
-            match #invoke_rust_and_return_to_ffi {
-                result => unsafe {
-                    ::core::ptr::write(#out_ident, result);
+    match dyn_callable.return_type.passing_convention() {
+        PassingConvention::AbiCompatible => {
+            let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
+            return_type_fragment = Some(quote! { -> #ffi_return_type });
+            out_param_ident = None;
+            out_param_type = None;
+        }
+        PassingConvention::LayoutCompatible => {
+            let out_ident = format_ident!("out");
+            invoke_rust_and_return_to_ffi = quote! {
+                match #invoke_rust_and_return_to_ffi {
+                    result => unsafe {
+                        ::core::ptr::write(#out_ident, result);
+                    }
                 }
-            }
-        };
+            };
 
-        let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
-        return_type_fragment = None;
-        out_param_ident = Some(out_ident);
-        out_param_type = Some(quote! { *mut #ffi_return_type });
+            let ffi_return_type = dyn_callable.return_type.to_token_stream(db);
+            return_type_fragment = None;
+            out_param_ident = Some(out_ident);
+            out_param_type = Some(quote! { *mut #ffi_return_type });
+        }
+        PassingConvention::ComposablyBridged => {
+            let crubit_abi_type =
+                db.crubit_abi_type(dyn_callable.return_type.as_ref().clone()).ok()?;
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
+            let bridge_buffer_ident = format_ident!("bridge_buffer");
+            invoke_rust_and_return_to_ffi = quote! {
+                ::bridge_rust::internal::encode(
+                    #crubit_abi_type_expr_tokens,
+                    #bridge_buffer_ident,
+                    #invoke_rust_and_return_to_ffi
+                );
+            };
+
+            return_type_fragment = None;
+            out_param_ident = Some(bridge_buffer_ident);
+            out_param_type = Some(quote! { *mut ::core::ffi::c_uchar });
+        }
+        PassingConvention::Ctor => {
+            panic!("Ctor not supported");
+        }
+        PassingConvention::OwnedPtr => {
+            panic!("OwnedPtr not supported");
+        }
+        PassingConvention::Void => {
+            // Put a semicolon at the end to clarify that we do not return anything.
+            invoke_rust_and_return_to_ffi = quote! {
+                #invoke_rust_and_return_to_ffi;
+            };
+
+            return_type_fragment = None;
+            out_param_ident = None;
+            out_param_type = None;
+        }
     }
 
     let param_idents = param_idents.iter().chain(out_param_ident.as_ref());

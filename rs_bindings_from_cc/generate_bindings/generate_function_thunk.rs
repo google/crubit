@@ -8,7 +8,8 @@ use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{Thunk, ThunkImpl};
 use database::db::BindingsGenerator;
 use database::rs_snippet::{
-    format_generic_params, unique_lifetimes, BridgeRsTypeKind, Lifetime, Mutability, RsTypeKind,
+    format_generic_params, unique_lifetimes, BridgeRsTypeKind, Lifetime, Mutability,
+    PassingConvention, RsTypeKind,
 };
 use error_report::{anyhow, bail};
 use ir::*;
@@ -159,15 +160,23 @@ pub fn generate_function_thunk(
         };
         out_param = Some(quote! { *mut ::core::ffi::c_void });
         out_param_ident = Some(param_idents.next().unwrap().clone());
-    } else if return_type.is_crubit_abi_bridge_type() {
-        out_param = Some(quote! { *mut ::core::ffi::c_uchar });
-        out_param_ident = Some(make_rs_ident("__return_abi_buffer"));
-        return_type_fragment = None;
-    } else if !return_type.is_c_abi_compatible_by_value() {
-        // For return types that can't be passed by value, create a new out parameter.
-        out_param = Some(quote! { *mut ::core::ffi::c_void });
-        out_param_ident = Some(make_rs_ident("__return"));
-        return_type_fragment = None;
+    } else {
+        match return_type.passing_convention() {
+            PassingConvention::ComposablyBridged => {
+                out_param = Some(quote! { *mut ::core::ffi::c_uchar });
+                out_param_ident = Some(make_rs_ident("__return_abi_buffer"));
+                return_type_fragment = None;
+            }
+            // For return types that can't be passed by value, create a new out parameter.
+            PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                out_param = Some(quote! { *mut ::core::ffi::c_void });
+                out_param_ident = Some(make_rs_ident("__return"));
+                return_type_fragment = None;
+            }
+            PassingConvention::AbiCompatible
+            | PassingConvention::Void
+            | PassingConvention::OwnedPtr => {}
+        }
     }
 
     // Of the remaining lifetimes, collect them.
@@ -181,15 +190,15 @@ pub fn generate_function_thunk(
         out_param_ident.as_ref().into_iter().chain(param_idents).cloned().collect_vec();
     let param_types = out_param
         .into_iter()
-        .chain(param_types.map(|param_type| {
-            if param_type.is_crubit_abi_bridge_type() {
-                quote! { *const ::core::ffi::c_uchar }
-            } else if !param_type.is_c_abi_compatible_by_value() {
+        .chain(param_types.map(|param_type| match param_type.passing_convention() {
+            PassingConvention::ComposablyBridged => quote! { *const ::core::ffi::c_uchar },
+            PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
                 let param_type_tokens = param_type.to_token_stream(db);
                 quote! {&mut #param_type_tokens}
-            } else {
-                param_type.to_token_stream(db)
             }
+            PassingConvention::AbiCompatible
+            | PassingConvention::Void
+            | PassingConvention::OwnedPtr => param_type.to_token_stream(db),
         }))
         .collect_vec();
 
@@ -483,20 +492,27 @@ pub fn generate_function_thunk_impl(
                 _ => {
                     let rs_type_kind = db.rs_type_kind(p.type_.clone())?;
                     // non-Unpin types are wrapped by a pointer in the thunk.
-                    if rs_type_kind.is_crubit_abi_bridge_type() {
-                        let crubit_abi_type = db.crubit_abi_type(rs_type_kind)?;
-                        let crubit_abi_type_expr_tokens =
-                            CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-                        let decoder = format_ident!("__{ident}_decoder");
-                        Ok(quote! {
-                            #crubit_abi_type_expr_tokens.Decode(#decoder)
-                        })
-                    } else if !rs_type_kind.is_c_abi_compatible_by_value() {
-                        Ok(quote! { std::move(* #ident) })
-                    } else if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {
-                        Ok(quote! { #ident })
-                    } else {
-                        Ok(quote! { std::move( #ident) })
+                    match rs_type_kind.passing_convention() {
+                        PassingConvention::ComposablyBridged => {
+                            let crubit_abi_type = db.crubit_abi_type(rs_type_kind)?;
+                            let crubit_abi_type_expr_tokens =
+                                CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                            let decoder = format_ident!("__{ident}_decoder");
+                            Ok(quote! {
+                                #crubit_abi_type_expr_tokens.Decode(#decoder)
+                            })
+                        }
+                        PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                            Ok(quote! { std::move(* #ident) })
+                        }
+                        PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
+                            if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {
+                                Ok(quote! { #ident })
+                            } else {
+                                Ok(quote! { std::move( #ident) })
+                            }
+                        }
+                        PassingConvention::Void => unreachable!("parameter types cannot be void"),
                     }
                 }
             }
@@ -511,28 +527,32 @@ pub fn generate_function_thunk_impl(
     let is_return_value_c_abi_compatible = return_type_kind.is_c_abi_compatible_by_value();
     let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&return_type_kind, ir)?;
 
-    let return_type_name = if return_type_kind.is_crubit_abi_bridge_type() {
-        param_idents.insert(0, expect_format_cc_ident("__return_abi_buffer"));
-        param_types.insert(0, quote! {unsigned char *});
-        quote! { void }
-    } else if !is_return_value_c_abi_compatible {
-        param_idents.insert(0, expect_format_cc_ident("__return"));
-        if let RsTypeKind::BridgeType {
-            bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
-            ..
-        } = return_type_kind.unalias()
-        {
-            let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
-            conversion_externs.extend(quote! {
-                extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
-            });
-            param_types.insert(0, quote! {void *});
-        } else {
-            param_types.insert(0, quote! {#return_type_cpp_spelling *});
+    let return_type_name = match return_type_kind.passing_convention() {
+        PassingConvention::ComposablyBridged => {
+            param_idents.insert(0, expect_format_cc_ident("__return_abi_buffer"));
+            param_types.insert(0, quote! {unsigned char *});
+            quote! { void }
         }
-        quote! {void}
-    } else {
-        return_type_cpp_spelling.clone()
+        PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+            param_idents.insert(0, expect_format_cc_ident("__return"));
+            if let RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
+                ..
+            } = return_type_kind.unalias()
+            {
+                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
+                conversion_externs.extend(quote! {
+                    extern "C" void #convert_function(void* cpp_struct, void* rust_struct);
+                });
+                param_types.insert(0, quote! {void *});
+            } else {
+                param_types.insert(0, quote! {#return_type_cpp_spelling *});
+            }
+            quote! {void}
+        }
+        PassingConvention::AbiCompatible
+        | PassingConvention::OwnedPtr
+        | PassingConvention::Void => return_type_cpp_spelling.clone(),
     };
 
     let mut this_ref_qualification = match &func.rs_name {
@@ -563,53 +583,63 @@ pub fn generate_function_thunk_impl(
         };
 
     let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
-    let return_stmt = if return_type_kind.is_crubit_abi_bridge_type() {
-        let out_param = &param_idents[0];
-        let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
-        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-        let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-        quote! {
-            ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
-            #crubit_abi_type_expr_tokens.Encode(
-                #return_expr,
-                __return_encoder
-            )
-        }
-    } else if !is_return_value_c_abi_compatible {
-        let out_param = &param_idents[0];
-        if let RsTypeKind::BridgeType {
-            bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
-            ..
-        } = return_type_kind.unalias()
-        {
-            let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
+    let return_stmt = match return_type_kind.passing_convention() {
+        PassingConvention::ComposablyBridged => {
+            let out_param = &param_idents[0];
+            let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
+            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
             quote! {
-                auto __original_cpp_struct = #return_expr;
-                #convert_function(&__original_cpp_struct, #out_param)
+                ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
+                #crubit_abi_type_expr_tokens.Encode(
+                    #return_expr,
+                    __return_encoder
+                )
             }
-        } else {
-            // Explicitly use placement `new` so that we get guaranteed copy elision in
-            // C++17.
-            quote! {new(#out_param) auto(#return_expr)}
         }
-    } else {
-        match &func.return_type.variant {
-            CcTypeVariant::Primitive(Primitive::Void) => return_expr,
-            CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::LValueRef, .. }) => {
-                quote! { return std::addressof( #return_expr ) }
-            }
-            CcTypeVariant::Pointer(PointerType { kind: PointerTypeKind::RValueRef, .. }) => {
-                let nested_type = cpp_type_name::format_cpp_type_with_references(
-                    &db.rs_type_kind(func.return_type.clone())?,
-                    ir,
-                )?;
+        PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+            let out_param = &param_idents[0];
+            if let RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::BridgeVoidConverters { cpp_to_rust_converter, .. },
+                ..
+            } = return_type_kind.unalias()
+            {
+                let convert_function = expect_format_cc_ident(cpp_to_rust_converter);
                 quote! {
-                    #nested_type lvalue = #return_expr;
-                    return &lvalue
+                    auto __original_cpp_struct = #return_expr;
+                    #convert_function(&__original_cpp_struct, #out_param)
                 }
+            } else {
+                // Explicitly use placement `new` so that we get guaranteed copy elision in
+                // C++17.
+                quote! {new(#out_param) auto(#return_expr)}
             }
-            CcTypeVariant::FuncPointer { non_null: true, .. } => quote! { return & #return_expr },
-            _ => quote! { return #return_expr },
+        }
+        PassingConvention::Void => return_expr,
+        PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
+            match &func.return_type.variant {
+                CcTypeVariant::Pointer(PointerType {
+                    kind: PointerTypeKind::LValueRef, ..
+                }) => {
+                    quote! { return std::addressof( #return_expr ) }
+                }
+                CcTypeVariant::Pointer(PointerType {
+                    kind: PointerTypeKind::RValueRef, ..
+                }) => {
+                    let nested_type = cpp_type_name::format_cpp_type_with_references(
+                        &db.rs_type_kind(func.return_type.clone())?,
+                        ir,
+                    )?;
+                    quote! {
+                        #nested_type lvalue = #return_expr;
+                        return &lvalue
+                    }
+                }
+                CcTypeVariant::FuncPointer { non_null: true, .. } => {
+                    quote! { return & #return_expr }
+                }
+                _ => quote! { return #return_expr },
+            }
         }
     };
 

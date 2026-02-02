@@ -9,7 +9,7 @@ use database::code_snippet::{ApiSnippets, Feature, GeneratedItem, Thunk, Visibil
 use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
 use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
-    unique_lifetimes, Lifetime, LifetimeOptions, Mutability, RsTypeKind,
+    unique_lifetimes, Lifetime, LifetimeOptions, Mutability, PassingConvention, RsTypeKind,
 };
 use database::BindingsGenerator;
 use error_report::{anyhow, bail, ErrorList};
@@ -1099,39 +1099,42 @@ fn generate_func_body(
             // not generate the thunk at all, but this would be a bit of extra work.
             //
             // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
-            let mut body = if return_type.is_owned_ptr() {
-                quote! {
-                    ::core::mem::transmute(
-                        #crate_root_path::detail::#thunk_ident(
+            let return_type_or_self = {
+                let record = match impl_kind {
+                    ImplKind::Struct { record, .. }
+                    | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
+                    _ => None,
+                };
+                return_type.to_token_stream_replacing_by_self(db, record)
+            };
+            let mut body = match return_type.passing_convention() {
+                PassingConvention::AbiCompatible | PassingConvention::Void => {
+                    let negate_symbol = if let ImplKind::Trait {
+                        trait_name: TraitName::PartialEq { negate_thunk_result: true, .. },
+                        ..
+                    } = &impl_kind
+                    {
+                        Some(quote! { ! })
+                    } else {
+                        None
+                    };
+                    quote! {
+                        #negate_symbol #crate_root_path::detail::#thunk_ident(
                             #( #clone_prefixes #thunk_args #clone_suffixes ),*
                         )
-                    )
+                    }
                 }
-            } else if return_type.is_c_abi_compatible_by_value() {
-                let negate_symbol = if let ImplKind::Trait {
-                    trait_name: TraitName::PartialEq { negate_thunk_result: true, .. },
-                    ..
-                } = &impl_kind
-                {
-                    Some(quote! { ! })
-                } else {
-                    None
-                };
-                quote! {
-                    #negate_symbol #crate_root_path::detail::#thunk_ident(
-                        #( #clone_prefixes #thunk_args #clone_suffixes ),*
-                    )
+                PassingConvention::LayoutCompatible => {
+                    quote! {
+                        let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
+                        #crate_root_path::detail::#thunk_ident(
+                            &raw mut __return as *mut ::core::ffi::c_void
+                            #( , #clone_prefixes #thunk_args #clone_suffixes )*
+                        );
+                        __return.assume_init()
+                    }
                 }
-            } else {
-                let return_type_or_self = {
-                    let record = match impl_kind {
-                        ImplKind::Struct { record, .. }
-                        | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => Some(&**record),
-                        _ => None,
-                    };
-                    return_type.to_token_stream_replacing_by_self(db, record)
-                };
-                if return_type.is_crubit_abi_bridge_type() {
+                PassingConvention::ComposablyBridged => {
                     let crubit_abi_type = db.crubit_abi_type(return_type.clone())?;
                     let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
                     let crubit_abi_type_expr_tokens =
@@ -1144,24 +1147,26 @@ fn generate_func_body(
                             );
                         })
                     }
-                } else if return_type.is_unpin() {
-                    quote! {
-                        let mut __return = ::core::mem::MaybeUninit::<#return_type_or_self>::uninit();
-                        #crate_root_path::detail::#thunk_ident(
-                            &raw mut __return as *mut ::core::ffi::c_void
-                            #( , #clone_prefixes #thunk_args #clone_suffixes )*
-                        );
-                        __return.assume_init()
-                    }
-                } else {
+                }
+                PassingConvention::Ctor => {
                     quote! {
                         ::ctor::FnCtor::new(
                             move |dest: *mut #return_type_or_self| {
+                                #crate_root_path::detail::#thunk_ident(
+                                    dest as *mut ::core::ffi::c_void
+                                    #( , #thunk_args )*
+                                );
+                            }
+                        )
+                    }
+                }
+                PassingConvention::OwnedPtr => {
+                    quote! {
+                        ::core::mem::transmute(
                             #crate_root_path::detail::#thunk_ident(
-                                dest as *mut ::core::ffi::c_void
-                                #( , #thunk_args )*
-                            );
-                        })
+                                #( #clone_prefixes #thunk_args #clone_suffixes ),*
+                            )
+                        )
                     }
                 }
             };
@@ -1924,43 +1929,23 @@ fn function_signature(
         if let Err(err) = type_.check_by_value() {
             errors.add(err);
         }
-        if !type_.is_unpin() {
-            // `impl Ctor` will fail to compile in a trait.
-            // This will only be hit if there was a bug in api_func_shape.
-            if let ImplKind::Trait { .. } = &impl_kind {
-                panic!(
-                    "non-Unpin types cannot work by value in traits; this should have instead \
-                        become an rvalue reference to force the caller to materialize the Ctor."
-                );
-            }
-            // The generated bindings require a move constructor.
-            if !type_.is_move_constructible() {
-                errors.add(anyhow!("Non-movable, non-trivial_abi type '{}' is not supported by value as parameter #{i}", type_.display(db)));
-            }
-            let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
-                if should_replace_by_self {
-                    type_.to_token_stream_replacing_by_self(db, Some(impl_record))
-                } else {
-                    type_.to_token_stream_with_owned_ptr_type(db)
-                }
+        let quoted_type_or_self =
+            if let (Some(impl_record), true) = (impl_kind_record, should_replace_by_self) {
+                type_.to_token_stream_replacing_by_self(db, Some(impl_record))
             } else {
                 type_.to_token_stream_with_owned_ptr_type(db)
             };
-            *features |= Feature::impl_trait_in_assoc_type;
-            api_params.push(quote! {#ident: ::ctor::Ctor![#quoted_type_or_self]});
-            thunk_args
-                .push(quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
-        } else {
-            let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
-                if should_replace_by_self {
-                    type_.to_token_stream_replacing_by_self(db, Some(impl_record))
-                } else {
-                    type_.to_token_stream_with_owned_ptr_type(db)
-                }
-            } else {
-                type_.to_token_stream_with_owned_ptr_type(db)
-            };
-            if type_.is_crubit_abi_bridge_type() {
+
+        match type_.passing_convention() {
+            PassingConvention::AbiCompatible => {
+                api_params.push(quote! {#ident: #quoted_type_or_self});
+                thunk_args.push(quote! {#ident});
+            }
+            PassingConvention::LayoutCompatible => {
+                api_params.push(quote! {mut #ident: #quoted_type_or_self});
+                thunk_args.push(quote! {&mut #ident});
+            }
+            PassingConvention::ComposablyBridged => {
                 let crubit_abi_type = db
                     .crubit_abi_type(type_.clone())
                     .with_context(|| format!("while generating bridge param '{ident}'"))?;
@@ -1969,15 +1954,32 @@ fn function_signature(
 
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {::bridge_rust::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #ident).as_ptr() as *const u8});
-            } else if type_.is_owned_ptr() {
+            }
+            PassingConvention::Ctor => {
+                // `impl Ctor` will fail to compile in a trait.
+                // This will only be hit if there was a bug in api_func_shape.
+                if let ImplKind::Trait { .. } = &impl_kind {
+                    panic!(
+                        "non-Unpin types cannot work by value in traits; this should have instead \
+                        become an rvalue reference to force the caller to materialize the Ctor."
+                    );
+                }
+                // The generated bindings require a move constructor.
+                if !type_.is_move_constructible() {
+                    errors.add(anyhow!("Non-movable, non-trivial_abi type '{}' is not supported by value as parameter #{i}", type_.display(db)));
+                }
+                *features |= Feature::impl_trait_in_assoc_type;
+                api_params.push(quote! {#ident: ::ctor::Ctor![#quoted_type_or_self]});
+                thunk_args.push(
+                    quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))},
+                );
+            }
+            PassingConvention::OwnedPtr => {
                 api_params.push(quote! {#ident: #quoted_type_or_self});
                 thunk_args.push(quote! {::core::mem::transmute(#ident)});
-            } else if type_.is_c_abi_compatible_by_value() {
-                api_params.push(quote! {#ident: #quoted_type_or_self});
-                thunk_args.push(quote! {#ident});
-            } else {
-                api_params.push(quote! {mut #ident: #quoted_type_or_self});
-                thunk_args.push(quote! {&mut #ident});
+            }
+            PassingConvention::Void => {
+                unreachable!("parameter types should never be void")
             }
         }
     }
