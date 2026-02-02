@@ -1470,16 +1470,18 @@ impl RsTypeKind {
     ///
     /// This is used to determine how the type should be passed across the FFI boundary.
     pub fn passing_convention(&self) -> PassingConvention {
-        if self.is_c_abi_compatible_by_value() {
-            PassingConvention::AbiCompatible
+        if self.is_owned_ptr() {
+            // owned_ptr is a subset of is_c_abi_compatible_by_value, so must be checked before.
+            PassingConvention::OwnedPtr
+        } else if self.is_void() {
+            // void is a subset of is_c_abi_compatible_by_value, so must be checked before.
+            PassingConvention::Void
         } else if self.is_crubit_abi_bridge_type() {
             PassingConvention::ComposablyBridged
         } else if !self.is_unpin() {
             PassingConvention::Ctor
-        } else if self.is_owned_ptr() {
-            PassingConvention::OwnedPtr
-        } else if self.is_void() {
-            PassingConvention::Void
+        } else if self.is_c_abi_compatible_by_value() {
+            PassingConvention::AbiCompatible
         } else {
             PassingConvention::LayoutCompatible
         }
