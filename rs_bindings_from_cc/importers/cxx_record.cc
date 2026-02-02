@@ -638,12 +638,21 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
     }
   } else if (top_level_namespace == "c9") {
     if (templated_decl->getName() == "Co") {
-      LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
-          << "c9::Co should have one template arg";
+      if (specialization_decl->getTemplateArgs().size() != 1) {
+        return absl::InvalidArgumentError(
+            "c9::Co should have one template arg");
+      }
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+      // Check that t is completable, or void (which is always incomplete).
+      if (!t->isVoidType() &&
+          !ictx.sema_.isCompleteType(specialization_decl->getLocation(), t)) {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "c9::Co return type is incomplete: ", t.getAsString()));
+      }
       return TemplateSpecialization::C9Co(TemplateArg(ictx.ConvertQualType(
-          specialization_decl->getTemplateArgs()[0].getAsType(),
+          t,
           /*lifetimes=*/nullptr, /*nullable=*/true,
           ictx.AreAssumedLifetimesEnabledForTarget(
               ictx.GetOwningTarget(specialization_decl)))));
