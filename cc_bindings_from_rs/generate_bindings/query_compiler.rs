@@ -133,7 +133,7 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
             } else {
                 anon_count += 1;
                 let name = Symbol::intern(&format!("{ANON_REGION_PREFIX}{anon_count}"));
-                ty::BoundRegionKind::NamedAnon(name)
+                ty::BoundRegionKind::NamedForPrinting(name)
             }
         });
         ty::Region::new_late_param(
