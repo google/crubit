@@ -29,6 +29,15 @@ bzl_library(
 )
 
 bzl_library(
+    name = "rust_bindings_from_cc_rule",
+    srcs = ["rust_bindings_from_cc_rule.bzl"],
+    deps = [
+        ":providers_bzl",
+        ":rust_bindings_from_cc_aspect",
+    ],
+)
+
+bzl_library(
     name = "toolchain_headers_bzl",
     srcs = ["toolchain_headers.bzl"],
     deps = [
