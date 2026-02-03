@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/traits.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -56,10 +57,10 @@ MyStruct final {
 
 // Generated from:
 // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=5
-template <typename Type>
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_definition_golden :: MyTrait")
     MyTrait {
-  static constexpr bool is_implemented = false;
+  template <typename T>
+  using impl = rs_std::impl<T, MyTrait>;
 };
 
 static_assert(
@@ -77,8 +78,8 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 }  // namespace trait_definition
 
 template <>
-struct ::trait_definition::MyTrait<::trait_definition::MyStruct> {
-  static constexpr bool is_implemented = true;
+struct rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
+  static constexpr bool kIsImplemented = true;
 
   // Generated from:
   // cc_bindings_from_rs/test/traits/in_dependent_crate/trait_definition.rs;l=14
@@ -91,9 +92,9 @@ extern "C" std::int32_t __crubit_thunk_MyTrait_udo_usomething(
     ::trait_definition::MyStruct const&);
 }
 }  // namespace trait_definition
-inline std::int32_t(
-    ::trait_definition::MyTrait<::trait_definition::MyStruct>::do_something)(
-    ::trait_definition::MyStruct const& self) {
+inline std::int32_t
+rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait>::
+    do_something(::trait_definition::MyStruct const& self) {
   return trait_definition::__crubit_internal::
       __crubit_thunk_MyTrait_udo_usomething(self);
 }

@@ -882,14 +882,17 @@ fn generate_trait(
     let rs_type = canonical_name.format_for_rs().to_string();
     let attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
 
-    let main_api = CcSnippet::new(quote! {
-        __NEWLINE__ #doc_comment
-        template <typename Type>
-        struct #(#attributes)* #trait_name {
-          __NEWLINE__ static constexpr bool is_implemented = false;
-        };
-        __NEWLINE__
-    });
+    let main_api = CcSnippet::with_include(
+        quote! {
+            __NEWLINE__ #doc_comment
+            struct #(#attributes)* #trait_name {
+                template <typename T>
+                using impl = rs_std::impl<T, #trait_name>;
+            };
+            __NEWLINE__
+        },
+        db.support_header("rs_std/traits.h"),
+    );
     Ok(ApiSnippets { main_api, ..Default::default() })
 }
 
@@ -1609,14 +1612,15 @@ fn generate_trait_impls<'a, 'b>(
                 .collect();
 
             let main_api = assoc_items.main_api.into_tokens(&mut prereqs);
+            prereqs.includes.insert(db.support_header("rs_std/traits.h"));
 
             Ok(ApiSnippets {
                 main_api: CcSnippet {
                     tokens: quote! {
                         __NEWLINE__
                         template<>
-                        struct #trait_name<#adt_cc_name> {
-                            static constexpr bool is_implemented = true;
+                        struct rs_std::impl<#adt_cc_name, #trait_name> {
+                            static constexpr bool kIsImplemented = true;
 
                             #main_api
                         };
