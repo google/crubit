@@ -10,6 +10,7 @@ use unsafe_attributes::*;
 #[deny(unsafe_code)]
 fn test_safe_struct() {
     UseSafeStructUnannotated(SafeStructUnannotated::default());
+    UseUnsafeStructAnnotatedSafe(UnsafeStructAnnotatedSafe::default());
 }
 
 #[googletest::gtest]
@@ -17,7 +18,4 @@ fn test_safe_struct() {
 fn test_unsafe_struct() {
     unsafe { UseSafeStructAnnotatedUnsafe(SafeStructAnnotatedUnsafe::default()) };
     unsafe { UseUnsafeStructUnannotated(UnsafeStructUnannotated::default()) };
-
-    // TODO(b/481018055): this should not be unsafe.
-    unsafe { UseUnsafeStructAnnotatedSafe(UnsafeStructAnnotatedSafe::default()) };
 }

@@ -690,9 +690,15 @@ fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
 fn record_safety(db: &dyn BindingsGenerator, record: Rc<Record>) -> Safety {
     let mut doc = String::new();
 
-    if record.is_unsafe_type {
-        // TODO(b/480191443): allow C++ annotations to provide a specific reason.
-        doc += "* The C++ type is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.";
+    match record.safety_annotation {
+        SafetyAnnotation::DisableUnsafe => {
+            return Safety::Safe;
+        }
+        SafetyAnnotation::Unsafe => {
+            // TODO(b/480191443): allow C++ annotations to provide a specific reason.
+            doc += "* The C++ type is explicitly annotated as unsafe. Ensure that its safety requirements are upheld.";
+        }
+        SafetyAnnotation::Unannotated => {}
     }
 
     if record.is_union() {
@@ -716,7 +722,10 @@ fn record_safety(db: &dyn BindingsGenerator, record: Rc<Record>) -> Safety {
         })
         .collect();
 
-    if !record.is_unsafe_type && !record.is_union() && reasons.is_empty() {
+    if matches!(record.safety_annotation, SafetyAnnotation::Unannotated)
+        && !record.is_union()
+        && reasons.is_empty()
+    {
         return Safety::Safe;
     }
 

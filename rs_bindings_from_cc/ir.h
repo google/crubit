@@ -718,18 +718,12 @@ struct Record {
   // More information: docs/struct_layout
   bool override_alignment = false;
 
-  // True if the C++ class is annotated with `CRUBIT_UNSAFE`, otherwise false.
+  // Whether the C++ type is explicitly annotated as safe or unsafe, or has no
+  // safety annotation.
   //
-  // Crubit considers some types unsafe, like pointers. If a function
-  // accepts a value of this type, it's assumed that basically anything it could
-  // possibly do with that value involves a risk of UB if that value is invalid
-  // (e.g. dangling). Any pointer-like type which has no lifetime / could be
-  // dangling/invalid should marked with is_unsafe_type. Some examples:
-  //
-  // * string_view
-  // * span
-  // * absl::FunctionRef
-  bool is_unsafe_type = false;
+  // Note that if the C++ type is not annotated, Crubit will still mark the type
+  // as unsafe if it is a union or contains unsafe public fields.
+  SafetyAnnotation safety_annotation = SafetyAnnotation::kUnannotated;
 
   // Special member functions.
   SpecialMemberFunc copy_constructor = SpecialMemberFunc::kUnavailable;

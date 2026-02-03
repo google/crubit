@@ -439,16 +439,26 @@ absl::StatusOr<TraitDerives> GetTraitDerives(const clang::Decl& decl) {
   return result;
 }
 
-absl::StatusOr<bool> IsUnsafeType(const clang::Decl& decl) {
+absl::StatusOr<SafetyAnnotation> GetSafetyAnnotation(const clang::Decl& decl) {
   CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> args,
                           GetAnnotateAttrArgs(decl, "crubit_override_unsafe"));
-  if (!args.has_value()) return false;
+  if (!args.has_value()) return SafetyAnnotation::kUnannotated;
   if (args->size() != 1) {
     return absl::InvalidArgumentError(
         "`crubit_override_unsafe` annotation must have exactly one argument");
   }
 
-  return GetExprAsBool(*args->front(), decl.getASTContext());
+  absl::StatusOr<bool> is_unsafe =
+      GetExprAsBool(*args->front(), decl.getASTContext());
+  if (!is_unsafe.ok()) {
+    return absl::InvalidArgumentError(
+        "`crubit_override_unsafe` annotation must have a bool argument");
+  }
+  if (*is_unsafe) {
+    return SafetyAnnotation::kUnsafe;
+  } else {
+    return SafetyAnnotation::kDisableUnsafe;
+  }
 }
 
 std::optional<Identifier> StringRefToOptionalIdentifier(llvm::StringRef name) {
@@ -1090,10 +1100,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(trait_derives).status()));
   }
 
-  absl::StatusOr<bool> is_unsafe_type = IsUnsafeType(*record_decl);
-  if (!is_unsafe_type.ok()) {
+  absl::StatusOr<SafetyAnnotation> safety_annotation =
+      GetSafetyAnnotation(*record_decl);
+  if (!safety_annotation.ok()) {
     return unsupported(
-        FormattedError::FromStatus(std::move(is_unsafe_type).status()));
+        FormattedError::FromStatus(std::move(safety_annotation).status()));
   }
 
   auto record = Record{
@@ -1118,7 +1129,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .trait_derives = *std::move(trait_derives),
       .is_derived_class = is_derived_class,
       .override_alignment = override_alignment,
-      .is_unsafe_type = *is_unsafe_type,
+      .safety_annotation = *safety_annotation,
       .copy_constructor = GetCopyCtorSpecialMemberFunc(ictx_, *record_decl),
       .move_constructor = GetMoveCtorSpecialMemberFunc(ictx_, *record_decl),
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),

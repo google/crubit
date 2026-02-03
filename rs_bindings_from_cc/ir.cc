@@ -655,7 +655,7 @@ llvm::json::Value Record::ToJson() const {
       {"trait_derives", trait_derives.ToJson()},
       {"is_derived_class", is_derived_class},
       {"override_alignment", override_alignment},
-      {"is_unsafe_type", is_unsafe_type},
+      {"safety_annotation", SafetyAnnotationToString(safety_annotation)},
       {"copy_constructor", copy_constructor},
       {"move_constructor", move_constructor},
       {"destructor", destructor},

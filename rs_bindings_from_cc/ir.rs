@@ -1213,7 +1213,7 @@ pub struct Record {
     pub trait_derives: TraitDerives,
     pub is_derived_class: bool,
     pub override_alignment: bool,
-    pub is_unsafe_type: bool,
+    pub safety_annotation: SafetyAnnotation,
     pub copy_constructor: SpecialMemberFunc,
     pub move_constructor: SpecialMemberFunc,
     pub destructor: SpecialMemberFunc,
