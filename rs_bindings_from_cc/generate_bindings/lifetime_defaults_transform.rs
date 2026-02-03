@@ -135,6 +135,8 @@ struct LifetimeResult {
     ty: CcType,
     /// Output state for default lifetime assignment.
     state: LifetimeState,
+    /// Output state for default lifetime assignment on `this`.
+    this_state: LifetimeState,
 }
 
 impl LifetimeDefaults {
@@ -170,16 +172,22 @@ impl LifetimeDefaults {
     /// Adds lifetimes to a type in input position. Returns the new type paired with a LifetimeState
     /// describing the lifetimes we encountered and a list of any lifetimes we had to bind.
     /// `name_hint` is used to name the lifetime parameter when we need to make one.
+    /// `is_this` must be `true` if this type is being used for the C++ implicit `this`.
     fn add_lifetime_to_input_type(
         &mut self,
+        is_this: bool,
         name_hint: Option<&Rc<str>>,
         new_bindings: &mut Vec<Rc<str>>,
         ty: &CcType,
     ) -> LifetimeResult {
         match &ty.variant {
-            CcTypeVariant::Pointer(pty) if pty.kind == PointerTypeKind::LValueRef => {
-                let LifetimeResult { ty: pointee_type, state: _ } =
-                    self.add_lifetime_to_input_type(name_hint, new_bindings, &pty.pointee_type);
+            CcTypeVariant::Pointer(pty) if is_this || pty.kind == PointerTypeKind::LValueRef => {
+                let LifetimeResult { ty: pointee_type, .. } = self.add_lifetime_to_input_type(
+                    false,
+                    name_hint,
+                    new_bindings,
+                    &pty.pointee_type,
+                );
                 let mut state =
                     self.get_state_for_annotated_lifetime(&ty.explicit_lifetimes, new_bindings);
                 if state == LifetimeState::Unseen {
@@ -193,9 +201,17 @@ impl LifetimeDefaults {
                     ..pty.clone()
                 });
                 new_ty.explicit_lifetimes = self.get_lifetime_for_state(&state);
-                LifetimeResult { ty: new_ty, state }
+                if is_this {
+                    LifetimeResult { ty: new_ty, state: LifetimeState::Unseen, this_state: state }
+                } else {
+                    LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen }
+                }
             }
-            _ => LifetimeResult { ty: ty.clone(), state: LifetimeState::Unseen },
+            _ => LifetimeResult {
+                ty: ty.clone(),
+                state: LifetimeState::Unseen,
+                this_state: LifetimeState::Unseen,
+            },
         }
     }
 
@@ -247,29 +263,36 @@ impl LifetimeDefaults {
     fn add_lifetime_to_func(&mut self, func: &Func) -> Func {
         let mut new_func = func.clone();
         let mut state = LifetimeState::Unseen;
-        let mut ctx = BindingContext::new();
+        let mut this_state = LifetimeState::Unseen;
         new_func.lifetime_inputs.clear();
         // TODO(b/454627672): add bindings for parent item lifetimes.
         func.lifetime_inputs
             .iter()
-            .for_each(|name| new_func.lifetime_inputs.push(ctx.push_new_binding(name)));
+            .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
         new_func.params = func
             .params
             .iter()
-            .map(|param| {
+            .enumerate()
+            .map(|(ix, param)| {
                 let mut new_param = param.clone();
-                let LifetimeResult { ty: new_type, state: new_state } = self
-                    .add_lifetime_to_input_type(
+                let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
+                    self.add_lifetime_to_input_type(
+                        /*is_this=*/
+                        ix == 0 && &*new_param.identifier.identifier == "__this",
                         Some(&new_param.identifier.identifier),
                         &mut new_func.lifetime_inputs,
                         &new_param.type_,
                     );
                 state.update(&new_state);
+                this_state.update(&new_this_state);
                 new_param.type_ = new_type;
                 new_param
             })
             .collect();
-        let lifetime = self.get_lifetime_for_state(&state);
+        let lifetime = match this_state {
+            LifetimeState::Unseen => self.get_lifetime_for_state(&state),
+            _ => self.get_lifetime_for_state(&this_state),
+        };
         new_func.return_type = self.add_lifetime_to_output_type(
             &lifetime,
             &mut new_func.lifetime_inputs,

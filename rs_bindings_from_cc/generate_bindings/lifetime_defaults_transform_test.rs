@@ -6,7 +6,7 @@
 use arc_anyhow::Result;
 use googletest::prelude::*;
 use ir_matchers::assert_ir_matches;
-use ir_testing::{retrieve_func, retrieve_lifetime_param_id, with_full_lifetime_macros};
+use ir_testing::with_full_lifetime_macros;
 use lifetime_defaults_transform::{lifetime_defaults_transform, BindingContext};
 use multiplatform_ir_testing::ir_from_assumed_lifetimes_cc;
 use quote::quote;
@@ -228,6 +228,138 @@ fn test_no_lifetime_assigned_for_nullary_fn() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: [] ... }, ...
                 params: [],
                 lifetime_params: [],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { int& f(); };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir);
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["__this"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        identifier: "__this", ...
+                    }
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["__this"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_explicit_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { int& f() $a; };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir);
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                        identifier: "__this", ...
+                    }
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_very_explicit_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { int& $a f() $a; };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir);
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                        identifier: "__this", ...
+                    }
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_this_lifetime_returned_for_member_function_with_reference_param() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { int& f(int& i1); };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir);
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType { ... explicit_lifetimes: ["__this"] ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        identifier: "__this", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["i1"] ... },
+                        identifier: "i1", ...
+                    },
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["__this", "i1"],
                 ...
             }
         }
