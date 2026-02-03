@@ -268,7 +268,29 @@ fn generate_item_impl(db: &dyn BindingsGenerator, item: &Item) -> Result<ApiSnip
         Item::Enum(enum_) => db.generate_enum(enum_.clone())?,
         Item::GlobalVar(var) => generate_global_var(db, var.clone())?,
         Item::TypeAlias(type_alias) => generate_type_alias(db, type_alias.clone())?,
-        Item::UnsupportedItem(unsupported) => generate_unsupported(db, unsupported.clone()),
+        Item::UnsupportedItem(unsupported) => {
+            // Categorize unsupported items directly produced from the C++ importer.
+            // We let generate_record, generate_enum, etc. handle categorization when the item
+            // had a more specific type, which is why this categorization goes here, and not
+            // in generate_unsupported.
+            use UnsupportedItemKind::*;
+            match unsupported.kind {
+                Func | Constructor => {
+                    db.errors().add_category(error_report::Category::Function);
+                }
+                GlobalVar => {
+                    db.errors().add_category(error_report::Category::Variable);
+                }
+                Class | Struct | Union | Enum => {
+                    db.errors().add_category(error_report::Category::Type);
+                }
+                TypeAlias => {
+                    db.errors().add_category(error_report::Category::Alias);
+                }
+                Namespace | Other => {}
+            }
+            generate_unsupported(db, unsupported.clone())
+        }
         Item::Comment(comment) => generate_comment(comment.clone()),
         Item::Namespace(namespace) => generate_namespace(db, namespace.clone())?,
         Item::UseMod(use_mod) => {
