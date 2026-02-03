@@ -23,7 +23,7 @@ pub mod A {
 
 // namespace A
 
-pub mod B { // Error while generating bindings for item 'B::Foo':
+pub mod B { // Error while generating bindings for function 'B::Foo':
             // Function aliases are not yet supported.
 }
 

@@ -936,11 +936,15 @@ IR::Item Importer::ImportUnsupportedItem(
 }
 
 IR::Item Importer::ImportUnsupportedItem(
-    const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+    const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,
     std::vector<FormattedError> errors, bool is_hard_error) {
   auto kind = UnsupportedItem::Kind::kOther;
+  const clang::Decl* decl = &original_decl;
+  while (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
+    decl = using_decl->getTargetDecl();
+  }
   if (const clang::TagDecl* named_decl =
-          clang::dyn_cast<clang::TagDecl>(&decl)) {
+          clang::dyn_cast<clang::TagDecl>(decl)) {
     switch (named_decl->getTagKind()) {
       case clang::TagTypeKind::Struct:
         kind = UnsupportedItem::Kind::kStruct;
@@ -958,7 +962,7 @@ IR::Item Importer::ImportUnsupportedItem(
         break;
     }
   } else if (const clang::FunctionDecl* func_decl =
-                 clang::dyn_cast<clang::FunctionDecl>(&decl)) {
+                 clang::dyn_cast<clang::FunctionDecl>(decl)) {
     kind = func_decl->getKind() == clang::NamedDecl::Kind::CXXConstructor
                ? UnsupportedItem::Kind::kConstructor
                : UnsupportedItem::Kind::kFunc;
@@ -975,17 +979,18 @@ IR::Item Importer::ImportUnsupportedItem(
     kind = UnsupportedItem::Kind::kTypeAlias;
   }
   std::string name = "unnamed";
-  if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(&decl)) {
+  if (const auto* named_decl =
+          clang::dyn_cast<clang::NamedDecl>(&original_decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
-  std::string source_loc = ConvertSourceLocation(decl.getBeginLoc());
+  std::string source_loc = ConvertSourceLocation(original_decl.getBeginLoc());
   return UnsupportedItem{
       .name = name,
       .kind = kind,
       .path = std::move(path),
       .errors = std::move(errors),
       .source_loc = source_loc,
-      .id = GenerateItemId(&decl),
+      .id = GenerateItemId(&original_decl),
       .must_bind = is_hard_error,
   };
 }
