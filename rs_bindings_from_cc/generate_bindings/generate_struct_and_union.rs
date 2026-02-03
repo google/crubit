@@ -56,6 +56,8 @@ pub fn generate_incomplete_record(
     db: &dyn BindingsGenerator,
     incomplete_record: Rc<IncompleteRecord>,
 ) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::NonMovable);
+
     // If the record won't have bindings, we default to `public` to keep going anyway.
     let visibility = db
         .has_bindings(ir::Item::IncompleteRecord(incomplete_record.clone()))
@@ -350,16 +352,28 @@ fn field_definition(
 
 /// Implementation of `BindingsGenerator::generate_record`.
 pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
+    use error_report::Category;
+    db.errors().add_category(Category::Type);
+    if !record.is_unpin() {
+        db.errors().add_category(Category::NonMovable);
+    }
+    if record.template_specialization.is_some() {
+        db.errors().add_category(Category::GenericInstantiation);
+    }
+
     let record_rs_type_kind = db.rs_type_kind(record.as_ref().into())?;
     if matches!(
         &record_rs_type_kind,
         RsTypeKind::Record { uniform_repr_template_type: Some(_), .. }
     ) {
+        db.errors().add_category(Category::GenericInstantiation);
         return Ok(ApiSnippets::default());
     }
     if record_rs_type_kind.is_bridge_type() {
+        db.errors().add_category(Category::Bridge);
         return Ok(ApiSnippets::default());
     }
+
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
     let ident = make_rs_ident(record.rs_name.identifier.as_ref());

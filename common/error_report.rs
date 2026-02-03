@@ -174,6 +174,42 @@ pub trait ErrorReporting {
     fn assert_in_item(&self, item: ItemName);
     /// Exit `item`, and restore the scope to `replace_with`.
     fn exit_item(&self, item: ItemName, replace_with: Option<ItemName>);
+
+    /// Adds the provided category metadata bits to the current item.
+    fn add_category(&self, category: Category);
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u32)]
+pub enum Category {
+    /// This item is a function.
+    Function = 1 << 0,
+
+    /// This item is a global variable.
+    Variable = 1 << 1,
+
+    /// This item is a type definition.
+    Type = 1 << 2,
+
+    /// This item is a type alias.
+    Alias = 1 << 3,
+
+    /// This item is a generic or template instantiation.
+    ///
+    /// For example, with `template <typename T> class MyTemplate{}`, `MyTemplate<int>` is a
+    /// `GenericInstantiation`.
+    GenericInstantiation = 1 << 6,
+
+    /// This item is a non-movable type in the language it's receiving bindings for.
+    ///
+    /// If this is a C++ type, then NonMovable is set when the resulting Rust
+    /// type is pinned in memory and can't be used by value without ctor. If it is a Rust type,
+    /// then NonMovable is set when the corresponding C++ type doesn't have a move constructor.
+    NonMovable = 1 << 7,
+
+    /// This item is a bridged type, which cannot be used by value.
+    Bridge = 1 << 8,
+    // TODO(b/468093766): Abstract? base classes, public inheritance
 }
 
 /// A named unique identifier for an item.
@@ -213,6 +249,7 @@ impl ErrorReporting for IgnoreErrors {
     }
     fn assert_in_item(&self, _: ItemName) {}
     fn exit_item(&self, _: ItemName, _: Option<ItemName>) {}
+    fn add_category(&self, _: Category) {}
 }
 
 fn hide_unstable_details(input: &str) -> String {
@@ -321,7 +358,7 @@ impl ErrorReporting for ErrorReport {
         let mut map = self.map.borrow_mut();
         match map.entry(item.id) {
             Entry::Vacant(e) => {
-                e.insert(ErrorReportEntry { name: item.name.clone(), errors: vec![] });
+                e.insert(ErrorReportEntry { name: item.name.clone(), ..Default::default() });
             }
             Entry::Occupied(e) => {
                 assert_eq!(
@@ -352,6 +389,11 @@ impl ErrorReporting for ErrorReport {
             "bad scoping: stopped handling an item, but we were processing a different item."
         );
     }
+
+    fn add_category(&self, category: Category) {
+        self.map.borrow_mut().entry(self.current_item().id).or_default().category |=
+            category as u32;
+    }
 }
 
 /// An entry in an error report.
@@ -363,6 +405,16 @@ pub struct ErrorReportEntry {
     pub name: Rc<str>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub errors: Vec<FormattedError>,
+
+    /// A bitset of Category flags.
+    ///
+    /// (Note: can't use flagset, because it fails in recent rustc.)
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub category: u32,
+}
+
+fn is_default<T: Default + PartialEq>(value: &T) -> bool {
+    value == &T::default()
 }
 
 /// Reporter for fatal errors that will cause bindings generation to fail.

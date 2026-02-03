@@ -110,6 +110,7 @@ fn generate_type_alias(
     db: &dyn BindingsGenerator,
     type_alias: Rc<TypeAlias>,
 ) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::Alias);
     // Skip the type alias if it maps to a bridge type.
     let rs_type_kind = db.rs_type_kind((&*type_alias).into())?;
     let generated_item = if rs_type_kind.unalias().is_bridge_type() {
@@ -159,6 +160,7 @@ fn generate_type_alias(
 }
 
 fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::Variable);
     let type_ = db.rs_type_kind(var.type_.clone())?;
 
     Ok(ApiSnippets {
