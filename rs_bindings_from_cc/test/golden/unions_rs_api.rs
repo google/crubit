@@ -281,7 +281,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * The callee does not read an incorrect field out of the union.
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `constant_array_field_not_yet_supported`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
+///   * `constant_array_field_not_yet_supported`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField

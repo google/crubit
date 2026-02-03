@@ -458,6 +458,7 @@ rust_library(
         ":cpp_type_name",
         ":has_bindings",
         "//common:arc_anyhow",
+        "//common:error_report",
         "//rs_bindings_from_cc:ir",
         "//rs_bindings_from_cc/generate_bindings/database",
     ],

@@ -408,74 +408,68 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       if (lifetimes) {
         this_lifetimes = &lifetimes->GetThisLifetimes();
       }
-      absl::StatusOr<CcType> this_param_type =
+      CcType this_param_type =
           ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
                                 /*nullable=*/false, assumed_lifetimes_enabled);
-      if (!this_param_type.ok()) {
-        errors.Add(
-            FormattedError::PrefixedStrCat("`this` parameter is not supported",
-                                           this_param_type.status().message()));
-      } else {
-        if (assumed_lifetimes_enabled) {
-          if (auto qual_type = method_decl->getType(); !qual_type.isNull()) {
-            // Since getThisType desugars `this` (among other nontrivial
-            // transformations), we need to post-hoc crawl through annotations
-            // on the CXXMethodDecl to collect lifetimes. For example, for a
-            // function like `int* $b f() && $a [[clang::lifetimebound]]`, we'll
-            // see a type like:
-            //
-            // (AttributedType (AttributedType (FunctionProtoType
-            //     (AttributedType (PointerType ...)))))
-            //
-            // where the first two AttributedTypes are meant to bind to `this`.
-            auto this_lifetime_views = CollectExplicitLifetimes(
-                ictx_.sema_.getASTContext(), *qual_type.getTypePtr());
-            if (!this_lifetime_views.ok()) {
-              errors.Add(FormattedError::PrefixedStrCat(
-                  "Can't collect lifetimes for `this`",
-                  this_lifetime_views.status().message()));
-            } else if (!this_lifetime_views->empty() &&
-                       !this_param_type->explicit_lifetimes.empty()) {
-              errors.Add(FormattedError::PrefixedStrCat(
-                  "Extra explicit lifetimes on `this`",
-                  absl::StrJoin(*this_lifetime_views, ", ")));
-            } else {
-              this_param_type->explicit_lifetimes.reserve(
-                  this_lifetime_views->size());
-              absl::c_transform(
-                  *this_lifetime_views,
-                  std::back_inserter(this_param_type->explicit_lifetimes),
-                  [](absl::string_view lifetime_view) {
-                    return std::string(lifetime_view);
-                  });
-            }
+      if (assumed_lifetimes_enabled) {
+        if (auto qual_type = method_decl->getType(); !qual_type.isNull()) {
+          // Since getThisType desugars `this` (among other nontrivial
+          // transformations), we need to post-hoc crawl through annotations
+          // on the CXXMethodDecl to collect lifetimes. For example, for a
+          // function like `int* $b f() && $a [[clang::lifetimebound]]`, we'll
+          // see a type like:
+          //
+          // (AttributedType (AttributedType (FunctionProtoType
+          //     (AttributedType (PointerType ...)))))
+          //
+          // where the first two AttributedTypes are meant to bind to `this`.
+          auto this_lifetime_views = CollectExplicitLifetimes(
+              ictx_.sema_.getASTContext(), *qual_type.getTypePtr());
+          if (!this_lifetime_views.ok()) {
+            errors.Add(FormattedError::PrefixedStrCat(
+                "Can't collect lifetimes for `this`",
+                this_lifetime_views.status().message()));
+          } else if (!this_lifetime_views->empty() &&
+                     !this_param_type.explicit_lifetimes.empty()) {
+            errors.Add(FormattedError::PrefixedStrCat(
+                "Extra explicit lifetimes on `this`",
+                absl::StrJoin(*this_lifetime_views, ", ")));
+          } else {
+            this_param_type.explicit_lifetimes.reserve(
+                this_lifetime_views->size());
+            absl::c_transform(
+                *this_lifetime_views,
+                std::back_inserter(this_param_type.explicit_lifetimes),
+                [](absl::string_view lifetime_view) {
+                  return std::string(lifetime_view);
+                });
           }
         }
-        ApplyRefQualifierToThisPointer(*this_param_type,
-                                       method_decl->getRefQualifier(),
-                                       assumed_lifetimes_enabled);
-        params.push_back(
-            {.type = *std::move(this_param_type),
-             .identifier = Identifier("__this"),
-             // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
-             .unknown_attr = {}});
-        if (assumed_lifetimes_enabled && !method_decl->getType().isNull()) {
-          auto clang_annotations =
-              CollectClangLifetimeAnnotationsForMemberFunctionType(
-                  ictx_.sema_.getASTContext(),
-                  *method_decl->getType().getTypePtr());
-          if (!clang_annotations.ok()) {
-            errors.Add(FormattedError::PrefixedStrCat(
-                "Can't collect clang lifetime annotations for `this`",
-                clang_annotations.status().message()));
-          } else {
-            if (clang_annotations->lifetimebound) {
-              params.back().clang_lifetimebound = true;
-            }
-            if (!clang_annotations->lifetime_capture_by.empty()) {
-              params.back().clang_lifetime_capture_by =
-                  std::move(clang_annotations->lifetime_capture_by);
-            }
+      }
+      ApplyRefQualifierToThisPointer(this_param_type,
+                                     method_decl->getRefQualifier(),
+                                     assumed_lifetimes_enabled);
+      params.push_back(
+          {.type = std::move(this_param_type),
+           .identifier = Identifier("__this"),
+           // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
+           .unknown_attr = {}});
+      if (assumed_lifetimes_enabled && !method_decl->getType().isNull()) {
+        auto clang_annotations =
+            CollectClangLifetimeAnnotationsForMemberFunctionType(
+                ictx_.sema_.getASTContext(),
+                *method_decl->getType().getTypePtr());
+        if (!clang_annotations.ok()) {
+          errors.Add(FormattedError::PrefixedStrCat(
+              "Can't collect clang lifetime annotations for `this`",
+              clang_annotations.status().message()));
+        } else {
+          if (clang_annotations->lifetimebound) {
+            params.back().clang_lifetimebound = true;
+          }
+          if (!clang_annotations->lifetime_capture_by.empty()) {
+            params.back().clang_lifetime_capture_by =
+                std::move(clang_annotations->lifetime_capture_by);
           }
         }
       }
@@ -492,15 +486,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       param_lifetimes = &lifetimes->GetParamLifetimes(i);
     }
-    auto param_type =
+    CcType param_type =
         ictx_.ConvertQualType(param->getType(), param_lifetimes,
                               /*nullable=*/true, assumed_lifetimes_enabled);
-    if (!param_type.ok()) {
-      errors.Add(
-          FormattedError::Substitute("Parameter #$0 is not supported: $1", i,
-                                     param_type.status().message()));
-      continue;
-    }
 
     std::optional<Identifier> param_name = GetTranslatedParamName(param);
     CHECK(param_name.has_value());  // No known failure cases.
@@ -514,7 +502,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       errors.Add(FormattedError::FromStatus(std::move(unknown_attr).status()));
       continue;
     }
-    params.push_back({.type = *param_type,
+    params.push_back({.type = std::move(param_type),
                       .identifier = *std::move(param_name),
                       .unknown_attr = *std::move(unknown_attr)});
 

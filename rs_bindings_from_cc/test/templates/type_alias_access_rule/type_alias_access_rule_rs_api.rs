@@ -23,7 +23,7 @@
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `a_`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
+///   * `a_`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
 ///
 /// Generated from: rs_bindings_from_cc/test/templates/type_alias_access_rule/type_alias_access_rule.h;l=13
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]

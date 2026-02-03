@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "absl/functional/overload.h"
 #include "absl/status/status.h"
+#include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -247,6 +248,7 @@ MATCHER(HasLifetimes, "") {
                                       func_pointer.param_and_return_types,
                                       result_listener);
           },
+          [&](const FormattedError&) { return false; },
           // There doesn't appear to be a way to record lifetimes as applied
           // to records accepting lifetime arguments.
           [&](const ItemId& id) { return false; },
@@ -325,7 +327,8 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
 
   for (const auto& item : ir.items) {
     if (const auto* type_alias = std::get_if<TypeAlias>(&item)) {
-      if (type_alias->cc_name.Ident() == "__builtin_ms_va_list") {
+      // Skip builtin type aliases like __uint128_t, __builtin_ms_va_list.
+      if (absl::StartsWith(type_alias->cc_name.Ident(), "__")) {
         continue;
       }
     }
@@ -965,23 +968,29 @@ TEST(ImporterTest, FailedClassTemplateMethod) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   const UnsupportedItem* unsupported_a = nullptr;
-  const UnsupportedItem* unsupported_b = nullptr;
+  const TypeAlias* unsupported_b = nullptr;
   for (auto unsupported_item : ir.get_items_if<UnsupportedItem>()) {
     if (unsupported_item->name == "A") {
       unsupported_a = unsupported_item;
-    } else if (unsupported_item->name == "B") {
-      unsupported_b = unsupported_item;
+    }
+  }
+  for (auto type_alias : ir.get_items_if<TypeAlias>()) {
+    if (type_alias->cc_name.Ident() == "B") {
+      unsupported_b = type_alias;
     }
   }
   ASSERT_TRUE(unsupported_a != nullptr);
   ASSERT_TRUE(unsupported_b != nullptr);
+  const FormattedError* error_b =
+      std::get_if<FormattedError>(&unsupported_b->underlying_type.variant);
+  ASSERT_TRUE(error_b != nullptr);
   EXPECT_THAT(unsupported_a->errors,
               Contains(testing::Property(
                   "message", &FormattedError::message,
                   HasSubstr("Class templates are not supported yet"))));
   EXPECT_THAT(
-      unsupported_b->errors,
-      Contains(testing::Property(
+      unsupported_b->underlying_type.variant,
+      VariantWith<FormattedError>(testing::Property(
           "message", &FormattedError::message,
           HasSubstr(
               "Unsupported type 'A<NoMethod>': Failed to complete template "

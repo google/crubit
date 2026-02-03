@@ -24,7 +24,7 @@ pub mod repro {
     ///
     /// To call a function that accepts this type, you must uphold these requirements:
     /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `nanos`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
+    ///   * `nanos`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'
     ///
     /// Generated from: rs_bindings_from_cc/test/templates/regression_401857961/repro.h;l=15
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]

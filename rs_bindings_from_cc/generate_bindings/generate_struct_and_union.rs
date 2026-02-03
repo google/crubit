@@ -124,10 +124,7 @@ fn get_field_rs_type_kind_for_layout(
             }
         }
     }
-    let type_kind = match &field.type_ {
-        Ok(t) => db.rs_type_kind(t.clone())?,
-        Err(e) => bail!("{e}"),
-    };
+    let type_kind = db.rs_type_kind(field.type_.clone())?;
 
     if let RsTypeKind::Error { error, .. } = type_kind {
         return Err(error.clone());
@@ -828,11 +825,7 @@ fn cc_struct_no_unique_address_impl(
         // Can't use `get_field_rs_type_kind_for_layout` here, because we want to dig
         // into no_unique_address fields, despite laying them out as opaque
         // blobs of bytes.
-        let Ok(cpp_type) = field.type_.as_ref() else {
-            continue;
-        };
-
-        let type_ident = db.rs_type_kind(cpp_type.clone()).with_context(|| {
+        let type_ident = db.rs_type_kind(field.type_.clone()).with_context(|| {
             format!("Failed to format type for field {field:?} on record {record:?}")
         })?;
         no_unique_address_accessors.push(NoUniqueAddressAccessor {

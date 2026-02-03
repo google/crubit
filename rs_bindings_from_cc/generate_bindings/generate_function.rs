@@ -1342,7 +1342,15 @@ fn rs_type_kinds_for_func(
                         assume_lifetimes,
                     },
                 )
-                .map_err(|err| anyhow!("Failed to format type of parameter {i}: {err}")),
+                .map_err(|err| {
+                    // Use a shared aggregation fmt key for all "parameter not supported" errors.
+                    let fail = |parameter| anyhow!("{parameter} is not supported: {err}");
+                    if i == 0 && func.is_instance_method() {
+                        fail(format_args!("`this` parameter"))
+                    } else {
+                        fail(format_args!("Parameter #{}", if func.is_instance_method() { i - 1 } else { i }))
+                    }
+                }),
             )
         })
         .collect();
@@ -1360,7 +1368,7 @@ fn rs_type_kinds_for_func(
                 assume_lifetimes,
             },
         )
-        .map_err(|err| anyhow!("Failed to format return type: {err}")),
+        .map_err(|err| anyhow!("Return type is not supported: {err}")),
     );
 
     errors.consolidate()?;

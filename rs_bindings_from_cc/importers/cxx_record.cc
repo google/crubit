@@ -728,13 +728,12 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   }
   // TODO(b/454627672): is templated_decl the right decl to check for
   // assumed_lifetimes?
-  CRUBIT_ASSIGN_OR_RETURN(
-      CcType return_type,
+  CcType return_type =
       ictx.ConvertQualType(sig_fn_type->getReturnType(),
                            /*lifetimes=*/nullptr,
                            /*nullable=*/true,
                            ictx.AreAssumedLifetimesEnabledForTarget(
-                               ictx.GetOwningTarget(templated_decl))));
+                               ictx.GetOwningTarget(templated_decl)));
 
   std::vector<CcType> param_types;
   // Convert the parameter types, ensuring that they are complete first.
@@ -751,12 +750,11 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
     }
     // TODO(b/454627672): is specialization_decl the right decl to check for
     // assumed_lifetimes?
-    CRUBIT_ASSIGN_OR_RETURN(
-        CcType param_cc_type,
+    CcType param_cc_type =
         ictx.ConvertQualType(param_type, /*lifetimes=*/nullptr,
                              /*nullable=*/true,
                              ictx.AreAssumedLifetimesEnabledForTarget(
-                                 ictx.GetOwningTarget(&specialization_decl))));
+                                 ictx.GetOwningTarget(&specialization_decl)));
     param_types.push_back(std::move(param_cc_type));
   }
 
@@ -1187,30 +1185,30 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     }
 
     const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
-    absl::StatusOr<CcType> type;
-    switch (access) {
-      case clang::AS_public:
-        // TODO(mboehme): Once lifetime_annotations supports retrieving
-        // lifetimes in field types, pass these to ConvertQualType().
-        // TODO(b/454627672): is record_decl the right decl to check for
-        // assumed_lifetimes?
-        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes,
-                                     /*nullable=*/true,
-                                     ictx_.AreAssumedLifetimesEnabledForTarget(
-                                         ictx_.GetOwningTarget(record_decl)));
-        break;
-      case clang::AS_protected:
-      case clang::AS_private:
-      case clang::AS_none:
-        // As a performance optimization (i.e. to keep the generated code
-        // small) we can emit private fields as opaque blobs of bytes.  This
-        // may avoid the need to include supporting types in the generated
-        // code (e.g. avoiding extra template instantiations).  See also
-        // b/226580208 and <internal link>.
-        type = absl::UnavailableError(
-            "Types of non-public C++ fields can be elided away");
-        break;
-    }
+    CcType type = [&]() {
+      switch (access) {
+        case clang::AS_public:
+          // TODO(mboehme): Once lifetime_annotations supports retrieving
+          // lifetimes in field types, pass these to ConvertQualType().
+          // TODO(b/454627672): is record_decl the right decl to check for
+          // assumed_lifetimes?
+          return ictx_.ConvertQualType(
+              field_decl->getType(), no_lifetimes,
+              /*nullable=*/true,
+              ictx_.AreAssumedLifetimesEnabledForTarget(
+                  ictx_.GetOwningTarget(record_decl)));
+        case clang::AS_protected:
+        case clang::AS_private:
+        case clang::AS_none:
+          // As a performance optimization (i.e. to keep the generated code
+          // small) we can emit private fields as opaque blobs of bytes.  This
+          // may avoid the need to include supporting types in the generated
+          // code (e.g. avoiding extra template instantiations).  See also
+          // b/226580208 and <internal link>.
+          return CcType(FormattedError::Static(
+              "Types of non-public C++ fields can be elided away"));
+      }
+    }();
 
     bool is_inheritable = false;
     auto* field_record = field_decl->getType()->getAsCXXRecordDecl();
@@ -1360,15 +1358,15 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   };
 
   if (name == "optional") {
-    CRUBIT_ASSIGN_OR_RETURN(CcType inner, cc_type_of_arg(0));
+    CcType inner = cc_type_of_arg(0);
     return BridgeType{BridgeType::StdOptional{
         .inner_type = std::make_shared<CcType>(std::move(inner)),
     }};
   }
 
   if (name == "pair") {
-    CRUBIT_ASSIGN_OR_RETURN(CcType first, cc_type_of_arg(0));
-    CRUBIT_ASSIGN_OR_RETURN(CcType second, cc_type_of_arg(1));
+    CcType first = cc_type_of_arg(0);
+    CcType second = cc_type_of_arg(1);
     return BridgeType{BridgeType::StdPair{
         .first_type = std::make_shared<CcType>(std::move(first)),
         .second_type = std::make_shared<CcType>(std::move(second)),
@@ -1376,11 +1374,16 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   }
 
   if (name == "basic_string") {
-    CRUBIT_ASSIGN_OR_RETURN(CcType char_type, cc_type_of_arg(0));
+    CcType char_type = cc_type_of_arg(0);
     if (const auto* primitive =
             std::get_if<CcType::Primitive>(&char_type.variant);
         primitive != nullptr && primitive->spelling == "char") {
       return BridgeType{BridgeType::StdString{}};
+    }
+    // HACK: restoring old behavior that hid a bug in our logic for std::wstring
+    // TODO(b/468093766): Fail in the ordinary Record handling logic, not here.
+    if (auto* error = std::get_if<FormattedError>(&char_type.variant)) {
+      return absl::InternalError(error->message());
     }
   }
   // Add builtin bridge types here as needed.

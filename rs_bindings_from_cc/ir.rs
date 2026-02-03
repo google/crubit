@@ -467,6 +467,13 @@ pub enum CcTypeVariant {
         lifetime_inputs: Vec<Rc<str>>,
     },
     Decl(ItemId),
+    /// This type could not be translated to Rust.
+    ///
+    /// It's preferable to forward on a failed type conversion,
+    /// to defer errors as late as possible. For instance, struct
+    /// fields should become blobs of bytes, instead of failing
+    /// the whole struct.
+    Error(FormattedError),
 }
 
 impl CcTypeVariant {
@@ -966,7 +973,7 @@ pub struct Field {
     pub cpp_identifier: Option<Identifier>,
     pub doc_comment: Option<Rc<str>>,
     #[serde(rename(deserialize = "type"))]
-    pub type_: Result<CcType, String>,
+    pub type_: CcType,
     pub access: AccessSpecifier,
     pub offset: usize,
     pub size: usize,
@@ -1121,7 +1128,7 @@ pub enum BridgeType {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TemplateArg {
     #[serde(rename(deserialize = "type"))]
-    pub type_: Result<CcType, String>,
+    pub type_: CcType,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -1529,7 +1536,7 @@ impl<T> Hash for IgnoredField<T> {
     fn hash<H: Hasher>(&self, _state: &mut H) {}
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FormattedError {
     pub fmt: Rc<str>,

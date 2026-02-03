@@ -133,7 +133,13 @@ llvm::json::Value CcType::ToJson() const {
                  }},
             };
           },
-          [&](ItemId id) { return llvm::json::Object{{"Decl", id}}; }},
+          [&](ItemId id) { return llvm::json::Object{{"Decl", id}}; },
+          [&](FormattedError error) {
+            return llvm::json::Object{
+                {"Error", llvm::json::Object{
+                              {"fmt", std::string(error.fmt())},
+                              {"message", std::string(error.message())}}}};
+          }},
       variant);
 
   if (explicit_lifetimes.empty()) {

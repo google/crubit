@@ -87,9 +87,8 @@ unsafe impl ::cxx::ExternType for NontrivialCustomType {
 // Records with packed layout are not supported
 
 // Error while generating bindings for function 'MultipleReasons':
-// Parameter #0 is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
-//
-// Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
+// Parameter #0 is not supported: Unsupported `volatile` qualifier: volatile int
+// Return type is not supported: Unsupported `volatile` qualifier: volatile int
 
 // Error while generating bindings for struct 'TypeWithUnknownAttribute':
 // Can't generate bindings for TypeWithUnknownAttribute, because of missing required features (crubit.rs-features):

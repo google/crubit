@@ -1070,7 +1070,7 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   return absl::StrCat(spelling_loc_str, "\n", expansion_loc_str);
 }
 
-absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
+CcType Importer::ConvertTemplateSpecializationType(
     const clang::TemplateSpecializationType* type) {
   // Qualifiers are handled separately in TypeMapper::ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
@@ -1079,7 +1079,7 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
       clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
           type->getAsCXXRecordDecl());
   if (!specialization_decl) {
-    return absl::InvalidArgumentError(absl::Substitute(
+    return CcType(FormattedError::Substitute(
         "Template specialization '$0' without an associated record decl "
         "is not supported.",
         type_string));
@@ -1099,7 +1099,7 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
     }
     auto target = GetOwningTarget(template_decl);
     if (!IsCrubitEnabledForTarget(target)) {
-      return absl::InvalidArgumentError(absl::Substitute(
+      return CcType(FormattedError::Substitute(
           "Failed to complete template specialization type $0: template "
           "belongs to target $1, which does not support Crubit.",
           type_string, target.value()));
@@ -1129,7 +1129,7 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
             ctx_.getCanonicalTagType(specialization_decl));
       });
   if (diagnostic_recorder.getNumErrors() != 0) {
-    return absl::InvalidArgumentError(absl::Substitute(
+    return CcType(FormattedError::Substitute(
         "Failed to complete template specialization type $0: Diagnostics "
         "emitted:\n$1",
         type_string, diagnostic_recorder.ConcatenatedDiagnostics()));
@@ -1141,7 +1141,7 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
   absl::Status import_status =
       CheckImportStatus(GetDeclItem(specialization_decl));
   if (!import_status.ok()) {
-    return absl::InvalidArgumentError(absl::Substitute(
+    return CcType(FormattedError::Substitute(
         "Failed to create bindings for template specialization type $0: $1",
         type_string, import_status.message()));
   }
@@ -1149,9 +1149,9 @@ absl::StatusOr<CcType> Importer::ConvertTemplateSpecializationType(
   return ConvertTypeDecl(specialization_decl);
 }
 
-absl::StatusOr<CcType> Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
+CcType Importer::ConvertTypeDecl(clang::NamedDecl* decl) {
   if (!EnsureSuccessfullyImported(decl)) {
-    return absl::NotFoundError(absl::Substitute(
+    return CcType(FormattedError::Substitute(
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
 
@@ -1271,10 +1271,9 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
           param_lifetimes =
               &pointee_lifetimes->GetFuncLifetimes().GetParamLifetimes(i);
         }
-        CRUBIT_ASSIGN_OR_RETURN(
-            CcType cpp_param_type,
+        CcType cpp_param_type =
             ConvertQualType(func_type->getParamType(i), param_lifetimes,
-                            /*nullable=*/true, assume_lifetimes));
+                            /*nullable=*/true, assume_lifetimes);
         param_and_return_types.push_back(std::move(cpp_param_type));
       }
 
@@ -1283,10 +1282,9 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         return_lifetimes =
             &pointee_lifetimes->GetFuncLifetimes().GetReturnLifetimes();
       }
-      CRUBIT_ASSIGN_OR_RETURN(
-          CcType cpp_return_type,
+      CcType cpp_return_type =
           ConvertQualType(func_type->getReturnType(), return_lifetimes,
-                          /*nullable=*/true, assume_lifetimes));
+                          /*nullable=*/true, assume_lifetimes);
       param_and_return_types.push_back(std::move(cpp_return_type));
 
       CHECK(type->isPointerType() || type->isLValueReferenceType());
@@ -1296,10 +1294,8 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
           .param_and_return_types = std::move(param_and_return_types),
       });
     }
-    CRUBIT_ASSIGN_OR_RETURN(
-        CcType cpp_pointee_type,
-        ConvertQualType(pointee_type, pointee_lifetimes, /*nullable=*/true,
-                        assume_lifetimes));
+    CcType cpp_pointee_type = ConvertQualType(
+        pointee_type, pointee_lifetimes, /*nullable=*/true, assume_lifetimes);
     // Note: we don't check for a lifetime here and prefer to defer to the
     // IR consumer to error if a lifetime is required. This allows the IR
     // consumer to infer a lifetime where-appropriate (e.g. constructors).
@@ -1397,7 +1393,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
       "Unsupported clang::Type class '", type->getTypeClassName(), "'"));
 }
 
-absl::StatusOr<CcType> Importer::ConvertQualType(
+CcType Importer::ConvertQualType(
     clang::QualType qual_type,
     const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
     bool assume_lifetimes) {
@@ -1407,21 +1403,32 @@ absl::StatusOr<CcType> Importer::ConvertQualType(
 
   absl::StatusOr<CcType> type = ConvertType(qual_type.getTypePtr(), lifetimes,
                                             nullable, assume_lifetimes);
+
+  // TODO(b/468093766): make _all_ the functions return a CcType.
+  // Then we can remove this duplicated logic: "either it was bad and returned
+  // as a bad status, or it was bad and returned as a CcType with a
+  // FormattedError variant". That's a bit ridiculous! But the remaining uses
+  // of Status are a bit tricky and don't fit in a first draft.
   if (!type.ok()) {
-    absl::Status error = absl::UnimplementedError(absl::Substitute(
+    return CcType(FormattedError::Substitute(
         "Unsupported type '$0': $1", type_string, type.status().message()));
-    error.SetPayload(kTypeStatusPayloadUrl, absl::Cord(type_string));
-    return error;
+  }
+  if (auto* error = std::get_if<FormattedError>(&type->variant)) {
+    // TODO(jeanpierreda): The most-specific type should go at the start, and
+    // be something we can aggregate by somehow.
+    // TODO(jeanpierreda): This produces pretty verbose errors.
+    return CcType(FormattedError::Substitute("Unsupported type '$0': $1",
+                                             type_string, error->message()));
   }
 
   // Handle cv-qualification.
   type->is_const = qual_type.isConstQualified();
   if (qual_type.isVolatileQualified()) {
-    return absl::UnimplementedError(
-        absl::StrCat("Unsupported `volatile` qualifier: ", type_string));
+    return CcType(FormattedError::PrefixedStrCat(
+        "Unsupported `volatile` qualifier", type_string));
   }
 
-  return type;
+  return *std::move(type);
 }
 
 std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {

@@ -48,7 +48,7 @@ pub unsafe fn ConsumeArray(pair: *mut ::ffi_11::c_int) {
 }
 
 // Error while generating bindings for type alias 'Arr':
-// Unsupported type 'int[2]': Unsupported clang::Type class 'ConstantArray'
+// Can't generate bindings for Arr due to missing bindings for its dependency: Unsupported type 'int[2]': Unsupported clang::Type class 'ConstantArray'
 
 /// # Safety
 ///

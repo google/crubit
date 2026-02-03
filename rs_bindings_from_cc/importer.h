@@ -125,7 +125,7 @@ class Importer final : public ImportContext {
       const clang::NamedDecl* named_decl) const override;
   std::optional<std::string> GetComment(const clang::Decl* decl) const override;
   std::string ConvertSourceLocation(clang::SourceLocation loc) const override;
-  absl::StatusOr<CcType> ConvertQualType(
+  CcType ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
       bool assume_lifetimes) override;
@@ -169,20 +169,22 @@ class Importer final : public ImportContext {
   std::vector<clang::Decl*> GetCanonicalChildren(
       const clang::DeclContext* decl_context) const;
   // Converts a type to a CcType.
+  // TODO(b/251045039): Return a `CcType`.
   absl::StatusOr<CcType> ConvertType(
       const clang::Type* type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
       bool assume_lifetimes);
   // Converts a type, without processing attributes.
+  // TODO(b/251045039): Return a `CcType`.
   absl::StatusOr<CcType> ConvertUnattributedType(
       const clang::Type* type,
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
       bool assume_lifetimes);
-  absl::StatusOr<CcType> ConvertTypeDecl(clang::NamedDecl* decl);
+  CcType ConvertTypeDecl(clang::NamedDecl* decl);
 
   // Converts `type` into a CcType, after first importing the Record behind
   // the template instantiation.
-  absl::StatusOr<CcType> ConvertTemplateSpecializationType(
+  CcType ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type);
 
   // The different decl importers. Note that order matters: the first importer

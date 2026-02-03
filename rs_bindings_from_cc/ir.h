@@ -114,6 +114,64 @@ inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
   return o << std::string(llvm::formatv("{0:2}", l.ToJson()));
 }
 
+// An error that stores its format string as well as the formatted message.
+class FormattedError final {
+ public:
+  auto operator<=>(const FormattedError&) const = default;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const FormattedError& e) {
+    return H::combine(std::move(h), e.fmt_, e.message_);
+  }
+
+  // Returns a FormattedError for a static string. The string is used as both
+  // the format string and the formatted message. Intended to be used only with
+  // string literals.
+  template <size_t N>
+  static FormattedError Static(const char (&array)[N]) {
+    return FormattedError(array, array);
+  }
+
+  // Returns a FormattedError built with `absl::StrCat()`. The first argument is
+  // taken as the format string. All arguments are concatenated to form the
+  // formatted message, with an extra `": "` inserted after the first argument.
+  template <size_t N, typename... Ts>
+  static FormattedError PrefixedStrCat(const char (&prefix)[N],
+                                       Ts&&... moreArgs) {
+    return FormattedError(
+        prefix, absl::StrCat(prefix, ": ", std::forward<Ts>(moreArgs)...));
+  }
+
+  // Returns a FormattedError built with `absl::Substitute()`.
+  template <size_t N, typename... Ts>
+  static FormattedError Substitute(const char (&format)[N], Ts&&... args) {
+    return FormattedError(format,
+                          absl::Substitute(format, std::forward<Ts>(args)...));
+  }
+
+  // Extracts a format string from a status payload, if present.
+  static FormattedError FromStatus(absl::Status status);
+
+  absl::string_view fmt() const { return fmt_; }
+  absl::string_view message() const { return message_; }
+
+  llvm::json::Value ToJson() const;
+
+  // Type URL for use as an `absl::Status` payload.
+  static constexpr absl::string_view kFmtPayloadTypeUrl =
+      "type.googleapis.com/crubit.FormattedError.fmt";
+
+ private:
+  FormattedError(std::string fmt, std::string message)
+      : fmt_(fmt), message_(message) {}
+
+  // The format string that produced the error message, if available. This is
+  // used as an aggregation key for error reports.
+  std::string fmt_;
+  // Explanation of why we couldn't generate bindings.
+  std::string message_;
+};
+
 // Whether a function is annotated with `CRUBIT_UNSAFE` or
 // `CRUBIT_DISABLE_UNSAFE`. `[[clang::unsafe_buffer_usage]]` is also considered
 // unsafe.
@@ -197,7 +255,8 @@ struct CcType {
     return primitive != nullptr && primitive->spelling == "void";
   }
 
-  using Variant = std::variant<Primitive, PointerType, FuncPointer, ItemId>;
+  using Variant =
+      std::variant<Primitive, PointerType, FuncPointer, ItemId, FormattedError>;
 
   explicit CcType(Variant variant) : variant(std::move(variant)) {}
 
@@ -432,7 +491,7 @@ struct Field {
   std::optional<Identifier> cpp_identifier;
 
   std::optional<std::string> doc_comment;
-  absl::StatusOr<CcType> type;
+  CcType type;
   AccessSpecifier access;
   uint64_t offset;  // Field offset in bits.
   uint64_t size;    // Field size in bits.
@@ -511,7 +570,7 @@ struct SizeAlign {
 // TODO: Handle non-type template parameter.
 // A template argument for a template specialization.
 struct TemplateArg {
-  absl::StatusOr<CcType> type;
+  CcType type;
   llvm::json::Value ToJson() const;
 };
 
@@ -800,64 +859,6 @@ struct TypeAlias {
 inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
   return o << std::string(llvm::formatv("{0:2}", t.ToJson()));
 }
-
-// An error that stores its format string as well as the formatted message.
-class FormattedError final {
- public:
-  auto operator<=>(const FormattedError&) const = default;
-
-  template <typename H>
-  friend H AbslHashValue(H h, const FormattedError& e) {
-    return H::combine(std::move(h), e.fmt_, e.message_);
-  }
-
-  // Returns a FormattedError for a static string. The string is used as both
-  // the format string and the formatted message. Intended to be used only with
-  // string literals.
-  template <size_t N>
-  static FormattedError Static(const char (&array)[N]) {
-    return FormattedError(array, array);
-  }
-
-  // Returns a FormattedError built with `absl::StrCat()`. The first argument is
-  // taken as the format string. All arguments are concatenated to form the
-  // formatted message, with an extra `": "` inserted after the first argument.
-  template <size_t N, typename... Ts>
-  static FormattedError PrefixedStrCat(const char (&prefix)[N],
-                                       Ts&&... moreArgs) {
-    return FormattedError(
-        prefix, absl::StrCat(prefix, ": ", std::forward<Ts>(moreArgs)...));
-  }
-
-  // Returns a FormattedError built with `absl::Substitute()`.
-  template <size_t N, typename... Ts>
-  static FormattedError Substitute(const char (&format)[N], Ts&&... args) {
-    return FormattedError(format,
-                          absl::Substitute(format, std::forward<Ts>(args)...));
-  }
-
-  // Extracts a format string from a status payload, if present.
-  static FormattedError FromStatus(absl::Status status);
-
-  absl::string_view fmt() const { return fmt_; }
-  absl::string_view message() const { return message_; }
-
-  llvm::json::Value ToJson() const;
-
-  // Type URL for use as an `absl::Status` payload.
-  static constexpr absl::string_view kFmtPayloadTypeUrl =
-      "type.googleapis.com/crubit.FormattedError.fmt";
-
- private:
-  FormattedError(std::string fmt, std::string message)
-      : fmt_(fmt), message_(message) {}
-
-  // The format string that produced the error message, if available. This is
-  // used as an aggregation key for error reports.
-  std::string fmt_;
-  // Explanation of why we couldn't generate bindings.
-  std::string message_;
-};
 
 // A placeholder for an item that we can't generate bindings for (yet)
 struct UnsupportedItem {

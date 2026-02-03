@@ -11,7 +11,7 @@ use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
 use crubit_abi_type::FullyQualifiedPath;
 use crubit_feature::CrubitFeature;
-use error_report::{anyhow, bail, ensure};
+use error_report::{bail, ensure};
 use flagset::FlagSet;
 use ir::*;
 use itertools::Itertools;
@@ -307,12 +307,8 @@ impl UniformReprTemplateType {
         is_return_type: bool,
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &TemplateArg| -> Result<RsTypeKind> {
-            let arg_type = match &template_arg.type_ {
-                Ok(arg_type) => arg_type.clone(),
-                Err(e) => bail!("{e}"),
-            };
             // Importantly, `is_return_type` is not propagated through inner types.
-            let arg_type_kind = db.rs_type_kind(arg_type)?;
+            let arg_type_kind = db.rs_type_kind(template_arg.type_.clone())?;
             ensure!(
                 !arg_type_kind.is_bridge_type(),
                 "Bridge types cannot be used as template arguments"
@@ -349,11 +345,7 @@ impl UniformReprTemplateType {
             }
             Some(TemplateSpecializationKind::AbslSpan { element_type }) => {
                 let element_type_kind = type_arg(element_type)?;
-                let is_const = element_type
-                    .type_
-                    .as_ref()
-                    .expect("should be okay because type_arg succeeded")
-                    .is_const;
+                let is_const = element_type.type_.is_const;
                 Ok(Some(Rc::new(UniformReprTemplateType::AbslSpan {
                     is_const,
 
@@ -613,12 +605,7 @@ impl BridgeRsTypeKind {
                     abi_cpp,
                     generic_types: template_args
                         .iter()
-                        .map(|template_arg| {
-                            let type_ = template_arg.type_.as_ref().map_err(|err| {
-                                anyhow!("Failed to get type from template arg: {}", err)
-                            })?;
-                            db.rs_type_kind(type_.clone())
-                        })
+                        .map(|template_arg| db.rs_type_kind(template_arg.type_.clone()))
                         .collect::<Result<Rc<[RsTypeKind]>>>()?,
                 }
             }
@@ -676,12 +663,7 @@ fn new_c9_co_record(
     else {
         return Ok(None);
     };
-    let arg_type = element_type
-        .type_
-        .as_ref()
-        .map_err(|e: &String| anyhow!("c9::Co T argument is not Crubit compatible: {e}"))?
-        .clone();
-    let arg_type_kind = db.rs_type_kind(arg_type)?;
+    let arg_type_kind = db.rs_type_kind(element_type.type_.clone())?;
     if let RsTypeKind::Error { error, .. } = arg_type_kind {
         return Err(error);
     };
@@ -1952,6 +1934,7 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
 mod tests {
     use super::*;
     use arc_anyhow::Result;
+    use error_report::anyhow;
     use googletest::prelude::*;
     use token_stream_matchers::assert_rs_matches;
 

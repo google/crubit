@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{anyhow, ensure, Result};
+use arc_anyhow::{anyhow, ensure, Error, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
 use database::rs_snippet::{Lifetime, LifetimeOptions, Mutability, RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
@@ -145,7 +145,12 @@ pub fn rs_type_kind_with_lifetime_elision(
             let ir = db.ir();
             let item = ir.find_untyped_decl(*id);
 
-            if let Err(error) = db.has_bindings(item.clone()) {
+            if let Err(no_bindings_reason) = db.has_bindings(item.clone()) {
+                let error: Error;
+                let unsupported_alias_error = || {
+                    use ir::GenericItem;
+                    anyhow!("Unsupported type alias {name}", name = item.debug_name(db.ir()))
+                };
                 // Alias fallbacks: type aliases are unique among items, in that if the item
                 // defining the alias fails to receive bindings, we can still use the aliased type.
                 if let ir::Item::TypeAlias(alias) = item {
@@ -153,22 +158,35 @@ pub fn rs_type_kind_with_lifetime_elision(
                     // not on targets that intend to support Rust users of those type aliases.
                     // (If we did, then a C++ library owner could break Rust callers, which is a
                     // maintenance responsibility that they did not sign up for!)
-                    if !matches!(error, NoBindingsReason::MissingRequiredFeatures { .. }) {
-                        return db.rs_type_kind_with_lifetime_elision(
+                    if !matches!(
+                        no_bindings_reason,
+                        NoBindingsReason::MissingRequiredFeatures { .. }
+                    ) {
+                        if let Ok(ty) = db.rs_type_kind_with_lifetime_elision(
                             alias.underlying_type.clone(),
                             lifetime_options,
-                        );
+                        ) {
+                            return Ok(ty);
+                        } else {
+                            // TODO(b/481368622): this fails if we fall through to comprehensive fallbacks.
+                            return Err(unsupported_alias_error());
+                        }
                     }
+                    // If it still fails, hide the error. Most users only need to know
+                    // "Alias does not exist", not "decltype(declval<T>().x()) does not exist".
+                    error = unsupported_alias_error();
+                } else {
+                    error = no_bindings_reason.into();
                 }
                 // Comprehensive fallbacks: if we can delay reifying the error, delay it.
                 if let Ok(symbol) = cpp_type_name::tagless_cpp_type_name_for_item(item, db.ir()) {
                     return Ok(RsTypeKind::Error {
                         symbol: symbol.to_string().into(),
-                        error: error.into(),
+                        error,
                         visibility_override: None,
                     });
                 }
-                return Err(error.into());
+                return Err(error);
             }
 
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
@@ -180,6 +198,13 @@ pub fn rs_type_kind_with_lifetime_elision(
                 lifetime_options.have_reference_param,
                 lifetime_options.is_return_type,
             )
+        }
+        CcTypeVariant::Error(e) => {
+            let e = error_report::FormattedError::new(
+                e.fmt.to_string().into(),
+                e.message.to_string().into(),
+            );
+            Err(e.into())
         }
     }
 }

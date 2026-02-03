@@ -64,7 +64,7 @@ absl::StatusOr<bool> GetIsSameAbiAttribute(const clang::Decl* decl) {
 // them to `CcType`s.
 //
 // `decl` must not be null.
-absl::StatusOr<std::optional<std::vector<CcType>>> GetTemplateParameters(
+std::optional<std::vector<CcType>> GetTemplateParameters(
     ImportContext& ictx, const clang::Decl* decl) {
   const auto* specialization_decl =
       llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(decl);
@@ -76,13 +76,10 @@ absl::StatusOr<std::optional<std::vector<CcType>>> GetTemplateParameters(
   for (const auto& arg : specialization_decl->getTemplateArgs().asArray()) {
     // TODO(b/454627672): is specialization_decl the right decl to check for
     // assumed_lifetimes?
-    auto cpp_type = ictx.ConvertQualType(
+    result.push_back(ictx.ConvertQualType(
         arg.getAsType(), /*lifetimes=*/nullptr, /*nullable=*/true,
         ictx.AreAssumedLifetimesEnabledForTarget(
-            ictx.GetOwningTarget(specialization_decl)));
-    if (!cpp_type.ok()) return cpp_type.status();
-
-    result.push_back(*cpp_type);
+            ictx.GetOwningTarget(specialization_decl))));
   }
 
   return result;
@@ -128,14 +125,8 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
   policy.SuppressTagKeyword = true;
   std::string cc_name = cc_qualtype.getAsString(policy);
 
-  absl::StatusOr<std::optional<std::vector<CcType>>> type_parameters =
+  std::optional<std::vector<CcType>> type_parameters =
       GetTemplateParameters(ictx_, type_decl);
-  if (!type_parameters.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        *type_decl, std::nullopt,
-        FormattedError::PrefixedStrCat("Error fetching template parameters",
-                                       type_parameters.status().message()));
-  }
 
   ictx_.MarkAsSuccessfullyImported(type_decl);
 
@@ -149,7 +140,7 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
   return ExistingRustType{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
-      .type_parameters = type_parameters->value_or(std::vector<CcType>()),
+      .type_parameters = type_parameters.value_or(std::vector<CcType>()),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),
       .is_same_abi = *is_same_abi,

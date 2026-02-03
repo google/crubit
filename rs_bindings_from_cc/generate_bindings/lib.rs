@@ -112,7 +112,25 @@ fn generate_type_alias(
 ) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Alias);
     // Skip the type alias if it maps to a bridge type.
-    let rs_type_kind = db.rs_type_kind((&*type_alias).into())?;
+    // NOTE: rs_type_kind() gives a poor error message ("no bindings for <Alias>") if the underlying
+    // type is unsupported, so that most users of rs_type_kind (e.g. function definitions, structs)
+    // will fail with an error message about the _alias_ being unsupported, not the alias-ee.
+    //
+    // We, however, want to be more specific. To get the better error message, we call directly
+    // into has_bindings().
+    //
+    // Since rs_type_kind() can succeed even if this alias is unsupported (it is "seen through"),
+    // we only do so after rs_type_kind() fails.
+    let Ok(rs_type_kind) = db.rs_type_kind((&*type_alias).into()) else {
+        // Return the un-hidden raw error from has_bindings().
+        let Err(e) = db.has_bindings(ir::Item::TypeAlias(type_alias)) else {
+            unreachable!(
+                "Crubit promised to have bindings for a type alias, but didn't. This is a bug."
+            )
+        };
+        return Err(e.into());
+    };
+
     let generated_item = if rs_type_kind.unalias().is_bridge_type() {
         let disable_comment = format!(
             "Type alias for {cpp_type} suppressed due to being a bridge type",
@@ -634,16 +652,7 @@ fn record_field_safety(db: &dyn BindingsGenerator, field: Field) -> Safety {
     if field.access != AccessSpecifier::Public {
         return Safety::Safe;
     }
-    let cpp_type = match &field.type_ {
-        Ok(cpp_type) => cpp_type,
-        Err(err) => {
-            // If we can't get the CcType for a public field, we assume it's unsafe.
-            return Safety::unsafe_because(format!(
-                "C++ type is unknown; safety requirements cannot be automatically generated: {err}"
-            ));
-        }
-    };
-    let field_rs_type_kind = match db.rs_type_kind(cpp_type.clone()) {
+    let field_rs_type_kind = match db.rs_type_kind(field.type_.clone()) {
         Ok(field_rs_type_kind) => field_rs_type_kind,
         Err(err) => {
             // If we can't get the RsTypeKind for a public field, we assume it's unsafe.

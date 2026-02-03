@@ -77,7 +77,7 @@ impl Default for WithBitfields {
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `status`: C++ type is unknown; safety requirements cannot be automatically generated: Unsupported type 'enum AlignmentRegressionTest::(unnamed at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)': No generated bindings found for ''
+///   * `status`: Rust type is unknown; safety requirements cannot be automatically generated: Unsupported type 'enum AlignmentRegressionTest::(unnamed at ./rs_bindings_from_cc/test/golden/bitfields.h:26:3)': No generated bindings found for ''
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AlignmentRegressionTest
