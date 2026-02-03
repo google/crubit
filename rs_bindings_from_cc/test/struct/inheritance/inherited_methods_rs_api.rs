@@ -26,7 +26,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}

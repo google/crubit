@@ -22,7 +22,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CompatibleType
 pub struct CompatibleType {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for CompatibleType {}
 impl !Sync for CompatibleType {}

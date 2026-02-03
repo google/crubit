@@ -29,7 +29,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
@@ -193,7 +193,7 @@ impl ::ctor::PinnedDrop for Nontrivial {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
 pub struct NontrivialInline {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for NontrivialInline {}
@@ -309,7 +309,7 @@ impl ::ctor::PinnedDrop for NontrivialInline {
 pub struct NontrivialMembers {
     /// Reason for representing this field as a blob of bytes:
     /// nontrivial fields would be destroyed in the wrong order
-    pub(crate) nontrivial_member: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) nontrivial_member: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for NontrivialMembers {}
 impl !Sync for NontrivialMembers {}
@@ -363,7 +363,7 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
 pub struct NontrivialUnpin {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for NontrivialUnpin {}
@@ -596,7 +596,7 @@ where
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}

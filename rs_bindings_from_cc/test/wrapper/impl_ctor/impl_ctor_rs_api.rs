@@ -26,7 +26,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub value: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}

@@ -170,12 +170,12 @@ fn test_simple_struct() -> Result<()> {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+                __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
                 pub public_int: ::core::ffi::c_int,
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                pub(crate) protected_int: [::core::mem::MaybeUninit<u8>; 4],
+                pub(crate) protected_int: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                pub(crate) private_int: [::core::mem::MaybeUninit<u8>; 4],
+                pub(crate) private_int: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
             }
         }
     );
@@ -1797,7 +1797,7 @@ fn test_supported_nontrivial_field() -> Result<()> {
         quote! {
         pub struct Outer {
             ...
-            pub(crate) inner_field: [::core::mem::MaybeUninit<u8>; 8],
+            pub(crate) inner_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
             pub inner_ptr_field: *mut crate::Inner,
         }}
     );

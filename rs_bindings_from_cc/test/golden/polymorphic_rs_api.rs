@@ -24,7 +24,7 @@
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase
 pub struct PolymorphicBase {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
 impl !Send for PolymorphicBase {}
 impl !Sync for PolymorphicBase {}
@@ -69,7 +69,7 @@ impl ::ctor::PinnedDrop for PolymorphicBase {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2
 pub struct PolymorphicBase2 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
 impl !Send for PolymorphicBase2 {}
 impl !Sync for PolymorphicBase2 {}
@@ -120,7 +120,7 @@ impl ::ctor::PinnedDrop for PolymorphicBase2 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicDerived
 pub struct PolymorphicDerived {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
 }
 impl !Send for PolymorphicDerived {}
 impl !Sync for PolymorphicDerived {}

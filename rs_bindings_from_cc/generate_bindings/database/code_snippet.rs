@@ -550,6 +550,7 @@ pub fn generated_items_to_tokens(
                     recursively_pinned_attr,
                     must_use_attr,
                     align,
+                    internally_mutable_unknown_fields,
                     crubit_annotation,
                     visibility,
                     struct_or_union,
@@ -576,7 +577,12 @@ pub fn generated_items_to_tokens(
 
                 let head_padding = head_padding.map(|n| {
                     let n = Literal::usize_unsuffixed(n);
-                    quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
+                    // TODO(b/481405536): Do this unconditionally.
+                    if *internally_mutable_unknown_fields {
+                        quote! { __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n], }
+                    } else {
+                        quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
+                    }
                 });
 
                 let send_impl = match implements_send {
@@ -904,6 +910,7 @@ pub struct Record {
     pub recursively_pinned_attr: Option<RecursivelyPinnedAttr>,
     pub must_use_attr: Option<MustUseAttr>,
     pub align: Option<usize>,
+    pub internally_mutable_unknown_fields: bool,
     pub crubit_annotation: DocCommentAttr,
     pub visibility: Visibility,
     pub struct_or_union: StructOrUnion,
@@ -1029,18 +1036,25 @@ impl ToTokens for StructOrUnion {
 /// Quotes as the type of a type-less, unaligned block of memory that can hold a
 /// specified number of bits, rounded up to the next multiple of 8.
 #[derive(Copy, Clone, Debug)]
-pub struct BitPadding(pub NonZeroUsize);
+pub struct BitPadding {
+    pub size: NonZeroUsize,
+    pub internally_mutable: bool,
+}
 
 impl BitPadding {
     fn padding_size_in_bytes(self) -> usize {
-        self.0.get().div_ceil(8)
+        self.size.get().div_ceil(8)
     }
 }
 
 impl ToTokens for BitPadding {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let n = Literal::usize_unsuffixed(self.padding_size_in_bytes());
-        quote! { [::core::mem::MaybeUninit<u8>; #n] }.to_tokens(tokens);
+        if self.internally_mutable {
+            quote! { [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n] }.to_tokens(tokens);
+        } else {
+            quote! { [::core::mem::MaybeUninit<u8>; #n] }.to_tokens(tokens);
+        }
     }
 }
 

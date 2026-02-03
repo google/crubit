@@ -258,6 +258,9 @@ fn field_definition(
     override_alignment: &mut bool,
     fields_that_must_be_copy: &mut Vec<TokenStream>,
 ) -> Result<FieldDefinition> {
+    // TODO(b/481405536): we should do this unconditionally.
+    let internally_mutable_unknown_fields = !record.should_derive_copy();
+
     // opaque blob representations are always unaligned, even though the actual C++
     // field might be aligned. To put the current field at the right offset, we
     // might need to insert some extra padding.
@@ -276,7 +279,8 @@ fn field_definition(
         offset - padding_start
     };
 
-    let padding = NonZeroUsize::new(padding_size_in_bits).map(BitPadding);
+    let padding = NonZeroUsize::new(padding_size_in_bits)
+        .map(|size| BitPadding { size, internally_mutable: internally_mutable_unknown_fields });
 
     // Bitfields get represented by private padding to ensure overall
     // struct layout is compatible.
@@ -286,10 +290,11 @@ fn field_definition(
             field_index,
             desc: desc.to_vec(),
             padding,
-            bits: BitPadding(
-                NonZeroUsize::new(end - offset)
+            bits: BitPadding {
+                size: NonZeroUsize::new(end - offset)
                     .expect("Bit padding should always be greater than 0"),
-            ),
+                internally_mutable: internally_mutable_unknown_fields,
+            },
         });
     };
 
@@ -322,10 +327,11 @@ fn field_definition(
     let field_type = match field_rs_type_kind {
         Err(_) => {
             *override_alignment = true;
-            FieldType::Erased(BitPadding(
-                NonZeroUsize::new(end - field.offset)
+            FieldType::Erased(BitPadding {
+                size: NonZeroUsize::new(end - field.offset)
                     .expect("Bit padding should always be greater than 0"),
-            ))
+                internally_mutable: internally_mutable_unknown_fields,
+            })
         }
         Ok(type_kind) => {
             let ty = type_kind.to_token_stream(db);
@@ -644,6 +650,8 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         } else {
             None
         },
+        // TODO(b/481405536): we should do this unconditionally.
+        internally_mutable_unknown_fields: !record.should_derive_copy(),
         crubit_annotation: DocCommentAttr(
             format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}").into(),
         ),

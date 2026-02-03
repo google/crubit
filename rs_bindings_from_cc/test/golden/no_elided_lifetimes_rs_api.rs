@@ -87,7 +87,7 @@ impl Default for S {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}

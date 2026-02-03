@@ -26,7 +26,7 @@
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Uncopyable
 pub struct Uncopyable {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Uncopyable {}
 impl !Sync for Uncopyable {}
@@ -55,10 +55,10 @@ impl ::ctor::CtorNew<()> for Uncopyable {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=UncopyableDespiteDecl
 pub struct UncopyableDespiteDecl {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) vector_: [::core::mem::MaybeUninit<u8>; 24],
+    pub(crate) vector_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for UncopyableDespiteDecl {}
 impl !Sync for UncopyableDespiteDecl {}

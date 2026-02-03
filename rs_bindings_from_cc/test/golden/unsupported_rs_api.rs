@@ -66,7 +66,7 @@ impl Default for TrivialCustomType {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialCustomType
 pub struct NontrivialCustomType {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub i: ::ffi_11::c_int,
 }
 impl !Send for NontrivialCustomType {}

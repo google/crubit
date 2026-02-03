@@ -224,10 +224,10 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding
 pub struct FieldInTailPadding {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
-    pub(crate) inner_struct: [::core::mem::MaybeUninit<u8>; 5],
+    pub(crate) inner_struct: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 5],
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: ::ffi_11::c_char,
 }

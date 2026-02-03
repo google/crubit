@@ -205,7 +205,7 @@ impl Default for Derived {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
 pub struct VirtualBase1 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 24],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for VirtualBase1 {}
 impl !Sync for VirtualBase1 {}
@@ -252,7 +252,7 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
 pub struct VirtualBase2 {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 24],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
 impl !Send for VirtualBase2 {}
 impl !Sync for VirtualBase2 {}
@@ -299,7 +299,7 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
 pub struct VirtualDerived {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 32],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }
 impl !Send for VirtualDerived {}
 impl !Sync for VirtualDerived {}
@@ -346,7 +346,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=MyAbstractClass
 pub struct MyAbstractClass {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 8],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
 }
 impl !Send for MyAbstractClass {}
 impl !Sync for MyAbstractClass {}

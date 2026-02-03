@@ -19,10 +19,10 @@
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
 pub struct DestructionOrderRecorder {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) int_field_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) int_field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for DestructionOrderRecorder {}
 impl !Sync for DestructionOrderRecorder {}
@@ -124,16 +124,16 @@ impl Drop for DestructionOrderRecorder {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
 pub struct FieldDestructionOrderTester {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field1_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field1_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field2_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field2_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field3_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field3_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for FieldDestructionOrderTester {}
 impl !Sync for FieldDestructionOrderTester {}

@@ -70,7 +70,7 @@ impl Default for EmptyUnion {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
 pub struct Nontrivial {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
 }
 impl !Send for Nontrivial {}
@@ -148,7 +148,7 @@ impl Default for RenamedUnion {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TriviallyCopyableButNontriviallyDestructible
 pub struct TriviallyCopyableButNontriviallyDestructible {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}

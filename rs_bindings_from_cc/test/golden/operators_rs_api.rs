@@ -516,10 +516,10 @@ impl Default for AddableReturnsVoid {
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableConstMemberNonunpin
 pub struct AddableConstMemberNonunpin {
-    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) field_: [::core::mem::MaybeUninit<u8>; 4],
+    pub(crate) field_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
 }
 impl !Send for AddableConstMemberNonunpin {}
 impl !Sync for AddableConstMemberNonunpin {}
