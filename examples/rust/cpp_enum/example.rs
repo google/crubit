@@ -8,7 +8,7 @@ use open_enum::open_enum;
 #[open_enum(allow_alias)]
 #[cpp_enum(kind = "enum class")]
 #[repr(i32)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 pub enum Color {
     Red,
     Blue,
