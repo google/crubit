@@ -58,7 +58,7 @@ Crubit will generate the following bindings:
 ```
 {{ #include ../../examples/cpp/method/example_generated.rs }}
 ```
-<!--  snippet:0,6 "impl Bar" -->
+<!--  content:"(?m)impl Bar.*?(^$|^    \})" -->
 
 
 ### `unsafe` functions {#unsafe}
