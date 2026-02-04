@@ -31,9 +31,9 @@ macro_rules! function_return_type_is {
   ($mod:ident, $($cc_name:ident => $rs_type:ty),* $(,)?) => {
     $(
     const _ : () = {
-      #[allow(dead_code)]
+      #[allow(dead_code, unused_unsafe)]
       unsafe fn test_return_type() {
-        let _c = Cell::new($mod::$cc_name::Function(unreachable!()));
+        let _c = unsafe { Cell::new($mod::$cc_name::Function(unreachable!())) };
         let _: Cell<$rs_type> = _c;
       }
     };

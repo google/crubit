@@ -9,7 +9,6 @@ use crate::BindingsGenerator;
 use arc_anyhow::Result;
 use code_gen_utils::make_rs_ident;
 use code_gen_utils::NamespaceQualifier;
-use crubit_abi_type::FullyQualifiedPath;
 use crubit_feature::CrubitFeature;
 use error_report::{bail, ensure};
 use flagset::FlagSet;

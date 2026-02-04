@@ -1434,9 +1434,9 @@ fn make_cpp_type_from_item(
     db: &dyn BindingsGenerator,
 ) -> Result<TokenStream> {
     let namespace_qualifier = db.ir().namespace_qualifier(item);
-    let mut namespace_parts = namespace_qualifier.parts().map(|part| make_rs_ident(part));
+    let namespace_parts = namespace_qualifier.parts().map(|part| make_rs_ident(part));
     let cpp_type = cc_name
         .parse::<TokenStream>()
-        .map_err(|e| anyhow!("Failed to parse C++ name: {cc_name}"))?;
+        .map_err(|e| anyhow!("Failed to parse C++ name `{cc_name}`: {e}"))?;
     Ok(quote! { :: #(#namespace_parts::)* #cpp_type })
 }
