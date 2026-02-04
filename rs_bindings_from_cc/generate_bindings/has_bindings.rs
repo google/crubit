@@ -83,10 +83,21 @@ pub fn has_bindings(
                 let parent_module_name: Rc<str> =
                     parent_record.rs_name.identifier.as_ref().to_snake_case().into();
 
+                let resolved_type_name = resolved_type_names.get(&parent_module_name).ok_or_else(||
+                    NoBindingsReason::DependencyFailed {
+                        context: item.debug_name(ir),
+                        error: anyhow!(
+                            "Could not find parent's module name.\
+                            \n  This is a bug. The parent's module name should always be\
+                            \n  in the list. More info:\
+                            \n    for item: {item_name}\
+                            \n    inside parent module {parent_module_name} (originally {parent_name})",
+                            item_name = item.debug_name(ir),
+                            parent_name = parent.debug_name(ir),
+                        ),
+                    })?;
                 let ResolvedTypeName::RecordNestedItems { parent_records_that_map_to_this_name } =
-                    resolved_type_names
-                        .get(&parent_module_name)
-                        .expect("parent module name should always be in the list, this is a bug")
+                    resolved_type_name
                 else {
                     // The parent module name was overwritten by something else.
                     return Err(NoBindingsReason::ParentModuleNameOverwritten {

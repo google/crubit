@@ -91,4 +91,10 @@ struct Bar {};
 
 }  // namespace no_longer_top_level
 
+// TODO(b/481667188): Nested should get bindings.
+struct ContainsForwardDeclared {
+  struct Nested;
+};
+struct ContainsForwardDeclared::Nested {};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NESTED_TYPES_H_

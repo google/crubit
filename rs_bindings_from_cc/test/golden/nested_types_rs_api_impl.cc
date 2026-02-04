@@ -221,4 +221,12 @@ __rust_thunk___ZN19no_longer_top_level22same_name_as_namespace3BarC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct ContainsForwardDeclared) == 1);
+static_assert(alignof(struct ContainsForwardDeclared) == 1);
+
+extern "C" void __rust_thunk___ZN23ContainsForwardDeclaredC1Ev(
+    struct ContainsForwardDeclared* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

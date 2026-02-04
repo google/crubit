@@ -654,6 +654,38 @@ pub mod no_longer_top_level {
 
 // namespace no_longer_top_level
 
+/// TODO(b/481667188): Nested should get bindings.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=ContainsForwardDeclared
+pub struct ContainsForwardDeclared {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for ContainsForwardDeclared {}
+impl !Sync for ContainsForwardDeclared {}
+unsafe impl ::cxx::ExternType for ContainsForwardDeclared {
+    type Id = ::cxx::type_id!("ContainsForwardDeclared");
+    type Kind = ::cxx::kind::Trivial;
+}
+
+impl Default for ContainsForwardDeclared {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23ContainsForwardDeclaredC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// Error while generating bindings for struct 'ContainsForwardDeclared::Nested':
+// Can't generate bindings for ContainsForwardDeclared::Nested due to missing bindings for its dependency: Could not find parent's module name.
+//   This is a bug. The parent's module name should always be
+//   in the list. More info:
+//     for item: ContainsForwardDeclared::Nested
+//     inside parent module contains_forward_declared (originally ContainsForwardDeclared)
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -713,6 +745,9 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN19no_longer_top_level22same_name_as_namespace3BarC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN23ContainsForwardDeclaredC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
     }
@@ -834,4 +869,9 @@ const _: () = {
     );
     static_assertions::assert_impl_all!(crate::no_longer_top_level::same_name_as_namespace::Bar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::no_longer_top_level::same_name_as_namespace::Bar: Drop);
+
+    assert!(::core::mem::size_of::<crate::ContainsForwardDeclared>() == 1);
+    assert!(::core::mem::align_of::<crate::ContainsForwardDeclared>() == 1);
+    static_assertions::assert_impl_all!(crate::ContainsForwardDeclared: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::ContainsForwardDeclared: Drop);
 };

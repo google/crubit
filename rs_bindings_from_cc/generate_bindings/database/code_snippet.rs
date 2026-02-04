@@ -456,6 +456,7 @@ impl From<NoBindingsReason> for Error {
 }
 
 /// The thing that a type name resolves to.
+#[derive(Debug)]
 pub enum ResolvedTypeName {
     Namespace {
         /// Namespaces with the same canonical namespace id are coalesced together.
