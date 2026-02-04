@@ -42,6 +42,10 @@
 
 - [Movable Types](./rust/movable_types.md)
 
+# Integration notes
+
+- [Cargo build](./overview/cargo_build.md)
+
 # Design
 
 - [High-level design of C++/Rust interop](./design/design.md)
