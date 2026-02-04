@@ -194,6 +194,9 @@ pub enum Category {
     /// This item is a type alias.
     Alias = 1 << 3,
 
+    /// This item is a namespace (C++) or module (Rust).
+    Namespace = 1 << 4,
+
     /// This item is a generic or template instantiation.
     ///
     /// For example, with `template <typename T> class MyTemplate{}`, `MyTemplate<int>` is a

@@ -197,6 +197,7 @@ fn generate_global_var(db: &dyn BindingsGenerator, var: Rc<GlobalVar>) -> Result
 }
 
 fn generate_namespace(db: &dyn BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
+    db.errors().add_category(error_report::Category::Namespace);
     let ir = db.ir();
     let mut api_snippets = ApiSnippets::default();
 
