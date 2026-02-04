@@ -1300,7 +1300,7 @@ fn rs_type_kinds_for_func(
         .contains(crubit_feature::CrubitFeature::AssumeLifetimes);
 
     // TODO(b/454627672): is it worth caching this?
-    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func) } else { func };
+    let func = if assume_lifetimes { &lifetime_defaults_transform_func(db, func)? } else { func };
     let param_types: Vec<RsTypeKind> = func
         .params
         .iter()

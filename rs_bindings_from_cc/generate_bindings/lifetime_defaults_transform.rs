@@ -6,7 +6,9 @@
 
 //! Adds default lifetimes to (partially-) unannotated IR.
 
+use arc_anyhow::Result;
 use database::BindingsGenerator;
+use error_report::bail;
 use ir::{make_ir, CcType, CcTypeVariant, FlatIR, Func, Item, PointerType, PointerTypeKind, IR};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -62,7 +64,7 @@ impl BindingContext {
     }
 
     /// Returns a fresh variable name based on `id`.
-    fn fresh_name_for(&self, id: &Rc<str>) -> Rc<str> {
+    pub fn fresh_name_for(&self, id: &Rc<str>) -> Rc<str> {
         if !self.names.contains(id) {
             return id.clone();
         }
@@ -259,8 +261,77 @@ impl LifetimeDefaults {
         }
     }
 
+    /// Returns the number of lifetime parameters `ty` expects to take, where `ty` may be a type
+    /// that has not yet been transformed.
+    fn get_lifetime_arity(&mut self, ty: &CcType) -> Result<usize> {
+        // TODO(b/454627672): Support other types.
+        match &ty.variant {
+            CcTypeVariant::Pointer(_) => Ok(1),
+            CcTypeVariant::Primitive(_) => Ok(0),
+            CcTypeVariant::FuncPointer { .. } => {
+                bail!("TODO(b/454627672): function pointer returns are unsupported")
+            }
+            CcTypeVariant::Decl(_) => bail!("TODO(b/454627672): decl returns are unsupported"),
+            CcTypeVariant::Error(msg) => bail!("encountered error type: {:?}", msg),
+        }
+    }
+
+    /// Transforms a function with Clang lifetime annotations into a function with Crubit-style
+    /// lifetime annotations. This function will not rename any existing lifetimes.
+    fn lower_clang_annotations(&mut self, func: &mut Func) -> Result<()> {
+        // TODO(b/475407556): Support lifetime_capture_by.
+        let mut return_lifetime: Vec<Rc<str>> = func.return_type.explicit_lifetimes.clone();
+        let mut has_lifetimebound = false;
+        // First, check to see if there are any existing lifetime annotations that we need to
+        // respect.
+        for param in func.params.iter() {
+            if param.clang_lifetimebound {
+                has_lifetimebound = true;
+                if return_lifetime.is_empty() {
+                    // If a [[lifetimebound]] parameter already has a lifetime annotation and we
+                    // don't have a lifetime for the return value yet, use the parameter's
+                    // annotation.
+                    return_lifetime = param.type_.explicit_lifetimes.clone();
+                } else if !param.type_.explicit_lifetimes.is_empty()
+                    && param.type_.explicit_lifetimes != return_lifetime
+                {
+                    // If there's a conflict between what we believe is the [[lifetimebound]]
+                    // lifetime and the one annotated on a parameter, return a diagnostic.
+                    bail!(
+                        "lifetimebound: lifetime mismatch in function {:#?} between parameter {:#?} with lifetime {:#?} and return with lifetime {:#?}",
+                        &func.cc_name,
+                        &param.identifier.identifier,
+                        &param.type_.explicit_lifetimes,
+                        &return_lifetime
+                    );
+                }
+            }
+        }
+        if !has_lifetimebound {
+            // If there are no [[lifetimebound]] parameters, we don't need to change anything.
+            return Ok(());
+        }
+        if return_lifetime.is_empty() {
+            // Since there are [[lifetimebound]] parameters but none were given lifetime
+            // annotations, we need to create new lifetime variables for the return value.
+            // Use a reserved name for these so we don't conflict with lifetimes embedded in
+            // types or on non-[[lifetimebound]] parameters.
+            let arity = self.get_lifetime_arity(&func.return_type)?;
+            for _ in 0..arity {
+                return_lifetime.push(self.bindings.fresh_name_for(&Rc::from("__rv")))
+            }
+        }
+        for param in func.params.iter_mut() {
+            if param.clang_lifetimebound {
+                param.type_.explicit_lifetimes = return_lifetime.clone();
+            }
+        }
+        func.return_type.explicit_lifetimes = return_lifetime;
+        Ok(())
+    }
+
     /// Transforms a function to use default lifetime rules.
-    fn add_lifetime_to_func(&mut self, func: &Func) -> Func {
+    fn add_lifetime_to_func(&mut self, func: &Func) -> Result<Func> {
         let mut new_func = func.clone();
         let mut state = LifetimeState::Unseen;
         let mut this_state = LifetimeState::Unseen;
@@ -269,26 +340,20 @@ impl LifetimeDefaults {
         func.lifetime_inputs
             .iter()
             .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
-        new_func.params = func
-            .params
-            .iter()
-            .enumerate()
-            .map(|(ix, param)| {
-                let mut new_param = param.clone();
-                let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
-                    self.add_lifetime_to_input_type(
-                        /*is_this=*/
-                        ix == 0 && &*new_param.identifier.identifier == "__this",
-                        Some(&new_param.identifier.identifier),
-                        &mut new_func.lifetime_inputs,
-                        &new_param.type_,
-                    );
-                state.update(&new_state);
-                this_state.update(&new_this_state);
-                new_param.type_ = new_type;
-                new_param
-            })
-            .collect();
+        self.lower_clang_annotations(&mut new_func)?;
+        new_func.params.iter_mut().enumerate().for_each(|(ix, param)| {
+            let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
+                self.add_lifetime_to_input_type(
+                    /*is_this=*/
+                    ix == 0 && &*param.identifier.identifier == "__this",
+                    Some(&param.identifier.identifier),
+                    &mut new_func.lifetime_inputs,
+                    &param.type_,
+                );
+            state.update(&new_state);
+            this_state.update(&new_this_state);
+            param.type_ = new_type;
+        });
         let lifetime = match this_state {
             LifetimeState::Unseen => self.get_lifetime_for_state(&state),
             _ => self.get_lifetime_for_state(&this_state),
@@ -298,36 +363,39 @@ impl LifetimeDefaults {
             &mut new_func.lifetime_inputs,
             &new_func.return_type,
         );
-        new_func
+        Ok(new_func)
     }
 
     /// Since we keep all item ids stable, we only have to deep-clone the objects that we need to
     /// change. We may need to introduce lifetime param binders whenever we see a type (but not on
     /// decls).
-    fn add_lifetime_to_item(&mut self, item: &Item) -> Item {
+    fn add_lifetime_to_item(&mut self, item: &Item) -> Result<Item> {
         match item {
-            Item::Func(func) => Item::Func(self.add_lifetime_to_func(func).into()),
-            _ => item.clone(),
+            Item::Func(func) => Ok(Item::Func(self.add_lifetime_to_func(func)?.into())),
+            _ => Ok(item.clone()),
         }
     }
 }
 
 /// Creates a copy of `func` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_func(db: &dyn BindingsGenerator, func: &Func) -> Func {
+pub fn lifetime_defaults_transform_func(db: &dyn BindingsGenerator, func: &Func) -> Result<Func> {
     LifetimeDefaults::new(db.ir()).add_lifetime_to_func(func)
 }
 
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
-pub fn lifetime_defaults_transform(ir: &IR) -> IR {
-    let new_items =
-        ir.items().map(|item| LifetimeDefaults::new(ir).add_lifetime_to_item(item)).collect();
-    make_ir(FlatIR {
+pub fn lifetime_defaults_transform(ir: &IR) -> Result<IR> {
+    let mut new_items = vec![];
+    for item in ir.items() {
+        let new_item = LifetimeDefaults::new(ir).add_lifetime_to_item(item)?;
+        new_items.push(new_item);
+    }
+    Ok(make_ir(FlatIR {
         public_headers: ir.flat_ir().public_headers.clone(),
         current_target: ir.flat_ir().current_target.clone(),
         items: new_items,
         top_level_item_ids: ir.flat_ir().top_level_item_ids.clone(),
         crate_root_path: ir.flat_ir().crate_root_path.clone(),
         crubit_features: ir.flat_ir().crubit_features.clone(),
-    })
+    }))
 }
