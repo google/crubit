@@ -140,6 +140,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     return ExistingRustType{
         .rs_name = std::string(enum_decl->getName()),
         .cc_name = enum_decl->getQualifiedNameAsString(),
+        .unique_name = ictx_.GetUniqueName(*enum_decl),
         .type_parameters = {},
         .owning_target = ictx_.GetOwningTarget(enum_decl),
         .size_align = std::nullopt,
@@ -153,6 +154,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   return Enum{
       .cc_name = (*enum_name).cc_identifier,
       .rs_name = (*enum_name).rs_identifier(),
+      .unique_name = ictx_.GetUniqueName(*enum_decl),
       .id = ictx_.GenerateItemId(enum_decl),
       .owning_target = ictx_.GetOwningTarget(enum_decl),
       .source_loc = ictx_.ConvertSourceLocation(enum_decl->getBeginLoc()),

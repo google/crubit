@@ -110,6 +110,7 @@ std::optional<IR::Item> VarDeclImporter::Import(clang::VarDecl* var_decl) {
   return GlobalVar{
       .cc_name = var_name->cc_identifier,
       .rs_name = var_name->rs_identifier(),
+      .unique_name = ictx_.GetUniqueName(*var_decl),
       .id = ictx_.GenerateItemId(var_decl),
       .owning_target = ictx_.GetOwningTarget(var_decl),
       .source_loc = ictx_.ConvertSourceLocation(var_decl->getBeginLoc()),

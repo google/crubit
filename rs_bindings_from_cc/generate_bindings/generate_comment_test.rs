@@ -107,6 +107,9 @@ impl ir::GenericItem for TestItem {
     fn id(&self) -> ItemId {
         TEST_ITEM_ID
     }
+    fn unique_name(&self) -> Option<Rc<str>> {
+        None
+    }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }

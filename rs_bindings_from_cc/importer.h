@@ -130,6 +130,8 @@ class Importer final : public ImportContext {
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
       bool assume_lifetimes) override;
 
+  std::string GetUniqueName(const clang::Decl& decl) const override;
+
   void MarkAsSuccessfullyImported(const clang::NamedDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
       const clang::NamedDecl* decl) const override;

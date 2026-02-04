@@ -59,6 +59,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
 
   return Namespace{.cc_name = identifier->cc_identifier,
                    .rs_name = identifier->cc_identifier,
+                   .unique_name = ictx_.GetUniqueName(*namespace_decl),
                    .id = ictx_.GenerateItemId(namespace_decl),
                    .canonical_namespace_id =
                        ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),

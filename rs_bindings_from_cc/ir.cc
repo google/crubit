@@ -302,6 +302,7 @@ llvm::json::Value ExistingRustType::ToJson() const {
   llvm::json::Object override{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
+      {"unique_name", unique_name},
       {"type_parameters", type_parameters},
       {"owning_target", owning_target},
       {"is_same_abi", is_same_abi},
@@ -346,6 +347,7 @@ llvm::json::Value Func::ToJson() const {
   llvm::json::Object func{
       {"cc_name", cc_name},
       {"rs_name", rs_name},
+      {"unique_name", unique_name},
       {"owning_target", owning_target},
       {"doc_comment", doc_comment},
       {"mangled_name", mangled_name},
@@ -446,6 +448,7 @@ std::ostream& operator<<(std::ostream& o, const RecordType& record_type) {
 llvm::json::Value IncompleteRecord::ToJson() const {
   llvm::json::Object record{{"cc_name", cc_name},
                             {"rs_name", rs_name},
+                            {"unique_name", unique_name},
                             {"id", id},
                             {"owning_target", owning_target},
                             {"unknown_attr", unknown_attr},
@@ -639,6 +642,7 @@ llvm::json::Value Record::ToJson() const {
   llvm::json::Object record{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
+      {"unique_name", unique_name},
       {"mangled_cc_name", mangled_cc_name},
       {"id", id},
       {"owning_target", owning_target},
@@ -689,6 +693,7 @@ llvm::json::Value Enum::ToJson() const {
   llvm::json::Object enum_ir{
       {"cc_name", cc_name},
       {"rs_name", rs_name},
+      {"unique_name", unique_name},
       {"id", id},
       {"owning_target", owning_target},
       {"source_loc", source_loc},
@@ -708,6 +713,7 @@ llvm::json::Value GlobalVar::ToJson() const {
   llvm::json::Object var{
       {"cc_name", cc_name},
       {"rs_name", rs_name},
+      {"unique_name", unique_name},
       {"id", id},
       {"owning_target", owning_target},
       {"source_loc", source_loc},
@@ -726,6 +732,7 @@ llvm::json::Value GlobalVar::ToJson() const {
 llvm::json::Value TypeAlias::ToJson() const {
   llvm::json::Object type_alias{{"cc_name", cc_name},
                                 {"rs_name", rs_name},
+                                {"unique_name", unique_name},
                                 {"id", id},
                                 {"owning_target", owning_target},
                                 {"unknown_attr", unknown_attr},
@@ -809,6 +816,10 @@ llvm::json::Value UnsupportedItem::ToJson() const {
       {"must_bind", must_bind},
   };
 
+  if (!unique_name.empty()) {
+    unsupported.insert({"unique_name", unique_name});
+  }
+
   return llvm::json::Object{
       {"UnsupportedItem", std::move(unsupported)},
   };
@@ -836,6 +847,7 @@ llvm::json::Value Namespace::ToJson() const {
   llvm::json::Object ns{
       {"cc_name", cc_name},
       {"rs_name", rs_name},
+      {"unique_name", unique_name},
       {"id", id},
       {"canonical_namespace_id", canonical_namespace_id},
       {"unknown_attr", unknown_attr},

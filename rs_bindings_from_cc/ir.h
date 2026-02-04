@@ -432,6 +432,7 @@ struct Func {
 
   UnqualifiedIdentifier cc_name;
   UnqualifiedIdentifier rs_name;
+  std::string unique_name;
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
   std::string mangled_name;
@@ -683,6 +684,7 @@ struct Record {
   // `rs_name` is similar to "__CcTemplateInst8MyStructIiE").
   Identifier rs_name;
   Identifier cc_name;
+  std::string unique_name;
   // Mangled record names are used to 1) provide valid Rust identifiers for
   // C++ template specializations, and 2) help build unique names for virtual
   // upcast thunks.
@@ -784,6 +786,7 @@ struct IncompleteRecord {
   llvm::json::Value ToJson() const;
   Identifier cc_name;
   Identifier rs_name;
+  std::string unique_name;
   ItemId id;
   BazelLabel owning_target;
   std::optional<std::string> unknown_attr;
@@ -805,6 +808,7 @@ struct Enum {
 
   Identifier cc_name;
   Identifier rs_name;
+  std::string unique_name;
   ItemId id;
   BazelLabel owning_target;
   std::string source_loc;
@@ -820,6 +824,7 @@ struct GlobalVar {
 
   Identifier cc_name;
   Identifier rs_name;
+  std::string unique_name;
   ItemId id;
   BazelLabel owning_target;
   std::string source_loc;
@@ -840,6 +845,7 @@ struct TypeAlias {
 
   Identifier cc_name;
   Identifier rs_name;
+  std::string unique_name;
   ItemId id;
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
@@ -886,6 +892,7 @@ struct UnsupportedItem {
 
   // Qualified name of the item for which we couldn't generate bindings
   std::string name;
+  std::string unique_name;
 
   // For unsupported items, we may generate markers in the Rust bindings to
   // indicate that the item is not supported. This function returns the kind of
@@ -925,6 +932,7 @@ struct Namespace {
 
   Identifier cc_name;
   Identifier rs_name;
+  std::string unique_name;
   ItemId id;
   ItemId canonical_namespace_id;
   std::optional<std::string> unknown_attr;
@@ -962,6 +970,7 @@ struct ExistingRustType {
 
   std::string rs_name;
   std::string cc_name;
+  std::string unique_name;
 
   // The generic/template type parameters to the C++/Rust type.
   std::vector<CcType> type_parameters;

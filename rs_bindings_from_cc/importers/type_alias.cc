@@ -79,6 +79,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       return ExistingRustType{
           .rs_name = ProtoEnumToRustName(*decl),
           .cc_name = decl->getQualifiedNameAsString(),
+          .unique_name = ictx_.GetUniqueName(*decl),
           .type_parameters = {},
           .owning_target = ictx_.GetOwningTarget(decl),
           .size_align = std::nullopt,
@@ -183,6 +184,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
   return TypeAlias{
       .cc_name = (*identifier).cc_identifier,
       .rs_name = rs_name,
+      .unique_name = ictx_.GetUniqueName(*decl),
       .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
       .doc_comment = ictx_.GetComment(decl),

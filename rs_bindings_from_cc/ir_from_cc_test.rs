@@ -50,6 +50,7 @@ fn test_function() {
             Func {
                 cc_name: "f",
                 rs_name: "f",
+                unique_name: "c:@F@f#I#I#",
                 owning_target: BazelLabel("//test:testing_target"),
                 mangled_name: "_Z1fii",
                 doc_comment: None,
@@ -216,7 +217,7 @@ fn test_unescapable_rust_keywords_in_enumerator_name() {
         quote! { UnsupportedItem {
             name: "SomeEnum", ...
             errors: [FormattedError {
-                ..., message: "Enumerator name is not supported: Unescapable identifier: self", ...
+                ... message: "Enumerator name is not supported: Unescapable identifier: self", ...
             }], ...
         }}
     );
@@ -230,7 +231,7 @@ fn test_unescapable_rust_keywords_in_anonymous_struct_type_alias() {
         quote! { UnsupportedItem {
             name: "Self", ...
             errors: [FormattedError {
-                ..., message: "Record name is not supported: Unescapable identifier: Self", ...
+                ... message: "Record name is not supported: Unescapable identifier: Self", ...
             }], ...
         }}
     );
@@ -254,7 +255,7 @@ fn test_unescapable_rust_keywords_in_namespace_name() {
         quote! { UnsupportedItem {
             name: "self", ...
             errors: [FormattedError {
-                ..., message: "Namespace name is not supported: Unescapable identifier: self", ...
+                ... message: "Namespace name is not supported: Unescapable identifier: self", ...
             }], ...
         }}
     );
@@ -268,7 +269,7 @@ fn test_unescapable_rust_keywords_in_function_name() {
         quote! { UnsupportedItem {
             name: "self", ...
             errors: [FormattedError {
-                ..., message: "Function name is not supported: Unescapable identifier: self", ...
+                ... message: "Function name is not supported: Unescapable identifier: self", ...
             }], ...
         }}
     );
@@ -282,7 +283,7 @@ fn test_unescapable_rust_keywords_in_type_alias_name() {
         quote! { UnsupportedItem {
             name: "Self", ...
             errors: [FormattedError {
-                ..., message: "Type alias name is not supported: Unescapable identifier: Self", ...
+                ... message: "Type alias name is not supported: Unescapable identifier: Self", ...
             }], ...
         }}
     );
@@ -362,10 +363,11 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
             name: "MyTemplate",
+            unique_name: Some("c:@ST>1#T@MyTemplate"),
             kind: Class,
             path: Some(UnsupportedItemPath { ident: "MyTemplate", enclosing_item_id: None, }),
             errors: [FormattedError {
-                ..., message: "Class templates are not supported yet", ...
+                ... message: "Class templates are not supported yet", ...
             }], ...
         }}
     );
@@ -378,10 +380,11 @@ fn test_function_template_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
             name: "SomeFunctionTemplate",
+            unique_name: Some("c:@FT@>1#TSomeFunctionTemplate#v#"),
             kind: Func,
             path: Some(UnsupportedItemPath { ident: "SomeFunctionTemplate", enclosing_item_id: None, }),
             errors: [FormattedError {
-                ..., message: "Function templates are not supported yet", ...
+                ... message: "Function templates are not supported yet", ...
             }], ...
         }}
     );
@@ -410,6 +413,7 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
         ir,
         quote! { UnsupportedItem {
             name: "SomeFunctionTemplateWithDeductionGuide",
+            unique_name: Some("c:@ST>1#T@SomeFunctionTemplateWithDeductionGuide"),
             kind: Class,
             path: Some(UnsupportedItemPath { ident: "SomeFunctionTemplateWithDeductionGuide", enclosing_item_id: None, }),
             errors: [FormattedError {
@@ -566,7 +570,7 @@ fn test_struct_with_packed_attribute() {
         quote! { UnsupportedItem {
             name: "PackedStruct", ...
             errors: [FormattedError {
-                ..., message: "Records with packed layout are not supported", ...
+                ... message: "Records with packed layout are not supported", ...
             }], ...
         }}
     );
@@ -589,7 +593,7 @@ fn test_struct_with_packed_field() {
         quote! { UnsupportedItem {
             name: "PackedStruct", ...
             errors: [FormattedError {
-                ..., message: "Records with packed layout are not supported", ...
+                ... message: "Records with packed layout are not supported", ...
             }], ...
         }}
     );
@@ -767,10 +771,11 @@ fn test_conflicting_unsafe_annotation() {
         ir,
         quote! { UnsupportedItem {
             name: "S",
+            unique_name: Some ("c:@S@S"),
             kind: Struct,
             path: Some(UnsupportedItemPath { ident: "S", enclosing_item_id: None, }),
             errors: [FormattedError {
-                ..., message: "Different declarations have inconsistent `crubit_override_unsafe` annotations.", ...
+                ... message: "Different declarations have inconsistent `crubit_override_unsafe` annotations.", ...
             }], ...
         }}
     );
@@ -1106,12 +1111,13 @@ fn test_typedef() -> Result<()> {
           TypeAlias {
             cc_name: "MyTypedefDecl",
             rs_name: "MyTypedefDecl",
+            unique_name: "c:ir_from_cc_virtual_header.h@T@MyTypedefDecl",
             id: ItemId(...),
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
             unknown_attr: None,
             underlying_type: #int,
-            source_loc: ...
+            ...
             enclosing_item_id: None,
             must_bind: false,
           }
@@ -1123,12 +1129,13 @@ fn test_typedef() -> Result<()> {
           TypeAlias {
             cc_name: "MyTypeAliasDecl",
             rs_name: "MyTypeAliasDecl",
+            unique_name: "c:@MyTypeAliasDecl",
             id: ItemId(...),
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
             unknown_attr: None,
             underlying_type: #int,
-            source_loc: ...,
+            ...
             enclosing_item_id: None,
             must_bind: false,
           }
@@ -1211,8 +1218,9 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE", ...
-            cc_name: "test_namespace_bindings::MyStruct<int>", ...
+            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE",
+            cc_name: "test_namespace_bindings::MyStruct<int>",
+            unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I", ...
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment of MyStruct template."), ...
             fields: [Field {
@@ -1236,6 +1244,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
         quote! {
           TypeAlias {
             cc_name: "MyTypeAlias", ...
+            unique_name: "c:@N@test_namespace_bindings@MyTypeAlias", ...
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment of MyTypeAlias."), ...
             underlying_type: CcType {
@@ -1251,6 +1260,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
           Func {
             cc_name: "GetValue",
             rs_name: "GetValue",
+            unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I@F@GetValue#1",
             owning_target: BazelLabel("//test:testing_target"),
             mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of GetValue method."), ...
@@ -1270,6 +1280,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
           Func {
               cc_name: "operator=",
               rs_name: "operator=",
+              unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I@F@operator=#&1$@N@test_namespace_bindings@S@MyStruct>#I#",
               owning_target: BazelLabel("//test:testing_target"),
               mangled_name: "_ZN23test_namespace_bindings8MyStructIiEaSERKS1_", ...
               doc_comment: None, ...
@@ -1306,8 +1317,9 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE", ...
-            cc_name: "test_namespace_bindings::MyStruct<int>", ...
+            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE",
+            cc_name: "test_namespace_bindings::MyStruct<int>",
+            unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I", ...
             owning_target: BazelLabel("//test:testing_target"),
             template_specialization: Some(TemplateSpecialization { ...
                 defining_target: BazelLabel("//test:testing_target"), ...
@@ -1340,6 +1352,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
           Func {
             cc_name: "GetValue",
             rs_name: "GetValue",
+            unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I@F@GetValue#1",
             owning_target: BazelLabel("//test:testing_target"),
             mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
             doc_comment: Some("Doc comment of the GetValue method specialization for T=int."), ...
@@ -1629,8 +1642,9 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInst8MyStructIiE", ...
-            cc_name: "MyStruct<int>", ...
+            rs_name: "__CcTemplateInst8MyStructIiE",
+            cc_name: "MyStruct<int>",
+            unique_name: "c:@S@MyStruct>#I", ...
             owning_target: BazelLabel("//test:testing_target"), ...
           }
         }
@@ -1643,6 +1657,7 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
           Func {
             cc_name: "MyFunction",
             rs_name: "MyFunction",
+            unique_name: "c:@F@MyFunction#",
             owning_target: BazelLabel("//test:testing_target"), ...
             return_type: CcType {
                 variant: Decl(ItemId(#record_id)), ...
@@ -1687,6 +1702,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
           Func {
             cc_name: "MyFunction",
             rs_name: "MyFunction",
+            unique_name: "c:@F@MyFunction#&1$@S@MyStruct>#I#",
             owning_target: BazelLabel("//test:testing_target"), ...
             params: [FuncParam {
                 type_: CcType {
@@ -2420,6 +2436,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
            Record {
               rs_name: "DerivedClass",
               cc_name: "DerivedClass",
+              unique_name: "c:@S@DerivedClass",
               mangled_cc_name: "12DerivedClass",
               id: ItemId(...),
               owning_target: BazelLabel("//test:testing_target"),
@@ -2969,6 +2986,7 @@ fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
         quote! {
             UnsupportedItem {
                 name: "Packed",
+                ...
                 kind: Struct,
                 ...
             }
@@ -3240,10 +3258,11 @@ fn test_unnamed_enum_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "(unnamed enum at ./ir_from_cc_virtual_header.h:3:1)",
+                unique_name: Some("c:@Ea@kFoo"),
                 kind: Enum,
                 path: None,
                 errors: [FormattedError {
-                    ..., message: "Unnamed enums are not supported yet", ...
+                    ... message: "Unnamed enums are not supported yet", ...
                 }], ...
             }
         }
@@ -3264,10 +3283,11 @@ fn test_literal_operator_unsupported() {
         quote! {
             UnsupportedItem {
                 name: "operator\"\"_foobar",
+                unique_name: Some("c:@F@operator\"\"_foobar#*1C#"),
                 kind: Func,
                 path: None,
                 errors: [FormattedError {
-                    ..., message: "Function name is not supported: Unsupported name: operator\"\"_foobar", ...
+                    ... message: "Function name is not supported: Unsupported name: operator\"\"_foobar", ...
                 }], ...
             }
         }
@@ -3419,10 +3439,11 @@ fn test_record_items() {
             quote! {
               ... UnsupportedItem {
                   name: "TopLevelStruct::operator int",
+                  ...
                   kind: Func,
                   path: None,
                   errors: [FormattedError {
-                    ..., message: "Function name is not supported: Unsupported name: operator int",
+                    ... message: "Function name is not supported: Unsupported name: operator int",
                   }],
                   ...
               }
@@ -4014,7 +4035,7 @@ fn test_source_location_with_macro() {
   void fun_name();
 
 NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
-        quote! {Func { ..., source_loc: #loc, ... } },
+        quote! {Func { ... source_loc: #loc, ... } },
     );
 
     let loc = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
@@ -4023,7 +4044,7 @@ NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
         r#"
 #define TYPE_ALIAS_TO_INT(type_alias) using type_alias = int;
 TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
-        quote! {TypeAlias { ..., source_loc: #loc, ... } },
+        quote! {TypeAlias { ... source_loc: #loc, ... } },
     );
     let loc = "Generated from: ir_from_cc_virtual_header.h;l=4\n\
         Expanded at: ir_from_cc_virtual_header.h;l=6";
@@ -4032,7 +4053,7 @@ TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
 #define TEMPLATE_NO_OP_FUNC(func_name) \
 template <typename T> void func_name() {};
   TEMPLATE_NO_OP_FUNC(unsupported_templated_no_op_func_to_test_source_location_with_macro);"#,
-        quote! {UnsupportedItem { ..., source_loc: Some(#loc,), ... } },
+        quote! {UnsupportedItem { ... source_loc: Some(#loc,), ... } },
     );
 
     let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
@@ -4042,7 +4063,7 @@ template <typename T> void func_name() {};
 #define DEFINE_EMPTY_ENUM(enum_name) \
   enum enum_name {};
 DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
-        quote! {Enum { ..., source_loc: #loc, ... } },
+        quote! {Enum { ... source_loc: #loc, ... } },
     );
 
     let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
@@ -4052,7 +4073,7 @@ DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
 #define DEFINE_EMPTY_STRUCT(struct_name) \
   struct struct_name {};
 DEFINE_EMPTY_STRUCT(EmptyStructToTestSourceLocationWithMacro);"#,
-        quote! {Record { ..., source_loc: #loc, ... } },
+        quote! {Record { ... source_loc: #loc, ... } },
     );
 }
 
@@ -4064,23 +4085,23 @@ fn test_source_location() {
     };
     assert_matches(
         "void no_op_func_to_test_source_location();",
-        quote! {Func { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {Func { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
     assert_matches(
         r#"typedef float SomeTypedefToTestSourceLocation;"#,
-        quote! {TypeAlias { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {TypeAlias { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
     assert_matches(
         r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
-        quote! {UnsupportedItem { ..., source_loc: Some("Generated from: ir_from_cc_virtual_header.h;l=3"), ... } },
+        quote! {UnsupportedItem { ... source_loc: Some("Generated from: ir_from_cc_virtual_header.h;l=3"), ... } },
     );
     assert_matches(
         r#"enum SomeEmptyEnumToTestSourceLocation {};"#,
-        quote! {Enum { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {Enum { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
     assert_matches(
         r#"struct SomeEmptyStructToTestSourceLocation {};"#,
-        quote! {Record { ..., source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
+        quote! {Record { ... source_loc: "Generated from: ir_from_cc_virtual_header.h;l=3", ... } },
     );
 }
 

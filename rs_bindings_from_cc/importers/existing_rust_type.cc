@@ -140,6 +140,7 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
   return ExistingRustType{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
+      .unique_name = ictx_.GetUniqueName(*type_decl),
       .type_parameters = type_parameters.value_or(std::vector<CcType>()),
       .owning_target = ictx_.GetOwningTarget(type_decl),
       .size_align = std::move(size_align),

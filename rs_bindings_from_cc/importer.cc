@@ -62,6 +62,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Index/USRGeneration.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
@@ -986,6 +987,7 @@ IR::Item Importer::ImportUnsupportedItem(
   std::string source_loc = ConvertSourceLocation(original_decl.getBeginLoc());
   return UnsupportedItem{
       .name = name,
+      .unique_name = GetUniqueName(original_decl),
       .kind = kind,
       .path = std::move(path),
       .errors = std::move(errors),
@@ -1434,6 +1436,19 @@ CcType Importer::ConvertQualType(
   }
 
   return *std::move(type);
+}
+
+std::string Importer::GetUniqueName(const clang::Decl& decl) const {
+  llvm::SmallString<128> usr;
+  if (!clang::index::generateUSRForDecl(&decl, usr)) {
+    return std::string(usr.str());
+  }
+
+  // Note: we shouldn't get this far for anything with a real name, and we
+  // can't really fall back to GetMangledName unconditionally because
+  // mangleName crashes at least for types like the implicit `__uint128_t`
+  // typedef.
+  return "";
 }
 
 std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {

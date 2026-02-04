@@ -216,6 +216,11 @@ class ImportContext {
       const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
       bool assume_lifetimes) = 0;
 
+  // Returns a unique name for the given decl. (Probably the USR.)
+  //
+  // This should be unique for all items declared by a given Bazel target.
+  virtual std::string GetUniqueName(const clang::Decl& decl) const = 0;
+
   // Marks `decl` as successfully imported.  Other pieces of code can check
   // HasBeenAlreadySuccessfullyImported to avoid introducing dangling ItemIds
   // that refer to an unimportable `decl`.

@@ -703,6 +703,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   return Func{
       .cc_name = translated_name->cc_identifier,
       .rs_name = translated_name->rs_identifier(),
+      .unique_name = ictx_.GetUniqueName(*function_decl),
       .owning_target = ictx_.GetOwningTarget(function_decl),
       .doc_comment = std::move(doc_comment),
       .mangled_name = ictx_.GetMangledName(function_decl),
