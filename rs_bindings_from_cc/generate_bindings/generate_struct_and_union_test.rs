@@ -1921,3 +1921,61 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
 
     Ok(())
 }
+
+#[gtest]
+fn test_fmt() -> Result<()> {
+    let mut ir = ir_from_cc(
+        r#"
+        struct DisplayAndDebug {
+            template <typename Sink>
+            friend void AbslStringify(Sink& sink, const DisplayAndDebug&) {
+                sink.Append("DisplayAndDebug");
+            }
+        };
+        struct [[clang::annotate("crubit_internal_trait_derive", "Debug")]] OnlyDisplay {
+            template <typename Sink>
+            friend void AbslStringify(Sink& sink, const OnlyDisplay&) {
+                sink.Append("OnlyDisplay");
+            }
+        };
+    "#,
+    )?;
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) =
+        crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Fmt;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for DisplayAndDebug {
+              ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Display for DisplayAndDebug {
+              ...
+            }
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for OnlyDisplay {
+              ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Display for OnlyDisplay {
+              ...
+            }
+        }
+    );
+    Ok(())
+}

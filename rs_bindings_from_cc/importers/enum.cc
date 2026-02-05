@@ -13,6 +13,7 @@
 #include "absl/status/statusor.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
@@ -151,12 +152,14 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   }
 
   ictx_.MarkAsSuccessfullyImported(enum_decl);
+  BazelLabel owning_target = ictx_.GetOwningTarget(enum_decl);
+  bool fmt_enabled = ictx_.IsFmtEnabledForTarget(owning_target);
   return Enum{
       .cc_name = (*enum_name).cc_identifier,
       .rs_name = (*enum_name).rs_identifier(),
       .unique_name = ictx_.GetUniqueName(*enum_decl),
       .id = ictx_.GenerateItemId(enum_decl),
-      .owning_target = ictx_.GetOwningTarget(enum_decl),
+      .owning_target = std::move(owning_target),
       .source_loc = ictx_.ConvertSourceLocation(enum_decl->getBeginLoc()),
       .underlying_type = *std::move(type),
       .enumerators = enum_decl->isCompleteDefinition()
@@ -164,6 +167,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
                          : std::nullopt,
       .unknown_attr = std::move(*unknown_attr),
       .enclosing_item_id = *std::move(enclosing_item_id),
+      .detected_formatter = fmt_enabled && ictx_.DetectFormatter(*enum_decl),
   };
 }
 

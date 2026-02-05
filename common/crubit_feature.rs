@@ -36,6 +36,9 @@ flagset::flags! {
 
         /// Use ergonomic lifetime defaults when interpreting lifetime annotations.
         AssumeLifetimes,
+
+        /// Enable formatting to Rust via C++.
+        Fmt,
     }
 }
 
@@ -55,6 +58,7 @@ impl CrubitFeature {
             Self::Experimental => "experimental",
             Self::CustomFfiTypes => "custom_ffi_types",
             Self::AssumeLifetimes => "assume_lifetimes",
+            Self::Fmt => "fmt",
         }
     }
 
@@ -71,6 +75,7 @@ impl CrubitFeature {
             Self::Experimental => "//features:experimental",
             Self::CustomFfiTypes => "//features:custom_ffi_types",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
+            Self::Fmt => "//features:fmt",
         }
     }
 }
@@ -88,6 +93,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"experimental" => CrubitFeature::Experimental.into(),
         b"custom_ffi_types" => CrubitFeature::CustomFfiTypes.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
+        b"fmt" => CrubitFeature::Fmt.into(),
         _ => return None,
     };
     Some(features)
@@ -195,6 +201,7 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
+                | CrubitFeature::Fmt
         );
     }
 
@@ -223,6 +230,7 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
+                | CrubitFeature::Fmt
         );
     }
 
@@ -239,6 +247,7 @@ mod tests {
                 | CrubitFeature::NonUnpinCtor
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
+                | CrubitFeature::Fmt
         );
     }
 }

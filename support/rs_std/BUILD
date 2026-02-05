@@ -6,7 +6,7 @@ load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cc_bindings_from_rust",
 )
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -197,4 +197,43 @@ cc_library(
         "//visibility:public",
     ],
     deps = [],
+)
+
+rust_library(
+    name = "lossy_formatter",
+    srcs = ["lossy_formatter.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        "//support/ffi_11",
+    ],
+)
+
+crubit_rust_test(
+    name = "lossy_formatter_test",
+    crate = ":lossy_formatter",
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_bindings_from_rust(
+    name = "lossy_formatter_cc",
+    aspect_hints = ["//features:fmt"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    crate = ":lossy_formatter",
+)
+
+cc_library(
+    name = "lossy_formatter_for_bindings",
+    hdrs = ["lossy_formatter_for_bindings.h"],
+    aspect_hints = ["//features:fmt"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//:__subpackages__"],
+    deps = [":lossy_formatter_cc"],
 )

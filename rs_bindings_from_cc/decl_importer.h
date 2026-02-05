@@ -20,6 +20,7 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/RawCommentList.h"
@@ -171,6 +172,27 @@ class ImportContext {
   // raw in the IR for later processing.
   virtual bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const = 0;
+
+  // Returns true iff `label` has opted in to formatter detection.
+  virtual bool IsFmtEnabledForTarget(const BazelLabel& label) const = 0;
+
+  // Returns whether the given `decl`'s type has a detectable formatter.
+  //
+  // For a type `T`, finds:
+  // * `template <typename Sink> void AbslStringify(Sink&, const T&)`
+  // * `template <typename Sink> void AbslStringify(Sink&, T)`
+  // * `std::ostream& operator<<(std::ostream&, const T&)`
+  // * `std::ostream& operator<<(std::ostream&, T)`
+  //
+  // in any of the following:
+  // * `T`'s namespace
+  // * `T`'s friends
+  // * `T`'s bases' friends
+  //
+  // and recurses on the bases of `T`. e.g., if `T` inherits from `B`, then
+  // include both `AbslStringify(Sink&, T)` and `AbslStringify(Sink&, B)` in
+  // `B`.
+  virtual bool DetectFormatter(const clang::TypeDecl& decl) const = 0;
 
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //
