@@ -73,10 +73,10 @@ pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
 }
 
 /// Returns the C++ underlying type of the `cpp_enum` struct specified by the given def id.
-pub(crate) fn cpp_enum_cpp_underlying_type(
-    db: &dyn BindingsGenerator,
+pub(crate) fn cpp_enum_cpp_underlying_type<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
 
     let field_middle_ty = cpp_enum_rust_underlying_type(tcx, def_id)?;
@@ -185,7 +185,7 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
 fn generate_cpp_enum<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> ApiSnippets {
+) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let enumeration_cc_name = &core.cc_short_name;
 
@@ -289,7 +289,7 @@ pub(crate) fn generate_associated_item<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
-) -> Option<ApiSnippets> {
+) -> Option<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     let def_id = assoc_item.def_id;
     if !is_supported_associated_item(tcx, def_id) {
@@ -393,7 +393,7 @@ pub fn from_trait_impls_by_argument<'tcx>(
 fn generate_into_impls<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
-) -> ApiSnippets {
+) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let cc_struct_name = &core.cc_short_name;
 
@@ -529,7 +529,7 @@ fn generate_into_impls<'tcx>(
 pub fn generate_adt<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> ApiSnippets {
+) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let adt_cc_name = &core.cc_short_name;
 
@@ -883,7 +883,7 @@ fn anonymous_field_ident(index: usize) -> Ident {
 fn generate_tuple_struct_ctor<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> Option<ApiSnippets> {
+) -> Option<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     let TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
         panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.self_ty)
@@ -986,17 +986,17 @@ fn generate_fields<'tcx>(
     size_in_bytes: u64,
     alignment_in_bytes: u64,
     member_function_names: &HashSet<String>,
-) -> ApiSnippets {
+) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let TyKind::Adt(adt_def, adt_generic_args) = self_ty.kind() else {
         panic!("Attempted to generate fields for a non-ADT type: {:?}", self_ty)
     };
-    struct FieldTypeInfo {
+    struct FieldTypeInfo<'tcx> {
         size: u64,
-        cpp_type: CcSnippet,
+        cpp_type: CcSnippet<'tcx>,
     }
-    struct Field {
-        type_info: Result<FieldTypeInfo>,
+    struct Field<'tcx> {
+        type_info: Result<FieldTypeInfo<'tcx>>,
         cc_name: Ident,
         rs_name: TokenStream,
         is_public: bool,
@@ -1006,7 +1006,7 @@ fn generate_fields<'tcx>(
         doc_comment: TokenStream,
         attributes: Vec<TokenStream>,
     }
-    impl Field {
+    impl<'a> Field<'a> {
         fn size(&self) -> u64 {
             match self.type_info {
                 Err(_) => self.offset_of_next_field - self.offset,
@@ -1067,7 +1067,7 @@ fn generate_fields<'tcx>(
             .map(|variant| variant.size.bytes() - tag_size_with_padding)
             .collect_vec(),
     };
-    let variants_fields: Vec<Vec<Field>> = match adt_def.adt_kind() {
+    let variants_fields: Vec<Vec<Field<'tcx>>> = match adt_def.adt_kind() {
         // Handle cases of unsupported ADTs.
         ty::AdtKind::Enum if (!repr_attrs.contains(&rustc_hir::attrs::ReprC)) => {
             vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
@@ -1384,8 +1384,8 @@ fn generate_fields<'tcx>(
         }
 
         // Takes a field and converts it to a token stream.
-        let get_field_tokens = |field: Field,
-                                prereqs: &mut CcPrerequisites,
+        let get_field_tokens = |field: Field<'tcx>,
+                                prereqs: &mut CcPrerequisites<'tcx>,
                                 current_visibility: &mut CcFieldVisState|
          -> TokenStream {
             let cc_name = &field.cc_name;
@@ -1705,7 +1705,7 @@ fn generate_fields<'tcx>(
 fn generate_relocating_ctor<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> ApiSnippets {
+) -> ApiSnippets<'tcx> {
     let adt_cc_name = &core.cc_short_name;
     let main_api = CcSnippet::with_include(
         quote! {

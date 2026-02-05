@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate rustc_middle;
 extern crate rustc_span;
 
 use crate::FineGrainedFeature;
@@ -11,6 +12,7 @@ use crubit_abi_type::CrubitAbiType;
 use error_report::bail;
 use itertools::Itertools;
 use proc_macro2::TokenStream;
+use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use rustc_span::Symbol;
 use std::cmp::Ordering;
@@ -24,26 +26,26 @@ use std::ops::{Add, AddAssign};
 /// for when we build up a CrubitAbiType where some of the inner types (e.g. std::string_view)
 /// might have C++ prerequisites (e.g. <string>) that need to be included to work.
 #[derive(Clone)]
-pub struct CrubitAbiTypeWithCcPrereqs {
+pub struct CrubitAbiTypeWithCcPrereqs<'tcx> {
     pub crubit_abi_type: CrubitAbiType,
-    pub prereqs: CcPrerequisites,
+    pub prereqs: CcPrerequisites<'tcx>,
 }
 
-impl CrubitAbiTypeWithCcPrereqs {
+impl<'tcx> CrubitAbiTypeWithCcPrereqs<'tcx> {
     /// Extracts the CrubitAbiType and adds the C++ prerequisites to the given `prereqs`.
-    pub fn crubit_abi_type(self, prereqs: &mut CcPrerequisites) -> CrubitAbiType {
+    pub fn crubit_abi_type(self, prereqs: &mut CcPrerequisites<'tcx>) -> CrubitAbiType {
         *prereqs += self.prereqs;
         self.crubit_abi_type
     }
 }
-impl From<CrubitAbiType> for CrubitAbiTypeWithCcPrereqs {
+impl<'tcx> From<CrubitAbiType> for CrubitAbiTypeWithCcPrereqs<'tcx> {
     fn from(crubit_abi_type: CrubitAbiType) -> Self {
         Self { crubit_abi_type, prereqs: Default::default() }
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct CcPrerequisites {
+pub struct CcPrerequisites<'tcx> {
     /// Set of `#include`s that a `CcSnippet` depends on.  For example if
     /// `CcSnippet::tokens` expands to `std::int32_t`, then `includes`
     /// need to cover the `#include <cstdint>`.
@@ -69,15 +71,25 @@ pub struct CcPrerequisites {
 
     /// Set of Crubit feature flags required for the CcSnippet to be valid.
     pub required_features: flagset::FlagSet<FineGrainedFeature>,
+
+    // Set of template specializations our snippet requires.
+    pub template_specializations: HashSet<TemplateSpecialization<'tcx>>,
 }
 
-impl CcPrerequisites {
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub enum TemplateSpecialization<'tcx> {
+    /// Our layout compatible type for `std::option::Option`.
+    RsStdOption { arg_ty: Ty<'tcx>, self_ty: Ty<'tcx> },
+}
+
+impl<'tcx> CcPrerequisites<'tcx> {
     pub fn is_empty(&self) -> bool {
-        let Self { includes, defs, fwd_decls, required_features } = self;
+        let Self { includes, defs, fwd_decls, required_features, template_specializations } = self;
         includes.is_empty()
             && defs.is_empty()
             && fwd_decls.is_empty()
             && required_features.is_empty()
+            && template_specializations.is_empty()
     }
 
     /// Weakens all dependencies to only require a forward declaration. Example
@@ -91,10 +103,11 @@ impl CcPrerequisites {
     }
 }
 
-impl AddAssign for CcPrerequisites {
+impl<'tcx> AddAssign for CcPrerequisites<'tcx> {
     #[allow(clippy::suspicious_op_assign_impl)]
     fn add_assign(&mut self, rhs: Self) {
-        let Self { mut includes, defs, fwd_decls, required_features } = rhs;
+        let Self { mut includes, defs, fwd_decls, required_features, template_specializations } =
+            rhs;
 
         // `BTreeSet::append` is used because it _seems_ to be more efficient than
         // calling `extend`.  This is because `extend` takes an iterator
@@ -108,10 +121,11 @@ impl AddAssign for CcPrerequisites {
         self.defs.extend(defs);
         self.fwd_decls.extend(fwd_decls);
         self.required_features |= required_features;
+        self.template_specializations.extend(template_specializations);
     }
 }
 
-impl Add for CcPrerequisites {
+impl<'tcx> Add for CcPrerequisites<'tcx> {
     type Output = Self;
 
     fn add(mut self, rhs: Self) -> Self {
@@ -121,13 +135,13 @@ impl Add for CcPrerequisites {
 }
 
 #[derive(Clone, Default)]
-pub struct CcSnippet {
+pub struct CcSnippet<'tcx> {
     pub tokens: TokenStream,
-    pub prereqs: CcPrerequisites,
+    pub prereqs: CcPrerequisites<'tcx>,
 }
 // Override debug to use the Display impl for tokens, as the Debug impl for TokenStream is rarely
 // useful (it shows the structure of the tokens, not the actual text).
-impl fmt::Debug for CcSnippet {
+impl<'tcx> fmt::Debug for CcSnippet<'tcx> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("CcSnippet")
             .field("tokens", &self.tokens.to_string())
@@ -136,10 +150,10 @@ impl fmt::Debug for CcSnippet {
     }
 }
 
-impl CcSnippet {
+impl<'tcx> CcSnippet<'tcx> {
     /// Consumes `self` and returns its `tokens`, while preserving
     /// its `prereqs` into `prereqs_accumulator`.
-    pub fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites) -> TokenStream {
+    pub fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> TokenStream {
         let Self { tokens, prereqs } = self;
         *prereqs_accumulator += prereqs;
         tokens
@@ -183,12 +197,12 @@ impl CcSnippet {
         }
     }
 
-    pub fn into_main_api(self) -> ApiSnippets {
+    pub fn into_main_api(self) -> ApiSnippets<'tcx> {
         ApiSnippets { main_api: self, ..Default::default() }
     }
 }
 
-impl AddAssign for CcSnippet {
+impl<'tcx> AddAssign for CcSnippet<'tcx> {
     fn add_assign(&mut self, rhs: Self) {
         self.tokens.extend(rhs.into_tokens(&mut self.prereqs));
     }
@@ -288,16 +302,16 @@ impl AddAssign for RsSnippet {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct ApiSnippets {
+pub struct ApiSnippets<'tcx> {
     /// Main API - for example:
     /// - A C++ declaration of a function (with a doc comment),
     /// - A C++ definition of a struct (with a doc comment).
-    pub main_api: CcSnippet,
+    pub main_api: CcSnippet<'tcx>,
 
     /// C++ implementation details - for example:
     /// - A C++ declaration of an `extern "C"` thunk,
     /// - C++ `static_assert`s about struct size, aligment, and field offsets.
-    pub cc_details: CcSnippet,
+    pub cc_details: CcSnippet<'tcx>,
 
     /// Rust implementation details - for example:
     /// - A Rust implementation of an `extern "C"` thunk,
@@ -305,7 +319,7 @@ pub struct ApiSnippets {
     pub rs_details: RsSnippet,
 }
 
-impl ApiSnippets {
+impl<'tcx> ApiSnippets<'tcx> {
     /// Resolves the feature requirements. If the required features of `self`
     /// are in `crubit_features`, then this returns a version of `self` with
     /// the feature requirements removed. Otherwise, this returns an error.
@@ -321,8 +335,8 @@ impl ApiSnippets {
     }
 }
 
-impl FromIterator<ApiSnippets> for ApiSnippets {
-    fn from_iter<I: IntoIterator<Item = ApiSnippets>>(iter: I) -> Self {
+impl<'tcx> FromIterator<ApiSnippets<'tcx>> for ApiSnippets<'tcx> {
+    fn from_iter<I: IntoIterator<Item = ApiSnippets<'tcx>>>(iter: I) -> Self {
         let mut result = ApiSnippets::default();
         for ApiSnippets { main_api, cc_details, rs_details } in iter.into_iter() {
             result.main_api += main_api;

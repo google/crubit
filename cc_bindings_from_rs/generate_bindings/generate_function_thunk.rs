@@ -84,7 +84,7 @@ pub fn generate_thunk_decl<'tcx>(
     sig_mid: &ty::FnSig<'tcx>,
     thunk_name: &Ident,
     has_self_param: bool,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let main_api_ret_type = format_ret_ty_for_cc(db, sig_mid)?.into_tokens(&mut prereqs);
@@ -182,7 +182,7 @@ pub fn generate_thunk_decl<'tcx>(
 fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
-    bridged_type: &BridgedType,
+    bridged_type: &BridgedType<'tcx>,
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
@@ -621,9 +621,9 @@ pub fn is_thunk_required(tcx: TyCtxt<'_>, sig: &ty::FnSig) -> Result<()> {
     Ok(())
 }
 
-pub struct TraitThunks {
+pub struct TraitThunks<'tcx> {
     pub method_name_to_cc_thunk_name: HashMap<Symbol, Ident>,
-    pub cc_thunk_decls: CcSnippet,
+    pub cc_thunk_decls: CcSnippet<'tcx>,
     pub rs_thunk_impls: RsSnippet,
 }
 
@@ -633,7 +633,7 @@ pub fn generate_trait_thunks<'tcx>(
     // We do not support other generic args, yet.
     type_args: &[Ty<'tcx>],
     adt: &AdtCoreBindings<'tcx>,
-) -> Result<TraitThunks> {
+) -> Result<TraitThunks<'tcx>> {
     let tcx = db.tcx();
     assert!(tcx.is_trait(trait_id));
 

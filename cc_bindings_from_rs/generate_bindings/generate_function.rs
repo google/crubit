@@ -245,7 +245,7 @@ struct ReturnConversion {
 fn format_ty_for_cc_amending_prereqs<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: SugaredTy<'tcx>,
-    prereqs: &mut CcPrerequisites,
+    prereqs: &mut CcPrerequisites<'tcx>,
 ) -> Result<TokenStream> {
     let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
         db.format_ty_for_cc(ty, TypeLocation::Other)?;
@@ -257,7 +257,7 @@ fn cc_return_value_from_c_abi<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ident: Ident,
     ty: SugaredTy<'tcx>,
-    prereqs: &mut CcPrerequisites,
+    prereqs: &mut CcPrerequisites<'tcx>,
     storage_statements: &mut TokenStream,
     recursive: bool,
 ) -> Result<ReturnConversion> {
@@ -446,7 +446,7 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
 
 pub(crate) struct Param<'tcx> {
     pub(crate) cc_name: Ident,
-    pub(crate) cpp_type: CcParamTy,
+    pub(crate) cpp_type: CcParamTy<'tcx>,
     pub(crate) ty: SugaredTy<'tcx>,
 }
 
@@ -549,7 +549,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     rs_return_type: SugaredTy<'tcx>,
     self_param: ThunkSelfParameter,
     params: &[Param<'tcx>],
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let mut tokens = TokenStream::new();
@@ -656,7 +656,10 @@ pub(crate) fn generate_thunk_call<'tcx>(
 }
 
 /// Implementation of `BindingsGenerator::generate_function`.
-pub fn generate_function(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
+pub fn generate_function<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     ensure!(
         !tcx.generics_of(def_id).requires_monomorphization(tcx),

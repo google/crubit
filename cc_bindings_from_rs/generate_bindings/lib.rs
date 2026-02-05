@@ -724,11 +724,11 @@ fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
     None
 }
 
-fn generate_using(
-    db: &dyn BindingsGenerator<'_>,
+fn generate_using<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
     using_name: &Symbol,
     def_id: DefId,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     match tcx.def_kind(def_id) {
         DefKind::Fn => {
@@ -769,7 +769,10 @@ fn generate_using(
     }
 }
 
-fn generate_const(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<ApiSnippets> {
+fn generate_const<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
     let unsupported_consts = [
@@ -865,10 +868,10 @@ fn supported_traits(db: &dyn BindingsGenerator<'_>) -> Rc<[DefId]> {
     Rc::from(traits)
 }
 
-fn generate_trait(
-    db: &dyn BindingsGenerator<'_>,
+fn generate_trait<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
     trait_id: DefId,
-) -> arc_anyhow::Result<ApiSnippets> {
+) -> arc_anyhow::Result<ApiSnippets<'tcx>> {
     if !db.supported_traits().contains(&trait_id) {
         bail!("Trait is not yet supported")
     }
@@ -896,11 +899,11 @@ fn generate_trait(
     Ok(ApiSnippets { main_api, ..Default::default() })
 }
 
-fn generate_type_alias(
-    db: &dyn BindingsGenerator<'_>,
+fn generate_type_alias<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
     using_name: &str,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mir_ty = tcx.type_of(def_id).instantiate_identity();
     let alias_type = SugaredTy::missing_hir(mir_ty);
@@ -912,7 +915,7 @@ fn create_type_alias<'tcx>(
     def_id: DefId,
     alias_name: &str,
     alias_type: SugaredTy<'tcx>,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let cc_bindings = db.format_ty_for_cc(alias_type, TypeLocation::Other)?;
     let mut main_api_prereqs = CcPrerequisites::default();
     let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
@@ -939,11 +942,11 @@ fn create_type_alias<'tcx>(
 fn generate_default_ctor<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> Result<ApiSnippets, ApiSnippets> {
+) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
     fn fallible_format_default_ctor<'tcx>(
         db: &dyn BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
-    ) -> Result<ApiSnippets> {
+    ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let trait_id = tcx
             .get_diagnostic_item(sym::Default)
@@ -1009,11 +1012,11 @@ fn generate_default_ctor<'tcx>(
 fn generate_copy_ctor_and_assignment_operator<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> Result<ApiSnippets, ApiSnippets> {
+) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
     fn fallible_format_copy_ctor_and_assignment_operator<'tcx>(
         db: &dyn BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
-    ) -> Result<ApiSnippets> {
+    ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let cc_struct_name = &core.cc_short_name;
 
@@ -1094,11 +1097,11 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
 fn generate_move_ctor_and_assignment_operator<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-) -> Result<ApiSnippets, NoMoveOrAssign> {
+) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
     fn fallible_format_move_ctor_and_assignment_operator<'tcx>(
         db: &dyn BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
-    ) -> Result<ApiSnippets> {
+    ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let adt_cc_name = &core.cc_short_name;
         if generate_struct_and_union::adt_core_bindings_needs_drop(&core, tcx) {
@@ -1329,7 +1332,10 @@ fn item_name_for_error_report(
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
-fn generate_item(db: &dyn BindingsGenerator<'_>, def_id: DefId) -> Result<Option<ApiSnippets>> {
+fn generate_item<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
     let generated = generate_item_impl(db, def_id);
     let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
@@ -1360,10 +1366,10 @@ macro_rules! error_scope {
 
 // A helper for `generate_item`.
 // The wrapper is used to ensure that the `must_bind` annotation is enforced.
-fn generate_item_impl(
-    db: &dyn BindingsGenerator<'_>,
+fn generate_item_impl<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
-) -> Result<Option<ApiSnippets>> {
+) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
     if db.symbol_canonical_name(def_id).is_none() {
         return Ok(None);
@@ -1391,11 +1397,11 @@ fn generate_item_impl(
 
 /// Formats a C++ comment explaining why no bindings have been generated for
 /// `local_def_id`.
-fn generate_unsupported_def(
-    db: &dyn BindingsGenerator<'_>,
+fn generate_unsupported_def<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
     err: Error,
-) -> CcSnippet {
+) -> CcSnippet<'tcx> {
     let tcx = db.tcx();
     db.errors().assert_in_item(item_name_for_error_report(db, def_id));
     db.errors().report(&err);
@@ -1513,17 +1519,17 @@ pub(crate) trait SortedByDef: Iterator + Sized {
 }
 impl<T: Iterator + Sized> SortedByDef for T {}
 
-struct FormattedItem {
+struct FormattedItem<'tcx> {
     def_id: DefId,
-    snippets: Option<ApiSnippets>,
+    snippets: Option<ApiSnippets<'tcx>>,
     aliases: Vec<ExportedPath>,
 }
 
 /// Generate bindings to supported trait implementations. An implementation is supported if both
 /// its trait and implementing type receive bindings.
-fn generate_trait_impls<'a, 'b>(
-    db: &'a dyn BindingsGenerator<'b>,
-) -> impl Iterator<Item = ApiSnippets> + use<'a, 'b> {
+fn generate_trait_impls<'a, 'tcx>(
+    db: &'a dyn BindingsGenerator<'tcx>,
+) -> impl Iterator<Item = ApiSnippets<'tcx>> + use<'a, 'tcx> {
     let tcx = db.tcx();
     let supported_traits: Vec<DefId> = db.supported_traits().iter().copied().collect();
     // TyCtxt makes it easy to get all the implementations of a trait, but there isn't an easy way
@@ -1639,7 +1645,9 @@ fn generate_trait_impls<'a, 'b>(
         })
 }
 
-fn formatted_items_in_crate(db: &dyn BindingsGenerator<'_>) -> impl Iterator<Item = FormattedItem> {
+fn formatted_items_in_crate<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+) -> impl Iterator<Item = FormattedItem<'tcx>> {
     let tcx = db.tcx();
     let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
     defs_in_crate

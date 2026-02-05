@@ -78,7 +78,7 @@ pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
     pointee: SugaredTy<'tcx>,
     mutability: Mutability,
     pointer_sigil: TokenStream,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let const_qualifier = match mutability {
         Mutability::Mut => quote! {},
@@ -96,7 +96,7 @@ pub fn format_slice_pointer_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     slice_ty: SugaredTy<'tcx>,
     mutability: rustc_middle::mir::Mutability,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let const_qualifier = match mutability {
         Mutability::Mut => quote! {},
         Mutability::Not => quote! { const },
@@ -119,7 +119,7 @@ pub fn format_slice_pointer_for_cc<'tcx>(
 }
 
 /// Returns a CcSnippet referencing `rs_std::StrRef` and its include path.
-pub fn format_str_ref_for_cc(db: &dyn BindingsGenerator<'_>) -> CcSnippet {
+pub fn format_str_ref_for_cc<'tcx>(db: &dyn BindingsGenerator<'tcx>) -> CcSnippet<'tcx> {
     CcSnippet::with_include(quote! { rs_std::StrRef }, db.support_header("rs_std/str_ref.h"))
 }
 
@@ -128,7 +128,7 @@ pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     referent_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
     pointer_sigil: TokenStream,
-) -> Option<CcSnippet> {
+) -> Option<CcSnippet<'tcx>> {
     let ty::TyKind::Adt(adt, substs) = referent_ty.kind() else {
         return None;
     };
@@ -149,12 +149,12 @@ pub fn format_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: SugaredTy<'tcx>,
     location: TypeLocation,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
-    fn cstdint(tokens: TokenStream) -> CcSnippet {
+    fn cstdint<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
         CcSnippet::with_include(tokens, CcInclude::cstdint())
     }
-    fn keyword(tokens: TokenStream) -> CcSnippet {
+    fn keyword<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
         CcSnippet::new(tokens)
     }
 
@@ -545,7 +545,7 @@ fn treat_ref_as_ptr<'tcx>(
 pub fn format_ret_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
-) -> Result<CcSnippet> {
+) -> Result<CcSnippet<'tcx>> {
     let output_ty = SugaredTy::fn_output(sig_mid);
     db.format_ty_for_cc(output_ty, TypeLocation::FnReturn)
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
@@ -582,8 +582,8 @@ pub fn region_is_elided<'tcx>(tcx: TyCtxt<'tcx>, region: ty::Region<'tcx>) -> bo
     }
 }
 
-pub struct CcParamTy {
-    pub snippet: CcSnippet,
+pub struct CcParamTy<'tcx> {
+    pub snippet: CcSnippet<'tcx>,
     pub is_lifetime_bound: bool,
 }
 
@@ -592,7 +592,7 @@ pub fn format_param_types_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
     has_self_param: bool,
-) -> Result<Vec<CcParamTy>> {
+) -> Result<Vec<CcParamTy<'tcx>>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
     let param_types = SugaredTy::fn_inputs(sig_mid);
     let mut snippets = Vec::with_capacity(param_types.len());
@@ -853,7 +853,7 @@ pub fn format_region_as_rs_lifetime<'tcx>(
 /// Bridged types may be representation-equivalent such that pointers to one may be treated as
 /// pointers to the other, or they may require conversion functions (in which case they can only
 /// be passed by-value).
-pub enum BridgedType {
+pub enum BridgedType<'tcx> {
     Legacy {
         /// The spelling of the C++ type of the item.
         cpp_type: CcType,
@@ -861,12 +861,12 @@ pub enum BridgedType {
         include_path: Symbol,
         conversion_info: BridgedTypeConversionInfo,
     },
-    Composable(Box<BridgedTypeComposable>),
+    Composable(Box<BridgedTypeComposable<'tcx>>),
 }
 
-pub struct BridgedTypeComposable {
+pub struct BridgedTypeComposable<'tcx> {
     pub cpp_type: FullyQualifiedPath,
-    pub prereqs: CcPrerequisites,
+    pub prereqs: CcPrerequisites<'tcx>,
     pub crubit_abi_type: CrubitAbiType,
 }
 
@@ -916,7 +916,7 @@ pub fn ensure_ty_is_pointer_like<'tcx>(
 pub fn crubit_abi_type_from_ty<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<CrubitAbiTypeWithCcPrereqs> {
+) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>> {
     Ok(CrubitAbiTypeWithCcPrereqs::from(match ty.kind() {
         ty::TyKind::Bool => CrubitAbiType::transmute("bool", "bool"),
         ty::TyKind::Char => CrubitAbiType::transmute("char", "::rs_std::char_"),
@@ -1050,7 +1050,7 @@ impl BridgedBuiltin {
         self,
         db: &dyn BindingsGenerator<'tcx>,
         substs: &[GenericArg<'tcx>],
-    ) -> Result<CrubitAbiTypeWithCcPrereqs> {
+    ) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>> {
         match self {
             BridgedBuiltin::Result => {
                 bail!("Result as a bridge type is not yet supported")
@@ -1072,7 +1072,7 @@ impl BridgedBuiltin {
         }
     }
 
-    pub fn prereqs(self) -> CcPrerequisites {
+    pub fn prereqs<'tcx>(self) -> CcPrerequisites<'tcx> {
         match self {
             BridgedBuiltin::Result => CcPrerequisites::default(),
             BridgedBuiltin::Option => {
@@ -1091,7 +1091,7 @@ fn crubit_abi_type_from_bridged_adt<'tcx>(
     abi_rust: Symbol,
     abi_cpp: Symbol,
     substs: &[GenericArg<'tcx>],
-) -> Result<CrubitAbiTypeWithCcPrereqs> {
+) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>> {
     let mut prereqs = CcPrerequisites::default();
     let crubit_abi_type = CrubitAbiType::Type {
         rust_abi_path: FullyQualifiedPath {
@@ -1123,7 +1123,7 @@ fn crubit_abi_type_from_bridged_adt<'tcx>(
 fn is_manually_annotated_bridged_adt<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<Option<BridgedType>> {
+) -> Result<Option<BridgedType<'tcx>>> {
     // We take a `Ty` instead of adt + substs directly so we can use `Ty` in error messages.
     let ty::TyKind::Adt(adt, substs) = ty.kind() else {
         panic!("should only be called on an ADT type");
@@ -1206,7 +1206,7 @@ fn is_manually_annotated_bridged_adt<'tcx>(
 pub fn is_bridged_type<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<Option<BridgedType>> {
+) -> Result<Option<BridgedType<'tcx>>> {
     match ty.kind() {
         ty::TyKind::Ref(_, referent_mid, _) if is_bridged_type(db, *referent_mid)?.is_some() => {
             bail!(

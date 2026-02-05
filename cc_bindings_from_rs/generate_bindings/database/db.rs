@@ -184,7 +184,7 @@ memoized::query_group! {
           &self,
           ty: SugaredTy<'tcx>,
           location: TypeLocation,
-      ) -> Result<CcSnippet>;
+      ) -> Result<CcSnippet<'tcx>>;
 
       /// Formats `ty` into a `CcSnippet` that represents how the type should be
       /// spelled in a C++ declaration of a function parameter or field.
@@ -203,7 +203,7 @@ memoized::query_group! {
       fn generate_default_ctor(
           &self,
           core: Rc<AdtCoreBindings<'tcx>>,
-      ) -> Result<ApiSnippets, ApiSnippets>;
+      ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>>;
 
       /// Generates the copy constructor and the copy-assignment operator for an ADT if
       /// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
@@ -214,7 +214,7 @@ memoized::query_group! {
       fn generate_copy_ctor_and_assignment_operator(
           &self,
           core: Rc<AdtCoreBindings<'tcx>>,
-      ) -> Result<ApiSnippets, ApiSnippets>;
+      ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>>;
 
       /// Generates the move constructor and the move-assignment operator for an ADT if possible
       /// (it depends on various factors like `needs_drop`, `is_unpin` and implementations of
@@ -224,7 +224,7 @@ memoized::query_group! {
       fn generate_move_ctor_and_assignment_operator(
           &self,
           core: Rc<AdtCoreBindings<'tcx>>,
-      ) -> Result<ApiSnippets, NoMoveOrAssign>;
+      ) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>>;
 
       /// Generates bindings for a HIR item idenfied by `def_id`.  Returns `None` if
       /// the item can be ignored. Returns an `Err` if the bindings could not be
@@ -233,7 +233,7 @@ memoized::query_group! {
       /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:generate_item
-      fn generate_item(&self, def_id: DefId) -> Result<Option<ApiSnippets>>;
+      fn generate_item(&self, def_id: DefId) -> Result<Option<ApiSnippets<'tcx>>>;
 
       /// Generates bindings for a function with the given `local_def_id`.
       ///
@@ -242,7 +242,7 @@ memoized::query_group! {
       /// - doesn't identify a function
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_function.rs?q=function:generate_function
-      fn generate_function(&self, def_id: DefId) -> Result<ApiSnippets>;
+      fn generate_function(&self, def_id: DefId) -> Result<ApiSnippets<'tcx>>;
 
       /// Determines if an ADT needs bindings generated in the current crate. This is a distinct method from `generate_adt_core` because we may want core binding information for a type that does not support bindings. For example, when generating bindings that use a type that isn't defined in the current crate.
       ///
@@ -267,7 +267,7 @@ memoized::query_group! {
       /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate.
       fn generate_adt_core(&self, def_id: DefId) -> Result<Rc<AdtCoreBindings<'tcx>>>;
 
-      fn crubit_abi_type_from_ty(&self, ty: Ty<'tcx>) -> Result<CrubitAbiTypeWithCcPrereqs>;
+      fn crubit_abi_type_from_ty(&self, ty: Ty<'tcx>) -> Result<CrubitAbiTypeWithCcPrereqs<'tcx>>;
 
       /// Gathers all  `From` trait impls for the current crate and provides a mapping from the
       /// argument type to the impl. This is useful for determining `From` impls of ADTs where the
