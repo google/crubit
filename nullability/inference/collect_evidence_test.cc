@@ -285,7 +285,7 @@ TEST(SummarizeDefinitionTest, Deref) {
         location: "input.cc:5:17"
         evidence_kind: UNCHECKED_DEREFERENCE
       }
-      block_atom: 31
+      block_atom: 33
     }
     behavior_summaries {
       requires_annotation {
@@ -294,7 +294,7 @@ TEST(SummarizeDefinitionTest, Deref) {
         location: "input.cc:3:15"
         evidence_kind: UNCHECKED_DEREFERENCE
       }
-      block_atom: 39
+      block_atom: 41
     }
     virtual_method_index {}
     definition_location: "input.cc:2:10"
