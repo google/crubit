@@ -187,3 +187,14 @@ cc_library(
     ],
     deps = [],
 )
+
+cc_library(
+    name = "option",
+    hdrs = ["option.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [],
+)
