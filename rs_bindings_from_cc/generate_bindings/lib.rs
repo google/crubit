@@ -1265,11 +1265,23 @@ fn generate_dyn_callable_rust_thunk_impl(
     let unwrapper = match dyn_callable.fn_trait {
         FnTrait::Fn => quote! { &*f },
         FnTrait::FnMut => quote! { &mut *f },
-        FnTrait::FnOnce => quote! {
-            // SAFETY: For FnOnce, DynCallable ensures that the invoker (where this read occurs) is
-            // replaced after the first call, ensuring that this happens at most once.
-            ::core::ptr::read(f)
-        },
+        FnTrait::FnOnce => {
+            // Replace the FnOnce with an empty instance, so it can still be dropped.
+            // Since it's a ZST, no allocation will be performed, and it can even be forgotten
+            // without worrying about leaks.
+            let rust_return_type_fragment = dyn_callable.rust_return_type_fragment(db);
+            let param_type_tokens =
+                dyn_callable.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
+            quote! {
+                // SAFETY: f is guaranteed to be valid for reads and writes, is properly aligned,
+                // and points to a properly initialized value of the correct type.
+                ::core::ptr::replace(f, ::alloc::boxed::Box::new(
+                    |#(_: #param_type_tokens),*| #rust_return_type_fragment {
+                        ::core::unreachable!("Called FnOnce after it was moved");
+                    }
+                ))
+            }
+        }
     };
     let mut invoke_rust_and_return_to_ffi = quote! {
         (unsafe { #unwrapper })(#(#param_idents),*)
