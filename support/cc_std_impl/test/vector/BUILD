@@ -37,6 +37,9 @@ crubit_rust_test(
         ":cc_movable_types",
         "//support/public:cc_std",
     ],
+    # LINT.IfChange
+    rustc_flags = ["-Zallow-features=allocator_api"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1

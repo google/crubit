@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![feature(allocator_api)]
 
 use googletest::prelude::*;
 use static_assertions::assert_impl_all;
@@ -1043,5 +1044,50 @@ fn test_vector_of_custom_types_passed_by_value() {
         cc_movable_types::crubit_test::SimpleRustMovableType::from(2),
         cc_movable_types::crubit_test::SimpleRustMovableType::from(3),
     ]);
-    cc_helper_functions::crubit_test::vector_pass_by_value(v);
+    assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 3);
+}
+
+/// Tests for the empty vector, which is a special case: an ordinary
+/// Rust array or vector uses alignof(T) as the pointer, but C++ uses 0.
+///
+/// Incorrectly written code will have UB in the C++ destructor.
+///
+/// The tests in this module create an empty vector in a variety of ways,
+/// and use it by value to run the C++ destructor.
+mod empty_vector {
+    use super::*;
+
+    #[gtest]
+    fn test_default() {
+        assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(Default::default()), 0);
+    }
+
+    #[gtest]
+    fn test_from_vec() {
+        let v = cc_std::std::vector::from(vec![]);
+        assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 0);
+    }
+
+    #[gtest]
+    fn test_from_shared_allocator() {
+        let v = cc_std::std::vector::from(Vec::new_in(
+            cc_std::crubit_cc_std_internal::std_allocator::StdAllocator {},
+        ));
+        assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 0);
+    }
+
+    #[gtest]
+    fn test_from_shared_allocator_with_capacity() {
+        let v = cc_std::std::vector::from(Vec::with_capacity_in(
+            1,
+            cc_std::crubit_cc_std_internal::std_allocator::StdAllocator {},
+        ));
+        assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 0);
+    }
+
+    #[gtest]
+    fn test_from_iterator() {
+        let v = cc_std::std::vector::from_iter([].into_iter());
+        assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 0);
+    }
 }

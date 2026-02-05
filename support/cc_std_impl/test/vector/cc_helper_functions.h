@@ -59,9 +59,9 @@ vector_get_simple_rust_movable_type() {
           SimpleRustMovableType(3)};
 }
 
-inline void vector_pass_by_value(std::vector<SimpleRustMovableType> vec) {
+inline size_t vector_size_by_value(std::vector<SimpleRustMovableType> vec) {
   // Note: the vector is destroyed after this function returns.
-  assert(!vec.empty());
+  return vec.size();
 }
 
 }  // namespace crubit_test
