@@ -779,6 +779,7 @@ struct Record {
   std::optional<ItemId> enclosing_item_id;
   bool must_bind = false;
   bool overloads_operator_delete = false;
+  bool detected_formatter = false;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -817,6 +818,7 @@ struct Enum {
   std::optional<std::string> unknown_attr;
   std::optional<ItemId> enclosing_item_id;
   bool must_bind = false;
+  bool detected_formatter = false;
 };
 
 struct GlobalVar {
