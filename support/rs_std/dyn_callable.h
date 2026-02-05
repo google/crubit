@@ -263,9 +263,7 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
     auto* invoker = this->invoker_;
     this->manager_ = internal_dyn_callable::EmptyManager;
     this->invoker_ = nullptr;
-    return absl::AnyInvocable<Sig>(reinterpret_cast<void*>(&this->storage_),
-                                   reinterpret_cast<void (*)()>(manager),
-                                   reinterpret_cast<void (*)()>(invoker));
+    return absl::AnyInvocable<Sig>(&this->storage_, manager, invoker);
   }
 
   // Returns `true` if `f` is empty.
