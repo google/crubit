@@ -626,11 +626,22 @@ pub fn generate_adt<'tcx>(
     .into_iter()
     .collect();
 
+    let repr_attrs = db.repr_attrs(core.def_id);
+
     let ApiSnippets {
         main_api: fields_main_api,
         cc_details: fields_cc_details,
         rs_details: fields_rs_details,
-    } = generate_fields(db, &core, &member_function_names);
+    } = generate_fields(
+        db,
+        core.self_ty,
+        &core.cc_short_name,
+        &core.rs_fully_qualified_name,
+        &repr_attrs,
+        core.size_in_bytes,
+        core.alignment_in_bytes,
+        &member_function_names,
+    );
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
@@ -852,20 +863,17 @@ struct IndexedVariantField<'tcx> {
 /// For each field, iteration always provides the middle FieldDef and it's index within it's variant.
 /// The hir type of the field will optionally be included if it is available.
 fn variant_fields_iter<'tcx>(
-    core: &AdtCoreBindings<'tcx>,
+    self_ty: Ty<'tcx>,
 ) -> impl Iterator<Item = impl Iterator<Item = IndexedVariantField<'tcx>>> {
-    core.self_ty
-        .ty_adt_def()
-        .expect("`core.def_id` needs to identify an ADT")
-        .variants()
-        .iter()
-        .map(|variant| {
+    self_ty.ty_adt_def().expect("`core.def_id` needs to identify an ADT").variants().iter().map(
+        |variant| {
             variant
                 .fields
                 .iter()
                 .enumerate()
                 .map(move |(index, field_def)| IndexedVariantField { index, field_def })
-        })
+        },
+    )
 }
 
 fn anonymous_field_ident(index: usize) -> Ident {
@@ -900,7 +908,7 @@ fn generate_tuple_struct_ctor<'tcx>(
     let clone_trait_id = tcx.lang_items().copy_trait().expect("Copy trait not found");
     let unpin_trait_id = tcx.lang_items().unpin_trait().expect("Unpin trait not found");
 
-    let field_tys = variant_fields_iter(core.as_ref())
+    let field_tys = variant_fields_iter(core.self_ty)
         .next()
         .expect("Tuple structs must have one variant")
         .map(|IndexedVariantField { field_def, .. }| {
@@ -971,16 +979,18 @@ fn generate_tuple_struct_ctor<'tcx>(
 /// Returns the body of the C++ struct that represents the given ADT.
 fn generate_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    core: &AdtCoreBindings<'tcx>,
+    self_ty: Ty<'tcx>,
+    cc_short_name: &Ident,
+    rs_fully_qualified_name: &TokenStream,
+    repr_attrs: &[rustc_hir::attrs::ReprAttr],
+    size_in_bytes: u64,
+    alignment_in_bytes: u64,
     member_function_names: &HashSet<String>,
 ) -> ApiSnippets {
     let tcx = db.tcx();
-    let TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
-        panic!("Attempted to generate fields for a non-ADT type: {:?}", core.self_ty)
+    let TyKind::Adt(adt_def, adt_generic_args) = self_ty.kind() else {
+        panic!("Attempted to generate fields for a non-ADT type: {:?}", self_ty)
     };
-
-    let repr_attrs = db.repr_attrs(core.def_id);
-
     struct FieldTypeInfo {
         size: u64,
         cpp_type: CcSnippet,
@@ -1005,8 +1015,8 @@ fn generate_fields<'tcx>(
         }
     }
 
-    let layout = get_layout(tcx, core.self_ty)
-        .expect("Layout should be already verified by `generate_adt_core`");
+    let layout =
+        get_layout(tcx, self_ty).expect("Layout should be already verified by `generate_adt_core`");
     let err_fields = |err| {
         vec![Field {
             type_info: Err(err),
@@ -1015,7 +1025,7 @@ fn generate_fields<'tcx>(
             is_public: false,
             index: 0,
             offset: 0,
-            offset_of_next_field: core.size_in_bytes,
+            offset_of_next_field: size_in_bytes,
             doc_comment: quote! {},
             attributes: vec![],
         }]
@@ -1044,7 +1054,7 @@ fn generate_fields<'tcx>(
             variants.iter().map(|layout| layout.size.bytes() - tag_size_with_padding).collect_vec()
         }
         Variants::Single { .. } | Variants::Empty => {
-            vec![core.alignment_in_bytes]
+            vec![alignment_in_bytes]
         }
     };
 
@@ -1065,7 +1075,7 @@ fn generate_fields<'tcx>(
 
         // Otherwise, get the fields and determine the memory layout.
         _ => {
-            let mut variants_fields = variant_fields_iter(core)
+            let mut variants_fields = variant_fields_iter(self_ty)
                 .map(|field_iter| {
                     field_iter
                         .map(|IndexedVariantField { index, field_def }| {
@@ -1205,7 +1215,7 @@ fn generate_fields<'tcx>(
     let cc_details = if variants_fields.is_empty() {
         CcSnippet::default()
     } else {
-        let adt_cc_name = &core.cc_short_name;
+        let adt_cc_name = cc_short_name;
         let cc_assertions: TokenStream = match adt_def.adt_kind() {
             ty::AdtKind::Struct | ty::AdtKind::Union => {
                 variants_fields
@@ -1305,7 +1315,7 @@ fn generate_fields<'tcx>(
         //     .collect()
         RsSnippet::default()
     } else {
-        let adt_rs_name = &core.rs_fully_qualified_name;
+        let adt_rs_name = rs_fully_qualified_name;
         variants_fields
             .iter()
             .flatten()
@@ -1584,7 +1594,7 @@ fn generate_fields<'tcx>(
                             .collect_vec()
                     }
                     Variants::Single { .. } | Variants::Empty => {
-                        vec![core.alignment_in_bytes]
+                        vec![alignment_in_bytes]
                     }
                 };
 
