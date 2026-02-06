@@ -429,15 +429,15 @@ impl From<NoBindingsReason> for Error {
                     all_missing.join("\n")
                 )
             }
-            NoBindingsReason::DependencyFailed { context, error } => error.context(format!(
-                "Can't generate bindings for {context} due to missing bindings for its dependency"
-            )),
+            NoBindingsReason::DependencyFailed { context, error } => anyhow!(
+                "Can't generate bindings for {context} due to missing bindings for its dependency: {error:#}"
+            ),
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")
             }
-            NoBindingsReason::Unsupported { context, error } => error.context(format!(
-                "Can't generate bindings for {context}, because it is unsupported"
-            )),
+            NoBindingsReason::Unsupported { context, error } => anyhow!(
+                "Can't generate bindings for {context}, because it is unsupported: {error:#}"
+            ),
             NoBindingsReason::ParentModuleNameNotUnique {
                 conflicting_name,
                 parent_names_that_map_to_same_name,

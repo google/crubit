@@ -43,6 +43,20 @@ impl Default for CannotUpcastInCrubit {
     }
 }
 
+pub mod c9 { // Error while generating bindings for class 'c9::Co':
+             // Class templates are not supported yet
+}
+
+// namespace c9
+
+// Error while generating bindings for function 'ReturnsCo':
+// Cannot use an error type by value: Can't generate bindings for c9::Co<NotCrubitExposed> due to missing bindings for its dependency: Can't generate bindings for NotCrubitExposed, because of missing required features (crubit.rs-features):
+// rs_bindings_from_cc/test/golden/not_crubit_exposed.h needs [//features:supported] for NotCrubitExposed
+
+// Error while generating bindings for class 'c9::Co<NotCrubitExposed>':
+// Can't generate bindings for c9::Co<NotCrubitExposed> due to missing bindings for its dependency: Can't generate bindings for NotCrubitExposed, because of missing required features (crubit.rs-features):
+// rs_bindings_from_cc/test/golden/not_crubit_exposed.h needs [//features:supported] for NotCrubitExposed
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;

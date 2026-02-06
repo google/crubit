@@ -315,4 +315,4 @@ impl From<NonEmptyCharClass> for ::ffi_11::c_char {
 // Can't generate bindings for ForwardDeclared, because it is unsupported: b/322391132: Forward-declared (opaque) enums are not implemented yet
 
 // Error while generating bindings for function 'do_not_generate_bindings_for_me':
-// Cannot use an error type by value: Can't generate bindings for ForwardDeclared, because it is unsupported
+// Cannot use an error type by value: Can't generate bindings for ForwardDeclared, because it is unsupported: b/322391132: Forward-declared (opaque) enums are not implemented yet
