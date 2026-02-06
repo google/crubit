@@ -591,6 +591,186 @@ fn test_this_lifetime_returned_for_member_function_with_reference_param() -> Res
 }
 
 #[gtest]
+fn test_this_lifetime_applied_for_constructor() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { S(); S(const S& o) = delete; S(const S&& o) = delete; };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: Constructor,
+                rs_name: Constructor, ...
+                return_type: CcType { ... variant: Primitive(Void) ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        identifier: "__this", ...
+                    }
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["__this"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_this_lifetime_annotation_applied_for_constructor() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { S() $a; S(const S& o) = delete; S(const S&& o) = delete; };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: Constructor,
+                rs_name: Constructor, ...
+                return_type: CcType { ... variant: Primitive(Void) ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                        identifier: "__this", ...
+                    }
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_param_lifetime_inferred_for_constructor() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { S(int& i1); S(const S& o) = delete; S(const S&& o) = delete; };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: Constructor,
+                rs_name: Constructor, ...
+                return_type: CcType { ... variant: Primitive(Void) ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        identifier: "__this", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["i1"] ... },
+                        identifier: "i1", ...
+                    },
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["__this", "i1"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_param_lifetimebound_to_this_in_constructor() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S {
+        S(int& i1 [[clang::lifetimebound]]);
+        S(const S& o) = delete;
+        S(const S&& o) = delete;
+      };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: Constructor,
+                rs_name: Constructor, ...
+                return_type: CcType { ... variant: Primitive(Void) ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        identifier: "__this", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["__this"] ... },
+                        identifier: "i1", ...
+                    },
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["__this"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_param_lifetimebound_to_this_in_constructor_explicit_lifetime() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S {
+        S(int& i1 [[clang::lifetimebound]]) $a;
+        S(const S& o) = delete;
+        S(const S&& o) = delete;
+      };
+      "#),
+    )?;
+    let dir = lifetime_defaults_transform(&ir)?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: Constructor,
+                rs_name: Constructor, ...
+                return_type: CcType { ... variant: Primitive(Void) ... }, ...
+                params: [
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                        identifier: "__this", ...
+                    },
+                    FuncParam {
+                        type_: CcType { ... explicit_lifetimes: ["a"] ... },
+                        identifier: "i1", ...
+                    },
+                ],
+                lifetime_params: [],
+                ...
+                lifetime_inputs: ["a"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_binding_context_has_static() -> Result<()> {
     let mut ctx = BindingContext::new();
     let mut called = false;

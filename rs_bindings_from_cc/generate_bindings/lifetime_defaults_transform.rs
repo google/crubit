@@ -282,11 +282,12 @@ impl LifetimeDefaults {
         // TODO(b/475407556): Support lifetime_capture_by.
         let mut return_lifetime: Vec<Rc<str>> = func.return_type.explicit_lifetimes.clone();
         let mut has_lifetimebound = false;
+        let is_constructor = func.cc_name == ir::UnqualifiedIdentifier::Constructor;
         // First, check to see if there are any existing lifetime annotations that we need to
         // respect.
-        for param in func.params.iter() {
-            if param.clang_lifetimebound {
-                has_lifetimebound = true;
+        for (ix, param) in func.params.iter().enumerate() {
+            if param.clang_lifetimebound || (is_constructor && ix == 0) {
+                has_lifetimebound |= param.clang_lifetimebound;
                 if return_lifetime.is_empty() {
                     // If a [[lifetimebound]] parameter already has a lifetime annotation and we
                     // don't have a lifetime for the return value yet, use the parameter's
@@ -316,17 +317,24 @@ impl LifetimeDefaults {
             // annotations, we need to create new lifetime variables for the return value.
             // Use a reserved name for these so we don't conflict with lifetimes embedded in
             // types or on non-[[lifetimebound]] parameters.
-            let arity = self.get_lifetime_arity(&func.return_type)?;
+            let arity = self.get_lifetime_arity(if is_constructor {
+                &func.params[0].type_
+            } else {
+                &func.return_type
+            })?;
             for _ in 0..arity {
-                return_lifetime.push(self.bindings.fresh_name_for(&Rc::from("__rv")))
+                let name = if is_constructor { &Rc::from("__this") } else { &Rc::from("__rv") };
+                return_lifetime.push(self.bindings.fresh_name_for(name))
             }
         }
-        for param in func.params.iter_mut() {
-            if param.clang_lifetimebound {
+        for (ix, param) in func.params.iter_mut().enumerate() {
+            if param.clang_lifetimebound || (is_constructor && ix == 0) {
                 param.type_.explicit_lifetimes = return_lifetime.clone();
             }
         }
-        func.return_type.explicit_lifetimes = return_lifetime;
+        if !is_constructor {
+            func.return_type.explicit_lifetimes = return_lifetime;
+        }
         Ok(())
     }
 
