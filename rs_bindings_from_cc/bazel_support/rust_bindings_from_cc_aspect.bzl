@@ -31,6 +31,10 @@ load(
     "generate_and_compile_bindings",
 )
 load("@protobuf//rust:aspects.bzl", "RustProtoInfo", "rust_cc_proto_library_aspect")
+load(
+    "@protobuf//rust/bazel:encode_raw_string_as_crate_name.bzl",
+    "encode_raw_string_as_crate_name",
+)
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -281,6 +285,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     extra_rs_srcs = []
     extra_deps = []
+    aliases = {}
 
     # Headers for which we will produce bindings.
     public_hdrs = []
@@ -291,18 +296,6 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     elif ctx.rule.kind == "cc_embed_data" or ctx.rule.kind == "upb_proto_library":
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
-
-    elif ctx.rule.kind == "cc_stubby_library":
-        public_hdrs = target[CcInfo].compilation_context.direct_public_headers
-        extra_rule_specific_deps = ctx.rule.attr.implicit_cc_deps
-
-        if not AdditionalRustSrcsProviderInfo in target:
-            fail("cc_stubby_library must provide AdditionalRustSrcsProviderInfo")
-
-        additional_provider = target[AdditionalRustSrcsProviderInfo]
-
-        extra_rs_srcs.extend(_get_additional_rust_srcs_from_provider(additional_provider))
-        extra_deps.extend(_get_additional_rust_deps_from_provider(additional_provider))
 
     has_public_headers = len(public_hdrs) > 0
     if not has_public_headers:
@@ -388,6 +381,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         should_generate_bindings = (
             has_public_headers or extra_rs_srcs
         ) and not _is_cc_proto_library(target),
+        aliases = aliases,
     )
 
 rust_bindings_from_cc_aspect = aspect(
@@ -399,6 +393,7 @@ rust_bindings_from_cc_aspect = aspect(
         "_cc_lib",
         # for cc_stubby_library implicit deps
         "implicit_cc_deps",
+        "implicit_rust_deps",
     ],
     requires = [rust_cc_proto_library_aspect],
     required_aspect_providers = [CcInfo],
