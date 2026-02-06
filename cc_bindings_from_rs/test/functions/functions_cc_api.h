@@ -20,9 +20,7 @@
 
 #include <cstdint>
 
-namespace functions {
-
-namespace fn_abi_tests {
+namespace functions::fn_abi_tests {
 
 //  Testing `#[unsafe(export_name = ...)]` - the generated bindings need to
 //  forward/proxy the call into a function with a different name.
@@ -62,18 +60,18 @@ std::int32_t add_i32_via_rust_abi(std::int32_t x, std::int32_t y);
 // cc_bindings_from_rs/test/functions/functions.rs;l=20
 extern "C" double get_42_as_f64_via_no_mangle_extern_c();
 
-}  // namespace fn_abi_tests
+}  // namespace functions::fn_abi_tests
 
-namespace fn_attribute_tests {
+namespace functions::fn_attribute_tests {
 
 // Generated from:
 // cc_bindings_from_rs/test/functions/functions.rs;l=128
 [[deprecated("★ Deprecated note for add_i32 ★")]] std::int32_t add_i32(
     std::int32_t x, std::int32_t y);
 
-}  // namespace fn_attribute_tests
+}  // namespace functions::fn_attribute_tests
 
-namespace fn_must_use_tests {
+namespace functions::fn_must_use_tests {
 
 // Generated from:
 // cc_bindings_from_rs/test/functions/functions.rs;l=151
@@ -83,9 +81,9 @@ namespace fn_must_use_tests {
 // cc_bindings_from_rs/test/functions/functions.rs;l=146
 [[nodiscard]] std::int32_t no_msg_add(std::int32_t x, std::int32_t y);
 
-}  // namespace fn_must_use_tests
+}  // namespace functions::fn_must_use_tests
 
-namespace fn_param_ty_tests {
+namespace functions::fn_param_ty_tests {
 
 //  Testing a type that maps to a built-in C++ type (spelled with a
 //  keyword). `float` is one such example.
@@ -132,9 +130,9 @@ get_ref_to_smaller_int(std::int32_t const* $a crubit_nonnull x,
 void set_mut_ref_to_sum_of_ints(std::int32_t& sum, std::int32_t x,
                                 std::int32_t y);
 
-}  // namespace fn_param_ty_tests
+}  // namespace functions::fn_param_ty_tests
 
-namespace other_fn_param_tests {
+namespace functions::other_fn_param_tests {
 
 // Generated from:
 // cc_bindings_from_rs/test/functions/functions.rs;l=121
@@ -142,9 +140,9 @@ std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
     std::int32_t x, std::int32_t y, std::int32_t __param_2,
     std::int32_t __param_3);
 
-}  // namespace other_fn_param_tests
+}  // namespace functions::other_fn_param_tests
 
-namespace unit_ret_ty_tests {
+namespace functions::unit_ret_ty_tests {
 
 // Generated from:
 // cc_bindings_from_rs/test/functions/functions.rs;l=115
@@ -154,9 +152,9 @@ extern "C" std::int32_t get_global_i32_via_extern_c_with_export_name();
 // cc_bindings_from_rs/test/functions/functions.rs;l=110
 void set_global_i32_via_extern_c_with_export_name(std::int32_t x);
 
-}  // namespace unit_ret_ty_tests
+}  // namespace functions::unit_ret_ty_tests
 
-namespace unsafe_fn_tests {
+namespace functions::unsafe_fn_tests {
 
 //  # Safety
 //
@@ -167,9 +165,9 @@ namespace unsafe_fn_tests {
 // cc_bindings_from_rs/test/functions/functions.rs;l=138
 std::int32_t unsafe_add(std::int32_t x, std::int32_t y);
 
-}  // namespace unsafe_fn_tests
+}  // namespace functions::unsafe_fn_tests
 
-namespace fn_abi_tests {
+namespace functions::fn_abi_tests {
 
 namespace __crubit_internal {
 extern "C" std::int32_t custom_export_name_for_add_i32(std::int32_t,
@@ -198,9 +196,9 @@ inline std::int32_t add_i32_via_rust_abi(std::int32_t x, std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32_uvia_urust_uabi(x, y);
 }
 
-}  // namespace fn_abi_tests
+}  // namespace functions::fn_abi_tests
 
-namespace fn_attribute_tests {
+namespace functions::fn_attribute_tests {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_add_ui32(std::int32_t, std::int32_t);
@@ -209,9 +207,9 @@ inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
 
-}  // namespace fn_attribute_tests
+}  // namespace functions::fn_attribute_tests
 
-namespace fn_must_use_tests {
+namespace functions::fn_must_use_tests {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_msg_uadd(std::int32_t, std::int32_t);
@@ -227,9 +225,9 @@ inline std::int32_t no_msg_add(std::int32_t x, std::int32_t y) {
   return __crubit_internal::__crubit_thunk_no_umsg_uadd(x, y);
 }
 
-}  // namespace fn_must_use_tests
+}  // namespace functions::fn_must_use_tests
 
-namespace fn_param_ty_tests {
+namespace functions::fn_param_ty_tests {
 
 namespace __crubit_internal {
 extern "C" double __crubit_thunk_add_uf64(double, double);
@@ -307,9 +305,9 @@ inline void set_mut_ref_to_sum_of_ints(std::int32_t& sum, std::int32_t x,
       sum, x, y);
 }
 
-}  // namespace fn_param_ty_tests
+}  // namespace functions::fn_param_ty_tests
 
-namespace other_fn_param_tests {
+namespace functions::other_fn_param_tests {
 
 namespace __crubit_internal {
 extern "C" std::int32_t
@@ -324,9 +322,9 @@ inline std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
           x, y, __param_2, __param_3);
 }
 
-}  // namespace other_fn_param_tests
+}  // namespace functions::other_fn_param_tests
 
-namespace unit_ret_ty_tests {
+namespace functions::unit_ret_ty_tests {
 
 namespace __crubit_internal {
 extern "C" void custom_export_name_for_get_global_i32(std::int32_t);
@@ -335,9 +333,9 @@ inline void set_global_i32_via_extern_c_with_export_name(std::int32_t x) {
   return __crubit_internal::custom_export_name_for_get_global_i32(x);
 }
 
-}  // namespace unit_ret_ty_tests
+}  // namespace functions::unit_ret_ty_tests
 
-namespace unsafe_fn_tests {
+namespace functions::unsafe_fn_tests {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_unsafe_uadd(std::int32_t, std::int32_t);
@@ -346,8 +344,7 @@ inline std::int32_t unsafe_add(std::int32_t x, std::int32_t y) {
   return __crubit_internal::__crubit_thunk_unsafe_uadd(x, y);
 }
 
-}  // namespace unsafe_fn_tests
+}  // namespace functions::unsafe_fn_tests
 
-}  // namespace functions
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_FUNCTIONS_FUNCTIONS_GOLDEN

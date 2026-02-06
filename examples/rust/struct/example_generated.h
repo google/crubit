@@ -88,5 +88,6 @@ inline void Struct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Struct, a));
 }
 }  // namespace example_crate
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_STRUCT_EXAMPLE_CRATE_GOLDEN

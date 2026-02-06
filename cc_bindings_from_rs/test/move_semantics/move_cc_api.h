@@ -206,5 +206,6 @@ inline void consume_foo(::move::Foo _foo) {
 }
 
 }  // namespace move
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MOVE_SEMANTICS_MOVE_GOLDEN

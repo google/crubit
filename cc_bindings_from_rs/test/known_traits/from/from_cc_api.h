@@ -292,5 +292,6 @@ inline void OpaqueRef::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OpaqueRef, __field0));
 }
 }  // namespace from
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_FROM_FROM_GOLDEN

@@ -22,9 +22,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace structs {
-
-namespace abi_classification {
+namespace structs::abi_classification {
 
 // CRUBIT_ANNOTATE: must_bind=
 //  Expected ABI classification: SSE.  (For indirect confirmation, see the
@@ -211,9 +209,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace abi_classification
+}  // namespace structs::abi_classification
 
-namespace default_repr {
+namespace structs::default_repr {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -264,9 +262,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/structs/structs.rs;l=50
 std::int32_t get_x(::structs::default_repr::Point p);
 
-}  // namespace default_repr
+}  // namespace structs::default_repr
 
-namespace dynamically_sized_type {
+namespace structs::dynamically_sized_type {
 
 // Error generating bindings for
 // `structs_golden::dynamically_sized_type::DynamicallySizedStruct` defined at
@@ -275,7 +273,7 @@ namespace dynamically_sized_type {
 
 }
 
-namespace interior_mutability {
+namespace structs::interior_mutability {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -310,9 +308,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace interior_mutability
+}  // namespace structs::interior_mutability
 
-namespace keyword_named_fields_and_methods {
+namespace structs::keyword_named_fields_and_methods {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -357,9 +355,9 @@ struct
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace keyword_named_fields_and_methods
+}  // namespace structs::keyword_named_fields_and_methods
 
-namespace nested_ptr_type_mutability_qualifiers {
+namespace structs::nested_ptr_type_mutability_qualifiers {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -399,9 +397,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace nested_ptr_type_mutability_qualifiers
+}  // namespace structs::nested_ptr_type_mutability_qualifiers
 
-namespace non_cpp_movable {
+namespace structs::non_cpp_movable {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -457,9 +455,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/structs/structs.rs;l=79
 std::int32_t get_x(::structs::non_cpp_movable::Point const& p);
 
-}  // namespace non_cpp_movable
+}  // namespace structs::non_cpp_movable
 
-namespace repr_c {
+namespace structs::repr_c {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -510,9 +508,9 @@ Point final {
 // cc_bindings_from_rs/test/structs/structs.rs;l=25
 std::int32_t get_x(::structs::repr_c::Point p);
 
-}  // namespace repr_c
+}  // namespace structs::repr_c
 
-namespace struct_by_float_passing_with_no_cc_definition {
+namespace structs::struct_by_float_passing_with_no_cc_definition {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -578,9 +576,9 @@ no_mangle_multiply(
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat x,
     ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat y);
 
-}  // namespace struct_by_float_passing_with_no_cc_definition
+}  // namespace structs::struct_by_float_passing_with_no_cc_definition
 
-namespace struct_by_float_passing_with_no_thunk {
+namespace structs::struct_by_float_passing_with_no_thunk {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -648,9 +646,9 @@ thunkless_multiply(
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat x,
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat y);
 
-}  // namespace struct_by_float_passing_with_no_thunk
+}  // namespace structs::struct_by_float_passing_with_no_thunk
 
-namespace unsupported_types {
+namespace structs::unsupported_types {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -692,9 +690,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace unsupported_types
+}  // namespace structs::unsupported_types
 
-namespace zst_fields {
+namespace structs::zst_fields {
 
 // Error generating bindings for `structs_golden::zst_fields::Zst1` defined at
 // cc_bindings_from_rs/test/structs/structs.rs;l=88:
@@ -760,9 +758,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/structs/structs.rs;l=106
 std::int32_t get_value(::structs::zst_fields::ZstFields x);
 
-}  // namespace zst_fields
+}  // namespace structs::zst_fields
 
-namespace abi_classification {
+namespace structs::abi_classification {
 
 static_assert(
     sizeof(StructFloat) == 16,
@@ -912,9 +910,9 @@ inline void StructMemory::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructMemory, _padding));
   static_assert(1 == offsetof(StructMemory, i));
 }
-}  // namespace abi_classification
+}  // namespace structs::abi_classification
 
-namespace default_repr {
+namespace structs::default_repr {
 
 static_assert(
     sizeof(Point) == 8,
@@ -947,11 +945,11 @@ inline std::int32_t get_x(::structs::default_repr::Point p) {
   return __crubit_internal::__crubit_thunk_get_ux(&p);
 }
 
-}  // namespace default_repr
+}  // namespace structs::default_repr
 
-namespace dynamically_sized_type {}
+namespace structs::dynamically_sized_type {}
 
-namespace interior_mutability {
+namespace structs::interior_mutability {
 
 static_assert(
     sizeof(SomeStruct) == 4,
@@ -972,9 +970,9 @@ static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, field));
 }
-}  // namespace interior_mutability
+}  // namespace structs::interior_mutability
 
-namespace keyword_named_fields_and_methods {
+namespace structs::keyword_named_fields_and_methods {
 
 static_assert(
     sizeof(AField) == 4,
@@ -996,9 +994,9 @@ inline std::int32_t AField::operator_() const {
 inline void AField::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(AField, operator__));
 }
-}  // namespace keyword_named_fields_and_methods
+}  // namespace structs::keyword_named_fields_and_methods
 
-namespace nested_ptr_type_mutability_qualifiers {
+namespace structs::nested_ptr_type_mutability_qualifiers {
 
 static_assert(
     sizeof(SomeStruct) == 16,
@@ -1020,9 +1018,9 @@ inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, mut_const_ptr));
   static_assert(8 == offsetof(SomeStruct, const_mut_ptr));
 }
-}  // namespace nested_ptr_type_mutability_qualifiers
+}  // namespace structs::nested_ptr_type_mutability_qualifiers
 
-namespace non_cpp_movable {
+namespace structs::non_cpp_movable {
 
 static_assert(
     sizeof(Point) == 8,
@@ -1058,9 +1056,9 @@ inline std::int32_t get_x(::structs::non_cpp_movable::Point const& p) {
   return __crubit_internal::__crubit_thunk_get_ux(p);
 }
 
-}  // namespace non_cpp_movable
+}  // namespace structs::non_cpp_movable
 
-namespace repr_c {
+namespace structs::repr_c {
 
 static_assert(
     sizeof(Point) == 8,
@@ -1093,9 +1091,9 @@ inline std::int32_t get_x(::structs::repr_c::Point p) {
   return __crubit_internal::__crubit_thunk_get_ux(&p);
 }
 
-}  // namespace repr_c
+}  // namespace structs::repr_c
 
-namespace struct_by_float_passing_with_no_cc_definition {
+namespace structs::struct_by_float_passing_with_no_cc_definition {
 
 static_assert(
     sizeof(StructFloat) == 16,
@@ -1156,9 +1154,9 @@ no_mangle_multiply(
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace struct_by_float_passing_with_no_cc_definition
+}  // namespace structs::struct_by_float_passing_with_no_cc_definition
 
-namespace struct_by_float_passing_with_no_thunk {
+namespace structs::struct_by_float_passing_with_no_thunk {
 
 static_assert(
     sizeof(StructFloat) == 16,
@@ -1241,9 +1239,9 @@ thunkless_multiply(
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace struct_by_float_passing_with_no_thunk
+}  // namespace structs::struct_by_float_passing_with_no_thunk
 
-namespace unsupported_types {
+namespace structs::unsupported_types {
 
 static_assert(
     sizeof(SomeStruct) == 4,
@@ -1276,9 +1274,9 @@ inline ::structs::unsupported_types::SomeStruct SomeStruct::create(
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, unsupported_field));
 }
-}  // namespace unsupported_types
+}  // namespace structs::unsupported_types
 
-namespace zst_fields {
+namespace structs::zst_fields {
 
 static_assert(
     sizeof(ZstFields) == 4,
@@ -1311,8 +1309,7 @@ inline std::int32_t get_value(::structs::zst_fields::ZstFields x) {
   return __crubit_internal::__crubit_thunk_get_uvalue(&x);
 }
 
-}  // namespace zst_fields
+}  // namespace structs::zst_fields
 
-}  // namespace structs
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_STRUCTS_GOLDEN

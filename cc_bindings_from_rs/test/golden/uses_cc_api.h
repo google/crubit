@@ -100,6 +100,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: Foo") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+}  // namespace uses_rust
+
+namespace uses_rust {
+
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=77
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
@@ -129,6 +133,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+}  // namespace uses_rust
+
+namespace uses_rust {
+
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=67
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
@@ -157,6 +165,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: InnerX") alignas(4)
  private:
   static void __crubit_field_offset_assertions();
 };
+
+}  // namespace uses_rust
+
+namespace uses_rust {
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=20
@@ -196,6 +208,10 @@ std::int32_t f1();
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=12
 std::int32_t f2();
+
+}  // namespace uses_rust
+
+namespace uses_rust {
 
 // Generated from:
 // cc_bindings_from_rs/test/golden/uses.rs;l=54
@@ -249,10 +265,13 @@ inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, i));
   static_assert(4 == offsetof(Foo, bar_));
 }
+}  // namespace uses_rust
 
-namespace test_mod {
+namespace uses_rust::test_mod {
 using S CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: G") = ::uses_rust::G;
 }
+
+namespace uses_rust {
 
 static_assert(
     sizeof(G) == 4,
@@ -266,6 +285,9 @@ static_assert(std::is_trivially_move_assignable_v<G>);
 inline void G::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(G, field));
 }
+}  // namespace uses_rust
+
+namespace uses_rust {
 
 static_assert(
     sizeof(InnerX) == 4,
@@ -279,11 +301,14 @@ static_assert(std::is_trivially_move_assignable_v<InnerX>);
 inline void InnerX::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(InnerX, field));
 }
+}  // namespace uses_rust
 
-namespace test_use_glob {
+namespace uses_rust::test_use_glob {
 using X1 CRUBIT_INTERNAL_RUST_TYPE(":: uses_rust_golden :: X1") =
     ::uses_rust::X1;
 }
+
+namespace uses_rust {
 
 static_assert(
     sizeof(X1) == 4,
@@ -297,24 +322,35 @@ static_assert(std::is_trivially_move_assignable_v<X1>);
 inline void X1::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(X1, x));
 }
+}  // namespace uses_rust
 
-namespace test_use_glob {
+namespace uses_rust::test_use_glob {
 using ::uses_rust::f1;
 }
+
+namespace uses_rust {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_f1();
 }
 inline std::int32_t f1() { return __crubit_internal::__crubit_thunk_f1(); }
 
-namespace test_use_glob {
+}  // namespace uses_rust
+
+namespace uses_rust::test_use_glob {
 using ::uses_rust::f2;
 }
+
+namespace uses_rust {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_f2();
 }
 inline std::int32_t f2() { return __crubit_internal::__crubit_thunk_f2(); }
+
+}  // namespace uses_rust
+
+namespace uses_rust {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_g1();
@@ -327,5 +363,6 @@ extern "C" std::int32_t __crubit_thunk_g2();
 inline std::int32_t g2() { return __crubit_internal::__crubit_thunk_g2(); }
 
 }  // namespace uses_rust
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_USES_RUST_GOLDEN

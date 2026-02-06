@@ -20,9 +20,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace rs_default {
-
-namespace derived_impl {
+namespace rs_default::derived_impl {
 
 // Generated from:
 // cc_bindings_from_rs/test/known_traits/default/default.rs;l=28
@@ -63,9 +61,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace derived_impl
+}  // namespace rs_default::derived_impl
 
-namespace explicit_impl {
+namespace rs_default::explicit_impl {
 
 // Generated from:
 // cc_bindings_from_rs/test/known_traits/default/default.rs;l=10
@@ -106,9 +104,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace explicit_impl
+}  // namespace rs_default::explicit_impl
 
-namespace field_with_no_default {
+namespace rs_default::field_with_no_default {
 
 //  It is important that `StructWithoutDefault` is `pub` so that `field`
 //  above is typed correctly in the C++ bindings and not replaced with a
@@ -191,9 +189,9 @@ StructWithFieldWithNoDefault final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace field_with_no_default
+}  // namespace rs_default::field_with_no_default
 
-namespace no_impl {
+namespace rs_default::no_impl {
 
 // Generated from:
 // cc_bindings_from_rs/test/known_traits/default/default.rs;l=64
@@ -230,9 +228,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace no_impl
+}  // namespace rs_default::no_impl
 
-namespace transparent_struct {
+namespace rs_default::transparent_struct {
 
 // Generated from:
 // cc_bindings_from_rs/test/known_traits/default/default.rs;l=70
@@ -273,9 +271,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace transparent_struct
+}  // namespace rs_default::transparent_struct
 
-namespace derived_impl {
+namespace rs_default::derived_impl {
 
 static_assert(
     sizeof(SomeStruct) == 4,
@@ -304,9 +302,9 @@ inline std::int32_t SomeStruct::extract_int(
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, __field0));
 }
-}  // namespace derived_impl
+}  // namespace rs_default::derived_impl
 
-namespace explicit_impl {
+namespace rs_default::explicit_impl {
 
 static_assert(
     sizeof(SomeStruct) == 4,
@@ -335,9 +333,9 @@ inline std::int32_t SomeStruct::extract_int(
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, __field0));
 }
-}  // namespace explicit_impl
+}  // namespace rs_default::explicit_impl
 
-namespace field_with_no_default {
+namespace rs_default::field_with_no_default {
 
 static_assert(
     sizeof(StructWithFieldWithNoDefault) == 4,
@@ -381,9 +379,9 @@ static_assert(std::is_trivially_move_assignable_v<StructWithoutDefault>);
 inline void StructWithoutDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithoutDefault, __field0));
 }
-}  // namespace field_with_no_default
+}  // namespace rs_default::field_with_no_default
 
-namespace no_impl {
+namespace rs_default::no_impl {
 
 static_assert(
     sizeof(SomeStruct) == 4,
@@ -397,9 +395,9 @@ static_assert(std::is_trivially_move_assignable_v<SomeStruct>);
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, __field0));
 }
-}  // namespace no_impl
+}  // namespace rs_default::no_impl
 
-namespace transparent_struct {
+namespace rs_default::transparent_struct {
 
 static_assert(
     sizeof(SomeStruct) == 4,
@@ -428,8 +426,7 @@ inline std::int32_t SomeStruct::extract_int() const {
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, __field0));
 }
-}  // namespace transparent_struct
+}  // namespace rs_default::transparent_struct
 
-}  // namespace rs_default
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_DEFAULT_RS_DEFAULT_GOLDEN

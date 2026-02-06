@@ -175,5 +175,6 @@ inline void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
 }
 
 }  // namespace str
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN

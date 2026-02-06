@@ -21,5 +21,6 @@ namespace unit_structs {
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 }
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STRUCTS_UNIT_STRUCTS_UNIT_STRUCTS_GOLDEN

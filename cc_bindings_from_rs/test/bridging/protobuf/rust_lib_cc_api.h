@@ -160,5 +160,6 @@ inline void FooService::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(FooService, stats));
 }
 }  // namespace rust_lib
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN

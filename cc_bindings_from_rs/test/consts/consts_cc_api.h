@@ -103,5 +103,6 @@ inline void TyWithAssocConsts::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TyWithAssocConsts, __field0));
 }
 }  // namespace consts
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_CONSTS_CONSTS_GOLDEN

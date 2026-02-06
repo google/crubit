@@ -212,5 +212,6 @@ inline std::uint16_t c_ushort() {
 }
 
 }  // namespace rust_api
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_FFI_11_TESTS_TYPE_IDENTITY_RUST_API_GOLDEN

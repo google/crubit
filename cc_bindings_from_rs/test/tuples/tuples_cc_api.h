@@ -498,5 +498,6 @@ inline void return_unit_is_not_tuple() {
 }
 
 }  // namespace tuples
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_TUPLES_TUPLES_GOLDEN

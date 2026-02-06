@@ -174,5 +174,6 @@ inline ::leaf_rs_lib::LeafRsEnum wrap_enum(std::uint8_t x) {
 }
 
 }  // namespace leaf_rs_lib
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_COMMON_TEST_BIDIRECTIONAL_DEPS_LEAF_RS_LIB_GOLDEN

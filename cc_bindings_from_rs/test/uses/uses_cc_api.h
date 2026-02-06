@@ -63,6 +63,10 @@ AliasOfExportedStruct final {
   static void __crubit_field_offset_assertions();
 };
 
+}  // namespace uses
+
+namespace uses {
+
 // CRUBIT_ANNOTATE: must_bind=
 //
 // Generated from:
@@ -93,6 +97,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
  private:
   static void __crubit_field_offset_assertions();
 };
+
+}  // namespace uses
+
+namespace uses {
 
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=74
@@ -127,7 +135,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-namespace a::c {
+}  // namespace uses
+
+namespace uses::a::c {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -135,9 +145,9 @@ namespace a::c {
 // cc_bindings_from_rs/test/uses/uses.rs;l=109
 std::int32_t private_middle_path();
 
-}  // namespace a::c
+}  // namespace uses::a::c
 
-namespace doc_hidden_test::visible {
+namespace uses::doc_hidden_test::visible {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -145,7 +155,9 @@ namespace doc_hidden_test::visible {
 // cc_bindings_from_rs/test/uses/uses.rs;l=90
 std::int32_t private_fn();
 
-}  // namespace doc_hidden_test::visible
+}  // namespace uses::doc_hidden_test::visible
+
+namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -153,13 +165,25 @@ std::int32_t private_fn();
 // cc_bindings_from_rs/test/uses/uses.rs;l=14
 std::int32_t f();
 
+}  // namespace uses
+
+namespace uses {
+
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=75
 void other_public_name();
 
+}  // namespace uses
+
+namespace uses {
+
 // Generated from:
 // cc_bindings_from_rs/test/uses/uses.rs;l=31
 std::int32_t private_fn();
+
+}  // namespace uses
+
+namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
 //
@@ -173,6 +197,9 @@ std::int32_t private_fn();
 // cc_bindings_from_rs/test/uses/uses.rs;l=58
 ::extern_crate::Y return_y();
 
+}  // namespace uses
+
+namespace uses {
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
 static_assert(
@@ -198,7 +225,9 @@ inline ::uses::AliasOfExportedStruct AliasOfExportedStruct::create(
 inline void AliasOfExportedStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(AliasOfExportedStruct, field));
 }
+}  // namespace uses
 
+namespace uses {
 using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
     ::uses::Original;
 using Alias2 CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
@@ -215,7 +244,9 @@ static_assert(std::is_trivially_move_assignable_v<Original>);
 inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, field));
 }
+}  // namespace uses
 
+namespace uses {
 using PublicName CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: OtherPublicName") = ::uses::OtherPublicName;
 static_assert(
@@ -230,12 +261,15 @@ static_assert(std::is_trivially_move_assignable_v<OtherPublicName>);
 inline void OtherPublicName::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OtherPublicName, __field0));
 }
+}  // namespace uses
 
+namespace uses {
 using X CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") = ::extern_crate::X;
 using XFromExternCrate CRUBIT_INTERNAL_RUST_TYPE(":: extern_crate :: X") =
     ::extern_crate::X;
+}  // namespace uses
 
-namespace a::c {
+namespace uses::a::c {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_private_umiddle_upath();
@@ -244,13 +278,13 @@ inline std::int32_t private_middle_path() {
   return __crubit_internal::__crubit_thunk_private_umiddle_upath();
 }
 
-}  // namespace a::c
+}  // namespace uses::a::c
 
-namespace doc_hidden_test::hidden {
+namespace uses::doc_hidden_test::hidden {
 using ::uses::doc_hidden_test::visible::private_fn;
 }
 
-namespace doc_hidden_test::visible {
+namespace uses::doc_hidden_test::visible {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_private_ufn();
@@ -259,17 +293,22 @@ inline std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
 
-}  // namespace doc_hidden_test::visible
+}  // namespace uses::doc_hidden_test::visible
 
-namespace test_mod {
+namespace uses::test_mod {
 using ::uses::f;
 }
+
+namespace uses {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_f();
 }
 inline std::int32_t f() { return __crubit_internal::__crubit_thunk_f(); }
 
+}  // namespace uses
+
+namespace uses {
 constexpr auto public_name = ::uses::other_public_name;
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_other_upublic_uname();
@@ -278,12 +317,20 @@ inline void other_public_name() {
   return __crubit_internal::__crubit_thunk_other_upublic_uname();
 }
 
+}  // namespace uses
+
+namespace uses {
+
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_private_ufn();
 }
 inline std::int32_t private_fn() {
   return __crubit_internal::__crubit_thunk_private_ufn();
 }
+
+}  // namespace uses
+
+namespace uses {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_ux(::extern_crate::X* __ret_ptr);
@@ -306,5 +353,6 @@ inline ::extern_crate::Y return_y() {
 }
 
 }  // namespace uses
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_USES_USES_GOLDEN

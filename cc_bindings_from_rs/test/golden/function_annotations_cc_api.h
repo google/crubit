@@ -33,6 +33,7 @@ inline std::int32_t add_two_integers(std::int32_t x, std::int32_t y) {
 }
 
 }  // namespace function_annotations_rust
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_FUNCTION_ANNOTATIONS_RUST_GOLDEN
 

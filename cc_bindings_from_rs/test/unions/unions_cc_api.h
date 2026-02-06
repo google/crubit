@@ -22,9 +22,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace unions {
-
-namespace repr_c {
+namespace unions::repr_c {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=11
@@ -60,9 +58,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
 // cc_bindings_from_rs/test/unions/unions.rs;l=16
 ::unions::repr_c::U create();
 
-}  // namespace repr_c
+}  // namespace unions::repr_c
 
-namespace repr_c_clone {
+namespace unions::repr_c_clone {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=77
@@ -99,9 +97,9 @@ U final {
 // cc_bindings_from_rs/test/unions/unions.rs;l=87
 ::unions::repr_c_clone::U create();
 
-}  // namespace repr_c_clone
+}  // namespace unions::repr_c_clone
 
-namespace repr_c_drop {
+namespace unions::repr_c_drop {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=122
@@ -131,9 +129,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace repr_c_drop
+}  // namespace unions::repr_c_drop
 
-namespace repr_c_packed {
+namespace unions::repr_c_packed {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=51
@@ -170,9 +168,9 @@ __attribute__((packed)) U final {
 // cc_bindings_from_rs/test/unions/unions.rs;l=56
 ::unions::repr_c_packed::U create();
 
-}  // namespace repr_c_packed
+}  // namespace unions::repr_c_packed
 
-namespace repr_rust {
+namespace unions::repr_rust {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=23
@@ -229,9 +227,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
 // cc_bindings_from_rs/test/unions/unions.rs;l=28
 ::unions::repr_rust::U create();
 
-}  // namespace repr_rust
+}  // namespace unions::repr_rust
 
-namespace repr_rust_clone {
+namespace unions::repr_rust_clone {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=94
@@ -279,9 +277,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/unions/unions.rs;l=104
 ::unions::repr_rust_clone::U create();
 
-}  // namespace repr_rust_clone
+}  // namespace unions::repr_rust_clone
 
-namespace repr_rust_drop {
+namespace unions::repr_rust_drop {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=141
@@ -323,9 +321,9 @@ U final {
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace repr_rust_drop
+}  // namespace unions::repr_rust_drop
 
-namespace repr_rust_packed {
+namespace unions::repr_rust_packed {
 
 // Generated from:
 // cc_bindings_from_rs/test/unions/unions.rs;l=64
@@ -366,9 +364,9 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 // cc_bindings_from_rs/test/unions/unions.rs;l=69
 ::unions::repr_rust_packed::U create();
 
-}  // namespace repr_rust_packed
+}  // namespace unions::repr_rust_packed
 
-namespace repr_c {
+namespace unions::repr_c {
 
 static_assert(
     sizeof(U) == 4,
@@ -393,9 +391,9 @@ inline ::unions::repr_c::U create() {
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace repr_c
+}  // namespace unions::repr_c
 
-namespace repr_c_clone {
+namespace unions::repr_c_clone {
 
 static_assert(
     sizeof(U) == 4,
@@ -436,9 +434,9 @@ inline ::unions::repr_c_clone::U create() {
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace repr_c_clone
+}  // namespace unions::repr_c_clone
 
-namespace repr_c_drop {
+namespace unions::repr_c_drop {
 
 static_assert(
     sizeof(U) == 8,
@@ -462,9 +460,9 @@ inline U& U::operator=(U&& other) {
 inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
-}  // namespace repr_c_drop
+}  // namespace unions::repr_c_drop
 
-namespace repr_c_packed {
+namespace unions::repr_c_packed {
 
 static_assert(
     sizeof(U) == 4,
@@ -489,9 +487,9 @@ inline ::unions::repr_c_packed::U create() {
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace repr_c_packed
+}  // namespace unions::repr_c_packed
 
-namespace repr_rust {
+namespace unions::repr_rust {
 
 static_assert(
     sizeof(U) == 4,
@@ -547,9 +545,9 @@ inline ::unions::repr_rust::U create() {
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace repr_rust
+}  // namespace unions::repr_rust
 
-namespace repr_rust_clone {
+namespace unions::repr_rust_clone {
 
 static_assert(
     sizeof(U) == 4,
@@ -607,9 +605,9 @@ inline ::unions::repr_rust_clone::U create() {
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace repr_rust_clone
+}  // namespace unions::repr_rust_clone
 
-namespace repr_rust_drop {
+namespace unions::repr_rust_drop {
 
 static_assert(
     sizeof(U) == 8,
@@ -650,9 +648,9 @@ inline std::int32_t* U::get_x() const {
 inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
-}  // namespace repr_rust_drop
+}  // namespace unions::repr_rust_drop
 
-namespace repr_rust_packed {
+namespace unions::repr_rust_packed {
 
 static_assert(
     sizeof(U) == 4,
@@ -677,8 +675,7 @@ inline ::unions::repr_rust_packed::U create() {
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace repr_rust_packed
+}  // namespace unions::repr_rust_packed
 
-}  // namespace unions
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_UNIONS_UNIONS_GOLDEN

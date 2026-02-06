@@ -459,5 +459,6 @@ function_with_nested_drop_default_arrays(
 }
 
 }  // namespace arrays
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ARRAYS_ARRAYS_GOLDEN

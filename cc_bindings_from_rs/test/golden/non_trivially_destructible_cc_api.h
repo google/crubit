@@ -146,5 +146,6 @@ inline void take_by_value(
 }
 
 }  // namespace non_trivially_destructible_rust
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_NON_TRIVIALLY_DESTRUCTIBLE_RUST_GOLDEN

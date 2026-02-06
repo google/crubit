@@ -25,9 +25,7 @@
 
 #include "support/ffi_11/ffi_11.h"
 
-namespace primitive_types {
-
-namespace argument_types {
+namespace primitive_types::argument_types {
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=60
@@ -37,9 +35,9 @@ void c_char_mut_ptr_arg(decltype(char(0))* __param_0);
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=59
 void c_char_ptr_arg(decltype(char(0)) const* __param_0);
 
-}  // namespace argument_types
+}  // namespace primitive_types::argument_types
 
-namespace field_types {
+namespace primitive_types::field_types {
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=169
@@ -216,9 +214,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace field_types
+}  // namespace primitive_types::field_types
 
-namespace return_types {
+namespace primitive_types::return_types {
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=74
@@ -348,9 +346,9 @@ std::uint8_t u8();
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=148
 std::uintptr_t usize();
 
-}  // namespace return_types
+}  // namespace primitive_types::return_types
 
-namespace test_c_void_ptr {
+namespace primitive_types::test_c_void_ptr {
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=9
@@ -406,9 +404,9 @@ void* identity_mut_c_void_ptr(void* ptr);
 ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember
 new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut);
 
-}  // namespace test_c_void_ptr
+}  // namespace primitive_types::test_c_void_ptr
 
-namespace test_maybe_uninit {
+namespace primitive_types::test_maybe_uninit {
 
 // Generated from:
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=44
@@ -427,9 +425,9 @@ maybe_uninit_ref(std::int32_t const* $static maybe_uninit);
 // cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=38
 std::int32_t& $static maybe_uninit_ref_mut(std::int32_t* $static maybe_uninit);
 
-}  // namespace test_maybe_uninit
+}  // namespace primitive_types::test_maybe_uninit
 
-namespace argument_types {
+namespace primitive_types::argument_types {
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_c_uchar_umut_uptr_uarg(decltype(char(0))*);
@@ -445,9 +443,9 @@ inline void c_char_ptr_arg(decltype(char(0)) const* __param_0) {
   return __crubit_internal::__crubit_thunk_c_uchar_uptr_uarg(__param_0);
 }
 
-}  // namespace argument_types
+}  // namespace primitive_types::argument_types
 
-namespace field_types {
+namespace primitive_types::field_types {
 
 static_assert(
     sizeof(Types) == 152,
@@ -489,9 +487,9 @@ inline void Types::__crubit_field_offset_assertions() {
   static_assert(147 == offsetof(Types, i8));
   static_assert(148 == offsetof(Types, u8));
 }
-}  // namespace field_types
+}  // namespace primitive_types::field_types
 
-namespace return_types {
+namespace primitive_types::return_types {
 
 namespace __crubit_internal {
 extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
@@ -695,9 +693,9 @@ inline std::uintptr_t usize() {
   return __crubit_internal::__crubit_thunk_usize();
 }
 
-}  // namespace return_types
+}  // namespace primitive_types::return_types
 
-namespace test_c_void_ptr {
+namespace primitive_types::test_c_void_ptr {
 
 static_assert(
     sizeof(StructWithCVoidPointerMember) == 16,
@@ -745,9 +743,9 @@ new_struct_with_c_void_pointer_member(const void* ptr_const, void* ptr_mut) {
   return std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-}  // namespace test_c_void_ptr
+}  // namespace primitive_types::test_c_void_ptr
 
-namespace test_maybe_uninit {
+namespace primitive_types::test_maybe_uninit {
 
 namespace __crubit_internal {
 extern "C" std::int32_t const* __crubit_thunk_maybe_uuninit_uptr(
@@ -784,8 +782,7 @@ maybe_uninit_ref_mut(std::int32_t* $static maybe_uninit) {
       maybe_uninit);
 }
 
-}  // namespace test_maybe_uninit
+}  // namespace primitive_types::test_maybe_uninit
 
-}  // namespace primitive_types
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_PRIMITIVE_TYPES_PRIMITIVE_TYPES_GOLDEN

@@ -320,5 +320,6 @@ inline void function_with_trivial_unnamed_lifetime_param(
 }
 
 }  // namespace lifetimes
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_LIFETIMES_LIFETIMES_GOLDEN

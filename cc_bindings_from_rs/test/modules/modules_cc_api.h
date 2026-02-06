@@ -21,15 +21,15 @@
 #include <type_traits>
 #include <utility>
 
-namespace modules {
-
-namespace basic_module {
+namespace modules::basic_module {
 
 // Generated from:
 // cc_bindings_from_rs/test/modules/modules.rs;l=9
 std::int32_t add_i32(std::int32_t x, std::int32_t y);
 
-}  // namespace basic_module
+}  // namespace modules::basic_module
+
+namespace modules {
 
 namespace [[deprecated]] deprecated_module {
 
@@ -39,7 +39,9 @@ namespace [[deprecated]] deprecated_module {
 
 }  // namespace deprecated_module
 
-namespace impl_in_separate_private_module {
+}  // namespace modules
+
+namespace modules::impl_in_separate_private_module {
 
 // Generated from:
 // cc_bindings_from_rs/test/modules/modules.rs;l=48
@@ -86,9 +88,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace impl_in_separate_private_module
+}  // namespace modules::impl_in_separate_private_module
 
-namespace outer {
+namespace modules::outer {
 
 namespace [[deprecated]] inner_deprecated {
 
@@ -99,9 +101,9 @@ namespace [[deprecated]] inner_deprecated {
 
 }
 
-}  // namespace outer
+}  // namespace modules::outer
 
-namespace outer::middle {
+namespace modules::outer::middle {
 
 namespace [[deprecated]] innermost_deprecated {
 
@@ -112,9 +114,9 @@ namespace [[deprecated]] innermost_deprecated {
 
 }
 
-}  // namespace outer::middle
+}  // namespace modules::outer::middle
 
-namespace basic_module {
+namespace modules::basic_module {
 
 namespace __crubit_internal {
 extern "C" std::int32_t __crubit_thunk_add_ui32(std::int32_t, std::int32_t);
@@ -123,7 +125,9 @@ inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
   return __crubit_internal::__crubit_thunk_add_ui32(x, y);
 }
 
-}  // namespace basic_module
+}  // namespace modules::basic_module
+
+namespace modules {
 
 namespace [[deprecated]] deprecated_module {
 
@@ -136,7 +140,9 @@ inline std::int32_t add_i32(std::int32_t x, std::int32_t y) {
 
 }  // namespace deprecated_module
 
-namespace impl_in_separate_private_module {
+}  // namespace modules
+
+namespace modules::impl_in_separate_private_module {
 
 static_assert(
     sizeof(Foo) == 4,
@@ -171,20 +177,19 @@ inline std::int32_t Foo::into_i32(
 inline void Foo::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Foo, __field0));
 }
-}  // namespace impl_in_separate_private_module
+}  // namespace modules::impl_in_separate_private_module
 
-namespace outer {
+namespace modules::outer {
 
 namespace [[deprecated]] inner_deprecated {}
 
-}  // namespace outer
+}  // namespace modules::outer
 
-namespace outer::middle {
+namespace modules::outer::middle {
 
 namespace [[deprecated]] innermost_deprecated {}
 
-}  // namespace outer::middle
+}  // namespace modules::outer::middle
 
-}  // namespace modules
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_MODULES_MODULES_GOLDEN

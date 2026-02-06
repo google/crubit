@@ -37,7 +37,9 @@ use crate::generate_struct_and_union::{
 };
 use arc_anyhow::{Context, Error, Result};
 use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
-use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet};
+use database::code_snippet::{
+    ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
+};
 use database::{
     AdtCoreBindings, BindingsGenerator, ExportedPath, FineGrainedFeature, FullyQualifiedName,
     NoMoveOrAssign, PublicPaths, SugaredTy, TypeLocation, UnqualifiedName,
@@ -1645,6 +1647,14 @@ fn generate_trait_impls<'a, 'tcx>(
         })
 }
 
+fn generate_template_specialization<'tcx>(
+    _db: &dyn BindingsGenerator<'tcx>,
+    _specialization: TemplateSpecialization<'tcx>,
+) -> CcSnippet<'tcx> {
+    // More to come on this later.
+    CcSnippet::new(quote! {})
+}
+
 fn formatted_items_in_crate<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
 ) -> impl Iterator<Item = FormattedItem<'tcx>> {
@@ -1755,28 +1765,80 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         }
     };
 
+    let mut specializations = cc_details_prereqs.template_specializations;
+    specializations.extend(
+        main_apis.values().flat_map(|api| api.prereqs.template_specializations.iter()).cloned(),
+    );
+
+    let mut specializations: HashMap<TemplateSpecialization<'_>, CcSnippet> = specializations
+        .into_iter()
+        .map(|spec| (spec.clone(), generate_template_specialization(db, spec)))
+        .collect();
+
     // Find the order of `main_apis` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
     // `main_apis` in the same order as the source order of the Rust APIs.
     let tcx = db.tcx();
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    enum Node<'tcx> {
+        Def(DefId),
+        Specialization(TemplateSpecialization<'tcx>),
+    }
     let ordered_ids = {
         let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
-            let nodes = main_apis.keys().copied();
-            let deps = main_apis.iter().flat_map(|(&successor, main_api)| {
-                let predecessors = main_api.prereqs.defs.iter().copied().filter(|pre|
+            let nodes = main_apis
+                .keys()
+                .copied()
+                .map(Node::Def)
+                .chain(specializations.keys().cloned().map(Node::Specialization));
+            let deps = main_apis
+                .iter()
+                .map(|(successor, main_api)| (Node::Def(*successor), main_api))
+                .chain(
+                    specializations
+                        .iter()
+                        .map(|(spec, main_api)| (Node::Specialization(spec.clone()), main_api)),
+                )
+                .flat_map(|(successor, main_api)| {
+                    let predecessors = main_api
+                        .prereqs
+                        .defs
+                        .iter()
+                        .copied()
                         // Only consider `pre`s that we're currently generating APIs for.
-                        main_apis.contains_key(pre));
-                predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
-            });
-            toposort::toposort(nodes, deps, move |&lhs_id, &rhs_id| {
-                stable_def_id_cmp(tcx, lhs_id, rhs_id)
+                        .filter(|pre| main_apis.contains_key(pre))
+                        .map(Node::Def)
+                        .chain(
+                            main_api
+                                .prereqs
+                                .template_specializations
+                                .iter()
+                                .cloned()
+                                .map(Node::Specialization),
+                        );
+                    predecessors.map(move |predecessor| toposort::Dependency {
+                        predecessor,
+                        successor: successor.clone(),
+                    })
+                });
+            toposort::toposort(nodes, deps, move |lhs_id, rhs_id| {
+                match (lhs_id, rhs_id) {
+                    (Node::Def(lhs_id), Node::Def(rhs_id)) => {
+                        stable_def_id_cmp(tcx, *lhs_id, *rhs_id)
+                    }
+                    // Prefer to emit specializations after defs.
+                    (Node::Specialization(_), Node::Specialization(_)) => Ordering::Equal,
+                    (Node::Def(_), Node::Specialization(_)) => Ordering::Less,
+                    (Node::Specialization(_), Node::Def(_)) => Ordering::Greater,
+                }
             })
         };
         assert_eq!(
             0,
             failed_ids.len(),
             "There are no known scenarios where CcPrerequisites::defs can form \
-                    a dependency cycle. These `LocalDefId`s form an unexpected cycle: {}",
+                    a dependency cycle. These `DefId`s form an unexpected cycle: {}",
             failed_ids.into_iter().map(|id| format!("{:?}", id)).join(",")
         );
         ordered_ids
@@ -1788,71 +1850,86 @@ fn generate_crate(db: &Database) -> Result<BindingsTokens> {
         let mut already_declared: HashSet<DefId> = HashSet::new();
         let mut fwd_decls: HashSet<DefId> = HashSet::new();
         let mut includes = cc_details_prereqs.includes;
-        let mut ordered_main_apis: Vec<(DefId, TokenStream)> = Vec::new();
-        for def_id in ordered_ids.into_iter() {
+        let mut ordered_main_apis: Vec<(Node, TokenStream)> = Vec::new();
+        for node in ordered_ids.into_iter() {
             let CcSnippet {
-                tokens: cc_tokens,
-                prereqs: CcPrerequisites {
-                    includes: mut inner_includes,
-                    fwd_decls: inner_fwd_decls,
-                    .. // `defs` have already been utilized by `toposort` above
-                }
-            } = main_apis.remove(&def_id).unwrap();
+                        tokens: cc_tokens,
+                        prereqs: CcPrerequisites {
+                            includes: mut inner_includes,
+                            fwd_decls: inner_fwd_decls,
+                            .. // `defs` and `specializations` have already been utilized by `toposort` above
+                        }
+                    } = match &node {
+                        Node::Def(def_id) => main_apis.remove(def_id).unwrap(),
+                        Node::Specialization(spec) => specializations.remove(spec).unwrap(),
+                    };
 
             fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
-            already_declared.insert(def_id);
             already_declared.extend(inner_fwd_decls.into_iter());
+            // We don't need to do this for specializations.
+            if let Node::Def(def_id) = node {
+                already_declared.insert(def_id);
+            }
 
             includes.append(&mut inner_includes);
-            ordered_main_apis.push((def_id, cc_tokens));
+            ordered_main_apis.push((node, cc_tokens));
         }
 
         let fwd_decls = fwd_decls
             .into_iter()
             .sorted_by_def(tcx)
-            .map(|local_def_id| (local_def_id, generate_fwd_decl(db, local_def_id)));
+            .map(|def_id| (Node::Def(def_id), generate_fwd_decl(db, def_id)));
 
+        let cpp_top_level_ns: Vec<Rc<str>> =
+            format_top_level_ns_for_crate(db, db.source_crate_num())
+                .iter()
+                .map(|sym| Rc::from(sym.as_str()))
+                .collect();
         // The first item of the tuple here is the DefId of the namespace.
-        let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> =
-            fwd_decls
-                .into_iter()
-                .chain(ordered_main_apis)
-                .map(|(def_id, tokens)| {
-                    (
-                        tcx.opt_parent(def_id),
-                        db.symbol_canonical_name(def_id)
-                            .unwrap_or_else(|| {
-                                panic!("Exported item {def_id:?} should have a canonical name")
-                            })
-                            .cpp_ns_path,
-                        tokens,
-                    )
-                })
-                .chain(cc_details.into_iter().map(|details| {
-                    (tcx.opt_parent(details.def_id), details.namespace, details.tokens)
-                }))
-                .collect_vec();
+        let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> = fwd_decls
+            .into_iter()
+            .chain(ordered_main_apis)
+            .map(|(node, tokens)| match node {
+                Node::Def(def_id) => (
+                    tcx.opt_parent(def_id),
+                    NamespaceQualifier::new(
+                        cpp_top_level_ns.iter().cloned().chain(
+                            db.symbol_canonical_name(def_id)
+                                .unwrap_or_else(|| {
+                                    panic!("Exported item {def_id:?} should have a canonical name")
+                                })
+                                .cpp_ns_path
+                                .namespaces,
+                        ),
+                    ),
+                    tokens,
+                ),
+                // Specializations always live in the top-level namespace.
+                Node::Specialization(_) => (None, NamespaceQualifier::new::<Rc<str>>([]), tokens),
+            })
+            .chain(cc_details.into_iter().map(|details| {
+                (
+                    tcx.opt_parent(details.def_id),
+                    NamespaceQualifier::new(
+                        cpp_top_level_ns.iter().cloned().chain(details.namespace.namespaces),
+                    ),
+                    details.tokens,
+                )
+            }))
+            .collect_vec();
 
         (includes, ordered_cc)
     };
 
     // Generate top-level elements of the C++ header file.
     let cc_api = {
-        let cpp_top_level_ns = format_top_level_ns_for_crate(db, db.source_crate_num())
-            .iter()
-            .map(|ns| db.format_cc_ident(*ns))
-            .collect::<Result<Vec<_>>>()?;
-
         let includes = format_cc_includes(&includes);
         let ordered_cc = format_namespace_bound_cc_tokens(db, ordered_cc, tcx);
         quote! {
             #includes
             __NEWLINE__ __NEWLINE__
-            namespace #(#cpp_top_level_ns)::* {
-                __NEWLINE__
-                #ordered_cc
-                __NEWLINE__
-            }
+            #ordered_cc
+            __NEWLINE__
             #impls_tokens
             #(#impls_cc_details)__NEWLINE__*
             __NEWLINE__

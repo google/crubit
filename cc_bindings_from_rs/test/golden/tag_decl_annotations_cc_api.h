@@ -87,6 +87,7 @@ inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, f));
 }
 }  // namespace tag_decl_annotations_rust
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_GOLDEN_TAG_DECL_ANNOTATIONS_RUST_GOLDEN
 

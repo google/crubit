@@ -33,5 +33,6 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 }  // namespace example_crate
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_CPP_ENUM_EXAMPLE_CRATE_GOLDEN

@@ -72,5 +72,6 @@ inline void ReprCUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ReprCUnion, b));
 }
 }  // namespace example_crate
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_EXAMPLES_RUST_UNION_EXAMPLE_CRATE_GOLDEN

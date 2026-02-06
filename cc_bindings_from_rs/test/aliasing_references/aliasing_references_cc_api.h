@@ -268,5 +268,6 @@ inline void mut_refs(std::int32_t& __param_0, std::int32_t& __param_1) {
 }
 
 }  // namespace aliasing_references
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ALIASING_REFERENCES_ALIASING_REFERENCES_GOLDEN

@@ -22,9 +22,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace enums {
-
-namespace repr_c {
+namespace enums::repr_c {
 
 // Generated from:
 // cc_bindings_from_rs/test/enums/enums.rs;l=11
@@ -106,9 +104,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace repr_c
+}  // namespace enums::repr_c
 
-namespace repr_c_clone_active_variant {
+namespace enums::repr_c_clone_active_variant {
 
 // Generated from:
 // cc_bindings_from_rs/test/enums/enums.rs;l=79
@@ -179,9 +177,9 @@ bool is_b(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 // cc_bindings_from_rs/test/enums/enums.rs;l=109
 bool is_c(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 
-}  // namespace repr_c_clone_active_variant
+}  // namespace enums::repr_c_clone_active_variant
 
-namespace repr_c_clone_counter {
+namespace enums::repr_c_clone_counter {
 
 // Generated from:
 // cc_bindings_from_rs/test/enums/enums.rs;l=55
@@ -227,9 +225,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace repr_c_clone_counter
+}  // namespace enums::repr_c_clone_counter
 
-namespace repr_c_drop {
+namespace enums::repr_c_drop {
 
 // Generated from:
 // cc_bindings_from_rs/test/enums/enums.rs;l=31
@@ -288,9 +286,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace repr_c_drop
+}  // namespace enums::repr_c_drop
 
-namespace repr_c {
+namespace enums::repr_c {
 
 static_assert(
     sizeof(MyEnum) == 40,
@@ -325,9 +323,9 @@ inline void MyEnum::__crubit_field_offset_assertions() {
   static_assert(4 == offsetof(MyEnum::__crubit_C_struct, b));
   static_assert(8 == offsetof(MyEnum::__crubit_C_struct, c));
 }
-}  // namespace repr_c
+}  // namespace enums::repr_c
 
-namespace repr_c_clone_active_variant {
+namespace enums::repr_c_clone_active_variant {
 
 static_assert(
     sizeof(CloneActiveVariant) == 8,
@@ -400,9 +398,9 @@ inline bool is_c(
   return __crubit_internal::__crubit_thunk_is_uc(e);
 }
 
-}  // namespace repr_c_clone_active_variant
+}  // namespace enums::repr_c_clone_active_variant
 
-namespace repr_c_clone_counter {
+namespace enums::repr_c_clone_counter {
 
 static_assert(
     sizeof(CloneCount) == 16,
@@ -443,9 +441,9 @@ inline void CloneCount::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(CloneCount, A));
   static_assert(0 == offsetof(CloneCount::__crubit_A_struct, p));
 }
-}  // namespace repr_c_clone_counter
+}  // namespace enums::repr_c_clone_counter
 
-namespace repr_c_drop {
+namespace enums::repr_c_drop {
 
 static_assert(
     sizeof(DropMe) == 16,
@@ -474,8 +472,7 @@ inline void DropMe::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DropMe::__crubit_B_struct, __field0));
   static_assert(0 == offsetof(DropMe::__crubit_C_struct, p));
 }
-}  // namespace repr_c_drop
+}  // namespace enums::repr_c_drop
 
-}  // namespace enums
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_ENUMS_ENUMS_GOLDEN

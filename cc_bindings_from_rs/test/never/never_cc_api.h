@@ -110,5 +110,6 @@ inline void never_return() {
 }
 
 }  // namespace never
+
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NEVER_NEVER_GOLDEN
