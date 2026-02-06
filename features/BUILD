@@ -94,6 +94,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling formatting to Rust via C++.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "fmt",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["fmt"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set containing experimental Crubit features, in addition to the officially supported
 # features.
 #
