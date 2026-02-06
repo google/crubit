@@ -8,7 +8,8 @@
 
 use ctor::{
     copy, ctor, emplace, mov, raw_ctor, recursively_pinned, try_emplace, Assign, Ctor, CtorNew,
-    Emplace, FnCtor, ManuallyDropCtor, RecursivelyPinned, RvalueReference, Slot, UnreachableCtor,
+    Emplace, FnCtor, ManuallyDropCtor, RecursivelyPinned, RvalueReference, SelfCtor, Slot,
+    UnreachableCtor,
 };
 use googletest::gtest;
 use std::cell::RefCell;
@@ -78,7 +79,7 @@ fn test_emplace_macro() {
 #[gtest]
 fn test_try_emplace_returns_ok() {
     struct OkCtor;
-    impl !Unpin for OkCtor {}
+    impl !SelfCtor for OkCtor {}
     // SAFETY: unconditionally initializes dest.
     unsafe impl Ctor for OkCtor {
         type Output = i32;
@@ -96,7 +97,7 @@ fn test_try_emplace_returns_ok() {
 #[gtest]
 fn test_try_emplace_returns_err() {
     struct ErrCtor;
-    impl !Unpin for ErrCtor {}
+    impl !SelfCtor for ErrCtor {}
     // SAFETY: unconditionally returns error.
     unsafe impl Ctor for ErrCtor {
         type Output = i32;
@@ -347,7 +348,7 @@ unsafe impl<'a> Ctor for PanicCtor<'a> {
     }
 }
 
-impl !Unpin for PanicCtor<'_> {}
+impl !SelfCtor for PanicCtor<'_> {}
 
 /// Tests that drop() is called when the Ctor doesn't panic.
 #[gtest]
@@ -464,7 +465,7 @@ unsafe impl<'a> Ctor for LoggingCtor<'a> {
         Ok(())
     }
 }
-impl !Unpin for LoggingCtor<'_> {}
+impl !SelfCtor for LoggingCtor<'_> {}
 
 impl<'a> CtorNew<&DropCtorLogger<'a>> for DropCtorLogger<'a> {
     type CtorType = LoggingCtor<'a>;

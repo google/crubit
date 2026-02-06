@@ -106,7 +106,7 @@ fn derive_default_impl(input: syn::DeriveInput) -> syn::Result<proc_macro2::Toke
             }
         }
 
-        impl !::core::marker::Unpin for #struct_ctor_name {}
+        impl !::#ctor::SelfCtor for #struct_ctor_name {}
 
         impl ::#ctor::CtorNew<()> for #struct_name {
             type CtorType = #struct_ctor_name;

@@ -11,6 +11,22 @@ For each feature we use, we document the following:
 *   **Use case:** What do we use the feature for?
 *   **Exit strategy:** What would happen if the feature went away?
 
+### `auto_traits`
+
+*   **Crubit feature:** `supported`
+
+*   **Use case:** To allow defining a deferred pininit trait, `Ctor`, which
+    accepts all existing Rust-movable types by value, without any overlapping
+    trait impls.
+
+*   **Exit strategy:** Change to just `impl<T: Unpin> RustMove for T {}`. We can
+    go back to the old strategy of abusing the `Unpin` trait to try to capture
+    "most types". Any callers which were using Rust-movable non-`Unpin` types
+    would need to either add an explicit `impl Ctor for MyType {type
+    Output=Self; ...}`, or manually use `RustMoveCtor(x)` (which implements
+    `Ctor`) when a `Ctor` is requested for `x` but `x` doesn't itself implement
+    `Ctor<Output=Self, ...>`.
+
 ### `custom_inner_attributes`
 
 *   **Crubit feature:** `supported`
@@ -22,13 +38,12 @@ For each feature we use, we document the following:
 
 *   **Crubit feature:** `supported`
 *   **Use case:** Used to implement `ctor` / nontrivial intialization, so that
-    we can dispatch on the existence of the `Unpin` trait (which is not possible
-    with `PhantomPinned`). Also used so that we can pin/unpin a type without
-    adding a field (which is not possible with `PhantomPinned`).
-*   **Exit strategy:** For dispatch, we can define a new auto trait (also an
-    unstable feature) or use specialization (also an unstable feature). For the
-    fields, this is a compatibility break, and we'd need to add a PhantomData
-    field to all C++ types to mark them as `!Send`, `!Unpin`, etc.
+    we can dispatch on the existence of the `SelfCtor` trait. Also used so that
+    we can pin/unpin a type without adding a field (which is not possible with
+    `PhantomPinned`).
+*   **Exit strategy:** For the fields, this is a compatibility break, and we'd
+    need to add a `PhantomData` field to all C++ types to mark them as `!Send`,
+    `!Unpin`, etc.
 
 ### `extern_types`
 

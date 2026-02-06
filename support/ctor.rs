@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![cfg_attr(not(test), no_std)]
-#![feature(negative_impls, allow_internal_unstable, super_let)]
+#![feature(auto_traits, negative_impls, allow_internal_unstable, super_let)]
 #![allow(internal_features)] // allow_internal_unstable 🤔
 //! Traits for memory management operations on wrapped C++ objects, inspired by
 //! moveit, pin-init, and the current in-place initialization proposal at
@@ -79,22 +79,14 @@
 //! ## Blanket impls
 //!
 //! So that Rust types can be used against C++ functions (even templated ones),
-//! the copy and move traits have blanket impls for all suitable Unpin types.
+//! the copy and move traits have blanket impls for all Rust types (except
+//! for dedicated construction types, like `FnCtor`.)
 //!
-//! More significantly, we take the position that all `Unpin` types are their own
-//! `Ctor`. This makes `Ctor`-based initialization nearly a perfect superset of
-//! normal initialization rules: for a non-self-referential Rust type (an `Unpin`
-//! type), it looks the same as normal, but for C++-like `!Unpin` types we use
-//! custom `Ctor` values to initialize in-place.
-//!
-//! Blanket implementing based on `Unpin` means that we're treating `T : Unpin`
-//! as effectively meaning "`T` is safe to deal with by value", which is close to,
-//! but not quite, what it means. (There are some types which are `!Unpin` but
-//! would be safe to treat as normal rust types. Unfortunately, there is no way
-//! to detect them.)
-//!
-//! A more general solution would be to use a custom auto trait, e.g.
-//! `pub auto trait SelfInit {}`.
+//! All non-ctor-helper types are their own `Ctor`. This makes `Ctor`-based
+//! initialization nearly a perfect superset of normal initialization rules.
+//! If you have a type by value, initialization is performed by a Rust move.
+//! For C++-like types that require in-place initialization, and cannot be
+//! moved in Rust, we use custom `Ctor` values to initialize in-place.
 //!
 //! ### Compatible changes to types
 //!
@@ -111,10 +103,8 @@
 //! In order to make it as backwards-compatible as possible to "upgrade" a type
 //! from being non-Rust-movable to Rust-movable, this works whether `MyType` is Rust-movable or not.
 //! Functions which used to return an opaque `Ctor` object will now instead return the raw value
-//! itself. Provided the type is Unpin, it will automatically implement `Ctor<Output=Self, Error=Infallible>`, thanks to a blanket
-//! impl in this crate.
-//!
-//! TODO(b/477144850): Revise the above.
+//! itself. Since the blanket impls already automatically implement
+//! `Ctor<Output=Self, Error=Infallible>`, existing callers continue to work unchanged.
 //!
 //! This would also be possible if there were no blanket impl, and instead `Ctor` were manually
 //! implemented for every type. However, this would mean that a large number of types would not
@@ -301,7 +291,7 @@ pub unsafe trait Ctor: Sized {
             }
         }
 
-        impl<C, F> !Unpin for CtorThen<C, F>
+        impl<C, F> !SelfCtor for CtorThen<C, F>
         where
             C: Ctor,
             F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>,
@@ -375,7 +365,7 @@ pub unsafe trait Ctor: Sized {
             }
         }
 
-        impl<C, F, O> !Unpin for CtorOrElse<C, F, O>
+        impl<C, F, O> !SelfCtor for CtorOrElse<C, F, O>
         where
             C: Ctor,
             F: FnOnce(C::Error) -> O,
@@ -470,7 +460,7 @@ pub fn ctor_error<T: ?Sized, E>(e: E) -> impl Ctor<Output = T, Error = E> {
         }
     }
 
-    impl<T: ?Sized, E> !Unpin for CtorError<T, E> {}
+    impl<T: ?Sized, E> !SelfCtor for CtorError<T, E> {}
 
     CtorError { e, marker: PhantomData }
 }
@@ -536,6 +526,17 @@ impl<T> Emplace<T> for Arc<T> {
     }
 }
 
+/// An auto trait for types that are values in their own right, rather than
+/// dedicated constructors for some *other* type.
+///
+/// This trait is implemented for all types by default. Types like `FnCtor` that
+/// exist only to construct other types should opt out via `impl !SelfCtor for ...`.
+///
+/// Do not directly rely on this trait. Instead, use `Ctor`. `SelfCtor` is a workaround to
+/// implement specialization of `Ctor`, and will go away if we ever get a useful form of
+/// specialization.
+pub auto trait SelfCtor {}
+
 #[must_use = must_use_ctor!()]
 pub struct FnCtor<Output, F: FnOnce(*mut Output)>(pub F, PhantomData<fn(Output)>);
 impl<Output, F: FnOnce(*mut Output)> FnCtor<Output, F> {
@@ -555,8 +556,8 @@ unsafe impl<Output, F: FnOnce(*mut Output)> Ctor for FnCtor<Output, F> {
     }
 }
 
-/// !Unpin to override the blanket Ctor impl.
-impl<Output, F> !Unpin for FnCtor<Output, F> {}
+/// !SelfCtor to override the blanket Ctor impl.
+impl<Output, F> !SelfCtor for FnCtor<Output, F> {}
 
 /// Copy type.
 ///
@@ -581,8 +582,8 @@ where
     }
 }
 
-/// !Unpin to override the blanket Ctor impl.
-impl<P: ?Sized> !Unpin for Copy<P> {}
+/// !SelfCtor to override the blanket Ctor impl.
+impl<P: ?Sized> !SelfCtor for Copy<P> {}
 
 /// Returns a `Copy` which can be used as a `CtorNew` or `Assign` source, or as
 /// a `Ctor` directly.
@@ -683,7 +684,7 @@ where
 }
 
 /// !Unpin to override the blanket `Ctor` impl.
-impl<'a, T: ?Sized> !Unpin for RvalueReference<'a, T> {}
+impl<'a, T: ?Sized> !SelfCtor for RvalueReference<'a, T> {}
 
 /// Const rvalue reference (move-reference) type. Usually not very helpful.
 ///
@@ -720,8 +721,8 @@ where
     }
 }
 
-/// !Unpin to override the blanket `Ctor` impl.
-impl<'a, T: ?Sized> !Unpin for ConstRvalueReference<'a, T> {}
+/// !SelfCtor to override the blanket `Ctor` impl.
+impl<'a, T: ?Sized> !SelfCtor for ConstRvalueReference<'a, T> {}
 
 /// Creates a "to-be-moved" pointer for `src`.
 ///
@@ -755,29 +756,17 @@ macro_rules! const_mov {
 // For interop with C++ templates that may need to take Rust types, we will want
 // blanket impls for Rust types where it is safe to do so.
 
-/// All Rust types are their own constructor, if it is known to be safe (i.e.
-/// Unpin).
+/// All Rust types are their own constructor (except those that implement `Ctor`
+/// for another type, see `SelfCtor` above.)
 ///
-/// (Note that this is an approximation: some types are safe to deal with by
-/// value, as long as they have never been pinned. In `ctor`, we assume
-/// that *anything* which is `!Unpin` is only safe to initialize via a manually
-/// provided `Ctor`.)
-///
-/// (Note: to avoid overlapping impls, every type that implements `Ctor` by hand
-/// must be `!Unpin`.)
-///
-/// This allows code to safely accept direct initialization of `Unpin` Rust
-/// values, while also accepting `Ctor`-based initialization for `!Unpin`
-/// values: use `Ctor`-based initialization for both, and as a special case,
-/// `Ctor`-based initialization looks identical to direct initialization when
-/// the value is `Unpin`. For example, the `ctor!` macro looks like direct
-/// initialization for everything `Unpin`.
-///
-/// A contrasting design might be to have a separate initialization syntax for
-/// direct vs `Ctor`-based initialization. However, that would still likely need
-/// to be restricted to `Unpin` types for safety.
-// SAFETY: unconditionally initializes dest.
-unsafe impl<T: Unpin> Ctor for T {
+/// This allows code to safely accept direct initialization of Rust-movable
+/// values, while also accepting customized in-place pinned initialization for
+/// non-Rust-movable values: use `Ctor`-based initialization for both.
+//
+// SAFETY: unconditionally initializes dest. Note that while it is pinned after construction,
+// it is not pinned beforehand, as we accept it by value. (If it was meant to be pinned, the UB
+// already happened as part of passing self by value, and nothing we do here adds additional UB.)
+unsafe impl<T: SelfCtor> Ctor for T {
     type Output = T;
     type Error = Infallible;
     unsafe fn ctor(self, dest: *mut Self) -> Result<(), Infallible> {
@@ -789,7 +778,7 @@ unsafe impl<T: Unpin> Ctor for T {
 /// Constructs via a Rust move.
 #[must_use = must_use_ctor!()]
 pub struct RustMoveCtor<T, E = Infallible>(T, PhantomData<fn() -> E>);
-impl<T, E> !Unpin for RustMoveCtor<T, E> {}
+impl<T, E> !SelfCtor for RustMoveCtor<T, E> {}
 
 impl<T, E> RustMoveCtor<T, E> {
     pub fn new(x: T) -> Self {
@@ -832,7 +821,7 @@ impl<T: ?Sized, E> UnreachableCtor<T, E> {
         UnreachableCtor(PhantomData::default())
     }
 }
-impl<T: ?Sized, E> !Unpin for UnreachableCtor<T, E> {}
+impl<T: ?Sized, E> !SelfCtor for UnreachableCtor<T, E> {}
 
 // TODO(jeanpierreda): Might be more interesting to make this return `Result<!, ()>`,
 // but that requires unstable features, and also means it can't be used in `emplace!`.
@@ -1596,49 +1585,6 @@ pub trait CtorNew<ConstructorArgs> {
 // Misc
 // ====
 
-/// A constructor for `PhantomPinned`.
-///
-/// ## Why doesn't `PhantomPinned` implement `Ctor<Output=Self>` ?
-///
-/// A self-impl, where `PhantomPinned : Ctor<Output=PhantomPinned>` would also
-/// have been safe, even though `PhantomPinned` is `!Unpin`, because it's just a
-/// marker. However, the trait coherence rules are not happy about this:
-///
-/// ```
-/// // crate_1
-/// #![feature(negative_impls)]
-/// pub struct Foo;
-/// impl !Unpin for Foo {}
-/// ```
-///
-/// ```
-/// // crate_2
-/// trait MyTrait {}
-/// impl<T: Unpin> MyTrait for T{}
-/// impl MyTrait for crate_1::Foo {}
-/// ```
-///
-/// (In our case, `Foo` is `std::marker::PhantomPinned`, and `MyTrait` is
-/// `Ctor`)
-///
-/// Within `crate_1`, Rust understands that `Foo` is `!Unpin`. So `impl MyTrait
-/// for Foo {}` is valid in `crate_1`. However, outside of `crate_1`, Rust
-/// decides it doesn't know whether `Foo` implements `Unpin` or not, and so
-/// incorrectly believes that the impls may conflict.
-///
-/// So while it is perfectly feasible to implement self-construction for any
-/// type locally, we cannot give foreign impls.
-pub struct PhantomPinnedCtor;
-// SAFETY: unconditionally initializes dest.
-unsafe impl Ctor for PhantomPinnedCtor {
-    type Output = core::marker::PhantomPinned;
-    type Error = Infallible;
-    unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Infallible> {
-        RustMoveCtor::new(core::marker::PhantomPinned).ctor(dest)
-    }
-}
-impl !Unpin for PhantomPinnedCtor {}
-
 /// A constructor for ManuallyDrop<T>, given a constructor for T.
 ///
 /// ManuallyDrop is special as the only non-Copy type allowed in a union, so we
@@ -1667,4 +1613,4 @@ unsafe impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
     }
 }
 
-impl<T: Ctor> !Unpin for ManuallyDropCtor<T> {}
+impl<T: Ctor> !SelfCtor for ManuallyDropCtor<T> {}

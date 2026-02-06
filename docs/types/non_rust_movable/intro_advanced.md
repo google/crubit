@@ -126,32 +126,28 @@ around without calling `ctor()`, you are not yet performing any copies or moves.
 
 #### Universal initialization {#universal-initialization}
 
-If we take the point of view that `Unpin` types are all safe to move by value,
-and `!Unpin` types are all dangerous and must use `Ctor` to initialize something
-in place, the following blanket impl makes `Ctor` an extension of safe
-initialization, by implicitly defining it already for all `Unpin` types:
+`ctor` has a blanket impl of `Ctor<Output=Self, Error=Infallible>` for every
+Rust type except for those that specifically are designed to be a `Ctor` for
+some other type. This makes `Ctor` nearly a perfect superset of safe
+initialization. It is equivalent to a Rust move for Rust-movable values, but
+also works for non-Rust-movable values.
 
 ```rust
-impl<T: Unpin> Ctor for T {
+pub auto trait SelfCtor {}
+impl<T: SelfCtor> Ctor for T {
     type Output = T;
     type Error = Infallible;
-    unsafe fn ctor(self, mut dest: *mut T) {
+    unsafe fn ctor(self, mut dest: *mut T) -> Result<(), Self::Error> {
         dest.write(self);
+        Ok(())
     }
 }
 ```
 
-This ends up being very convenient when initialization of relocatable and
-non-Rust-movable types is mixed together, such as with `ctor!` below.
-Conceptually, we should imagine ourselves as having extended Rust initialization
-to also cover types which can't be relocated, and pretend that all `!Unpin`
-types are non-Rust-movable.
-
-However, this means that a custom `Ctor` type must artificially declare itself
-to be `!Unpin`, only so that it is omitted from the blanket impl and can be a
-`Ctor` for something other than itself.
-
-<!-- TODO(b/477144850): rewrite above when it's no longer true. -->
+Code which intends to perform initialization of a value, and which permits the
+use of non-Rust-movable values, can take a `Ctor` trait impl instead of a
+concrete `T`, and work for both. For example, this is how the `ctor!` macro
+below works.
 
 ### Heap allocation {#heap-allocation}
 
@@ -245,8 +241,8 @@ This is all wrapped up in a macro. The `ctor!` macro returns an `impl Ctor`
 (step #1), the implementation of which looks up the different fields (step #2),
 and initializes them using user-provided `Ctor`s (#3). Since relocatable types
 like `u32` are their own `Ctor`, this looks much like normal initialization,
-generalized to work in-place with custom `Ctor` implementations for `!Unpin`
-types:
+generalized to work in-place with custom `Ctor` implementations for
+non-Rust-movable types:
 
 ```rust
 let sub_ctor = …; // a Ctor<Output=T>
@@ -504,7 +500,7 @@ Deref&lt;Target=T>`, so that you can `x.assign(copy(y))` where in C++ you would
 `x = y;` – although `&*y` works as well and is preferable.
 
 (For copying, there are good reasons not to have `let x = c;` work. Also,
-references are `Unpin` object types, and so they already implement `Ctor` for
+references are ordinary Rust values, and so they already implement `Ctor` for
 themselves -- remember, this is an *extension* of regular Rust initialization!)
 
 Note that for both copying and moving, nothing happens until the actual call to

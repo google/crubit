@@ -20,7 +20,7 @@ rust_library(
     edition = "2021",
     proc_macro_deps = [":ctor_proc_macros"],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=allow_internal_unstable,negative_impls,super_let"],
+    rustc_flags = ["-Zallow-features=allow_internal_unstable,auto_traits,negative_impls,super_let"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",
