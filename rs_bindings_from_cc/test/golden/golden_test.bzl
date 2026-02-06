@@ -36,6 +36,14 @@ _generate_bindings = rule(
             aspects = [rust_bindings_from_cc_aspect],
             cfg = crubit_flavor_transition,
         ),
+        # Synthetic dependency to ensure even a coarse `bazel query` analysis finds a transitive
+        # dependency from Crubit tool sources to golden test bindings.
+        "_rs_bindings_from_cc_binary": attr.label(
+            default = "//rs_bindings_from_cc",
+            executable = True,
+            allow_single_file = True,
+            cfg = "exec",
+        ),
     },
     implementation = _generate_bindings_impl,
 )
