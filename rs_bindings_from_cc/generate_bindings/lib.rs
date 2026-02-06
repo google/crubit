@@ -131,45 +131,32 @@ fn generate_type_alias(
         return Err(e.into());
     };
 
-    let generated_item = if rs_type_kind.unalias().is_bridge_type() {
-        let disable_comment = format!(
-            "Type alias for {cpp_type} suppressed due to being a bridge type",
-            cpp_type = type_alias.debug_name(db.ir()),
-        );
-        GeneratedItem::Comment { message: disable_comment.into() }
-    } else {
-        let underlying_type = db
-            .rs_type_kind(type_alias.underlying_type.clone())
-            .with_context(|| format!("Failed to format underlying type for {type_alias}"))?;
+    let underlying_type = db
+        .rs_type_kind(type_alias.underlying_type.clone())
+        .with_context(|| format!("Failed to format underlying type for {type_alias}"))?;
 
-        // If this type alias refers to a record with nested types,
-        // we need to also re-export the generated module.
-        let mut underlying_nested_module_path = None;
-        if let RsTypeKind::Record { record, crate_path, .. } = &underlying_type {
-            if generate_struct_and_union::child_items(record, db)
-                .any(|child_item| child_item.is_nested)
-            {
-                let underlying_nested_module_name =
-                    make_rs_ident(&record.rs_name.identifier.to_snake_case());
-                underlying_nested_module_path =
-                    Some(quote! { #crate_path #underlying_nested_module_name });
-            }
-        }
+    // If this type alias refers to a record with nested types,
+    // we need to also re-export the generated module.
+    let mut underlying_nested_module_path = None;
+    if let RsTypeKind::Record { record, crate_path, .. } = &underlying_type
+        && generate_struct_and_union::child_items(record, db).any(|child_item| child_item.is_nested)
+    {
+        let underlying_nested_module_name =
+            make_rs_ident(&record.rs_name.identifier.to_snake_case());
+        underlying_nested_module_path = Some(quote! { #crate_path #underlying_nested_module_name });
+    }
 
-        GeneratedItem::TypeAlias {
-            doc_comment: generate_doc_comment(
-                type_alias.doc_comment.as_deref(),
-                None,
-                Some(&type_alias.source_loc),
-                db.environment(),
-            ),
-            visibility: db
-                .type_visibility(&type_alias.owning_target, rs_type_kind)
-                .unwrap_or_default(),
-            ident: make_rs_ident(&type_alias.rs_name.identifier),
-            underlying_type: underlying_type.to_token_stream(db),
-            underlying_nested_module_path,
-        }
+    let generated_item = GeneratedItem::TypeAlias {
+        doc_comment: generate_doc_comment(
+            type_alias.doc_comment.as_deref(),
+            None,
+            Some(&type_alias.source_loc),
+            db.environment(),
+        ),
+        visibility: db.type_visibility(&type_alias.owning_target, rs_type_kind).unwrap_or_default(),
+        ident: make_rs_ident(&type_alias.rs_name.identifier),
+        underlying_type: underlying_type.to_token_stream(db),
+        underlying_nested_module_path,
     };
     Ok(ApiSnippets {
         generated_items: HashMap::from([(type_alias.id, generated_item)]),

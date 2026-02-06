@@ -171,6 +171,16 @@ pub fn has_bindings(
                 /*is_return_type=*/ true,
             ) {
                 Ok(rs_type_kind) => {
+                    if matches!(item, Item::TypeAlias(_)) && rs_type_kind.unalias().is_bridge_type()
+                    {
+                        return Err(NoBindingsReason::Unsupported {
+                            context: item.debug_name(ir),
+                            error: anyhow!(
+                                "Type alias for {cpp_type} suppressed due to being a bridge type",
+                                cpp_type = item.debug_name(ir),
+                            ),
+                        });
+                    }
                     let visibility = type_visibility(db, &item, rs_type_kind)?;
                     Ok(BindingsInfo { visibility })
                 }
