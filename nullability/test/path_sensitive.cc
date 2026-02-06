@@ -48,11 +48,7 @@ TEST(PointerNullabilityTest, ConditionalInitialization2) {
       b = return_bool();
       if (!b) p = produce_int();
 
-      // TODO(b/307492164): False negative. This dereference is unsafe.
-      // This false negative likely happens because we don't model a return
-      // value for the `return_bool()` call above, so the `false` value that `b`
-      // is initialized with does not get overwritten.
-      (void)*p;
+      (void)*p;  // [[unsafe]]
     }
   )cc"));
 }
