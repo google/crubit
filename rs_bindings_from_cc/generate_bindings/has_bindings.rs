@@ -87,7 +87,7 @@ pub fn has_bindings(
                     NoBindingsReason::DependencyFailed {
                         context: item.debug_name(ir),
                         error: anyhow!(
-                            "Could not find parent's module name.\
+                            "crubit.rs/errors/nested_type: Could not find parent's module name.\
                             \n  This is a bug. The parent's module name should always be\
                             \n  in the list. More info:\
                             \n    for item: {item_name}\

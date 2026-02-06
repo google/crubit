@@ -100,13 +100,13 @@ pub mod foo {
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=already_snake_case
 pub struct already_snake_case {
     /// Reason for representing this field as a blob of bytes:
-    /// parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+    /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for already_snake_case {}
@@ -128,19 +128,19 @@ impl Default for already_snake_case {
 }
 
 // Error while generating bindings for struct 'already_snake_case::Inner':
-// parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames
 pub struct ConflictingSnakeCaseNames {
     /// Reason for representing this field as a blob of bytes:
-    /// records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ConflictingSnakeCaseNames {}
@@ -162,19 +162,19 @@ impl Default for ConflictingSnakeCaseNames {
 }
 
 // Error while generating bindings for struct 'ConflictingSnakeCaseNames::Inner':
-// records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
 /// # Safety
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ConflictingSnakeCaseNames_
 pub struct ConflictingSnakeCaseNames_ {
     /// Reason for representing this field as a blob of bytes:
-    /// records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for ConflictingSnakeCaseNames_ {}
@@ -198,7 +198,7 @@ impl Default for ConflictingSnakeCaseNames_ {
 }
 
 // Error while generating bindings for struct 'ConflictingSnakeCaseNames_::Inner':
-// records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -285,13 +285,13 @@ impl Default for OnlyOneHasNestedItems_ {
 ///
 /// To call a function that accepts this type, you must uphold these requirements:
 /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-///   * `i`: Crubit cannot assume unknown types are safe: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SameNameAsNamespace
 pub struct SameNameAsNamespace {
     /// Reason for representing this field as a blob of bytes:
-    /// parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+    /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
     pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for SameNameAsNamespace {}
@@ -313,7 +313,7 @@ impl Default for SameNameAsNamespace {
 }
 
 // Error while generating bindings for struct 'SameNameAsNamespace::Inner':
-// parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 
 // namespace same_name_as_namespace
 
@@ -378,13 +378,13 @@ pub mod no_longer_top_level {
     ///
     /// To call a function that accepts this type, you must uphold these requirements:
     /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: already_snake_case
     pub struct already_snake_case {
         /// Reason for representing this field as a blob of bytes:
-        /// parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+        /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for already_snake_case {}
@@ -408,19 +408,19 @@ pub mod no_longer_top_level {
     }
 
     // Error while generating bindings for struct 'no_longer_top_level::already_snake_case::Inner':
-    // parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
+    // crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `already_snake_case` already exists
 
     /// # Safety
     ///
     /// To call a function that accepts this type, you must uphold these requirements:
     /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames
     pub struct ConflictingSnakeCaseNames {
         /// Reason for representing this field as a blob of bytes:
-        /// records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+        /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for ConflictingSnakeCaseNames {}
@@ -442,19 +442,19 @@ pub mod no_longer_top_level {
     }
 
     // Error while generating bindings for struct 'no_longer_top_level::ConflictingSnakeCaseNames::Inner':
-    // records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    // crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
     /// # Safety
     ///
     /// To call a function that accepts this type, you must uphold these requirements:
     /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: ConflictingSnakeCaseNames_
     pub struct ConflictingSnakeCaseNames_ {
         /// Reason for representing this field as a blob of bytes:
-        /// records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+        /// crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for ConflictingSnakeCaseNames_ {}
@@ -476,7 +476,7 @@ pub mod no_longer_top_level {
     }
 
     // Error while generating bindings for struct 'no_longer_top_level::ConflictingSnakeCaseNames_::Inner':
-    // records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
+    // crubit.rs/errors/nested_type: records ["ConflictingSnakeCaseNames", "ConflictingSnakeCaseNames_"] all have nested items, but all map to the same nested module name: `conflicting_snake_case_names`
 
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
@@ -565,13 +565,13 @@ pub mod no_longer_top_level {
     ///
     /// To call a function that accepts this type, you must uphold these requirements:
     /// * Document why the following public unsafe fields of this type cannot be misused by callee:
-    ///   * `i`: Crubit cannot assume unknown types are safe: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+    ///   * `i`: Crubit cannot assume unknown types are safe: crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=no_longer_top_level :: SameNameAsNamespace
     pub struct SameNameAsNamespace {
         /// Reason for representing this field as a blob of bytes:
-        /// parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+        /// crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
         pub(crate) i: [::core::mem::MaybeUninit<u8>; 1],
     }
     impl !Send for SameNameAsNamespace {}
@@ -595,7 +595,7 @@ pub mod no_longer_top_level {
     }
 
     // Error while generating bindings for struct 'no_longer_top_level::SameNameAsNamespace::Inner':
-    // parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
+    // crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `same_name_as_namespace` already exists
 
     // namespace same_name_as_namespace
 
@@ -680,7 +680,7 @@ impl Default for ContainsForwardDeclared {
 }
 
 // Error while generating bindings for struct 'ContainsForwardDeclared::Nested':
-// Can't generate bindings for ContainsForwardDeclared::Nested due to missing bindings for its dependency: Could not find parent's module name.
+// Can't generate bindings for ContainsForwardDeclared::Nested due to missing bindings for its dependency: crubit.rs/errors/nested_type: Could not find parent's module name.
 //   This is a bug. The parent's module name should always be
 //   in the list. More info:
 //     for item: ContainsForwardDeclared::Nested

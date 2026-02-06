@@ -443,12 +443,12 @@ impl From<NoBindingsReason> for Error {
                 parent_names_that_map_to_same_name,
             } => {
                 anyhow!(
-                    "records {parent_names_that_map_to_same_name:?} all have nested items, but all map to the same nested module name: `{conflicting_name}`",
+                    "crubit.rs/errors/nested_type: records {parent_names_that_map_to_same_name:?} all have nested items, but all map to the same nested module name: `{conflicting_name}`",
                 )
             }
             NoBindingsReason::ParentModuleNameOverwritten { conflicting_name } => {
                 anyhow!(
-                    "parent record has nested items, but the module to contain them could not be generated because another item named `{conflicting_name}` already exists",
+                    "crubit.rs/errors/nested_type: parent record has nested items, but the module to contain them could not be generated because another item named `{conflicting_name}` already exists",
                 )
             }
         }
