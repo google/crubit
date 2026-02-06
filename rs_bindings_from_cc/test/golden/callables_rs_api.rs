@@ -977,7 +977,14 @@ mod detail {
             dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
         >,
     ) {
-        (unsafe { ::core::ptr::read(f) })();
+        (unsafe {
+            ::core::ptr::replace(
+                f,
+                ::alloc::boxed::Box::new(|| {
+                    ::core::unreachable!("Called FnOnce after it was moved");
+                }),
+            )
+        })();
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __CcTemplateInstN6rs_std11DynCallableIFvvOEEE_manager(
