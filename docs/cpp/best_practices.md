@@ -191,7 +191,10 @@ type).
     Rust features. These privileged Rust types can be used instead of the
     equivalent C++ types, as a wrapper type.
 
-In these cases, we may bridge to a wrapper type as a workaround, while we
+*   The type is simply not supported/supportable in Rust, and needs a wrapper as
+    a workaround. (See also: crubit.rs/errors/unsupported_type.)
+
+In these cases, Crubit may bridge to a wrapper type as a workaround, while we
 hopefully fix the underlying issues that mean we cannot directly use the
 underlying type. This offers us a subset of the API we want, and allows
 continued progress.
