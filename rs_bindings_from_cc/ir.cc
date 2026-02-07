@@ -674,6 +674,7 @@ llvm::json::Value Record::ToJson() const {
       {"enclosing_item_id", enclosing_item_id},
       {"must_bind", must_bind},
       {"overloads_operator_delete", overloads_operator_delete},
+      {"detected_formatter", detected_formatter},
   };
 
   return llvm::json::Object{
@@ -702,6 +703,7 @@ llvm::json::Value Enum::ToJson() const {
       {"unknown_attr", unknown_attr},
       {"enclosing_item_id", enclosing_item_id},
       {"must_bind", must_bind},
+      {"detected_formatter", detected_formatter},
   };
 
   return llvm::json::Object{
