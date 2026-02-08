@@ -463,7 +463,7 @@ fn test_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
     let ir = ir_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
-      struct S { int& f(); };
+      struct S { int& f() const; };
       "#),
     )?;
     let dir = lifetime_defaults_transform(&ir)?;
@@ -495,7 +495,7 @@ fn test_explicit_this_lifetime_returned_for_nullary_member_function() -> Result<
     let ir = ir_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
-      struct S { int& f() $a; };
+      struct S { int& f() const $a; };
       "#),
     )?;
     let dir = lifetime_defaults_transform(&ir)?;
@@ -559,7 +559,7 @@ fn test_this_lifetime_returned_for_member_function_with_reference_param() -> Res
     let ir = ir_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
-      struct S { int& f(int& i1); };
+      struct S { int& f(int& i1) const; };
       "#),
     )?;
     let dir = lifetime_defaults_transform(&ir)?;

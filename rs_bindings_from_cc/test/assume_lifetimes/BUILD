@@ -35,3 +35,32 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_test_cc_library(
+    name = "member_function",
+    srcs = ["member_function.cc"],
+    hdrs = ["member_function.h"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:assume_lifetimes",
+    ],
+)
+
+golden_test(
+    name = "member_function_golden_test",
+    basename = "member_function",
+    cc_library = "member_function",
+    golden_cc = "member_function_api_impl.cc",
+    golden_rs = "member_function_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "member_function_test",
+    srcs = ["member_function_test.rs"],
+    cc_deps = [
+        ":member_function",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

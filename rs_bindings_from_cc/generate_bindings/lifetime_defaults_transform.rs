@@ -178,13 +178,18 @@ impl LifetimeDefaults {
     fn add_lifetime_to_input_type(
         &mut self,
         is_this: bool,
+        is_constructor: bool,
         name_hint: Option<&Rc<str>>,
         new_bindings: &mut Vec<Rc<str>>,
         ty: &CcType,
     ) -> LifetimeResult {
         match &ty.variant {
-            CcTypeVariant::Pointer(pty) if is_this || pty.kind == PointerTypeKind::LValueRef => {
+            CcTypeVariant::Pointer(pty)
+                if (is_this && (is_constructor || pty.pointee_type.is_const))
+                    || pty.kind == PointerTypeKind::LValueRef =>
+            {
                 let LifetimeResult { ty: pointee_type, .. } = self.add_lifetime_to_input_type(
+                    false,
                     false,
                     name_hint,
                     new_bindings,
@@ -343,6 +348,7 @@ impl LifetimeDefaults {
         let mut new_func = func.clone();
         let mut state = LifetimeState::Unseen;
         let mut this_state = LifetimeState::Unseen;
+        let mut had_this = false;
         new_func.lifetime_inputs.clear();
         // TODO(b/454627672): add bindings for parent item lifetimes.
         func.lifetime_inputs
@@ -350,10 +356,12 @@ impl LifetimeDefaults {
             .for_each(|name| new_func.lifetime_inputs.push(self.bindings.push_new_binding(name)));
         self.lower_clang_annotations(&mut new_func)?;
         new_func.params.iter_mut().enumerate().for_each(|(ix, param)| {
+            let is_this = ix == 0 && &*param.identifier.identifier == "__this";
+            had_this |= is_this;
             let LifetimeResult { ty: new_type, state: new_state, this_state: new_this_state } =
                 self.add_lifetime_to_input_type(
-                    /*is_this=*/
-                    ix == 0 && &*param.identifier.identifier == "__this",
+                    is_this,
+                    func.cc_name == ir::UnqualifiedIdentifier::Constructor,
                     Some(&param.identifier.identifier),
                     &mut new_func.lifetime_inputs,
                     &param.type_,
@@ -371,6 +379,15 @@ impl LifetimeDefaults {
             &mut new_func.lifetime_inputs,
             &new_func.return_type,
         );
+        if had_this {
+            // See if we can promote the type of `this` to a reference.
+            let this = new_func.params.get_mut(0).unwrap();
+            if !this.type_.explicit_lifetimes.is_empty()
+                && let CcTypeVariant::Pointer(pty) = &mut this.type_.variant
+            {
+                pty.kind = PointerTypeKind::LValueRef;
+            }
+        }
         Ok(new_func)
     }
 
