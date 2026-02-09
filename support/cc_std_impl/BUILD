@@ -49,6 +49,19 @@ additional_rust_srcs_for_crubit_bindings(
 )
 
 additional_rust_srcs_for_crubit_bindings(
+    name = "google_allocator",
+    srcs = [
+        "google_allocator.rs",
+    ],
+    compatible_with = [
+        "//buildenv/target:non_prod",
+    ],
+    visibility = [
+        "//support/cc_std:__subpackages__",
+    ],
+)
+
+additional_rust_srcs_for_crubit_bindings(
     name = "manually_bridged_types",
     srcs = [
         "string.rs",
