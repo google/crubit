@@ -124,15 +124,16 @@ static std::optional<unsigned> getEndOffsetOfEastQualifierAnnotation(
 /// annotation, returns the begin offset of the annotation. Else, returns
 /// std::nullopt.
 static std::optional<unsigned> getBeginOffsetOfWestQualifierAnnotation(
-    SourceLocation BeginningOfPtr, const SourceManager &SM,
-    const LangOptions &LangOpts, const FileID &DeclFID) {
-  Token PrevTok = utils::lexer::getPreviousToken(BeginningOfPtr, SM, LangOpts);
-  if (!PrevTok.is(tok::raw_identifier)) return std::nullopt;
+    SourceLocation BeginningOfPtr, const SourceManager& SM,
+    const LangOptions& LangOpts, const FileID& DeclFID) {
+  std::optional<Token> PrevTok =
+      utils::lexer::getPreviousToken(BeginningOfPtr, SM, LangOpts);
+  if (!PrevTok || !PrevTok->is(tok::raw_identifier)) return std::nullopt;
 
-  if (!isQualifierPositionAnnotation(PrevTok.getRawIdentifier()))
+  if (!isQualifierPositionAnnotation(PrevTok->getRawIdentifier()))
     return std::nullopt;
 
-  auto [FID, Offset] = SM.getDecomposedLoc(PrevTok.getLocation());
+  auto [FID, Offset] = SM.getDecomposedLoc(PrevTok->getLocation());
   if (FID != DeclFID) return std::nullopt;
 
   return Offset;
@@ -147,16 +148,17 @@ static bool isCVR(llvm::StringRef ID) {
 }
 
 static SourceLocation includePrecedingCVRQualifiers(
-    SourceLocation Begin, const SourceManager &SM, const LangOptions &LangOpts,
+    SourceLocation Begin, const SourceManager& SM, const LangOptions& LangOpts,
     bool AfterNewlinePrefixesIfIdentifier = true) {
   std::optional<Token> FinalQualifierSeen;
   // Update `Begin` as we search and find qualifier tokens.
-  Token Tok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
-  while (!Tok.is(tok::unknown)) {
-    if (!Tok.is(tok::raw_identifier)) break;
-    if (!isCVR(skipEscapedNewLinePrefixes(Tok.getRawIdentifier()))) break;
-    FinalQualifierSeen = Tok;
-    Begin = Tok.getLocation();
+  std::optional<Token> Tok =
+      utils::lexer::getPreviousToken(Begin, SM, LangOpts);
+  while (Tok && !Tok->is(tok::unknown)) {
+    if (!Tok->is(tok::raw_identifier)) break;
+    if (!isCVR(skipEscapedNewLinePrefixes(Tok->getRawIdentifier()))) break;
+    FinalQualifierSeen = *Tok;
+    Begin = Tok->getLocation();
     Tok = utils::lexer::getPreviousToken(Begin, SM, LangOpts);
   }
 
