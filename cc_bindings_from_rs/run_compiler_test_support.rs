@@ -140,6 +140,7 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
 }
 
 #[rustversion::since(2025-10-22)]
+#[rustversion::before(2026-02-07)]
 fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
     rustc_interface::interface::Config {
         opts,
@@ -160,6 +161,58 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
         hash_untracked_state: None,
         registry: rustc_errors::registry::Registry::new(rustc_errors::DIAGNOSTICS),
         locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec(),
+        ice_file: None,
+        extra_symbols: vec![],
+        using_internal_features: &USING_INTERNAL_FEATURES,
+    }
+}
+
+#[rustversion::since(2026-02-07)]
+#[rustversion::before(2026-02-08)]
+fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
+    rustc_interface::interface::Config {
+        opts,
+        crate_cfg: Default::default(),
+        crate_check_cfg: Default::default(),
+        input: Input::Str {
+            name: rustc_span::FileName::Custom(TEST_FILENAME.to_string()),
+            input: source,
+        },
+        output_file: None,
+        output_dir: None,
+        file_loader: None,
+        lint_caps: Default::default(),
+        psess_created: None,
+        register_lints: None,
+        override_queries: None,
+        make_codegen_backend: None,
+        hash_untracked_state: None,
+        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec(),
+        ice_file: None,
+        extra_symbols: vec![],
+        using_internal_features: &USING_INTERNAL_FEATURES,
+    }
+}
+
+#[rustversion::since(2026-02-08)]
+fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
+    rustc_interface::interface::Config {
+        opts,
+        crate_cfg: Default::default(),
+        crate_check_cfg: Default::default(),
+        input: Input::Str {
+            name: rustc_span::FileName::Custom(TEST_FILENAME.to_string()),
+            input: source,
+        },
+        output_file: None,
+        output_dir: None,
+        file_loader: None,
+        lint_caps: Default::default(),
+        psess_created: None,
+        register_lints: None,
+        override_queries: None,
+        make_codegen_backend: None,
+        hash_untracked_state: None,
         ice_file: None,
         extra_symbols: vec![],
         using_internal_features: &USING_INTERNAL_FEATURES,

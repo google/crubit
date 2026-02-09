@@ -14,7 +14,6 @@ extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
 
-use rustc_errors::registry;
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::{
     self as config, CodegenOptions, ErrorOutputType, OptionsTargetModifiers, Sysroot,
@@ -187,6 +186,113 @@ fn handle_options(
     }
 }
 
+#[rustversion::before(2026-02-07)]
+pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
+    rustc_interface::Config {
+        // Command line options
+        opts,
+        // cfg! configuration in addition to the default ones
+        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
+        crate_check_cfg: Vec::new(), // CheckCfg
+        input,
+        output_dir: None,  // Option<PathBuf>
+        output_file: None, // Option<PathBuf>
+        file_loader: None, // Option<Box<dyn FileLoader + Send + Sync>>
+        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_owned(),
+        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
+        // This is a callback from the driver that is called when [`ParseSess`] is created.
+        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
+        // This is a callback from the driver that is called when we're registering lints;
+        // it is called during plugin registration when we have the LintStore in a non-shared state.
+        //
+        // Note that if you find a Some here you probably want to call that function in the new
+        // function being registered.
+        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
+        // This is a callback from the driver that is called just after we have populated
+        // the list of queries.
+        //
+        // The second parameter is local providers and the third parameter is external providers.
+        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
+        // Registry of diagnostics codes.
+        registry: rustc_errors::registry::Registry::new(rustc_errors::codes::DIAGNOSTICS),
+        make_codegen_backend: None,
+        ice_file: None,
+        hash_untracked_state: None,
+        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
+        extra_symbols: vec![],
+    }
+}
+
+#[rustversion::since(2026-02-07)]
+#[rustversion::before(2026-02-08)]
+pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
+    rustc_interface::Config {
+        // Command line options
+        opts,
+        // cfg! configuration in addition to the default ones
+        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
+        crate_check_cfg: Vec::new(), // CheckCfg
+        input,
+        output_dir: None,  // Option<PathBuf>
+        output_file: None, // Option<PathBuf>
+        file_loader: None, // Option<Box<dyn FileLoader + Send + Sync>>
+        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_owned(),
+        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
+        // This is a callback from the driver that is called when [`ParseSess`] is created.
+        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
+        // This is a callback from the driver that is called when we're registering lints;
+        // it is called during plugin registration when we have the LintStore in a non-shared state.
+        //
+        // Note that if you find a Some here you probably want to call that function in the new
+        // function being registered.
+        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
+        // This is a callback from the driver that is called just after we have populated
+        // the list of queries.
+        //
+        // The second parameter is local providers and the third parameter is external providers.
+        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
+        make_codegen_backend: None,
+        ice_file: None,
+        hash_untracked_state: None,
+        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
+        extra_symbols: vec![],
+    }
+}
+
+#[rustversion::since(2026-02-08)]
+pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
+    rustc_interface::Config {
+        // Command line options
+        opts,
+        // cfg! configuration in addition to the default ones
+        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
+        crate_check_cfg: Vec::new(), // CheckCfg
+        input,
+        output_dir: None,              // Option<PathBuf>
+        output_file: None,             // Option<PathBuf>
+        file_loader: None,             // Option<Box<dyn FileLoader + Send + Sync>>
+        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
+        // This is a callback from the driver that is called when [`ParseSess`] is created.
+        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
+        // This is a callback from the driver that is called when we're registering lints;
+        // it is called during plugin registration when we have the LintStore in a non-shared state.
+        //
+        // Note that if you find a Some here you probably want to call that function in the new
+        // function being registered.
+        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
+        // This is a callback from the driver that is called just after we have populated
+        // the list of queries.
+        //
+        // The second parameter is local providers and the third parameter is external providers.
+        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
+        make_codegen_backend: None,
+        ice_file: None,
+        hash_untracked_state: None,
+        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
+        extra_symbols: vec![],
+    }
+}
+
 /// Generates bindings using rmeta input files rather than source files and rustc args.
 /// This function exists so we can guard it behind a feature flag and should be cleaned up once
 /// we've migrated to rmetas entirely.
@@ -277,45 +383,10 @@ fn main() {{}}
         )
         .into(),
     };
-    let config = rustc_interface::Config {
-        // Command line options
-        opts: config::Options {
-            externs,
-            search_paths,
-            target_triple,
-            cg,
-            ..config::Options::default()
-        },
-        // cfg! configuration in addition to the default ones
-        crate_cfg: Vec::new(),       // FxHashSet<(String, Option<String>)>
-        crate_check_cfg: Vec::new(), // CheckCfg
+    let config = construct_config(
         input,
-        output_dir: None,  // Option<PathBuf>
-        output_file: None, // Option<PathBuf>
-        file_loader: None, // Option<Box<dyn FileLoader + Send + Sync>>
-        locale_resources: rustc_driver::DEFAULT_LOCALE_RESOURCES.to_owned(),
-        lint_caps: Default::default(), // FxHashMap<lint::LintId, lint::Level>
-        // This is a callback from the driver that is called when [`ParseSess`] is created.
-        psess_created: None, //Option<Box<dyn FnOnce(&mut ParseSess) + Send>>
-        // This is a callback from the driver that is called when we're registering lints;
-        // it is called during plugin registration when we have the LintStore in a non-shared state.
-        //
-        // Note that if you find a Some here you probably want to call that function in the new
-        // function being registered.
-        register_lints: None, // Option<Box<dyn Fn(&Session, &mut LintStore) + Send + Sync>>
-        // This is a callback from the driver that is called just after we have populated
-        // the list of queries.
-        //
-        // The second parameter is local providers and the third parameter is external providers.
-        override_queries: None, // Option<fn(&Session, &mut ty::query::Providers<'_>, &mut ty::query::Providers<'_>)>
-        // Registry of diagnostics codes.
-        registry: registry::Registry::new(rustc_errors::codes::DIAGNOSTICS),
-        make_codegen_backend: None,
-        ice_file: None,
-        hash_untracked_state: None,
-        using_internal_features: &rustc_driver::USING_INTERNAL_FEATURES,
-        extra_symbols: vec![],
-    };
+        config::Options { externs, sysroot, target_triple, search_paths, ..Default::default() },
+    );
     rustc_interface::run_compiler(config, |compiler| {
         // Parse the program and print the syntax tree.
         let krate = rustc_interface::passes::parse(&compiler.sess);
