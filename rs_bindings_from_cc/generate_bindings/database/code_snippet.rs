@@ -1326,6 +1326,8 @@ pub enum Thunk {
         param_types: Vec<TokenStream>,
         return_type_fragment: Option<TokenStream>,
     },
+    /// Generates a thunk for `delete ptr`.
+    OperatorDelete { thunk_ident: Ident, type_name: TokenStream },
 }
 
 impl ToTokens for Thunk {
@@ -1361,6 +1363,12 @@ impl ToTokens for Thunk {
                     pub(crate) unsafe fn #thunk_ident #generic_params(
                         #( #param_idents: #param_types ),*
                     ) #return_type_fragment ;
+                }
+                .to_tokens(tokens);
+            }
+            Thunk::OperatorDelete { thunk_ident, type_name } => {
+                quote! {
+                    pub(crate) unsafe fn #thunk_ident(ptr: *mut #type_name);
                 }
                 .to_tokens(tokens);
             }
@@ -1400,6 +1408,11 @@ pub enum ThunkImpl {
     FuntionTypeAssertation {
         implementation_function: TokenStream,
         cc_function_type: TokenStream,
+    },
+    /// A function that implements `delete ptr`.
+    OperatorDelete {
+        thunk_ident: Ident,
+        type_cc_name: TokenStream,
     },
 }
 
@@ -1462,6 +1475,14 @@ impl ToTokens for ThunkImpl {
             ThunkImpl::FuntionTypeAssertation { implementation_function, cc_function_type } => {
                 quote! {
                     static_assert( ( #cc_function_type ) & #implementation_function);
+                }
+                .to_tokens(tokens);
+            }
+            ThunkImpl::OperatorDelete { thunk_ident, type_cc_name } => {
+                quote! {
+                    extern "C" void #thunk_ident(#type_cc_name* ptr) {
+                        delete ptr;
+                    }
                 }
                 .to_tokens(tokens);
             }

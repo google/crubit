@@ -37,17 +37,17 @@ fn test_unique_ptr_string() {
 
 #[gtest]
 fn test_unique_ptr_overloaded_delete() {
-    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrOverloadedDelete))
+    assert!(item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrOverloadedDelete))
 }
 
 #[gtest]
 fn test_unique_ptr_overloaded_destroying_delete() {
-    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrOverloadedDestroyingDelete))
+    assert!(item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrOverloadedDestroyingDelete))
 }
 
 #[gtest]
 fn test_unique_ptr_polymorphic_type() {
-    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrPolymorphicType))
+    assert!(item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrPolymorphicType))
 }
 
 #[gtest]

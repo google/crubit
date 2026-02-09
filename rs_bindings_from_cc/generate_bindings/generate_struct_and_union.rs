@@ -608,6 +608,14 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         } else {
             vec![]
         };
+
+    if record.overloads_operator_delete {
+        let (thunk, thunk_impl, trait_impl) = cc_struct_operator_delete_impl(db, &record)?;
+        api_snippets.thunks.push(thunk);
+        api_snippets.cc_details.push(thunk_impl);
+        indirect_functions.push(trait_impl);
+    }
+
     let incomplete_definition = if crubit_features.contains(crubit_feature::CrubitFeature::Wrapper)
     {
         Some(quote! {
@@ -929,4 +937,43 @@ fn cc_struct_upcast_impl(
     }
 
     Ok((upcast_impls, thunks, thunk_impls))
+}
+
+fn cc_struct_operator_delete_impl(
+    db: &dyn BindingsGenerator,
+    record: &Rc<Record>,
+) -> Result<(Thunk, ThunkImpl, TokenStream)> {
+    let thunk_ident = make_rs_ident(&format!(
+        "__crubit_delete__{}_{}",
+        record.mangled_cc_name,
+        record.owning_target.convert_to_cc_identifier(),
+    ));
+    let type_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
+    let type_cc_name = cpp_type_name_for_record(record.as_ref(), db.ir())?;
+
+    let thunk =
+        Thunk::OperatorDelete { thunk_ident: thunk_ident.clone(), type_name: type_name.clone() };
+    let thunk_impl = ThunkImpl::OperatorDelete {
+        thunk_ident: thunk_ident.clone(),
+        type_cc_name: type_cc_name.to_token_stream(),
+    };
+
+    let crate_root_path = db.ir().crate_root_path_tokens();
+    let in_cc_std = db.ir().is_current_target(&record.owning_target)
+        && record.owning_target.target_name_escaped() == "cc_std";
+    let trait_path = if in_cc_std {
+        quote! { crate::std::OperatorDelete }
+    } else {
+        quote! { ::cc_std::std::OperatorDelete }
+    };
+
+    let trait_impl = quote! {
+        unsafe impl #trait_path for #type_name {
+            unsafe fn delete(ptr: *mut Self) {
+                #crate_root_path::detail::#thunk_ident(ptr as *mut #type_name);
+            }
+        }
+    };
+
+    Ok((thunk, thunk_impl, trait_impl))
 }

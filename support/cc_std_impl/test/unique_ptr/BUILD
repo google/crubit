@@ -26,3 +26,24 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_test_cc_library(
+    name = "unique_ptr_dyn_test_helpers",
+    testonly = 1,
+    srcs = ["unique_ptr_dyn_test_helpers.cc"],
+    hdrs = ["unique_ptr_dyn_test_helpers.h"],
+    aspect_hints = ["//features:experimental"],
+    deps = ["//support:annotations"],
+)
+
+crubit_rust_test(
+    name = "unique_ptr_dyn_test",
+    srcs = ["unique_ptr_dyn_test.rs"],
+    cc_deps = [
+        ":unique_ptr_dyn_test_helpers",
+        "//support/public:cc_std",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

@@ -53,3 +53,53 @@ impl<T> Drop for unique_ptr<T> {
         }
     }
 }
+
+/// A trait for types that can be deleted via `delete p` in C++.
+///
+/// # Safety
+///
+/// `delete` must be safe to call on a pointer to `Self` that was allocated via `new`.
+pub unsafe trait OperatorDelete {
+    unsafe fn delete(ptr: *mut Self);
+}
+
+/// A smart pointer that owns and manages another object via a pointer,
+/// ABI-compatible with `std::unique_ptr` using default deleter from C++.
+///
+/// This version is used for types that have a virtual destructor or overloaded
+/// `operator delete`.
+#[allow(non_snake_case)]
+#[repr(C)]
+pub struct unique_ptr_dyn<T: OperatorDelete> {
+    ptr: *mut T,
+}
+
+impl<T: OperatorDelete> unique_ptr_dyn<T> {
+    /// Takes ownership of the provided raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must either be null, or allocated by C++ `new`. Otherwise, the
+    /// behavior is undefined.
+    pub unsafe fn new(ptr: *mut T) -> Self {
+        Self { ptr }
+    }
+
+    pub fn get(&self) -> *mut T {
+        self.ptr
+    }
+
+    pub fn release(&mut self) -> *mut T {
+        core::mem::replace(&mut self.ptr, core::ptr::null_mut())
+    }
+}
+
+impl<T: OperatorDelete> Drop for unique_ptr_dyn<T> {
+    fn drop(&mut self) {
+        if !self.ptr.is_null() {
+            unsafe {
+                OperatorDelete::delete(self.ptr);
+            }
+        }
+    }
+}
