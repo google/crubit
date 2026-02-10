@@ -1441,6 +1441,9 @@ pub fn generate_function(
             errors.consolidate()?;
             return Ok(None);
         };
+    if impl_kind.is_unsafe() {
+        db.errors().add_category(error_report::Category::Unsafe);
+    }
     let namespace_qualifier = ir.namespace_qualifier(&func).format_for_rs();
 
     if let Err(err) = return_type.check_by_value() {

@@ -212,6 +212,12 @@ pub enum Category {
 
     /// This item is a bridged type, which cannot be used by value.
     Bridge = 1 << 8,
+
+    /// This is an `unsafe` item. If it is a type, then it's a type that causes Crubit to
+    /// mark any function accepting it as unsafe.
+    ///
+    /// As an example, the C++ items `struct Foo{ T* x};` and `void Foo(T* x);` are unsafe.
+    Unsafe = 1 << 9,
     // TODO(b/468093766): Abstract? base classes, public inheritance
 }
 

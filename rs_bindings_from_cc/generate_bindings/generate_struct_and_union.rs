@@ -357,6 +357,10 @@ fn field_definition(
 pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
     use error_report::Category;
     db.errors().add_category(Category::Type);
+    let record_safety = db.record_safety(record.clone());
+    if matches!(record_safety, database::rs_snippet::Safety::Unsafe { .. }) {
+        db.errors().add_category(Category::Unsafe);
+    }
     if !record.is_unpin() {
         db.errors().add_category(Category::NonMovable);
     }
@@ -638,7 +642,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
             record.doc_comment.as_deref(),
-            db.record_safety(record.clone()).unsafe_reason().as_deref(),
+            record_safety.unsafe_reason().as_deref(),
             Some(&record.source_loc),
             db.environment(),
         ),
