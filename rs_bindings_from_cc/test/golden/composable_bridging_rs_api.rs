@@ -221,18 +221,6 @@ pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum>
 // Can't generate bindings for std::pointer_traits<char *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::pointer_traits<char *> (crate::__CcTemplateInstNSt3__u14pointer_traitsIPcEE is a template instantiation)
 
-// Error while generating bindings for class 'std::initializer_list<char32_t>':
-// Can't generate bindings for std::initializer_list<char32_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char32_t> (crate::__CcTemplateInstSt16initializer_listIDiE is a template instantiation)
-
-// Error while generating bindings for class 'std::initializer_list<char16_t>':
-// Can't generate bindings for std::initializer_list<char16_t>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char16_t> (crate::__CcTemplateInstSt16initializer_listIDsE is a template instantiation)
-
-// Error while generating bindings for class 'std::initializer_list<char>':
-// Can't generate bindings for std::initializer_list<char>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char> (crate::__CcTemplateInstSt16initializer_listIcE is a template instantiation)
-
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char32_t *>>':
 // Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char32_t *>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char32_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPDiEEEE is a template instantiation)
@@ -312,6 +300,18 @@ pub fn ReturnsI64EnumInComposableBridgeType() -> crate::MyOption<crate::I64Enum>
 // Error while generating bindings for class 'std::__wrap_iter<char *>':
 // Can't generate bindings for std::__wrap_iter<char *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::__wrap_iter<char *> (crate::__CcTemplateInstNSt3__u11__wrap_iterIPcEE is a template instantiation)
+
+// Error while generating bindings for class 'std::initializer_list<char32_t>':
+// Can't generate bindings for std::initializer_list<char32_t>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char32_t> (crate::__CcTemplateInstSt16initializer_listIDiE is a template instantiation)
+
+// Error while generating bindings for class 'std::initializer_list<char16_t>':
+// Can't generate bindings for std::initializer_list<char16_t>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char16_t> (crate::__CcTemplateInstSt16initializer_listIDsE is a template instantiation)
+
+// Error while generating bindings for class 'std::initializer_list<char>':
+// Can't generate bindings for std::initializer_list<char>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:composable_bridging_cc needs [//features:wrapper] for std::initializer_list<char> (crate::__CcTemplateInstSt16initializer_listIcE is a template instantiation)
 
 // Error while generating bindings for class 'std::allocator<char32_t>':
 // Can't generate bindings for std::allocator<char32_t>, because of missing required features (crubit.rs-features):

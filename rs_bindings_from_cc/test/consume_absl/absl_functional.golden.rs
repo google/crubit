@@ -280,57 +280,57 @@ pub mod absl_functional_internal { // Generated from: rs_bindings_from_cc/test/c
 // Can't generate bindings for std::initializer_list<char>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::initializer_list<char> (crate::__CcTemplateInstSt16initializer_listIcE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char32_t *>>':
 // Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char32_t *>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char32_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPDiEEEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char16_t *>>':
 // Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char16_t *>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char16_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPDsEEEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char32_t *>>':
 // Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char32_t *>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char32_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKDiEEEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char16_t *>>':
 // Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char16_t *>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char16_t *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKDsEEEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<const char *>>':
 // Can't generate bindings for std::reverse_iterator<std::__wrap_iter<const char *>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<const char *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKcEEEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<std::__wrap_iter<char *>>':
 // Can't generate bindings for std::reverse_iterator<std::__wrap_iter<char *>>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<std::__wrap_iter<char *>> (crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPcEEEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<const char32_t *>':
 // Can't generate bindings for std::reverse_iterator<const char32_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<const char32_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDiEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<const char16_t *>':
 // Can't generate bindings for std::reverse_iterator<const char16_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<const char16_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDsEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<const char8_t *>':
 // Can't generate bindings for std::reverse_iterator<const char8_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<const char8_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKDuEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<const char *>':
 // Can't generate bindings for std::reverse_iterator<const char *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<const char *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE is a template instantiation)
 
-// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=50
+// Generated from: nowhere/llvm/src/libcxx/include/__iterator/reverse_iterator.h;l=41
 // Error while generating bindings for class 'std::reverse_iterator<const wchar_t *>':
 // Can't generate bindings for std::reverse_iterator<const wchar_t *>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/consume_absl:absl_functional needs [//features:wrapper] for std::reverse_iterator<const wchar_t *> (crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE is a template instantiation)
