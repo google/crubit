@@ -186,7 +186,7 @@ fn handle_options(
     }
 }
 
-#[rustversion::before(2026-02-07)]
+#[rustversion::before(2026-02-06)]
 pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
     rustc_interface::Config {
         // Command line options
@@ -223,7 +223,7 @@ pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_in
     }
 }
 
-#[rustversion::since(2026-02-07)]
+#[rustversion::since(2026-02-06)]
 #[rustversion::before(2026-02-08)]
 pub fn construct_config(input: config::Input, opts: config::Options) -> rustc_interface::Config {
     rustc_interface::Config {
@@ -385,7 +385,7 @@ fn main() {{}}
     };
     let config = construct_config(
         input,
-        config::Options { externs, sysroot, target_triple, search_paths, ..Default::default() },
+        config::Options { externs, sysroot, target_triple, search_paths, cg, ..Default::default() },
     );
     rustc_interface::run_compiler(config, |compiler| {
         // Parse the program and print the syntax tree.
