@@ -1121,12 +1121,8 @@ fn generate_dyn_callable_cpp_thunk(
                     Some(quote! { #param_type_tokens* })
                 }
                 PassingConvention::ComposablyBridged => Some(quote! { unsigned char* }),
-                PassingConvention::Ctor => {
-                    panic!("Ctor not supported");
-                }
-                PassingConvention::OwnedPtr => {
-                    panic!("OwnedPtr not supported");
-                }
+                PassingConvention::Ctor => None,
+                PassingConvention::OwnedPtr => None,
                 PassingConvention::Void => unreachable!("parameter types cannot be void"),
             }
         })
@@ -1155,10 +1151,10 @@ fn generate_dyn_callable_cpp_thunk(
             decl_return_type_tokens = quote! { void };
         }
         PassingConvention::Ctor => {
-            panic!("Ctor not supported");
+            return None;
         }
         PassingConvention::OwnedPtr => {
-            panic!("OwnedPtr not supported");
+            return None;
         }
         PassingConvention::Void => {
             out_param_ident = None;
@@ -1238,12 +1234,8 @@ fn generate_dyn_callable_rust_thunk_impl(
                     });
                     Some(quote! { *mut ::core::ffi::c_uchar })
                 }
-                PassingConvention::Ctor => {
-                    panic!("Ctor not supported");
-                }
-                PassingConvention::OwnedPtr => {
-                    panic!("OwnedPtr not supported");
-                }
+                PassingConvention::Ctor => None,
+                PassingConvention::OwnedPtr => None,
                 PassingConvention::Void => unreachable!("parameter types cannot be void"),
             }
         })
@@ -1317,10 +1309,10 @@ fn generate_dyn_callable_rust_thunk_impl(
             out_param_type = Some(quote! { *mut ::core::ffi::c_uchar });
         }
         PassingConvention::Ctor => {
-            panic!("Ctor not supported");
+            return None;
         }
         PassingConvention::OwnedPtr => {
-            panic!("OwnedPtr not supported");
+            return None;
         }
         PassingConvention::Void => {
             // Put a semicolon at the end to clarify that we do not return anything.
