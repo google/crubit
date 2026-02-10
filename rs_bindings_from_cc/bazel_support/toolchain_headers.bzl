@@ -92,6 +92,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         ctx.attr,
         compilation_context = ctx.attr._stl[CcInfo].compilation_context,
         public_hdrs = public_libc_files + public_libcxx_files + ctx.files.extra_hdrs,
+        additional_cpp_hdrs = [],
         header_includes = header_includes,
         action_inputs = std_and_builtin_files,
         target_args = target_args,
