@@ -17,6 +17,7 @@ generated Rust bindings of this C++ target.
                 "linking a native library.",
         "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
                    "will be linked to this library target.",
+        "cpp_hdrs": "List of C++ headers that will be used to generate bindings.",
     },
 )
 
@@ -36,6 +37,8 @@ RustBindingsFromCcInfo = provider(
                         "{'t': <target>, 'h': [<header>], 'f': [<feature>]}"),
         "namespaces": ("A json file containing the namespace hierarchy for the target we " +
                        "are generating bindings for, or None."),
+        "additional_cpp_hdrs": ("A list of additional C++ headers that were passed to the " +
+                                "bindings generator, or None."),
     },
 )
 

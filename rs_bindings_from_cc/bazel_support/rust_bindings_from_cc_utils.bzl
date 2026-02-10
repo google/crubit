@@ -37,6 +37,7 @@ def generate_and_compile_bindings(
         attr,
         compilation_context,
         public_hdrs,
+        additional_cpp_hdrs,
         header_includes,
         action_inputs,
         target_args,
@@ -53,6 +54,7 @@ def generate_and_compile_bindings(
       attr: The current rule's attributes.
       compilation_context: The current compilation context.
       public_hdrs: A list of headers to be passed to the tool via the "--public_headers" flag.
+      additional_cpp_hdrs: A list of additional C++ headers to be passed to the tool.
       header_includes: A list of flags to be passed to the command line with "-include".
       action_inputs: A depset of inputs to the bindings generating action.
       target_args: A depset of strings, each one representing mapping of target to
@@ -174,6 +176,7 @@ def generate_and_compile_bindings(
             target_args = target_args,
             namespaces = namespaces_output,
             pass_through_dep_variant_infos = depset(),
+            additional_cpp_hdrs = additional_cpp_hdrs,
         ),
         GeneratedBindingsInfo(
             cc_file = cc_output,

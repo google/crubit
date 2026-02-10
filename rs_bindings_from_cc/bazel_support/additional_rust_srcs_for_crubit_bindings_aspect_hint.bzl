@@ -67,12 +67,13 @@ visibility([
     # <internal link> end
 ])
 
-def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps):
+def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cpp_hdrs):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         namespace_path = namespace_path,
         deps = _get_additional_rust_deps_variant_info(deps),
         cc_deps = _get_additional_cc_deps_variant_info(cc_deps),
+        cpp_hdrs = cpp_hdrs,
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
@@ -81,6 +82,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.namespace_path,
         ctx.attr.deps,
         ctx.attr.cc_deps,
+        ctx.attr.cpp_hdrs,
     )]
 
 _additional_rust_srcs_for_crubit_bindings_rule = rule(
@@ -102,6 +104,10 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             default = [],
             aspects = [rust_bindings_from_cc_aspect],
         ),
+        "cpp_hdrs": attr.label_list(
+            allow_files = True,
+            mandatory = False,
+        ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
 )
@@ -112,6 +118,7 @@ def additional_rust_srcs_for_crubit_bindings(
         namespace_path = "",
         deps = [],
         cc_deps = [],
+        cpp_hdrs = [],
         **kwargs):
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
@@ -131,6 +138,7 @@ def additional_rust_srcs_for_crubit_bindings(
             deps as rust_library.
         cc_deps: List of cc_library targets whose crubit-generated bindings will be made available
             to this library target.
+        cpp_hdrs: List of C++ headers that will be used to generate bindings.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
 
@@ -140,6 +148,7 @@ def additional_rust_srcs_for_crubit_bindings(
         namespace_path = namespace_path,
         deps = deps,
         cc_deps = cc_deps,
+        cpp_hdrs = cpp_hdrs,
         **kwargs
     )
 

@@ -117,6 +117,18 @@ def _get_additional_rust_deps(aspect_ctx):
             )
     return collections.uniq(additional_rust_deps)
 
+def _get_cpp_hdrs(targets):
+    """Returns `cpp_hdrs` associated with the `provider`."""
+    srcs = []
+    for target in targets:
+        # This is a label
+        if "files" in dir(target):
+            srcs.extend(target.files.to_list())
+        else:
+            # This is a file.
+            srcs.extend([target])
+    return srcs
+
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
     label = str(ctx.label)
@@ -318,6 +330,19 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = [empty_header_file]
         extra_cc_compilation_action_inputs = public_hdrs
 
+    additional_cpp_hdrs = []
+    for hint in ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            additional_cpp_hdrs.extend(
+                _get_cpp_hdrs(hint[AdditionalRustSrcsProviderInfo].cpp_hdrs),
+            )
+
+    for dep in getattr(ctx.rule.attr, "deps", []):
+        if RustBindingsFromCcInfo in dep:
+            additional_cpp_hdrs.extend(getattr(dep[RustBindingsFromCcInfo], "additional_cpp_hdrs", []))
+
+    public_hdrs = public_hdrs + additional_cpp_hdrs
+
     # At execution time we convert this depset to a json array that gets passed to our tool through
     # the --target_args flag.
     # We can improve upon this solution if:
@@ -358,6 +383,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ctx.rule.attr,
         compilation_context = target[CcInfo].compilation_context,
         public_hdrs = public_hdrs,
+        additional_cpp_hdrs = additional_cpp_hdrs,
         header_includes = header_includes,
         action_inputs = depset(
             direct = public_hdrs + (toolchain.builtin_headers if toolchain != None else []),
