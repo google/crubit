@@ -25,7 +25,7 @@ fn test_simple_function() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn Add(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int {
+            pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
                 unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
             }
         }
@@ -38,7 +38,7 @@ fn test_simple_function() -> Result<()> {
                 use super::*;
                 unsafe extern "C" {
                     #[link_name = "_Z3Addii"]
-                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
+                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
                 }
             }
         }
@@ -57,7 +57,7 @@ fn test_inline_function() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn Add(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int {
+            pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
                 unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
             }
         }
@@ -69,7 +69,7 @@ fn test_inline_function() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::core::ffi::c_int, b: ::core::ffi::c_int) -> ::core::ffi::c_int;
+                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
                 }
             }
         }
@@ -232,7 +232,7 @@ fn test_ptr_func() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub unsafe fn Deref(p: *const *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int {
+            pub unsafe fn Deref(p: *const *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
                 crate::detail::__rust_thunk___Z5DerefPKPi(p)
             }
         }
@@ -244,7 +244,7 @@ fn test_ptr_func() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    pub(crate) unsafe fn __rust_thunk___Z5DerefPKPi(p: *const *mut ::core::ffi::c_int) -> *mut ::core::ffi::c_int;
+                    pub(crate) unsafe fn __rust_thunk___Z5DerefPKPi(p: *const *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int;
                 }
             }
         }
@@ -275,7 +275,7 @@ fn test_const_char_ptr_func() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub unsafe fn f(str: *const ::core::ffi::c_schar) {
+            pub unsafe fn f(str: *const ::ffi_11::c_schar) {
                 crate::detail::__rust_thunk___Z1fPKa(str)
             }
         }
@@ -284,7 +284,7 @@ fn test_const_char_ptr_func() -> Result<()> {
         rs_api,
         quote! {
             extern "C" {
-                pub(crate) unsafe fn __rust_thunk___Z1fPKa(str: *const ::core::ffi::c_schar);
+                pub(crate) unsafe fn __rust_thunk___Z1fPKa(str: *const ::ffi_11::c_schar);
             }
         }
     );
@@ -359,7 +359,7 @@ fn test_impl_drop_trivial() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {impl Drop});
     assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
-    assert_rs_matches!(rs_api, quote! {pub x: ::core::ffi::c_int});
+    assert_rs_matches!(rs_api, quote! {pub x: ::ffi_11::c_int});
     assert_cc_not_matches!(rs_api_impl, quote! { std::destroy_at });
     Ok(())
 }
@@ -447,7 +447,7 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
         let txt = "Generated from: ir_from_cc_virtual_header.h;l=34\n\
                        Error while generating bindings for constructor 'Foo::Foo':\n\
                        The lifetime of `__this` is \
-                           unexpectedly also used by another parameter: &'a::core::ffi::c_int";
+                           unexpectedly also used by another parameter: &'a::ffi_11::c_int";
         quote! { __COMMENT__ #txt }
     });
     Ok(())
@@ -480,9 +480,9 @@ fn test_impl_from_for_1_arg_constructor() -> Result<()> {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl From<::core::ffi::c_int> for SomeStruct {
+                impl From<::ffi_11::c_int> for SomeStruct {
                     #[inline(always)]
-                    fn from(i: ::core::ffi::c_int) -> Self {
+                    fn from(i: ::ffi_11::c_int) -> Self {
                         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&raw mut tmp as *mut _, i);
@@ -1216,14 +1216,14 @@ fn test_elided_lifetimes() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn f<'a, 'b>(&'a mut self, i: &'b mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int { ... }
+            pub fn f<'a, 'b>(&'a mut self, i: &'b mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int { ... }
         }
     );
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut ::core::ffi::c_int)
-                -> &'a mut ::core::ffi::c_int;
+            pub(crate) unsafe fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut ::ffi_11::c_int)
+                -> &'a mut ::ffi_11::c_int;
         }
     );
     Ok(())
@@ -1240,14 +1240,14 @@ fn test_annotated_lifetimes() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn f<'a>(i1: &'a mut ::core::ffi::c_int, i2: &'a mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int { ... }
+            pub fn f<'a>(i1: &'a mut ::ffi_11::c_int, i2: &'a mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int { ... }
         }
     );
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut ::core::ffi::c_int, i2: &'a mut ::core::ffi::c_int)
-                -> &'a mut ::core::ffi::c_int;
+            pub(crate) unsafe fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut ::ffi_11::c_int, i2: &'a mut ::ffi_11::c_int)
+                -> &'a mut ::ffi_11::c_int;
         }
     );
     Ok(())
@@ -1306,7 +1306,7 @@ fn test_overloaded_functions() -> Result<()> {
         quote! { __COMMENT__ #txt }
     });
     assert_rs_not_matches!(rs_api, quote! {pub fn f()});
-    assert_rs_not_matches!(rs_api, quote! {pub fn f(i: ::core::ffi::c_int)});
+    assert_rs_not_matches!(rs_api, quote! {pub fn f(i: ::ffi_11::c_int)});
 
     assert_cc_matches!(rs_api, {
         let txt = "Generated from: ir_from_cc_virtual_header.h;l=7\n\
@@ -1324,7 +1324,7 @@ fn test_overloaded_functions() -> Result<()> {
     assert_rs_matches!(rs_api, quote! {pub fn f<'a>(&'a mut self)});
 
     // We can also import overloaded single-parameter constructors.
-    assert_rs_matches!(rs_api, quote! {impl From<::core::ffi::c_int> for S3});
+    assert_rs_matches!(rs_api, quote! {impl From<::ffi_11::c_int> for S3});
     assert_rs_matches!(rs_api, quote! {impl From<f64> for S3});
 
     // And we can import functions that have the same name + signature, but that are
@@ -1484,12 +1484,12 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl ::ctor::CtorNew<::core::ffi::c_uchar> for HasConstructor {
+            impl ::ctor::CtorNew<::ffi_11::c_uchar> for HasConstructor {
                 type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;
 
                 #[inline (always)]
-                fn ctor_new(args: ::core::ffi::c_uchar) -> Self::CtorType {
+                fn ctor_new(args: ::ffi_11::c_uchar) -> Self::CtorType {
                     let mut input = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: *mut Self| {
@@ -1518,12 +1518,12 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            impl ::ctor::CtorNew<(::core::ffi::c_uchar, ::core::ffi::c_schar)> for HasConstructor {
+            impl ::ctor::CtorNew<(::ffi_11::c_uchar, ::ffi_11::c_schar)> for HasConstructor {
                 type CtorType = ::ctor::Ctor![Self];
                 type Error = ::ctor::Infallible;
 
                 #[inline (always)]
-                fn ctor_new(args: (::core::ffi::c_uchar, ::core::ffi::c_schar)) -> Self::CtorType {
+                fn ctor_new(args: (::ffi_11::c_uchar, ::ffi_11::c_schar)) -> Self::CtorType {
                     let (mut input1, mut input2) = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: *mut Self| {
@@ -1561,7 +1561,7 @@ fn test_nonunpin_by_value_params() -> Result<()> {
         rs_api,
         quote! {
             impl <'b, 'y, 'b_2> ::ctor::CtorNew<(
-                &'b ::core::ffi::c_int,
+                &'b ::ffi_11::c_int,
                 ::ctor::RvalueReference<'y, Self>,
                 ::ctor::RvalueReference<'b_2, Self>)
             > for HasConstructor {
@@ -1572,7 +1572,7 @@ fn test_nonunpin_by_value_params() -> Result<()> {
 
                 #[inline (always)]
                 fn ctor_new(args: (
-                    &'b ::core::ffi::c_int,
+                    &'b ::ffi_11::c_int,
                     ::ctor::RvalueReference<'y, Self>,
                     ::ctor::RvalueReference<'b_2, Self>)
                 ) -> Self::CtorType {
@@ -1603,7 +1603,7 @@ fn test_nonunpin_return() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
+            pub fn ReturnsByValue<'a, 'b>(x: &'a ::ffi_11::c_int, y: &'b ::ffi_11::c_int)
             -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
@@ -1641,7 +1641,7 @@ fn test_nonunpin_const_return() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn ReturnsByValue<'a, 'b>(x: &'a ::core::ffi::c_int, y: &'b ::core::ffi::c_int)
+            pub fn ReturnsByValue<'a, 'b>(x: &'a ::ffi_11::c_int, y: &'b ::ffi_11::c_int)
             -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |dest: *mut crate::Nontrivial| {
@@ -2069,7 +2069,7 @@ fn test_simple_explicit_lifetime() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn Add<'a>(x: &'a mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int {
+            pub fn Add<'a>(x: &'a mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int {
                 unsafe { crate::detail::__rust_thunk___Z3AddRi(x) }
             }
         }
@@ -2082,7 +2082,7 @@ fn test_simple_explicit_lifetime() -> Result<()> {
                 use super::*;
                 unsafe extern "C" {
                     #[link_name = "_Z3AddRi"]
-                    pub(crate) unsafe fn __rust_thunk___Z3AddRi<'a>(x: &'a mut ::core::ffi::c_int) -> &'a mut ::core::ffi::c_int;
+                    pub(crate) unsafe fn __rust_thunk___Z3AddRi<'a>(x: &'a mut ::ffi_11::c_int) -> &'a mut ::ffi_11::c_int;
                 }
             }
         }

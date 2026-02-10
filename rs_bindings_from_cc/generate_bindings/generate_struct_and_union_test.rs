@@ -40,7 +40,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >"]
             pub struct __CcTemplateInst10MyTemplateIiE {
-                pub field: ::core::ffi::c_int,
+                pub field: ::ffi_11::c_int,
             }
         }
     );
@@ -50,7 +50,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
             impl __CcTemplateInst10MyTemplateIiE {
                 #[doc = " Generated from: test/dependency_header.h;l=5"]
                 #[inline(always)]
-                pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::core::ffi::c_int { unsafe {
+                pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> ::ffi_11::c_int { unsafe {
                     crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
                         self)
                 }}
@@ -71,7 +71,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
                 pub(crate) unsafe fn
                 __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget<'a>(
                     __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
-                ) -> ::core::ffi::c_int;
+                ) -> ::ffi_11::c_int;
                 ...
             } }
         }
@@ -171,7 +171,7 @@ fn test_simple_struct() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
                 __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
-                pub public_int: ::core::ffi::c_int,
+                pub public_int: ::ffi_11::c_int,
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
                 pub(crate) protected_int: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
@@ -394,9 +394,9 @@ fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
-                pub first_field: ::core::ffi::c_int, ...
+                pub first_field: ::ffi_11::c_int, ...
                 __bitfields1: [::core::mem::MaybeUninit<u8>; 4],
-                pub last_field: ::core::ffi::c_int,
+                pub last_field: ::ffi_11::c_int,
             }
             ...
             const _: () = {
@@ -565,12 +565,12 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithUnnamedMembers"]
             pub struct StructWithUnnamedMembers {
-               pub first_field: ::core::ffi::c_int,
+               pub first_field: ::ffi_11::c_int,
                #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'StructWithUnnamedMembers::(anonymous struct at ./ir_from_cc_virtual_header.h:7:11)': No generated bindings found for ''"]
                pub(crate) __unnamed_field1: [::core::mem::MaybeUninit<u8>; 8],
                #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'StructWithUnnamedMembers::(anonymous union at ./ir_from_cc_virtual_header.h:11:11)': No generated bindings found for ''"]
                pub(crate) __unnamed_field2: [::core::mem::MaybeUninit<u8>; 4],
-               pub last_field: ::core::ffi::c_int,
+               pub last_field: ::ffi_11::c_int,
             }
             ...
             const _: () = {
@@ -690,7 +690,7 @@ fn test_base_class_subobject_layout() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
-                pub z: ::core::ffi::c_short,
+                pub z: ::ffi_11::c_short,
             }
         }
     );
@@ -716,7 +716,7 @@ fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
-                pub z: ::core::ffi::c_short,
+                pub z: ::ffi_11::c_short,
             }
         }
     );
@@ -742,7 +742,7 @@ fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
-                pub z: ::core::ffi::c_short,
+                pub z: ::ffi_11::c_short,
             }
         }
     );
@@ -812,7 +812,7 @@ fn test_base_class_subobject_empty() -> Result<()> {
         quote! {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             pub struct Derived {
-                pub x: ::core::ffi::c_short,
+                pub x: ::ffi_11::c_short,
             }
         }
     );
@@ -838,7 +838,7 @@ fn test_non_aggregate_struct_private_field() -> Result<()> {
         quote! {
             pub struct NonAggregate {
                 __non_field_data:  [::core::mem::MaybeUninit<u8>; 0],
-                pub x: ::core::ffi::c_short,
+                pub x: ::ffi_11::c_short,
             }
         }
     );
@@ -871,7 +871,7 @@ fn test_no_unique_address() -> Result<()> {
                 pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
                 ...
                 pub(crate) field2: [::core::mem::MaybeUninit<u8>; 2],
-                pub z: ::core::ffi::c_short,
+                pub z: ::ffi_11::c_short,
             }
         }
     );
@@ -947,7 +947,7 @@ fn test_no_unique_address_empty() -> Result<()> {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
             pub struct Struct {
-                pub x: ::core::ffi::c_int,
+                pub x: ::ffi_11::c_int,
             }
             ...
             impl Struct {
@@ -1020,7 +1020,7 @@ fn test_doc_comment_record() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
             pub struct SomeStruct {
                 # [doc = " Field doc"]
-                pub field: ::core::ffi::c_int,
+                pub field: ::ffi_11::c_int,
             }
         }
     );
@@ -1047,8 +1047,8 @@ fn test_basic_union() -> Result<()> {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnion"]
             pub union SomeUnion {
-                pub some_field: ::core::ffi::c_int,
-                pub some_bigger_field: ::core::ffi::c_longlong,
+                pub some_field: ::ffi_11::c_int,
+                pub some_bigger_field: ::ffi_11::c_longlong,
             }
         }
     );
@@ -1090,7 +1090,7 @@ fn test_union_with_opaque_field() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=MyUnion"]
             pub union MyUnion { ...
                 first_field: [::core::mem::MaybeUninit<u8>; 56],
-                pub second_field: ::core::ffi::c_int,
+                pub second_field: ::ffi_11::c_int,
             }
         }
     );
@@ -1158,7 +1158,7 @@ fn test_union_with_private_fields() -> Result<()> {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnionWithPrivateFields"]
             pub union SomeUnionWithPrivateFields {
-                pub public_field: ::core::ffi::c_int,
+                pub public_field: ::ffi_11::c_int,
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
                 pub(crate) private_field: [::core::mem::MaybeUninit<u8>; 8],
             }
@@ -1304,7 +1304,7 @@ fn test_union_field_with_nontrivial_destructor() -> Result<()> {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithNontrivialField"]
             pub union UnionWithNontrivialField {
-                pub trivial_field: ::core::ffi::c_int,
+                pub trivial_field: ::ffi_11::c_int,
                 pub nontrivial_field: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,
             }
         }
@@ -1343,7 +1343,7 @@ fn test_union_with_constructors() -> Result<()> {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithDefaultConstructors"]
             pub union UnionWithDefaultConstructors {
-                pub a: ::core::ffi::c_int,
+                pub a: ::ffi_11::c_int,
             }
         }
     );
@@ -1622,7 +1622,7 @@ fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
             }
             ...
             pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-                pub value_: ::core::ffi::c_int,
+                pub value_: ::ffi_11::c_int,
             }
             ...
         }

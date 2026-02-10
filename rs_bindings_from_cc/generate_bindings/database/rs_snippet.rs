@@ -1606,94 +1606,45 @@ impl RsTypeKind {
             RsTypeKind::Primitive(primitive) => {
                 let ir = db.ir();
                 let features = db.ir().target_crubit_features(&ir.flat_ir().current_target);
-                let enable_ffi11_types = features.contains(CrubitFeature::CustomFfiTypes);
                 match primitive {
                     Primitive::Bool => quote! { bool },
                     Primitive::Void => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_void }
-                        } else {
-                            quote! { ::core::ffi::c_void }
-                        }
+                        quote! { ::ffi_11::c_void }
                     }
                     Primitive::Float => quote! { f32 },
                     Primitive::Double => quote! { f64 },
                     Primitive::Char => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_char }
-                        } else {
-                            quote! { ::core::ffi::c_char }
-                        }
+                        quote! { ::ffi_11::c_char }
                     }
                     Primitive::SignedChar => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_schar }
-                        } else {
-                            quote! { ::core::ffi::c_schar }
-                        }
+                        quote! { ::ffi_11::c_schar }
                     }
                     Primitive::UnsignedChar => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_uchar }
-                        } else {
-                            quote! { ::core::ffi::c_uchar }
-                        }
+                        quote! { ::ffi_11::c_uchar }
                     }
                     Primitive::Short => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_short }
-                        } else {
-                            quote! { ::core::ffi::c_short }
-                        }
+                        quote! { ::ffi_11::c_short }
                     }
                     Primitive::Int => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_int }
-                        } else {
-                            quote! { ::core::ffi::c_int }
-                        }
+                        quote! { ::ffi_11::c_int }
                     }
                     Primitive::Long => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_long }
-                        } else {
-                            quote! { ::core::ffi::c_long }
-                        }
+                        quote! { ::ffi_11::c_long }
                     }
                     Primitive::LongLong => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_longlong }
-                        } else {
-                            quote! { ::core::ffi::c_longlong }
-                        }
+                        quote! { ::ffi_11::c_longlong }
                     }
                     Primitive::UnsignedShort => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_ushort }
-                        } else {
-                            quote! { ::core::ffi::c_ushort }
-                        }
+                        quote! { ::ffi_11::c_ushort }
                     }
                     Primitive::UnsignedInt => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_uint }
-                        } else {
-                            quote! { ::core::ffi::c_uint }
-                        }
+                        quote! { ::ffi_11::c_uint }
                     }
                     Primitive::UnsignedLong => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_ulong }
-                        } else {
-                            quote! { ::core::ffi::c_ulong }
-                        }
+                        quote! { ::ffi_11::c_ulong }
                     }
                     Primitive::UnsignedLongLong => {
-                        if enable_ffi11_types {
-                            quote! { ::ffi_11::c_ulonglong }
-                        } else {
-                            quote! { ::core::ffi::c_ulonglong }
-                        }
+                        quote! { ::ffi_11::c_ulonglong }
                     }
                     Primitive::Char16T => quote! { u16 },
                     Primitive::Char32T => quote! { u32 },

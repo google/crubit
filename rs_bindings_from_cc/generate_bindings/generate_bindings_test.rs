@@ -44,7 +44,7 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn get_ptr_to_func() -> Option<extern "C" fn (f32, f64) -> ::core::ffi::c_int> {
+            pub fn get_ptr_to_func() -> Option<extern "C" fn (f32, f64) -> ::ffi_11::c_int> {
                 unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
             }
         }
@@ -58,7 +58,7 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
                 unsafe extern "C" {
                     #[link_name = "_Z15get_ptr_to_funcv"]
                     pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
-                    -> Option<extern "C" fn(f32, f64) -> ::core::ffi::c_int>;
+                    -> Option<extern "C" fn(f32, f64) -> ::ffi_11::c_int>;
                 }
             }
         }
@@ -84,7 +84,7 @@ fn test_func_ref() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> ::core::ffi::c_int {
+            pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> ::ffi_11::c_int {
                 unsafe { crate::detail::__rust_thunk___Z15get_ref_to_funcv() }
             }
         }
@@ -116,7 +116,7 @@ fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn get_ptr_to_func() -> Option<unsafe extern "C" fn (*const ::core::ffi::c_int) -> *const ::core::ffi::c_int> {
+            pub fn get_ptr_to_func() -> Option<unsafe extern "C" fn (*const ::ffi_11::c_int) -> *const ::ffi_11::c_int> {
                 unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
             }
         }
@@ -130,7 +130,7 @@ fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
                 unsafe extern "C" {
                     #[link_name = "_Z15get_ptr_to_funcv"]
                     pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
-                    -> Option<unsafe extern "C" fn(*const ::core::ffi::c_int) -> *const ::core::ffi::c_int>;
+                    -> Option<unsafe extern "C" fn(*const ::ffi_11::c_int) -> *const ::ffi_11::c_int>;
                 }
             }
         }
@@ -195,7 +195,7 @@ mod custom_abi_tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> ::core::ffi::c_int> {
+                pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> ::ffi_11::c_int> {
                     unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
                 }
             }
@@ -211,7 +211,7 @@ mod custom_abi_tests {
                     unsafe extern "C" {
                         #[link_name = "_Z15get_ptr_to_funcv"]
                         pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
-                        -> Option<extern "vectorcall" fn(f32, f64) -> ::core::ffi::c_int>;
+                        -> Option<extern "vectorcall" fn(f32, f64) -> ::ffi_11::c_int>;
                     }
                 }
             }
@@ -406,7 +406,7 @@ fn test_impl_drop_user_defined_destructor() -> Result<()> {
             }
         }
     );
-    assert_rs_matches!(rs_api, quote! {pub x: ::core::ffi::c_int,});
+    assert_rs_matches!(rs_api, quote! {pub x: ::ffi_11::c_int,});
     assert_rs_matches!(
         rs_api,
         quote! {pub nts: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,}
@@ -444,7 +444,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
             }
         }
     );
-    assert_rs_matches!(rs_api, quote! {pub x: ::core::ffi::c_int,});
+    assert_rs_matches!(rs_api, quote! {pub x: ::ffi_11::c_int,});
     assert_rs_matches!(rs_api, quote! {pub ts: crate::TrivialStruct,});
     assert_rs_matches!(
         rs_api,
@@ -475,10 +475,10 @@ fn test_type_alias() -> Result<()> {
         rs_api,
         quote! {
             #[doc = " MyTypedefDecl doc comment\n \n Generated from: ir_from_cc_virtual_header.h;l=5"]
-            pub type MyTypedefDecl = ::core::ffi::c_int;
+            pub type MyTypedefDecl = ::ffi_11::c_int;
         }
     );
-    assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl = ::core::ffi::c_int; });
+    assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl = ::ffi_11::c_int; });
     assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl_Alias = crate::MyTypeAliasDecl; });
     assert_rs_matches!(rs_api, quote! { pub type S_Alias = crate::S; });
     assert_rs_matches!(rs_api, quote! { pub type S_Alias_Alias = crate::S_Alias; });
@@ -522,44 +522,29 @@ fn test_rs_type_kind_implements_copy() -> Result<()> {
     let tests = vec![
         // Validity of the next few tests is verified via
         // `assert_[not_]impl_all!` static assertions above.
-        Test { cc: "int", lifetimes: true, rs: ":: core :: ffi :: c_int", is_copy: true },
-        Test {
-            cc: "const int&",
-            lifetimes: true,
-            rs: "& 'a :: core :: ffi :: c_int",
-            is_copy: true,
-        },
-        Test {
-            cc: "int&",
-            lifetimes: true,
-            rs: "& 'a mut :: core :: ffi :: c_int",
-            is_copy: false,
-        },
-        Test {
-            cc: "const int*",
-            lifetimes: true,
-            rs: "* const :: core :: ffi :: c_int",
-            is_copy: true,
-        },
-        Test { cc: "int*", lifetimes: true, rs: "* mut :: core :: ffi :: c_int", is_copy: true },
+        Test { cc: "int", lifetimes: true, rs: ":: ffi_11 :: c_int", is_copy: true },
+        Test { cc: "const int&", lifetimes: true, rs: "& 'a :: ffi_11 :: c_int", is_copy: true },
+        Test { cc: "int&", lifetimes: true, rs: "& 'a mut :: ffi_11 :: c_int", is_copy: false },
+        Test { cc: "const int*", lifetimes: true, rs: "* const :: ffi_11 :: c_int", is_copy: true },
+        Test { cc: "int*", lifetimes: true, rs: "* mut :: ffi_11 :: c_int", is_copy: true },
         Test {
             cc: "const int*",
             lifetimes: false,
-            rs: "* const :: core :: ffi :: c_int",
+            rs: "* const :: ffi_11 :: c_int",
             is_copy: true,
         },
-        Test { cc: "int*", lifetimes: false, rs: "* mut :: core :: ffi :: c_int", is_copy: true },
-        Test { cc: "void*", lifetimes: false, rs: "* mut :: core :: ffi :: c_void", is_copy: true },
+        Test { cc: "int*", lifetimes: false, rs: "* mut :: ffi_11 :: c_int", is_copy: true },
+        Test { cc: "void*", lifetimes: false, rs: "* mut :: ffi_11 :: c_void", is_copy: true },
         Test {
             cc: "const void*",
             lifetimes: false,
-            rs: "* const :: core :: ffi :: c_void",
+            rs: "* const :: ffi_11 :: c_void",
             is_copy: true,
         },
         Test {
             cc: "void* const*",
             lifetimes: false,
-            rs: "* const * mut :: core :: ffi :: c_void",
+            rs: "* const * mut :: ffi_11 :: c_void",
             is_copy: true,
         },
         // Tests below have been thought-through and verified "manually".
@@ -750,7 +735,7 @@ fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()>
 fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
     let ir = ir_from_cc("struct type { int dyn; };")?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-    assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: ::core::ffi::c_int ... } });
+    assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: ::ffi_11::c_int ... } });
     Ok(())
 }
 
@@ -785,13 +770,13 @@ fn test_namespace_module_items() -> Result<()> {
         quote! {
             pub mod test_namespace_bindings {
                 ...
-                pub fn func() -> ::core::ffi::c_int { ... }
+                pub fn func() -> ::ffi_11::c_int { ... }
                 ...
                 pub struct S { ... }
                 ...
                 pub mod inner {
                     ...
-                    pub fn inner_func() -> ::core::ffi::c_int { ... }
+                    pub fn inner_func() -> ::ffi_11::c_int { ... }
                     ...
                     pub struct InnerS { ... }
                     ...
@@ -825,7 +810,7 @@ fn test_detail_outside_of_namespace_module() -> Result<()> {
                 use super::*;
                 unsafe extern "C" {
                     #[link_name = "_ZN23test_namespace_bindings1fEv"]
-                    pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> ::core::ffi::c_int;
+                    pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> ::ffi_11::c_int;
                 }
             }
             ...
@@ -1099,8 +1084,8 @@ fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
     // The namespace, and everything in it or using it, will be missing from the
     // output.
     assert_rs_not_matches!(rs_api, quote! {NotPresent});
-    assert_rs_matches!(rs_api, quote! {pub fn Func(x: ::core::ffi::c_int)});
-    assert_rs_matches!(rs_api, quote! {pub fn Func2() -> ::core::ffi::c_int});
+    assert_rs_matches!(rs_api, quote! {pub fn Func(x: ::ffi_11::c_int)});
+    assert_rs_matches!(rs_api, quote! {pub fn Func2() -> ::ffi_11::c_int});
     Ok(())
 }
 

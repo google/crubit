@@ -19,18 +19,18 @@ fn test_generate_enum_basic() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::core::ffi::c_uint);
+            pub struct Color(::ffi_11::c_uint);
             impl Color {
                 pub const kRed: Color = Color(5);
                 pub const kBlue: Color = Color(6);
             }
-            impl From<::core::ffi::c_uint> for Color {
-                fn from(value: ::core::ffi::c_uint) -> Color {
+            impl From<::ffi_11::c_uint> for Color {
+                fn from(value: ::ffi_11::c_uint) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::core::ffi::c_uint {
-                fn from(value: Color) -> ::core::ffi::c_uint {
+            impl From<Color> for ::ffi_11::c_uint {
+                fn from(value: Color) -> ::ffi_11::c_uint {
                     value.0
                 }
             }
@@ -57,18 +57,18 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::core::ffi::c_int);
+            pub struct Color(::ffi_11::c_int);
             impl Color {
                 pub const kRed: Color = Color(-5);
                 pub const kBlue: Color = Color(-4);
             }
-            impl From<::core::ffi::c_int> for Color {
-                fn from(value: ::core::ffi::c_int) -> Color {
+            impl From<::ffi_11::c_int> for Color {
+                fn from(value: ::ffi_11::c_int) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::core::ffi::c_int {
-                fn from(value: Color) -> ::core::ffi::c_int {
+            impl From<Color> for ::ffi_11::c_int {
+                fn from(value: Color) -> ::ffi_11::c_int {
                     value.0
                 }
             }
@@ -95,7 +95,7 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::core::ffi::c_long);
+            pub struct Color(::ffi_11::c_long);
             impl Color {
                 pub const kViolet: Color = Color(-9223372036854775808);
                 pub const kRed: Color = Color(-5);
@@ -103,13 +103,13 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
                 pub const kGreen: Color = Color(3);
                 pub const kMagenta: Color = Color(9223372036854775807);
             }
-            impl From<::core::ffi::c_long> for Color {
-                fn from(value: ::core::ffi::c_long) -> Color {
+            impl From<::ffi_11::c_long> for Color {
+                fn from(value: ::ffi_11::c_long) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::core::ffi::c_long {
-                fn from(value: Color) -> ::core::ffi::c_long {
+            impl From<Color> for ::ffi_11::c_long {
+                fn from(value: Color) -> ::ffi_11::c_long {
                     value.0
                 }
             }
@@ -134,19 +134,19 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::core::ffi::c_ulong);
+            pub struct Color(::ffi_11::c_ulong);
             impl Color {
                 pub const kRed: Color = Color(0);
                 pub const kBlue: Color = Color(1);
                 pub const kLimeGreen: Color = Color(18446744073709551615);
             }
-            impl From<::core::ffi::c_ulong> for Color {
-                fn from(value: ::core::ffi::c_ulong) -> Color {
+            impl From<::ffi_11::c_ulong> for Color {
+                fn from(value: ::ffi_11::c_ulong) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::core::ffi::c_ulong {
-                fn from(value: Color) -> ::core::ffi::c_ulong {
+            impl From<Color> for ::ffi_11::c_ulong {
+                fn from(value: Color) -> ::ffi_11::c_ulong {
                     value.0
                 }
             }
@@ -167,7 +167,7 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::core::ffi::c_int);
+            pub struct Color(::ffi_11::c_int);
             impl Color {
                 pub const kViolet: Color = Color(-2147483648);
                 pub const kRed: Color = Color(-5);
@@ -175,13 +175,13 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
                 pub const kGreen: Color = Color(3);
                 pub const kMagenta: Color = Color(2147483647);
             }
-            impl From<::core::ffi::c_int> for Color {
-                fn from(value: ::core::ffi::c_int) -> Color {
+            impl From<::ffi_11::c_int> for Color {
+                fn from(value: ::ffi_11::c_int) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::core::ffi::c_int {
-                fn from(value: Color) -> ::core::ffi::c_int {
+            impl From<Color> for ::ffi_11::c_int {
+                fn from(value: Color) -> ::ffi_11::c_int {
                     value.0
                 }
             }
@@ -200,19 +200,19 @@ fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
             #[repr(transparent)]
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::core::ffi::c_uint);
+            pub struct Color(::ffi_11::c_uint);
             impl Color {
                 pub const kRed: Color = Color(0);
                 pub const kBlue: Color = Color(1);
                 pub const kLimeGreen: Color = Color(4294967295);
             }
-            impl From<::core::ffi::c_uint> for Color {
-                fn from(value: ::core::ffi::c_uint) -> Color {
+            impl From<::ffi_11::c_uint> for Color {
+                fn from(value: ::ffi_11::c_uint) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::core::ffi::c_uint {
-                fn from(value: Color) -> ::core::ffi::c_uint {
+            impl From<Color> for ::ffi_11::c_uint {
+                fn from(value: Color) -> ::ffi_11::c_uint {
                     value.0
                 }
             }
