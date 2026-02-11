@@ -165,10 +165,10 @@ fn generate_invoker_function_pointer(
                 arg_exprs.push(quote! { #arg_ident });
             }
             PassingConvention::Ctor => {
-                panic!("Ctor not supported");
+                bail!("Ctor not supported");
             }
             PassingConvention::OwnedPtr => {
-                panic!("OwnedPtr not supported");
+                bail!("OwnedPtr not supported");
             }
             PassingConvention::Void => unreachable!("parameter types cannot be void"),
         }
@@ -191,10 +191,10 @@ fn generate_invoker_function_pointer(
             Some(quote! { , out })
         }
         PassingConvention::Ctor => {
-            panic!("Ctor not supported");
+            bail!("Ctor not supported");
         }
         PassingConvention::OwnedPtr => {
-            panic!("OwnedPtr not supported");
+            bail!("OwnedPtr not supported");
         }
     };
 
@@ -226,10 +226,10 @@ fn generate_invoker_function_pointer(
         });
         }
         PassingConvention::Ctor => {
-            panic!("Ctor not supported");
+            bail!("Ctor not supported");
         }
         PassingConvention::OwnedPtr => {
-            panic!("OwnedPtr not supported");
+            bail!("OwnedPtr not supported");
         }
         PassingConvention::Void => {
             // No need to return anything.
