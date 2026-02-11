@@ -74,6 +74,16 @@ __rust_thunk___ZN27FieldDestructionOrderTesteraSEOS_(
 }
 
 extern "C" void
+__rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(
+    class FieldDestructionOrderTester* __this,
+    class DestructionOrderRecorder* field1,
+    class DestructionOrderRecorder* field2,
+    class DestructionOrderRecorder* field3) {
+  crubit::construct_at(__this, std::move(*field1), std::move(*field2),
+                       std::move(*field3));
+}
+
+extern "C" void
 __rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorderS0_S0_(
     class FieldDestructionOrderTester* __return,
     class DestructionOrderRecorder* field1,

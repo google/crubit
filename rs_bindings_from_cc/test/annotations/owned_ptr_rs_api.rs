@@ -55,7 +55,8 @@ pub struct OwnedThing(::core::ptr::NonNull<RawThing>);
 /// Generated from: rs_bindings_from_cc/test/annotations/owned_ptr.h;l=18
 impl From<i32> for RawThing {
     #[inline(always)]
-    fn from(value: i32) -> Self {
+    fn from(args: i32) -> Self {
+        let mut value = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN5ThingC1Ei(&raw mut tmp as *mut _, value);

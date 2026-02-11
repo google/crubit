@@ -102,7 +102,8 @@ pub mod crubit {
         /// Generated from: rs_bindings_from_cc/test/annotations/do_not_bind.h;l=31
         impl From<crate::crubit::test::ArgumentToBoundOverload> for StructWithDoNotBindConstructor {
             #[inline(always)]
-            fn from(mut __param_0: crate::crubit::test::ArgumentToBoundOverload) -> Self {
+            fn from(args: crate::crubit::test::ArgumentToBoundOverload) -> Self {
+                let mut __param_0 = args;
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut _,&mut __param_0);

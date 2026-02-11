@@ -6,7 +6,7 @@ use constructors::{
     NonTrivialStructWithConstructors, OtherSimpleStruct, StructWithDeletedConstructors,
     StructWithExplicitConversionConstructor, StructWithExplicitlyDefaultedConstructors,
     StructWithImplicitConversionConstructor, StructWithImplicitConversionFromReference,
-    StructWithInlineConstructors, StructWithPrivateConstructors,
+    StructWithInlineConstructors, StructWithMultipleConstructors, StructWithPrivateConstructors,
     StructWithUserProvidedConstructors,
 };
 use ctor::emplace;
@@ -35,6 +35,19 @@ fn test_explicit_conversion_constructor() {
     assert_impl_all!(StructWithExplicitConversionConstructor: From<i32>);
     let i: StructWithExplicitConversionConstructor = 125.into();
     assert_eq!(125, i.int_field);
+}
+
+#[gtest]
+fn test_multiple_constructors() {
+    assert_impl_all!(StructWithMultipleConstructors: From<i32>);
+    assert_impl_all!(StructWithMultipleConstructors: From<(i32, i32)>);
+    assert_impl_all!(StructWithMultipleConstructors: From<(i32, i32, i32)>);
+    let i: StructWithMultipleConstructors = 125.into();
+    assert_eq!(125, i.int_field);
+    let i: StructWithMultipleConstructors = (125, 126).into();
+    assert_eq!(251, i.int_field);
+    let i: StructWithMultipleConstructors = (125, 126, 127).into();
+    assert_eq!(378, i.int_field);
 }
 
 #[gtest]

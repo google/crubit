@@ -468,67 +468,6 @@ fn test_impl_default_non_trivial_struct() -> Result<()> {
 }
 
 #[gtest]
-fn test_impl_from_for_1_arg_constructor() -> Result<()> {
-    for explicit_qualifier in ["", "explicit"] {
-        let ir = ir_from_cc(&format!(
-            r#"#pragma clang lifetime_elision
-            struct SomeStruct final {{
-                {explicit_qualifier} SomeStruct(int i);  // implicit - no `explicit` keyword
-            }};"#,
-        ))?;
-        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                impl From<::ffi_11::c_int> for SomeStruct {
-                    #[inline(always)]
-                    fn from(i: ::ffi_11::c_int) -> Self {
-                        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                        unsafe {
-                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&raw mut tmp as *mut _, i);
-                            tmp.assume_init()
-                        }
-                    }
-                }
-            }
-        );
-    }
-    Ok(())
-}
-
-#[gtest]
-fn test_impl_from_for_implicit_conversion_from_reference() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
-        struct SomeOtherStruct final { int i; };
-        struct StructUnderTest final {
-            StructUnderTest(const SomeOtherStruct& other);  // implicit - no `explicit` keyword
-        };"#,
-    )?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-    // This is a regression test for b/223800038: We want to ensure that the
-    // code says `impl<'b>` (instead of incorrectly declaring that lifetime
-    // in `fn from<'b>`).
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            impl<'b> From<&'b crate::SomeOtherStruct> for StructUnderTest {
-                #[inline(always)]
-                fn from(other: &'b crate::SomeOtherStruct) -> Self {
-                    let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                    unsafe {
-                        crate::detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
-                            &raw mut tmp as *mut _, other);
-                        tmp.assume_init()
-                    }
-                }
-            }
-        },
-    );
-    Ok(())
-}
-
-#[gtest]
 fn test_impl_eq_for_member_function() -> Result<()> {
     let ir = ir_from_cc(
         r#"#pragma clang lifetime_elision
@@ -1891,45 +1830,6 @@ fn test_nonunpin_param() -> Result<()> {
         quote! {
             extern "C" void __rust_thunk___Z12TakesByValue10Nontrivial(struct Nontrivial*x) {
                 TakesByValue(std::move(*x));
-            }
-        }
-    );
-    Ok(())
-}
-
-#[gtest]
-fn test_nonunpin_trait_param() -> Result<()> {
-    let ir = ir_from_cc(
-        r#"#pragma clang lifetime_elision
-// This type must be `!Unpin`.
-        struct Nontrivial {
-            Nontrivial(Nontrivial&&);
-            Nontrivial& operator=(Nontrivial) {}
-            ~Nontrivial();
-        };
-
-        struct Trivial final {
-/*implicit*/
- Trivial(Nontrivial) {}
-        };
-        "#,
-    )?;
-    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-    assert_rs_matches!(
-        rs_api,
-        quote! {
-            impl<'__param_0> From<::ctor::RvalueReference<'__param_0, crate::Nontrivial>> for Trivial {
-                #[inline(always)]
-                fn from(__param_0: ::ctor::RvalueReference<'__param_0, crate::Nontrivial>) -> Self {
-                    let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
-                    unsafe {
-                        crate::detail::__rust_thunk___ZN7TrivialC1E10Nontrivial(
-                            &raw mut tmp as *mut _,
-                            __param_0
-                        );
-                        tmp.assume_init()
-                    }
-                }
             }
         }
     );

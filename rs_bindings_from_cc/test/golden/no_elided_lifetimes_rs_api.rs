@@ -168,7 +168,8 @@ unsafe impl ::cxx::ExternType for WrappedValue {
 
 impl From<::ffi_11::c_int> for WrappedValue {
     #[inline(always)]
-    fn from(value: ::ffi_11::c_int) -> Self {
+    fn from(args: ::ffi_11::c_int) -> Self {
+        let mut value = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12WrappedValueC1Ei(&raw mut tmp as *mut _, value);

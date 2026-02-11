@@ -39,7 +39,7 @@ where
     &'error (): BindingFailedFor_ZN22TypeWithPtrConstructorC1EPi,
 {
     #[inline(always)]
-    fn from(ptr: *mut ::ffi_11::c_int) -> Self {
+    fn from(args: *mut ::ffi_11::c_int) -> Self {
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
@@ -72,7 +72,7 @@ where
     &'error (): BindingFailedFor_ZN29TypeWithNonNullPtrConstructorC1EPi,
 {
     #[inline(always)]
-    fn from(ptr: *mut ::ffi_11::c_int) -> Self {
+    fn from(args: *mut ::ffi_11::c_int) -> Self {
         #![allow(unused_variables)]
         unreachable!(
             "This impl can never be instantiated. \
@@ -98,7 +98,8 @@ unsafe impl ::cxx::ExternType for TypeWithReferenceConstructor {
 /// Generated from: rs_bindings_from_cc/test/references/references.h;l=20
 impl From<&mut ::ffi_11::c_int> for TypeWithReferenceConstructor {
     #[inline(always)]
-    fn from(r#ref: &mut ::ffi_11::c_int) -> Self {
+    fn from(args: &mut ::ffi_11::c_int) -> Self {
+        let mut r#ref = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN28TypeWithReferenceConstructorC1ERi(

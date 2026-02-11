@@ -43,11 +43,21 @@ fn trait_name_to_token_stream_removing_trait_record(
 ) -> TokenStream {
     use TraitName::*;
     match trait_name {
-        UnpinConstructor { name, params } | Other { name, params, .. } => {
-            let name_as_token_stream = name.parse::<TokenStream>().unwrap();
-            let formatted_params =
-                format_generic_params_replacing_by_self(db, &**params, trait_record);
-            quote! {#name_as_token_stream #formatted_params}
+        Clone => {
+            quote! { Clone }
+        }
+        Default => {
+            quote! { Default }
+        }
+        CtorNew(arg_types) => {
+            let formatted_arg_types =
+                format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
+            quote! { ::ctor::CtorNew < #formatted_arg_types > }
+        }
+        From(arg_types) => {
+            let formatted_arg_types =
+                format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
+            quote! { From < #formatted_arg_types > }
         }
         PartialEq { param, .. } => {
             if trait_record.is_some_and(|trait_record| param.is_record(trait_record)) {
@@ -73,13 +83,11 @@ fn trait_name_to_token_stream_removing_trait_record(
                 quote! {PartialOrd #formatted_params}
             }
         }
-        CtorNew(arg_types) => {
-            let formatted_arg_types =
-                format_tuple_except_singleton_replacing_by_self(db, arg_types, trait_record);
-            quote! { ::ctor::CtorNew < #formatted_arg_types > }
-        }
-        Clone => {
-            quote! { Clone }
+        Other { name, params, .. } => {
+            let name_as_token_stream = name.parse::<TokenStream>().unwrap();
+            let formatted_params =
+                format_generic_params_replacing_by_self(db, &**params, trait_record);
+            quote! {#name_as_token_stream #formatted_params}
         }
     }
 }
@@ -807,7 +815,7 @@ fn api_func_shape_for_constructor(
         1 => {
             let func_name = make_rs_ident("default");
             let impl_kind = ImplKind::new_trait(
-                TraitName::UnpinConstructor { name: Rc::from("Default"), params: Rc::from([]) },
+                TraitName::Default,
                 record.clone(),
                 /* format_first_param_as_self= */ false,
                 /* force_const_reference_params= */ false,
@@ -829,32 +837,23 @@ fn api_func_shape_for_constructor(
             );
             Some((func_name, impl_kind))
         }
-        2 => {
-            if param_types[1].is_rvalue_ref_to(record) && record.should_derive_copy() {
+        _ => {
+            if param_types.len() == 2
+                && param_types[1].is_rvalue_ref_to(record)
+                && record.should_derive_copy()
+            {
                 // `MoveAndAssignViaCopy` is derived for `Copy` types, so we don't need to
                 // generate move constructor bindings explicitly.
                 return None;
             }
-            let param_type = &param_types[1];
             let func_name = make_rs_ident("from");
             let impl_kind = ImplKind::new_trait(
-                TraitName::UnpinConstructor {
-                    name: Rc::from("From"),
-                    params: Rc::from([param_type.clone()]),
-                },
+                TraitName::From(Rc::from(param_types[1..].to_vec())),
                 record.clone(),
                 /* format_first_param_as_self= */ false,
-                /* force_const_reference_params= */
-                false,
+                /* force_const_reference_params= */ false,
             );
             Some((func_name, impl_kind))
-        }
-        _ => {
-            // TODO(b/216648347): Support bindings for other constructors.
-            errors.add(anyhow!(
-                "Constructors with more than one parameter are not yet supported. See b/216648347."
-            ));
-            None
         }
     }
 }
@@ -1073,8 +1072,10 @@ fn generate_func_body(
     let ParamValueAdjustments { clone_prefixes, clone_suffixes } = param_value_adjustments;
 
     match &impl_kind {
-        ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. }
-        | ImplKind::Trait { trait_name: TraitName::Clone, .. }
+        ImplKind::Trait {
+            trait_name: TraitName::Clone | TraitName::Default | TraitName::From(_),
+            ..
+        }
         | ImplKind::Struct { is_renamed_unpin_constructor: true, .. } => {
             // SAFETY: A user-defined constructor is not guaranteed to
             // initialize all the fields. To make the `assume_init()` call
@@ -1748,9 +1749,7 @@ pub fn generate_function(
                         }
                     }
                 }
-                TraitName::UnpinConstructor { name, params }
-                    if *name == Rc::from("From") && reportable_status.is_ok() =>
-                {
+                TraitName::From(params) if reportable_status.is_ok() => {
                     let single_param_ = format_tuple_except_singleton_replacing_by_self(
                         db,
                         params,
@@ -2029,7 +2028,9 @@ fn function_signature(
                 *return_type = RsTypeKind::Primitive(Primitive::Bool);
             }
         }
-        Some(TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..) | TraitName::Clone) => {
+        Some(
+            TraitName::Clone | TraitName::CtorNew(..) | TraitName::Default | TraitName::From(..),
+        ) => {
             move_self_from_out_param_to_return_value(
                 db,
                 func,
@@ -2041,8 +2042,8 @@ fn function_signature(
             )?;
             quoted_return_type = Some(quote! { Self });
 
-            // CtorNew groups parameters into a tuple.
-            if let Some(TraitName::CtorNew(args_type)) = trait_name {
+            // CtorNew and From group parameters into a tuple.
+            if let Some(TraitName::CtorNew(args_type) | TraitName::From(args_type)) = trait_name {
                 let args_type = if let Some(impl_record) = impl_kind_record {
                     format_tuple_except_singleton_replacing_by_self(
                         db,

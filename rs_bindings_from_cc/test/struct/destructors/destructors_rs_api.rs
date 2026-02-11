@@ -59,7 +59,8 @@ impl DestructionOrderRecorder {
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=12
 impl From<::ffi_11::c_int> for DestructionOrderRecorder {
     #[inline(always)]
-    fn from(int_field: ::ffi_11::c_int) -> Self {
+    fn from(args: ::ffi_11::c_int) -> Self {
+        let mut int_field = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorderC1Ei(
@@ -82,7 +83,8 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for DestructionOrderRecorder {
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=16
 impl From<::ctor::RvalueReference<'_, Self>> for DestructionOrderRecorder {
     #[inline(always)]
-    fn from(other: ::ctor::RvalueReference<'_, Self>) -> Self {
+    fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut other = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24DestructionOrderRecorderC1EOS_(
@@ -175,7 +177,8 @@ impl FieldDestructionOrderTester {
 /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=42
 impl From<::ctor::RvalueReference<'_, Self>> for FieldDestructionOrderTester {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'_, Self>) -> Self {
+    fn from(args: ::ctor::RvalueReference<'_, Self>) -> Self {
+        let mut __param_0 = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesterC1EOS_(
@@ -213,9 +216,54 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for FieldDestruction
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=44
-// Error while generating bindings for constructor 'FieldDestructionOrderTester::FieldDestructionOrderTester':
-// Constructors with more than one parameter are not yet supported. See b/216648347.
+/// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=44
+impl
+    From<(
+        crate::DestructionOrderRecorder,
+        crate::DestructionOrderRecorder,
+        crate::DestructionOrderRecorder,
+    )> for FieldDestructionOrderTester
+{
+    #[inline(always)]
+    fn from(
+        args: (
+            crate::DestructionOrderRecorder,
+            crate::DestructionOrderRecorder,
+            crate::DestructionOrderRecorder,
+        ),
+    ) -> Self {
+        let (mut field1, mut field2, mut field3) = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(&raw mut tmp as*mut _,&mut field1,&mut field2,&mut field3);
+            tmp.assume_init()
+        }
+    }
+}
+impl
+    ::ctor::CtorNew<(
+        crate::DestructionOrderRecorder,
+        crate::DestructionOrderRecorder,
+        crate::DestructionOrderRecorder,
+    )> for FieldDestructionOrderTester
+{
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(
+        args: (
+            crate::DestructionOrderRecorder,
+            crate::DestructionOrderRecorder,
+            crate::DestructionOrderRecorder,
+        ),
+    ) -> Self::CtorType {
+        <Self as From<(
+            crate::DestructionOrderRecorder,
+            crate::DestructionOrderRecorder,
+            crate::DestructionOrderRecorder,
+        )>>::from(args)
+    }
+}
 
 // Generated from: nowhere/llvm/src/libcxx/include/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for struct 'std::integral_constant<bool, false>':
@@ -268,6 +316,12 @@ mod detail {
             __this: &mut crate::FieldDestructionOrderTester,
             __param_0: ::ctor::RvalueReference<'_, crate::FieldDestructionOrderTester>,
         ) -> &'__return_lifetime mut crate::FieldDestructionOrderTester;
+        pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(
+            __this: *mut ::core::ffi::c_void,
+            field1: &mut crate::DestructionOrderRecorder,
+            field2: &mut crate::DestructionOrderRecorder,
+            field3: &mut crate::DestructionOrderRecorder,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorderS0_S0_(
             __return: *mut ::core::ffi::c_void,
             field1: &mut crate::DestructionOrderRecorder,

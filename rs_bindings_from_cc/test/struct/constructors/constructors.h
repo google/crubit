@@ -26,6 +26,15 @@ struct StructWithExplicitConversionConstructor final {
   int int_field;
 };
 
+struct StructWithMultipleConstructors final {
+  explicit StructWithMultipleConstructors(int i) : int_field(i) {}
+  explicit StructWithMultipleConstructors(int i, int j) : int_field(i + j) {}
+  explicit StructWithMultipleConstructors(int i, int j, int k)
+      : int_field(i + j + k) {}
+
+  int int_field;
+};
+
 struct StructWithImplicitConversionConstructor final {
   // Testing `impl From<int> for ...` when the constructor is *not* `explicit`.
   // NOLINTNEXTLINE(google-explicit-constructor)

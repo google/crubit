@@ -39,88 +39,57 @@ pub struct FunctionId {
 /// specially-understood traits and families of traits.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TraitName {
+    /// The std::clone::Clone trait.
+    Clone,
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
     CtorNew(Rc<[RsTypeKind]>),
-    /// The std::clone::Clone trait.
-    Clone,
-    /// An Unpin constructor trait, e.g. From or Clone, with a list of parameter
-    /// types.
-    UnpinConstructor {
-        name: Rc<str>,
-        // /// Clonable, comparable token stream, which can be copied into a new TokenStream.
-        // #[repr(transparent)]
-        // struct TokenArray(Rc<[TokenTree]>);
-        // // impl From<TokenStream> for TokenArray, From<TokenArray> for TokenStream, PartialEq,
-        // Eq, Hash, etc.
-
-        // This avoids deferred parsing.
-
-        // I just can't figure out how to make the equality check not prohibitively ugly:
-
-        // impl PartialEq for TokenArray {
-        //   fn eq(&self, other: &TokenArray) {
-        //     struct EqTokenTree<'a>(&'a TokenTree);
-        //     impl PartialEq for EqTokenTree {
-        //       fn eq(&self, other: &EqTokenTree) {
-        //         match (&self.0, &other.0) {
-        //           (Group(g1), Group(g2)) => g1.delimiter() == g2.delimiter(),
-        //           (Ident(i1), Ident(i2)) => i1 == i2,
-        //           (Punct(p1), Punct(p2)) => p1.as_char() == p2.as_char(),
-        //           (Literal(l1), Literal(l2)) => /* can't find a better way to do this */
-        // l1.to_string() == l2.to_string(),           _ => False,
-        //         }
-        //       }
-        //     }
-        //     self.0.iter().map(EqTokenTree).eq(other.0.iter().map(EqTokenTree))
-        //   }
-        // }
-        params: Rc<[RsTypeKind]>,
-    },
+    Default,
+    From(Rc<[RsTypeKind]>),
     /// The PartialEq trait.
-    PartialEq { param: Rc<RsTypeKind>, negate_thunk_result: bool },
+    PartialEq {
+        param: Rc<RsTypeKind>,
+        negate_thunk_result: bool,
+    },
     /// The PartialOrd trait.
-    PartialOrd { param: Rc<RsTypeKind> },
+    PartialOrd {
+        param: Rc<RsTypeKind>,
+    },
     /// Any other trait, e.g. Eq.
-    Other { name: Rc<str>, params: Rc<[RsTypeKind]>, is_unsafe_fn: bool },
+    Other {
+        name: Rc<str>,
+        params: Rc<[RsTypeKind]>,
+        is_unsafe_fn: bool,
+    },
 }
 
 impl std::fmt::Display for TraitName {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            TraitName::CtorNew { .. } => {
-                write!(f, "CtorNew")
-            }
-            TraitName::UnpinConstructor { name, .. } => {
-                write!(f, "{name}")
-            }
-            TraitName::PartialEq { .. } => {
-                write!(f, "PartialEq")
-            }
-            TraitName::PartialOrd { .. } => {
-                write!(f, "PartialOrd")
-            }
-            TraitName::Other { name, .. } => {
-                write!(f, "{name}")
-            }
-            TraitName::Clone => {
-                write!(f, "Clone")
-            }
-        }
+        f.write_str(self.name_str())
     }
 }
 
 impl TraitName {
+    fn name_str(&self) -> &str {
+        match self {
+            TraitName::Clone => "Clone",
+            TraitName::CtorNew { .. } => "CtorNew",
+            TraitName::Default => "Default",
+            TraitName::From { .. } => "From",
+            TraitName::PartialEq { .. } => "PartialEq",
+            TraitName::PartialOrd { .. } => "PartialOrd",
+            TraitName::Other { name, .. } => name,
+        }
+    }
+
     /// Returns the generic parameters in this trait name.
     fn params(&self) -> &[RsTypeKind] {
         match self {
-            Self::CtorNew(params)
-            | Self::UnpinConstructor { params, .. }
-            | Self::Other { params, .. } => params,
+            Self::Clone | Self::Default => &[],
+            Self::CtorNew(params) | Self::From(params) | Self::Other { params, .. } => params,
             Self::PartialEq { param, .. } | Self::PartialOrd { param } => {
                 core::slice::from_ref(param)
             }
-            Self::Clone => &[],
         }
     }
 

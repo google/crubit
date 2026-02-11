@@ -86,7 +86,8 @@ impl Default for DocCommentSlashes {
 /// From<int> for DocCommentSlashes`.
 impl From<::ffi_11::c_int> for DocCommentSlashes {
     #[inline(always)]
-    fn from(__param_0: ::ffi_11::c_int) -> Self {
+    fn from(args: ::ffi_11::c_int) -> Self {
+        let mut __param_0 = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(

@@ -392,7 +392,8 @@ impl Default for NontrivialUnpin {
 
 impl From<::ffi_11::c_int> for NontrivialUnpin {
     #[inline(always)]
-    fn from(field: ::ffi_11::c_int) -> Self {
+    fn from(args: ::ffi_11::c_int) -> Self {
+        let mut field = args;
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Ei(&raw mut tmp as *mut _, field);
@@ -409,8 +410,29 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialUnpin {
     }
 }
 
-// Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
-// Constructors with more than one parameter are not yet supported. See b/216648347.
+impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialUnpin {
+    #[inline(always)]
+    fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
+        let (mut field, mut unused) = args;
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinC1Eii(
+                &raw mut tmp as *mut _,
+                field,
+                unused,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialUnpin {
+    type CtorType = Self;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
+        <Self as From<(::ffi_11::c_int, ::ffi_11::c_int)>>::from(args)
+    }
+}
 
 // Error while generating bindings for constructor 'NontrivialUnpin::NontrivialUnpin':
 // Can't generate bindings for NontrivialUnpin::NontrivialUnpin, because of missing required features (crubit.rs-features):
@@ -733,6 +755,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1Ei(
             __this: *mut ::core::ffi::c_void,
             field: ::ffi_11::c_int,
+        );
+        #[link_name = "_ZN15NontrivialUnpinC1Eii"]
+        pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinC1Eii(
+            __this: *mut ::core::ffi::c_void,
+            field: ::ffi_11::c_int,
+            unused: ::ffi_11::c_int,
         );
         #[link_name = "_ZN15NontrivialUnpinD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(
