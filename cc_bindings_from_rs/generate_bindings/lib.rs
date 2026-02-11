@@ -32,10 +32,13 @@ use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, generate_associated_item, scalar_value_to_string,
+    generate_adt_core, generate_associated_item, generate_fields, scalar_value_to_string,
 };
 use arc_anyhow::{Context, Error, Result};
-use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
+use code_gen_utils::{
+    escape_non_identifier_chars, format_cc_includes, CcConstQualifier, CcInclude,
+    NamespaceQualifier,
+};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
 };
@@ -46,6 +49,7 @@ use database::{
 pub use database::{Database, IncludeGuard};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
+use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use query_compiler::{
     does_type_implement_trait, get_layout, get_scalar_int_type, get_tag_size_with_padding,
@@ -1646,12 +1650,174 @@ fn generate_trait_impls<'a, 'tcx>(
         })
 }
 
+/// Generate a template specialization for an instance of `Option<T>`.
+///
+/// `arg_ty` is used to determine the corresponding C++ type of the `T` in `Option<T>`.
+/// `self_ty` is the type of the `Option<T>` and is used to determine the layout of the type,
+/// especially the location of the tag accounting for any niches.
+fn specialize_option<'tcx>(
+    db: &dyn BindingsGenerator<'tcx>,
+    arg_ty: Ty<'tcx>,
+    self_ty: Ty<'tcx>,
+) -> Result<CcSnippet<'tcx>> {
+    let tcx = db.tcx();
+    let mut prereqs = CcPrerequisites::default();
+    let ty_tokens = db
+        .format_ty_for_cc(SugaredTy::missing_hir(arg_ty), TypeLocation::Other)?
+        .resolve_feature_requirements(crate::crate_features(db, db.source_crate_num()))?
+        .into_tokens(&mut prereqs);
+    let layout = get_layout(tcx, self_ty).expect("We've already checked this layout is valid");
+    let size = layout.size().bytes();
+    let member_fields_names = HashSet::new();
+    let fields = generate_fields(
+        db,
+        self_ty,
+        &format_ident!("Option"),
+        &quote! { Option<#ty_tokens> },
+        &[],
+        size,
+        layout.align().abi.bytes(),
+        &member_fields_names,
+    );
+    let fields_main_api = fields.main_api.into_tokens(&mut prereqs);
+    let name = escape_non_identifier_chars(&format!("{}", self_ty));
+    let name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+
+    let ty::TyKind::Adt(adt, _) = self_ty.kind() else {
+        unreachable!("Option<T> must be an ADT");
+    };
+
+    let (mut some_idx, mut none_idx) = (None, None);
+    for (idx, variant) in adt.variants().iter_enumerated() {
+        use rustc_hir::LangItem;
+        match tcx.lang_items().from_def_id(variant.def_id) {
+            Some(LangItem::OptionSome) => some_idx = Some(idx),
+            Some(LangItem::OptionNone) => none_idx = Some(idx),
+            _ => unreachable!("Option<T> must only have a Some and None variant"),
+        }
+    }
+    let some_idx = some_idx.expect("Option<T> must have a Some variant");
+    let none_idx = none_idx.expect("Option<T> must have a None variant");
+
+    let take_optional_body = {
+        prereqs.includes.insert(CcInclude::optional());
+
+        let (tag, tag_encoding, tag_field, variants) = match layout.variants() {
+            rustc_abi::Variants::Empty => unreachable!("Option is never uninhabited"),
+            rustc_abi::Variants::Single { .. } => {
+                unreachable!("We do not support zero sized types.")
+            }
+            rustc_abi::Variants::Multiple { tag, tag_encoding, tag_field, variants } => {
+                (tag, tag_encoding, tag_field, variants)
+            }
+        };
+        use rustc_middle::ty::layout::PrimitiveExt;
+        let tag_type = tag.primitive().to_int_ty(tcx);
+        let tag_type_cc: TokenStream = db
+            .format_ty_for_cc(SugaredTy::missing_hir(tag_type), TypeLocation::Other)?
+            .into_tokens(&mut prereqs);
+        let tag_offset =
+            Literal::u64_unsuffixed(layout.fields().offset(tag_field.as_usize()).bytes());
+
+        let literal_of_tag_ty = |val: u128, ty: Ty<'tcx>| {
+            use rustc_middle::mir::interpret::Scalar;
+            use rustc_middle::ty::ScalarInt;
+            let (size, _) = ty.int_size_and_signed(tcx);
+            let (scalar_int, _) = ScalarInt::truncate_from_uint(val, size);
+            scalar_value_to_string(tcx, Scalar::Int(scalar_int), *ty.kind())
+                .and_then(|s| {
+                    s.parse::<TokenStream>()
+                        .map_err(|_| anyhow!("scalar_value_to_string produced invalid tokens"))
+                })
+                .expect("tag to be valid scalar tokens")
+        };
+        let discr_for_none = self_ty
+            .discriminant_for_variant(tcx, none_idx)
+            .expect("We do not support zero sized types.");
+        let none_discr_val = literal_of_tag_ty(discr_for_none.val, tag_type);
+        let (tag_val, take_some) = match tag_encoding {
+            rustc_abi::TagEncoding::Direct => {
+                // Option::None is variant 0. Option::Some is variant 1.
+                let some_variant = &variants[some_idx];
+                let payload_offset = Literal::u64_unsuffixed(some_variant.fields.offset(0).bytes());
+
+                (
+                    quote! { *tag },
+                    quote! {
+                        *tag = #none_discr_val;
+                        return std::optional<#ty_tokens>(
+                            *reinterpret_cast<const #ty_tokens*>(
+                                reinterpret_cast<const char*>(this) + #payload_offset));
+                    },
+                )
+            }
+            rustc_abi::TagEncoding::Niche { niche_start, ref niche_variants, .. } => {
+                let niche_start_val = literal_of_tag_ty(*niche_start, tag_type);
+                let none_relative_idx =
+                    none_idx.as_u32().strict_sub(niche_variants.start().as_u32()) as u128;
+                let none_relative_val =
+                    literal_of_tag_ty(*niche_start + none_relative_idx, tag_type);
+                (
+                    quote! { *tag - #niche_start_val },
+                    quote! {
+                        #ty_tokens value(std::move(*reinterpret_cast<#ty_tokens*>(this)));
+                        *tag = #none_relative_val;
+                        return std::make_optional(std::move(value));
+                    },
+                )
+            }
+        };
+        quote! {
+            auto tag = reinterpret_cast<#tag_type_cc*>(
+                reinterpret_cast<char*>(this) + #tag_offset);
+            if (#tag_val == #none_discr_val) {
+                return std::nullopt;
+            } else {
+                #take_some
+            }
+        }
+    };
+
+    let tokens = quote! {
+        __HASH_TOKEN__ ifndef #name __NEWLINE__
+        __HASH_TOKEN__ define #name __NEWLINE__
+        template<> __NEWLINE__
+        struct rs_std::Option<#ty_tokens> { __NEWLINE__
+            #fields_main_api __NEWLINE__
+
+        public:
+            std::optional<#ty_tokens> take_optional() noexcept {
+                #take_optional_body
+            }
+        }; __NEWLINE__
+        __HASH_TOKEN__ endif __NEWLINE__
+        __NEWLINE__
+    };
+    Ok(CcSnippet { tokens, prereqs })
+}
+
+/// Generate a template specialization.
 fn generate_template_specialization<'tcx>(
-    _db: &dyn BindingsGenerator<'tcx>,
-    _specialization: TemplateSpecialization<'tcx>,
+    db: &dyn BindingsGenerator<'tcx>,
+    specialization: TemplateSpecialization<'tcx>,
 ) -> CcSnippet<'tcx> {
-    // More to come on this later.
-    CcSnippet::new(quote! {})
+    let snippet_res: Result<CcSnippet<'tcx>, (Ty<'tcx>, arc_anyhow::Error)> = match specialization {
+        TemplateSpecialization::RsStdOption { arg_ty, self_ty } => {
+            specialize_option(db, arg_ty, self_ty).map_err(|e| (self_ty, e))
+        }
+    };
+
+    snippet_res.unwrap_or_else(|(ty, err)| {
+        use rustc_hir::def::Namespace;
+        use rustc_middle::ty::print::FmtPrinter;
+        use rustc_middle::ty::print::PrettyPrinter;
+        let tcx = db.tcx();
+        let name =
+            FmtPrinter::print_string(tcx, Namespace::TypeNS, |fmt| fmt.pretty_print_type(ty))
+                .unwrap_or_else(|_| "<unknown type>".to_string());
+        let msg = format!("Error generating specialization for `{name}`: {err:#}");
+        CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ })
+    })
 }
 
 fn formatted_items_in_crate<'tcx>(

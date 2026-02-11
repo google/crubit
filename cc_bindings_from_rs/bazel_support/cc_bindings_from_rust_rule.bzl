@@ -523,6 +523,7 @@ cc_bindings_from_rust_aspect = aspect(
                 "//support/public:str_ref",
                 "//support:bridge_cpp",
                 "//support/public:traits",
+                "//support/public:option",
             ],
         ),
         "_process_wrapper": attr.label(

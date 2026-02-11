@@ -10,7 +10,6 @@ use generate_bindings::generate_function::get_fn_sig;
 use proc_macro2::TokenStream;
 use quote::quote;
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
-use rustc_hir::FnRetTy;
 use rustc_middle::ty::TyCtxt;
 use test_helpers::bindings_db_for_tests;
 use token_stream_matchers::assert_cc_matches;
@@ -461,8 +460,8 @@ fn test_format_ty_for_cc_failures() {
             "Type `std::alloc::LayoutError` comes from the `core` crate, but no `--crate-header` was specified for this crate",
         ),
         (
-            "*const Option<i8>",
-            "Failed to format the pointee of the pointer type `*const std::option::Option<i8>`: Bridged types must appear in a bridgeable type location",
+            "*const Result<i8, i8>",
+            "Failed to format the pointee of the pointer type `*const std::result::Result<i8, i8>`: Result as a bridge type is not yet supported"
         ),
     ];
     let preamble = quote! {

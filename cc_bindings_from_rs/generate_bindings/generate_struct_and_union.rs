@@ -977,7 +977,7 @@ fn generate_tuple_struct_ctor<'tcx>(
 }
 
 /// Returns the body of the C++ struct that represents the given ADT.
-fn generate_fields<'tcx>(
+pub(crate) fn generate_fields<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     cc_short_name: &Ident,
@@ -1069,7 +1069,7 @@ fn generate_fields<'tcx>(
     };
     let variants_fields: Vec<Vec<Field<'tcx>>> = match adt_def.adt_kind() {
         // Handle cases of unsupported ADTs.
-        ty::AdtKind::Enum if (!repr_attrs.contains(&rustc_hir::attrs::ReprC)) => {
+        ty::AdtKind::Enum if !is_supported_enum => {
             vec![err_fields(anyhow!("No support for bindings of individual non-repr(C) `enum`s"))]
         }
 
@@ -1080,10 +1080,17 @@ fn generate_fields<'tcx>(
                     field_iter
                         .map(|IndexedVariantField { index, field_def }| {
                             let ty = SugaredTy::missing_hir(field_def.ty(tcx, adt_generic_args));
-                            let size =
-                                get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
-                            let type_info = size.and_then(|size| {
-                                if is_bridged_type(db, ty.mid())?.is_some() {
+                            let type_info = get_layout(tcx, ty.mid()).and_then(|layout| {
+                                let size = layout.size().bytes();
+                                if is_bridged_type(db, ty.mid())?.is_some()
+                                    && !ty
+                                        .mid()
+                                        .ty_adt_def()
+                                        .and_then(|adt_def| BridgedBuiltin::new(db, adt_def))
+                                        .is_some_and(|builtin| {
+                                            matches!(builtin, BridgedBuiltin::Option)
+                                        })
+                                {
                                     bail!(
                                         "Field is a bridged type and might not be layout-compatible
                                     with the C++ type (b/400633609)"

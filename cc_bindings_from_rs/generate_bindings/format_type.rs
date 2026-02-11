@@ -20,7 +20,9 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
-use database::code_snippet::{CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs};
+use database::code_snippet::{
+    CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
+};
 use database::BindingsGenerator;
 use database::{FineGrainedFeature, SugaredTy, TypeLocation};
 use error_report::{anyhow, bail, ensure};
@@ -288,6 +290,26 @@ pub fn format_ty_for_cc<'tcx>(
             let mut prereqs = CcPrerequisites::default();
 
             if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+                if !location.is_bridgeable() {
+                    if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
+                        let arg = substs.type_at(0);
+                        let ty_tokens = db
+                            .format_ty_for_cc(SugaredTy::missing_hir(arg), TypeLocation::Other)?
+                            .resolve_feature_requirements(crate::crate_features(
+                                db,
+                                db.source_crate_num(),
+                            ))?
+                            .into_tokens(&mut prereqs);
+                        prereqs.template_specializations.insert(
+                            TemplateSpecialization::RsStdOption { arg_ty: arg, self_ty: ty.mid() },
+                        );
+                        prereqs.includes.insert(db.support_header("rs_std/option.h"));
+                        return Ok(CcSnippet {
+                            tokens: quote! { rs_std::Option<#ty_tokens> },
+                            prereqs,
+                        });
+                    }
+                }
                 ensure!(
                     location.is_bridgeable(),
                     "Bridged types must appear in a bridgeable type location"
@@ -746,7 +768,7 @@ pub fn format_ty_for_rs<'tcx>(
                 .symbol_canonical_name(adt.did())
                 .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
             let type_name = canonical_name.format_for_rs();
-            let generic_params = if substs.len() == 0 {
+            let generic_params = if substs.is_empty() {
                 quote! {}
             } else {
                 let generic_params = substs

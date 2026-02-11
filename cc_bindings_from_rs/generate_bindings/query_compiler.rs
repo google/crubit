@@ -282,7 +282,9 @@ pub fn get_scalar_int_type<'tcx>(tcx: TyCtxt<'tcx>, scalar: Scalar) -> Ty<'tcx> 
                 (Integer::I128, true) => Ty::new_int(tcx, IntTy::I128),
             }
         }
-        _ => panic!("Internal error: integer scalar is not valid."),
+        _ => {
+            panic!("Internal error: integer scalar is not valid.")
+        }
     }
 }
 
