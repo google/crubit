@@ -150,6 +150,11 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
         write_file(&cmdline.h_out, &cc_api)?;
     }
 
+    // We need to touch this file or bazel will complain that we didn't create it.
+    if let Some(cpp_out) = &cmdline.cpp_out {
+        write_file(cpp_out, "")?;
+    }
+
     {
         let rustfmt_config = cmdline.rustfmt_exe_path.as_ref().map(|rustfmt_path| {
             RustfmtConfig::new(rustfmt_path, cmdline.rustfmt_config_path.as_deref())
