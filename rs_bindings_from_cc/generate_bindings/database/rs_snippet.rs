@@ -325,9 +325,6 @@ impl UniformReprTemplateType {
                 let element_type = type_arg(element_type)?;
                 ensure!(element_type.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", element_type.display(db));
                 ensure!(element_type.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", element_type.display(db));
-                if element_type.overloads_operator_delete() {
-                    return Ok(None);
-                }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtr { element_type })))
             }
             Some(TemplateSpecializationKind::StdVector { element_type }) => {
@@ -375,7 +372,11 @@ impl UniformReprTemplateType {
             }
             Self::StdUniquePtr { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
-                quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
+                if element_type.overloads_operator_delete() {
+                    quote! { ::cc_std::std::unique_ptr_dyn::<#element_type_tokens> }
+                } else {
+                    quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
+                }
             }
             Self::AbslSpan { is_const, include_lifetime, element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);

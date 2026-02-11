@@ -85,3 +85,27 @@ fn test_unique_ptr_destroyed_in_cpp() {
     let up = unsafe { cc_std::std::unique_ptr::new(up.release()) };
     test_helpers::unique_ptr_test::destroy_unique_ptr(up);
 }
+
+#[gtest]
+fn test_unique_ptr_with_virtual_destructor() {
+    let p = test_helpers::unique_ptr_test::create_virtual_base();
+    assert_eq!(
+        std::any::Any::type_id(&p),
+        std::any::TypeId::of::<cc_std::std::unique_ptr_dyn<test_helpers::unique_ptr_test::Base>>()
+    );
+    drop(p);
+    assert_eq!(test_helpers::unique_ptr_test::get_derived_destructor_count(), 1);
+}
+
+#[gtest]
+fn test_unique_ptr_with_custom_delete() {
+    let p = test_helpers::unique_ptr_test::create_custom_delete();
+    assert_eq!(
+        std::any::Any::type_id(&p),
+        std::any::TypeId::of::<
+            cc_std::std::unique_ptr_dyn<test_helpers::unique_ptr_test::CustomDelete>,
+        >()
+    );
+    drop(p);
+    assert_eq!(test_helpers::unique_ptr_test::get_custom_delete_count(), 1);
+}

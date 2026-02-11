@@ -89,6 +89,9 @@ fn trait_name_to_token_stream_removing_trait_record(
                 format_generic_params_replacing_by_self(db, &**params, trait_record);
             quote! {#name_as_token_stream #formatted_params}
         }
+        Delete => {
+            quote! { ::operator::Delete }
+        }
     }
 }
 
@@ -2070,7 +2073,7 @@ fn function_signature(
                 };
             }
         }
-        Some(TraitName::Other { .. }) | None => {}
+        Some(TraitName::Other { .. } | TraitName::Delete) | None => {}
     }
 
     let return_type_fragment = if matches!(

@@ -59,22 +59,6 @@ cc_library(
     ],
 )
 
-crubit_rust_test(
-    name = "unique_ptr_experimental_test",
-    srcs = ["unique_ptr_experimental_test.rs"],
-    cc_deps = [
-        ":common",
-        ":unique_ptr_experimental_lib",
-        "//support/public:cc_std",
-    ],
-    proc_macro_deps = [
-        "//common:item_exists",
-    ],
-    deps = [
-        "@crate_index//:googletest",
-    ],
-)
-
 cc_library(
     name = "vector_lib",
     hdrs = ["vector_lib.h"],

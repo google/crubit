@@ -567,6 +567,7 @@ pub fn generated_items_to_tokens(
                     items,
                     nested_items,
                     indirect_functions,
+                    delete,
                     owned_type_name,
                     member_methods,
                 } = record_item.as_ref();
@@ -704,6 +705,20 @@ pub fn generated_items_to_tokens(
                             .to_tokens(tokens);
                         }
                     }
+                }
+
+                if let Some(DeleteImpl { record_type, thunk_ident, crate_root_path }) = delete {
+                    quote! {
+                        unsafe impl ::operator::Delete for #record_type {
+                            #[inline(always)]
+                            unsafe fn delete(p: *mut Self) {
+                                #crate_root_path::detail::#thunk_ident(p);
+                            }
+                        }
+                        __NEWLINE__
+                        __NEWLINE__
+                    }
+                    .to_tokens(tokens);
                 }
 
                 if !nested_items.is_empty() {
@@ -928,6 +943,7 @@ pub struct Record {
     pub nested_items: Vec<ItemId>,
     /// Functions that get attached either by a trait or from a base class.
     pub indirect_functions: Vec<TokenStream>,
+    pub delete: Option<DeleteImpl>,
     /// The name of the owning wrapper type when the type was annotated with CRUBIT_OWNED_POINTEE.
     pub owned_type_name: Option<Ident>,
     pub member_methods: Vec<TokenStream>,
@@ -938,6 +954,13 @@ pub struct UpcastImpl {
     pub base_name: TokenStream,
     pub derived_name: TokenStream,
     pub body: UpcastImplBody,
+}
+
+#[derive(Clone, Debug)]
+pub struct DeleteImpl {
+    pub record_type: TokenStream,
+    pub thunk_ident: Ident,
+    pub crate_root_path: TokenStream,
 }
 
 #[derive(Clone, Debug)]

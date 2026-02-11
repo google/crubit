@@ -31,6 +31,12 @@ extern "C" void __rust_thunk___ZN15PolymorphicBaseD1Ev(
   std::destroy_at(__this);
 }
 
+extern "C" void
+__crubit_operator_delete__15PolymorphicBase___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
+    class PolymorphicBase* ptr) {
+  delete ptr;
+}
+
 static_assert(CRUBIT_SIZEOF(class PolymorphicBase2) == 8);
 static_assert(alignof(class PolymorphicBase2) == 8);
 
@@ -51,6 +57,12 @@ extern "C" void __rust_thunk___ZN16PolymorphicBase2D1Ev(
   std::destroy_at(__this);
 }
 
+extern "C" void
+__crubit_operator_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
+    class PolymorphicBase2* ptr) {
+  delete ptr;
+}
+
 static_assert(CRUBIT_SIZEOF(class PolymorphicDerived) == 16);
 static_assert(alignof(class PolymorphicDerived) == 8);
 
@@ -62,6 +74,12 @@ extern "C" void __rust_thunk___ZN18PolymorphicDerivedC1Ev(
 extern "C" void __rust_thunk___ZN18PolymorphicDerivedD1Ev(
     class PolymorphicDerived* __this) {
   std::destroy_at(__this);
+}
+
+extern "C" void
+__crubit_operator_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
+    class PolymorphicDerived* ptr) {
+  delete ptr;
 }
 
 #pragma clang diagnostic pop

@@ -7,7 +7,7 @@ use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
-    ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeriveAttr,
+    ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeleteImpl, DeriveAttr,
     DocCommentAttr, Feature, FieldDefinition, FieldType, GeneratedItem, MustUseAttr,
     NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk, ThunkImpl,
     UpcastImpl, UpcastImplBody, Visibility,
@@ -562,6 +562,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
     }
 
     let mut indirect_functions = vec![];
+    let mut operator_delete_impl = None;
     filter_out_ambiguous_member_functions(
         db,
         record.clone(),
@@ -605,6 +606,12 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         upcast_impls = new_upcast_impls;
         api_snippets.thunks.extend(thunks);
         api_snippets.cc_details.extend(thunk_impls);
+    }
+    if record.overloads_operator_delete && record.destructor != SpecialMemberFunc::Unavailable {
+        let (delete, thunk, thunk_impl) = cc_struct_operator_delete_impl(db, &record)?;
+        api_snippets.thunks.push(thunk);
+        api_snippets.cc_details.push(thunk_impl);
+        operator_delete_impl = Some(delete);
     }
     let no_unique_address_accessors =
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
@@ -682,6 +689,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         indirect_functions,
         owned_type_name,
         member_methods,
+        delete: operator_delete_impl,
     };
 
     api_snippets.features |= Feature::negative_impls;
@@ -933,4 +941,43 @@ fn cc_struct_upcast_impl(
     }
 
     Ok((upcast_impls, thunks, thunk_impls))
+}
+
+fn cc_struct_operator_delete_impl(
+    db: &dyn BindingsGenerator,
+    record: &Rc<Record>,
+) -> Result<(DeleteImpl, Thunk, ThunkImpl)> {
+    let ir = db.ir();
+    let crate_root_path = ir.crate_root_path_tokens();
+    let record_type = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
+
+    let thunk_ident = make_rs_ident(&format!(
+        "__crubit_operator_delete__{}_{}",
+        record.mangled_cc_name,
+        record.owning_target.convert_to_cc_identifier(),
+    ));
+
+    let thunk = Thunk::Function {
+        mangled_name: None,
+        thunk_ident: thunk_ident.clone(),
+        generic_params: quote! {},
+        param_idents: vec![make_rs_ident("ptr")],
+        param_types: vec![quote! { *mut #record_type }],
+        return_type_fragment: None,
+    };
+
+    let cc_record_name = cpp_type_name_for_record(record.as_ref(), ir)?;
+    let thunk_impl = ThunkImpl::Function {
+        conversion_externs: quote! {},
+        return_type_name: quote! { void },
+        thunk_ident: thunk_ident.clone(),
+        param_types: vec![quote! { #cc_record_name* }],
+        param_idents: vec![make_rs_ident("ptr")],
+        conversion_stmts: quote! {},
+        return_stmt: quote! { delete ptr },
+    };
+
+    let operator_delete = DeleteImpl { record_type, thunk_ident, crate_root_path };
+
+    Ok((operator_delete, thunk, thunk_impl))
 }

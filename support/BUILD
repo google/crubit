@@ -222,6 +222,15 @@ rust_test(
 )
 
 rust_library(
+    name = "operator",
+    srcs = ["operator.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_library(
     name = "bridge_rust",
     srcs = ["bridge.rs"],
     compatible_with = ["//buildenv/target:non_prod"],

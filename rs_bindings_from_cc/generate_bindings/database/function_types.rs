@@ -55,6 +55,8 @@ pub enum TraitName {
     PartialOrd {
         param: Rc<RsTypeKind>,
     },
+    /// The operator::Delete trait.
+    Delete,
     /// Any other trait, e.g. Eq.
     Other {
         name: Rc<str>,
@@ -78,6 +80,7 @@ impl TraitName {
             TraitName::From { .. } => "From",
             TraitName::PartialEq { .. } => "PartialEq",
             TraitName::PartialOrd { .. } => "PartialOrd",
+            TraitName::Delete => "::operator::Delete",
             TraitName::Other { name, .. } => name,
         }
     }
@@ -85,7 +88,7 @@ impl TraitName {
     /// Returns the generic parameters in this trait name.
     fn params(&self) -> &[RsTypeKind] {
         match self {
-            Self::Clone | Self::Default => &[],
+            Self::Clone | Self::Default | Self::Delete => &[],
             Self::CtorNew(params) | Self::From(params) | Self::Other { params, .. } => params,
             Self::PartialEq { param, .. } | Self::PartialOrd { param } => {
                 core::slice::from_ref(param)

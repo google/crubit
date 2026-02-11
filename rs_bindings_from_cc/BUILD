@@ -45,6 +45,7 @@ deps_for_bindings(
     ],
     deps_for_generated_rs_file = [
         "//support:ctor",
+        "//support:operator",
         "//support/ffi_11",
         "//support:forward_declare",
         "//support:oops",

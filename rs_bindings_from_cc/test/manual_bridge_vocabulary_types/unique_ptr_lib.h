@@ -44,19 +44,6 @@ inline std::unique_ptr<std::string> MakeUniquePtrString() {
   return std::make_unique<std::string>("hello, world");
 }
 
-inline std::unique_ptr<OverloadedDelete> MakeUniquePtrOverloadedDelete() {
-  return nullptr;
-}
-
-inline std::unique_ptr<OverloadedDestroyingDelete>
-MakeUniquePtrOverloadedDestroyingDelete() {
-  return nullptr;
-}
-
-inline std::unique_ptr<PolymorphicType> MakeUniquePtrPolymorphicType() {
-  return nullptr;
-}
-
 CRUBIT_MUST_BIND
 inline std::unique_ptr<FinalType> MakeUniquePtrFinalType() { return nullptr; }
 inline std::unique_ptr<IncompleteType> MakeUniquePtrIncompleteType() {
