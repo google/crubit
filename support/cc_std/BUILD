@@ -24,6 +24,7 @@ bindings_for_toolchain_headers(
     extra_rs_srcs = [
         "//support/cc_std_impl:extra_rs_srcs_for_cc_std",
         "//support/cc_std_impl:cpp_std_allocator",
+        "//support/cc_std_impl:google_allocator",
         "//support/cc_std_impl:manually_bridged_types",
     ],
     public_libc_hdrs = LIBC_HEADERS,
