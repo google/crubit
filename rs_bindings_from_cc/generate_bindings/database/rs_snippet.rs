@@ -288,6 +288,11 @@ pub enum UniformReprTemplateType {
     StdUniquePtr {
         element_type: RsTypeKind,
     },
+    /// std::unique_ptr<T, std::default_delete<T>> where T has a virtual
+    /// destructor or overloads operator delete.
+    StdUniquePtrDyn {
+        element_type: RsTypeKind,
+    },
     AbslSpan {
         is_const: bool,
         include_lifetime: bool,
@@ -326,7 +331,9 @@ impl UniformReprTemplateType {
                 ensure!(element_type.is_complete(), "Rust std::unique_ptr<T> cannot be used with incomplete types, and `{}` is incomplete", element_type.display(db));
                 ensure!(element_type.is_destructible(), "Rust std::unique_ptr<T> requires that `T` be destructible, but the destructor of `{}` is non-public or deleted", element_type.display(db));
                 if element_type.overloads_operator_delete() {
-                    return Ok(None);
+                    return Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtrDyn {
+                        element_type,
+                    })));
                 }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtr { element_type })))
             }
@@ -376,6 +383,10 @@ impl UniformReprTemplateType {
             Self::StdUniquePtr { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
+            }
+            Self::StdUniquePtrDyn { element_type } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                quote! { ::cc_std::std::unique_ptr_dyn::<#element_type_tokens> }
             }
             Self::AbslSpan { is_const, include_lifetime, element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);

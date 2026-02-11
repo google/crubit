@@ -74,6 +74,12 @@ extern "C" void __rust_thunk___ZN14VirtualDerivedC1Ev(
 static_assert(CRUBIT_SIZEOF(class MyAbstractClass) == 8);
 static_assert(alignof(class MyAbstractClass) == 8);
 
+extern "C" void
+__crubit_delete__15MyAbstractClass___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
+    class MyAbstractClass* ptr) {
+  delete ptr;
+}
+
 static_assert(sizeof(class MethodBase1) == 1);
 static_assert(alignof(class MethodBase1) == 1);
 

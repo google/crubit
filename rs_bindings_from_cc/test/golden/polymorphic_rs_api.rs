@@ -65,6 +65,12 @@ impl ::ctor::PinnedDrop for PolymorphicBase {
     }
 }
 
+unsafe impl ::cc_std::std::OperatorDelete for crate::PolymorphicBase {
+    unsafe fn delete(ptr: *mut Self) {
+        crate::detail::__crubit_delete__15PolymorphicBase___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(ptr as*mut crate::PolymorphicBase);
+    }
+}
+
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicBase2
@@ -113,6 +119,12 @@ impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN16PolymorphicBase2D1Ev(self)
+    }
+}
+
+unsafe impl ::cc_std::std::OperatorDelete for crate::PolymorphicBase2 {
+    unsafe fn delete(ptr: *mut Self) {
+        crate::detail::__crubit_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(ptr as*mut crate::PolymorphicBase2);
     }
 }
 
@@ -170,6 +182,12 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:polymorphic_cc needs [//features:experimental] for PolymorphicDerived::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+unsafe impl ::cc_std::std::OperatorDelete for crate::PolymorphicDerived {
+    unsafe fn delete(ptr: *mut Self) {
+        crate::detail::__crubit_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(ptr as*mut crate::PolymorphicDerived);
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -180,6 +198,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase>,
         );
+        pub(crate) unsafe fn __crubit_delete__15PolymorphicBase___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
+            ptr: *mut crate::PolymorphicBase,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2C1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -189,11 +210,17 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
+        pub(crate) unsafe fn __crubit_delete__16PolymorphicBase2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
+            ptr: *mut crate::PolymorphicBase2,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
             __this: ::core::pin::Pin<&'a mut crate::PolymorphicDerived>,
+        );
+        pub(crate) unsafe fn __crubit_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(
+            ptr: *mut crate::PolymorphicDerived,
         );
     }
 }

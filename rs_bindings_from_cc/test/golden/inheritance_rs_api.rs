@@ -366,6 +366,12 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MyAbstractClass::operator= (return type: references are not supported)
 // //rs_bindings_from_cc/test/golden:inheritance_cc needs [//features:experimental] for MyAbstractClass::operator= (the type of __param_0 (parameter #1): references are not supported)
 
+unsafe impl ::cc_std::std::OperatorDelete for crate::MyAbstractClass {
+    unsafe fn delete(ptr: *mut Self) {
+        crate::detail::__crubit_delete__15MyAbstractClass___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(ptr as*mut crate::MyAbstractClass);
+    }
+}
+
 /// Method inheritance
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[repr(C)]
@@ -543,6 +549,9 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN12VirtualBase2C1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN14VirtualDerivedC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __crubit_delete__15MyAbstractClass___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3ainheritance_5fcc(
+            ptr: *mut crate::MyAbstractClass,
         );
         pub(crate) unsafe fn __rust_thunk___ZN11MethodBase1C1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZN11MethodBase16PublicEv"]
