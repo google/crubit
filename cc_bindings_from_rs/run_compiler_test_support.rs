@@ -225,6 +225,7 @@ fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::int
 /// invocation. This saves some targets
 /// (e.g. `//cc_bindings_from_rs/generate_bindings:bindings_test`)
 /// several minutes of compilation time.
+#[allow(rustc::internal)]
 fn run_compiler_for_testing_impl(
     source: String,
     callback: Box<dyn for<'tcx> FnOnce(TyCtxt<'tcx>) + Send + '_>,
@@ -247,6 +248,12 @@ fn run_compiler_for_testing_impl(
         ],
         ..Default::default()
     };
+
+    // Needed for using target.json; avoids:
+    // error loading target specification: custom targets are unstable and require `-Zunstable-options`
+    // TODO: use `Session::unstable_options` instead of
+    // `unstable_opts.unstable_options` and remove the function #[allow(rustc::internal)].
+    opts.unstable_opts.unstable_options = true;
 
     let target_dir = tempfile::TempDir::new().unwrap();
 

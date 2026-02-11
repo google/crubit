@@ -2,7 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(rustc_private)]
-#![deny(rustc::internal)]
 
 extern crate rustc_driver;
 

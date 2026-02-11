@@ -2,7 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![feature(rustc_private)]
-#![deny(rustc::internal)]
 #![feature(stmt_expr_attributes)]
 #![feature(proc_macro_hygiene)]
 

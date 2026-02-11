@@ -4,7 +4,6 @@
 
 #![feature(never_type)]
 #![feature(rustc_private)]
-#![deny(rustc::internal)]
 
 extern crate rustc_driver;
 extern crate rustc_errors;
@@ -326,7 +325,12 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     // We do not support unstable options at the moment.
     // We just need an instance of this struct so we can reuse the logic in rustc rather than
     // duplicate it.
-    let unstable_opts = UnstableOptions::default();
+    let unstable_opts = UnstableOptions {
+        // Needed for when using a target.json; avoids:
+        // error loading target specification: custom targets are unstable and require `-Zunstable-options`
+        unstable_options: true,
+        ..UnstableOptions::default()
+    };
     // Ignore target modifiers.
     // These will cause a compilation error when we load our metadata if the crate under compilation
     // set them and we did not. But we don't care about setting them because we aren't actually
@@ -355,6 +359,9 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             .iter()
             .filter(|p| seen_search_paths.insert(*p))
             .map(|path| {
+                // TODO: use `Session::unstable_options` instead of
+                // `unstable_opts.unstable_options`.
+                #[allow(rustc::internal)]
                 SearchPath::from_cli_opt(
                     sysroot.path(),
                     &target_triple,
@@ -385,7 +392,15 @@ fn main() {{}}
     };
     let config = construct_config(
         input,
-        config::Options { externs, sysroot, target_triple, search_paths, cg, ..Default::default() },
+        config::Options {
+            externs,
+            sysroot,
+            target_triple,
+            search_paths,
+            cg,
+            unstable_opts,
+            ..Default::default()
+        },
     );
     rustc_interface::run_compiler(config, |compiler| {
         // Parse the program and print the syntax tree.

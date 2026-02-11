@@ -122,11 +122,17 @@ where
 {
     /// Configures how `rustc` internals work when invoked via `run_compiler`.
     /// Note that `run_compiler_test_support` uses a separate `Config`.
+    #[allow(rustc::internal)]
     fn config(&mut self, config: &mut rustc_interface::interface::Config) {
         // Silence warnings in the target crate to avoid reporting them twice: once when
         // compiling the crate via `rustc` and once when "compiling" the crate
         // via `cc_bindings_from_rs` (the `config` here affects the latter one).
         config.opts.lint_opts.push(("warnings".to_string(), rustc_lint_defs::Level::Allow));
+        // Needed for when using a target.json; avoids:
+        // error loading target specification: custom targets are unstable and require `-Zunstable-options`
+        // TODO: use `Session::unstable_options` instead of
+        // `unstable_opts.unstable_options` and remove the function #[allow(rustc::internal)].
+        config.opts.unstable_opts.unstable_options = true;
     }
 
     fn after_analysis<'tcx>(
