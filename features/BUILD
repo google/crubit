@@ -74,16 +74,6 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# A feature set enabling emitting `ffi_11` types in bindings.
-#
-# See crubit.rs-features#other
-crubit_feature_hint(
-    name = "custom_ffi_types",
-    compatible_with = ["//buildenv/target:non_prod"],
-    crubit_features = SUPPORTED_FEATURES + ["custom_ffi_types"],
-    visibility = ["//visibility:public"],
-)
-
 # A feature set enabling ergonomic lifetime defaults when interpreting lifetime annotations.
 #
 # See crubit.rs-features#other
