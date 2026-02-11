@@ -24,6 +24,10 @@ pub struct Cmdline {
     #[clap(long, value_parser, value_name = "FILE")]
     pub h_out: PathBuf,
 
+    /// Output path for C++ implementation file with bindings.
+    #[clap(long, value_parser, value_name = "FILE")]
+    pub cpp_out: Option<PathBuf>,
+
     /// Include guard for the C++ header file with bindings.
     #[clap(long, value_parser, value_name = "STRING")]
     pub h_out_include_guard: Option<String>,
@@ -312,6 +316,7 @@ mod tests {
     fn test_happy_path() {
         let cmdline = new_cmdline([
             "--h-out=foo.h",
+            "--cpp-out=foo_impl.cc",
             "--rs-out=foo_impl.rs",
             "--crubit-support-path-format=<crubit/support/{header}>",
             "--clang-format-exe-path=clang-format.exe",
@@ -320,6 +325,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(Path::new("foo.h"), cmdline.h_out);
+        assert_eq!(Some(PathBuf::from("foo_impl.cc")), cmdline.cpp_out);
         assert_eq!(Path::new("foo_impl.rs"), cmdline.rs_out);
         assert_eq!(
             Format::parse_with_metavars("<crubit/support/{header}>", &["header"]).unwrap(),
@@ -331,6 +337,18 @@ mod tests {
         assert!(cmdline.rustfmt_config_path.is_none());
         // Ignoring `rustc_args` in this test - they are covered in a separate
         // test below: `test_rustc_args_happy_path`.
+    }
+
+    #[test]
+    fn test_cpp_out_is_optional() {
+        let cmdline = new_cmdline([
+            "--h-out=foo.h",
+            "--rs-out=foo_impl.rs",
+            "--crubit-support-path-format=<crubit/support/{header}>",
+        ])
+        .unwrap();
+
+        assert_eq!(None, cmdline.cpp_out);
     }
 
     #[test]
@@ -509,6 +527,7 @@ mod tests {
     fn test_omit_rustfmt_exe_path() {
         let cmdline = new_cmdline([
             "--h-out=foo.h",
+            "--cpp-out=foo_impl.cc",
             "--rs-out=foo_impl.rs",
             "--crubit-support-path-format=<crubit/support/{header}>",
             "--clang-format-exe-path=clang-format.exe",
