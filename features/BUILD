@@ -106,6 +106,13 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
+crubit_feature_hint(
+    name = "callables",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["callables"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

@@ -8,6 +8,7 @@ crubit_test_cc_library(
     name = "calls_back_to_rust",
     srcs = ["calls_back_to_rust.cc"],
     hdrs = ["calls_back_to_rust.h"],
+    aspect_hints = ["//features:callables"],
     deps = [
         "//support:annotations",
         "//support/rs_std:dyn_callable",

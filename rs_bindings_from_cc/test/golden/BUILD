@@ -56,6 +56,7 @@ DEPS = {
         "template_fwd_without_crubit",
     ],
     "callables": ["//support/rs_std:dyn_callable"],
+    "callables_supported": ["//support/rs_std:dyn_callable"],
 }
 
 TAGS = {}
@@ -67,6 +68,10 @@ ASPECT_HINTS = {
     "template_inst": [
         "//features:wrapper",
     ],
+    "callables": [
+        "//features:callables",
+    ],
+    # "callables_supported" intentionally does not have the callables feature, only supported.
 }
 
 rust_bindings_from_cc_cli_flag(

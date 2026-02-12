@@ -10,6 +10,7 @@ use crubit_abi_type::{
     CrubitAbiType, CrubitAbiTypeToCppTokens, CrubitAbiTypeToRustExprTokens,
     CrubitAbiTypeToRustTokens, FullyQualifiedPath,
 };
+use crubit_feature::CrubitFeature;
 use database::code_snippet::{
     self, ApiSnippets, Bindings, BindingsTokens, CppDetails, CppIncludes, Feature, GeneratedItem,
 };
@@ -394,6 +395,14 @@ pub fn generate_bindings_tokens(
     let (dyn_callable_cpp_decls, dyn_callable_rust_impls): (Vec<TokenStream>, Vec<TokenStream>) =
         ir.records()
             .filter_map(|record| {
+                // If the record doesn't belong to a target with the Callables feature, skip.
+                if !ir
+                    .target_crubit_features(&record.owning_target)
+                    .contains(CrubitFeature::Callables)
+                {
+                    return None;
+                }
+
                 // It doesn't matter since we're just checking for presence of DynCallable.
                 let has_reference_param = false;
 
@@ -980,6 +989,10 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
             }
             BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
             BridgeRsTypeKind::DynCallable(dyn_callable) => {
+                ensure!(
+                    db.ir().target_crubit_features(&original_type.owning_target).contains(CrubitFeature::Callables),
+                    "Callables require the `callables` feature, but target `{:?}` does not have it enabled.", original_type.owning_target,
+                );
                 generate_dyn_callable::dyn_callable_crubit_abi_type(db, &dyn_callable)
             }
             BridgeRsTypeKind::C9Co { result_type, .. } => {
