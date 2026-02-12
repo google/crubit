@@ -84,22 +84,6 @@ __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0
 }
 
 extern "C" void
-__rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorderS0_S0_(
-    class FieldDestructionOrderTester* __return,
-    class DestructionOrderRecorder* field1,
-    class DestructionOrderRecorder* field2,
-    class DestructionOrderRecorder* field3) {
-  new (__return) auto(FieldDestructionOrderTester::Create(
-      std::move(*field1), std::move(*field2), std::move(*field3)));
-}
-
-static_assert(
-    (class FieldDestructionOrderTester (*)(class DestructionOrderRecorder,
-                                           class DestructionOrderRecorder,
-                                           class DestructionOrderRecorder)) &
-    ::FieldDestructionOrderTester::Create);
-
-extern "C" void
 __rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
     int field1, int field2, int field3) {
   FieldDestructionOrderTester::DestructFromCpp(field1, field2, field3);

@@ -48,14 +48,6 @@ class [[clang::trivial_abi]] FieldDestructionOrderTester final {
         field2_(std::move(field2)),
         field3_(std::move(field3)) {}
 
-  // TODO: b/216648347 - Remove once multi-argument constructors are supported.
-  static FieldDestructionOrderTester Create(DestructionOrderRecorder field1,
-                                            DestructionOrderRecorder field2,
-                                            DestructionOrderRecorder field3) {
-    return FieldDestructionOrderTester(std::move(field1), std::move(field2),
-                                       std::move(field3));
-  }
-
   static void DestructFromCpp(int field1, int field2, int field3) {
     auto tester = FieldDestructionOrderTester(DestructionOrderRecorder(field1),
                                               DestructionOrderRecorder(field2),

@@ -32,11 +32,11 @@ fn test_field_destruction_order() {
     {
         // The code below constructs the same FieldDestructionOrderTester object
         // as done internally in DestructFromCpp above.
-        let tester = FieldDestructionOrderTester::Create(
+        let tester = FieldDestructionOrderTester::from((
             DestructionOrderRecorder::from(field1_value),
             DestructionOrderRecorder::from(field2_value),
             DestructionOrderRecorder::from(field3_value),
-        );
+        ));
         // Dropping the `tester` should invoke destructors of field1/2/3 in the
         // same order as C++ (e.g. by calling into the C++ destructor of
         // FieldDestructionOrderTester).  Note that Rust uses a different order

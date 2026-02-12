@@ -143,22 +143,7 @@ unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
     type Kind = ::cxx::kind::Trivial;
 }
 impl FieldDestructionOrderTester {
-    /// TODO: b/216648347 - Remove once multi-argument constructors are supported.
-    ///
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=52
-    #[inline(always)]
-    pub fn Create(
-        mut field1: crate::DestructionOrderRecorder,
-        mut field2: crate::DestructionOrderRecorder,
-        mut field3: crate::DestructionOrderRecorder,
-    ) -> crate::FieldDestructionOrderTester {
-        unsafe {
-            let mut __return = ::core::mem::MaybeUninit::<Self>::uninit();
-            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorderS0_S0_(&raw mut __return as*mut::core::ffi::c_void,&mut field1,&mut field2,&mut field3);
-            __return.assume_init()
-        }
-    }
-    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=59
+    /// Generated from: rs_bindings_from_cc/test/struct/destructors/destructors.h;l=51
     #[inline(always)]
     pub fn DestructFromCpp(
         field1: ::ffi_11::c_int,
@@ -317,12 +302,6 @@ mod detail {
         ) -> &'__return_lifetime mut crate::FieldDestructionOrderTester;
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(
             __this: *mut ::core::ffi::c_void,
-            field1: &mut crate::DestructionOrderRecorder,
-            field2: &mut crate::DestructionOrderRecorder,
-            field3: &mut crate::DestructionOrderRecorder,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTester6CreateE24DestructionOrderRecorderS0_S0_(
-            __return: *mut ::core::ffi::c_void,
             field1: &mut crate::DestructionOrderRecorder,
             field2: &mut crate::DestructionOrderRecorder,
             field3: &mut crate::DestructionOrderRecorder,
