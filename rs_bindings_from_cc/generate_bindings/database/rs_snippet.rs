@@ -1604,69 +1604,65 @@ impl RsTypeKind {
                 let ident = make_rs_ident(&type_alias.rs_name.identifier);
                 quote! { #crate_path #ident }
             }
-            RsTypeKind::Primitive(primitive) => {
-                let ir = db.ir();
-                let features = db.ir().target_crubit_features(&ir.flat_ir().current_target);
-                match primitive {
-                    Primitive::Bool => quote! { bool },
-                    Primitive::Void => {
-                        quote! { ::ffi_11::c_void }
-                    }
-                    Primitive::Float => quote! { f32 },
-                    Primitive::Double => quote! { f64 },
-                    Primitive::Char => {
-                        quote! { ::ffi_11::c_char }
-                    }
-                    Primitive::SignedChar => {
-                        quote! { ::ffi_11::c_schar }
-                    }
-                    Primitive::UnsignedChar => {
-                        quote! { ::ffi_11::c_uchar }
-                    }
-                    Primitive::Short => {
-                        quote! { ::ffi_11::c_short }
-                    }
-                    Primitive::Int => {
-                        quote! { ::ffi_11::c_int }
-                    }
-                    Primitive::Long => {
-                        quote! { ::ffi_11::c_long }
-                    }
-                    Primitive::LongLong => {
-                        quote! { ::ffi_11::c_longlong }
-                    }
-                    Primitive::UnsignedShort => {
-                        quote! { ::ffi_11::c_ushort }
-                    }
-                    Primitive::UnsignedInt => {
-                        quote! { ::ffi_11::c_uint }
-                    }
-                    Primitive::UnsignedLong => {
-                        quote! { ::ffi_11::c_ulong }
-                    }
-                    Primitive::UnsignedLongLong => {
-                        quote! { ::ffi_11::c_ulonglong }
-                    }
-                    Primitive::Char16T => quote! { u16 },
-                    Primitive::Char32T => quote! { u32 },
-                    Primitive::PtrdiffT
-                    | Primitive::StdPtrdiffT
-                    | Primitive::IntptrT
-                    | Primitive::StdIntptrT => quote! { isize },
-                    Primitive::SizeT
-                    | Primitive::StdSizeT
-                    | Primitive::UintptrT
-                    | Primitive::StdUintptrT => quote! { usize },
-                    Primitive::Int8T | Primitive::StdInt8T => quote! { i8 },
-                    Primitive::Int16T | Primitive::StdInt16T => quote! { i16 },
-                    Primitive::Int32T | Primitive::StdInt32T => quote! { i32 },
-                    Primitive::Int64T | Primitive::StdInt64T => quote! { i64 },
-                    Primitive::Uint8T | Primitive::StdUint8T => quote! { u8 },
-                    Primitive::Uint16T | Primitive::StdUint16T => quote! { u16 },
-                    Primitive::Uint32T | Primitive::StdUint32T => quote! { u32 },
-                    Primitive::Uint64T | Primitive::StdUint64T => quote! { u64 },
+            RsTypeKind::Primitive(primitive) => match primitive {
+                Primitive::Bool => quote! { bool },
+                Primitive::Void => {
+                    quote! { ::ffi_11::c_void }
                 }
-            }
+                Primitive::Float => quote! { f32 },
+                Primitive::Double => quote! { f64 },
+                Primitive::Char => {
+                    quote! { ::ffi_11::c_char }
+                }
+                Primitive::SignedChar => {
+                    quote! { ::ffi_11::c_schar }
+                }
+                Primitive::UnsignedChar => {
+                    quote! { ::ffi_11::c_uchar }
+                }
+                Primitive::Short => {
+                    quote! { ::ffi_11::c_short }
+                }
+                Primitive::Int => {
+                    quote! { ::ffi_11::c_int }
+                }
+                Primitive::Long => {
+                    quote! { ::ffi_11::c_long }
+                }
+                Primitive::LongLong => {
+                    quote! { ::ffi_11::c_longlong }
+                }
+                Primitive::UnsignedShort => {
+                    quote! { ::ffi_11::c_ushort }
+                }
+                Primitive::UnsignedInt => {
+                    quote! { ::ffi_11::c_uint }
+                }
+                Primitive::UnsignedLong => {
+                    quote! { ::ffi_11::c_ulong }
+                }
+                Primitive::UnsignedLongLong => {
+                    quote! { ::ffi_11::c_ulonglong }
+                }
+                Primitive::Char16T => quote! { u16 },
+                Primitive::Char32T => quote! { u32 },
+                Primitive::PtrdiffT
+                | Primitive::StdPtrdiffT
+                | Primitive::IntptrT
+                | Primitive::StdIntptrT => quote! { isize },
+                Primitive::SizeT
+                | Primitive::StdSizeT
+                | Primitive::UintptrT
+                | Primitive::StdUintptrT => quote! { usize },
+                Primitive::Int8T | Primitive::StdInt8T => quote! { i8 },
+                Primitive::Int16T | Primitive::StdInt16T => quote! { i16 },
+                Primitive::Int32T | Primitive::StdInt32T => quote! { i32 },
+                Primitive::Int64T | Primitive::StdInt64T => quote! { i64 },
+                Primitive::Uint8T | Primitive::StdUint8T => quote! { u8 },
+                Primitive::Uint16T | Primitive::StdUint16T => quote! { u16 },
+                Primitive::Uint32T | Primitive::StdUint32T => quote! { u32 },
+                Primitive::Uint64T | Primitive::StdUint64T => quote! { u64 },
+            },
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
                     BridgeRsTypeKind::BridgeVoidConverters { rust_name, .. } => {

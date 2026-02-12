@@ -6,7 +6,6 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
-use crubit_feature::CrubitFeature;
 use database::code_snippet::{ApiSnippets, Feature, GeneratedItem};
 use database::BindingsGenerator;
 use ir::Enum;
@@ -24,7 +23,6 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
     let name = make_rs_ident(&enum_.rs_name.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
 
-    let features = db.ir().target_crubit_features(&enum_.owning_target);
     let enumerators = enum_.enumerators.iter().flatten().map(|enumerator| {
         if let Some(unknown_attr) = &enumerator.unknown_attr {
             let comment = format!(
