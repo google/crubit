@@ -58,6 +58,13 @@ impl<'a> string_view<'a> {
         &*self.raw.as_raw_bytes()
     }
 
+    /// Returns an owned `Vec<u8>` containing the same data as the string_view.
+    pub fn to_vec(&self) -> std::vec::Vec<u8> {
+        // SAFETY: the string is valid, and if it is mutably aliased, we do not use any aliases
+        // here.
+        unsafe { std::vec::Vec::from(&*self.raw.as_raw_bytes()) }
+    }
+
     /// Returns an OsStr referring to the string_view's data.
     ///
     /// # Safety
@@ -72,12 +79,10 @@ impl<'a> string_view<'a> {
         unsafe { std::ffi::OsStr::from_bytes(self.as_bytes()) }
     }
 
-    /// Returns a Rust OsString referring to the string_view's data.
+    /// Returns an owned Rust OsString containing the same data as the string_view.
     #[cfg(unix)]
     pub fn to_os_string(self) -> std::ffi::OsString {
-        // SAFETY: the string is valid, and if it is mutably aliased, we do not use any aliases
-        // here.
-        unsafe { std::ffi::OsString::from_vec(std::vec::Vec::from(&*self.raw.as_raw_bytes())) }
+        std::ffi::OsString::from_vec(self.to_vec())
     }
 
     pub fn len(&self) -> usize {
