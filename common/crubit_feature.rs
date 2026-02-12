@@ -39,6 +39,9 @@ flagset::flags! {
 
         /// Enable formatting to Rust via C++.
         Fmt,
+
+        /// Enable experimental support for `rs_std::DynCallable` and `absl::AnyInvocable`.
+        Callables,
     }
 }
 
@@ -59,6 +62,7 @@ impl CrubitFeature {
             Self::CustomFfiTypes => "custom_ffi_types",
             Self::AssumeLifetimes => "assume_lifetimes",
             Self::Fmt => "fmt",
+            Self::Callables => "callables",
         }
     }
 
@@ -76,6 +80,7 @@ impl CrubitFeature {
             Self::CustomFfiTypes => "//features:custom_ffi_types",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
             Self::Fmt => "//features:fmt",
+            Self::Callables => "//features:callables",
         }
     }
 }
@@ -94,6 +99,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"custom_ffi_types" => CrubitFeature::CustomFfiTypes.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         b"fmt" => CrubitFeature::Fmt.into(),
+        b"callables" => CrubitFeature::Callables.into(),
         _ => return None,
     };
     Some(features)
@@ -202,6 +208,7 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::Fmt
+                | CrubitFeature::Callables
         );
     }
 
@@ -231,6 +238,7 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::Fmt
+                | CrubitFeature::Callables
         );
     }
 
@@ -248,6 +256,7 @@ mod tests {
                 | CrubitFeature::Experimental
                 | CrubitFeature::CustomFfiTypes
                 | CrubitFeature::Fmt
+                | CrubitFeature::Callables
         );
     }
 }

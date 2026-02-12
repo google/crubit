@@ -4,7 +4,7 @@
 
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/templates/type_alias:type_alias
-// Features: custom_ffi_types, experimental, fmt, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
+// Features: callables, custom_ffi_types, experimental, fmt, non_unpin_ctor, std_unique_ptr, std_vector, supported, wrapper
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"

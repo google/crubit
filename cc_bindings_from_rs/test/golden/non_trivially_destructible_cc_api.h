@@ -4,7 +4,7 @@
 
 // Automatically @generated C++ bindings for the following Rust crate:
 // non_trivially_destructible_rust_golden
-// Features: custom_ffi_types, experimental, fmt, non_unpin_ctor,
+// Features: callables, custom_ffi_types, experimental, fmt, non_unpin_ctor,
 // std_unique_ptr, std_vector, supported, wrapper
 
 // clang-format off
