@@ -26,10 +26,9 @@ The `std::ffi` module has a few shortcomings:
     lint warnings if you use `i8` with APIs that actually accept `c_char`.
 
 Problem 3 can be solved with improvements to the documentation generator and
-linters. These tools can use an approach like
-[Crubit's `SugaredTy`](https://github.com/google/crubit/commit/6a813346b846acd0394187d3e58745b11d052a62)
-to keep track of whether `i8` came from the `c_char` alias, even though it is
-not inherently part of the type system. It doesn't need a new `ffi` module!
+linters. These tools can use the Rust HIR to keep track of whether `i8` came
+from the `c_char` alias, even though it is not inherently part of the type
+system. It doesn't need a new `ffi` module!
 
 Problem 2 is hopefully only a matter of adding some new aliases/types to the
 `ffi` module. It, also, doesn't need a new `ffi` module.

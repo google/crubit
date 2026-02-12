@@ -5,13 +5,12 @@
 #![feature(rustc_private)]
 
 use code_gen_utils::format_cc_includes;
-use database::{BindingsGenerator, SugaredTy, TypeLocation};
+use database::{BindingsGenerator, TypeLocation};
 use generate_bindings::generate_function::get_fn_sig;
 use proc_macro2::TokenStream;
 use quote::quote;
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
-use rustc_hir::FnRetTy;
-use rustc_middle::ty::TyCtxt;
+use rustc_middle::ty::{Ty, TyCtxt};
 use test_helpers::bindings_db_for_tests;
 use token_stream_matchers::assert_cc_matches;
 
@@ -21,12 +20,8 @@ fn test_ty<TestFn, Expectation>(
     preamble: TokenStream,
     test_fn: TestFn,
 ) where
-    TestFn: for<'tcx> Fn(
-            /* testcase_description: */ &str,
-            TyCtxt<'tcx>,
-            SugaredTy<'tcx>,
-            &Expectation,
-        ) + Sync,
+    TestFn:
+        for<'tcx> Fn(/* testcase_description: */ &str, TyCtxt<'tcx>, Ty<'tcx>, &Expectation) + Sync,
     Expectation: Sync,
 {
     fn input_to_string(input: &str, preamble: &TokenStream, type_location: TypeLocation) -> String {
@@ -45,14 +40,11 @@ fn test_ty<TestFn, Expectation>(
         input.to_string()
     }
 
-    fn get_test_function_ty<'tcx>(
-        tcx: TyCtxt<'tcx>,
-        type_location: TypeLocation,
-    ) -> SugaredTy<'tcx> {
+    fn get_test_function_ty<'tcx>(tcx: TyCtxt<'tcx>, type_location: TypeLocation) -> Ty<'tcx> {
         let sig_mid = get_fn_sig(tcx, find_def_id_by_name(tcx, "test_function").to_def_id());
         match type_location {
-            TypeLocation::FnReturn => SugaredTy::missing_hir(sig_mid.output()),
-            TypeLocation::FnParam { .. } => SugaredTy::missing_hir(sig_mid.inputs()[0]),
+            TypeLocation::FnReturn => sig_mid.output(),
+            TypeLocation::FnParam { .. } => sig_mid.inputs()[0],
             _ => unimplemented!(),
         }
     }
@@ -580,7 +572,7 @@ fn test_format_ty_for_rs_successes() {
         preamble,
         |desc, tcx, ty, expected_tokens| {
             let db = bindings_db_for_tests(tcx);
-            let actual_tokens = db.format_ty_for_rs(ty.mid()).unwrap().to_string();
+            let actual_tokens = db.format_ty_for_rs(ty).unwrap().to_string();
             let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual_tokens, expected_tokens, "{desc}");
         },
@@ -606,7 +598,7 @@ fn test_format_ty_for_rs_failures() {
         |desc, tcx, ty, expected_err| {
             let db = bindings_db_for_tests(tcx);
             let anyhow_err =
-                db.format_ty_for_rs(ty.mid()).expect_err(&format!("Expecting error for: {desc}"));
+                db.format_ty_for_rs(ty).expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         },

@@ -20,8 +20,7 @@ use code_gen_utils::{
 };
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
-use database::BindingsGenerator;
-use database::{SugaredTy, TypeLocation};
+use database::{BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -131,13 +130,13 @@ fn ident_for_each(prefix: &str, n: usize) -> Vec<Ident> {
 fn cc_param_to_c_abi<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     cc_ident: Ident,
-    ty: SugaredTy<'tcx>,
+    ty: Ty<'tcx>,
     post_analysis_typing_env: ty::TypingEnv<'tcx>,
     includes: &mut BTreeSet<CcInclude>,
     statements: &mut TokenStream,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
-    Ok(if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+    Ok(if let Some(bridged_type) = is_bridged_type(db, ty)? {
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
                 if let CcType::Pointer { .. } = cpp_type {
@@ -164,9 +163,9 @@ fn cc_param_to_c_abi<'tcx>(
                 quote! { #buffer_name }
             }
         }
-    } else if is_c_abi_compatible_by_value(tcx, ty.mid()) {
+    } else if is_c_abi_compatible_by_value(tcx, ty) {
         quote! { #cc_ident }
-    } else if let Some(tuple_tys) = ty.as_tuple() {
+    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
         let n = tuple_tys.len();
         let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);
 
@@ -186,12 +185,12 @@ fn cc_param_to_c_abi<'tcx>(
             let converted_value = cc_param_to_c_abi(
                 db,
                 tuple_element_name.clone(),
-                tuple_tys.index(i),
+                tuple_tys[i],
                 post_analysis_typing_env,
                 includes,
                 statements,
             )?;
-            if matches!(tuple_tys.index(i).mid().kind(), ty::TyKind::Tuple(_)) {
+            if matches!(tuple_tys[i].kind(), ty::TyKind::Tuple(_)) {
                 // Elements which are arrays must be referenced again in order
                 // to properly convert them to pointers.
                 //
@@ -213,7 +212,7 @@ fn cc_param_to_c_abi<'tcx>(
         quote! {
             #result_name
         }
-    } else if !ty.mid().needs_drop(db.tcx(), post_analysis_typing_env) {
+    } else if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
         // As an optimization, if the type is trivially destructible, we don't
         // need to move it to a new NoDestructor location. We can directly copy the
         // bytes.
@@ -244,7 +243,7 @@ struct ReturnConversion {
 
 fn format_ty_for_cc_amending_prereqs<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    ty: SugaredTy<'tcx>,
+    ty: Ty<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
 ) -> Result<TokenStream> {
     let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
@@ -256,7 +255,7 @@ fn format_ty_for_cc_amending_prereqs<'tcx>(
 fn cc_return_value_from_c_abi<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ident: Ident,
-    ty: SugaredTy<'tcx>,
+    ty: Ty<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
     storage_statements: &mut TokenStream,
     recursive: bool,
@@ -266,7 +265,7 @@ fn cc_return_value_from_c_abi<'tcx>(
     // TODO: b/459482188 - The order of this check must align with the order in `generate_thunk_decl`.
     // We should centralize this logic so that the order exists in a singular location used by both
     // places.
-    if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+    if let Some(bridged_type) = is_bridged_type(db, ty)? {
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
                 let cpp_type = format_cc_type_name(cpp_type.as_ref())?;
@@ -310,7 +309,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 })
             }
         }
-    } else if is_c_abi_compatible_by_value(tcx, ty.mid()) {
+    } else if is_c_abi_compatible_by_value(tcx, ty) {
         let cc_type = &format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
         let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
         storage_statements.extend(quote! {
@@ -321,7 +320,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             storage_name: storage_name.clone(),
             unpack_expr: quote! { *#storage_name },
         })
-    } else if let Some(tuple_tys) = ty.as_tuple() {
+    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind() {
         let n = tuple_tys.len();
         let mut storage_names = Vec::with_capacity(n);
         let mut unpack_exprs = Vec::with_capacity(n);
@@ -333,7 +332,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             } = cc_return_value_from_c_abi(
                 db,
                 tuple_element_ident,
-                tuple_tys.index(i),
+                tuple_tys[i],
                 prereqs,
                 storage_statements,
                 /*recursive=*/ true,
@@ -350,7 +349,7 @@ fn cc_return_value_from_c_abi<'tcx>(
         })
     } else {
         if recursive {
-            if let Some(adt_def) = ty.mid().ty_adt_def() {
+            if let Some(adt_def) = ty.ty_adt_def() {
                 let core = db.generate_adt_core(adt_def.did())?;
                 // Note: the error here is an ApiSnippets which is not propagated.
                 db.generate_move_ctor_and_assignment_operator(core).map_err(|_| {
@@ -447,7 +446,7 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
 pub(crate) struct Param<'tcx> {
     pub(crate) cc_name: Ident,
     pub(crate) cpp_type: CcParamTy<'tcx>,
-    pub(crate) ty: SugaredTy<'tcx>,
+    pub(crate) ty: Ty<'tcx>,
 }
 
 fn can_shared_refs_to_ty_alias_mut_refs<'tcx>(tcx: TyCtxt<'tcx>, target_ty: Ty<'tcx>) -> bool {
@@ -488,7 +487,7 @@ fn refs_to_check_for_aliasing<'tcx, 'a>(
     // TODO: b/351876244 - Apply this check to reference-like types such as
     // `cpp_std::string_view` and `absl::Span`.
     for param in params {
-        if let ty::TyKind::Ref(_region, target_ty, mutability) = param.ty.mid().kind() {
+        if let ty::TyKind::Ref(_region, target_ty, mutability) = param.ty.kind() {
             if mutability.is_mut() {
                 refs.mutable.push(param);
             } else if !can_shared_refs_to_ty_alias_mut_refs(tcx, *target_ty) {
@@ -546,7 +545,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
     thunk_name: Ident,
-    rs_return_type: SugaredTy<'tcx>,
+    rs_return_type: Ty<'tcx>,
     self_param: ThunkSelfParameter,
     params: &[Param<'tcx>],
 ) -> Result<CcSnippet<'tcx>> {
@@ -620,8 +619,8 @@ pub(crate) fn generate_thunk_call<'tcx>(
         quote! { __crubit_internal }
     };
 
-    let return_body = if is_bridged_type(db, rs_return_type.mid())?.is_none()
-        && is_c_abi_compatible_by_value(tcx, rs_return_type.mid())
+    let return_body = if is_bridged_type(db, rs_return_type)?.is_none()
+        && is_c_abi_compatible_by_value(tcx, rs_return_type)
     {
         // C++ compilers can emit diagnostics if a function marked [[noreturn]] looks like it
         // might return. In this scenario, we just call the (also [[noreturn]]) thunk.
@@ -702,7 +701,7 @@ pub fn generate_function<'tcx>(
         let cpp_types = format_param_types_for_cc(db, &sig_mid, function_kind.has_self_param())?;
         names
             .enumerate()
-            .zip(SugaredTy::fn_inputs(&sig_mid))
+            .zip(sig_mid.inputs())
             .zip(cpp_types)
             .map(|(((i, name), ty), cpp_type)| {
                 // TODO(jeanpierreda): deduplicate this with thunk_param_names.
@@ -719,52 +718,50 @@ pub fn generate_function<'tcx>(
                 } else {
                     expect_format_cc_ident(&format!("__param_{i}"))
                 };
-                Param { cc_name, cpp_type, ty }
+                Param { cc_name, cpp_type, ty: *ty }
             })
             .collect_vec()
     };
 
-    let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue if is_copy(tcx, def_id, params[0].ty.mid()));
+    let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue if is_copy(tcx, def_id, params[0].ty));
     let mut method_qualifiers = quote! {};
     if trait_ref.is_none() {
         match function_kind {
             FunctionKind::Free | FunctionKind::AssociatedFn => {}
             FunctionKind::MethodTakingSelfByValue => {
-                let self_ty = params[0].ty.mid();
+                let self_ty = params[0].ty;
                 method_qualifiers = if is_copy(tcx, def_id, self_ty) {
                     quote! { const }
                 } else {
                     quote! { && }
                 };
             }
-            FunctionKind::MethodTakingSelfByRef => match params[0].ty.mid().kind() {
-                ty::TyKind::Ref(region, _, mutability) => {
-                    let tcx = db.tcx();
-                    // Ref-qualify if the lifetime of `&self` is a named lifetime or if the elided
-                    // lifetime appears in the return type.
-                    // See crubit.rs-special-lifetimes for more details on the motivation.
-                    let ref_qualifier = if !region_is_elided(tcx, *region) {
-                        let lifetime_annotation =
-                            format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
-                        quote! { & #lifetime_annotation }
-                    } else if has_elided_region(tcx, sig_mid.output()) {
-                        let lifetime_annotation =
-                            format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
-                        main_api_prereqs
-                            .includes
-                            .insert(db.support_header("annotations_internal.h"));
-                        quote! { & #lifetime_annotation CRUBIT_LIFETIME_BOUND }
-                    } else {
-                        quote! {}
-                    };
-                    let mutability = match mutability {
-                        Mutability::Mut => quote! {},
-                        Mutability::Not => quote! { const },
-                    };
-                    method_qualifiers = quote! { #mutability #ref_qualifier }
-                }
-                _ => panic!("Expecting TyKind::Ref for MethodKind...Self...Ref"),
-            },
+            FunctionKind::MethodTakingSelfByRef => {
+                let ty::TyKind::Ref(region, _, mutability) = *params[0].ty.kind() else {
+                    panic!("Expecting TyKind::Ref for MethodKind...Self...Ref")
+                };
+                let tcx = db.tcx();
+                // Ref-qualify if the lifetime of `&self` is a named lifetime or if the elided
+                // lifetime appears in the return type.
+                // See crubit.rs-special-lifetimes for more details on the motivation.
+                let ref_qualifier = if !region_is_elided(tcx, region) {
+                    let lifetime_annotation =
+                        format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
+                    quote! { & #lifetime_annotation }
+                } else if has_elided_region(tcx, sig_mid.output()) {
+                    let lifetime_annotation =
+                        format_region_as_cc_lifetime(db, region, &mut main_api_prereqs);
+                    main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
+                    quote! { & #lifetime_annotation CRUBIT_LIFETIME_BOUND }
+                } else {
+                    quote! {}
+                };
+                let mutability = match mutability {
+                    Mutability::Mut => quote! {},
+                    Mutability::Not => quote! { const },
+                };
+                method_qualifiers = quote! { #mutability #ref_qualifier }
+            }
         }
     }
 
@@ -804,7 +801,7 @@ pub fn generate_function<'tcx>(
             quote! { #cpp_type #cc_name #annotation }
         })
         .collect_vec();
-    let rs_return_type = SugaredTy::fn_output(&sig_mid);
+    let rs_return_type = sig_mid.output();
     let thunk_name_cc = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
     let impl_body = generate_thunk_call(
         db,

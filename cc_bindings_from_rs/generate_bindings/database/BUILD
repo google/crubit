@@ -19,7 +19,6 @@ rust_library(
         "fully_qualified_name.rs",
         "include_guard.rs",
         "lib.rs",
-        "sugared_ty.rs",
         "type_location.rs",
     ],
     # LINT.IfChange

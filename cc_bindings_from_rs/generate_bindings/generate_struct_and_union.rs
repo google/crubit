@@ -20,7 +20,7 @@ use crate::{
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
-use database::{AdtCoreBindings, BindingsGenerator, SugaredTy, TypeLocation};
+use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -77,12 +77,7 @@ pub(crate) fn cpp_enum_cpp_underlying_type<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
 ) -> Result<CcSnippet<'tcx>> {
-    let tcx = db.tcx();
-
-    let field_middle_ty = cpp_enum_rust_underlying_type(tcx, def_id)?;
-
-    let field_type = SugaredTy::missing_hir(field_middle_ty);
-
+    let field_type = cpp_enum_rust_underlying_type(db.tcx(), def_id)?;
     db.format_ty_for_cc(field_type, TypeLocation::Other)
 }
 
@@ -417,10 +412,9 @@ fn generate_into_impls<'tcx>(
             if from_middle_ty.flags().contains(has_type_or_const_vars()) {
                 return None;
             }
-            let sugar_ty = SugaredTy::missing_hir(from_middle_ty);
             // We know that our type will always appear in FnReturn position for the `into` method.
             // If our type isn't C++-compatible, we can't generate an `into` impl.
-            let cc_ty = db.format_ty_for_cc(sugar_ty, TypeLocation::FnReturn).ok()?;
+            let cc_ty = db.format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn).ok()?;
             Some((from_middle_ty, cc_ty, *from_impl_id))
         },
     );
@@ -437,9 +431,8 @@ fn generate_into_impls<'tcx>(
             let into_middle_ty =
                 middle_trait_header.trait_ref.instantiate_identity().args.type_at(1);
 
-            let sugar_ty = SugaredTy::missing_hir(into_middle_ty);
             // If our type isn't Cxx compatible, we can't generate an `into` impl.
-            let cc_ty = db.format_ty_for_cc(sugar_ty, TypeLocation::FnReturn).ok()?;
+            let cc_ty = db.format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn).ok()?;
 
             Some((into_middle_ty, cc_ty, into_impl_id))
         });
@@ -466,10 +459,9 @@ fn generate_into_impls<'tcx>(
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
             let doc_comment = generate_doc_comment(db, def_id);
 
-            let sugar_self_ty = SugaredTy::missing_hir(core.self_ty);
             let self_cpp_ty = db
                 .format_ty_for_cc(
-                    sugar_self_ty,
+                    core.self_ty,
                     TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
                 )
                 .expect(
@@ -480,7 +472,7 @@ fn generate_into_impls<'tcx>(
                 db,
                 def_id,
                 thunk_name.clone(),
-                SugaredTy::missing_hir(middle_ty),
+                middle_ty,
                 ThunkSelfParameter::new(
                     /*has_self=*/ true,
                     is_copy(tcx, def_id, core.self_ty),
@@ -492,7 +484,7 @@ fn generate_into_impls<'tcx>(
                         snippet: CcSnippet::new(self_cpp_ty),
                         is_lifetime_bound: false,
                     },
-                    ty: sugar_self_ty,
+                    ty: core.self_ty,
                 }],
             )
             .expect("Self type of `Into` impl should be bridgeable");
@@ -929,7 +921,7 @@ fn generate_tuple_struct_ctor<'tcx>(
                 return None;
             }
 
-            Some(SugaredTy::missing_hir(ty))
+            Some(ty)
         })
         .collect::<Option<Vec<_>>>()?;
 
@@ -1079,11 +1071,10 @@ fn generate_fields<'tcx>(
                 .map(|field_iter| {
                     field_iter
                         .map(|IndexedVariantField { index, field_def }| {
-                            let ty = SugaredTy::missing_hir(field_def.ty(tcx, adt_generic_args));
-                            let size =
-                                get_layout(tcx, ty.mid()).map(|layout| layout.size().bytes());
+                            let ty = field_def.ty(tcx, adt_generic_args);
+                            let size = get_layout(tcx, ty).map(|layout| layout.size().bytes());
                             let type_info = size.and_then(|size| {
-                                if is_bridged_type(db, ty.mid())?.is_some() {
+                                if is_bridged_type(db, ty)?.is_some() {
                                     bail!(
                                         "Field is a bridged type and might not be layout-compatible
                                     with the C++ type (b/400633609)"
@@ -1541,7 +1532,7 @@ fn generate_fields<'tcx>(
                             .format_ty_for_cc(
                                 // An enum cannot have repr(c_char), or any other alias, so there's
                                 // never sugar.
-                                SugaredTy::missing_hir(tag_ty),
+                                tag_ty,
                                 TypeLocation::Other,
                             )
                             .expect("discriminant should be a integer type.")

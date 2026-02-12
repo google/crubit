@@ -13,7 +13,7 @@ use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcConstQualifier;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
-use database::{AdtCoreBindings, BindingsGenerator, SugaredTy};
+use database::{AdtCoreBindings, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -160,8 +160,8 @@ pub fn generate_thunk_decl<'tcx>(
 
     let mut attributes = vec![];
     // Attribute: noreturn
-    let rs_return_type = SugaredTy::fn_output(sig_mid);
-    if *rs_return_type.mid().kind() == ty::TyKind::Never {
+    let rs_return_type = sig_mid.output();
+    if *rs_return_type.kind() == ty::TyKind::Never {
         attributes.push(quote! {[[noreturn]]});
     }
 

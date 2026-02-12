@@ -4,6 +4,7 @@
 #![feature(rustc_private)]
 
 extern crate rustc_driver;
+extern crate rustc_middle;
 
 pub mod code_snippet;
 
@@ -18,7 +19,5 @@ mod fully_qualified_name;
 pub use fully_qualified_name::{ExportedPath, FullyQualifiedName, PublicPaths, UnqualifiedName};
 mod include_guard;
 pub use include_guard::IncludeGuard;
-mod sugared_ty;
-pub use sugared_ty::SugaredTy;
 mod type_location;
 pub use type_location::TypeLocation;

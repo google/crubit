@@ -10,7 +10,6 @@ use crate::adt_core_bindings::{AdtCoreBindings, NoMoveOrAssign};
 use crate::code_snippet::{ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
-use crate::sugared_ty::SugaredTy;
 use crate::type_location::TypeLocation;
 use arc_anyhow::Result;
 use code_gen_utils::CcInclude;
@@ -182,7 +181,7 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_ty_for_cc
       fn format_ty_for_cc(
           &self,
-          ty: SugaredTy<'tcx>,
+          ty: Ty<'tcx>,
           location: TypeLocation,
       ) -> Result<CcSnippet<'tcx>>;
 

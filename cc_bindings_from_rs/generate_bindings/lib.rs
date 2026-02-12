@@ -41,7 +41,7 @@ use database::code_snippet::{
 };
 use database::{
     AdtCoreBindings, BindingsGenerator, ExportedPath, FineGrainedFeature, FullyQualifiedName,
-    NoMoveOrAssign, PublicPaths, SugaredTy, TypeLocation, UnqualifiedName,
+    NoMoveOrAssign, PublicPaths, TypeLocation, UnqualifiedName,
 };
 pub use database::{Database, IncludeGuard};
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
@@ -760,7 +760,7 @@ fn generate_using<'tcx>(
         DefKind::Struct | DefKind::Enum => {
             // This points directly to a type definition, not an alias or compound data
             // type, so we can drop the hir type.
-            let use_type = SugaredTy::missing_hir(tcx.type_of(def_id).instantiate_identity());
+            let use_type = tcx.type_of(def_id).instantiate_identity();
             create_type_alias(db, def_id, using_name.as_str(), use_type)
         }
         DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str()),
@@ -791,7 +791,7 @@ fn generate_const<'tcx>(
         )
     }
     let ty = tcx.type_of(def_id).instantiate_identity();
-    let rust_type = SugaredTy::missing_hir(ty);
+    let rust_type = ty;
     let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
 
     let cc_type = cc_type_snippet.tokens;
@@ -905,9 +905,7 @@ fn generate_type_alias<'tcx>(
     def_id: DefId,
     using_name: &str,
 ) -> Result<CcSnippet<'tcx>> {
-    let tcx = db.tcx();
-    let mir_ty = tcx.type_of(def_id).instantiate_identity();
-    let alias_type = SugaredTy::missing_hir(mir_ty);
+    let alias_type = db.tcx().type_of(def_id).instantiate_identity();
     create_type_alias(db, def_id, using_name, alias_type)
 }
 
@@ -915,7 +913,7 @@ fn create_type_alias<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     def_id: DefId,
     alias_name: &str,
-    alias_type: SugaredTy<'tcx>,
+    alias_type: Ty<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
     let cc_bindings = db.format_ty_for_cc(alias_type, TypeLocation::Other)?;
     let mut main_api_prereqs = CcPrerequisites::default();

@@ -4,7 +4,8 @@
 
 extern crate rustc_span;
 
-use crate::{AdtCoreBindings, SugaredTy};
+use crate::AdtCoreBindings;
+use rustc_middle::ty::Ty;
 use rustc_span::Symbol;
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -20,7 +21,7 @@ pub struct CppType<'tcx> {
     /// The kind of C++ type this is.
     pub kind: CppTypeKind<'tcx>,
     /// The Rust type that this C++ type was created from.
-    pub rs_type_origin: SugaredTy<'tcx>,
+    pub rs_type_origin: Ty<'tcx>,
 }
 
 #[derive(Clone)]

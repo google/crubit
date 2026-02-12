@@ -22,7 +22,7 @@ use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
 use database::code_snippet::{CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs};
 use database::BindingsGenerator;
-use database::{FineGrainedFeature, SugaredTy, TypeLocation};
+use database::{FineGrainedFeature, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{quote, ToTokens};
@@ -75,7 +75,7 @@ pub fn format_cc_ident(db: &dyn BindingsGenerator, ident: &str) -> Result<Ident>
 
 pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    pointee: SugaredTy<'tcx>,
+    pointee: Ty<'tcx>,
     mutability: Mutability,
     pointer_sigil: TokenStream,
 ) -> Result<CcSnippet<'tcx>> {
@@ -84,7 +84,7 @@ pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
         Mutability::Mut => quote! {},
         Mutability::Not => quote! { const },
     };
-    if pointee.mid().is_c_void(tcx) {
+    if pointee.is_c_void(tcx) {
         return Ok(CcSnippet { tokens: quote! { #const_qualifier void* }, ..Default::default() });
     }
     let CcSnippet { tokens, mut prereqs } = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
@@ -94,7 +94,7 @@ pub fn format_pointer_or_reference_ty_for_cc<'tcx>(
 
 pub fn format_slice_pointer_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    slice_ty: SugaredTy<'tcx>,
+    slice_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
 ) -> Result<CcSnippet<'tcx>> {
     let const_qualifier = match mutability {
@@ -139,15 +139,14 @@ pub fn format_transparent_pointee_or_reference_for_cc<'tcx>(
         return None;
     }
 
-    let referent_mid = substs[0].expect_ty();
-    let referent = SugaredTy::missing_hir(referent_mid);
+    let referent = substs[0].expect_ty();
     format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
 }
 
 /// Implementation of `BindingsGenerator::format_ty_for_cc`.
 pub fn format_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    ty: SugaredTy<'tcx>,
+    ty: Ty<'tcx>,
     location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
@@ -158,7 +157,7 @@ pub fn format_ty_for_cc<'tcx>(
         CcSnippet::new(tokens)
     }
 
-    Ok(match ty.mid().kind() {
+    Ok(match *ty.kind() {
         ty::TyKind::Never => match location {
             TypeLocation::FnReturn => keyword(quote! { void }),
             _ => {
@@ -166,8 +165,7 @@ pub fn format_ty_for_cc<'tcx>(
                 bail!("The never type `!` is only supported as a return type (b/254507801)");
             }
         },
-        ty::TyKind::Tuple(_) => {
-            let types = ty.as_tuple().unwrap();
+        ty::TyKind::Tuple(ref types) => {
             if types.is_empty() && matches!(location, TypeLocation::FnReturn) {
                 keyword(quote! { void })
             } else if !location.is_bridgeable() {
@@ -177,7 +175,7 @@ pub fn format_ty_for_cc<'tcx>(
                 prereqs.includes.insert(CcInclude::tuple());
 
                 let mut cc_types = Vec::with_capacity(types.len());
-                for element_type in types {
+                for element_type in *types {
                     cc_types.push(
                         db.format_ty_for_cc(element_type, TypeLocation::NestedBridgeable)?
                             .into_tokens(&mut prereqs),
@@ -195,10 +193,9 @@ pub fn format_ty_for_cc<'tcx>(
             prereqs.includes.insert(CcInclude::array());
             // We need to be able to handle expressions at the type level that are not simple
             // numeric literals.
-            let target_size = evaluate_const_as_u64(db.tcx(), *length);
-            let sugared_element_type = SugaredTy::missing_hir(*element_type);
+            let target_size = evaluate_const_as_u64(db.tcx(), length);
             let cc_element_ty =
-                db.format_ty_for_cc(sugared_element_type, location)?.into_tokens(&mut prereqs);
+                db.format_ty_for_cc(element_type, location)?.into_tokens(&mut prereqs);
             let c_int = Literal::u64_unsuffixed(target_size);
             CcSnippet { prereqs, tokens: quote! { std::array<#cc_element_ty, #c_int> } }
         }
@@ -231,7 +228,7 @@ pub fn format_ty_for_cc<'tcx>(
                         typing_mode: ty::TypingMode::PostAnalysis,
                         param_env: ty::ParamEnv::empty(),
                     }
-                    .as_query_input(ty.mid()),
+                    .as_query_input(ty),
                 )
                 .expect("`layout_of` is expected to succeed for the builtin `char` type")
                 .layout;
@@ -283,11 +280,11 @@ pub fn format_ty_for_cc<'tcx>(
             bail!("C++ doesn't have a standard equivalent of `{ty}` (b/254094650)");
         }
 
-        ty::TyKind::Adt(adt, substs) => {
+        ty::TyKind::Adt(adt, ref substs) => {
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
-            if let Some(bridged_type) = is_bridged_type(db, ty.mid())? {
+            if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 ensure!(
                     location.is_bridgeable(),
                     "Bridged types must appear in a bridgeable type location"
@@ -305,11 +302,7 @@ pub fn format_ty_for_cc<'tcx>(
                         if !substs.is_empty() {
                             let mut generic_types_tokens = Vec::with_capacity(substs.len());
                             for subst in *substs {
-                                let snippet = format_ty_for_cc(
-                                    db,
-                                    SugaredTy::missing_hir(subst.expect_ty()),
-                                    location,
-                                )?;
+                                let snippet = format_ty_for_cc(db, subst.expect_ty(), location)?;
                                 generic_types_tokens
                                     .push(snippet.into_tokens(&mut composable.prereqs));
                             }
@@ -359,29 +352,25 @@ pub fn format_ty_for_cc<'tcx>(
             CcSnippet { tokens: canonical_name.format_for_cc(db)?, prereqs }
         }
 
-        ty::TyKind::RawPtr(pointee_mid, mutbl) => {
-            if let ty::TyKind::Slice(slice_ty) = pointee_mid.kind() {
-                check_slice_layout(db.tcx(), ty.mid());
-                let sugared_ty = SugaredTy::missing_hir(*slice_ty);
-                return format_slice_pointer_for_cc(db, sugared_ty, *mutbl);
+        ty::TyKind::RawPtr(pointee_ty, mutbl) => {
+            if let ty::TyKind::Slice(slice_ty) = pointee_ty.kind() {
+                check_slice_layout(db.tcx(), ty);
+                return format_slice_pointer_for_cc(db, *slice_ty, mutbl);
             }
             // Early return in case we handle a transparent pointer type.
-            if let Some(snippet) = format_transparent_pointee_or_reference_for_cc(
-                db,
-                *pointee_mid,
-                *mutbl,
-                quote! { * },
-            ) {
+            if let Some(snippet) =
+                format_transparent_pointee_or_reference_for_cc(db, pointee_ty, mutbl, quote! { * })
+            {
                 return Ok(snippet);
             }
 
-            let pointee = SugaredTy::missing_hir(*pointee_mid);
-            format_pointer_or_reference_ty_for_cc(db, pointee, *mutbl, quote! { * }).with_context(
-                || format!("Failed to format the pointee of the pointer type `{ty}`"),
-            )?
+            format_pointer_or_reference_ty_for_cc(db, pointee_ty, mutbl, quote! { * })
+                .with_context(|| {
+                    format!("Failed to format the pointee of the pointer type `{ty}`")
+                })?
         }
 
-        ty::TyKind::Ref(region, referent_mid, mutability) => {
+        ty::TyKind::Ref(region, referent, mutability) => {
             match location {
                 TypeLocation::FnReturn | TypeLocation::FnParam { .. } | TypeLocation::Const => (),
                 TypeLocation::NestedBridgeable | TypeLocation::Other => bail!(
@@ -390,25 +379,25 @@ pub fn format_ty_for_cc<'tcx>(
                 ),
             };
 
-            if matches!(referent_mid.kind(), ty::TyKind::Slice(_)) {
-                check_slice_layout(db.tcx(), ty.mid());
+            if matches!(referent.kind(), ty::TyKind::Slice(_)) {
+                check_slice_layout(db.tcx(), ty);
             }
 
-            if matches!(referent_mid.kind(), ty::TyKind::Str) {
-                check_slice_layout(db.tcx(), ty.mid());
+            if matches!(referent.kind(), ty::TyKind::Str) {
+                check_slice_layout(db.tcx(), ty);
                 if mutability.is_mut() {
                     bail!("Mutable references to `str` are not yet supported.")
                 }
                 return Ok(format_str_ref_for_cc(db));
             }
 
-            let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty.mid(), location);
+            let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty, location);
 
             let mut prereqs = CcPrerequisites::default();
             let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
                 let lifetime = format_region_as_cc_lifetime(db, region, &mut prereqs);
                 // Don't annotate maybe uninit with crubit_nonnull.
-                let annotation = if try_ty_as_maybe_uninit(db, referent_mid).is_some() {
+                let annotation = if try_ty_as_maybe_uninit(db, referent).is_some() {
                     quote! {}
                 } else {
                     prereqs.includes.insert(db.support_header("annotations_internal.h"));
@@ -427,17 +416,16 @@ pub fn format_ty_for_cc<'tcx>(
             // Early return in case we handle a transparent reference type.
             if let Some(mut snippet) = format_transparent_pointee_or_reference_for_cc(
                 db,
-                *referent_mid,
-                *mutability,
+                referent,
+                mutability,
                 ptr_or_ref_prefix.clone(),
             ) {
                 snippet.prereqs += prereqs;
                 return Ok(snippet);
             }
 
-            let referent = SugaredTy::missing_hir(*referent_mid);
             let tokens =
-                format_pointer_or_reference_ty_for_cc(db, referent, *mutability, ptr_or_ref_prefix)
+                format_pointer_or_reference_ty_for_cc(db, referent, mutability, ptr_or_ref_prefix)
                     .with_context(|| {
                         format!("Failed to format the referent of the reference type `{ty}`")
                     })?
@@ -546,7 +534,7 @@ pub fn format_ret_ty_for_cc<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     sig_mid: &ty::FnSig<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
-    let output_ty = SugaredTy::fn_output(sig_mid);
+    let output_ty = sig_mid.output();
     db.format_ty_for_cc(output_ty, TypeLocation::FnReturn)
         .with_context(|| format!("Error formatting function return type `{output_ty}`"))
 }
@@ -594,9 +582,9 @@ pub fn format_param_types_for_cc<'tcx>(
     has_self_param: bool,
 ) -> Result<Vec<CcParamTy<'tcx>>> {
     let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
-    let param_types = SugaredTy::fn_inputs(sig_mid);
+    let param_types = sig_mid.inputs();
     let mut snippets = Vec::with_capacity(param_types.len());
-    for (i, param_type) in param_types.enumerate() {
+    for (i, param_type) in param_types.iter().copied().enumerate() {
         let is_self_param = i == 0 && has_self_param;
         let location = TypeLocation::FnParam { elided_is_output, is_self_param };
         let cc_type = db
@@ -605,7 +593,7 @@ pub fn format_param_types_for_cc<'tcx>(
         snippets.push(CcParamTy {
             snippet: cc_type,
             is_lifetime_bound: matches!(
-                treat_ref_as_ptr(db.tcx(), param_type.mid(), location),
+                treat_ref_as_ptr(db.tcx(), param_type, location),
                 RefConvert::ToPtr { is_lifetime_bound: true }
             ),
         });
@@ -615,7 +603,7 @@ pub fn format_param_types_for_cc<'tcx>(
 
 fn try_ty_as_maybe_uninit<'tcx>(
     db: &dyn BindingsGenerator<'_>,
-    ty: &Ty<'tcx>,
+    ty: Ty<'tcx>,
 ) -> Option<GenericArg<'tcx>> {
     if let ty::TyKind::Adt(adt, substs) = ty.kind() {
         if matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"]) {
@@ -628,7 +616,7 @@ fn try_ty_as_maybe_uninit<'tcx>(
 /// Format a supported `repr(transparent)` pointee type
 pub fn format_transparent_pointee<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    ty: &Ty<'tcx>,
+    ty: Ty<'tcx>,
 ) -> Result<TokenStream> {
     let Some(generic_arg) = try_ty_as_maybe_uninit(db, ty) else {
         bail!("unable to generate bindings for anything other than `MaybeUninit<T>`")
@@ -708,7 +696,7 @@ pub fn format_ty_for_rs<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Result<TokenStream> {
-    Ok(match ty.kind() {
+    Ok(match *ty.kind() {
         ty::TyKind::Bool
         | ty::TyKind::Float(_)
         | ty::TyKind::Char
@@ -719,7 +707,7 @@ pub fn format_ty_for_rs<'tcx>(
             .parse()
             .expect("rustc_middle::ty::Ty::to_string() should produce no parsing errors"),
         ty::TyKind::FnPtr(binder_with_fn_sig_tys, fn_header) => {
-            format_fn_ptr_for_rs(db, *binder_with_fn_sig_tys, *fn_header)?
+            format_fn_ptr_for_rs(db, binder_with_fn_sig_tys, fn_header)?
         }
         ty::TyKind::Tuple(types) => {
             let rs_types = types
@@ -729,8 +717,8 @@ pub fn format_ty_for_rs<'tcx>(
             quote! { (#(#rs_types,)*) }
         }
         ty::TyKind::Array(element_type, length) => {
-            let rs_element_type = db.format_ty_for_rs(*element_type)?;
-            let target_size = evaluate_const_as_u64(db.tcx(), *length);
+            let rs_element_type = db.format_ty_for_rs(element_type)?;
+            let target_size = evaluate_const_as_u64(db.tcx(), length);
             let unsuffixed_length = Literal::u64_unsuffixed(target_size);
             quote! { [ #rs_element_type; #unsuffixed_length ] }
         }
@@ -778,7 +766,7 @@ pub fn format_ty_for_rs<'tcx>(
             };
             let ty = match format_transparent_pointee(db, pointee_ty) {
                 Ok(generic_ty) => generic_ty,
-                Err(_) => db.format_ty_for_rs(*pointee_ty).with_context(|| {
+                Err(_) => db.format_ty_for_rs(pointee_ty).with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
                 })?,
             };
@@ -795,14 +783,14 @@ pub fn format_ty_for_rs<'tcx>(
             };
             let ty = match format_transparent_pointee(db, referent_ty) {
                 Ok(generic_ty) => generic_ty,
-                Err(_) => db.format_ty_for_rs(*referent_ty).with_context(|| {
+                Err(_) => db.format_ty_for_rs(referent_ty).with_context(|| {
                     format!("Failed to format the referent of the reference type `{ty}`")
                 })?,
             };
             quote! { & #lifetime #mutability #ty }
         }
         ty::TyKind::Slice(slice_ty) => {
-            let ty = db.format_ty_for_rs(*slice_ty).with_context(|| {
+            let ty = db.format_ty_for_rs(slice_ty).with_context(|| {
                 format!("Failed to format the element type of the slice type `{ty}`")
             })?;
             quote! { [#ty] }
@@ -813,7 +801,7 @@ pub fn format_ty_for_rs<'tcx>(
 
 pub fn format_region_as_cc_lifetime<'tcx>(
     db: &dyn BindingsGenerator<'tcx>,
-    region: &ty::Region<'tcx>,
+    region: ty::Region<'tcx>,
     prereqs: &mut CcPrerequisites,
 ) -> TokenStream {
     let name = region
@@ -839,7 +827,7 @@ pub fn format_region_as_cc_lifetime<'tcx>(
 
 pub fn format_region_as_rs_lifetime<'tcx>(
     tcx: TyCtxt<'tcx>,
-    region: &ty::Region<'tcx>,
+    region: ty::Region<'tcx>,
 ) -> TokenStream {
     let name = region
         .get_name(tcx)
@@ -884,7 +872,7 @@ pub enum BridgedTypeConversionInfo {
 ///
 /// Currently, that means that the type is pointer-sized, pointer-aligned,
 /// and has a initialized (non-union), scalar ABI.
-fn layout_pointer_like(from: &Layout, data_layout: &TargetDataLayout) -> bool {
+fn layout_pointer_like(from: Layout, data_layout: &TargetDataLayout) -> bool {
     from.size() == data_layout.pointer_size()
         && from.align().abi == data_layout.pointer_align().abi
         && matches!(from.backend_repr(), BackendRepr::Scalar(Scalar::Initialized { .. }))
@@ -900,7 +888,7 @@ pub fn ensure_ty_is_pointer_like<'tcx>(
             bail!("Can't convert {ty} to a C++ pointer as it's not `repr(transparent)`");
         }
 
-        if !layout_pointer_like(&get_layout(db.tcx(), ty)?, db.tcx().data_layout()) {
+        if !layout_pointer_like(get_layout(db.tcx(), ty)?, db.tcx().data_layout()) {
             bail!(
                 "Can't convert {ty} to a C++ pointer as its layout is not pointer-like. \
                 To be considered pointer-like it may only have one non-ZST field that needs \
@@ -1004,8 +992,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
             }
             // Do we need to confirm that pointee is layout compatible?
             let rust_type = db.format_ty_for_rs(pointee)?;
-            let cpp_type_with_prereqs =
-                db.format_ty_for_cc(SugaredTy::missing_hir(pointee), TypeLocation::Other)?;
+            let cpp_type_with_prereqs = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
 
             return Ok(CrubitAbiTypeWithCcPrereqs {
                 crubit_abi_type: CrubitAbiType::Ptr {
@@ -1208,13 +1195,13 @@ pub fn is_bridged_type<'tcx>(
     ty: Ty<'tcx>,
 ) -> Result<Option<BridgedType<'tcx>>> {
     match ty.kind() {
-        ty::TyKind::Ref(_, referent_mid, _) if is_bridged_type(db, *referent_mid)?.is_some() => {
+        ty::TyKind::Ref(_, referent, _) if is_bridged_type(db, *referent)?.is_some() => {
             bail!(
                 "Can't format reference type `{ty}` because the referent is a bridged type. \
                     Passing bridged types by reference is not supported."
             )
         }
-        ty::TyKind::RawPtr(pointee_mid, _) if is_bridged_type(db, *pointee_mid)?.is_some() => {
+        ty::TyKind::RawPtr(pointee, _) if is_bridged_type(db, *pointee)?.is_some() => {
             bail!(
                 "Can't format pointer type `{ty}` because the pointee is a bridged type. \
                     Passing bridged types by pointer is not supported."
