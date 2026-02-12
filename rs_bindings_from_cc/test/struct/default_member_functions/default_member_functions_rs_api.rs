@@ -15,7 +15,6 @@
     negative_impls
 )]
 #![allow(stable_features)]
-#![no_std]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
 #![allow(dead_code, unused_mut)]

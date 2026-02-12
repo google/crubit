@@ -516,7 +516,6 @@ pub fn generate_bindings_tokens(
     Ok(BindingsTokens {
         rs_api: quote! {
             #features __NEWLINE__
-            #![no_std] __NEWLINE__
 
             // `rust_builtin_type_abi_assumptions.md` documents why the generated
             // bindings need to relax the `improper_ctypes_definitions` warning
