@@ -18,9 +18,11 @@ CRUBIT_MUST_BIND inline void destroy_unique_ptr(std::unique_ptr<int>) {}
 struct Base {
   virtual ~Base() = default;
   static inline int derived_destructor_count = 0;
+  virtual bool is_derived() const { return false; }
 };
 struct Derived : public Base {
   ~Derived() override { derived_destructor_count++; }
+  bool is_derived() const override { return true; }
 };
 
 CRUBIT_MUST_BIND inline std::unique_ptr<Base> create_virtual_base() {

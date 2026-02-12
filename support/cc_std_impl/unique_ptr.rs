@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::crubit_cc_std_internal::std_allocator;
+use core::pin::Pin;
 use core::ptr::null_mut;
+
 pub use operator::Delete;
 
 /// A smart pointer that owns and manages another object of type `T` via a
 /// pointer, ABI-compatible with `std::unique_ptr` using the default deleter from
-/// C++.
+/// C++. This is analogous to `Pin<Box<T>>`.
 ///
 /// If the class has a virtual destructor and is not the most-derived class, or if it overloads
 /// `operator delete`, it is UB to use `unique_ptr`. Instead, use [`unique_ptr_dyn`].
@@ -18,6 +20,7 @@ pub struct unique_ptr<T: Sized> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
     // 2. If `ptr` is not null, it is exclusively owned by this `unique_ptr`.
+    // 3. the pointee is pinned.
     ptr: *mut T,
 }
 
@@ -55,6 +58,8 @@ impl<T: Sized> unique_ptr<T> {
     ///
     /// The object must not overload `operator delete`. If the destructor is
     /// virtual, `T` must be type of the most derived class.
+    ///
+    /// This pins `ptr`, and the same preconditions apply as for `Pin::new_unchecked`.
     pub unsafe fn new(ptr: *mut T) -> Self {
         Self { ptr }
     }
@@ -74,6 +79,13 @@ impl<T: Sized> unique_ptr<T> {
     {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
         unsafe { self.ptr.as_mut() }
+    }
+
+    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    pub fn as_pin(&mut self) -> Option<Pin<&mut T>> {
+        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        // The pointee is pinned.
+        unsafe { Some(Pin::new_unchecked(self.ptr.as_mut()?)) }
     }
 }
 
@@ -103,6 +115,7 @@ pub struct unique_ptr_dyn<T: Sized + Delete> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
     // 2. If `ptr` is not null, it is exclusively owned by this `unique_ptr_dyn`.
+    // 3. the pointee is pinned.
     ptr: *mut T,
 }
 
@@ -120,6 +133,8 @@ impl<T: Sized + Delete> unique_ptr_dyn<T> {
     /// # Safety
     ///
     /// `ptr` must either be null, or allocated by C++ `new`.
+    ///
+    /// This pins `ptr`, and the same preconditions apply as for `Pin::new_unchecked`.
     pub unsafe fn new(ptr: *mut T) -> Self {
         Self { ptr }
     }
@@ -139,6 +154,13 @@ impl<T: Sized + Delete> unique_ptr_dyn<T> {
     {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
         unsafe { self.ptr.as_mut() }
+    }
+
+    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    pub fn as_pin(&mut self) -> Option<Pin<&mut T>> {
+        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        // The pointee is pinned.
+        unsafe { Some(Pin::new_unchecked(self.ptr.as_mut()?)) }
     }
 }
 

@@ -101,11 +101,16 @@ fn test_unique_ptr_destroyed_in_cpp() {
 
 #[gtest]
 fn test_unique_ptr_with_virtual_destructor() {
-    let p = test_helpers::unique_ptr_test::create_virtual_base();
+    let mut p = test_helpers::unique_ptr_test::create_virtual_base();
     assert_eq!(
         std::any::Any::type_id(&p),
         std::any::TypeId::of::<cc_std::std::unique_ptr_dyn<test_helpers::unique_ptr_test::Base>>()
     );
+    unsafe {
+        assert!(test_helpers::unique_ptr_test::Base::is_derived(
+            <std::pin::Pin<&mut _>>::into_inner_unchecked(p.as_pin().unwrap())
+        ));
+    }
     drop(p);
     assert_eq!(test_helpers::unique_ptr_test::get_derived_destructor_count(), 1);
 }
