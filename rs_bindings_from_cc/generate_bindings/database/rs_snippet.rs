@@ -364,7 +364,7 @@ impl UniformReprTemplateType {
         }
     }
 
-    fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
+    pub fn to_token_stream(&self, db: &dyn BindingsGenerator) -> TokenStream {
         match self {
             Self::StdVector { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);

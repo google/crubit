@@ -6,13 +6,17 @@
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
+#include "crubit/support/annotations.h"
 #include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "rs_bindings_from_cc/test/bridging/rust_library.h"
 #include "support/annotations.h"
 #include "support/bridge.h"
@@ -106,5 +110,25 @@ inline std::optional<rust_library::MyStruct> ReturnOptionalMyStruct() {
 enum class MyEnum { kFoo, kBar };
 
 std::optional<MyEnum> ValidateMyEnum(MyEnum value);
+
+struct StructWithVirtualDestructor {
+  virtual ~StructWithVirtualDestructor() = default;
+};
+
+CRUBIT_MUST_BIND
+absl::StatusOr<std::unique_ptr<StructWithVirtualDestructor>>
+MakeStatusOrWithVirtualDestructor();
+
+CRUBIT_MUST_BIND
+std::vector<std::unique_ptr<StructWithVirtualDestructor>>
+MakeVectorWithVirtualDestructor();
+
+CRUBIT_MUST_BIND
+absl::Span<std::unique_ptr<StructWithVirtualDestructor>>
+MakeSpanWithVirtualDestructor();
+
+CRUBIT_MUST_BIND
+std::optional<std::unique_ptr<StructWithVirtualDestructor>>
+MakeOptionalWithVirtualDestructor();
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_COMPOSABLE_BRIDGING_LIB_H_

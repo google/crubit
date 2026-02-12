@@ -4,13 +4,16 @@
 
 #include "rs_bindings_from_cc/test/bridging/composable_bridging_lib.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/types/span.h"
 #include "support/rs_std/slice_ref.h"
 
 Vec3<float> MakeVec3(float x, float y, float z) {
@@ -100,4 +103,24 @@ std::optional<MyEnum> ValidateMyEnum(MyEnum value) {
     default:
       return std::nullopt;
   }
+}
+
+absl::StatusOr<std::unique_ptr<StructWithVirtualDestructor>>
+MakeStatusOrWithVirtualDestructor() {
+  return std::make_unique<StructWithVirtualDestructor>();
+}
+
+std::vector<std::unique_ptr<StructWithVirtualDestructor>>
+MakeVectorWithVirtualDestructor() {
+  return {};
+}
+
+absl::Span<std::unique_ptr<StructWithVirtualDestructor>>
+MakeSpanWithVirtualDestructor() {
+  return {};
+}
+
+std::optional<std::unique_ptr<StructWithVirtualDestructor>>
+MakeOptionalWithVirtualDestructor() {
+  return std::make_unique<StructWithVirtualDestructor>();
 }

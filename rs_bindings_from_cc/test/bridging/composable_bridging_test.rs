@@ -133,3 +133,15 @@ fn test_composable_bridge_with_enum_inside() {
     assert_eq!(ValidateMyEnum(MyEnum::kBar), Some(MyEnum::kBar));
     assert_eq!(ValidateMyEnum(MyEnum::from(42)), None);
 }
+
+#[gtest]
+fn test_composable_bridge_with_unique_ptr_dyn() {
+    let statusor = composable_bridging_lib::MakeStatusOrWithVirtualDestructor();
+    assert!(statusor.is_ok());
+
+    let vector = composable_bridging_lib::MakeVectorWithVirtualDestructor();
+    let span = composable_bridging_lib::MakeSpanWithVirtualDestructor();
+
+    let optional = composable_bridging_lib::MakeOptionalWithVirtualDestructor();
+    assert!(optional.is_some());
+}

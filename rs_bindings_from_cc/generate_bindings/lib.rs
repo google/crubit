@@ -1083,15 +1083,19 @@ fn crubit_abi_type(db: &dyn BindingsGenerator, rs_type_kind: RsTypeKind) -> Resu
                 })
             }
         },
-        RsTypeKind::Record { record, crate_path, .. } => {
+        RsTypeKind::Record { record, crate_path, uniform_repr_template_type, .. } => {
             ensure!(
                 record.is_unpin(),
                 "Type `{}` must be Rust-movable in order to memcpy through a bridge buffer. See crubit.rs/cpp/classes_and_structs#rust_movable",
                 record.cc_name
             );
 
-            let rs_name = make_rs_ident(record.rs_name.identifier.as_ref());
-            let rust_type = quote! { #crate_path #rs_name };
+            let rust_type = if let Some(generic_monomorphization) = uniform_repr_template_type {
+                generic_monomorphization.to_token_stream(db)
+            } else {
+                let rs_name = make_rs_ident(record.rs_name.identifier.as_ref());
+                quote! { #crate_path #rs_name }
+            };
 
             // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
             // except that it creates an Ident instead of a TokenStream.

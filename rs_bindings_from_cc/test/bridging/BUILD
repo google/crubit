@@ -89,6 +89,7 @@ cc_library(
         "//support/rs_std:slice_ref",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/types:span",
     ],
 )
 
