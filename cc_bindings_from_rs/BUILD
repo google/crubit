@@ -17,11 +17,9 @@ package(
     default_visibility = ["//:__subpackages__"],
 )
 
-crubit_rust_binary(
-    name = "cc_bindings_from_rs",
-    srcs = ["cc_bindings_from_rs.rs"],
-    # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
-    crubit_dep = False,
+rust_library(
+    name = "cpp_api_from_rust_lib",
+    srcs = ["lib.rs"],
     proc_macro_deps = [
         "@crate_index//:rustversion",  # v1
     ],
@@ -44,9 +42,26 @@ crubit_rust_binary(
     ],
 )
 
+crubit_rust_binary(
+    name = "cc_bindings_from_rs",
+    srcs = ["cc_bindings_from_rs.rs"],
+    # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
+    crubit_dep = False,
+    # LINT.IfChange
+    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
+    # LINT.ThenChange(//docs/overview/unstable_features.md)
+    deps = [
+        ":cmdline",
+        ":cpp_api_from_rust_lib",
+        "//common:arc_anyhow",
+        "@crate_index//:clap",  # v4
+        "@crate_index//:itertools",  # v0_13
+    ],
+)
+
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
-    crate = ":cc_bindings_from_rs",
+    crate = ":cpp_api_from_rust_lib",
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=never_type,rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)

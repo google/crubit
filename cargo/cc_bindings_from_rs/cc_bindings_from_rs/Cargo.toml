@@ -19,21 +19,8 @@ path = "../../../cc_bindings_from_rs/cc_bindings_from_rs.rs"
 doctest = false
 
 [dependencies]
-generate_bindings = { path = "../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
 cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline", package = "cc_bindings_from_rs_cmdline"}
-run_compiler = { path = "../../../cargo/cc_bindings_from_rs/run_compiler", package = "cc_bindings_from_rs_run_compiler"}
-code_gen_utils = { path = "../../../cargo/common/code_gen_utils"}
-token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
-kythe_metadata = { path = "../../../cargo/common/kythe_metadata"}
+cpp_api_from_rust_lib = { path = "../../../cargo/cc_bindings_from_rs/cpp_api_from_rust_lib", package = "cc_bindings_from_rs_cpp_api_from_rust_lib"}
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
-error_report = { path = "../../../cargo/common/error_report"}
 clap.workspace = true
 itertools.workspace = true
-crubit_feature = { path = "../../../cargo/common/crubit_feature"}
-flagset.workspace = true
-rustversion.workspace = true
-[dev-dependencies]
-run_compiler_test_support = { path = "../../../cargo/cc_bindings_from_rs/run_compiler_test_support", package = "cc_bindings_from_rs_run_compiler_test_support"}
-external_binaries = { path = "../../../cargo/common/external_binaries"}
-regex.workspace = true
-tempfile.workspace = true
