@@ -10,6 +10,7 @@ static INSTANCE_COUNTER: AtomicI32 = AtomicI32::new(0);
 /// A struct with the same size and alignment as `int`.
 /// The number of alive instances is tracked by `INSTANCE_COUNTER`.
 #[repr(transparent)]
+#[derive(Debug, PartialEq)]
 struct InstanceCounted(std::ffi::c_int);
 
 impl Drop for InstanceCounted {
@@ -51,6 +52,18 @@ fn test_unique_ptr_get_returns_non_owned_pointer() {
     let up = InstanceCounted::new_unique_ptr();
     assert_eq!(up.get(), up.get());
     assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 1);
+}
+
+#[gtest]
+fn test_unique_ptr_as_mut_null() {
+    let mut up = unsafe { cc_std::std::unique_ptr::<InstanceCounted>::new(std::ptr::null_mut()) };
+    assert_eq!(up.as_mut(), None);
+}
+
+#[gtest]
+fn test_unique_ptr_as_mut_non_null() {
+    let mut up = InstanceCounted::new_unique_ptr();
+    assert_eq!(up.as_mut().unwrap().0, 123456);
 }
 
 #[gtest]

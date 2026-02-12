@@ -17,9 +17,34 @@ pub use operator::Delete;
 pub struct unique_ptr<T: Sized> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
-    // 2. If `ptr` is not null, it is owned by this `unique_ptr`.
+    // 2. If `ptr` is not null, it is exclusively owned by this `unique_ptr`.
     ptr: *mut T,
 }
+
+// SAFETY: unique_ptr exclusively owns `T` and adds no additional constraints on sending the
+// pointer.
+unsafe impl<T: Sized + Send> Send for unique_ptr<T> {}
+
+// This is _not_ Sync, because we want to be able to pass unique_ptr to C++ in safe code,
+// but the following would have UB in a multithreaded context:
+//
+// ```c++
+// void Foo(const std::unique_ptr<MyClass>& ptr) {
+//   ptr->Mutate();
+// }
+// ```
+//
+// ```rust
+// let ptr : unique_ptr<MyClass> = ...;
+// cpp_lib::Foo(&ptr);
+// ```
+//
+// In other words, because unique_ptr is internally mutable, we have the choice between safely
+// sharing `&unique_ptr` in Rust, or safely calling functions that take a `&unique_ptr`.
+//
+// In either case, we can feel a little bit relieved that it's extraordinarily rare to pass
+// a reference to a unique_ptr. If you want to borrow T, you can unsafely dereference the
+// unique_ptr and obtain a `&T`.
 
 impl<T: Sized> unique_ptr<T> {
     /// Takes ownership of the provided raw pointer.
@@ -40,6 +65,15 @@ impl<T: Sized> unique_ptr<T> {
 
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
+    }
+
+    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    pub fn as_mut(&mut self) -> Option<&mut T>
+    where
+        T: Unpin,
+    {
+        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        unsafe { self.ptr.as_mut() }
     }
 }
 
@@ -62,15 +96,21 @@ impl<T> Drop for unique_ptr<T> {
 
 /// A smart pointer that owns and manages another object of type `T` via a
 /// pointer, ABI-compatible with `std::unique_ptr` using default deleter from
-/// C++.
+/// C++. This is analogous to `Pin<Box<T>>`.
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct unique_ptr_dyn<T: Sized + Delete> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
-    // 2. If `ptr` is not null, it is owned by this `unique_ptr_dyn`.
+    // 2. If `ptr` is not null, it is exclusively owned by this `unique_ptr_dyn`.
     ptr: *mut T,
 }
+
+// SAFETY: unique_ptr_dyn exclusively owns `T` and adds no additional constraints on sending the
+// pointer.
+unsafe impl<T: Sized + Delete + Send> Send for unique_ptr_dyn<T> {}
+
+// This is _not_ Sync for the same reason as unique_ptr.
 
 impl<T: Sized + Delete> unique_ptr_dyn<T> {
     /// Takes ownership of the provided raw pointer to a polymorphic type.
@@ -90,6 +130,15 @@ impl<T: Sized + Delete> unique_ptr_dyn<T> {
 
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
+    }
+
+    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    pub fn as_mut(&mut self) -> Option<&mut T>
+    where
+        T: Unpin,
+    {
+        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        unsafe { self.ptr.as_mut() }
     }
 }
 
