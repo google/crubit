@@ -263,17 +263,29 @@ impl LayoutCompatible {
 // Can't generate bindings for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void>, because of missing required features (crubit.rs-features):
 // //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::pmr::polymorphic_allocator<char>, char *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_3pmr21polymorphic_allocatorIcEEPcvEE is a template instantiation)
 
-// Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::allocator<char32_t>, char32_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char32_t>, char32_t *, void>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::allocator<char32_t>, char32_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_9allocatorIDiEEPDivEE is a template instantiation)
+// Error while generating bindings for struct 'std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>>':
+// Can't generate bindings for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char32_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_3pmr21polymorphic_allocatorIDiEEEE is a template instantiation)
 
-// Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::allocator<char16_t>, char16_t *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char16_t>, char16_t *, void>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::allocator<char16_t>, char16_t *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_9allocatorIDsEEPDsvEE is a template instantiation)
+// Error while generating bindings for struct 'std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>>':
+// Can't generate bindings for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char16_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_3pmr21polymorphic_allocatorIDsEEEE is a template instantiation)
 
-// Error while generating bindings for struct 'std::__alloc_traits_difference_type<std::allocator<char>, char *, void>':
-// Can't generate bindings for std::__alloc_traits_difference_type<std::allocator<char>, char *, void>, because of missing required features (crubit.rs-features):
-// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__alloc_traits_difference_type<std::allocator<char>, char *, void> (crate::__CcTemplateInstNSt3__u30__alloc_traits_difference_typeINS_9allocatorIcEEPcvEE is a template instantiation)
+// Error while generating bindings for struct 'std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>>':
+// Can't generate bindings for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__allocator_traits_base<std::pmr::polymorphic_allocator<char>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_3pmr21polymorphic_allocatorIcEEEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::__allocator_traits_base<std::allocator<char32_t>>':
+// Can't generate bindings for std::__allocator_traits_base<std::allocator<char32_t>>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__allocator_traits_base<std::allocator<char32_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_9allocatorIDiEEEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::__allocator_traits_base<std::allocator<char16_t>>':
+// Can't generate bindings for std::__allocator_traits_base<std::allocator<char16_t>>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__allocator_traits_base<std::allocator<char16_t>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_9allocatorIDsEEEE is a template instantiation)
+
+// Error while generating bindings for struct 'std::__allocator_traits_base<std::allocator<char>>':
+// Can't generate bindings for std::__allocator_traits_base<std::allocator<char>>, because of missing required features (crubit.rs-features):
+// //rs_bindings_from_cc/test/golden:callables_supported_cc needs [//features:wrapper] for std::__allocator_traits_base<std::allocator<char>> (crate::__CcTemplateInstNSt3__u23__allocator_traits_baseINS_9allocatorIcEEEE is a template instantiation)
 
 // Error while generating bindings for struct 'std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>':
 // Can't generate bindings for std::allocator_traits<std::pmr::polymorphic_allocator<char32_t>>, because of missing required features (crubit.rs-features):
