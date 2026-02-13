@@ -31,3 +31,12 @@ pub fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
         Some("assume_lifetimes"),
     )
 }
+
+pub fn ir_from_fmt_cc(program: &str) -> Result<IR> {
+    ir_testing::ir_from_cc_dependency(
+        multiplatform_testing::test_platform(),
+        program,
+        "// empty header",
+        Some("fmt"),
+    )
+}

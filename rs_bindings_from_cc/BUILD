@@ -42,6 +42,7 @@ deps_for_bindings(
         "//support/public:bindings_support",
         "//support:bridge_cpp",
         "//support/rs_std:dyn_callable",
+        "//support/rs_std:lossy_formatter_for_bindings",
     ],
     deps_for_generated_rs_file = [
         "//support:ctor",
@@ -51,6 +52,7 @@ deps_for_bindings(
         "//support:oops",
         "//support:bridge_rust",
         "//support/rs_std:dyn_callable_rs",
+        "//support/rs_std:lossy_formatter",
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
         "@crate_index//:static_assertions",  # v1

@@ -6,10 +6,13 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident};
-use database::code_snippet::{ApiSnippets, Feature, GeneratedItem};
+use crubit_feature::CrubitFeature;
+use database::code_snippet::{
+    ApiSnippets, Feature, FmtImpl, FmtTrait, GeneratedItem, Thunk, ThunkImpl,
+};
 use database::BindingsGenerator;
 use ir::Enum;
-use proc_macro2::Literal;
+use proc_macro2::{Literal, TokenStream};
 use quote::{quote, ToTokens};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -19,7 +22,7 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
     db.errors().add_category(error_report::Category::Type);
     let ident = expect_format_cc_ident(&enum_.cc_name.identifier);
     let namespace_qualifier = db.ir().namespace_qualifier(&enum_).format_for_cc()?;
-    let fully_qualified_cc_name = quote! { #namespace_qualifier #ident }.to_string();
+    let fully_qualified_cc_name = quote! { #namespace_qualifier #ident };
     let name = make_rs_ident(&enum_.rs_name.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.clone())?;
 
@@ -55,6 +58,36 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
         quote! {pub const #ident: #name = #name(#value);}
     });
     let underlying_type_tokens = underlying_type.to_token_stream(db);
+    let mut thunks: Vec<Thunk> = vec![];
+    let mut cc_details: Vec<ThunkImpl> = vec![];
+    let display_impl: TokenStream =
+        if db.ir().target_crubit_features(&enum_.owning_target).contains(CrubitFeature::Fmt)
+            && enum_.detected_formatter
+        {
+            let fmt_fn_name = make_rs_ident(&format!(
+                "__crubit_fmt__{type_name}_{odr_suffix}",
+                type_name = enum_.cc_name,
+                odr_suffix = enum_.owning_target.convert_to_cc_identifier(),
+            ));
+            let crate_root_path = db.ir().crate_root_path_tokens();
+            let namespace_qualifier = db.ir().namespace_qualifier(&enum_).format_for_rs();
+            let qualified_name = {
+                quote! { #crate_root_path:: #namespace_qualifier #name }
+            };
+            thunks
+                .push(Thunk::Fmt { fmt_fn_name: fmt_fn_name.clone(), param_type: qualified_name });
+            cc_details.push(ThunkImpl::Fmt {
+                fmt_fn_name: fmt_fn_name.clone(),
+                param_type: fully_qualified_cc_name.clone(),
+            });
+            let display_impl =
+                FmtImpl { fmt_trait: FmtTrait::Display, type_name: name.clone(), fmt_fn_name };
+            quote! {
+                #display_impl
+            }
+        } else {
+            quote! {}
+        };
 
     let annotation = format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}");
     let item = quote! {
@@ -75,10 +108,13 @@ pub fn generate_enum(db: &dyn BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiS
                 value.0
             }
         }
+        #display_impl
     };
     Ok(ApiSnippets {
         generated_items: HashMap::from([(enum_.id, GeneratedItem::Enum(item))]),
         features: Feature::register_tool.into(),
+        thunks,
+        cc_details,
         ..Default::default()
     })
 }

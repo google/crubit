@@ -8,7 +8,7 @@ use database::code_snippet::BindingsTokens;
 use generate_struct_and_union::generate_derives;
 use googletest::prelude::gtest;
 use ir_testing::with_lifetime_macros;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record};
+use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_from_fmt_cc, ir_record};
 use proc_macro2::TokenStream;
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
@@ -1919,5 +1919,61 @@ fn test_multiple_member_functions_grouped_in_impl() -> Result<()> {
         }
     );
 
+    Ok(())
+}
+
+#[gtest]
+fn test_fmt() -> Result<()> {
+    let ir = ir_from_fmt_cc(
+        r#"
+        struct DisplayAndDebug {
+            template <typename Sink>
+            friend void AbslStringify(Sink& sink, const DisplayAndDebug&) {
+                sink.Append("DisplayAndDebug");
+            }
+        };
+        struct [[clang::annotate("crubit_internal_trait_derive", "Debug")]] OnlyDisplay {
+            template <typename Sink>
+            friend void AbslStringify(Sink& sink, const OnlyDisplay&) {
+                sink.Append("OnlyDisplay");
+            }
+        };
+    "#,
+    )?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for DisplayAndDebug {
+              ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Display for DisplayAndDebug {
+              ...
+            }
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Debug for OnlyDisplay {
+              ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::fmt::Display for OnlyDisplay {
+              ...
+            }
+        }
+    );
     Ok(())
 }

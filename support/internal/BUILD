@@ -9,6 +9,7 @@ cc_library(
     hdrs = [
         "check_no_mutable_aliasing.h",
         "cxx20_backports.h",
+        "fmt.h",
         "lazy_init.h",
         "memswap.h",
         "offsetof.h",
@@ -27,7 +28,10 @@ cc_library(
     # we can't rely on an exact version and/or exact absl/base/options.h).
     deps = [
         "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:has_ostream_operator",
         "@abseil-cpp//absl/types:span",
     ],
 )

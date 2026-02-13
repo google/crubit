@@ -563,6 +563,7 @@ pub fn generated_items_to_tokens(
                     cxx_impl,
                     incomplete_definition,
                     upcast_impls,
+                    fmt_impls,
                     no_unique_address_accessors,
                     items,
                     nested_items,
@@ -650,6 +651,7 @@ pub fn generated_items_to_tokens(
                     #send_impl
                     #sync_impl
                     #cxx_impl
+                    #( #fmt_impls )*
 
                     #incomplete_definition
 
@@ -938,6 +940,7 @@ pub struct Record {
     pub cxx_impl: Option<CxxExternTypeImpl>,
     pub incomplete_definition: Option<TokenStream>,
     pub upcast_impls: Vec<Result<UpcastImpl, String>>,
+    pub fmt_impls: Vec<FmtImpl>,
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
     pub items: Vec<ItemId>,
     pub nested_items: Vec<ItemId>,
@@ -967,6 +970,48 @@ pub struct DeleteImpl {
 pub enum UpcastImplBody {
     PointerOffset { offset: i64 },
     CastThunk { crate_root_path: Option<Ident>, cast_fn_name: Ident },
+}
+
+#[derive(Clone, Debug)]
+pub struct FmtImpl {
+    pub fmt_trait: FmtTrait,
+    pub type_name: Ident,
+    pub fmt_fn_name: Ident,
+}
+
+impl ToTokens for FmtImpl {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self { fmt_trait, type_name, fmt_fn_name } = self;
+        quote! {
+            impl #fmt_trait for #type_name {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = ::lossy_formatter::LossyFormatter::new(f);
+                    if unsafe { crate::detail::#fmt_fn_name(self, &mut f) } {
+                        ::core::result::Result::Ok(())
+                    } else {
+                        ::core::result::Result::Err(::core::fmt::Error)
+                    }
+                }
+            }
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum FmtTrait {
+    Debug,
+    Display,
+}
+
+impl ToTokens for FmtTrait {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            FmtTrait::Debug => quote! { ::core::fmt::Debug },
+            FmtTrait::Display => quote! { ::core::fmt::Display },
+        }
+        .to_tokens(tokens);
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1340,6 +1385,8 @@ impl ToTokens for AssertableTrait {
 pub enum Thunk {
     /// Generates a thunk for upcasting from a derived type to a base type.
     Upcast { cast_fn_name: Ident, derived_name: TokenStream, base_name: TokenStream },
+    /// Generates a thunk for formatting in C++.
+    Fmt { fmt_fn_name: Ident, param_type: TokenStream },
     /// Generates a thunk for a function.
     Function {
         mangled_name: Option<Rc<str>>,
@@ -1357,6 +1404,14 @@ impl ToTokens for Thunk {
             Thunk::Upcast { cast_fn_name, derived_name, base_name } => {
                 quote! {
                     pub fn #cast_fn_name(from: *const #derived_name) -> *const #base_name;
+                }
+                .to_tokens(tokens);
+            }
+            Thunk::Fmt { fmt_fn_name, param_type } => {
+                quote! {
+                    pub(crate) unsafe fn #fmt_fn_name(
+                        value: &#param_type,
+                        formatter: &mut ::lossy_formatter::LossyFormatter) -> bool;
                 }
                 .to_tokens(tokens);
             }
@@ -1400,6 +1455,11 @@ pub enum ThunkImpl {
         cast_fn_name: Ident,
         derived_cc_name: TokenStream,
     },
+    /// A function that formats in C++.
+    Fmt {
+        fmt_fn_name: Ident,
+        param_type: TokenStream,
+    },
     /// A function that implements a Rust function thunk.
     Function {
         conversion_externs: TokenStream,
@@ -1433,6 +1493,15 @@ impl ToTokens for ThunkImpl {
                 quote! {
                     extern "C" const #base_cc_name& #cast_fn_name(const #derived_cc_name& from) {
                         return from;
+                    }
+                }
+                .to_tokens(tokens);
+            }
+            ThunkImpl::Fmt { fmt_fn_name, param_type } => {
+                quote! {
+                    extern "C" bool #fmt_fn_name(
+                        const #param_type& value, ::lossy_formatter::LossyFormatter& formatter) {
+                        return ::crubit::Fmt(value, formatter);
                     }
                 }
                 .to_tokens(tokens);

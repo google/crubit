@@ -800,6 +800,36 @@ fn generate_rs_api_impl_includes(
                 }
             }
         }
+
+        if ir
+            .target_crubit_features(&record.owning_target)
+            .contains(crubit_feature::CrubitFeature::Fmt)
+            && record.detected_formatter
+        {
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.clone(),
+                "rs_std/lossy_formatter_for_bindings.h".into(),
+            ));
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.clone(),
+                "internal/fmt.h".into(),
+            ));
+        }
+    }
+
+    for e in ir.enums() {
+        if ir.target_crubit_features(&e.owning_target).contains(crubit_feature::CrubitFeature::Fmt)
+            && e.detected_formatter
+        {
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.clone(),
+                "rs_std/lossy_formatter_for_bindings.h".into(),
+            ));
+            internal_includes.insert(CcInclude::SupportLibHeader(
+                crubit_support_path_format.clone(),
+                "internal/fmt.h".into(),
+            ));
+        }
     }
 
     for type_alias in ir.type_aliases() {

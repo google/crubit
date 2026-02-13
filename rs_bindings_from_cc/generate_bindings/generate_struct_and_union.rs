@@ -8,9 +8,9 @@ use code_gen_utils::{expect_format_cc_type_name, make_rs_ident};
 use cpp_type_name::{cpp_tagless_type_name_for_record, cpp_type_name_for_record};
 use database::code_snippet::{
     ApiSnippets, AssertableTrait, Assertion, BitPadding, BitfieldComment, DeleteImpl, DeriveAttr,
-    DocCommentAttr, Feature, FieldDefinition, FieldType, GeneratedItem, MustUseAttr,
-    NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk, ThunkImpl,
-    UpcastImpl, UpcastImplBody, Visibility,
+    DocCommentAttr, Feature, FieldDefinition, FieldType, FmtImpl, FmtTrait, GeneratedItem,
+    MustUseAttr, NoUniqueAddressAccessor, RecursivelyPinnedAttr, SizeofImpl, StructOrUnion, Thunk,
+    ThunkImpl, UpcastImpl, UpcastImplBody, Visibility,
 };
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::BindingsGenerator;
@@ -613,6 +613,34 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         api_snippets.cc_details.push(thunk_impl);
         operator_delete_impl = Some(delete);
     }
+    let mut fmt_impls = vec![];
+    if crubit_features.contains(crubit_feature::CrubitFeature::Fmt) && record.detected_formatter {
+        let fmt_fn_name = make_rs_ident(&format!(
+            "__crubit_fmt__{type_name}_{odr_suffix}",
+            type_name = record.mangled_cc_name,
+            odr_suffix = record.owning_target.convert_to_cc_identifier(),
+        ));
+        fmt_impls.push(FmtImpl {
+            fmt_trait: FmtTrait::Display,
+            type_name: ident.clone(),
+            fmt_fn_name: fmt_fn_name.clone(),
+        });
+        if record.trait_derives.debug != TraitImplPolarity::Positive {
+            fmt_impls.push(FmtImpl {
+                fmt_trait: FmtTrait::Debug,
+                type_name: ident.clone(),
+                fmt_fn_name: fmt_fn_name.clone(),
+            })
+        }
+        api_snippets.thunks.push(Thunk::Fmt {
+            fmt_fn_name: fmt_fn_name.clone(),
+            param_type: qualified_ident.clone(),
+        });
+        api_snippets.cc_details.push(ThunkImpl::Fmt {
+            fmt_fn_name,
+            param_type: cpp_type_name_for_record(&record, ir)?,
+        });
+    }
     let no_unique_address_accessors =
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
             cc_struct_no_unique_address_impl(db, &record)?
@@ -683,6 +711,7 @@ pub fn generate_record(db: &dyn BindingsGenerator, record: Rc<Record>) -> Result
         cxx_impl,
         incomplete_definition,
         upcast_impls,
+        fmt_impls,
         no_unique_address_accessors,
         items,
         nested_items,
