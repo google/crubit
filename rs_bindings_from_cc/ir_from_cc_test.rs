@@ -3061,7 +3061,7 @@ fn test_elided_lifetimes() {
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let r = ir.records().next().expect("IR should contain `struct S`");
     assert_eq!(r.rs_name.identifier.as_ref(), "S");
-    assert!(r.is_trivial_abi);
+    assert!(r.is_memcpy_movable);
 
     let f = ir
         .functions()
