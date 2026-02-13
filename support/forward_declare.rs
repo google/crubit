@@ -584,8 +584,14 @@ mod mut_ref_transmutability {
     }
 }
 
-/// Like `Into<T>`, but for completeness conversions.
+/// Converts from `Self` to `T`, where `Self` *is* `T` in C++.
+///
+/// For example, if two different C++ headers forward declare the same type, then
+/// these declarations will become distinct types in Rust, but can be `CppCast` to
+/// one another, and can both be `CppCast` to (and from) the complete type in the
+/// header that defines the type.
 pub trait CppCast<T> {
+    /// Converts `self` to a `T`.
     fn cpp_cast(self) -> T;
 }
 
@@ -627,7 +633,7 @@ where
     Self: 'a,
     T: 'a + Sized,
 {
-    /// Cast between types.
+    /// Converts `self` to a `T`.
     ///
     /// # Safety
     ///
